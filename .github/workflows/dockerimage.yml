@@ -1,0 +1,160 @@
+name: Docker Image CI
+
+on:
+  pull_request:
+    branches:
+      - master
+      - staging
+      - development
+  push:
+    branches:
+      - master
+      - staging
+      - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Export release code
+        if: (success() || failure())
+        id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
+        run: |
+          export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
+          export RELEASE=$VERSION.$(date --utc +%y%m%d)
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+          echo "##[set-output name=releasename]$RELEASE"
+      - name: Setting APP_NAME
+        run: |
+          export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
+          echo "APP_NAME=$NAME" >> $GITHUB_ENV
+      - name: Print app name
+        run: echo "APP_NAME = $APP_NAME"
+      - name: Setting APP_ENV to dev
+        run: |
+          echo "APP_ENV=dev">> $GITHUB_ENV
+          echo "APP_BUILD=dev">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to prod
+        if: contains( github.ref, 'master' ) || contains( github.base_ref, 'master' )
+        run: |
+          echo "APP_ENV=latest">> $GITHUB_ENV
+          echo "APP_BUILD=$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to stag
+        if: contains( github.ref, 'staging' ) || contains( github.base_ref, 'staging' )
+        run: |
+          echo "APP_ENV=stag">> $GITHUB_ENV
+          echo "APP_BUILD=stag">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Print definitive APP_ENV
+        run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
+      - name: Build the Docker image
+        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+      - name: Run the docker image
+        run: docker-compose up -d
+      - name: Taking some sleep (for containers to come up)
+        run: sleep 20
+      - name: Check if all containers are running
+        run: docker ps
+      - name: Dumping the logs
+        run: docker-compose logs
+      - name: Database Update
+        run: docker-compose exec -T php bin/console doctrine:schema:update --force
+      #- name: Taking some more sleep (for database to be updated)
+      #  run: sleep 20
+      #- name: Database Check
+      #  run: docker-compose exec -T php bin/console doctrine:schema:validate
+      - name: Security Checks
+        run: |
+          curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
+          chmod +x ./local-php-security-checker
+          ./local-php-security-checker --path ./api/composer.lock
+
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+      #- name: Run Postman Tests
+      #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
+      #  run: newman run api/public/schema/*.postman_collection.json
+      - name: Add docker tags
+        if: github.ref == 'refs/heads/master'
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker tag "${image}":latest "${image}":"${APP_BUILD}"
+          done
+          echo 'IMAGES=$images' >> $GITHUB_ENV
+      - name: Show all images
+        run: docker images
+      - name: Login to Container Registry
+        id: containerregistry-login
+        run: |
+         if [ "${{ secrets.GITHUB_TOKEN }}" != "" ]; then
+           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $(cut -d'/' -f1 <<< $GITHUB_REPOSITORY) --password-stdin
+           echo "##[set-output name=success;]true"
+         else
+           echo "##[set-output name=success;]false"
+         fi
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development')
+        name: Push to Container Registry
+        run: docker-compose push
+
+      - if: steps.containerregistry-login.outputs.success == 'true' && github.ref == 'refs/heads/master'
+        name: Push versioned containers to Container Registry
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker push "${image}":"${APP_BUILD}"
+          done
+      - name: Create kube config
+        id: kubeconfig
+        if: contains( github.ref, 'development' )
+        run: |
+          if [ "${{ secrets.KUBECONFIG }}" != "" ]; then
+            printf "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+            echo "##[set-output name=success]true"
+          else
+            echo "##[set-output name=success]false"
+          fi
+      - name: Rollout new containers
+        if: (contains( github.ref, 'development' )) && steps.kubeconfig.outputs.success == 'true' && success()
+        run: |
+          kubectl rollout restart deployment/$APP_NAME-php --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
+          kubectl rollout restart deployment/$APP_NAME-nginx --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
+          kubectl rollout restart deployment/$APP_NAME-varnish --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
+      #            - name: Export release code
+      #              if: (success() || failure())
+      #              id: releasecode
+      #              run: |
+      #                  export RELEASE=$APP_BUILD-$(git rev-parse --short $GITHUB_SHA)
+      #                  echo "##[set-output name=releasename]$RELEASE"
+      - name: Print release name
+        if: (success() || failure())
+        run: echo $RELEASENAME
+        env:
+          RELEASENAME: ${{ steps.releasecode.outputs.releasename }}
+      - name: Create Release
+        if: contains( github.ref, 'master' ) && steps.kubeconfig.outputs.success == 'true' && ( success() || failure() )
+        id: create_release
+        uses: actions/create-release@v1
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps.releasecode.outputs.releasename }}
+          release_name: ${{ steps.releasecode.outputs.releasename }}
+          draft: false
+          prerelease: false
+      - name: Chores
+        if: (success() || failure())
+        run: docker-compose down
