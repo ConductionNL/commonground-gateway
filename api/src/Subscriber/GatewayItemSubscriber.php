@@ -3,16 +3,9 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\Gateway;
-use App\Entity\Registration;
 use App\Service\GatewayService;
-use App\Service\LayerService;
-use App\Service\NewRegistrationService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
 use Exception;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
