@@ -14,10 +14,6 @@ class GatewayItemSubscriber implements EventSubscriberInterface
 
     private GatewayService $gatewayService;
 
-    /**
-     * UserItemSubscriber constructor.
-     *
-     */
     public function __construct(GatewayService $gatewayService)
     {
         $this->gatewayService = $gatewayService;
