@@ -29,7 +29,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     		"get",
  *          "gateway_post"={
  *              "path"="/gateways/{name}/{endpoint}",
- *              "method"="post",
+ *              "method"="POST",
+ *              "read"=false,
+ *              "validate"=false,
  *              "requirements"={
  *                  "endpoint"=".+"
  *              },
@@ -40,20 +42,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  *      itemOperations={
- * 		    "get",
+ * 		    "get"={
+ *              "read"=false,
+ *              "validate"=false
+ *          },
  * 	        "put",
  * 	        "delete",
- *          "get_change_logs"={
- *              "path"="/gateways/{id}/change_log",
- *              "method"="get",
- *              "openapi_context" = {
- *                  "summary"="Changelogs",
- *                  "description"="Gets al the change logs for this resource"
- *              }
- *          },
  *          "gateway_get"={
  *              "path"="/gateways/{name}/{endpoint}",
- *              "method"="get",
+ *              "method"="GET",
+ *              "read"=false,
+ *              "validate"=false,
  *              "requirements"={
  *                  "endpoint"=".+"
  *              },
@@ -64,7 +63,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *          "gateway_put"={
  *              "path"="/gateways/{name}/{endpoint}",
- *              "method"="put",
+ *              "method"="PUT",
+ *              "read"=false,
+ *              "validate"=false,
  *              "requirements"={
  *                  "endpoint"=".+"
  *              },
@@ -75,13 +76,23 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *          "gateway_delete"={
  *              "path"="/gateways/{name}/{endpoint}",
- *              "method"="delete",
+ *              "method"="DELETE",
+ *              "read"=false,
+ *              "validate"=false,
  *              "requirements"={
  *                  "endpoint"=".+"
  *              },
  *              "openapi_context"={
  *                  "summary"="Gateway DELETE calls",
  *                  "description"="routes DELETE calls through gateway"
+ *              }
+ *          },
+ *          "get_change_logs"={
+ *              "path"="/gateways/{id}/change_log",
+ *              "method"="get",
+ *              "openapi_context" = {
+ *                  "summary"="Changelogs",
+ *                  "description"="Gets al the change logs for this resource"
  *              }
  *          },
  *          "get_audit_trail"={
