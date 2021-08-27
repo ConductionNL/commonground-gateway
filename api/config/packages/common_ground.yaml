@@ -180,73 +180,12 @@ parameters:
 
     components:
         be:
-            location: "%env(APP_COMMONGROUND_BE_LOCATION)%"
-            auth: "username-password"
-            username: "%env(APP_COMMONGROUND_BE_USERNAME)%"
-            password: "%env(APP_COMMONGROUND_BE_PASSWORD)%"
+            location: "placeholder"
+            auth: "placeholder"
+            username: "placeholder"
+            password: "placeholder"
             accept: "application/ld+json"
-            autowire: false
-        drc:
-            location: "%env(APP_COMMONGROUND_DRC_LOCATION)%"
-            auth: "jwt"
-            id: "%env(APP_COMMONGROUND_DRC_ID)%"
-            secret: "%env(APP_COMMONGROUND_DRC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        ac:
-            location: "%env(APP_COMMONGROUND_AC_LOCATION)%"
-            auth: "jwt"
-            id: "%env(APP_COMMONGROUND_AC_ID)%"
-            secret: "%env(APP_COMMONGROUND_AC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        nrc:
-            location: "%env(APP_COMMONGROUND_NRC_LOCATION)%"
-            auth: "jwt"
-            id: "%env(APP_COMMONGROUND_NRC_ID)%"
-            secret: "%env(APP_COMMONGROUND_NRC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        zrc:
-            location: "%env(APP_COMMONGROUND_ZRC_LOCATION)%"
-            auth: "jwt"
-            id: "%env(APP_COMMONGROUND_ZRC_ID)%"
-            secret: "%env(APP_COMMONGROUND_ZRC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        ztc:
-            location: "%env(APP_COMMONGROUND_ZTC_LOCATION)%"
-            auth: "jwt"
-            id: "%env(APP_COMMONGROUND_ZTC_ID)%"
-            secret: "%env(APP_COMMONGROUND_ZTC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        kic:
-            location: "%env(APP_COMMONGROUND_KIC_LOCATION)%"
-            auth: "jwt"
-            id: "huwelijksplanner-Wex83XXe"
-            secret: "%env(APP_COMMONGROUND_KIC_SECRET)%"
-            accept: "application/json"
-            autowire: false
-        nlx_in:
-            location: "%env(APP_COMMONGROUND_NLX_IN_LOCATION)%"
-            apikey: "%env(APP_COMMONGROUND_NLX_IN_APIKEY)%"
-        nlx_out:
-            location: "%env(APP_COMMONGROUND_NLX_OUT_LOCATION)%"
-            apikey: "%env(APP_COMMONGROUND_NLX_OUT_APIKEY)%"
-        bag:
-            location: "%env(APP_COMMONGROUND_BAG_LOCATION)%"
-            apikey: "%env(APP_COMMONGROUND_BAG_APIKEY)%"
-        kvk:
-            location: "%env(APP_COMMONGROUND_KVK_LOCATION)%"
-            apikey: "%env(APP_COMMONGROUND_KVK_APIKEY)%"
-        rdw:
-            location: "%env(APP_COMMONGROUND_RDW_LOCATION)%"
-            apikey: "%env(APP_COMMONGROUND_RDW_APIKEY)%"
-        ds:
-            location: "%env(APP_DIGISPOOF_LOCATION)%"
-        eh:
-            location: "%env(APP_EHERKENNING_LOCATION)%"
+
 
     # Organisatie details
     env(GOOGLE_TAG_MANAGER_ID): ""

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
@@ -15,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -36,7 +38,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "get_change_logs"={
  *              "path"="/gateways/{id}/change_log",
  *              "method"="get",
- *              "swagger_context" = {
+ *              "openapi_context" = {
  *                  "summary"="Changelogs",
  *                  "description"="Gets al the change logs for this resource"
  *              }
@@ -44,7 +46,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "get_audit_trail"={
  *              "path"="/gateways/{id}/audit_trail",
  *              "method"="get",
- *              "swagger_context" = {
+ *              "openapi_context" = {
  *                  "summary"="Audittrail",
  *                  "description"="Gets the audit trail for this resource"
  *              }
@@ -58,6 +60,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ * @UniqueEntity("name")
  */
 class Gateway
 {
@@ -76,20 +79,157 @@ class Gateway
     private UuidInterface $id;
 
     /**
-     * @var string The Name of this component which is used in the commonGround service
+     * @var string The Name of the Gateway which is used in the commonGround service
      *
-     * @example conduction cluster
-     *
-     * @Gedmo\Versioned
      * @Assert\NotNull
-     * @Assert\Unique()
      * @Assert\Length(
      *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="arc"
+     *         }
+     *     }
      * )
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
+
+    /**
+     * @var string The method used for authentication to the Gateway
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"apikey", "jwt", "username-password"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"apikey", "jwt", "username-password"},
+     *             "example"="apikey"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $auth;
+
+    /**
+     * @var ?string The Locale of the Gateway
+     *
+     * @Assert\Length(
+     *      max = 10
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="nl"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=10, nullable=true)
+     */
+    private ?string $locale = null;
+
+    /**
+     * @var ?string The accept header used for the Gateway
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="application/json"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $accept = null;
+
+    /**
+     * @var ?string The JWT used for authentication to the Gateway
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $jwt = null;
+
+    /**
+     * @var ?string The username used for authentication to the Gateway
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="username@email.nl"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $username = null;
+
+    /**
+     * @var ?string The password used for authentication to the Gateway
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="password"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $password = null;
+
+    /**
+     * @var ?string The api key used for authentication to the Gateway
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="66505f8c-a80e-4bad-8678-d48ace4fbe4b"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $apikey = null;
 
     public function getId(): ?UuidInterface
     {
@@ -111,6 +251,78 @@ class Gateway
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(?string $locale): self
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    public function getAccept(): ?string
+    {
+        return $this->accept;
+    }
+
+    public function setAccept(?string $accept): self
+    {
+        $this->accept = $accept;
+
+        return $this;
+    }
+
+    public function getJwt(): ?string
+    {
+        return $this->jwt;
+    }
+
+    public function setJwt(?string $jwt): self
+    {
+        $this->jwt = $jwt;
+
+        return $this;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(?string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(?string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    public function getApiKey(): ?string
+    {
+        return $this->apikey;
+    }
+
+    public function setApiKey(?string $apikey): self
+    {
+        $this->apikey = $apikey;
 
         return $this;
     }
