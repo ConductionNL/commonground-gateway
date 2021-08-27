@@ -3,13 +3,8 @@
 namespace App\Service;
 
 use App\Entity\Gateway;
-use App\Entity\LearningNeed;
-use App\Entity\LearningNeedOutCome;
-use App\Exception\BadRequestPathException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -25,13 +20,20 @@ class GatewayService
         $this->entityManager = $entityManager;
     }
 
-
+    /**
+     * Processes the call to the Gateway and returns the response.
+     *
+     * @param string $name Name of the Gateway.
+     * @param string $endpoint Endpoint of the Gateway to send the request to.
+     * @param string $method Method to use against the Gateway.
+     * @param string $content Content to send to the Gateway.
+     * @param array $query Query parameters to send to the Gateway.
+     * @return Response Created response received from Gateway or error received from Gateway.
+     */
     public function processGateway(string $name, string $endpoint, string $method, string $content, array $query): Response
     {
-
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
-
         $component = $this->gatewayToArray($gateway);
         $url = $gateway->getLocation() . '/' . $endpoint;
 
@@ -45,6 +47,17 @@ class GatewayService
                 ['content-type' => 'application/json']
             );
         }
+        return $this->createResponse($result);
+    }
+
+    /**
+     * Creates Response object based on the guzzle response.
+     *
+     * @param Object $result The object returned from guzzle.
+     * @return Response Created response object.
+     */
+    public function createResponse(Object $result): Response
+    {
         $response = New Response();
         $response->setContent($result->getBody()->getContents());
         $response->headers->replace($result->getHeaders());
@@ -52,7 +65,6 @@ class GatewayService
         $response->setStatusCode($result->getStatusCode());
 
         return $response;
-
     }
 
     /**
@@ -77,6 +89,12 @@ class GatewayService
         return array_filter($result);
     }
 
+    /**
+     * Checks if the Gateway object is valid.
+     *
+     * @param Gateway $gateway The Gateway object that needs to be checked.
+     * @throws BadRequestHttpException If the Gateway object is not valid.
+     */
     public function checkGateway(Gateway $gateway): void
     {
         switch ($gateway->getAuth()) {

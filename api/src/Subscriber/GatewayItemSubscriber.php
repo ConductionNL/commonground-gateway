@@ -52,8 +52,6 @@ class GatewayItemSubscriber implements EventSubscriberInterface
         }
         $route = $event->getRequest()->attributes->get('_route');
 
-        $response = new Response();
-
         if (
             $route !== 'api_gateways_gateway_get_item' &&
             $route !== 'api_gateways_gateway_put_item' &&
