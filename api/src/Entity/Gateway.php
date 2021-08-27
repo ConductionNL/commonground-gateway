@@ -327,4 +327,16 @@ class Gateway
         return $this;
     }
 
+    public function getAuth(): string
+    {
+        return $this->auth;
+    }
+
+    public function setAuth(string $auth): self
+    {
+        $this->auth = $auth;
+
+        return $this;
+    }
+
 }
