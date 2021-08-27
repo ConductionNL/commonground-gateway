@@ -43,6 +43,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "description"="Gets al the change logs for this resource"
  *              }
  *          },
+ *          "gateway_get"={
+ *              "path"="/gateways/{name}/{endpoint}",
+ *              "method"="get",
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Gateway GET call",
+ *                  "description"="routes GET call through gateway"
+ *              }
+ *          },
  *          "get_audit_trail"={
  *              "path"="/gateways/{id}/audit_trail",
  *              "method"="get",
@@ -97,6 +108,26 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
+
+    /**
+     * @var string The location where the Gateway needs to be accessed
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://test.nl/api/v1/arc"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $location;
 
     /**
      * @var string The method used for authentication to the Gateway
@@ -255,6 +286,30 @@ class Gateway
         return $this;
     }
 
+    public function getLocation(): ?string
+    {
+        return $this->location;
+    }
+
+    public function setLocation(string $location): self
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+
+    public function getAuth(): string
+    {
+        return $this->auth;
+    }
+
+    public function setAuth(string $auth): self
+    {
+        $this->auth = $auth;
+
+        return $this;
+    }
+
     public function getLocale(): ?string
     {
         return $this->locale;
@@ -326,17 +381,4 @@ class Gateway
 
         return $this;
     }
-
-    public function getAuth(): string
-    {
-        return $this->auth;
-    }
-
-    public function setAuth(string $auth): self
-    {
-        $this->auth = $auth;
-
-        return $this;
-    }
-
 }
