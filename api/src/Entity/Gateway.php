@@ -10,15 +10,12 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -29,7 +26,18 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
  *          "post",
- *     		"get"
+ *     		"get",
+ *          "gateway_post"={
+ *              "path"="/gateways/{name}/{endpoint}",
+ *              "method"="post",
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Gateway POST calls",
+ *                  "description"="routes POST calls through gateway"
+ *              }
+ *          },
  *     },
  *      itemOperations={
  * 		    "get",
@@ -50,8 +58,30 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "endpoint"=".+"
  *              },
  *              "openapi_context"={
- *                  "summary"="Gateway GET call",
- *                  "description"="routes GET call through gateway"
+ *                  "summary"="Gateway GET calls",
+ *                  "description"="routes GET calls through gateway"
+ *              }
+ *          },
+ *          "gateway_put"={
+ *              "path"="/gateways/{name}/{endpoint}",
+ *              "method"="put",
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Gateway PUT calls",
+ *                  "description"="routes PUT calls through gateway"
+ *              }
+ *          },
+ *          "gateway_delete"={
+ *              "path"="/gateways/{name}/{endpoint}",
+ *              "method"="delete",
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Gateway DELETE calls",
+ *                  "description"="routes DELETE calls through gateway"
  *              }
  *          },
  *          "get_audit_trail"={
@@ -381,4 +411,5 @@ class Gateway
 
         return $this;
     }
+
 }
