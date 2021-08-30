@@ -303,6 +303,23 @@ class Gateway
      */
     private ?string $apikey = null;
 
+    /**
+     * @var ?string The documentation url for this gateway
+     *
+     * @Assert\Url
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://documentation.nl"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $documentation = null;
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -419,6 +436,18 @@ class Gateway
     public function setApiKey(?string $apikey): self
     {
         $this->apikey = $apikey;
+
+        return $this;
+    }
+
+    public function getDocumentation(): ?string
+    {
+        return $this->documentation;
+    }
+
+    public function setDocumentation(?string $documentation): self
+    {
+        $this->documentation = $documentation;
 
         return $this;
     }

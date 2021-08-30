@@ -17,7 +17,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
 	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 
-	composer install --prefer-dist --no-progress --no-interaction
+	composer install --prefer-dist --no-progress --no-suggest --no-interaction
 
 	mkdir -p /cert
 
@@ -36,9 +36,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		bin/console doctrine:schema:update --force --no-interaction
 
 		# If you want to retain data in your dev enviroment comment this command out
-#		echo "Loading fixtures"
-#		bin/console doctrine:fixtures:load  --no-interaction
-
+		echo "Loading fixtures"
+		bin/console hautelook:fixtures:load -n --no-bundles
 		#if [ "$APP_URL" == 'http://localhost' ]; then
 			# Lets update the docs to show the latest chages
 			#echo "Creating OAS documentation"

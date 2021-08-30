@@ -1,0 +1,56 @@
+name: Artifact Register
+
+on:
+    pull_request:
+        branches:
+            - master
+    push:
+        branches:
+            - master
+
+
+jobs:
+    register:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - name: Check if we need to take action
+              id: process
+              run: |
+                  export ARTIFACTHUB_ID=$(grep ARTIFACTHUB_ID= .env | cut -d '=' -f2)
+                  if [ "${{ secrets.ARTIFACT_KEY }}" != "" ] && [ "$ARTIFACTHUB_ID" != "false" ] || [ "ARTIFACTHUB_ID" == "" ]; then
+                    echo "##[set-output name=success;]true"
+                  else
+                    echo "##[set-output name=success;]false"
+                  fi
+            - name: defining variables
+              id: request
+              if: steps.process.outputs.success == 'true'
+              run: |
+                  export HEADER='{"X-API-KEY": "'${{secrets.ARTIFACT_KEY}}'"}'
+                  echo "HEADER=$HEADER" >> $GITHUB_ENV
+                  echo "##[set-output name=header]$HEADER"
+                  echo $HEADER
+                  export USER=$(grep ARTIFACTHUB_USER= .env | cut -d '=' -f2)
+                  if [ $USER != "" ]; then
+                    export URL="https://artifacthub.io/api/v1/repositories/org/$USER"
+                  else
+                    export URL='https://artifacthub.io/api/v1/repositories/user'
+                  fi
+                  echo "URL=$URL" >> $GITHUB_ENV
+                  echo "##[set-output name=url]$URL"
+                  export HELM=$(grep HELM_REPOSITORY= .env | cut -d '=' -f2)
+                  echo "HELM=$HELM" >> $GITHUB_ENV
+                  echo "##[set-output name=helm]$HELM"
+                  export NAME=$(grep APP_NAME_TECHNICAL= .env | cut -d '=' -f2)
+                  echo "NAME=$NAME" >> $GITHUB_ENV
+                  echo "##[set-output name=name]$NAME"
+            - name: Register To Artifact Hub
+              if: steps.process.outputs.success == 'true'
+              uses: satak/webrequest-action@master
+              id: webhook
+              with:
+                  url: https://artifacthub.io/api/v1/repositories/user
+                  method: POST
+                  payload: '{"name": "${{ env.NAME }}", "url": "${{ env.HELM }}"}'
+                  headers: '{"X-API-Key": "${{secrets.ARTIFACT_KEY}}"}'

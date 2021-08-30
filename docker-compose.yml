@@ -18,7 +18,7 @@ services:
       - db
     volumes:
       - ./api:/srv/api:rw,cached
-      - ./nlx-setup:/cert:rw,cached
+      - ./gateway:/srv/api/fixtures:rw,cached
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
