@@ -1,0 +1,13 @@
+#############################
+# 		"nginx" stage 		#
+#############################
+# depends on the "php" stage above, and with an litle bit of help from https://github.com/shiphp/nginx-env
+FROM nginx:latest AS api_platform_nginx
+
+# Due to our config we need a copy of the public folder for serving static content
+COPY docker/nginx/conf.d/default.conf.template /etc/nginx/templates/default.conf.template
+WORKDIR /srv/api
+COPY public public/
+
+RUN apt update; \
+  apt upgrade -y
