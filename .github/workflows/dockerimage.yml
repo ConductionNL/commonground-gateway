@@ -18,8 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - name: Install Newman
-        run: npm install -g newman
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
@@ -74,13 +72,6 @@ jobs:
           curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
           chmod +x ./local-php-security-checker
           ./local-php-security-checker --path ./api/composer.lock
-
-      - uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          name: codecov-umbrella
-          fail_ci_if_error: true
-          verbose: true
       #- name: Run Postman Tests
       #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
       #  run: newman run api/public/schema/*.postman_collection.json
@@ -126,12 +117,6 @@ jobs:
           else
             echo "##[set-output name=success]false"
           fi
-      - name: Rollout new containers
-        if: (contains( github.ref, 'development' )) && steps.kubeconfig.outputs.success == 'true' && success()
-        run: |
-          kubectl rollout restart deployment/$APP_NAME-php --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
-          kubectl rollout restart deployment/$APP_NAME-nginx --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
-          kubectl rollout restart deployment/$APP_NAME-varnish --kubeconfig="kubeconfig.yaml"  --namespace=$APP_ENV
       #            - name: Export release code
       #              if: (success() || failure())
       #              id: releasecode
