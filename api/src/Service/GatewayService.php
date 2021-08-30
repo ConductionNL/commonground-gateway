@@ -101,8 +101,8 @@ class GatewayService
     {
         switch ($gateway->getAuth()) {
             case "jwt":
-                if ($gateway->getJwt() == null || $gateway->getJwtId() || $gateway->getSecret()) {
-                    throw new BadRequestHttpException('JWT is required for auth type: jwt');
+                if ($gateway->getJwtId() == null || $gateway->getSecret() == null) {
+                    throw new BadRequestHttpException('jwtid and secret are required for auth type: jwt');
                 }
                 break;
             case "apikey":
