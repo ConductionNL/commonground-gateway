@@ -247,6 +247,38 @@ class Gateway
     private ?string $jwt = null;
 
     /**
+     * @var ?string The JWT ID used for authentication to the Gateway
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="conduction"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $jwtId = null;
+
+    /**
+     * @var ?string The JWT secret used for authentication to the Gateway
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="secret"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $secret = null;
+
+    /**
      * @var ?string The username used for authentication to the Gateway
      *
      * @Assert\Length(
@@ -400,6 +432,30 @@ class Gateway
     public function setJwt(?string $jwt): self
     {
         $this->jwt = $jwt;
+
+        return $this;
+    }
+
+    public function getJwtId(): ?string
+    {
+        return $this->jwtId;
+    }
+
+    public function setJwtId(?string $jwtId): self
+    {
+        $this->jwtId = $jwtId;
+
+        return $this;
+    }
+
+    public function getSecret(): ?string
+    {
+        return $this->secret;
+    }
+
+    public function setSecret(?string $secret): self
+    {
+        $this->secret = $secret;
 
         return $this;
     }

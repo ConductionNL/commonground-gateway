@@ -80,6 +80,8 @@ class GatewayService
             'location' => $gateway->getLocation(),
             'apikey' => $gateway->getApiKey(),
             'jwt' => $gateway->getJwt(),
+            'secret' => $gateway->getSecret(),
+            'id' => $gateway->getJwtId(),
             'locale' => $gateway->getLocale(),
             'accept' => $gateway->getAccept(),
             'username' => $gateway->getUsername(),
@@ -99,7 +101,7 @@ class GatewayService
     {
         switch ($gateway->getAuth()) {
             case "jwt":
-                if ($gateway->getJwt() == null) {
+                if ($gateway->getJwt() == null || $gateway->getJwtId() || $gateway->getSecret()) {
                     throw new BadRequestHttpException('JWT is required for auth type: jwt');
                 }
                 break;

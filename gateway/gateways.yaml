@@ -1,8 +1,10 @@
 App\Entity\Gateway:
     gateway_1:
-        name: wrc
-        auth: apikey
-        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-        location: https://conduction.demodam.nl/api/v1/wrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
+        name: brp
+        auth: username-password
+        username: begraven
+        password: demodam
+        location: http://vrij-brp.demodam.nl/haal-centraal-brp-bevragen/api/v1.3
+        documentation: https://raw.githubusercontent.com/ConductionNL/brpservice/master/api/public/schema/openapi.yaml
+        accept: application/hal+json
 

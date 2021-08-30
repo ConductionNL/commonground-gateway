@@ -39,7 +39,7 @@ final class GatewayDecorator implements NormalizerInterface
 
         foreach ($gateways as $gateway) {
             $docs['paths'] = array_merge($docs['paths'], $gateway['paths']);
-            $docs['components'] = array_merge($docs['components'], $gateway['components']);
+            $docs['components']['schemas'] = array_merge($docs['components']['schemas'], $gateway['components']);
             $docs['tags'] = array_merge($docs['tags'], $gateway['tags']);
         }
 
@@ -51,11 +51,7 @@ final class GatewayDecorator implements NormalizerInterface
         $results = [];
         foreach ($gateways as $gateway) {
             if ($gateway instanceof Gateway && $gateway->getDocumentation() !== null) {
-                try {
                     $results[] = $this->retrieveDocumentation($gateway);
-                } catch (\Throwable $e) {
-                    continue;
-                }
             }
         }
 
@@ -93,34 +89,34 @@ final class GatewayDecorator implements NormalizerInterface
             if (isset($schema['properties'])) {
                 foreach ($schema['properties'] as &$property){
                     if (isset($property['$ref'])) {
-                        $exploded = explode($property['$ref'], '/');
-                        $tags = explode(end($exploded), '-');
+                        $exploded = explode('/', $property['$ref']);
+                        $tags = explode('-', end($exploded));
                         if (count($tags) == 1) {
-                            $tags = explode(end($exploded), ':');
+                            $tags = explode(':', end($exploded));
                         }
                         $property['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['$ref']);
                     }
 
                     if (isset($property['anyOf'][0]['$ref'])) {
-                        $exploded = explode($property['anyOf'][0]['$ref'], '/');
-                        $tags = explode(end($exploded), '-');
+                        $exploded = explode('/', $property['anyOf'][0]['$ref']);
+                        $tags = explode('-', end($exploded));
                         if (count($tags) == 1) {
-                            $tags = explode(end($exploded), ':');
+                            $tags = explode(':', end($exploded));
                         }
                         $property['anyOf'][0]['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['anyOf'][0]['$ref']);
                     }
 
                     if (isset($property['items']['$ref'])) {
-                        $exploded = explode($property['items']['$ref'], '/');
-                        $tags = explode(end($exploded), '-');
+                        $exploded = explode('/', $property['items']['$ref']);
+                        $tags = explode('-', end($exploded));
                         if (count($tags) == 1) {
-                            $tags = explode(end($exploded), ':');
+                            $tags = explode(':', end($exploded));
                         }
                         $property['items']['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['items']['$ref']);
                     }
                 }
             }
-            $results[$key] = $schema;
+            $results['Gateway' . ucfirst($gateway->getName()) . $key] = $schema;
         }
 
         return $results;
@@ -131,7 +127,12 @@ final class GatewayDecorator implements NormalizerInterface
         $results = [];
 
         foreach ($paths as $key => $value) {
-            foreach ($value as &$operation) {
+            foreach ($value as $operationKey => &$operation) {
+
+                if ($operationKey == 'parameters') {
+                    continue;
+                }
+
                 $tag = $operation['tags'][0];
                 $operation['tags'] = [
                     'Gateway' . ucfirst($gateway->getName()) . ucfirst($operation['tags'][0])
@@ -143,6 +144,9 @@ final class GatewayDecorator implements NormalizerInterface
                     'in' => 'header'
                 ];
 
+                if (isset($operation['produces'])) {
+                    unset($operation['produces']);
+                }
                 foreach ($operation['responses'] as &$response) {
                     if (isset($response['content'])) {
                         foreach ($response['content'] as &$item) {
@@ -150,7 +154,15 @@ final class GatewayDecorator implements NormalizerInterface
                                 $item['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['$ref']);
                             }
                             if (isset($item['schema']['properties']['hydra:member'])) {
-                                $item['schema']['properties']['hydra:member'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['hydra:member']);
+                                $item['schema']['properties']['hydra:member']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['hydra:member']['items']['$ref']);
+                            }
+                            if (isset($item['schema']['items']['$ref'])) {
+                                $exploded = explode('/',$item['schema']['items']['$ref']);
+                                $tags = explode('-', end($exploded));
+                                if (count($tags) == 1) {
+                                    $tags = explode(':', end($exploded));
+                                }
+                                $item['schema']['items']['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $item['schema']['items']['$ref']);
                             }
                         }
                     }
@@ -164,7 +176,7 @@ final class GatewayDecorator implements NormalizerInterface
                 }
             }
 
-            $results['/gateways/' . $gateway->getName() . '/' . $key] = $value;
+            $results['/gateways/' . $gateway->getName() . $key] = $value;
         }
 
         return $results;
