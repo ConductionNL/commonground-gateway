@@ -1,6 +1,14 @@
 FROM php:7.4-fpm-alpine AS api_platform_php
 
+RUN apk add --no-cache \
+		acl \
+		file \
+		gettext \
+		git \
+	;
+
 ARG APCU_VERSION=5.1.17
+
 RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
@@ -51,6 +59,8 @@ RUN apk add --no-cache \
 	;
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN ln -s $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
+COPY docker/php/conf.d/api-platform.ini $PHP_INI_DIR/conf.d/api-platform.ini
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
