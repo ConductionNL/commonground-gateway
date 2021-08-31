@@ -37,7 +37,7 @@ class GatewayService
         $component = $this->gatewayToArray($gateway);
         $url = $gateway->getLocation() . '/' . $endpoint;
 
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, [], false, $method);
+        $result = $this->commonGroundService->callService($component, $url, $content, $query, ['access-control-allow-origin' => '*'], false, $method);
 
         if (is_array($result)) {
             $result['error'] = json_decode($result['error'], true);
@@ -61,7 +61,15 @@ class GatewayService
         $response = New Response();
         $response->setContent($result->getBody()->getContents());
         $response->headers->replace($result->getHeaders());
-        $response->headers->add(['Access-Control-Allow-Origin' => '*']);
+        $headers = $result->getHeaders();
+
+        if ($headers['Content-Type'][0] == 'application/hal+json' || $headers['Content-Type'][0] == 'application/ld+json; charset=utf-8') {
+            $response->headers->add(['Content-Type' => 'application/json']);
+        }
+
+        $response->headers->add(['access-control-allow-origin' => '*']);
+        $response->headers->remove('Server');
+        $response->headers->remove('X-Content-Type-Options');
         $response->setStatusCode($result->getStatusCode());
 
         return $response;

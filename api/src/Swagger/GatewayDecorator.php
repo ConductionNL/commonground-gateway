@@ -51,7 +51,11 @@ final class GatewayDecorator implements NormalizerInterface
         $results = [];
         foreach ($gateways as $gateway) {
             if ($gateway instanceof Gateway && $gateway->getDocumentation() !== null) {
+                try{
                     $results[] = $this->retrieveDocumentation($gateway);
+                } catch (\Throwable $e) {
+                    continue;
+                }
             }
         }
 
@@ -69,7 +73,12 @@ final class GatewayDecorator implements NormalizerInterface
         $array = $this->responseBodyToArray($response->getBody()->getContents(), $type);
         $result['paths'] = $this->handleOpenApiPaths($array['paths'], $gateway);
         $result['components'] = $this->handleOpenApiComponents($array['components'], $gateway);
-        $result['tags'] = $this->handleOpenApiTags($array['tags'], $gateway);
+
+        if (isset($array['tags'])) {
+            $result['tags'] = $this->handleOpenApiTags($array['tags'], $gateway);
+        } else {
+            $result['tags'] = [];
+        }
 
         return $result;
     }
@@ -82,41 +91,59 @@ final class GatewayDecorator implements NormalizerInterface
         return $tags;
     }
 
+    public function handleArray(array $items, Gateway $gateway): array
+    {
+        if (isset($items['$ref'])) {
+            $tag = $this->handleTag($items['$ref']);
+            $items['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $items['$ref']);
+            return $items;
+        } elseif (isset($items['items'])) {
+            $this->handleArray($items['items'], $gateway);
+        }
+        return $items;
+    }
+
     public function handleOpenApiComponents(array $components, Gateway $gateway): array
     {
         $results = [];
-        foreach ($components['schemas'] as $key => &$schema) {
-            if (isset($schema['properties'])) {
-                foreach ($schema['properties'] as &$property){
-                    if (isset($property['$ref'])) {
-                        $exploded = explode('/', $property['$ref']);
-                        $tags = explode('-', end($exploded));
-                        if (count($tags) == 1) {
-                            $tags = explode(':', end($exploded));
+        if (isset($components['schemas'])) {
+            foreach ($components['schemas'] as $key => &$schema) {
+                if (isset($schema['allOf'])) {
+                    foreach ($schema['allOf'] as &$item) {
+                        if (isset($item['$ref'])) {
+                            $tag = $this->handleTag($item['$ref']);
+                            $item['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['$ref']);
                         }
-                        $property['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['$ref']);
-                    }
-
-                    if (isset($property['anyOf'][0]['$ref'])) {
-                        $exploded = explode('/', $property['anyOf'][0]['$ref']);
-                        $tags = explode('-', end($exploded));
-                        if (count($tags) == 1) {
-                            $tags = explode(':', end($exploded));
+                        if (isset($item['properties']['coordinates']['$ref'])) {
+                            $tag = $this->handleTag($item['properties']['coordinates']['$ref']);
+                            $item['properties']['coordinates']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['properties']['coordinates']['$ref']);
                         }
-                        $property['anyOf'][0]['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['anyOf'][0]['$ref']);
-                    }
-
-                    if (isset($property['items']['$ref'])) {
-                        $exploded = explode('/', $property['items']['$ref']);
-                        $tags = explode('-', end($exploded));
-                        if (count($tags) == 1) {
-                            $tags = explode(':', end($exploded));
+                        if (isset($item['properties']['coordinates']['items'])) {
+                            $item['properties']['coordinates']['items'] = $this->handleArray($item['properties']['coordinates']['items'], $gateway);
                         }
-                        $property['items']['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $property['items']['$ref']);
                     }
                 }
+                if (isset($schema['properties'])) {
+                    foreach ($schema['properties'] as $propKey => &$property){
+
+                        if (isset($property['$ref'])) {
+                            $tag = $this->handleTag($property['$ref']);
+                            $property['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['$ref']);
+                        }
+
+                        if (isset($property['anyOf'][0]['$ref'])) {
+                            $tag = $this->handleTag($property['anyOf'][0]['$ref']);
+                            $property['anyOf'][0]['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['anyOf'][0]['$ref']);
+                        }
+
+                        if (isset($property['items']['$ref'])) {
+                            $tag = $this->handleTag($property['items']['$ref']);
+                            $property['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['items']['$ref']);
+                        }
+                    }
+                }
+                $results['Gateway' . ucfirst($gateway->getName()) . $key] = $schema;
             }
-            $results['Gateway' . ucfirst($gateway->getName()) . $key] = $schema;
         }
 
         return $results;
@@ -133,10 +160,11 @@ final class GatewayDecorator implements NormalizerInterface
                     continue;
                 }
 
-                $tag = $operation['tags'][0];
-                $operation['tags'] = [
-                    'Gateway' . ucfirst($gateway->getName()) . ucfirst($operation['tags'][0])
-                ];
+                if (isset($operation['tags'][0])) {
+                    $operation['tags'] = [
+                        'Gateway' . ucfirst($gateway->getName()) . ucfirst($operation['tags'][0])
+                    ];
+                }
 
                 $operation['parameters'][] = [
                     'name' => 'Prefer',
@@ -148,21 +176,27 @@ final class GatewayDecorator implements NormalizerInterface
                     unset($operation['produces']);
                 }
                 foreach ($operation['responses'] as &$response) {
+                    if (isset($response['$ref'])) {
+                        $tag = $this->handleTag($response['$ref']);
+                        $response['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $response['$ref']);
+                    }
                     if (isset($response['content'])) {
                         foreach ($response['content'] as &$item) {
                             if (isset($item['schema']['$ref'])) {
+                                $tag = $this->handleTag($item['schema']['$ref']);
                                 $item['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['$ref']);
                             }
                             if (isset($item['schema']['properties']['hydra:member'])) {
+                                $tag = $this->handleTag($item['schema']['properties']['hydra:member']['items']['$ref']);
                                 $item['schema']['properties']['hydra:member']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['hydra:member']['items']['$ref']);
                             }
                             if (isset($item['schema']['items']['$ref'])) {
-                                $exploded = explode('/',$item['schema']['items']['$ref']);
-                                $tags = explode('-', end($exploded));
-                                if (count($tags) == 1) {
-                                    $tags = explode(':', end($exploded));
-                                }
-                                $item['schema']['items']['$ref'] = str_replace($tags[0], 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tags[0]), $item['schema']['items']['$ref']);
+                                $tag = $this->handleTag($item['schema']['items']['$ref']);
+                                $item['schema']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['items']['$ref']);
+                            }
+                            if (isset($item['schema']['properties']['results']['items']['$ref'])) {
+                                $tag = $this->handleTag($item['schema']['properties']['results']['items']['$ref']);
+                                $item['schema']['properties']['results']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['results']['items']['$ref']);
                             }
                         }
                     }
@@ -171,6 +205,7 @@ final class GatewayDecorator implements NormalizerInterface
                 if (isset($operation['requestBody']['content'])) {
                     foreach ($operation['requestBody']['content'] as &$content) {
                         if (isset($content['schema']['$ref'])) {
+                            $tag = $this->handleTag($content['schema']['$ref']);
                             $content['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $content['schema']['$ref']);
                         }
                     }
@@ -181,6 +216,18 @@ final class GatewayDecorator implements NormalizerInterface
         }
 
         return $results;
+    }
+
+    public function handleTag($data)
+    {
+        $exploded = explode('/', $data);
+        $tags = explode('-', end($exploded));
+        $tag = $tags[0];
+        if (count($tags) == 1) {
+            $tag = explode(':', end($exploded))[0];
+        }
+
+        return $tag;
     }
 
     public function responseBodyToArray(string $responseBody, string $type): array
