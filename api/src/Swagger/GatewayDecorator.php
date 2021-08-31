@@ -170,8 +170,9 @@ final class GatewayDecorator implements NormalizerInterface
 
                 if (isset($operation['requestBody']['content'])) {
                     foreach ($operation['requestBody']['content'] as &$content) {
-                        $content['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $content['schema']['$ref']);
-
+                        if (isset($content['schema']['$ref'])) {
+                            $content['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $content['schema']['$ref']);
+                        }
                     }
                 }
             }
