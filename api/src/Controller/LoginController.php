@@ -37,7 +37,7 @@ class LoginController extends AbstractController
     public function MeAction(Request $request, CommonGroundService $commonGroundService)
     {
 
-        $item = $this->cache->getItem('code_'.md5($json['userId']));
+        $item = $this->cache->getItem('code_'.md5($request->query->get('bsn')));
 
         if ($item->isHit()) {
             $result = $commonGroundService->getResource(['component' => 'brp', 'type' => 'ingeschrevenpersonen', 'id' => $item->get()]);
@@ -45,8 +45,6 @@ class LoginController extends AbstractController
         } else {
             $result = null;
         }
-
-        var_dump($result);
 
         return new Response(
             $result,

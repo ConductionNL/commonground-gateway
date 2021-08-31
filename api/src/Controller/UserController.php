@@ -58,6 +58,7 @@ class UserController extends AbstractController
      */
     public function RedirectAction(Request $request, CommonGroundService $commonGroundService)
     {
+
         if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {
             return $this->redirect($request->headers->get('referer'));
 
