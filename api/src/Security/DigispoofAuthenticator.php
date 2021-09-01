@@ -24,6 +24,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
 class DigispoofAuthenticator extends AbstractGuardAuthenticator
@@ -33,13 +34,15 @@ class DigispoofAuthenticator extends AbstractGuardAuthenticator
     private $commonGroundService;
     private $router;
     private CacheInterface $cache;
+    private TokenStorageInterface $tokenStorage;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, CacheInterface $cache)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, CacheInterface $cache, TokenStorageInterface $tokenStorage)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
         $this->router = $router;
         $this->cache = $cache;
+        $this->tokenStorage = $tokenStorage;
     }
 
     /**
@@ -110,12 +113,15 @@ class DigispoofAuthenticator extends AbstractGuardAuthenticator
     {
         $backUrl = $request->request->get('back_url');
         $bsn = $request->request->get('bsn');
+        $user = $this->commonGroundService->getResource(['component' => 'brp', 'type' => 'ingeschrevenpersonen', 'id' => $bsn]);
+
+        $this->tokenStorage->setToken();
 
         $item = $this->cache->getItem('code_'.md5($bsn));
         $item->set($bsn);
         $this->cache->save($item);
 
-        return new RedirectResponse($backUrl);
+        return new RedirectResponse($backUrl . '?bsn='. $bsn . '&name=' . $user['naam']['aanschrijfwijze']);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
