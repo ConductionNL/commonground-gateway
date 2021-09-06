@@ -99,12 +99,7 @@ class Authentication
     private string $name;
 
     /**
-     * @var string The location where the authentication is hosted
-     *
-     * @Assert\NotNull
-     * @Assert\Length(
-     *      max = 255
-     * )
+     * @var ?string The location where the authentication is hosted
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -114,9 +109,24 @@ class Authentication
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="text", nullable=true)
      */
-    private string $location;
+    private ?string $authenticateUrl = null;
+
+    /**
+     * @var ?string The location where the token for the authentication is hosted
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://test.nl/token"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $tokenUrl = null;
 
     /**
      * @var ?string The secret used for authentication
@@ -189,14 +199,26 @@ class Authentication
         return $this;
     }
 
-    public function getLocation(): ?string
+    public function getAuthenticateUrl(): ?string
     {
-        return $this->location;
+        return $this->authenticateUrl;
     }
 
-    public function setLocation(string $location): self
+    public function setAuthenticateUrl(string $authenticateUrl): self
     {
-        $this->location = $location;
+        $this->authenticateUrl = $authenticateUrl;
+
+        return $this;
+    }
+
+    public function getTokenUrl(): ?string
+    {
+        return $this->tokenUrl;
+    }
+
+    public function setTokenUrl(string $tokenUrl): self
+    {
+        $this->tokenUrl = $tokenUrl;
 
         return $this;
     }

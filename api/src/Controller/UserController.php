@@ -11,6 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -63,14 +64,18 @@ class UserController extends AbstractController
             $identifier = $this->session->get('identifier');
         }
 
+        if (!$method || !$identifier) {
+            throw new BadRequestException('Missing authentication method or identifier');
+        }
+
         $this->session->set('backUrl', $request->headers->get('referer'));
         $this->session->set('method', $method);
         $this->session->set('identifier', $identifier);
 
 
-        $responseUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_authenticate');
+        $redirectUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_authenticate');
 
-        return $this->redirect($redirect);
+        return $this->redirect($this->authenticationService->handleAuthenticationUrl($method, $identifier, $redirectUrl));
     }
 
     /**
