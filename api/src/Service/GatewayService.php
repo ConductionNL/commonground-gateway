@@ -63,11 +63,8 @@ class GatewayService
         $response->headers->replace($result->getHeaders());
         $headers = $result->getHeaders();
 
-        if ($headers['Content-Type'][0] == 'application/hal+json' || $headers['Content-Type'][0] == 'application/ld+json; charset=utf-8') {
-            $response->headers->add(['Content-Type' => 'application/json']);
-        }
-
         $response->headers->add(['access-control-allow-origin' => '*']);
+        $response->headers->add(['Access-Control-Allow-Credentials' => 'true']);
         $response->headers->remove('Server');
         $response->headers->remove('X-Content-Type-Options');
         $response->setStatusCode($result->getStatusCode());

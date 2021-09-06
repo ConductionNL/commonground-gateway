@@ -53,3 +53,21 @@ App\Entity\Gateway:
         jwtId: conduction
         location: https://open-zaak.demodam.nl/documenten/api/v1
         documentation: https://github.com/VNG-Realisatie/documenten-api/raw/master/src/openapi.yaml
+    gateway_8:
+        name: logging
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://conduction.demodam.nl/api/v1/lgc
+        documentation: https://raw.githubusercontent.com/ConductionNL/loggingcomponent/master/api/public/schema/openapi.yaml
+    gateway_9:
+        name: waardepapieren-register
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://waardepapieren.demodam.nl/api/v1/register
+        documentation: https://github.com/ConductionNL/waardepapieren-register/raw/master/api/public/schema/openapi.yaml
+    gateway_10:
+        name: waardepapieren-service
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://waardepapieren.demodam.nl/api/v1/service
+        documentation: https://github.com/ConductionNL/waardepapieren-register/raw/master/api/public/schema/openapi.yaml

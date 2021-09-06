@@ -39,6 +39,19 @@ class UserController extends AbstractController
     }
 
     /**
+     * @Route("login/{method}/{identifier}")
+     */
+    public function AuthenticateAction(Request $request, $method, $identifier)
+    {
+
+        $redirect = $commonGroundService->cleanUrl(['component' => 'ds']);
+
+        $responseUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_digispoof');
+
+        return $this->redirect($redirect);
+    }
+
+    /**
      * @Route("logout")
      */
     public function LogoutAction(Request $request, CommonGroundService $commonGroundService)
