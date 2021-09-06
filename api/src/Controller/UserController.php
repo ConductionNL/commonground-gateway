@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\ApplicationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
@@ -13,6 +14,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -24,6 +26,15 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  */
 class UserController extends AbstractController
 {
+
+    private AuthenticationService $authenticationService;
+    private SessionInterface $session;
+
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
+    {
+        $this->authenticationService = $authenticationService;
+        $this->session = $session;
+    }
 
     /**
      * @Route("login/digispoof")
@@ -44,9 +55,20 @@ class UserController extends AbstractController
     public function AuthenticateAction(Request $request, $method, $identifier)
     {
 
-        $redirect = $commonGroundService->cleanUrl(['component' => 'ds']);
+        if ($this->session->get('method')) {
+            $method = $this->session->get('method');
+        }
 
-        $responseUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_digispoof');
+        if ($this->session->get('identifier')) {
+            $identifier = $this->session->get('identifier');
+        }
+
+        $this->session->set('backUrl', $request->headers->get('referer'));
+        $this->session->set('method', $method);
+        $this->session->set('identifier', $identifier);
+
+
+        $responseUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_authenticate');
 
         return $this->redirect($redirect);
     }

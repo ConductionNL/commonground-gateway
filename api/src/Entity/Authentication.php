@@ -150,6 +150,21 @@ class Authentication
      */
     private ?string $clientId = null;
 
+    /**
+     * @var ?array The scopes used for authentication
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="array",
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $scopes = [];
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -206,6 +221,18 @@ class Authentication
     public function setClientId(?string $clientId): self
     {
         $this->clientId = $clientId;
+
+        return $this;
+    }
+
+    public function getScopes(): ?array
+    {
+        return $this->scopes;
+    }
+
+    public function setScopes(?array $scopes): self
+    {
+        $this->scopes = $scopes;
 
         return $this;
     }
