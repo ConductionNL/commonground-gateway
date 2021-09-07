@@ -6,6 +6,7 @@ use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -42,7 +43,7 @@ class GatewayService
         $component = $this->gatewayToArray($gateway);
         $url = $gateway->getLocation() . '/' . $endpoint;
 
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, ['access-control-allow-origin' => '*'], false, $method);
+        $result = $this->commonGroundService->callService($component, $url, $content, $query, [], false, $method);
 
         if (is_array($result)) {
             $result['error'] = json_decode($result['error'], true);
@@ -59,8 +60,8 @@ class GatewayService
     {
         $user = $this->tokenStorage->getToken()->getUser();
 
-        if (!$user->getUsername()) {
-            throw new AccessDeniedException('Access Denied.');
+        if (is_string($user)) {
+            throw new AccessDeniedHttpException('Access denied.');
         }
     }
 
@@ -77,8 +78,6 @@ class GatewayService
         $response->headers->replace($result->getHeaders());
         $headers = $result->getHeaders();
 
-        $response->headers->add(['access-control-allow-origin' => '*']);
-        $response->headers->add(['Access-Control-Allow-Credentials' => 'true']);
         $response->headers->remove('Server');
         $response->headers->remove('X-Content-Type-Options');
         $response->setStatusCode($result->getStatusCode());
