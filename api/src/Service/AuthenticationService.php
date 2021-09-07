@@ -6,20 +6,78 @@ use App\Entity\Authentication;
 use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Client;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class AuthenticationService
 {
-    private CommonGroundService $commonGroundService;
+    private SessionInterface $session;
     private EntityManagerInterface $entityManager;
+    private Client $client;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager)
     {
-        $this->commonGroundService = $commonGroundService;
+        $this->session = $session;
         $this->entityManager = $entityManager;
+        $this->client = new Client();
+    }
+
+    public function authenticate(string $method, string $identifier, string $code): array
+    {
+
+        if (!$method || !$identifier) {
+            throw new BadRequestException("Method and identifier can't be empty");
+        }
+
+        $authentication = $this->retrieveAuthentication($identifier);
+
+        return $this->retrieveData($method, $code, $authentication);
+    }
+
+    public function retrieveData(string $method, string $code, Authentication $authentication): array
+    {
+        $redirectUrl = $this->session->get('redirectUrl');
+
+        if (!$redirectUrl) {
+            throw new BadRequestException('no redirect url found in session');
+        }
+
+        switch ($method) {
+            case 'adfs':
+                return $this->retrieveAdfsData($code, $authentication, $redirectUrl);
+                break;
+            case 'digid':
+                break;
+            default:
+                throw new BadRequestException('Authentication method not supported');
+        }
+
+    }
+
+    public function retrieveAdfsData(string $code, Authentication $authentication, string $redirectUrl): array
+    {
+        $body = [
+            'client_id'         => $authentication->getClientId(),
+            'client_secret'     => $authentication->getSecret(),
+            'redirect_uri'      => $redirectUrl,
+            'code'              => $code,
+            'grant_type'        => 'authorization_code',
+        ];
+
+        $response = $this->client->request('POST', $authentication->getTokenUrl(), [
+            'form_params'  => $body,
+            'content_type' => 'application/x-www-form-urlencoded',
+        ]);
+
+        $accessToken = json_decode($response->getBody()->getContents(), true);
+
+        $json = base64_decode(explode('.', $accessToken['access_token'])[1]);
+        return json_decode($json, true);
+
     }
 
     public function handleAuthenticationUrl(string $method, string $identifier, string $redirectUrl): string
@@ -30,10 +88,11 @@ class AuthenticationService
 
     }
 
-    public function buildRedirectUrl(string $method, string $redirectUrl, Authentication $authentication): string
+    public function buildRedirectUrl(string $method, string $redirectUrl, Authentication $authentication): ?string
     {
         switch ($method) {
             case 'adfs':
+                return $this->handleAdfsRedirectUrl($redirectUrl, $authentication);
                 break;
             case 'digid':
                 break;
@@ -44,7 +103,12 @@ class AuthenticationService
 
     public function handleAdfsRedirectUrl(string $redirectUrl, Authentication $authentication): string
     {
-        return $authentication->getAuthenticateUrl() . '?clientId=' . $authentication->getClientId();
+        return $authentication->getAuthenticateUrl() .
+            '?response_type=code&response_mode=query&client_id=' .
+            $authentication->getClientId() . '&^redirect_uri=' .
+            $redirectUrl .
+            '&scope=' .
+            implode(' ', $authentication->getScopes());
     }
 
     public function retrieveAuthentication(string $identifier): Authentication

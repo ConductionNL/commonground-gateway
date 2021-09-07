@@ -18,7 +18,8 @@ security:
             guard:
                 authenticators:
                     - App\Security\DigispoofAuthenticator
-
+                    - App\Security\OauthAuthenticator
+                entry_point: App\Security\DigispoofAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 

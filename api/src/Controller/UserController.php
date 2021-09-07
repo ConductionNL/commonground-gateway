@@ -53,17 +53,8 @@ class UserController extends AbstractController
     /**
      * @Route("login/{method}/{identifier}")
      */
-    public function AuthenticateAction(Request $request, $method, $identifier)
+    public function AuthenticateAction(Request $request, $method = null, $identifier = null)
     {
-
-        if ($this->session->get('method')) {
-            $method = $this->session->get('method');
-        }
-
-        if ($this->session->get('identifier')) {
-            $identifier = $this->session->get('identifier');
-        }
-
         if (!$method || !$identifier) {
             throw new BadRequestException('Missing authentication method or identifier');
         }
@@ -72,8 +63,9 @@ class UserController extends AbstractController
         $this->session->set('method', $method);
         $this->session->set('identifier', $identifier);
 
+        $redirectUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_authenticate', ['method' => $method, 'identifier' => $identifier]);
 
-        $redirectUrl = $request->getSchemeAndHttpHost() . $this->generateUrl('app_user_authenticate');
+        $this->session->set('redirectUrl', $redirectUrl);
 
         return $this->redirect($this->authenticationService->handleAuthenticationUrl($method, $identifier, $redirectUrl));
     }
