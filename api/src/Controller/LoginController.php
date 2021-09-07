@@ -49,11 +49,16 @@ class LoginController extends AbstractController
             $result = null;
         }
 
-        return new Response(
+        $response = new Response(
             $result,
             Response::HTTP_OK,
             ['content-type' => 'application/json']
         );
+
+        $response->headers->add(['Access-Control-Allow-Credentials' => 'true']);
+        $response->headers->add(['access-control-allow-origin' => '*']);
+
+        return $response;
 
     }
 

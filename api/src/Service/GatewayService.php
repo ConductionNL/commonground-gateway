@@ -8,16 +8,20 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class GatewayService
 {
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
+    private TokenStorageInterface $tokenStorage;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
+        $this->tokenStorage = $tokenStorage;
     }
 
     /**
@@ -32,6 +36,7 @@ class GatewayService
      */
     public function processGateway(string $name, string $endpoint, string $method, string $content, array $query): Response
     {
+        $this->checkAuthentication();
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
         $component = $this->gatewayToArray($gateway);
@@ -48,6 +53,15 @@ class GatewayService
             );
         }
         return $this->createResponse($result);
+    }
+
+    public function checkAuthentication(): void
+    {
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!$user->getUsername()) {
+            throw new AccessDeniedException('Access Denied.');
+        }
     }
 
     /**
