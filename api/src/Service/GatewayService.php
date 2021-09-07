@@ -35,7 +35,7 @@ class GatewayService
      * @param array $query Query parameters to send to the Gateway.
      * @return Response Created response received from Gateway or error received from Gateway.
      */
-    public function processGateway(string $name, string $endpoint, string $method, string $content, array $query): Response
+    public function processGateway(string $name, string $endpoint, string $method, string $content, array $query, array $headers): Response
     {
         $this->checkAuthentication();
         $gateway = $this->retrieveGateway($name);
@@ -43,7 +43,7 @@ class GatewayService
         $component = $this->gatewayToArray($gateway);
         $url = $gateway->getLocation() . '/' . $endpoint;
 
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, [], false, $method);
+        $result = $this->commonGroundService->callService($component, $url, $content, $query, ['accept' => $headers['accept'][0]], false, $method);
 
         if (is_array($result)) {
             $result['error'] = json_decode($result['error'], true);
@@ -59,6 +59,7 @@ class GatewayService
     public function checkAuthentication(): void
     {
         $user = $this->tokenStorage->getToken()->getUser();
+
 
         if (is_string($user)) {
             throw new AccessDeniedHttpException('Access denied.');
@@ -78,6 +79,7 @@ class GatewayService
         $response->headers->replace($result->getHeaders());
         $headers = $result->getHeaders();
 
+        $response->headers->add(['access-control-allow-origin' => '*']);
         $response->headers->remove('Server');
         $response->headers->remove('X-Content-Type-Options');
         $response->setStatusCode($result->getStatusCode());
