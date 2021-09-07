@@ -16,6 +16,9 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     /* The username display */
     private string $username;
 
+    /* Provide UUID instead of normal password */
+    private $password;
+
     /* The first name of the user */
     private $firstName;
 
@@ -36,9 +39,10 @@ class AuthenticationUser implements UserInterface, EquatableInterface
 
     private $email;
 
-    public function __construct(string $username = '', string $firstName = '', string $lastName = '', string $name = '', string $salt = null, array $roles = [], string $email = '', $locale = null)
+    public function __construct(string $username = '', string $password = '', string $firstName = '', string $lastName = '', string $name = '', string $salt = null, array $roles = [], string $email = '', $locale = null)
     {
         $this->username = $username;
+        $this->password = $password;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
         $this->name = $name;
@@ -57,6 +61,11 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     public function getRoles()
     {
         return $this->roles;
+    }
+
+    public function getPassword()
+    {
+        return $this->password;
     }
 
     public function getSalt()
@@ -107,7 +116,8 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     public function serialize()
     {
         return serialize([
-            $this->username
+            $this->username,
+            $this->password,
             // see section on salt below
             // $this->salt,
         ]);
@@ -116,7 +126,8 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     public function unserialize($serialized)
     {
         list(
-            $this->username) = unserialize($serialized);
+            $this->username,
+            $this->password) = unserialize($serialized);
     }
 
     public function isEqualTo(UserInterface $user)

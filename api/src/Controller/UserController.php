@@ -59,7 +59,7 @@ class UserController extends AbstractController
             throw new BadRequestException('Missing authentication method or identifier');
         }
 
-        $this->session->set('backUrl', $request->headers->get('referer'));
+        $this->session->set('backUrl', $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
         $this->session->set('method', $method);
         $this->session->set('identifier', $identifier);
 
@@ -73,7 +73,7 @@ class UserController extends AbstractController
     /**
      * @Route("logout")
      */
-    public function LogoutAction(Request $request, CommonGroundService $commonGroundService)
+    public function LogoutAction(Request $request)
     {
 
         if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {
@@ -88,7 +88,7 @@ class UserController extends AbstractController
     /**
      * @Route("redirect")
      */
-    public function RedirectAction(Request $request, CommonGroundService $commonGroundService)
+    public function RedirectAction(Request $request)
     {
 
         if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {

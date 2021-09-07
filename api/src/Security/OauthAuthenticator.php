@@ -88,9 +88,10 @@ class OauthAuthenticator extends AbstractGuardAuthenticator
     {
         return new AuthenticationUser(
             $credentials['username'],
+            '',
             $credentials['givenName'],
             $credentials['familyName'],
-            $credentials['givenName'] . $credentials['familyName'],
+            $credentials['givenName'] . " " . $credentials['familyName'],
             null,
             ['ROLE_USER'],
             $credentials['email']

@@ -1,8 +1,8 @@
 security:
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        commongroundProvider:
-            id: Conduction\CommonGroundBundle\Security\User\CommongroundProvider
+        authenticationProvider:
+            id: App\Security\User\AuthenticationProvider
     firewalls:
         main:
             anonymous: ~
@@ -14,12 +14,12 @@ security:
                 path: app_user_logout
                 target: app_user_redirect
             stateless: false
-            provider: commongroundProvider
+            provider: authenticationProvider
             guard:
                 authenticators:
                     - App\Security\DigispoofAuthenticator
                     - App\Security\OauthAuthenticator
-                entry_point: App\Security\DigispoofAuthenticator
+                entry_point: App\Security\OauthAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 
