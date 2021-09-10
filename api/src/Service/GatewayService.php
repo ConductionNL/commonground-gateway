@@ -82,6 +82,7 @@ class GatewayService
         $response->headers->add(['access-control-allow-origin' => '*']);
         $response->headers->remove('Server');
         $response->headers->remove('X-Content-Type-Options');
+        $response->headers->remove('Set-Cookie');
         $response->setStatusCode($result->getStatusCode());
 
         return $response;
