@@ -24,32 +24,12 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ApiResource(
- *     normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *     itemOperations={
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
  *          "get",
  *          "put",
  *          "delete",
- *          "get_eav_objects"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity uri",
- *                  "description"="Returns the object"
- *              }
- *          },
- *          "post_eav_objects"={
- *              "method"="POST",
- *              "path"="/eav/data/{entity}",
- *              "swagger_context" = {
- *                  "summary"="Post object",
- *                  "description"="Returns the created object"
- *              }
- *          },
- *     },
- *      collectionOperations={
- *  	    "get",
- *  	    "post",
  *          "get_eav_object"={
  *              "method"="GET",
  *              "path"="/eav/data/{entity}/{uuid}",
@@ -74,6 +54,26 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "description"="Returns the updated object"
  *              }
  *          },
+ *     },
+ *  collectionOperations={
+ *      "get",
+ *      "post",
+ *      "get_eav_objects"={
+ *          "method"="GET",
+ *          "path"="/eav/data/{entity}",
+ *          "swagger_context" = {
+ *              "summary"="Get object with objectEntity uri",
+ *              "description"="Returns the object"
+ *          }
+ *      },
+ *      "post_eav_objects"={
+ *          "method"="POST",
+ *          "path"="/eav/data/{entity}",
+ *          "swagger_context" = {
+ *              "summary"="Post object",
+ *              "description"="Returns the created object"
+ *          }
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

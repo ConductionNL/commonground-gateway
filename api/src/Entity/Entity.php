@@ -26,13 +26,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/eav/data/{entity}"},
- *      "put"={"path"="/eav/data/{entity}"},
- *      "delete={"path"="/eav/data/{entity}"}"
+ *      "get",
+ *      "put",
+ *      "delete"
  *  },
  *  collectionOperations={
- *      "get"={"path"="/eav/data/{entity}"},
- *      "post={"path"="/eav/data/{entity}"}"
+ *      "get",
+ *      "post"
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

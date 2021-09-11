@@ -27,10 +27,10 @@ class EavService
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, )
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
     {
-        $this->em = $em; // Why (to get existing ObjectEntity and check if an entity type exists or not
-        $this->commonGroundService = $commonGroundService; // hangt  van guzle af
+        $this->em = $em;
+        $this->commonGroundService = $commonGroundService; 
         $this->validationService = $validationService;
     }
 

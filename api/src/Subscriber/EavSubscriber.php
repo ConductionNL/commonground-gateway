@@ -1,6 +1,4 @@
 <?php
-
-
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
@@ -76,12 +74,12 @@ class EavSubscriber implements EventSubscriberInterface
         //elseif(!$id && array_key_exists('uuid', $body) ){ // this catches zgw api's
         //    $id = $body['uuid'];
         //)
-        elseif(!$id && array_key_exists('@id', $body) ){
+        elseif(!$id && array_key_exists('@id', $body)) {
             $id = $this->commonGroundService->getUuidFromUrl($body['@id']);
-        )
-        elseif(!$id && array_key_exists('@self', $body) ){
+        }
+        elseif(!$id && array_key_exists('@self', $body)) {
             $id = $this->commonGroundService->getUuidFromUrl($body['@self']);
-        )
+        }
 
         /*
          * Fixing the object
@@ -98,7 +96,7 @@ class EavSubscriber implements EventSubscriberInterface
         }
         // lets make sure that the entity and object match
         if($entity != $object->getEntity() ){
-            throw new HttpException('There is a mismatch between the provided ('.$entity->getName().') entity and the entity already atached to the object ('.$object->getEntity()->getName().')' 400);
+            throw new HttpException('There is a mismatch between the provided ('.$entity->getName().') entity and the entity already atached to the object ('.$object->getEntity()->getName().')', 400);
         }
 
         /*
@@ -168,7 +166,5 @@ class EavSubscriber implements EventSubscriberInterface
             ['content-type' => 'application/json']
         );
         $event->setResponse($response);
-
-
     }
 }
