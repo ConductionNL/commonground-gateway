@@ -1,0 +1,120 @@
+App\Entity\Entity:
+    registration:
+        name: registration
+        description: apikey
+    person:
+        name: person
+        description: apikey
+    organisation:
+        name: organisation
+        description: apikey
+    email:
+        name: email
+        description: an email addres number beloning to an person or organisation
+    telephone:
+        name: telephone
+        description: an telephone number beloning to an person or organisation
+    permissionDetails:
+        name: permissionDetails
+        description: the permisions that this person has given
+        
+App\Entity\Atribute:
+    # lets first hook our objects and sub objects together
+    # registration
+    registration_student:
+        name: student
+        type: object
+        entity: registration
+        object: person
+    registration_registrar:
+        name: registrar
+        type: object
+        entity: registration
+        object: person
+    registration_languageHouseId:
+        name: languageHouseId
+        type: string
+        entity: registration
+    registration_permissionDetails:
+        name: registrar
+        type: object
+        entity: registration
+        object: permissionDetails
+    registration_memo:
+        name: memo
+        type: string
+        entity: registration
+    # person
+    person_givenName:
+        name: givenName
+        type: string
+        entity: person
+    person_additionalName:
+        name: additionalName
+        type: string
+        entity: person
+    person_familyName:
+        name: familyName
+        type: string
+        entity: person
+    person_gender:
+        name: gender
+        type: string
+        entity: person
+    person_birthday:
+        name: birthday
+        type: date
+        entity: person
+    person_organization:
+        name: organization
+        type: object
+        entity: person
+        object: organization
+    person_emails:
+        name: emails
+        multiple: true
+        type: object
+        entity: person
+        object: email
+    person_telephones:
+        name: telephones
+        multiple: true
+        type: object
+        entity: person
+        object: telephone
+    # Organisation
+    organisation_name:
+        name: name
+        type: string
+        entity: organisation
+    organisation_type:
+        name: type
+        type: string
+        entity: organisation
+    # Telephone
+    telephone_telephone:
+        name: telephone
+        type: string
+        entity: telephone    
+    # email
+    email_email:
+        name: email
+        type: string
+        entity: email
+    # permissionDetails 
+    permissionDetails_didSignPermissionForm:
+        name: didSignPermissionForm
+        type: boolean
+        entity: permissionDetails
+    permissionDetails_hasPermissionToShareDataWithProviders:
+        name: hasPermissionToShareDataWithProviders
+        type: string
+        entity: permissionDetails
+    permissionDetails_hasPermissionToShareDataWithLibraries:
+        name: hasPermissionToShareDataWithLibraries
+        type: string
+        entity: permissionDetails
+    permissionDetails_hasPermissionToSendInformationAboutLibraries:
+        name: hasPermissionToSendInformationAboutLibraries
+        type: string
+        entity: permissionDetails
