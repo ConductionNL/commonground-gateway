@@ -30,7 +30,7 @@ class EavService
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
     {
         $this->em = $em;
-        $this->commonGroundService = $commonGroundService; 
+        $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
     }
 
@@ -60,7 +60,7 @@ class EavService
         $this->em->persist($object);
 
         /* @wilco why the below? */
-        $object->setUri($this->validationService->createUri($entity->getType(), $object->getId()));
+        //$object->setUri($this->validationService->createUri($object->getEntity()->getType(), $object->getId()));
         $this->em->flush();
 
         return $this->renderResult($object);
@@ -116,14 +116,14 @@ class EavService
 //            $response['eavId'] = $id;
 //        }
 
-        $response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
-        $response['@id'] = $result->getUri();
-        $response['@type'] = ucfirst($result->getEntity()->getName());
-        $response['id'] = $result->getId();
-        $response['@self'] = $response['@id'];
-        $response['@eav'] = $response['@id'];
-        $response['@eavType'] = $response['@type'];
-        $response['eavId'] = $response['id'];
+        //$response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        //$response['@id'] = $result->getUri();
+        //$response['@type'] = ucfirst($result->getEntity()->getName());
+        //$response['id'] = $result->getId();
+        //$response['@self'] = $response['@id'];
+        //$response['@eav'] = $response['@id'];
+        //$response['@eavType'] = $response['@type'];
+        //$response['eavId'] = $response['id'];
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();

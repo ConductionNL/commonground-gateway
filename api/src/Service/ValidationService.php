@@ -222,6 +222,18 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(),'Expects array, ' . gettype($value) . ' given.');
                 }
                 break;
+            case 'date':
+                if (!$attribute->getMultiple()) {
+                    try {
+                        new \DateTime($value);
+                    } catch (HttpException $e) {
+                        $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', failed to parse string to DateTime.');
+                    }
+                }
+                if ($attribute->getMultiple() && !is_array($value)) {
+                    $objectEntity->addError($attribute->getName(),'Expects array, ' . gettype($value) . ' given.');
+                }
+                break;
             default:
                 $objectEntity->addError($attribute->getName(),'has an an unknown type: [' . $attributeType . ']');
         }

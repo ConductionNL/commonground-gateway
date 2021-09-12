@@ -348,20 +348,22 @@ class ObjectEntity
     public function getValueByAttribute(Attribute $attribute): Value
     {
         // Check if value with this attribute exists for this ObjectEntity
+        /* @todo dit gaat nu fout op put uiteraard */
+        /*
         $value = $this->getObjectValues()->filter(function (Value $value) use ($attribute) {
             return $value->getAttribute() === $attribute;
         });
-        if (count($value) == 1) {
-            $value = $value[0];
+
+        if (count($value) > 0) {
+            return $value[0];
         }
+        */
+
         // If no value with this attribute was found
-        else {
-            // Create a new value and return that one
-            $value = new Value();
-            $value->setAttribute($attribute);
-            $value->setObjectEntity($this);
-            $this->addObjectValue($value);
-        }
+        $value = new Value();
+        $value->setAttribute($attribute);
+        $value->setObjectEntity($this);
+        $this->addObjectValue($value);
 
         return $value;
     }

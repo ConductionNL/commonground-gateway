@@ -64,9 +64,8 @@ class Entity
      * @Assert\Length(
      *     max = 255
      * )
-     * @Assert\NotNull
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, unique=true)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $type;
 

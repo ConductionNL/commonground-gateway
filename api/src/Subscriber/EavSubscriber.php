@@ -17,7 +17,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use function GuzzleHttp\json_decode;
 
 class EavSubscriber implements EventSubscriberInterface
@@ -44,11 +47,18 @@ class EavSubscriber implements EventSubscriberInterface
     {
         $route = $event->getRequest()->attributes->get('_route');
         $resource = $event->getControllerResult();
-
+        
         // Make sure we only triggen when needed
-        if(!in_array($route, ['post_eav_objects','put_eav_object','delete_eav_object','get_eav_object','get_eav_objects'])){
+        if(!in_array($route, [
+            'api_object_entities_post_eav_objects_collection',
+            'api_object_entities_put_eav_object_item',
+            'api_object_entities_delete_eav_object_item',
+            'api_object_entities_get_eav_object_item',
+            'api_object_entities_get_eav_objects_collection'
+        ])){
             return;
         }
+
 
         // We will always need an $entity
         $entityName = $event->getRequest()->attributes->get("entity");
@@ -86,14 +96,17 @@ class EavSubscriber implements EventSubscriberInterface
          */
         if($id){
             $object = $this->em->getRepository("App\Entity\ObjectEntity")->get($id);
-            if($object){
+            if(!$object){
                 throw new HttpException('No object found with this id: ' . $id, 400);
             }
         }
-        elseif($route=="post_eav_objects"){
+        elseif($route=="api_object_entities_post_eav_objects_collection"){
             $object = New ObjectEntity;
             $object->setEntity($entity);
         }
+
+
+
         // lets make sure that the entity and object match
         if($entity != $object->getEntity() ){
             throw new HttpException('There is a mismatch between the provided ('.$entity->getName().') entity and the entity already atached to the object ('.$object->getEntity()->getName().')', 400);
@@ -102,16 +115,17 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling data mutantions
          */
-        if ($route == 'post_eav_objects' || $route == 'put_eav_object') {
+        if ($route == 'api_object_entities_post_eav_objects_collection' || $route == 'api_object_entities_put_eav_object_item') {
 
             /* @todo catch missing data and trhow error */
             if(!$entityName){
-                /* throw error */
+                throw new HttpException('An entity name should be provided for this route', 400);
             }
             if(!$body){
-                /* throw error */
+                throw new HttpException('An body should be provided for this route', 400);
             }
-            if(!$uuid &&  $route == 'put_eav_object'){
+            if(!$id &&  $route == 'api_object_entities_put_eav_object_item'){
+                throw new HttpException('An id should be provided for this route', 400);
             }
 
             // Transfer the variable to the service
@@ -122,7 +136,7 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling reading requests
          */
-        if ($route == 'get_eav_object' || $route == 'get_eav_object')
+        if ($route == 'api_object_entities_get_eav_objects_collection' || $route == 'api_object_entities_get_eav_object_item')
         {
             /* @todo catch missing data and trhow error */
             if(!$entityName){
@@ -165,6 +179,7 @@ class EavSubscriber implements EventSubscriberInterface
             $responseType,
             ['content-type' => 'application/json']
         );
+
         $event->setResponse($response);
     }
 }
