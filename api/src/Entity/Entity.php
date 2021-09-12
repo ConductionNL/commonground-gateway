@@ -58,6 +58,26 @@ class Entity
     private $id;
 
     /**
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
+     * @ORM\JoinColumn(nullable=true)
+     * @MaxDepth(1)
+     */
+    private Gateway $gateway;
+
+    /**
+     * @var string The type of this Entity
+     *
+     * @Gedmo\Versioned
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $endpoint;
+
+    /**
      * @var string The type of this Entity
      *
      * @Gedmo\Versioned
@@ -143,6 +163,30 @@ class Entity
     public function getId()
     {
         return $this->id;
+    }
+
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getEndpoint(): ?string
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(string $endpoint): self
+    {
+        $this->endpoint = $endpoint;
+
+        return $this;
     }
 
     public function getType(): ?string

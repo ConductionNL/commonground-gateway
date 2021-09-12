@@ -48,10 +48,12 @@ class EavService
         }
 
         //TODO: commented out for now
+        if($object->getHasPromises()){
+            Promise\Utils::settle($object->getAllPromisses)->wait();
+        }
 //        // Making the api calls
 //
 //        // Waiting for als the guzzle the results
-//        Promise\Utils::settle($object->getAllPromisses)->wait();
 //        if($object->getHasErrors()){
 //            return $this->returnErrors($object);
 //        }

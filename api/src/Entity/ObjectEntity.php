@@ -110,7 +110,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities")
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
      * @MaxDepth(1)
      */
     private ?Entity $entity;
@@ -131,22 +131,29 @@ class ObjectEntity
     private ?Value $subresourceOf = null;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean")
+     * @Groups({"read"})
      */
     private bool $hasErrors = false;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
      */
     private ?array $errors = [];
 
     /**
+     * @Groups({"read"})
+     */
+    private bool $hasPromises = false;
+
+    /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
      */
     private ?array $promises = [];
+
+    /**
+     * @Groups({"read", "write"})
+     */
+    private ?array $externalResult = [];
 
     public function __construct()
     {
@@ -245,6 +252,8 @@ class ObjectEntity
             $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors);
         }
         // Do the same for resources under this one if set to false
+        /* @todo wilco de opdracht was upward waarom downward? kost snelheid is er een argument?
+        /*
         elseif ($hasErrors == false) {
             $subResources = $this->getSubresources();
             foreach ($subResources as $subResource) {
@@ -258,6 +267,7 @@ class ObjectEntity
                 }
             }
         }
+        */
 
         return $this;
     }
@@ -308,6 +318,24 @@ class ObjectEntity
         return array_merge($allErrors, $this->getErrors());
     }
 
+
+    public function getHasPromises(): bool
+    {
+        return $this->hasErrors;
+    }
+
+    public function setHasPromises(bool $hasPromises): self
+    {
+        $this->hasPromises = $hasPromises;
+
+        // Do the same for resources above this one if set to true
+        if ($hasPromises == true && $this->getSubresourceOf()) {
+            $this->getSubresourceOf()->getObjectEntity()->setHasPromises($hasPromises);
+        }
+
+        return $this->promises;
+    }
+
     public function getPromises(): ?array
     {
         return $this->promises;
@@ -315,15 +343,23 @@ class ObjectEntity
 
     public function setPromises(?array $promises): self
     {
+        if(!$this->hasPromises) {
+            $this->setHasPromises(true);
+        }
+
         $this->promises = $promises;
 
         return $this;
     }
 
-    public function addPromise(?string $promise): array
+    public function addPromise(object $promise): array
     {
         //TODO: check if promise is already in array?
         $this->promises[] = $promise;
+
+        if(!$this->hasPromises) {
+            $this->setHasPromises(true);
+        }
 
         return $this->promises;
     }
@@ -344,6 +380,19 @@ class ObjectEntity
         }
         return array_merge($allPromises, $this->errors);
     }
+
+    public function getExternalResult(): ?array
+    {
+        return $this->externalResult;
+    }
+
+    public function setExternalResult(?array $externalResult): self
+    {
+        $this->externalResult = $externalResult;
+
+        return $this;
+    }
+
 
     public function getValueByAttribute(Attribute $attribute): Value
     {

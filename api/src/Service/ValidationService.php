@@ -6,6 +6,7 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use App\Service\GatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
@@ -19,10 +20,17 @@ use Symfony\Component\String\Inflector\EnglishInflector;
 class ValidationService
 {
     private EntityManagerInterface $em;
+    private CommonGroundService $commonGroundService;
+    private GatewayService $gatewayService;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(
+        EntityManagerInterface $em,
+        CommonGroundService $commonGroundService,
+        GatewayService $gatewayService)
     {
         $this->em = $em;
+        $this->commonGroundService = $commonGroundService;
+        $this->gatewayService = $gatewayService;
     }
 
     /*@todo docs */
@@ -86,12 +94,10 @@ class ValidationService
             }
 
             /* @todo dit is de plek waarop we weten of er een appi call moet worden gemaakt */
-
-            /*
-            if(!$objectEntity->hasErrors() && VASTTELLEN OF DIE EXERN MOET){
-                // $objectEntity->addPromise($this->createPromise($objectEntity, $post));
+            if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
+                $objectEntity->addPromise($this->createPromise($objectEntity, $post));
             }
-            */
+
         }
 
         return $objectEntity;
@@ -252,23 +258,39 @@ class ValidationService
 
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een atrubte zijn gevangen
 
+        $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+        $query = [];
+        $headers = [];
 
+        if($objectEntity->getUri()){
+            $method = 'PUT';
+            $url = $objectEntity->getUri();
+        }
+        else{
+            $method = 'POST';
+            $url = $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint();
+        }
 
+        $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
+            function (ResponseInterface $response, ObjectEntity $objectEntity) {
+                $object = json_decode($response->getBody()->getContents(), true);
+                $objectEntity->setUri($object['@id']);
+                $objectEntity->setExternalResult($object);
+                /* @todo Speed whise we would like to do some cashing here */
+
+            },
+            function (RequestException $e, ObjectEntity $objectEntity) {
+                $objectEntity->addError($objectEntity->name, $e->getMessage());
+            }
+        );
+///
         // Async aanroepen van de promise methode in cg bundel
 //        $promise = $client->requestAsync('GET', 'http://httpbin.org/get', $post);
 //
 //        // Creating a promise
-//        $promise->then(
-//            function (ResponseInterface $response, ObjectEntity $objectEntity) {
-//                $object = json_decode($response->getBody()->getContents(), true);
-//                $objectEntity->setUri($object['@id']);
-//            },
-//            function (RequestException $e, ObjectEntity $objectEntity) {
-//                $objectEntity->addError($objectEntity->name,$e->getMessage());
-//            }
-//        );
+//        $promise
 //
-//        return $promise;
+        return $promise;
     }
 
     //TODO: change this to work better? (known to cause problems) used it to generate the @id / @eav for eav objects (intern and extern objects).

@@ -1,19 +1,48 @@
+App\Entity\Gateway:
+    edu_api:
+        name: educatie component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    contacten_api:
+        name: contacten component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+
 App\Entity\Entity:
     registration:
         name: registration
         description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participants'
     person:
         name: person
         description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'people'
     organization:
         name: organization
         description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'organizations'
     email:
         name: email
-        description: an email addres number beloning to an person or organization
+        description: an email addres beloning to an person or organization
+        gateway: '@contacten_api'
+        endpoint: 'emails'
     telephone:
         name: telephone
         description: an telephone number beloning to an person or organization
+        gateway: '@contacten_api'
+        endpoint: 'telephones'
+    addres:
+        name: addres
+        description: an addres  beloning to an person or organization
+        gateway: '@contacten_api'
+        endpoint: 'addresses'
     permissionDetails:
         name: permissionDetails
         description: the permisions that this person has given
