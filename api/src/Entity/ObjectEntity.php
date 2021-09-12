@@ -333,7 +333,7 @@ class ObjectEntity
             $this->getSubresourceOf()->getObjectEntity()->setHasPromises($hasPromises);
         }
 
-        return $this->promises;
+        return $this;
     }
 
     public function getPromises(): ?array
@@ -423,6 +423,7 @@ class ObjectEntity
         $values = $this->getObjectValues()->filter(function (Value $value) {
             return $value->getAttribute()->getType() === 'object';
         });
+
         $subresources = new ArrayCollection();
         foreach ($values as $value) {
             $subresource = $value->getValue();

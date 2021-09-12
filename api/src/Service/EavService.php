@@ -15,6 +15,8 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Paginator;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\String\Inflector\EnglishInflector;
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Promise\Utils;
 
 class EavService
 {
@@ -47,9 +49,13 @@ class EavService
             return $this->returnErrors($object);
         }
 
-        //TODO: commented out for now
-        if($object->getHasPromises()){
-            Promise\Utils::settle($object->getAllPromisses)->wait();
+        /* this way of working is way vasther then passing stuff trough the object's, lets also implement this for error checks */
+        if(!empty($this->validationService->promises)){
+            Utils::settle($this->validationService->promises)->wait();
+
+            foreach($this->validationService->promises as $promise){
+                echo $promise->wait();
+            }
         }
 //        // Making the api calls
 //
@@ -147,6 +153,9 @@ class EavService
                 continue;
             }
             $response[$attribute->getName()] = $value->getValue();
+
+            // Lets isnert the object that we are extending
+            $response = array_merge($response, $result->getExternalResult());
         }
 
         return $response;

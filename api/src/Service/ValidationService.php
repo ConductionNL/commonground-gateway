@@ -22,6 +22,10 @@ class ValidationService
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private GatewayService $gatewayService;
+    public $promises = []; /* @todo zou private met getter moeten zijn */
+    public $errors = []; /* @todo zou private met getter moeten zijn */
+    public ?ObjectEntity $objectEntity;
+
 
     public function __construct(
         EntityManagerInterface $em,
@@ -95,7 +99,9 @@ class ValidationService
 
             /* @todo dit is de plek waarop we weten of er een appi call moet worden gemaakt */
             if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
-                $objectEntity->addPromise($this->createPromise($objectEntity, $post));
+                $promise =$this->createPromise($objectEntity, $post);
+                $this->promises[]=$promise;
+                $objectEntity->addPromise($promise);
             }
 
         }
@@ -122,6 +128,7 @@ class ValidationService
                 if(!$valueObject->getValue()){
                     $subObject = New ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
+                    $subObject->setSubresourceOf($valueObject);
                     $valueObject->setValue($subObject);
                 } else {
                     $subObject = $valueObject->getValue();
@@ -262,6 +269,8 @@ class ValidationService
         $query = [];
         $headers = [];
 
+        $this->objectEntity = $objectEntity;
+
         if($objectEntity->getUri()){
             $method = 'PUT';
             $url = $objectEntity->getUri();
@@ -272,17 +281,19 @@ class ValidationService
         }
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
-            function (ResponseInterface $response, ObjectEntity $objectEntity) {
-                $object = json_decode($response->getBody()->getContents(), true);
-                $objectEntity->setUri($object['@id']);
-                $objectEntity->setExternalResult($object);
-                /* @todo Speed whise we would like to do some cashing here */
-
+        // $onFulfilled
+            function ($response) {
+                //var_dump($value);
+                $this->objectEntity->setExternalResult(json_decode($response->getBody()->getContents(), true));
             },
-            function (RequestException $e, ObjectEntity $objectEntity) {
-                $objectEntity->addError($objectEntity->name, $e->getMessage());
+            // $onRejected
+            function ($error) {
+                ///var_dump($reason);
+                //echo $error->getMessage();
+                $this->objectEntity->addError('gateway endpoint', $error->getMessage());
             }
         );
+
 ///
         // Async aanroepen van de promise methode in cg bundel
 //        $promise = $client->requestAsync('GET', 'http://httpbin.org/get', $post);
