@@ -60,14 +60,11 @@ class EavService
 
         // Afther guzzle has cleared we need to again check for errors
         if($object->getHasErrors()) {
-            //return $this->returnErrors($object);
+            return $this->returnErrors($object);
         }
 
         // Saving the data
         $this->em->persist($object);
-
-        /* @wilco why the below? */
-        //$object->setUri($this->validationService->createUri($object->getEntity()->getType(), $object->getId()));
         $this->em->flush();
 
         return $this->renderResult($object);
@@ -113,24 +110,18 @@ class EavService
     {
         $response = [];
 
-        //TODO: for extern objects
-//        // Check component code and if it is not EAV also get the normal object.
-//        if ($this->componentCode != 'eav') {
-//            $response = $this->commonGroundService->getResource($objectEntity->getUri(), [], false, false, true, false);
-//            $response['@self'] = $response['@id'];
-//            $response['@eav'] = $uri;
-//            $response['@eavType'] = ucfirst($this->entityName);
-//            $response['eavId'] = $id;
-//        }
+        if($result->getUri()){
+            $response['@uri'] = $result->getUri();
+        }
 
-        //$response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
-        //$response['@id'] = $result->getUri();
-        //$response['@type'] = ucfirst($result->getEntity()->getName());
-        //$response['id'] = $result->getId();
-        //$response['@self'] = $response['@id'];
-        //$response['@eav'] = $response['@id'];
-        //$response['@eavType'] = $response['@type'];
-        //$response['eavId'] = $response['id'];
+
+        // Lets start with the external results
+        $response = array_merge($response, $result->getExternalResult());
+
+        // Lets move some stuff out of the way
+        if(array_key_exists('@context',$response)){$response['@gateway/context'] = $response['@context'];}
+        if(array_key_exists('id',$response)){$response['@gateway/id'] = $response['id'];}
+        if(array_key_exists('@type',$response)){$response['@gateway/type'] = $response['@type'];}
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
@@ -154,8 +145,13 @@ class EavService
             $response[$attribute->getName()] = $value->getValue();
 
             // Lets isnert the object that we are extending
-            $response = array_merge($response, $result->getExternalResult());
         }
+
+        // Lets make ik personal
+        $response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['id'] = $result->getId();
 
         return $response;
     }

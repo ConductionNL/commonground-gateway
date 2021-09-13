@@ -33,7 +33,7 @@ App\Entity\Attribute:
     # lets first hook our objects and sub objects together
     # registration
     registration_student:
-        name: student
+        name: person
         type: object
         entity: '@registration'
         object: '@person'
@@ -47,7 +47,7 @@ App\Entity\Attribute:
         type: string
         entity: '@registration'
     registration_permissionDetails:
-        name: registrar
+        name: permissionDetails
         type: object
         entity: '@registration'
         object: '@permissionDetails'
@@ -62,13 +62,13 @@ App\Entity\Attribute:
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToShareDataWithProviders:
         name: hasPermissionToShareDataWithProviders
-        type: string
+        type: boolean
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToShareDataWithLibraries:
         name: hasPermissionToShareDataWithLibraries
-        type: string
+        type: boolean
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToSendInformationAboutLibraries:
         name: hasPermissionToSendInformationAboutLibraries
-        type: string
+        type: boolean
         entity: '@permissionDetails'
