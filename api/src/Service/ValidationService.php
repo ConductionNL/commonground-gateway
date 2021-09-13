@@ -18,12 +18,14 @@ use Doctrine\Common\Collections\Collection;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class ValidationService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private GatewayService $gatewayService;
+    private CacheInterface $cache;
     public $promises = []; /* @todo zou private met getter moeten zijn */
     public $errors = []; /* @todo zou private met getter moeten zijn */
 
@@ -31,11 +33,13 @@ class ValidationService
     public function __construct(
         EntityManagerInterface $em,
         CommonGroundService $commonGroundService,
-        GatewayService $gatewayService)
+        GatewayService $gatewayService,
+        CacheInterface $cache)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
+        $this->cache = $cache;
     }
 
     /*@todo docs */
@@ -114,8 +118,6 @@ class ValidationService
      * Returns a Value on succes or a false on failure
      * @todo docs */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value) {
-
-
 
         $attributeType = $attribute->getType();
 
@@ -312,8 +314,21 @@ class ValidationService
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($post, $objectEntity, $url) {
-                $objectEntity->setUri($url);
-                $objectEntity->setExternalResult(json_decode($response->getBody()->getContents(), true));
+                $result = json_decode($response->getBody()->getContents(), true);
+                if(array_key_exists('id',$result)){
+                    $objectEntity->setUri($url.'/'.$result['id']);
+                    $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
+                }
+                else{
+                    $objectEntity->setUri($url.'/');
+                    $item = $this->cache->getItem('commonground_'.md5($url));
+                }
+                $objectEntity->setExternalResult($result);
+
+                // Lets stuff this into the cache for speed reasons
+                $item->set($result);
+                //$item->expiresAt(new \DateTime('tomorrow'));
+                $this->cache->save($item);
             },
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
