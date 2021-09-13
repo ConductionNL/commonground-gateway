@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "07635c622378015b4e0d7cb9850a35e5",
+    "content-hash": "a03825885ffe58c247517984ec5057ac",
     "packages": [
         {
             "name": "api-platform/api-pack",
@@ -2983,16 +2983,16 @@
         },
         {
             "name": "hautelook/alice-bundle",
-            "version": "2.9.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/hautelook/AliceBundle.git",
-                "reference": "17c5199b2a6efbc1383b0afe1cddfa3c176b7b6f"
+                "url": "https://github.com/theofidry/AliceBundle.git",
+                "reference": "b7afdbaf2c290be7d2fafe2ef7ddcb4c1be608c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hautelook/AliceBundle/zipball/17c5199b2a6efbc1383b0afe1cddfa3c176b7b6f",
-                "reference": "17c5199b2a6efbc1383b0afe1cddfa3c176b7b6f",
+                "url": "https://api.github.com/repos/theofidry/AliceBundle/zipball/b7afdbaf2c290be7d2fafe2ef7ddcb4c1be608c5",
+                "reference": "b7afdbaf2c290be7d2fafe2ef7ddcb4c1be608c5",
                 "shasum": ""
             },
             "require": {
@@ -3011,6 +3011,7 @@
                 "phpunit/phpunit": "^8.5",
                 "symfony/phpunit-bridge": "^5.1"
             },
+            "default-branch": true,
             "type": "symfony-bundle",
             "extra": {
                 "branch-alias": {
@@ -3024,7 +3025,14 @@
                     "Hautelook\\AliceBundle\\": "src"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Hautelook\\AliceBundle\\": [
+                        "fixtures",
+                        "tests"
+                    ]
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -3041,23 +3049,22 @@
             ],
             "description": "Symfony bundle to manage fixtures with Alice and Faker.",
             "keywords": [
+                "Alice",
+                "Faker",
                 "Fixture",
-                "alice",
-                "faker",
-                "orm",
-                "symfony"
+                "ORM",
+                "Symfony"
             ],
             "support": {
-                "issues": "https://github.com/hautelook/AliceBundle/issues",
-                "source": "https://github.com/hautelook/AliceBundle/tree/2.9.0"
+                "source": "https://github.com/theofidry/AliceBundle/tree/master"
             },
             "funding": [
                 {
-                    "url": "https://github.com/theofidry",
-                    "type": "github"
+                    "type": "github",
+                    "url": "https://github.com/theofidry"
                 }
             ],
-            "time": "2021-02-23T08:45:57+00:00"
+            "time": "2021-05-11T08:27:12+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
@@ -9914,7 +9921,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "conduction/commongroundbundle": 20
+        "conduction/commongroundbundle": 20,
+        "hautelook/alice-bundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -9924,5 +9932,5 @@
         "ext-iconv": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
