@@ -11,6 +11,54 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
         documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    mrc_api:
+        name: medewerker catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    memo_api:
+        name: memo component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    arc_api:
+#        name: agenda service
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    bs_api:
+#        name: bericht service
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/bs
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    uc_api:
+#        name: user component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    wrc_api:
+#        name: webresource catalogus
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    nrc_api:
+#        name: notification component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/nrc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#    rc_api:
+#        name: review component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/rc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 
 App\Entity\Entity:
     registration:
@@ -20,6 +68,7 @@ App\Entity\Entity:
         endpoint: 'participants'
         transformations:
             student: person
+            registrar: person
     person:
         name: person
         description: apikey
@@ -28,6 +77,33 @@ App\Entity\Entity:
     permissionDetails:
         name: permissionDetails
         description: the permisions that this person has given
+    memo:
+        name: memo
+        description: apikey
+        gateway: '@memo_api'
+        endpoint: 'memos'
+    employee:
+        name: employee
+        description: apikey
+        gateway: '@mrc_api'
+        endpoint: 'employees'
+        transformations:
+#            person: person #???
+#            education: education #???
+            followingCourse: education
+    education:
+        name: education
+        description: apikey
+        gateway: '@mrc_api'
+        endpoint: 'education'
+    availability:
+        name: availability
+        description: the availability of this employee (7 days of the week, each with a morning, afternoon and evening)
+        transformations:
+            availabilityNotes: memo
+#    availabilityDay: # or monday, tuesday, etc. ??? (see post employee taalhuizen-service)
+#        name: availabilityDay
+#        description: the availabilityDay of an availability (one of the 7 days of the week, with a morning, afternoon and evening)
         
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
