@@ -165,15 +165,31 @@ class EavService
         return $this->renderResult($object);
     }
 
-    public function handleGet(array $body, string $entityName, ?string $uuid)
+    /* @todo typecast the request */
+    public function handleGet(ObjectEntity $object, $request): array
     {
 
+        return $this->renderResult($object);
     }
 
-
-    public function handleDelete(array $body, string $entityName, ?string $uuid)
+    /* @todo typecast the request */
+    public function handleSearch(string $entityName, $request): array
     {
+        /* @todo we might want some filtering here */
+        $objects = $this->em->getRepository("App:ObjectEntity")->findBy(['entity.name'=>$entityName]);
+        $results = ['results'=>[],'total'];
+        foreach($objects as $object){
+            $results['results'][] = $this->renderResult($object);
+        }
+        $results['results']['total'] = count( $results['results']);
+    }
 
+    public function handleDelete(ObjectEntity $object, $request)
+    {
+        $this->em->remove($object);
+        $this->em->flush();
+
+        return [];
     }
 
     /**

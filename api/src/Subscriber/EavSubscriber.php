@@ -87,21 +87,36 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling reading requests
          */
-        if ($route == 'api_object_entities_get_eav_objects_collection' || $route == 'api_object_entities_get_eav_object_item')
+        if ($route == 'api_object_entities_get_eav_object_item')
         {
             /* @todo catch missing data and trhow error */
             if(!$entityName){
                 /* throw error */
             }
-            if(!$body){
-                /* throw error */
-            }
-            if(!$id &&  $route == 'get_eav_object'){
+            if(!$id && $route == 'get_eav_object'){
                 /* throw error */
             }
 
             // Transfer the variable to the service
-            $result = $this->eavService->handleGet($body, $entityName, $object);
+            $result = $this->eavService->handleGet($object, $event->getRequest());
+        }
+
+
+        /*
+         * Handeling reading requests
+         */
+        if ($route == 'api_object_entities_get_eav_objects_collection')
+        {
+            /* @todo catch missing data and trhow error */
+            if(!$entityName){
+                /* throw error */
+            }
+            if(!$id && $route == 'get_eav_object'){
+                /* throw error */
+            }
+
+            // Transfer the variable to the service
+            $result = $this->eavService->handleSearch($entityName, $event->getRequest());
         }
 
         /*

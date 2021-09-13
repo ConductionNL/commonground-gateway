@@ -82,6 +82,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
             }
         }
         elseif($action == 'remove'){
+            /* @todo we should check is an entity is not ussed elswhere before removing it */
             $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
             /* @todo we need to do some abstraction to log these calls, something like an callWrapper at the eav service  */
             $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '',[],[],false, 'DELETE');
