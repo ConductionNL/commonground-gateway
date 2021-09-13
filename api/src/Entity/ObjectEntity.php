@@ -82,22 +82,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 *               "description"="Returns the object"
 *              }
 *          },
-*          "put_eav_object"={
-*              "method"="GET",
-*              "path"="/eav/data/{entity}/{id}",
-*              "swagger_context" = {
-*                  "summary"="Put object",
-*                  "description"="Returns the updated object"
-*              }
-*          },
-*          "delete_eav_object"={
-*              "method"="GET",
-*              "path"="/eav/data/{entity}/{id}",
-*              "swagger_context" = {
-*                  "summary"="delete object",
-*                  "description"="Returns the updated object"
-*              }
-*          },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -137,18 +121,18 @@ class ObjectEntity
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
      * @MaxDepth(1)
      */
-    private ?Entity $entity;
+    private ?Entity $entity = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"all"})
      * @MaxDepth(1)
      */
     private $objectValues;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects")
+     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects", cascade={"persist"})
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */

@@ -320,7 +320,7 @@ class ValidationService
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 }
                 else{
-                    $objectEntity->setUri($url.'/');
+                    $objectEntity->setUri($url);
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
                 $objectEntity->setExternalResult($result);
@@ -332,7 +332,19 @@ class ValidationService
             },
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
-                $objectEntity->addError('gateway endpoint', $error->getResponse()->getBody()->getContents());
+                /* @todo lelijke code */
+                if(json_decode($error, true)){
+                    $error = json_decode($error, true);
+                    if(array_key_exists('hydra:description',$error)){
+                        $objectEntity->addError('gateway endpoint', $error['hydra:description']);
+                    }
+                    if(array_key_exists('message',$error)){
+                        $objectEntity->addError('gateway endpoint', $error['message']);
+                    }
+                }
+                else {
+                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getResponse()->getBody()->getContents());
+                }
             }
         );
 

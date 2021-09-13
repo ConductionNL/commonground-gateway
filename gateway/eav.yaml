@@ -15,7 +15,7 @@ App\Entity\Gateway:
         name: medewerker catalogus
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
         documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
     memo_api:
         name: memo component
@@ -67,18 +67,21 @@ App\Entity\Entity:
         description: apikey
         gateway: '@uc_api'
         endpoint: 'users'
-    registration:
-        route: '/api/registrations'
-        name: registration
+    student:
+        route: '/api/students'
+        name: students
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participants'
-        transformations:
-            student: person
-            registrar: person
+    registration:
+        route: '/api/registrations'
+        name: registrations
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participants'
     person:
         route: '/api/persons'
-        name: person
+        name: persons
         description: apikey
         gateway: '@contacten_api'
         endpoint: 'people'
@@ -92,7 +95,7 @@ App\Entity\Entity:
         endpoint: 'memos'
     employee:
         route: '/api/employees'
-        name: employee
+        name: employees
         description: apikey
         gateway: '@mrc_api'
         endpoint: 'employees'
@@ -101,29 +104,35 @@ App\Entity\Entity:
 #            education: education #???
 #            followingCourse: education
     student_dosier_event:
-        route: '/api/student_dosier_event'
+        route: '/api/student_dosier_events'
         name: student dosier events
         description: apikey
         gateway: '@edu_api'
-        endpoint: 'organization'
+        endpoint: 'student_dosier_events'
     test_result:
-        route: '/api/test_result'
+        route: '/api/test_results'
         name: test results
         description: apikey
         gateway: '@edu_api'
-            endpoint: 'organization'
+        endpoint: 'test_results'
     learning_needs:
         route: '/api/learning_needs'
         name: learning needs
         description: apikey
         gateway: '@edu_api'
-        endpoint: 'organization'
+        endpoint: 'learning_needs'
+    participation:
+        route: '/api/participations'
+        name: participations
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participations'
     organization:
         route: '/api/organizations'
-        name: organization
+        name: organizations
         description: apikey
         gateway: '@contacten_api'
-        endpoint: 'organization'
+        endpoint: 'organizations'
     education:
         name: education
         description: apikey
@@ -141,6 +150,21 @@ App\Entity\Entity:
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
     # registration
+    student_person:
+        name: person
+        type: object
+        entity: '@student'
+        object: '@person'
+    user_person:
+        name: person
+        type: object
+        entity: '@user'
+        object: '@person'
+    employee_person:
+        name: person
+        type: object
+        entity: '@employee'
+        object: '@person'
     registration_student:
         name: person
         type: object
@@ -164,6 +188,11 @@ App\Entity\Attribute:
         name: memo
         type: string
         entity: '@registration'
+    organisation_person:
+        name: person
+        type: object
+        entity: '@registration'
+        object: '@person'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm
