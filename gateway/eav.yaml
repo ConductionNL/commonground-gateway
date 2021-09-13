@@ -35,12 +35,12 @@ App\Entity\Gateway:
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/bs
 #        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
-#    uc_api:
-#        name: user component
-#        auth: apikey
-#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-#        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    uc_api:
+        name: user component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 #    wrc_api:
 #        name: webresource catalogus
 #        auth: apikey
@@ -61,6 +61,12 @@ App\Entity\Gateway:
 #        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 
 App\Entity\Entity:
+    user:
+        route: '/api/users'
+        name: users
+        description: apikey
+        gateway: '@uc_api'
+        endpoint: 'users'
     registration:
         route: '/api/registrations'
         name: registration
@@ -71,6 +77,7 @@ App\Entity\Entity:
             student: person
             registrar: person
     person:
+        route: '/api/persons'
         name: person
         description: apikey
         gateway: '@contacten_api'
@@ -84,14 +91,39 @@ App\Entity\Entity:
         gateway: '@memo_api'
         endpoint: 'memos'
     employee:
+        route: '/api/employees'
         name: employee
         description: apikey
         gateway: '@mrc_api'
         endpoint: 'employees'
-        transformations:
+#        transformations:
 #            person: person #???
 #            education: education #???
-            followingCourse: education
+#            followingCourse: education
+    student_dosier_event:
+        route: '/api/student_dosier_event'
+        name: student dosier events
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'organization'
+    test_result:
+        route: '/api/test_result'
+        name: test results
+        description: apikey
+        gateway: '@edu_api'
+            endpoint: 'organization'
+    learning_needs:
+        route: '/api/learning_needs'
+        name: learning needs
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'organization'
+    organization:
+        route: '/api/organizations'
+        name: organization
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'organization'
     education:
         name: education
         description: apikey
@@ -100,8 +132,8 @@ App\Entity\Entity:
     availability:
         name: availability
         description: the availability of this employee (7 days of the week, each with a morning, afternoon and evening)
-        transformations:
-            availabilityNotes: memo
+#        transformations:
+#            availabilityNotes: memo
 #    availabilityDay: # or monday, tuesday, etc. ??? (see post employee taalhuizen-service)
 #        name: availabilityDay
 #        description: the availabilityDay of an availability (one of the 7 days of the week, with a morning, afternoon and evening)
