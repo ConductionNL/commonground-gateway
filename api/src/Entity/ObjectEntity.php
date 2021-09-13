@@ -30,30 +30,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "get",
  *          "put",
  *          "delete",
- *          "get_eav_object"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity id",
- *               "description"="Returns the object"
- *              }
- *          },
- *          "put_eav_object"={
- *              "method"="PUT",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Put object",
- *                  "description"="Returns the updated object"
- *              }
- *          },
- *          "delete_eav_object"={
- *              "method"="DELETE",
- *              "path"="/eav/data/{entity}/{uuid}",
- *              "swagger_context" = {
- *                  "summary"="delete object",
- *                  "description"="Returns the updated object"
- *              }
- *          },
  *     },
  *  collectionOperations={
  *      "get",
@@ -74,6 +50,30 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "description"="Returns the created object"
  *          }
  *      },
+*          "get_eav_object"={
+*              "method"="GET",
+*              "path"="/eav/data/{entity}/{id}",
+*              "swagger_context" = {
+*                  "summary"="Get object with objectEntity id",
+*               "description"="Returns the object"
+*              }
+*          },
+*          "put_eav_object"={
+*              "method"="GET",
+*              "path"="/eav/data/{entity}/{id}",
+*              "swagger_context" = {
+*                  "summary"="Put object",
+*                  "description"="Returns the updated object"
+*              }
+*          },
+*          "delete_eav_object"={
+*              "method"="GET",
+*              "path"="/eav/data/{entity}/{id}",
+*              "swagger_context" = {
+*                  "summary"="delete object",
+*                  "description"="Returns the updated object"
+*              }
+*          },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

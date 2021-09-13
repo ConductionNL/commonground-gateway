@@ -52,16 +52,14 @@ class EavSubscriber implements EventSubscriberInterface
         // Make sure we only triggen when needed
         if(!in_array($route, [
             'api_object_entities_post_eav_objects_collection',
-            'api_object_entities_put_eav_object_item',
-            'api_object_entities_delete_eav_object_item',
-            'api_object_entities_get_eav_object_item',
+            'api_object_entities_put_eav_object_collection',
+            'api_object_entities_delete_eav_object_collection',
+            'api_object_entities_get_eav_object_collection',
             'api_object_entities_get_eav_objects_collection'
         ])){
             return;
         }
 
-        var_dump('test for get');
-        die;
         // We will always need an $entity
         $entityName = $event->getRequest()->attributes->get("entity");
 
@@ -71,7 +69,7 @@ class EavSubscriber implements EventSubscriberInterface
         // Checking and validating the id
         $id = $event->getRequest()->attributes->get("id");
         // The id might be contained somwhere else, lets test for that
-        $id = $this->eavService->getId($body, $id);
+        //$id = $this->eavService->getId($body, $id);
 
 
         /*@todo deze check voelt wierd aan */
@@ -83,7 +81,7 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling data mutantions
          */
-        if ($route == 'api_object_entities_post_eav_objects_collection' || $route == 'api_object_entities_put_eav_object_item') {
+        if ($route == 'api_object_entities_post_eav_objects_collection' || $route == 'api_object_entities_put_eav_object_collection') {
             $this->eavService->checkRequest($entityName, $body, $id, $event->getRequest()->getMethod());
             // Transfer the variable to the service
             $result = $this->eavService->handleMutation($object, $body);
@@ -93,7 +91,7 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling reading requests
          */
-        if ($route == 'api_object_entities_get_eav_object_item')
+        if ($route == 'api_object_entities_get_eav_object_collection')
         {
             /* @todo catch missing data and trhow error */
             if(!$entityName){
@@ -128,7 +126,7 @@ class EavSubscriber implements EventSubscriberInterface
         /*
          * Handeling deletions
          */
-        if ($route == 'delete_eav_object')
+        if ($route == 'delete_eav_collection')
         {
 
             /* @todo catch missing data and trhow error */

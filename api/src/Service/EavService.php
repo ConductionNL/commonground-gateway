@@ -83,7 +83,7 @@ class EavService
     public function getObject(?string $id, string $method, Entity $entity): ?ObjectEntity
     {
         if($id) {
-            $object = $this->em->getRepository("App:ObjectEntity")->get($id);
+            $object = $this->em->getRepository("App:ObjectEntity")->findOneBy(['id'=>Uuid::fromString($id)]);
             if(!$object) {
                 throw new HttpException('No object found with this id: ' . $id, 400);
             } elseif ($entity != $object->getEntity()) {
