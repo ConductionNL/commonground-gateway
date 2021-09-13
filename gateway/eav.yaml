@@ -62,6 +62,7 @@ App\Entity\Gateway:
 
 App\Entity\Entity:
     registration:
+        route: '/api/registrations'
         name: registration
         description: apikey
         gateway: '@edu_api'

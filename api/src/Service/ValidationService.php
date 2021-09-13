@@ -332,7 +332,7 @@ class ValidationService
             },
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
-                $this->objectEntity->addError('gateway endpoint', $error->getResponse()->getBody()->getContents());
+                $objectEntity->addError('gateway endpoint', $error->getResponse()->getBody()->getContents());
             }
         );
 

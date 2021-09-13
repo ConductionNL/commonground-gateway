@@ -8,12 +8,14 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use HttpException;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use SensioLabs\Security\Exception\HttpException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Paginator;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
@@ -34,6 +36,99 @@ class EavService
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+    }
+
+    /**
+     * @param string $entityName
+     * @return Entity
+     */
+    public function getEntity(string $entityName): Entity
+    {
+
+        if(!$entityName){
+            throw new HttpException('No entity name provided', 400);
+        }
+        $entity = $this->em->getRepository("App:Entity")->findOneBy(['name' => $entityName]);
+        if(!$entity || !($entity instanceof Entity)){
+            throw new HttpException('Could not establish an entity for '.$entityName, 400);
+        }
+
+        return $entity;
+    }
+
+    public function getId(array $body, ?string $id): ?string
+    {
+        if(!$id && array_key_exists('id', $body) ){
+            $id = $body['id'];
+        }
+        //elseif(!$id && array_key_exists('uuid', $body) ){ // this catches zgw api's
+        //    $id = $body['uuid'];
+        //)
+        elseif(!$id && array_key_exists('@id', $body)) {
+            $id = $this->commonGroundService->getUuidFromUrl($body['@id']);
+        }
+        elseif(!$id && array_key_exists('@self', $body)) {
+            $id = $this->commonGroundService->getUuidFromUrl($body['@self']);
+        }
+
+        return $id;
+    }
+
+    /**
+     * @param string|null $id
+     * @param string $method
+     * @param Entity $entity
+     * @return ObjectEntity|null
+     */
+    public function getObject(?string $id, string $method, Entity $entity): ?ObjectEntity
+    {
+        if($id) {
+            $object = $this->em->getRepository("App:ObjectEntity")->get($id);
+            if(!$object) {
+                throw new HttpException('No object found with this id: ' . $id, 400);
+            } elseif ($entity != $object->getEntity()) {
+                throw new HttpException('There is a mismatch between the provided ('.$entity->getName().') entity and the entity already atached to the object ('.$object->getEntity()->getName().')', 400);
+            }
+            return $object;
+        }
+        elseif($method == 'POST'){
+            $object = new ObjectEntity;
+            $object->setEntity($entity);
+            return $object;
+        }
+        return null;
+    }
+
+    public function getResponse(?string $id, string $entityName, array $body, Request $request, Entity $entity): Response
+    {
+        $object = $this->getObject($id, $request->getMethod(), $entity);
+
+        if($request->getMethod() == 'POST' || $request->getMethod() == 'PUT'){
+            $this->checkRequest($entityName, $body, $id, $request->getMethod());
+            // Transfer the variable to the service
+            $result = $this->handleMutation($object, $body);
+            $responseType = Response::HTTP_CREATED;
+        }
+
+        $response = new Response(
+            json_encode($result),
+            $responseType,
+            ['content-type' => 'application/json']
+        );
+        return $response;
+    }
+
+    public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
+    {
+        if(!$entityName){
+            throw new HttpException('An entity name should be provided for this route', 400);
+        }
+        if(!$body){
+            throw new HttpException('An body should be provided for this route', 400);
+        }
+        if(!$id &&  $method == 'PUT'){
+            throw new HttpException('An id should be provided for this route', 400);
+        }
     }
 
     /*

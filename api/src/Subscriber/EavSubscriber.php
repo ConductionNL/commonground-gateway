@@ -3,6 +3,7 @@ namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Component;
+use App\Entity\Entity;
 use App\Entity\ObjectCommunication;
 use App\Entity\ObjectEntity;
 
@@ -47,7 +48,7 @@ class EavSubscriber implements EventSubscriberInterface
     {
         $route = $event->getRequest()->attributes->get('_route');
         $resource = $event->getControllerResult();
-        
+
         // Make sure we only triggen when needed
         if(!in_array($route, [
             'api_object_entities_post_eav_objects_collection',
@@ -59,75 +60,25 @@ class EavSubscriber implements EventSubscriberInterface
             return;
         }
 
-
         // We will always need an $entity
         $entityName = $event->getRequest()->attributes->get("entity");
-        if(!$entityName){
-            throw new HttpException('No entity name provided', 400);
-        }
-        $entity = $this->em->getRepository("App\Entity\Entity")->findOneBy(['name' => $entityName]);
-        if(!$entity){
-            throw new HttpException('Could not establish an entity for '.$entityName, 400);
-        }
+        $entity = $this->eavService->getEntity($entityName);
 
         // Get  a body
         $body = json_decode($event->getRequest()->getContent(), true);
 
-        /*
-         * Checking and validating the id
-         */
+        // Checking and validating the id
         $id = $event->getRequest()->attributes->get("uuid");
         // The id might be contained somwhere else, lets test for that
-        if(!$id && array_key_exists('id', $body) ){
-            $id = $body['id'];
-        }
-        //elseif(!$id && array_key_exists('uuid', $body) ){ // this catches zgw api's
-        //    $id = $body['uuid'];
-        //)
-        elseif(!$id && array_key_exists('@id', $body)) {
-            $id = $this->commonGroundService->getUuidFromUrl($body['@id']);
-        }
-        elseif(!$id && array_key_exists('@self', $body)) {
-            $id = $this->commonGroundService->getUuidFromUrl($body['@self']);
-        }
+        $id = $this->eavService->getId($body, $id);
 
-        /*
-         * Fixing the object
-         */
-        if($id){
-            $object = $this->em->getRepository("App\Entity\ObjectEntity")->get($id);
-            if(!$object){
-                throw new HttpException('No object found with this id: ' . $id, 400);
-            }
-        }
-        elseif($route=="api_object_entities_post_eav_objects_collection"){
-            $object = New ObjectEntity;
-            $object->setEntity($entity);
-        }
-
-
-
-        // lets make sure that the entity and object match
-        if($entity != $object->getEntity() ){
-            throw new HttpException('There is a mismatch between the provided ('.$entity->getName().') entity and the entity already atached to the object ('.$object->getEntity()->getName().')', 400);
-        }
+        $object = $this->eavService->getObject($id, $event->getRequest()->getMethod(), $entity);
 
         /*
          * Handeling data mutantions
          */
         if ($route == 'api_object_entities_post_eav_objects_collection' || $route == 'api_object_entities_put_eav_object_item') {
-
-            /* @todo catch missing data and trhow error */
-            if(!$entityName){
-                throw new HttpException('An entity name should be provided for this route', 400);
-            }
-            if(!$body){
-                throw new HttpException('An body should be provided for this route', 400);
-            }
-            if(!$id &&  $route == 'api_object_entities_put_eav_object_item'){
-                throw new HttpException('An id should be provided for this route', 400);
-            }
-
+            $this->eavService->checkRequest($entityName, $body, $id, $event->getRequest()->getMethod());
             // Transfer the variable to the service
             $result = $this->eavService->handleMutation($object, $body);
         }
@@ -145,7 +96,7 @@ class EavSubscriber implements EventSubscriberInterface
             if(!$body){
                 /* throw error */
             }
-            if(!$uuid &&  $route == 'get_eav_object'){
+            if(!$id &&  $route == 'get_eav_object'){
                 /* throw error */
             }
 
@@ -163,7 +114,7 @@ class EavSubscriber implements EventSubscriberInterface
             if(!$entityName){
                 /* throw error */
             }
-            if(!$uuid ){
+            if(!$id ){
                 /* throw error */
             }
 
