@@ -17,6 +17,7 @@ RUN set -eux; \
 		libpng-dev \
 		postgresql-dev \
 		zlib-dev \
+		gmp-dev \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
@@ -27,6 +28,7 @@ RUN set -eux; \
 		pdo_mysql \
 		pcntl \
 		gd \
+		gmp \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \

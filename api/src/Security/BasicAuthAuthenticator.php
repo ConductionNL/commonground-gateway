@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
@@ -95,7 +96,8 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         $person = [];
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
-            $person = $this->commonGroundService->getResource($user['person']);
+            $id = substr($user['person'], strrpos($user['person'], '/') + 1);
+            $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
         }
 
         return new AuthenticationUser(
@@ -118,12 +120,15 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
 
-        $jwt = $this->authenticationService->generateJwt();
+        $result = [];
+        $result['token'] = $this->authenticationService->generateJwt();
 
-        var_dump($jwt);
-        die;
+        return new Response(
+            json_encode($result),
+            Response::HTTP_OK,
+            ['content-type' => 'application/json']
+        );
 
-        return new RedirectResponse($backUrl);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
