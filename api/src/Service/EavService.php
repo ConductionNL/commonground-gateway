@@ -175,13 +175,16 @@ class EavService
     /* @todo typecast the request */
     public function handleSearch(string $entityName, $request): array
     {
-        /* @todo we might want some filtering here */
-        $objects = $this->em->getRepository("App:ObjectEntity")->findBy(['entity.name'=>$entityName]);
-        $results = ['results'=>[],'total'];
+        /* @todo we might want some filtering here, also this should be in the entity repository */
+        $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
+        $objects = $this->em->getRepository("App:ObjectEntity")->findBy(['entity'=>$entity]);
+        $results = ['results'=>[]];
         foreach($objects as $object){
             $results['results'][] = $this->renderResult($object);
         }
-        $results['results']['total'] = count( $results['results']);
+        $results['total'] = count( $results['results']);
+
+        return $results;
     }
 
     public function handleDelete(ObjectEntity $object, $request)

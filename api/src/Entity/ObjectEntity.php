@@ -32,7 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "delete",
  *          "get_eav_object"={
  *              "method"="GET",
- *              "path"="/eav/data/{entity}/{uuid}",
+ *              "path"="/eav/data/{entity}/{id}",
  *              "swagger_context" = {
  *                  "summary"="Get object with objectEntity id",
  *               "description"="Returns the object"
@@ -40,7 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *          "put_eav_object"={
  *              "method"="PUT",
- *              "path"="/eav/data/{entity}/{uuid}",
+ *              "path"="/eav/data/{entity}/{id}",
  *              "swagger_context" = {
  *                  "summary"="Put object",
  *                  "description"="Returns the updated object"

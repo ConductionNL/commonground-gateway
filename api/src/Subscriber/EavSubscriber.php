@@ -60,19 +60,25 @@ class EavSubscriber implements EventSubscriberInterface
             return;
         }
 
+        var_dump('test for get');
+        die;
         // We will always need an $entity
         $entityName = $event->getRequest()->attributes->get("entity");
-        $entity = $this->eavService->getEntity($entityName);
 
         // Get  a body
         $body = json_decode($event->getRequest()->getContent(), true);
 
         // Checking and validating the id
-        $id = $event->getRequest()->attributes->get("uuid");
+        $id = $event->getRequest()->attributes->get("id");
         // The id might be contained somwhere else, lets test for that
         $id = $this->eavService->getId($body, $id);
 
-        $object = $this->eavService->getObject($id, $event->getRequest()->getMethod(), $entity);
+
+        /*@todo deze check voelt wierd aan */
+        if($route != 'api_object_entities_get_eav_objects_collection'){
+            $entity = $this->eavService->getEntity($entityName);
+            $object = $this->eavService->getObject($id, $event->getRequest()->getMethod(), $entity);
+        }
 
         /*
          * Handeling data mutantions
@@ -103,7 +109,7 @@ class EavSubscriber implements EventSubscriberInterface
 
 
         /*
-         * Handeling reading requests
+         * Handeling search requests
          */
         if ($route == 'api_object_entities_get_eav_objects_collection')
         {
