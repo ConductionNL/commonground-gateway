@@ -7,23 +7,153 @@ use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
+use Jose\Component\Core\AlgorithmManager;
+use Jose\Component\KeyManagement\JWKFactory;
+use Jose\Component\Signature\Algorithm\RS512;
+use Jose\Component\Signature\JWSVerifier;
+use Jose\Component\Signature\Serializer\CompactSerializer;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 class AuthenticationService
 {
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
     private Client $client;
+    private TokenStorageInterface $tokenStorage;
+    private CommonGroundService $commonGroundService;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, CommonGroundService $commonGroundService)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->client = new Client();
+        $this->tokenStorage = $tokenStorage;
+        $this->commonGroundService = $commonGroundService;
+    }
+
+    public function generateJwt()
+    {
+        $user = $this->retrieveCurrentUser();
+
+        $array = [
+          'username' => $user->getUsername(),
+          'password' => $user->getPassword()
+        ];
+
+        $user = $this->commonGroundService->createResource($array, ['component' => 'uc', 'type' => 'login']);
+
+        return $user['jwtToken'];
+
+    }
+
+    /**
+     * Validates a JWT token with the public key stored in the component.
+     *
+     * @param string $jws       The signed JWT token to validate
+     * @param string $publicKey
+     *
+     * @throws Exception Thrown when the JWT token could not be verified
+     *
+     * @return bool Whether the jwt is valid
+     */
+    public function validateJWTAndGetPayload(string $jws, string $publicKey): bool
+    {
+        try {
+            $serializer = new CompactSerializer();
+            $jwt = $serializer->unserialize($jws);
+            $algorithmManager = new AlgorithmManager([new RS512()]);
+            $pem = $this->writeFile($publicKey, 'pem');
+            $public = JWKFactory::createFromKeyFile($pem);
+            $this->removeFiles([$pem]);
+
+            $jwsVerifier = new JWSVerifier($algorithmManager);
+
+            if ($jwsVerifier->verifyWithKey($jwt, $public, 0)) {
+                return true;
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    public function checkJWTExpiration($token): bool
+    {
+        $data = $this->retrieveJWTContents($token);
+
+        if (strtotime('now') >= $data['exp']) {
+            return false;
+        }
+
+        return true;
+
+    }
+
+    public function retrieveJWTUser($token): bool
+    {
+        $data = $this->retrieveJWTContents($token);
+
+        try {
+            $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $data['userId']]);
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function retrieveJWTContents($token): array
+    {
+        $json = base64_decode(explode('.', $token)[1]);
+        return json_decode($json, true);
+    }
+
+    /**
+     * Writes a temporary file in the component file system.
+     *
+     * @param string $contents The contents of the file to write
+     * @param string $type     The type of file to write
+     *
+     * @return string The location of the written file
+     */
+    public function writeFile(string $contents, string $type): string
+    {
+        $stamp = microtime().getmypid();
+        file_put_contents(dirname(__FILE__, 3).'/var/'.$type.'-'.$stamp, $contents);
+
+        return dirname(__FILE__, 3).'/var/'.$type.'-'.$stamp;
+    }
+
+    /**
+     * Removes (temporary) files from the filesystem.
+     *
+     * @param array $files An array of file paths of files to delete
+     */
+    public function removeFiles(array $files): void
+    {
+        foreach ($files as $filename) {
+            unlink($filename);
+        }
+    }
+
+    public function retrieveCurrentUser()
+    {
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!is_string($user)) {
+            return $user;
+        }
+
+        throw new AccessDeniedException('Unable to find logged in user');
     }
 
     public function authenticate(string $method, string $identifier, string $code): array
