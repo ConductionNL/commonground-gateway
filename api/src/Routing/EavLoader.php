@@ -57,7 +57,7 @@ class EavLoader extends Loader
     {
         if(!$this->entityManager->getConnection()->isConnected())
             return [];
-        
+
         $routes = [];
         $entities = $this->entityManager->getRepository('App:Entity')->findAll();
 
