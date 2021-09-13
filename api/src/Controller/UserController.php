@@ -38,6 +38,14 @@ class UserController extends AbstractController
     }
 
     /**
+     * @Route("login", methods={"POST"})
+     */
+    public function LoginAction(Request $request, CommonGroundService $commonGroundService)
+    {
+
+    }
+
+    /**
      * @Route("login/digispoof")
      */
     public function DigispoofAction(Request $request, CommonGroundService $commonGroundService)
