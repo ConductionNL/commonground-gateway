@@ -136,6 +136,12 @@ class Entity
     private Collection $usedIn;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $transformations = [];
+
+    /**
      * @var Datetime The moment this request was created
      *
      * @Groups({"read"})
@@ -316,6 +322,18 @@ class Entity
                 $attribute->setObject(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getTransformations(): ? array
+    {
+        return $this->transformations;
+    }
+
+    public function setTransformations(array $transformations): self
+    {
+        $this->transformations = $transformations;
 
         return $this;
     }

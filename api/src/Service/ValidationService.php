@@ -280,27 +280,27 @@ class ValidationService
             $url = $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint();
         }
 
+        // do transformation
+        if($objectEntity->getEntity()->getTransformations() && !empty($objectEntity->getEntity()->getTransformations())){
+            /* @todo use array map to rename key's https://stackoverflow.com/questions/9605143/how-to-rename-array-keys-in-php */
+        }
+
+        var_dump($objectEntity->getEntity()->getName());
+
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
-        // $onFulfilled
+            // $onFulfilled
             function ($response) {
-                //var_dump($value);
                 $this->objectEntity->setExternalResult(json_decode($response->getBody()->getContents(), true));
             },
             // $onRejected
             function ($error) {
-                ///var_dump($reason);
-                //echo $error->getMessage();
+                var_dump($this->objectEntity->getEntity()->getName());
+                echo($error->getMessage());
+                //echo $error->getMessage($error);
                 $this->objectEntity->addError('gateway endpoint', $error->getMessage());
             }
         );
 
-///
-        // Async aanroepen van de promise methode in cg bundel
-//        $promise = $client->requestAsync('GET', 'http://httpbin.org/get', $post);
-//
-//        // Creating a promise
-//        $promise
-//
         return $promise;
     }
 

@@ -18,31 +18,13 @@ App\Entity\Entity:
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participants'
+        transformations:
+            student: person
     person:
         name: person
         description: apikey
         gateway: '@contacten_api'
         endpoint: 'people'
-    organization:
-        name: organization
-        description: apikey
-        gateway: '@contacten_api'
-        endpoint: 'organizations'
-    email:
-        name: email
-        description: an email addres beloning to an person or organization
-        gateway: '@contacten_api'
-        endpoint: 'emails'
-    telephone:
-        name: telephone
-        description: an telephone number beloning to an person or organization
-        gateway: '@contacten_api'
-        endpoint: 'telephones'
-    addres:
-        name: addres
-        description: an addres  beloning to an person or organization
-        gateway: '@contacten_api'
-        endpoint: 'addresses'
     permissionDetails:
         name: permissionDetails
         description: the permisions that this person has given
@@ -73,63 +55,6 @@ App\Entity\Attribute:
         name: memo
         type: string
         entity: '@registration'
-    # person
-    person_givenName:
-        name: givenName
-        type: string
-        entity: '@person'
-    person_additionalName:
-        name: additionalName
-        type: string
-        entity: '@person'
-    person_familyName:
-        name: familyName
-        type: string
-        entity: '@person'
-    person_gender:
-        name: gender
-        type: string
-        entity: '@person'
-    person_birthday:
-        name: birthday
-        type: date
-        entity: '@person'
-    person_organization:
-        name: organization
-        type: object
-        entity: '@person'
-        object: '@organization'
-    person_emails:
-        name: emails
-        multiple: true
-        type: object
-        entity: '@person'
-        object: '@email'
-    person_telephones:
-        name: telephones
-        multiple: true
-        type: object
-        entity: '@person'
-        object: '@telephone'
-    # organization
-    organization_name:
-        name: name
-        type: string
-        entity: '@organization'
-    organization_type:
-        name: type
-        type: string
-        entity: '@organization'
-    # Telephone
-    telephone_telephone:
-        name: telephone
-        type: string
-        entity: '@telephone'    
-    # email
-    email_email:
-        name: email
-        type: string
-        entity: '@email'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm

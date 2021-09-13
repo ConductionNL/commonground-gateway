@@ -57,12 +57,11 @@ class EavService
                 echo $promise->wait();
             }
         }
-//        // Making the api calls
-//
-//        // Waiting for als the guzzle the results
-//        if($object->getHasErrors()){
-//            return $this->returnErrors($object);
-//        }
+
+        // Afther guzzle has cleared we need to again check for errors
+        if($object->getHasErrors()) {
+            //return $this->returnErrors($object);
+        }
 
         // Saving the data
         $this->em->persist($object);
