@@ -17,12 +17,14 @@ class GatewayService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private TokenStorageInterface $tokenStorage;
+    private AuthenticationService $authenticationService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->tokenStorage = $tokenStorage;
+        $this->authenticationService = $authenticationService;
     }
 
     /**

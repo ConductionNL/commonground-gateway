@@ -14,6 +14,7 @@ use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Security\User\CommongroundUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -79,26 +80,33 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
-        $users = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $credentials['username']]);
+        $users = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $credentials['username']])['hydra:member'];
 
         if (count($users) === 0) {
             return;
         }
 
-        $user = $this->commonGroundService->createResource(array($credentials['username'], $credentials['password']), ['component' => 'uc', 'type' => 'login']);
+        try {
+            $user = $this->commonGroundService->createResource($credentials, ['component' => 'uc', 'type' => 'login']);
+        } catch (ClientException $e) {
+            throw New BadRequestException($e->getResponse()->getBody()->getContents());
+        }
 
-        var_dump($user);
-        die;
+        $person = [];
+
+        if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
+            $person = $this->commonGroundService->getResource($user['person']);
+        }
 
         return new AuthenticationUser(
             $credentials['username'],
-            '',
-            $credentials['givenName'],
-            $credentials['familyName'],
-            $credentials['givenName'] . " " . $credentials['familyName'],
+            $credentials['password'],
+            $person['givenName'] ?? '',
+            $person['familyName'] ?? '',
+            $person['givenName'] . " " . $person['familyName'] ?? '',
             null,
             ['ROLE_USER'],
-            $credentials['email']
+            $credentials['username']
         );
     }
 
@@ -109,20 +117,18 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        $backUrl = $this->session->get('backUrl');
 
-        $this->session->remove('backUrl');
-        $this->session->remove('method');
-        $this->session->remove('identifier');
+        $jwt = $this->authenticationService->generateJwt();
+
+        var_dump($jwt);
+        die;
 
         return new RedirectResponse($backUrl);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        return new RedirectResponse($this->router->generate(
-            'app_user_authenticate',
-            ['method' => $this->session->get('method'), 'identifier' => $this->session->get('identifier')]));
+        throw New BadRequestException("Invalid username + password combination");
     }
 
     /**

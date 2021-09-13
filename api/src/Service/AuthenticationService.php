@@ -8,22 +8,56 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class AuthenticationService
 {
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
     private Client $client;
+    private TokenStorageInterface $tokenStorage;
+    private CommonGroundService $commonGroundService;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, CommonGroundService $commonGroundService)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->client = new Client();
+        $this->tokenStorage = $tokenStorage;
+        $this->commonGroundService = $commonGroundService;
+    }
+
+    public function generateJwt()
+    {
+        $user = $this->retrieveCurrentUser();
+
+        $array = [
+          'username' => $user->getUsername(),
+          'password' => $user->getPassword()
+        ];
+
+        $user = $this->commonGroundService->createResource($array, ['component' => 'uc', 'type' => 'login']);
+
+
+        var_dump($user);
+        die;
+
+    }
+
+    public function retrieveCurrentUser()
+    {
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!is_string($user)) {
+            return $user;
+        }
+
+        throw new AccessDeniedException('Unable to find logged in user');
     }
 
     public function authenticate(string $method, string $identifier, string $code): array
