@@ -16,6 +16,8 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Paginator;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\String\Inflector\EnglishInflector;
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Promise\Utils;
 
 class ValidationService
 {
@@ -24,7 +26,6 @@ class ValidationService
     private GatewayService $gatewayService;
     public $promises = []; /* @todo zou private met getter moeten zijn */
     public $errors = []; /* @todo zou private met getter moeten zijn */
-    public ?ObjectEntity $objectEntity;
 
 
     public function __construct(
@@ -81,6 +82,7 @@ class ValidationService
                     }
                 }
             }
+
             // TODO: something with defaultValue, maybe not here? (but do check if defaultValue is set before returning this is required!)
 //            elseif ($attribute->getDefaultValue()) {
 //                $post[$attribute->getName()] = $attribute->getDefaultValue();
@@ -96,14 +98,13 @@ class ValidationService
                 /* @todo handling the setting to null of exisiting variables */
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
+        }
 
-            /* @todo dit is de plek waarop we weten of er een appi call moet worden gemaakt */
-            if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
-                $promise =$this->createPromise($objectEntity, $post);
-                $this->promises[]=$promise;
-                $objectEntity->addPromise($promise);
-            }
-
+        /* @todo dit is de plek waarop we weten of er een appi call moet worden gemaakt */
+        if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
+            $promise =$this->createPromise($objectEntity, $post);
+            $this->promises[]=$promise;
+            $objectEntity->addPromise($promise);
         }
 
         return $objectEntity;
@@ -261,15 +262,15 @@ class ValidationService
 
 
     function createPromise(ObjectEntity $objectEntity, array $post){
-        //TODO: client is not recognized, so commented out for now
+
 
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een atrubte zijn gevangen
+
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
         $query = [];
         $headers = [];
 
-        $this->objectEntity = $objectEntity;
 
         if($objectEntity->getUri()){
             $method = 'PUT';
@@ -285,19 +286,38 @@ class ValidationService
             /* @todo use array map to rename key's https://stackoverflow.com/questions/9605143/how-to-rename-array-keys-in-php */
         }
 
-        var_dump($objectEntity->getEntity()->getName());
+        // If we are depend on subresources on another api we need to wait for those to resolve (we might need there id's for this resoure)
+        /* @to the bug of setting the promise on the wrong object blocks this */
+        if(!$objectEntity->getHasPromises()){
+            Utils::settle($objectEntity->getPromises())->wait();
+        }
+
+        // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
+        foreach($objectEntity->getObjectValues() as $value){
+            // Lets prefend the posting of values that we store localy
+            unset($post[$value->getAttribute()->getName()]);
+
+            // then we can check if we need to insert uri for the linked data of subobjects in other api's
+            if($value->getAttribute()->getMultiple() && $value->getObjects()){
+                /* @todo this loop in loop is a death sin */
+                foreach ($value->getObjects() as $objectToUri){
+                    $post[$value->getAttribute()->getName()][] =   $objectToUri->getUri();
+                }
+            }
+            elseif($value->getObjects()->first()){
+                $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+            }
+        }
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) {
-                $this->objectEntity->setExternalResult(json_decode($response->getBody()->getContents(), true));
+            function ($response) use ($post, $objectEntity, $url) {
+                $objectEntity->setUri($url);
+                $objectEntity->setExternalResult(json_decode($response->getBody()->getContents(), true));
             },
             // $onRejected
-            function ($error) {
-                var_dump($this->objectEntity->getEntity()->getName());
-                echo($error->getMessage());
-                //echo $error->getMessage($error);
-                $this->objectEntity->addError('gateway endpoint', $error->getMessage());
+            function ($error) use ($post, $objectEntity ) {
+                $this->objectEntity->addError('gateway endpoint', $error->getResponse()->getBody()->getContents());
             }
         );
 
