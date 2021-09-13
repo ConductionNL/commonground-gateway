@@ -3,6 +3,12 @@
     "license": "proprietary",
     "minimum-stability": "stable",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/theofidry/AliceBundle"
+        }
+    ],
     "require": {
         "php": "^7.4.0",
         "ext-ctype": "*",
@@ -14,7 +20,7 @@
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.9",
-        "hautelook/alice-bundle": "^2.9",
+        "hautelook/alice-bundle": "dev-master",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
         "symfony/asset": "5.3.*",
