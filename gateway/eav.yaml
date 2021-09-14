@@ -67,12 +67,35 @@ App\Entity\Entity:
         description: apikey
         gateway: '@uc_api'
         endpoint: 'users'
+#Student stuff
     student:
         route: '/api/students'
         name: students
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participants'
+    civicIntegrationDetails:
+        name: civicIntegrationDetails
+        description: the permisions that this person has given
+    generalDetails:
+        name: generalDetails
+        description: the permisions that this person has given    
+    referrerDetails:
+        name: referrerDetails
+        description: the permisions that this person has given
+    backgroundDetails:
+        name: backgroundDetails
+        description: the permisions that this person has given
+    dutchNTDetails:
+        name: dutchNTDetails
+        description: the permisions that this person has given
+    jobDetails:
+        name: jobDetails
+        description: the permisions that this person has given
+    motivationDetails:
+        name: motivationDetails
+        description: the permisions that this person has given
+    #regitration is basically a student clone
     registration:
         route: '/api/registrations'
         name: registrations
@@ -155,6 +178,217 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@person'
+    student_civicIntegrationDetails:
+        name: civicIntegrationDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_generalDetails:
+        name: generalDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_referrerDetails:
+        name: referrerDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_backgroundDetails:
+        name: backgroundDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_dutchNTDetails:
+        name: dutchNTDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_registrar:
+        name: registrar
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_permissionDetails:
+        name: permissionDetails
+        type: object
+        entity: '@student'
+        object: '@permissionDetails'
+    student_jobDetails:
+        name: jobDetails
+        type: object
+        entity: '@student'
+        object: '@jobDetails'
+    student_motivationDetails:
+        name: motivationDetails
+        type: object
+        entity: '@student'
+        object: '@motivationDetails'
+    student_languageHouseId:
+        name: languageHouseId
+        type: string
+        entity: '@student'
+    student_speakingLevel:
+        name: speakingLevel
+        type: string
+        entity: '@student'
+    student_readingTestResult:
+        name: readingTestResult
+        type: string
+        entity: '@student'
+    student_writingTestResult:
+        name: writingTestResult
+        type: string
+        entity: '@student'
+    # civicIntegrationDetails
+    civicIntegrationDetails_civicIntegrationRequirement:
+        name: civicIntegrationRequirement
+        type: string
+        entity: '@civicIntegrationDetails'
+    civicIntegrationDetails_civicIntegrationRequirementReason:
+        name: civicIntegrationRequirementReason
+        type: string
+        entity: '@civicIntegrationDetails'
+    civicIntegrationDetails_civicIntegrationRequirementFinishDate:
+        name: civicIntegrationRequirementFinishDate
+        type: string
+        entity: '@civicIntegrationDetails'
+    # generalDetails
+    generalDetails_countryOfOrigin:
+        name: countryOfOrigin
+        type: string
+        entity: '@generalDetails'
+    generalDetails_nativeLanguage:
+        name: nativeLanguage
+        type: string
+        entity: '@generalDetails'
+    generalDetails_otherLanguages:
+        name: otherLanguages
+        type: string
+        entity: '@generalDetails'
+    generalDetails_familyComposition:
+        name: familyComposition
+        type: string
+        entity: '@generalDetails'
+    generalDetails_childrenCount:
+        name: childrenCount
+        type: integer
+        entity: '@generalDetails'
+    generalDetails_childrenDatesOfBirth:
+        name: childrenDatesOfBirth
+        type: integer
+        entity: '@referrerDetails'
+    # referrerDetails
+    referrerDetails_referringOrganization:
+        name: referringOrganization
+        type: string
+        entity: '@referrerDetails'
+    referrerDetails_email:
+        name: email
+        type: string
+        entity: '@referrerDetails'
+    # backgroundDetails
+    backgroundDetails_foundVia:
+        name: foundVia
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_foundViaOther:
+        name: foundViaOther
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBefore:
+        name: wentToLanguageHouseBefore
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBeforeReason:
+        name: wentToLanguageHouseBeforeReason
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBeforeYear:
+        name: wentToLanguageHouseBeforeYear
+        type: integer
+        entity: '@backgroundDetails'
+    backgroundDetails_network:
+        name: network
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_participationLadder:
+        name: participationLadder
+        type: integer
+        entity: '@backgroundDetails'
+    # dutchNTDetails
+    dutchNTDetails_dutchNTLevel:
+        name: dutchNTLevel
+        type: string
+        entity: '@dutchNTDetails'
+    dutchNTDetails_inNetherlandsSinceYear:
+        name: inNetherlandsSinceYear
+        type: integer
+        entity: '@dutchNTDetails'
+    dutchNTDetails_languageInDailyLife:
+        name: languageInDailyLife
+        type: string
+        entity: '@dutchNTDetails'
+    dutchNTDetails_knowsLatinAlphabet:
+        name: knowsLatinAlphabet
+        type: boolean
+        entity: '@dutchNTDetails'
+    dutchNTDetails_lastKnownLevel:
+        name: lastKnownLevel
+        type: string
+        entity: '@dutchNTDetails'
+    # jobDetails
+    jobDetails_trainedForJob:
+        name: trainedForJob
+        type: string
+        entity: '@jobDetails'
+    jobDetails_lastJob:
+        name: lastJob
+        type: string
+        entity: '@jobDetails'
+    jobDetails_dayTimeActivities:
+        name: dayTimeActivities
+        type: string
+        entity: '@jobDetails'
+    jobDetails_dayTimeActivitiesOther:
+        name: dayTimeActivitiesOther
+        type: boolean
+        entity: '@jobDetails'
+    # motivationDetails
+    motivationDetails_desiredSkills:
+        name: desiredSkills
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_desiredSkillsOther:
+        name: desiredSkillsOther
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_hasTriedThisBefore:
+        name: hasTriedThisBefore
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_whyWantTheseskills:
+        name: whyWantTheseskills
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_desiredLearningMethod:
+        name: desiredLearningMethod
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_remarks:
+        name: remarks
+        type: string
+        entity: '@motivationDetails'
+    # person
+    person_contactPreference:
+        name: contactPreference
+        type: string
+        entity: '@person'
+
+    person_contactPreferenceOther:
+        name: contactPreferenceOther
+        type: string
+        entity: '@person'
+    #user
     user_person:
         name: person
         type: object
@@ -165,6 +399,7 @@ App\Entity\Attribute:
         type: object
         entity: '@employee'
         object: '@person'
+    #registration
     registration_student:
         name: person
         type: object
