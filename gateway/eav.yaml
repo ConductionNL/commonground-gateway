@@ -283,6 +283,10 @@ App\Entity\Attribute:
         name: referringOrganization
         type: string
         entity: '@referrerDetails'
+    referrerDetails_referringOrganizationOther:
+        name: referringOrganizationOther
+        type: string
+        entity: '@referrerDetails'    
     referrerDetails_email:
         name: email
         type: string
@@ -367,10 +371,18 @@ App\Entity\Attribute:
         name: hasTriedThisBefore
         type: string
         entity: '@motivationDetails'
+    motivationDetails_hasTriedThisBeforeExplanation:
+        name: hasTriedThisBeforeExplanation
+        type: string
+        entity: '@motivationDetails'    
     motivationDetails_whyWantTheseskills:
         name: whyWantTheseskills
         type: string
         entity: '@motivationDetails'
+    motivationDetails_whyWantThisNow:
+        name: whyWantThisNow
+        type: string
+        entity: '@motivationDetails'     
     motivationDetails_desiredLearningMethod:
         name: desiredLearningMethod
         type: string
