@@ -55,11 +55,13 @@ class EavLoader extends Loader
 
     public function getEntityRoutes(): array
     {
-        if(!$this->entityManager->getConnection()->isConnected())
-            return [];
 
         $routes = [];
-        $entities = $this->entityManager->getRepository('App:Entity')->findAll();
+        try{
+            $entities = $this->entityManager->getRepository('App:Entity')->findAll();
+        } catch(\Doctrine\DBAL\Exception\ConnectionException $e) {
+            return [];
+        }
 
         foreach($entities as $entity)
         {

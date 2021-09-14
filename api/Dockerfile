@@ -5,6 +5,7 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
+		bash \
 	;
 
 ARG APCU_VERSION=5.1.17
