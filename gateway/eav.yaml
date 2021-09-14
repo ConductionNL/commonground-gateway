@@ -41,12 +41,12 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
         documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
-#    wrc_api:
-#        name: webresource catalogus
-#        auth: apikey
-#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-#        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    wrc_api:
+        name: webresource catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 #    nrc_api:
 #        name: notification component
 #        auth: apikey
@@ -66,7 +66,7 @@ App\Entity\Entity:
         name: users
         description: apikey
         gateway: '@uc_api'
-        endpoint: 'users'
+        endpoint: 'users'   
 #Student stuff
     student:
         route: '/api/students'
@@ -95,7 +95,7 @@ App\Entity\Entity:
     motivationDetails:
         name: motivationDetails
         description: the permisions that this person has given
-    #regitration is basically a student clone
+#regitration is basically a student clone
     registration:
         route: '/api/registrations'
         name: registrations
@@ -116,6 +116,7 @@ App\Entity\Entity:
         description: apikey
         gateway: '@memo_api'
         endpoint: 'memos'
+#Employee stuff
     employee:
         route: '/api/employees'
         name: employees
@@ -123,33 +124,43 @@ App\Entity\Entity:
         gateway: '@mrc_api'
         endpoint: 'employees'
 #        transformations:
-#            person: person #???
-#            education: education #???
 #            followingCourse: education
+#StudentDossier stuff
     student_dosier_event:
         route: '/api/student_dosier_events'
         name: student dosier events
         description: apikey
         gateway: '@edu_api'
         endpoint: 'student_dosier_events'
+#Document stuff
+    document:
+        route: '/api/documents'
+        name: documents
+        description: apikey
+        gateway: '@wrc_api'
+        endpoint: 'documents'
+#TestResult stuff
     test_result:
         route: '/api/test_results'
         name: test results
         description: apikey
         gateway: '@edu_api'
         endpoint: 'test_results'
+#LearningNeed stuff
     learning_needs:
         route: '/api/learning_needs'
         name: learning needs
         description: apikey
         gateway: '@edu_api'
         endpoint: 'learning_needs'
+#Participation stuff
     participation:
         route: '/api/participations'
         name: participations
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participations'
+#Organization stuff
     organization:
         route: '/api/organizations'
         name: organizations
