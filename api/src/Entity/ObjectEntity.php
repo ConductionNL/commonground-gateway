@@ -306,6 +306,7 @@ class ObjectEntity
 
     public function getAllErrors(): ?array
     {
+        /* @todo gelaagd teruggeven */
         $allErrors = [];
         $subResources = $this->getSubresources();
         foreach ($subResources as $subresource) {

@@ -161,6 +161,9 @@ class EavSubscriber implements EventSubscriberInterface
         if(array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
+
+        /* @todo hier notificeren */
+
         $response = new Response(
             json_encode($result),
             $responseType,

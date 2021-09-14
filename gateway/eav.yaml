@@ -182,27 +182,27 @@ App\Entity\Attribute:
         name: civicIntegrationDetails
         type: object
         entity: '@student'
-        object: '@person'
+        object: '@civicIntegrationDetails'
     student_generalDetails:
         name: generalDetails
         type: object
         entity: '@student'
-        object: '@person'
+        object: '@generalDetails:'
     student_referrerDetails:
         name: referrerDetails
         type: object
         entity: '@student'
-        object: '@person'
+        object: '@referrerDetails'
     student_backgroundDetails:
         name: backgroundDetails
         type: object
         entity: '@student'
-        object: '@person'
+        object: '@backgroundDetails'
     student_dutchNTDetails:
         name: dutchNTDetails
         type: object
         entity: '@student'
-        object: '@person'
+        object: '@dutchNTDetails'
     student_registrar:
         name: registrar
         type: object
@@ -268,6 +268,7 @@ App\Entity\Attribute:
     generalDetails_familyComposition:
         name: familyComposition
         type: string
+        maxLength: 255
         entity: '@generalDetails'
     generalDetails_childrenCount:
         name: childrenCount
