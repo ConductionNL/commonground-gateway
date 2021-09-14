@@ -55,11 +55,13 @@ class EavLoader extends Loader
 
     public function getEntityRoutes(): array
     {
-        if(!$this->entityManager->getConnection()->isConnected())
-            return [];
 
         $routes = [];
-        $entities = $this->entityManager->getRepository('App:Entity')->findAll();
+        try{
+            $entities = $this->entityManager->getRepository('App:Entity')->findAll();
+        } catch(\Doctrine\DBAL\Exception\ConnectionException $e) {
+            return [];
+        }
 
         foreach($entities as $entity)
         {
@@ -77,7 +79,7 @@ class EavLoader extends Loader
             '_controller'   => 'App\Controller\EavController:extraAction',
         ];
         $requirements = [
-            'id'    => '\d+',
+            'id'    => '\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b',
         ];
         return new Route($path, $defaults, $requirements, [], null, [], [$method]);
     }
