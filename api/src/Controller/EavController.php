@@ -23,20 +23,17 @@ class EavController extends AbstractController
         $this->serializerService = new SerializerService($serializer);
     }
 
-    public function extraAction(Request $request, EavService $eavService): Response
+    public function extraAction(?string $id, Request $request, EavService $eavService): Response
     {
-        $route = $request->attributes->get('_route');
-        $entityName = explode('_', $route)[2];
+        $offset = strlen('dynamic_eav_');
+        $entityName = substr($request->attributes->get('_route'), $offset, strpos($request->attributes->get('_route'), strtolower($request->getMethod())) - 1 - $offset);
+        return $eavService->handleRequest($request, $entityName);
+    }
 
-        $entity = $eavService->getEntity($entityName);
-        $body = json_decode($request->getContent(), true);
-
-        // Checking and validating the id
-        $id = $request->attributes->get("id");
-        // The id might be contained somwhere else, lets test for that
-        $id = $eavService->getId($body, $id);
-
-        return $eavService->getResponse($id, $entityName, $body, $request, $entity);
+    public function deleteAction(Request $request, EavService $eavService)
+    {
+        $entityName = $request->attributes->get("entity");
+        return $eavService->handleRequest($request, $entityName);
     }
 
 }

@@ -79,7 +79,7 @@ class EavLoader extends Loader
             '_controller'   => 'App\Controller\EavController:extraAction',
         ];
         $requirements = [
-            'id'    => '\d+',
+            'id'    => '\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b',
         ];
         return new Route($path, $defaults, $requirements, [], null, [], [$method]);
     }

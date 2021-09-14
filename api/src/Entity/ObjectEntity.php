@@ -11,6 +11,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\JoinColumn;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -52,7 +53,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "swagger_context" = {
  *                  "summary"="delete object",
  *                  "description"="Returns the updated object"
- *              }
+ *              },
+ *              "read"  = false,
+ *              "controller" = "App\Controller\EavController::deleteAction"
  *          },
  *     },
  *  collectionOperations={
@@ -133,6 +136,8 @@ class ObjectEntity
     /**
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects", cascade={"persist"})
+     *
+     * @JoinColumn(onDelete="CASCADE")
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
