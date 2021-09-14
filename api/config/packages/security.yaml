@@ -7,9 +7,6 @@ security:
         main:
             anonymous: ~
             pattern: ^/
-            form_login:
-                login_path: app_user_login
-                check_path: app_user_login
             logout:
                 path: app_user_logout
                 target: app_user_redirect
@@ -19,6 +16,7 @@ security:
                 authenticators:
                     - App\Security\DigispoofAuthenticator
                     - App\Security\OauthAuthenticator
+                    - App\Security\BasicAuthAuthenticator
                 entry_point: App\Security\OauthAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication

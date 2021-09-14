@@ -10,13 +10,16 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use SensioLabs\Security\Exception\HttpException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Paginator;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
+use function GuzzleHttp\json_decode;
 
 class EavService
 {
@@ -34,6 +37,192 @@ class EavService
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+    }
+
+    /**
+     * @param string $entityName
+     * @return Entity
+     */
+    public function getEntity(string $entityName): Entity
+    {
+
+        if(!$entityName){
+            throw new HttpException(400, 'No entity name provided');
+        }
+        $entity = $this->em->getRepository("App:Entity")->findOneBy(['name' => $entityName]);
+        if(!$entity || !($entity instanceof Entity)){
+            throw new HttpException(400, 'Could not establish an entity for '.$entityName);
+        }
+
+        return $entity;
+    }
+
+    public function getId(array $body, ?string $id): ?string
+    {
+        if(!$id && array_key_exists('id', $body) ){
+            $id = $body['id'];
+        }
+        //elseif(!$id && array_key_exists('uuid', $body) ){ // this catches zgw api's
+        //    $id = $body['uuid'];
+        //)
+        elseif(!$id && array_key_exists('@id', $body)) {
+            $id = $this->commonGroundService->getUuidFromUrl($body['@id']);
+        }
+        elseif(!$id && array_key_exists('@self', $body)) {
+            $id = $this->commonGroundService->getUuidFromUrl($body['@self']);
+        }
+
+        return $id;
+    }
+
+    /**
+     * @param string|null $id
+     * @param string $method
+     * @param Entity $entity
+     * @return ObjectEntity|null
+     */
+    public function getObject(?string $id, string $method, Entity $entity): ?ObjectEntity
+    {
+        if($id) {
+            $object = $this->em->getRepository("App:ObjectEntity")->findOneBy(['id'=>Uuid::fromString($id)]);
+            if(!$object) {
+                throw new HttpException(400, "No object found with this id: $id");
+            } elseif ($entity != $object->getEntity()) {
+                throw new HttpException(400,"There is a mismatch between the provided ({$entity->getName()}) entity and the entity already atached to the object ({$object->getEntity()->getName()})");
+            }
+            return $object;
+        }
+        elseif($method == 'POST'){
+            $object = new ObjectEntity;
+            $object->setEntity($entity);
+            return $object;
+        }
+        return null;
+    }
+
+    public function handleRequest(Request $request, string $entityName): Response
+    {
+        $route = $request->attributes->get('_route');
+
+        // We will always need an $entity
+
+
+        // Get  a body
+        if($request->getContent()){
+            $body = json_decode($request->getContent(), true);
+        }
+
+        // Checking and validating the id
+        $id = $request->attributes->get("id");
+        // The id might be contained somwhere else, lets test for that
+        //$id = $this->eavService->getId($body, $id);
+
+
+        /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
+        if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
+            $entity = $this->getEntity($entityName);
+            $object = $this->getObject($id, $request->getMethod(), $entity);
+        }
+
+        /*
+         * Handeling data mutantions
+         */
+        if (strpos($route, 'collection') !== false && $request->getMethod() == 'POST') {
+            $this->checkRequest($entityName, $body, $id, $request->getMethod());
+            // Transfer the variable to the service
+            $result = $this->handleMutation($object, $body);
+            $responseType = Response::HTTP_CREATED;
+        }
+
+        /*
+         * Handeling data mutantions
+         */
+        if (strpos($route, 'item') !== false && $request->getMethod() == 'PUT') {
+            $this->checkRequest($entityName, $body, $id, $request->getMethod());
+            // Transfer the variable to the service
+            $result = $this->handleMutation($object, $body);
+            $responseType = Response::HTTP_OK;
+        }
+
+
+        /*
+         * Handeling reading requests
+         */
+        if (((strpos($route, 'object_collection') !== false || strpos($route, 'item') !== false) && $request->getMethod() == 'GET'))
+        {
+            /* @todo catch missing data and trhow error */
+            if(!$entityName){
+                /* throw error */
+            }
+            if(!$id && $route == 'get_eav_object'){
+                /* throw error */
+            }
+
+            // Transfer the variable to the service
+            $result = $this->handleGet($object, $request);
+            $responseType = Response::HTTP_OK;
+        }
+
+
+        /*
+         * Handeling search requests
+         */
+        if ((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')
+        {
+            /* @todo catch missing data and trhow error */
+            if(!$entityName){
+                /* throw error */
+            }
+            if(!$id && $route == 'get_eav_object'){
+                /* throw error */
+            }
+
+            // Transfer the variable to the service
+            $result = $this->handleSearch($entityName, $request);
+            $responseType = Response::HTTP_OK;
+        }
+
+        /*
+         * Handeling deletions
+         */
+        if ($request->getMethod() == 'DELETE')
+        {
+
+            /* @todo catch missing data and trhow error */
+            if(!$entityName){
+                /* throw error */
+            }
+            if(!$id ){
+                /* throw error */
+            }
+
+            // Transfer the variable to the service
+            $result = $this->handleDelete($object, $request);
+            $responseType = Response::HTTP_NO_CONTENT;
+        }
+
+        /* @todo we can support more then just json */
+        if(array_key_exists('type',$result ) && $result['type']== 'error'){
+            $responseType = Response::HTTP_BAD_REQUEST;
+        }
+        return new Response(
+            json_encode($result),
+            $responseType,
+            ['content-type' => 'application/json']
+        );
+    }
+
+    public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
+    {
+        if(!$entityName){
+            throw new HttpException(400,'An entity name should be provided for this route');
+        }
+        if(!$body){
+            throw new HttpException(400, 'An body should be provided for this route');
+        }
+        if(!$id &&  $method == 'PUT'){
+            throw new HttpException(400, 'An id should be provided for this route');
+        }
     }
 
     /*
@@ -60,28 +249,44 @@ class EavService
 
         // Afther guzzle has cleared we need to again check for errors
         if($object->getHasErrors()) {
-            //return $this->returnErrors($object);
+            return $this->returnErrors($object);
         }
 
         // Saving the data
         $this->em->persist($object);
-
-        /* @wilco why the below? */
-        //$object->setUri($this->validationService->createUri($object->getEntity()->getType(), $object->getId()));
         $this->em->flush();
 
         return $this->renderResult($object);
     }
 
-    public function handleGet(array $body, string $entityName, ?string $uuid)
+    /* @todo typecast the request */
+    public function handleGet(ObjectEntity $object, $request): array
     {
 
+        return $this->renderResult($object);
     }
 
-
-    public function handleDelete(array $body, string $entityName, ?string $uuid)
+    /* @todo typecast the request */
+    public function handleSearch(string $entityName, $request): array
     {
+        /* @todo we might want some filtering here, also this should be in the entity repository */
+        $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
+        $objects = $this->em->getRepository("App:ObjectEntity")->findBy(['entity'=>$entity]);
+        $results = ['results'=>[]];
+        foreach($objects as $object){
+            $results['results'][] = $this->renderResult($object);
+        }
+        $results['total'] = count( $results['results']);
 
+        return $results;
+    }
+
+    public function handleDelete(ObjectEntity $object, $request)
+    {
+        $this->em->remove($object);
+        $this->em->flush();
+
+        return [];
     }
 
     /**
@@ -113,24 +318,18 @@ class EavService
     {
         $response = [];
 
-        //TODO: for extern objects
-//        // Check component code and if it is not EAV also get the normal object.
-//        if ($this->componentCode != 'eav') {
-//            $response = $this->commonGroundService->getResource($objectEntity->getUri(), [], false, false, true, false);
-//            $response['@self'] = $response['@id'];
-//            $response['@eav'] = $uri;
-//            $response['@eavType'] = ucfirst($this->entityName);
-//            $response['eavId'] = $id;
-//        }
+        if($result->getUri()){
+            $response['@uri'] = $result->getUri();
+        }
 
-        //$response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
-        //$response['@id'] = $result->getUri();
-        //$response['@type'] = ucfirst($result->getEntity()->getName());
-        //$response['id'] = $result->getId();
-        //$response['@self'] = $response['@id'];
-        //$response['@eav'] = $response['@id'];
-        //$response['@eavType'] = $response['@type'];
-        //$response['eavId'] = $response['id'];
+
+        // Lets start with the external results
+        $response = array_merge($response, $result->getExternalResult());
+
+        // Lets move some stuff out of the way
+        if(array_key_exists('@context',$response)){$response['@gateway/context'] = $response['@context'];}
+        if(array_key_exists('id',$response)){$response['@gateway/id'] = $response['id'];}
+        if(array_key_exists('@type',$response)){$response['@gateway/type'] = $response['@type'];}
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
@@ -154,8 +353,13 @@ class EavService
             $response[$attribute->getName()] = $value->getValue();
 
             // Lets isnert the object that we are extending
-            $response = array_merge($response, $result->getExternalResult());
         }
+
+        // Lets make ik personal
+        $response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['id'] = $result->getId();
 
         return $response;
     }

@@ -159,6 +159,14 @@ class Entity
      */
     private $dateModified;
 
+    /**
+     * @var string|null The route this entity can be found easier
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $route = null;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -358,6 +366,18 @@ class Entity
     public function setDateModified(\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getRoute(): ?string
+    {
+        return $this->route;
+    }
+
+    public function setRoute(?string $route): self
+    {
+        $this->route = $route;
 
         return $this;
     }

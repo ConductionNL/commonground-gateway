@@ -11,6 +11,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\JoinColumn;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -32,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "delete",
  *          "get_eav_object"={
  *              "method"="GET",
- *              "path"="/eav/data/{entity}/{uuid}",
+ *              "path"="/eav/data/{entity}/{id}",
  *              "swagger_context" = {
  *                  "summary"="Get object with objectEntity id",
  *               "description"="Returns the object"
@@ -40,7 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *          "put_eav_object"={
  *              "method"="PUT",
- *              "path"="/eav/data/{entity}/{uuid}",
+ *              "path"="/eav/data/{entity}/{id}",
  *              "swagger_context" = {
  *                  "summary"="Put object",
  *                  "description"="Returns the updated object"
@@ -48,11 +49,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *          "delete_eav_object"={
  *              "method"="DELETE",
- *              "path"="/eav/data/{entity}/{uuid}",
+ *              "path"="/eav/data/{entity}/{id}",
  *              "swagger_context" = {
  *                  "summary"="delete object",
  *                  "description"="Returns the updated object"
- *              }
+ *              },
+ *              "read"  = false,
+ *              "controller" = "App\Controller\EavController::deleteAction"
  *          },
  *     },
  *  collectionOperations={
@@ -74,6 +77,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "description"="Returns the created object"
  *          }
  *      },
+*          "get_eav_object"={
+*              "method"="GET",
+*              "path"="/eav/data/{entity}/{id}",
+*              "swagger_context" = {
+*                  "summary"="Get object with objectEntity id",
+*               "description"="Returns the object"
+*              }
+*          },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -113,18 +124,20 @@ class ObjectEntity
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
      * @MaxDepth(1)
      */
-    private ?Entity $entity;
+    private ?Entity $entity = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"all"})
      * @MaxDepth(1)
      */
     private $objectValues;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects")
+     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects", cascade={"persist"})
+     *
+     * @JoinColumn(onDelete="CASCADE")
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */

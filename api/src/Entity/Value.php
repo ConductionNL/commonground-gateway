@@ -107,7 +107,7 @@ class Value
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, fetch="EAGER", mappedBy="subresourceOf", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, fetch="EAGER", mappedBy="subresourceOf", cascade={"all"})
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
@@ -123,7 +123,7 @@ class Value
 
     /**
      * @Groups({"write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EAGER", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */

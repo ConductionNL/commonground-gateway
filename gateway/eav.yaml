@@ -15,7 +15,7 @@ App\Entity\Gateway:
         name: medewerker catalogus
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
         documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
     memo_api:
         name: memo component
@@ -35,12 +35,12 @@ App\Entity\Gateway:
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/bs
 #        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
-#    uc_api:
-#        name: user component
-#        auth: apikey
-#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-#        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    uc_api:
+        name: user component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
+        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 #    wrc_api:
 #        name: webresource catalogus
 #        auth: apikey
@@ -61,16 +61,50 @@ App\Entity\Gateway:
 #        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 
 App\Entity\Entity:
-    registration:
-        name: registration
+    user:
+        route: '/api/users'
+        name: users
+        description: apikey
+        gateway: '@uc_api'
+        endpoint: 'users'
+#Student stuff
+    student:
+        route: '/api/students'
+        name: students
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participants'
-        transformations:
-            student: person
-            registrar: person
+    civicIntegrationDetails:
+        name: civicIntegrationDetails
+        description: the permisions that this person has given
+    generalDetails:
+        name: generalDetails
+        description: the permisions that this person has given    
+    referrerDetails:
+        name: referrerDetails
+        description: the permisions that this person has given
+    backgroundDetails:
+        name: backgroundDetails
+        description: the permisions that this person has given
+    dutchNTDetails:
+        name: dutchNTDetails
+        description: the permisions that this person has given
+    jobDetails:
+        name: jobDetails
+        description: the permisions that this person has given
+    motivationDetails:
+        name: motivationDetails
+        description: the permisions that this person has given
+    #regitration is basically a student clone
+    registration:
+        route: '/api/registrations'
+        name: registrations
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participants'
     person:
-        name: person
+        route: '/api/persons'
+        name: persons
         description: apikey
         gateway: '@contacten_api'
         endpoint: 'people'
@@ -83,14 +117,45 @@ App\Entity\Entity:
         gateway: '@memo_api'
         endpoint: 'memos'
     employee:
-        name: employee
+        route: '/api/employees'
+        name: employees
         description: apikey
         gateway: '@mrc_api'
         endpoint: 'employees'
-        transformations:
+#        transformations:
 #            person: person #???
 #            education: education #???
-            followingCourse: education
+#            followingCourse: education
+    student_dosier_event:
+        route: '/api/student_dosier_events'
+        name: student dosier events
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'student_dosier_events'
+    test_result:
+        route: '/api/test_results'
+        name: test results
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'test_results'
+    learning_needs:
+        route: '/api/learning_needs'
+        name: learning needs
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'learning_needs'
+    participation:
+        route: '/api/participations'
+        name: participations
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participations'
+    organization:
+        route: '/api/organizations'
+        name: organizations
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'organizations'
     education:
         name: education
         description: apikey
@@ -99,8 +164,8 @@ App\Entity\Entity:
     availability:
         name: availability
         description: the availability of this employee (7 days of the week, each with a morning, afternoon and evening)
-        transformations:
-            availabilityNotes: memo
+#        transformations:
+#            availabilityNotes: memo
 #    availabilityDay: # or monday, tuesday, etc. ??? (see post employee taalhuizen-service)
 #        name: availabilityDay
 #        description: the availabilityDay of an availability (one of the 7 days of the week, with a morning, afternoon and evening)
@@ -108,8 +173,235 @@ App\Entity\Entity:
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
     # registration
+    student_person:
+        name: person
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_civicIntegrationDetails:
+        name: civicIntegrationDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_generalDetails:
+        name: generalDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_referrerDetails:
+        name: referrerDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_backgroundDetails:
+        name: backgroundDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_dutchNTDetails:
+        name: dutchNTDetails
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_registrar:
+        name: registrar
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_permissionDetails:
+        name: permissionDetails
+        type: object
+        entity: '@student'
+        object: '@permissionDetails'
+    student_jobDetails:
+        name: jobDetails
+        type: object
+        entity: '@student'
+        object: '@jobDetails'
+    student_motivationDetails:
+        name: motivationDetails
+        type: object
+        entity: '@student'
+        object: '@motivationDetails'
+    student_languageHouseId:
+        name: languageHouseId
+        type: string
+        entity: '@student'
+    student_speakingLevel:
+        name: speakingLevel
+        type: string
+        entity: '@student'
+    student_readingTestResult:
+        name: readingTestResult
+        type: string
+        entity: '@student'
+    student_writingTestResult:
+        name: writingTestResult
+        type: string
+        entity: '@student'
+    # civicIntegrationDetails
+    civicIntegrationDetails_civicIntegrationRequirement:
+        name: civicIntegrationRequirement
+        type: string
+        entity: '@civicIntegrationDetails'
+    civicIntegrationDetails_civicIntegrationRequirementReason:
+        name: civicIntegrationRequirementReason
+        type: string
+        entity: '@civicIntegrationDetails'
+    civicIntegrationDetails_civicIntegrationRequirementFinishDate:
+        name: civicIntegrationRequirementFinishDate
+        type: string
+        entity: '@civicIntegrationDetails'
+    # generalDetails
+    generalDetails_countryOfOrigin:
+        name: countryOfOrigin
+        type: string
+        entity: '@generalDetails'
+    generalDetails_nativeLanguage:
+        name: nativeLanguage
+        type: string
+        entity: '@generalDetails'
+    generalDetails_otherLanguages:
+        name: otherLanguages
+        type: string
+        entity: '@generalDetails'
+    generalDetails_familyComposition:
+        name: familyComposition
+        type: string
+        entity: '@generalDetails'
+    generalDetails_childrenCount:
+        name: childrenCount
+        type: integer
+        entity: '@generalDetails'
+    generalDetails_childrenDatesOfBirth:
+        name: childrenDatesOfBirth
+        type: integer
+        entity: '@referrerDetails'
+    # referrerDetails
+    referrerDetails_referringOrganization:
+        name: referringOrganization
+        type: string
+        entity: '@referrerDetails'
+    referrerDetails_email:
+        name: email
+        type: string
+        entity: '@referrerDetails'
+    # backgroundDetails
+    backgroundDetails_foundVia:
+        name: foundVia
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_foundViaOther:
+        name: foundViaOther
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBefore:
+        name: wentToLanguageHouseBefore
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBeforeReason:
+        name: wentToLanguageHouseBeforeReason
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_wentToLanguageHouseBeforeYear:
+        name: wentToLanguageHouseBeforeYear
+        type: integer
+        entity: '@backgroundDetails'
+    backgroundDetails_network:
+        name: network
+        type: string
+        entity: '@backgroundDetails'
+    backgroundDetails_participationLadder:
+        name: participationLadder
+        type: integer
+        entity: '@backgroundDetails'
+    # dutchNTDetails
+    dutchNTDetails_dutchNTLevel:
+        name: dutchNTLevel
+        type: string
+        entity: '@dutchNTDetails'
+    dutchNTDetails_inNetherlandsSinceYear:
+        name: inNetherlandsSinceYear
+        type: integer
+        entity: '@dutchNTDetails'
+    dutchNTDetails_languageInDailyLife:
+        name: languageInDailyLife
+        type: string
+        entity: '@dutchNTDetails'
+    dutchNTDetails_knowsLatinAlphabet:
+        name: knowsLatinAlphabet
+        type: boolean
+        entity: '@dutchNTDetails'
+    dutchNTDetails_lastKnownLevel:
+        name: lastKnownLevel
+        type: string
+        entity: '@dutchNTDetails'
+    # jobDetails
+    jobDetails_trainedForJob:
+        name: trainedForJob
+        type: string
+        entity: '@jobDetails'
+    jobDetails_lastJob:
+        name: lastJob
+        type: string
+        entity: '@jobDetails'
+    jobDetails_dayTimeActivities:
+        name: dayTimeActivities
+        type: string
+        entity: '@jobDetails'
+    jobDetails_dayTimeActivitiesOther:
+        name: dayTimeActivitiesOther
+        type: boolean
+        entity: '@jobDetails'
+    # motivationDetails
+    motivationDetails_desiredSkills:
+        name: desiredSkills
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_desiredSkillsOther:
+        name: desiredSkillsOther
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_hasTriedThisBefore:
+        name: hasTriedThisBefore
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_whyWantTheseskills:
+        name: whyWantTheseskills
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_desiredLearningMethod:
+        name: desiredLearningMethod
+        type: string
+        entity: '@motivationDetails'
+    motivationDetails_remarks:
+        name: remarks
+        type: string
+        entity: '@motivationDetails'
+    # person
+    person_contactPreference:
+        name: contactPreference
+        type: string
+        entity: '@person'
+
+    person_contactPreferenceOther:
+        name: contactPreferenceOther
+        type: string
+        entity: '@person'
+    #user
+    user_person:
+        name: person
+        type: object
+        entity: '@user'
+        object: '@person'
+    employee_person:
+        name: person
+        type: object
+        entity: '@employee'
+        object: '@person'
+    #registration
     registration_student:
-        name: student
+        name: person
         type: object
         entity: '@registration'
         object: '@person'
@@ -123,7 +415,7 @@ App\Entity\Attribute:
         type: string
         entity: '@registration'
     registration_permissionDetails:
-        name: registrar
+        name: permissionDetails
         type: object
         entity: '@registration'
         object: '@permissionDetails'
@@ -131,6 +423,11 @@ App\Entity\Attribute:
         name: memo
         type: string
         entity: '@registration'
+    organisation_person:
+        name: person
+        type: object
+        entity: '@registration'
+        object: '@person'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm
@@ -138,13 +435,13 @@ App\Entity\Attribute:
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToShareDataWithProviders:
         name: hasPermissionToShareDataWithProviders
-        type: string
+        type: boolean
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToShareDataWithLibraries:
         name: hasPermissionToShareDataWithLibraries
-        type: string
+        type: boolean
         entity: '@permissionDetails'
     permissionDetails_hasPermissionToSendInformationAboutLibraries:
         name: hasPermissionToSendInformationAboutLibraries
-        type: string
+        type: boolean
         entity: '@permissionDetails'

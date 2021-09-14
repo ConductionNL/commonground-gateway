@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -17,12 +18,16 @@ class GatewayService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private TokenStorageInterface $tokenStorage;
+    private AuthenticationService $authenticationService;
+    private RequestStack $requestStack;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, RequestStack $requestStack)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->tokenStorage = $tokenStorage;
+        $this->authenticationService = $authenticationService;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -58,10 +63,19 @@ class GatewayService
 
     public function checkAuthentication(): void
     {
+        $request = $this->requestStack->getCurrentRequest();
+        $authorized = true;
         $user = $this->tokenStorage->getToken()->getUser();
 
+        $token = str_replace('Bearer ', '', $request->headers->get('Authorization'));
 
         if (is_string($user)) {
+            $authorized = $this->authenticationService->validateJWTAndGetPayload($token, $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']));
+            $authorized = $this->authenticationService->checkJWTExpiration($token);
+            $authorized = $this->authenticationService->retrieveJWTUser($token);
+        }
+
+        if (!$authorized) {
             throw new AccessDeniedHttpException('Access denied.');
         }
     }
