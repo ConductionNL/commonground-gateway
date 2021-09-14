@@ -47,7 +47,7 @@ class ValidationService
 
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
-
+            /** @todo ever heard about switches? */
             // check if we have a value to validate
             if(key_exists($attribute->getName(), $post)){
                 // Lets see if it is an array of objects
@@ -119,6 +119,7 @@ class ValidationService
      * @todo docs */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value) {
 
+        /* @todo doubele switch */
         $attributeType = $attribute->getType();
 
         // Do validation for attribute depending on its type
