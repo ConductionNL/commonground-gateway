@@ -600,7 +600,6 @@ App\Entity\Attribute:
         type: string
         enum: ["Provider", "LanguageHouse"]
         entity: '@organization'
-        object: '@person'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm
