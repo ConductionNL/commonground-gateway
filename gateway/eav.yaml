@@ -388,12 +388,29 @@ App\Entity\Attribute:
         name: contactPreferenceOther
         type: string
         entity: '@person'
-    #user
+    # user
+    user_token:
+        name: token
+        type: string
+        entity: '@user'
+    user_organizationName:
+        name: organizationName
+        type: string
+        entity: '@user'
+    user_userEnvironment:
+        name: userEnvironment
+        type: string
+        entity: '@user'
+    user_organizationId:
+        name: organizationId
+        type: string
+        entity: '@user'
     user_person:
         name: person
         type: object
         entity: '@user'
         object: '@person'
+#   TODO Why is employee under user ?     
     employee_person:
         name: person
         type: object
