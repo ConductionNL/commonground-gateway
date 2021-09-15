@@ -72,6 +72,10 @@ spec:
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
+            - name: AUTH_ENABLED
+              value: 'true'
+            - name: APP_REPRO
+              value: 'https://github.com/ConductionNL/commonground-gateway'
             - name: TRUSTED_HOSTS
               valueFrom:
                 configMapKeyRef:
@@ -170,12 +174,14 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /api
               port: http
+            initialDelaySeconds: 30
           readinessProbe:
             httpGet:
-              path: /
+              path: /api
               port: http
+            initialDelaySeconds: 30
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
