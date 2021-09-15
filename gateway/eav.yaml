@@ -160,7 +160,7 @@ App\Entity\Entity:
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participations'
-#Organization stuff
+    # Organization stuff
     organization:
         route: '/api/organizations'
         name: organizations
@@ -594,10 +594,12 @@ App\Entity\Attribute:
         name: memo
         type: string
         entity: '@registration'
-    organisation_person:
-        name: person
-        type: object
-        entity: '@registration'
+    # Organization
+    organization_type:
+        name: type
+        type: string
+        enum: ["Provider", "LanguageHouse"]
+        entity: '@organization'
         object: '@person'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
