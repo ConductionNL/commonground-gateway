@@ -200,11 +200,11 @@ App\Entity\Attribute:
 #        entity: '@education' 
 #    education_startDate:
 #        name: startDate
-#        type: DateTime
+#        type: string #DateTime?
 #        entity: '@education'
 #    education_endDate:
 #        name: endDate
-#        type: DateTime
+#        type: string #DateTime?
 #        entity: '@education'
 #    education_institution:
 #        name: institution
@@ -334,6 +334,7 @@ App\Entity\Attribute:
         name: status
         type: string
         enum: ['REFERRRED', 'ACTIVE', 'COMPLETED']
+        defaultValue: 'REFERRRED'
         required: true
         entity: '@student'
     # educationDetails @todo check
@@ -359,8 +360,9 @@ App\Entity\Attribute:
     # availabilityDetails
     availabilityDetails_availability:
         name: availability
-        type: array
+        type: string
         enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
+        multiple: true
         entity: '@availabilityDetails'
     availabilityDetails_availabilityNotes:
         name: availabilityNotes
@@ -382,7 +384,7 @@ App\Entity\Attribute:
     # if civicIntegrationDetails_civicIntegrationRequirement == CURRENTLY_WORKING_ON_INTEGRATION:    
     civicIntegrationDetails_civicIntegrationRequirementFinishDate:
         name: civicIntegrationRequirementFinishDate
-        type: DateTime
+        type: string #DateTime?
         entity: '@civicIntegrationDetails'
     # generalDetails
     generalDetails_countryOfOrigin:
@@ -407,6 +409,7 @@ App\Entity\Attribute:
         type: string
         # @todo select multiple in Att 1 but single in the Taalhuizen-service
         enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED', 'WIDOW']
+        multiple: true
         entity: '@generalDetails'
     generalDetails_childrenCount:
         name: childrenCount
@@ -465,9 +468,10 @@ App\Entity\Attribute:
         entity: '@backgroundDetails'
     backgroundDetails_network:
         name: network
-        type: array
+        type: string
         # select multiple
         enum: ['HOUSEHOLD_MEMBERS', 'NEIGHBORS', 'FAMILY_MEMBERS', 'AID_WORKERS', 'FRIENDS_ACQUAINTANCES', 'PEOPLE_AT_MOSQUE_CHURCH', 'ACQUAINTANCES_SPEAKING_OWN_LANGUAGE', 'ACQUAINTANCES_SPEAKING_DUTCH']
+        multiple: true
         entity: '@backgroundDetails'
     # @todo
     backgroundDetails_participationLadder:
@@ -485,7 +489,7 @@ App\Entity\Attribute:
         entity: '@dutchNTDetails'
     dutchNTDetails_inNetherlandsSinceYear:
         name: inNetherlandsSinceYear
-        type: DateTime
+        type: string #DateTime?
         entity: '@dutchNTDetails'
     dutchNTDetails_languageInDailyLife:
         name: languageInDailyLife
@@ -514,9 +518,10 @@ App\Entity\Attribute:
         entity: '@jobDetails'
     jobDetails_dayTimeActivities:
         name: dayTimeActivities
-        type: array
+        type: string
         #select multiple
         enum: ['SEARCHING_FOR_JOB', 'RE_INTEGRATION', 'SCHOOL', 'VOLUNTEER_JOB', 'JOB', 'OTHER' ]
+        multiple: true
         entity: '@jobDetails'
     # if jobDetails_dayTimeActivities == OTHER:    
     jobDetails_dayTimeActivitiesOther:
@@ -527,9 +532,10 @@ App\Entity\Attribute:
     # motivationDetails
     motivationDetails_desiredSkills:
         name: desiredSkills
-        type: array
+        type: string
         #select multiple
         enum: [ 'KLIKTIK', 'USING_WHATSAPP', 'USING_SKYPE', 'DEVICE_FUNCTIONALITIES', 'DIGITAL_GOVERNMENT', 'RESERVE_BOOKS_IN_LIBRARY', 'ADS_ON_MARKTPLAATS',  'READ_FOR_CHILDREN', 'UNDERSTAND_PRESCRIPTIONS', 'WRITE_APPLICATION_LETTER', 'WRITE_POSTCARD_FOR_FAMILY', 'DO_ADMINISTRATION', 'CALCULATIONS_FOR_RECIPES', 'OTHER']
+        multiple: true
         entity: '@motivationDetails'
     # if motivationDetails_desiredSkills == OTHER: 
     motivationDetails_desiredSkillsOther:
@@ -558,9 +564,10 @@ App\Entity\Attribute:
         entity: '@motivationDetails'     
     motivationDetails_desiredLearningMethod:
         name: desiredLearningMethod
-        type: array
+        type: string
         #select multiple
         enum: ['IN_A_GROUP', 'ONE_ON_ONE', 'HOME_ENVIRONMENT', 'IN_LIBRARY_OR_OTHER', 'ONLINE']
+        multiple: true
         entity: '@motivationDetails'
     motivationDetails_remarks:
         name: remarks
