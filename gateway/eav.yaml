@@ -160,7 +160,7 @@ App\Entity\Entity:
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participations'
-#Organization stuff
+    # Organization stuff
     organization:
         route: '/api/organizations'
         name: organizations
@@ -394,23 +394,184 @@ App\Entity\Attribute:
     person_contactPreference:
         name: contactPreference
         type: string
+        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']
         entity: '@person'
 
     person_contactPreferenceOther:
         name: contactPreferenceOther
         type: string
         entity: '@person'
-    #user
+    # user
     user_person:
         name: person
         type: object
         entity: '@user'
         object: '@person'
+        required: true
+    # Employee
     employee_person:
         name: person
         type: object
         entity: '@employee'
         object: '@person'
+        required: true
+    employee_availability:
+        name: availability
+        type: object
+        entity: '@employee'
+        object: '@availability'
+    employee_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        maxLength: 2550
+        entity: '@employee'
+    employee_targetGroupPreferences:
+        name: targetGroupPreferences
+        type: string
+        enum: ['NT1', 'NT2']
+        entity: '@employee'
+    employee_volunteeringPreference:
+        name: volunteeringPreference
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_gotHereVia:
+        name: gotHereVia
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_hasExperienceWithTargetGroup:
+        name: hasExperienceWithTargetGroup
+        type: boolean
+        entity: '@employee'
+    employee_experienceWithTargetGroupYesReason:
+        name: experienceWithTargetGroupYesReason
+        type: string
+        entity: '@employee'
+    employee_currentEducation:
+        name: currentEducation
+        type: string
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@employee'
+    employee_education:
+        name: education
+        type: object
+        entity: '@employee'
+        object: '@education'
+    employee_doesCurrentlyFollowCourse:
+        name: doesCurrentlyFollowCourse
+        type: boolean
+        entity: '@employee'
+    employee_followingCourse:
+        name: followingCourse
+        type: object
+        entity: '@employee'
+        object: '@education'
+    employee_otherRelevantCertificates:
+        name: otherRelevantCertificates
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    # TODO datamodel question: do we want these properties (organizationId, userGroupIds, userId) to be added to Employee or to Person? 
+    employee_organizationId:
+        name: organizationId
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_userGroupIds:
+        name: organizationId
+        type: array
+        entity: '@employee'
+    employee_userId:
+        name: userId
+        type: string
+        entity: '@employee'
+    # Participation
+    # TODO datamodel question: do we want these properties (providerId, providerName <- are these from the organization of the Person? ) to be added to Participation or to Person? 
+    # TODO In the OAS is stated that either providerName, providerId or providerNote is required. This requires extra code/logic    
+    
+    # TODO Fix learningNeedOutcome (is this a full eav object or based on edu/result?)
+#    participation_providerId:
+#        name: providerId
+#        type: string
+#        maxLength: 36
+#        entity: '@participation'
+#    participation_providerName:
+#        name: providerName
+#        type: string
+#        entity: '@participation'
+#    participation_providerNote:
+#        name: providerNote
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_offerName:
+#        name: offerName
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_offerCourse:
+#        name: offerCourse
+#        type: string
+#        enum: ['LANGUAGE', 'MATH', 'DIGITAL', 'OTHER']
+#        entity: '@participation'
+#    participation_learningNeedOutcome:
+#        name: learningNeedOutcome
+#        type: object
+#        entity: '@participation'
+#        object: '@learningNeedOutcome'
+#    participation_isFormal:
+#        name: isFormal
+#        type: boolean
+#        entity: '@participation'
+#    participation_groupFormation:
+#        name: groupFormation
+#        type: string
+#        enum: ['INDIVIDUALLY', 'IN_A_GROUP']
+#        entity: '@participation'
+#    participation_totalClassHours:
+#        name: totalClassHours
+#        type: float
+#        entity: '@participation'
+#    participation_certificateWillBeAwarded:
+#        name: certificateWillBeAwarded
+#        type: boolean
+#        entity: '@participation'
+#    participation_engagements:
+#        name: engagements
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_learningNeedId:
+#        name: learningNeedId
+#        type: string
+#        maxLength: 36
+#        required: true
+#        entity: '@participation'
+    # Education
+    education_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'GROUP']
+        entity: '@education'
+    education_teacherProfessionalism:
+        name: teacherProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_courseProfessionalism:
+        name: courseProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_providesCertificate:
+        name: providesCertificate
+        type: boolean
+        entity: '@education'
+    education_amountOfHours:
+        name: amountOfHours
+        type: integer
+        entity: '@education'
     #registration
     registration_student:
         name: person
@@ -435,16 +596,18 @@ App\Entity\Attribute:
         name: memo
         type: string
         entity: '@registration'
-    organisation_person:
-        name: person
-        type: object
-        entity: '@registration'
-        object: '@person'
+    # Organization
+    organization_type:
+        name: type
+        type: string
+        enum: ["Provider", "LanguageHouse"]
+        entity: '@organization'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm
         type: boolean
         entity: '@permissionDetails'
+        
     permissionDetails_hasPermissionToShareDataWithProviders:
         name: hasPermissionToShareDataWithProviders
         type: boolean

@@ -61,8 +61,6 @@ parameters:
     env(BADGES): ""
 
     env(APP_MODE): "digispoof"
-    env(APP_CERT): ""
-    env(APP_KEY): ""
 
     env(APP_SHASIGN): ""
 
@@ -269,7 +267,6 @@ twig:
         app_subpath: "%env(APP_SUBPATH)%"
         app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
         app_demo: "%env(APP_DEMO)%"
-        app_repro: "%env(APP_REPRO)%"
         app_web: "%env(APP_WEB)%"
         app_internal: "%env(APP_INTERNAL)%"
         app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
