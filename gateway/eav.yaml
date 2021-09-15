@@ -409,12 +409,11 @@ App\Entity\Attribute:
         type: string
         # @todo select multiple in Att 1 but single in the Taalhuizen-service
         enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED', 'WIDOW']
-        multiple: true
         entity: '@generalDetails'
     generalDetails_childrenCount:
         name: childrenCount
         type: integer #type in att 1 is string
-        maxLength: 255
+        maxLength: 255 #this allows 999 children
         entity: '@generalDetails'
     generalDetails_childrenDatesOfBirth:
         name: childrenDatesOfBirth
@@ -484,13 +483,12 @@ App\Entity\Attribute:
     # dutchNTDetails
     dutchNTDetails_dutchNTLevel:
         name: dutchNTLevel
-        multiple: true
         type: string
         enum: ['NT1', 'NT2']
         entity: '@dutchNTDetails'
     dutchNTDetails_inNetherlandsSinceYear:
         name: inNetherlandsSinceYear
-        type: string #DateTime?
+        type: integer #DateTime?
         entity: '@dutchNTDetails'
     dutchNTDetails_languageInDailyLife:
         name: languageInDailyLife
