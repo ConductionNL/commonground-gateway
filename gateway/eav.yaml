@@ -364,7 +364,7 @@ App\Entity\Attribute:
         entity: '@availabilityDetails'
     availabilityDetails_availabilityNotes:
         name: availabilityNotes
-        type: object
+        type: string
         maxLength: 255
         entity: '@availabilityDetails'
     # civicIntegrationDetails
