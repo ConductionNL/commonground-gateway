@@ -17,21 +17,73 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\Utils;
-use function GuzzleHttp\json_decode;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Yaml\Yaml;
+
 
 class EavDocumentationService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
+    private array $supportedValidators;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+
+        // Lets define the validator that we support for docummentation right now
+        $this->supportedValidators = [
+            'multipleOf',
+            'maximum',
+            'exclusiveMaximum',
+            'minimum',
+            'exclusiveMinimum',
+            'maxLength',
+            'minLength',
+            'maxItems',
+            'uniqueItems',
+            'maxProperties',
+            'minProperties',
+            'required',
+            'enum',
+            'allOf',
+            'oneOf',
+            'anyOf',
+            'not',
+            'items',
+            'additionalProperties',
+            'default',
+        ];
+    }
+
+
+    /**
+     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger
+     *
+     * @return boolean returns true if succcesfull or false on failure
+     */
+    public function write(): bool 
+    {
+        // Get the docs
+        $docs = $this->getRenderDocumentation();
+
+        // Setup the file system
+        $filesystem = new Filesystem();
+
+        // Check if there is a eav folder in the /public folder
+        if(!$filesystem->exists('public/eav')){
+            $filesystem->mkdir('public/eav');
+        }
+
+        $filesystem->dumpFile('public/eav/schema.json', json_encode($docs));
+        $filesystem->dumpFile('public/eav/schema.yaml',  Yaml::dump($docs));
+
+        return true;
+
     }
 
     /**
@@ -64,15 +116,12 @@ class EavDocumentationService
             ["url"=>"/api/eav/data","description"=>"Gateway server"]
         ];
 
-        $entities = $this->em->getRepository()->findBy(['expose_in_docs'=>true]);
-
-        foreach($entities as $entity){
-            $docs = $this->addEntityToDocs($entity, $docs);
-        }
-
         // General reusable components for the documentation
         $docs['components']=[
-            "schemas"=>[],
+            "schemas"=>[
+                "ErrorModel",
+                "DeleteModel"
+            ],
             "responces"=>[
                 "error"=>[
                     "description"=>"error payload",
@@ -114,19 +163,32 @@ class EavDocumentationService
             ]
         ];
 
+        /* @todo we want to make exposing objects a choice */
+        $entities = $this->em->getRepository('App:Entity')->findAll(); ///findBy(['expose_in_docs'=>true]);
+
+        foreach($entities as $entity){
+            $docs = $this->addEntityToDocs($entity, $docs);
+        }
+
+
         return $docs;
     }
 
     /**
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array
      *
+     * @param Entity $entity
+     * @param array $docs
      * @return array
      */
     public function addEntityToDocs(Entity $entity, array $docs): array
     {
 
-        $docs['paths']['/'.$entity->getPath()] = $this->getCollectionPaths($entity);
-        $docs['paths']['/'.$entity->getPath().'/{id}'] = $this->getItemPaths($entity);
+        $docs['paths']['/'.$this->toSnakeCase($entity->getName())] = $this->getCollectionPaths($entity);
+        $docs['paths']['/'.$this->toSnakeCase($entity->getName()).'/{id}'] = $this->getItemPaths($entity);
+
+        /* @todo this only goes one deep */
+        $docs['components']['schemas'][$this->toCamelCase($entity->getName())] = $this->getItemSchema($entity);
 
         // create the tag
         $docs['tags'] = [
@@ -140,13 +202,46 @@ class EavDocumentationService
     /**
      * Generates an OAS3 documentation for the colleection paths of an entity
      *
+     * @param Entity $entity
      * @return array
      */
     public function getCollectionPaths(Entity $entity): array
     {
         $docs = [
-            "get" => [],
-            "post" => [],
+            "get" => [
+                "description"=>"Get a filterd list of ".$entity->getName()." objects",
+                "summary"=>"Get a ".$entity->getName()."list",
+                "operationId"=>"getPetsById",
+                "responses"=>[
+                    "default"=>[
+                        "description"=>"error payload",
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    "\$ref"=>'#/components/schemas/ErrorModel'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "post" => [
+                "description"=>"Creates a new".$entity->getName()." object",
+                "summary"=>"Create a ".$entity->getName(),
+                "operationId"=>"getPetsById",
+                "responses"=>[
+                    "default"=>[
+                        "description"=>"error payload",
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    "\$ref"=>'#/components/schemas/ErrorModel'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
         ];
 
         return $docs;
@@ -156,6 +251,7 @@ class EavDocumentationService
     /**
      * Generates an OAS3 documentation for the item paths of an entity
      *
+     * @param Entity $entity
      * @return array
      */
     public function getItemPaths(Entity $entity): array
@@ -166,9 +262,9 @@ class EavDocumentationService
 
             // Basic path operations
             $docs[$type] = [
-                "description"=>"Returns pets based on ID",
-                "summary"=>"Find pets by ID",
-                "operationId"=>"getPetsById",
+                "description"=>ucfirst($type)." a ".$entity->getName(),
+                "summary"=>ucfirst($type)." a ".$entity->getName(),
+                "operationId"=>$type.$this->toCamelCase($entity->getName())."ById",
                 "responses"=>[
                     "default"=>[
                         "description"=>"error payload",
@@ -191,7 +287,7 @@ class EavDocumentationService
                         "content"=>[
                             "application/json" => [
                                 "schema"=>[
-                                    "\$ref"=>'#/components/schemas/ErrorModel' /*@ todo generate model */
+                                    "\$ref"=>'#/components/schemas/'.$this->toCamelCase($entity->getName())
                                 ]
                             ]
                         ]
@@ -218,5 +314,92 @@ class EavDocumentationService
         ];
 
         return $docs;
+    }
+
+    /**
+     * Generates an OAS3 schema for the item  of an entity
+     *
+     * @param Entity $entity
+     * @return array
+     */
+    public function getItemSchema(Entity $entity): array
+    {
+        $schema = [
+            "type"=>"object",
+            "required"=>[],
+            "properties"=>[],
+
+        ];
+
+        foreach($entity->getAttributes() as $attribute){
+
+            // Handle requireded fields
+            if($attribute->getRequired()){
+                $schema['required'][] = $attribute->getName();
+            }
+
+            // Add the atribute
+            $schema['properties'][$attribute->getName()] = [
+                "type"=>$attribute->getType(),
+                "title"=>$attribute->getName(),
+                "description"=>$attribute->getDescription(),
+            ];
+
+            // The attribute might be a scheme on its own
+            if($attribute->getObject()){
+                $schema['properties'][$attribute->getName()] = ["\$ref"=>"#/components/schemas/".$attribute->getObject()->getName()];
+                // that also means that we don't have to do the rest
+                continue;
+            }
+
+            /* @todo we nee to add supoort for https://swagger.io/specification/#schema-object
+             *
+             *
+             */
+
+            /* @todo ow nooz a loopin a loop */
+            foreach($attribute->getValidations() as $validator => $validation){
+                if(!array_key_exists($validator, $this->supportedValidators)){
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Turns a string to toSnakeCase
+     *
+     * @param string $string the string to convert to toSnakeCase
+     * @return string the toSnakeCase represention of the string
+     */
+    public function toSnakeCase(string $value, ?string $delimiter = null): string
+    {
+        if (!\ctype_lower($value)) {
+            $value = (string) \preg_replace('/\s+/u', '', \ucwords($value));
+            $value = (string) \mb_strtolower(\preg_replace(
+                '/(.)(?=[A-Z])/u',
+                '$1' . ($delimiter ?? '_'),
+                $value
+            ));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Turns a string to CammelCase
+     *
+     * @param string $string the string to convert to CamelCase
+     * @return string the CamelCase represention of the string
+     */
+    public function toCamelCase($string, $dontStrip = []){
+        /*
+         * This will take any dash or underscore turn it into a space, run ucwords against
+         * it so it capitalizes the first letter in all words separated by a space then it
+         * turns and deletes all spaces.
+         */
+        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('',$dontStrip).']+/', ' ',$string))));
     }
 }
