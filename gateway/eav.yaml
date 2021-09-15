@@ -637,20 +637,10 @@ App\Entity\Attribute:
         type: string
         enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
         entity: '@employee'
-    employee_education:
-        name: education
-        type: object
-        entity: '@employee'
-        object: '@education'
     employee_doesCurrentlyFollowCourse:
         name: doesCurrentlyFollowCourse
         type: boolean
         entity: '@employee'
-    employee_followingCourse:
-        name: followingCourse
-        type: object
-        entity: '@employee'
-        object: '@education'
     employee_otherRelevantCertificates:
         name: otherRelevantCertificates
         type: string

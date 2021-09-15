@@ -334,7 +334,6 @@ class ValidationService
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
                 /* @todo lelijke code */
-
                 if($error->getResponse()){
                     $error = json_decode($error->getResponse()->getBody()->getContents(), true);
                     if($error && array_key_exists('message', $error)){
