@@ -271,7 +271,7 @@ class EavService
     {
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
-        $objects = $this->em->getRepository("App:ObjectEntity")->findBy(['entity'=>$entity]);
+        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity);
         $results = ['results'=>[]];
         foreach($objects as $object){
             $results['results'][] = $this->renderResult($object);

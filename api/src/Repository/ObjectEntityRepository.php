@@ -19,22 +19,31 @@ class ObjectEntityRepository extends ServiceEntityRepository
         parent::__construct($registry, ObjectEntity::class);
     }
 
-    // /**
-    //  * @return ObjectEntity[] Returns an array of ObjectEntity objects
-    //  */
-    /*
-    public function findByExampleField($value)
+   /**
+    * @return ObjectEntity[] Returns an array of ObjectEntity objects
+    */
+
+   // typecast deze shizle
+    public function findByEntity($entity, $filters = [],  $offset = 0, $limit = 25 )
     {
         return $this->createQueryBuilder('o')
-            ->andWhere('o.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('o.id', 'ASC')
-            ->setMaxResults(10)
+            ->andWhere('o.entity = :entity')
+            ->setParameter('entity', $entity)
+            // filters toevoegen
+            ->setFirstResult( $offset )
+            ->setMaxResults( $limit )
             ->getQuery()
             ->getResult()
         ;
+
     }
-    */
+
+    // Filter functie schrijven, checken op betaande atributen, zelf looping     
+    // voorbeeld filter student.generaldDesription.landoforigen=NL
+    //                  entity.atribute.propert['name'=landoforigen]
+    //                  (objectEntity.value.objectEntity.value.name=landoforigen and
+    //                  objectEntity.value.objectEntity.value.value=nl)
+
 
     /*
     public function findOneBySomeField($value): ?ObjectEntity
