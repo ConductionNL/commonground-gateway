@@ -309,6 +309,7 @@ App\Entity\Attribute:
     student_languageHouseId:
         name: languageHouseId
         type: string
+        required: true
         entity: '@student'
     student_speakingLevel:
         name: speakingLevel
@@ -329,6 +330,7 @@ App\Entity\Attribute:
         name: status
         type: string
         enum: ['REFERRRED', 'ACTIVE', 'COMPLETED']
+        required: true
         entity: '@student'
     # educationDetails @todo check
     educationDetails_followingEducationRightNow:
