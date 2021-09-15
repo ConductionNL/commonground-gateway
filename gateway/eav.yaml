@@ -323,12 +323,12 @@ App\Entity\Attribute:
     student_readingTestResult:
         name: readingTestResult
         type: string
-        enum: [ 'CAN_NOT_READ', 'A0', 'A1' 'A2', 'B1', 'B2', 'C1', 'C2']
+        enum: ['CAN_NOT_READ', 'A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
         entity: '@student'
     student_writingTestResult:
         name: writingTestResult
         type: string
-        enum: ['CAN_NOT_WRITE', 'WRITE_NAW_DETAILS', 'WRITE_SIMPLE_TEXTS' 'WRITE_SIMPLE_LETTERS']
+        enum: ['CAN_NOT_WRITE', 'WRITE_NAW_DETAILS', 'WRITE_SIMPLE_TEXTS', 'WRITE_SIMPLE_LETTERS']
         entity: '@student'
     student_status:
         name: status
