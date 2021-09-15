@@ -663,7 +663,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@employee'
     employee_userGroupIds:
-        name: organizationId
+        name: userGroupIds
         type: array
         entity: '@employee'
     employee_userId:
