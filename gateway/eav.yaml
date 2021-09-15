@@ -422,6 +422,7 @@ App\Entity\Attribute:
     employee_availabilityNotes:
         name: availabilityNotes
         type: string
+        maxLength: 2550
         entity: '@employee'
     employee_targetGroupPreferences:
         name: targetGroupPreferences
@@ -431,10 +432,12 @@ App\Entity\Attribute:
     employee_volunteeringPreference:
         name: volunteeringPreference
         type: string
+        maxLength: 255
         entity: '@employee'
     employee_gotHereVia:
         name: gotHereVia
         type: string
+        maxLength: 255
         entity: '@employee'
     employee_hasExperienceWithTargetGroup:
         name: hasExperienceWithTargetGroup
@@ -466,6 +469,13 @@ App\Entity\Attribute:
     employee_otherRelevantCertificates:
         name: otherRelevantCertificates
         type: string
+        maxLength: 255
+        entity: '@employee'
+    # TODO datamodel question: do we want these properties (organizationId, userGroupIds, userId) to be added to Employee or to Person? 
+    employee_organizationId:
+        name: organizationId
+        type: string
+        maxLength: 255
         entity: '@employee'
     employee_userGroupIds:
         name: organizationId
@@ -475,6 +485,30 @@ App\Entity\Attribute:
         name: userId
         type: string
         entity: '@employee'
+    # Education
+    education_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'GROUP']
+        entity: '@education'
+    education_teacherProfessionalism:
+        name: teacherProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_courseProfessionalism:
+        name: courseProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_providesCertificate:
+        name: providesCertificate
+        type: boolean
+        entity: '@education'
+    education_amountOfHours:
+        name: amountOfHours
+        type: integer
+        entity: '@education'
     #registration
     registration_student:
         name: person
