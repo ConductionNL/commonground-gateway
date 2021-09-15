@@ -21,7 +21,7 @@ use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
 use function GuzzleHttp\json_decode;
 
-class EavDocumentationServiceService
+class EavDocumentationService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
