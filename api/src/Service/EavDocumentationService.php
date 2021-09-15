@@ -74,8 +74,8 @@ class EavDocumentationService
         $filesystem = new Filesystem();
 
         // Check if there is a eav folder in the /public folder
-        if(!$filesystem->exists('/var/www/app/public/eav')){
-            $filesystem->mkdir('/var/www/app/public/eav', 0700);
+        if(!$filesystem->exists('/srv/api/public/eav')){
+            $filesystem->mkdir('/srv/api/public/eav');
         }
 
         $filesystem->dumpFile('schema.json', $doc);
@@ -162,7 +162,8 @@ class EavDocumentationService
             ]
         ];
 
-        $entities = $this->em->getRepository()->findBy(['expose_in_docs'=>true]);
+        /* @todo we want to make exposing objects a choice */
+        $entities = $this->em->getRepository('App:Entity')->findAll(); ///findBy(['expose_in_docs'=>true]);
 
         foreach($entities as $entity){
             $docs = $this->addEntityToDocs($entity, $docs);
@@ -182,11 +183,11 @@ class EavDocumentationService
     public function addEntityToDocs(Entity $entity, array $docs): array
     {
 
-        $docs['paths']['/'.$entity->getPath()] = $this->getCollectionPaths($entity);
-        $docs['paths']['/'.$entity->getPath().'/{id}'] = $this->getItemPaths($entity);
+        $docs['paths']['/'.$this->toSnakeCase($entity->getName())] = $this->getCollectionPaths($entity);
+        $docs['paths']['/'.$this->toSnakeCase($entity->getName()).'/{id}'] = $this->getItemPaths($entity);
 
         /* @todo this only goes one deep */
-        $docs['components']['schemas'][$entity->getName()] = $this->getItemSchema($entity);
+        $docs['components']['schemas'][$this->toCamelCase($entity->getName())] = $this->getItemSchema($entity);
 
         // create the tag
         $docs['tags'] = [
@@ -206,8 +207,40 @@ class EavDocumentationService
     public function getCollectionPaths(Entity $entity): array
     {
         $docs = [
-            "get" => [],
-            "post" => [],
+            "get" => [
+                "description"=>"Get a filterd list of ".$entity->getName()." objects",
+                "summary"=>"Get a ".$entity->getName()."list",
+                "operationId"=>"getPetsById",
+                "responses"=>[
+                    "default"=>[
+                        "description"=>"error payload",
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    "\$ref"=>'#/components/schemas/ErrorModel'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "post" => [
+                "description"=>"Creates a new".$entity->getName()." object",
+                "summary"=>"Create a ".$entity->getName(),
+                "operationId"=>"getPetsById",
+                "responses"=>[
+                    "default"=>[
+                        "description"=>"error payload",
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    "\$ref"=>'#/components/schemas/ErrorModel'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
         ];
 
         return $docs;
@@ -228,9 +261,9 @@ class EavDocumentationService
 
             // Basic path operations
             $docs[$type] = [
-                "description"=>"Returns pets based on ID",
-                "summary"=>"Find pets by ID",
-                "operationId"=>"getPetsById",
+                "description"=>ucfirst($type)." a ".$entity->getName(),
+                "summary"=>ucfirst($type)." a ".$entity->getName(),
+                "operationId"=>$type.$this->toCamelCase($entity->getName())."ById",
                 "responses"=>[
                     "default"=>[
                         "description"=>"error payload",
@@ -253,7 +286,7 @@ class EavDocumentationService
                         "content"=>[
                             "application/json" => [
                                 "schema"=>[
-                                    "\$ref"=>'#/components/schemas/ErrorModel' /*@ todo generate model */
+                                    "\$ref"=>'#/components/schemas/'.$this->toCamelCase($entity->getName())
                                 ]
                             ]
                         ]
@@ -288,7 +321,7 @@ class EavDocumentationService
      * @param Entity $entity
      * @return array
      */
-    public function getSchema(Entity $entity): array
+    public function getItemSchema(Entity $entity): array
     {
         $schema = [
             "type"=>"object",
@@ -332,5 +365,40 @@ class EavDocumentationService
         }
 
         return $schema;
+    }
+
+    /**
+     * Turns a string to toSnakeCase
+     *
+     * @param string $string the string to convert to toSnakeCase
+     * @return string the toSnakeCase represention of the string
+     */
+    public function toSnakeCase(string $value, ?string $delimiter = null): string
+    {
+        if (!\ctype_lower($value)) {
+            $value = (string) \preg_replace('/\s+/u', '', \ucwords($value));
+            $value = (string) \mb_strtolower(\preg_replace(
+                '/(.)(?=[A-Z])/u',
+                '$1' . ($delimiter ?? '_'),
+                $value
+            ));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Turns a string to CammelCase
+     *
+     * @param string $string the string to convert to CamelCase
+     * @return string the CamelCase represention of the string
+     */
+    public function toCamelCase($string, $dontStrip = []){
+        /*
+         * This will take any dash or underscore turn it into a space, run ucwords against
+         * it so it capitalizes the first letter in all words separated by a space then it
+         * turns and deletes all spaces.
+         */
+        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('',$dontStrip).']+/', ' ',$string))));
     }
 }

@@ -406,6 +406,11 @@ class Attribute
     private $maxDate;
 
     /**
+     * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
+     */
+    private $validations;
+
+    /**
      * @var Datetime The moment this request was created
      *
      * @Groups({"read"})
@@ -856,6 +861,55 @@ class Attribute
     public function setMaxDate(?string $maxDate): self
     {
         $this->maxDate = $maxDate;
+
+        return $this;
+    }
+
+
+    public function getValdiations(): ?array
+    {
+        $validations = [];
+        $validations['maximum']             = $this->getMaximum();
+        $validations['exclusiveMaximum']    = $this->getExclusiveMaximum();
+        $validations['minimum']             = $this->getMinimum();
+        $validations['exclusiveMinimum']    = $this->getExclusiveMinimum();
+        $validations['maxLength']           = $this->getMaxLength();
+        $validations['minLength']           = $this->getMinLength();
+        $validations['maxItems']            = $this->getMaxItems();
+        $validations['minItems']            = $this->getMinItems();
+        $validations['uniqueItems']         = $this->getUniqueItems();
+        $validations['maxProperties']       = $this->getMaxProperties();
+        $validations['minProperties']       = $this->getMinProperties();
+        $validations['required']            = $this->getRequired();
+        $validations['enum']                = $this->getEnum();
+        $validations['allOf']               = $this->getAllOf();
+        $validations['anyOf']               = $this->getAnyOf();
+        $validations['oneOf']               = $this->getOneOf();
+        $validations['defaultValue']        = $this->getDefaultValue();
+
+
+        return $validations;
+    }
+
+    public function setValdiations(?array $valdiations): self
+    {
+        if(array_key_exists('maximum',$valdiations)){           $this->getMaximum($valdiations['maximum']);}
+        if(array_key_exists('exclusiveMaximum',$valdiations)){  $this->getExclusiveMaximum($valdiations['exclusiveMaximum']);}
+        if(array_key_exists('minimum',$valdiations)){           $this->getMinimum($valdiations['minimum']);}
+        if(array_key_exists('exclusiveMinimum',$valdiations)){  $this->getExclusiveMinimum($valdiations['exclusiveMinimum']);}
+        if(array_key_exists('maxLength',$valdiations)){         $this->getMaxLength($valdiations['maxLength']);}
+        if(array_key_exists('minLength',$valdiations)){         $this->getMinLength($valdiations['minLength']);}
+        if(array_key_exists('maxItems',$valdiations)){          $this->getMaxItems($valdiations['maxItems']);}
+        if(array_key_exists('minItems',$valdiations)){          $this->getMinItems($valdiations['minItems']);}
+        if(array_key_exists('uniqueItems',$valdiations)){       $this->getUniqueItems($valdiations['uniqueItems']);}
+        if(array_key_exists('maxProperties',$valdiations)){     $this->getMaxProperties($valdiations['maxProperties']);}
+        if(array_key_exists('minProperties',$valdiations)){     $this->getMinProperties($valdiations['minProperties']);}
+        if(array_key_exists('required',$valdiations)){          $this->getRequired($valdiations['required']);}
+        if(array_key_exists('enum',$valdiations)){              $this->getEnum($valdiations['enum']);}
+        if(array_key_exists('allOf',$valdiations)){             $this->getAllOf($valdiations['allOf']);}
+        if(array_key_exists('anyOf',$valdiations)){             $this->getAnyOf($valdiations['anyOf']);}
+        if(array_key_exists('oneOf',$valdiations)){             $this->getOneOf($valdiations['oneOf']);}
+        if(array_key_exists('defaultValue',$valdiations)){      $this->getDefaultValue($valdiations['defaultValue']);}
 
         return $this;
     }
