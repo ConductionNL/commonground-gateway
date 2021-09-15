@@ -255,7 +255,7 @@ App\Entity\Attribute:
         name: generalDetails
         type: object
         entity: '@student'
-        object: '@generalDetails:'
+        object: '@generalDetails'
     student_referrerDetails:
         name: referrerDetails
         type: object
