@@ -413,6 +413,68 @@ App\Entity\Attribute:
         type: object
         entity: '@employee'
         object: '@person'
+        required: true
+    employee_availability:
+        name: availability
+        type: object
+        entity: '@employee'
+        object: '@availability'
+    employee_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        entity: '@employee'
+    employee_targetGroupPreferences:
+        name: targetGroupPreferences
+        type: string
+        enum: ['NT1', 'NT2']
+        entity: '@employee'
+    employee_volunteeringPreference:
+        name: volunteeringPreference
+        type: string
+        entity: '@employee'
+    employee_gotHereVia:
+        name: gotHereVia
+        type: string
+        entity: '@employee'
+    employee_hasExperienceWithTargetGroup:
+        name: hasExperienceWithTargetGroup
+        type: boolean
+        entity: '@employee'
+    employee_experienceWithTargetGroupYesReason:
+        name: experienceWithTargetGroupYesReason
+        type: string
+        entity: '@employee'
+    employee_currentEducation:
+        name: currentEducation
+        type: string
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@employee'
+    employee_education:
+        name: education
+        type: object
+        entity: '@employee'
+        object: '@education'
+    employee_doesCurrentlyFollowCourse:
+        name: doesCurrentlyFollowCourse
+        type: boolean
+        entity: '@employee'
+    employee_followingCourse:
+        name: followingCourse
+        type: object
+        entity: '@employee'
+        object: '@education'
+    employee_otherRelevantCertificates:
+        name: otherRelevantCertificates
+        type: string
+        entity: '@employee'
+    employee_userGroupIds:
+        name: organizationId
+        type: array
+        entity: '@employee'
+    employee_userId:
+        name: userId
+        type: string
+        entity: '@employee'
     #registration
     registration_student:
         name: person
