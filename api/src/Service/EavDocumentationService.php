@@ -19,6 +19,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Yaml\Yaml;
 
 
 class EavDocumentationService
@@ -68,7 +69,7 @@ class EavDocumentationService
     public function write(): array
     {
         // Get the docs
-        $doc = $this->getRenderDocumentation();
+        $docs = $this->getRenderDocumentation();
 
         // Setup the file system
         $filesystem = new Filesystem();
@@ -78,8 +79,8 @@ class EavDocumentationService
             $filesystem->mkdir('/srv/api/public/eav');
         }
 
-        $filesystem->dumpFile('schema.json', $doc);
-        $filesystem->dumpFile('schema.yaml', $doc);
+        $filesystem->dumpFile('schema.json', json_encode($docs));
+        $filesystem->dumpFile('schema.yaml',  Yaml::dump($docs));
 
         return true;
 
@@ -346,7 +347,7 @@ class EavDocumentationService
 
             // The attribute might be a scheme on its own
             if($attribute->getObject()){
-                $schema['properties'][$attribute->getName()] = ["\$ref"=>"#/components/schemas/".$attribute->getObject()->getObject()->getName()];
+                $schema['properties'][$attribute->getName()] = ["\$ref"=>"#/components/schemas/".$attribute->getObject()->getName()];
                 // that also means that we don't have to do the rest
                 continue;
             }
@@ -357,7 +358,7 @@ class EavDocumentationService
              */
 
             /* @todo ow nooz a loopin a loop */
-            foreach($attribute->getValidation() as $validator => $validation){
+            foreach($attribute->getValidations() as $validator => $validation){
                 if(!array_key_exists($validator, $this->supportedValidators)){
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }

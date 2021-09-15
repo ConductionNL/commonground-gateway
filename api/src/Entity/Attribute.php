@@ -866,7 +866,7 @@ class Attribute
     }
 
 
-    public function getValdiations(): ?array
+    public function getValidations(): ?array
     {
         $validations = [];
         $validations['maximum']             = $this->getMaximum();
@@ -891,25 +891,25 @@ class Attribute
         return $validations;
     }
 
-    public function setValdiations(?array $valdiations): self
+    public function setValidations(?array $validations): self
     {
-        if(array_key_exists('maximum',$valdiations)){           $this->getMaximum($valdiations['maximum']);}
-        if(array_key_exists('exclusiveMaximum',$valdiations)){  $this->getExclusiveMaximum($valdiations['exclusiveMaximum']);}
-        if(array_key_exists('minimum',$valdiations)){           $this->getMinimum($valdiations['minimum']);}
-        if(array_key_exists('exclusiveMinimum',$valdiations)){  $this->getExclusiveMinimum($valdiations['exclusiveMinimum']);}
-        if(array_key_exists('maxLength',$valdiations)){         $this->getMaxLength($valdiations['maxLength']);}
-        if(array_key_exists('minLength',$valdiations)){         $this->getMinLength($valdiations['minLength']);}
-        if(array_key_exists('maxItems',$valdiations)){          $this->getMaxItems($valdiations['maxItems']);}
-        if(array_key_exists('minItems',$valdiations)){          $this->getMinItems($valdiations['minItems']);}
-        if(array_key_exists('uniqueItems',$valdiations)){       $this->getUniqueItems($valdiations['uniqueItems']);}
-        if(array_key_exists('maxProperties',$valdiations)){     $this->getMaxProperties($valdiations['maxProperties']);}
-        if(array_key_exists('minProperties',$valdiations)){     $this->getMinProperties($valdiations['minProperties']);}
-        if(array_key_exists('required',$valdiations)){          $this->getRequired($valdiations['required']);}
-        if(array_key_exists('enum',$valdiations)){              $this->getEnum($valdiations['enum']);}
-        if(array_key_exists('allOf',$valdiations)){             $this->getAllOf($valdiations['allOf']);}
-        if(array_key_exists('anyOf',$valdiations)){             $this->getAnyOf($valdiations['anyOf']);}
-        if(array_key_exists('oneOf',$valdiations)){             $this->getOneOf($valdiations['oneOf']);}
-        if(array_key_exists('defaultValue',$valdiations)){      $this->getDefaultValue($valdiations['defaultValue']);}
+        if(array_key_exists('maximum',$validations)){           $this->getMaximum($validations['maximum']);}
+        if(array_key_exists('exclusiveMaximum',$validations)){  $this->getExclusiveMaximum($validations['exclusiveMaximum']);}
+        if(array_key_exists('minimum',$validations)){           $this->getMinimum($validations['minimum']);}
+        if(array_key_exists('exclusiveMinimum',$validations)){  $this->getExclusiveMinimum($validations['exclusiveMinimum']);}
+        if(array_key_exists('maxLength',$validations)){         $this->getMaxLength($validations['maxLength']);}
+        if(array_key_exists('minLength',$validations)){         $this->getMinLength($validations['minLength']);}
+        if(array_key_exists('maxItems',$validations)){          $this->getMaxItems($validations['maxItems']);}
+        if(array_key_exists('minItems',$validations)){          $this->getMinItems($validations['minItems']);}
+        if(array_key_exists('uniqueItems',$validations)){       $this->getUniqueItems($validations['uniqueItems']);}
+        if(array_key_exists('maxProperties',$validations)){     $this->getMaxProperties($validations['maxProperties']);}
+        if(array_key_exists('minProperties',$validations)){     $this->getMinProperties($validations['minProperties']);}
+        if(array_key_exists('required',$validations)){          $this->getRequired($validations['required']);}
+        if(array_key_exists('enum',$validations)){              $this->getEnum($validations['enum']);}
+        if(array_key_exists('allOf',$validations)){             $this->getAllOf($validations['allOf']);}
+        if(array_key_exists('anyOf',$validations)){             $this->getAnyOf($validations['anyOf']);}
+        if(array_key_exists('oneOf',$validations)){             $this->getOneOf($validations['oneOf']);}
+        if(array_key_exists('defaultValue',$validations)){      $this->getDefaultValue($validations['defaultValue']);}
 
         return $this;
     }
