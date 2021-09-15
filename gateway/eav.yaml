@@ -76,32 +76,41 @@ App\Entity\Entity:
         endpoint: 'participants'
     civicIntegrationDetails:
         name: civicIntegrationDetails
-        description: the permisions that this person has given
+        description: the civic integration details of this person
     generalDetails:
         name: generalDetails
-        description: the permisions that this person has given    
+        description: the general details of this person 
     referrerDetails:
         name: referrerDetails
-        description: the permisions that this person has given
+        description: the referrer details of this person
     backgroundDetails:
         name: backgroundDetails
-        description: the permisions that this person has given
+        description: the background details of this person
     dutchNTDetails:
         name: dutchNTDetails
-        description: the permisions that this person has given
+        description: the dutch NT details of this person
     jobDetails:
         name: jobDetails
-        description: the permisions that this person has given
+        description: the job details of this person
     motivationDetails:
         name: motivationDetails
-        description: the permisions that this person has given
-#regitration is basically a student clone
-    registration:
-        route: '/api/registrations'
-        name: registrations
-        description: apikey
-        gateway: '@edu_api'
-        endpoint: 'participants'
+        description: the motivation details of this person
+    educationDetails:
+        name: educationDetails
+        description: the education details of this person
+    courseDetails:
+        name: courseDetails
+        description: the course details of this person   
+    availabilityDetails:
+        name: availabilityDetails
+        description: the availability details of this person
+    #regitration is basically a student clone
+#    registration:
+#        route: '/api/registrations'
+#        name: registrations
+#        description: apikey
+#        gateway: '@edu_api'
+#        endpoint: 'participants'
     person:
         route: '/api/persons'
         name: persons
@@ -110,7 +119,7 @@ App\Entity\Entity:
         endpoint: 'people'
     permissionDetails:
         name: permissionDetails
-        description: the permisions that this person has given
+        description: the permissions that this person has given
     memo:
         name: memo
         description: apikey
@@ -183,7 +192,59 @@ App\Entity\Entity:
         
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
-    # registration
+    # education 
+#    education_name:
+#        name: name
+#        type: string
+#        maxLength: 255
+#        entity: '@education' 
+#    education_startDate:
+#        name: startDate
+#        type: string #DateTime?
+#        entity: '@education'
+#    education_endDate:
+#        name: endDate
+#        type: string #DateTime?
+#        entity: '@education'
+#    education_institution:
+#        name: institution
+#        type: string
+#        maxLength: 255
+#        entity: '@education'
+#    education_iscedEducationLevelCode:
+#        name: iscedEducationLevelCode
+#        type: string
+#        maxLength: 255
+#        entity: '@education'  
+#    education_degreeGrantedStatus:
+#        name: degreeGrantedStatus
+#        type: string
+#        maxLength: 255
+#        entity: '@education'
+#    education_groupFormation:
+#        name: groupFormation
+#        type: string
+#        enum: ['INDIVIDUALLY', 'GROUP']
+#        entity: '@education'
+#    education_teacherProfessionalism:
+#        name: teacherProfessionalism
+#        type: string
+#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        entity: '@education'
+#    education_courseProfessionalism:
+#        name: courseProfessionalism
+#        type: string
+#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        entity: '@education'
+#    education_providesCertificate:
+#        name: providesCertificate
+#        type: boolean
+#        entity: '@education'
+#    education_amountOfHours:
+#        name: amountOfHours
+#        type: integer
+#        entity: '@education'   
+    # student
     student_person:
         name: person
         type: object
@@ -234,111 +295,206 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@motivationDetails'
+    student_educationDetails:
+        name: educationDetails
+        type: object
+        entity: '@student'
+        object: '@educationDetails'
+    student_courseDetails:
+        name: courseDetails
+        type: object
+        entity: '@student'
+        object: '@courseDetails'   
+    student_availabilityDetails:
+        name: availabilityDetails
+        type: object
+        entity: '@student'
+        object: '@availabilityDetails'
     student_languageHouseId:
         name: languageHouseId
         type: string
+        required: true
         entity: '@student'
     student_speakingLevel:
         name: speakingLevel
         type: string
+        enum: ['BEGINNER', 'REASONABLE', 'ADVANCED']
         entity: '@student'
     student_readingTestResult:
         name: readingTestResult
         type: string
+        enum: ['CAN_NOT_READ', 'A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
         entity: '@student'
     student_writingTestResult:
         name: writingTestResult
         type: string
+        enum: ['CAN_NOT_WRITE', 'WRITE_NAW_DETAILS', 'WRITE_SIMPLE_TEXTS', 'WRITE_SIMPLE_LETTERS']
         entity: '@student'
+    student_status:
+        name: status
+        type: string
+        enum: ['REFERRRED', 'ACTIVE', 'COMPLETED']
+        defaultValue: 'REFERRRED'
+        required: true
+        entity: '@student'
+    # educationDetails @todo check
+    educationDetails_followingEducationRightNow:
+        name: followingEducationRightNow
+        type: string
+        # select single
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@educationDetails'       
+    educationDetails_education:
+        name: education
+        type: object
+        entity: '@education'
+    # courseDetails @todo check
+    courseDetails_isFollowingCourseRightNow:
+        name: isFollowingCourseRightNow
+        type: boolean
+        entity: '@courseDetails'
+    courseDetails_course:
+        name: course
+        type: object
+        entity: '@education'
+    # availabilityDetails
+    availabilityDetails_availability:
+        name: availability
+        type: string
+        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
+        multiple: true
+        entity: '@availabilityDetails'
+    availabilityDetails_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        maxLength: 255
+        entity: '@availabilityDetails'
     # civicIntegrationDetails
     civicIntegrationDetails_civicIntegrationRequirement:
         name: civicIntegrationRequirement
         type: string
+        enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
         entity: '@civicIntegrationDetails'
+    # if civicIntegrationDetails_civicIntegrationRequirement == NO:  
     civicIntegrationDetails_civicIntegrationRequirementReason:
         name: civicIntegrationRequirementReason
         type: string
+        enum: ['FINISHED', 'FROM_EU_COUNTRY', 'EXEMPTED_OR_ZROUTE']
         entity: '@civicIntegrationDetails'
+    # if civicIntegrationDetails_civicIntegrationRequirement == CURRENTLY_WORKING_ON_INTEGRATION:    
     civicIntegrationDetails_civicIntegrationRequirementFinishDate:
         name: civicIntegrationRequirementFinishDate
-        type: string
+        type: string #DateTime?
         entity: '@civicIntegrationDetails'
     # generalDetails
     generalDetails_countryOfOrigin:
         name: countryOfOrigin
         type: string
+        maxLength: 255
+        # enum: ISO list of countries?
         entity: '@generalDetails'
     generalDetails_nativeLanguage:
         name: nativeLanguage
         type: string
+        maxLength: 255
         entity: '@generalDetails'
     generalDetails_otherLanguages:
         name: otherLanguages
         type: string
+        maxLength: 255
         entity: '@generalDetails'
+    # Here we want to add an abstract construction    
     generalDetails_familyComposition:
         name: familyComposition
         type: string
-        maxLength: 255
+        # @todo select multiple in Att 1 but single in the Taalhuizen-service
+        enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED', 'WIDOW']
+        multiple: true
         entity: '@generalDetails'
     generalDetails_childrenCount:
         name: childrenCount
-        type: integer
+        type: integer #type in att 1 is string
+        maxLength: 255
         entity: '@generalDetails'
     generalDetails_childrenDatesOfBirth:
         name: childrenDatesOfBirth
-        type: integer
+        type: string
+        maxLength: 255
         entity: '@referrerDetails'
     # referrerDetails
     referrerDetails_referringOrganization:
         name: referringOrganization
         type: string
+        enum: [ 'UWV', 'SOCIAL_SERVICE', 'LIBRARY', 'WELFARE_WORK',  'NEIGHBORHOOD_TEAM', 'VOLUNTEER_ORGANIZATION', 'LANGUAGE_PROVIDER', 'OTHER']
         entity: '@referrerDetails'
+    # if referrerDetails_referringOrganization == OTHER:     
+    referrerDetails_referringOrganizationOther:
+        name: referringOrganizationOther
+        type: string
+        maxLength: 255
+        entity: '@referrerDetails'    
     referrerDetails_email:
         name: email
         type: string
+        maxLength: 255
         entity: '@referrerDetails'
     # backgroundDetails
     backgroundDetails_foundVia:
         name: foundVia
         type: string
+        enum: ['VOLUNTEER_CENTER', 'LIBRARY_WEBSITE', 'SOCIAL_MEDIA', 'NEWSPAPER', 'VIA_VIA', 'OTHER']
         entity: '@backgroundDetails'
+    #if backgroundDetails_foundVia == OTHER:   
     backgroundDetails_foundViaOther:
         name: foundViaOther
         type: string
+        maxLength: 255
         entity: '@backgroundDetails'
     backgroundDetails_wentToLanguageHouseBefore:
         name: wentToLanguageHouseBefore
-        type: string
+        type: boolean
         entity: '@backgroundDetails'
+    #if backgroundDetails_wentToLanguageHouseBefore == true:     
     backgroundDetails_wentToLanguageHouseBeforeReason:
         name: wentToLanguageHouseBeforeReason
         type: string
+        maxLength: 255
         entity: '@backgroundDetails'
+    # @todo is missing in Att 1 
     backgroundDetails_wentToLanguageHouseBeforeYear:
         name: wentToLanguageHouseBeforeYear
-        type: integer
+        type: integer # taalhuizen-service is the type float
+        maxLength: 255
         entity: '@backgroundDetails'
     backgroundDetails_network:
         name: network
         type: string
+        # select multiple
+        enum: ['HOUSEHOLD_MEMBERS', 'NEIGHBORS', 'FAMILY_MEMBERS', 'AID_WORKERS', 'FRIENDS_ACQUAINTANCES', 'PEOPLE_AT_MOSQUE_CHURCH', 'ACQUAINTANCES_SPEAKING_OWN_LANGUAGE', 'ACQUAINTANCES_SPEAKING_DUTCH']
+        multiple: true
         entity: '@backgroundDetails'
+    # @todo
     backgroundDetails_participationLadder:
         name: participationLadder
-        type: integer
+        type: string
+        # type in taalhuis service is integer 
+        # select single
+        enum: ['1 geïsoleerd', '2 sociale contacten buiten huis', '3 deelname georganiseerde activiteiten', '4 vrijwilligers werk/maatschappelijke activering', '5 betaald werk met ondersteuning', '6 betaald werk']
         entity: '@backgroundDetails'
     # dutchNTDetails
     dutchNTDetails_dutchNTLevel:
         name: dutchNTLevel
         type: string
+        enum: ['NT1', 'NT2']
         entity: '@dutchNTDetails'
     dutchNTDetails_inNetherlandsSinceYear:
         name: inNetherlandsSinceYear
-        type: integer
+        type: string #DateTime?
         entity: '@dutchNTDetails'
     dutchNTDetails_languageInDailyLife:
         name: languageInDailyLife
         type: string
+        maxLength: 255
         entity: '@dutchNTDetails'
     dutchNTDetails_knowsLatinAlphabet:
         name: knowsLatinAlphabet
@@ -347,56 +503,84 @@ App\Entity\Attribute:
     dutchNTDetails_lastKnownLevel:
         name: lastKnownLevel
         type: string
+        enum: ['A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'UNKNOWN']
         entity: '@dutchNTDetails'
     # jobDetails
     jobDetails_trainedForJob:
         name: trainedForJob
         type: string
+        maxLength: 255
         entity: '@jobDetails'
     jobDetails_lastJob:
         name: lastJob
         type: string
+        maxLength: 255
         entity: '@jobDetails'
     jobDetails_dayTimeActivities:
         name: dayTimeActivities
         type: string
+        #select multiple
+        enum: ['SEARCHING_FOR_JOB', 'RE_INTEGRATION', 'SCHOOL', 'VOLUNTEER_JOB', 'JOB', 'OTHER' ]
+        multiple: true
         entity: '@jobDetails'
+    # if jobDetails_dayTimeActivities == OTHER:    
     jobDetails_dayTimeActivitiesOther:
         name: dayTimeActivitiesOther
-        type: boolean
+        type: string
+        maxLength: 255
         entity: '@jobDetails'
     # motivationDetails
     motivationDetails_desiredSkills:
         name: desiredSkills
         type: string
+        #select multiple
+        enum: [ 'KLIKTIK', 'USING_WHATSAPP', 'USING_SKYPE', 'DEVICE_FUNCTIONALITIES', 'DIGITAL_GOVERNMENT', 'RESERVE_BOOKS_IN_LIBRARY', 'ADS_ON_MARKTPLAATS',  'READ_FOR_CHILDREN', 'UNDERSTAND_PRESCRIPTIONS', 'WRITE_APPLICATION_LETTER', 'WRITE_POSTCARD_FOR_FAMILY', 'DO_ADMINISTRATION', 'CALCULATIONS_FOR_RECIPES', 'OTHER']
+        multiple: true
         entity: '@motivationDetails'
+    # if motivationDetails_desiredSkills == OTHER: 
     motivationDetails_desiredSkillsOther:
         name: desiredSkillsOther
         type: string
+        maxLength: 255
         entity: '@motivationDetails'
     motivationDetails_hasTriedThisBefore:
         name: hasTriedThisBefore
-        type: string
+        type: boolean
         entity: '@motivationDetails'
+    motivationDetails_hasTriedThisBeforeExplanation:
+        name: hasTriedThisBeforeExplanation
+        type: string
+        maxLength: 255
+        entity: '@motivationDetails'    
     motivationDetails_whyWantTheseskills:
         name: whyWantTheseskills
         type: string
+        maxLength: 255
         entity: '@motivationDetails'
+    motivationDetails_whyWantThisNow:
+        name: whyWantThisNow
+        type: string
+        maxLength: 255
+        entity: '@motivationDetails'     
     motivationDetails_desiredLearningMethod:
         name: desiredLearningMethod
         type: string
+        #select multiple
+        enum: ['IN_A_GROUP', 'ONE_ON_ONE', 'HOME_ENVIRONMENT', 'IN_LIBRARY_OR_OTHER', 'ONLINE']
+        multiple: true
         entity: '@motivationDetails'
     motivationDetails_remarks:
         name: remarks
         type: string
+        maxLength: 255
         entity: '@motivationDetails'
     # person
     person_contactPreference:
         name: contactPreference
         type: string
-        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']
+        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']        
         entity: '@person'
-
+    # if person_contactPreference == OTHER:
     person_contactPreferenceOther:
         name: contactPreferenceOther
         type: string
@@ -573,50 +757,57 @@ App\Entity\Attribute:
         type: integer
         entity: '@education'
     #registration
-    registration_student:
-        name: person
-        type: object
-        entity: '@registration'
-        object: '@person'
-    registration_registrar:
-        name: registrar
-        type: object
-        entity: '@registration'
-        object: '@person'
-    registration_languageHouseId:
-        name: languageHouseId
-        type: string
-        entity: '@registration'
-    registration_permissionDetails:
-        name: permissionDetails
-        type: object
-        entity: '@registration'
-        object: '@permissionDetails'
-    registration_memo:
-        name: memo
-        type: string
-        entity: '@registration'
-    # Organization
-    organization_type:
-        name: type
-        type: string
-        enum: ["Provider", "LanguageHouse"]
-        entity: '@organization'
+#    registration_student:
+#        name: person
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
+#    registration_registrar:
+#        name: registrar
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
+#    registration_languageHouseId:
+#        name: languageHouseId
+#        type: string
+#        entity: '@registration'
+#        required: true
+#    registration_permissionDetails:
+#        name: permissionDetails
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@permissionDetails'
+#    registration_memo:
+#        name: memo
+#        type: string
+#        entity: '@registration'
+#    organisation_person:
+#        name: person
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
     # permissionDetails 
     permissionDetails_didSignPermissionForm:
         name: didSignPermissionForm
         type: boolean
         entity: '@permissionDetails'
-        
+        required: true
     permissionDetails_hasPermissionToShareDataWithProviders:
         name: hasPermissionToShareDataWithProviders
         type: boolean
         entity: '@permissionDetails'
+        required: true
     permissionDetails_hasPermissionToShareDataWithLibraries:
         name: hasPermissionToShareDataWithLibraries
         type: boolean
         entity: '@permissionDetails'
+        required: true
     permissionDetails_hasPermissionToSendInformationAboutLibraries:
         name: hasPermissionToSendInformationAboutLibraries
         type: boolean
         entity: '@permissionDetails'
+        required: true
