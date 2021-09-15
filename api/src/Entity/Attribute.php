@@ -513,6 +513,7 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
+        $this->type = 'object';
         $this->object = $object;
 
         return $this;
@@ -694,6 +695,11 @@ class Attribute
     public function setType(string $type): self
     {
         $this->type = $type;
+
+        // If the atribute type is changes away from an object we need to drop the object
+        if($type != 'object' and $this->object ){
+            unset($this->object);
+        }
 
         return $this;
     }

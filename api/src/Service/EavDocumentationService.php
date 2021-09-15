@@ -17,21 +17,72 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
-use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\Utils;
-use function GuzzleHttp\json_decode;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
-class EavDocumentationServiceService
+
+class EavDocumentationService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
+    private array $supportedValidators;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+
+        // Lets define the validator that we support for docummentation right now
+        $this->supportedValidators = [
+            'multipleOf',
+            'maximum',
+            'exclusiveMaximum',
+            'minimum',
+            'exclusiveMinimum',
+            'maxLength',
+            'minLength',
+            'maxItems',
+            'uniqueItems',
+            'maxProperties',
+            'minProperties',
+            'required',
+            'enum',
+            'allOf',
+            'oneOf',
+            'anyOf',
+            'not',
+            'items',
+            'additionalProperties',
+            'default',
+        ];
+    }
+
+
+    /**
+     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger
+     *
+     * @return boolean returns true if succcesfull or false on failure
+     */
+    public function write(): array
+    {
+        // Get the docs
+        $doc = $this->getRenderDocumentation();
+
+        // Setup the file system
+        $filesystem = new Filesystem();
+
+        // Check if there is a eav folder in the /public folder
+        if(!$filesystem->exists('/var/www/app/public/eav')){
+            $filesystem->mkdir('/var/www/app/public/eav', 0700);
+        }
+
+        $filesystem->dumpFile('schema.json', $doc);
+        $filesystem->dumpFile('schema.yaml', $doc);
+
+        return true;
+
     }
 
     /**
@@ -64,15 +115,12 @@ class EavDocumentationServiceService
             ["url"=>"/api/eav/data","description"=>"Gateway server"]
         ];
 
-        $entities = $this->em->getRepository()->findBy(['expose_in_docs'=>true]);
-
-        foreach($entities as $entity){
-            $docs = $this->addEntityToDocs($entity, $docs);
-        }
-
         // General reusable components for the documentation
         $docs['components']=[
-            "schemas"=>[],
+            "schemas"=>[
+                "ErrorModel",
+                "DeleteModel"
+            ],
             "responces"=>[
                 "error"=>[
                     "description"=>"error payload",
@@ -114,12 +162,21 @@ class EavDocumentationServiceService
             ]
         ];
 
+        $entities = $this->em->getRepository()->findBy(['expose_in_docs'=>true]);
+
+        foreach($entities as $entity){
+            $docs = $this->addEntityToDocs($entity, $docs);
+        }
+
+
         return $docs;
     }
 
     /**
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array
      *
+     * @param Entity $entity
+     * @param array $docs
      * @return array
      */
     public function addEntityToDocs(Entity $entity, array $docs): array
@@ -127,6 +184,9 @@ class EavDocumentationServiceService
 
         $docs['paths']['/'.$entity->getPath()] = $this->getCollectionPaths($entity);
         $docs['paths']['/'.$entity->getPath().'/{id}'] = $this->getItemPaths($entity);
+
+        /* @todo this only goes one deep */
+        $docs['components']['schemas'][$entity->getName()] = $this->getItemSchema($entity);
 
         // create the tag
         $docs['tags'] = [
@@ -140,6 +200,7 @@ class EavDocumentationServiceService
     /**
      * Generates an OAS3 documentation for the colleection paths of an entity
      *
+     * @param Entity $entity
      * @return array
      */
     public function getCollectionPaths(Entity $entity): array
@@ -156,6 +217,7 @@ class EavDocumentationServiceService
     /**
      * Generates an OAS3 documentation for the item paths of an entity
      *
+     * @param Entity $entity
      * @return array
      */
     public function getItemPaths(Entity $entity): array
@@ -218,5 +280,57 @@ class EavDocumentationServiceService
         ];
 
         return $docs;
+    }
+
+    /**
+     * Generates an OAS3 schema for the item  of an entity
+     *
+     * @param Entity $entity
+     * @return array
+     */
+    public function getSchema(Entity $entity): array
+    {
+        $schema = [
+            "type"=>"object",
+            "required"=>[],
+            "properties"=>[],
+
+        ];
+
+        foreach($entity->getAttributes() as $attribute){
+
+            // Handle requireded fields
+            if($attribute->getRequired()){
+                $schema['required'][] = $attribute->getName();
+            }
+
+            // Add the atribute
+            $schema['properties'][$attribute->getName()] = [
+                "type"=>$attribute->getType(),
+                "title"=>$attribute->getName(),
+                "description"=>$attribute->getDescription(),
+            ];
+
+            // The attribute might be a scheme on its own
+            if($attribute->getObject()){
+                $schema['properties'][$attribute->getName()] = ["\$ref"=>"#/components/schemas/".$attribute->getObject()->getObject()->getName()];
+                // that also means that we don't have to do the rest
+                continue;
+            }
+
+            /* @todo we nee to add supoort for https://swagger.io/specification/#schema-object
+             *
+             *
+             */
+
+            /* @todo ow nooz a loopin a loop */
+            foreach($attribute->getValidation() as $validator => $validation){
+                if(!array_key_exists($validator, $this->supportedValidators)){
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+        }
+
+        return $schema;
     }
 }
