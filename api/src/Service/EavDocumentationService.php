@@ -66,7 +66,7 @@ class EavDocumentationService
      *
      * @return boolean returns true if succcesfull or false on failure
      */
-    public function write(): array
+    public function write(): bool 
     {
         // Get the docs
         $docs = $this->getRenderDocumentation();
@@ -75,12 +75,12 @@ class EavDocumentationService
         $filesystem = new Filesystem();
 
         // Check if there is a eav folder in the /public folder
-        if(!$filesystem->exists('/srv/api/public/eav')){
-            $filesystem->mkdir('/srv/api/public/eav');
+        if(!$filesystem->exists('public/eav')){
+            $filesystem->mkdir('public/eav');
         }
 
-        $filesystem->dumpFile('schema.json', json_encode($docs));
-        $filesystem->dumpFile('schema.yaml',  Yaml::dump($docs));
+        $filesystem->dumpFile('public/eav/schema.json', json_encode($docs));
+        $filesystem->dumpFile('public/eav/schema.yaml',  Yaml::dump($docs));
 
         return true;
 
