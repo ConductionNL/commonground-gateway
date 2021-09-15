@@ -158,14 +158,7 @@ App\Entity\Entity:
         name: participations
         description: apikey
         gateway: '@edu_api'
-        endpoint: 'participations'
-    # @todo reports    
-#    report:
-#        route: '/api/reports'
-#        name: reports
-#        description: apikey
-#        gateway: '@edu_api'
-#        endpoint: 'reports'        
+        endpoint: 'participations'    
     organization:
         route: '/api/organizations'
         name: organizations
@@ -367,7 +360,6 @@ App\Entity\Attribute:
     civicIntegrationDetails_civicIntegrationRequirement:
         name: civicIntegrationRequirement
         type: string
-        # select single
         enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
         entity: '@civicIntegrationDetails'
     # if civicIntegrationDetails_civicIntegrationRequirement == NO:  
@@ -478,12 +470,11 @@ App\Entity\Attribute:
     dutchNTDetails_dutchNTLevel:
         name: dutchNTLevel
         type: string
-        # select single
         enum: ['NT1', 'NT2']
         entity: '@dutchNTDetails'
     dutchNTDetails_inNetherlandsSinceYear:
         name: inNetherlandsSinceYear
-        type: integer # type in att 1 is date
+        type: DateTime
         entity: '@dutchNTDetails'
     dutchNTDetails_languageInDailyLife:
         name: languageInDailyLife
@@ -497,7 +488,6 @@ App\Entity\Attribute:
     dutchNTDetails_lastKnownLevel:
         name: lastKnownLevel
         type: string
-        #select single
         enum: ['A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'UNKNOWN']
         entity: '@dutchNTDetails'
     # jobDetails
@@ -570,7 +560,6 @@ App\Entity\Attribute:
     person_contactPreference:
         name: contactPreference
         type: string
-        #single
         enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']        
         entity: '@person'
     # if person_contactPreference == OTHER:
@@ -644,29 +633,3 @@ App\Entity\Attribute:
         type: boolean
         entity: '@permissionDetails'
         required: true
-    # reports 
-#    report_organizationId: #??
-#        name: organizationId
-#        type: string
-#        entity: '@reports'
-#        required: true
-#    report_dateFrom: #??
-#        name: dateFrom
-#        type: string
-#        entity: '@reports'
-#        required: true
-#    report_dateUntil: #??
-#        name: dateUntil
-#        type: string
-#        entity: '@reports'
-#        required: true
-#    report_fileName: #??
-#        name: dateFrom
-#        type: string
-#        entity: '@reports'
-#        required: true
-#    report_base64: #??
-#        name: dateFrom
-#        type: string
-#        entity: '@reports'
-#        required: true
