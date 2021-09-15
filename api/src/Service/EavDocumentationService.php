@@ -66,7 +66,7 @@ class EavDocumentationService
      *
      * @return boolean returns true if succcesfull or false on failure
      */
-    public function write(): bool 
+    public function write(): bool
     {
         // Get the docs
         $docs = $this->getRenderDocumentation();

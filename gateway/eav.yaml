@@ -484,6 +484,7 @@ App\Entity\Attribute:
     # dutchNTDetails
     dutchNTDetails_dutchNTLevel:
         name: dutchNTLevel
+        multiple: true
         type: string
         enum: ['NT1', 'NT2']
         entity: '@dutchNTDetails'
@@ -612,6 +613,7 @@ App\Entity\Attribute:
     employee_targetGroupPreferences:
         name: targetGroupPreferences
         type: string
+        multiple: true
         enum: ['NT1', 'NT2']
         entity: '@employee'
     employee_volunteeringPreference:
