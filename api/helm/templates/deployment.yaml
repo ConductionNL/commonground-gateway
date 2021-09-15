@@ -40,6 +40,7 @@ spec:
             secretName: {{ .Chart.Name }}-certificate
             {{ end }}
             defaultMode: 420
+        {{- if .Values.security.saml.enabled }}
         - name: idp-certificate
           secret:
             {{ if .Values.security.saml.idp.certificate.existingSecret }}
@@ -48,6 +49,14 @@ spec:
             secretName: {{ .Chart.Name }}-idpcertificate
             {{ end }}
             defaultMode: 420
+        {{- end }}
+        {{- if .Values.fixtures }}
+        - name: idp-certificate
+          configMap:
+            name: {{ .Chart.Name }}-fixtures
+            defaultMode: 420
+        {{- end }}
+
       containers:
         - name: {{ .Chart.Name }}-php
           securityContext:
@@ -67,6 +76,11 @@ spec:
             {{- if .Values.security.saml.enabled }}
             - mountPath: /var/run/certs/idp
               name: idp-certificate
+              readOnly: true
+            {{- end }}
+            {{- if .Values.fixtures }}
+            - mountPath: /srv/api/fixtures
+              name: fixtures
               readOnly: true
             {{- end }}
           env:
