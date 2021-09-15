@@ -189,57 +189,57 @@ App\Entity\Entity:
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
     # education 
-    education_name:
-        name: name
-        type: string
-        maxLength: 255
-        entity: '@education' 
-    education_startDate:
-        name: startDate
-        type: DateTime
-        entity: '@education'
-    education_endDate:
-        name: endDate
-        type: DateTime
-        entity: '@education'
-    education_institution:
-        name: institution
-        type: string
-        maxLength: 255
-        entity: '@education'
-    education_iscedEducationLevelCode:
-        name: iscedEducationLevelCode
-        type: string
-        maxLength: 255
-        entity: '@education'  
-    education_degreeGrantedStatus:
-        name: degreeGrantedStatus
-        type: string
-        maxLength: 255
-        entity: '@education'
-    education_groupFormation:
-        name: groupFormation
-        type: string
-        enum: ['INDIVIDUALLY', 'GROUP']
-        entity: '@education'
-    education_teacherProfessionalism:
-        name: teacherProfessionalism
-        type: string
-        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
-        entity: '@education'
-    education_courseProfessionalism:
-        name: courseProfessionalism
-        type: string
-        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
-        entity: '@education'
-    education_providesCertificate:
-        name: providesCertificate
-        type: boolean
-        entity: '@education'
-    education_amountOfHours:
-        name: amountOfHours
-        type: integer
-        entity: '@education'   
+#    education_name:
+#        name: name
+#        type: string
+#        maxLength: 255
+#        entity: '@education' 
+#    education_startDate:
+#        name: startDate
+#        type: DateTime
+#        entity: '@education'
+#    education_endDate:
+#        name: endDate
+#        type: DateTime
+#        entity: '@education'
+#    education_institution:
+#        name: institution
+#        type: string
+#        maxLength: 255
+#        entity: '@education'
+#    education_iscedEducationLevelCode:
+#        name: iscedEducationLevelCode
+#        type: string
+#        maxLength: 255
+#        entity: '@education'  
+#    education_degreeGrantedStatus:
+#        name: degreeGrantedStatus
+#        type: string
+#        maxLength: 255
+#        entity: '@education'
+#    education_groupFormation:
+#        name: groupFormation
+#        type: string
+#        enum: ['INDIVIDUALLY', 'GROUP']
+#        entity: '@education'
+#    education_teacherProfessionalism:
+#        name: teacherProfessionalism
+#        type: string
+#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        entity: '@education'
+#    education_courseProfessionalism:
+#        name: courseProfessionalism
+#        type: string
+#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        entity: '@education'
+#    education_providesCertificate:
+#        name: providesCertificate
+#        type: boolean
+#        entity: '@education'
+#    education_amountOfHours:
+#        name: amountOfHours
+#        type: integer
+#        entity: '@education'   
     # student
     student_person:
         name: person
