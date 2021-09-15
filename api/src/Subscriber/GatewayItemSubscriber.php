@@ -55,6 +55,7 @@ class GatewayItemSubscriber implements EventSubscriberInterface
             $event->getRequest()->getMethod(),
             $event->getRequest()->getContent(),
             $event->getRequest()->query->all(),
+            $event->getRequest()->headers->all(),
         );
 
         $event->setResponse($response);

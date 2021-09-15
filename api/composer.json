@@ -10,11 +10,12 @@
         "api-platform/core": "^2.6",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",
+        "conduction/samlbundle": "dev-master",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.9",
-        "hautelook/alice-bundle": "^2.9",
+        "hautelook/alice-bundle": "^2.9.0",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
         "symfony/asset": "5.3.*",
@@ -31,6 +32,7 @@
         "symfony/serializer": "5.3.*",
         "symfony/twig-bundle": "5.3.*",
         "symfony/validator": "5.3.*",
+        "symfony/web-profiler-bundle": "5.3.*",
         "symfony/yaml": "5.3.*"
     },
     "config": {
@@ -75,5 +77,8 @@
             "allow-contrib": false,
             "require": "5.3.*"
         }
+    },
+    "require-dev": {
+        "symfony/stopwatch": "5.3.*"
     }
 }

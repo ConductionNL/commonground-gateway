@@ -5,6 +5,7 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
+		bash \
 	;
 
 ARG APCU_VERSION=5.1.17
@@ -17,6 +18,7 @@ RUN set -eux; \
 		libpng-dev \
 		postgresql-dev \
 		zlib-dev \
+		gmp-dev \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
@@ -27,6 +29,7 @@ RUN set -eux; \
 		pdo_mysql \
 		pcntl \
 		gd \
+		gmp \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \
@@ -90,6 +93,8 @@ COPY config config/
 COPY public public/
 COPY src src/
 COPY templates templates/
+COPY migrations migrations/
+COPY fixtures fixtures/
 
 RUN apk add --no-cache $PHPIZE_DEPS \
 	&& pecl install xdebug-2.9.2 \
