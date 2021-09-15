@@ -1,0 +1,192 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "commonground-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "commonground-gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "commonground-gateway.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: dependencies
+          secret:
+            secretName: {{ .Chart.Name }}-dependencies
+            defaultMode: 420
+        - name: app-certificates
+          secret:
+            {{ if .Values.security.certificate.existingSecret }}
+            secretName: {{ .Values.security.certificate.existingSecret }}
+            {{ else }}
+            secretName: {{ .Chart.Name }}-certificate
+            {{ end }}
+            defaultMode: 420
+        - name: idp-certificate
+          secret:
+            {{ if .Values.security.saml.idp.certificate.existingSecret }}
+            secretName: {{ .Values.security.saml.idp.certificate.existingSecret }}
+            {{ else }}
+            secretName: {{ .Chart.Name }}-idpcertificate
+            {{ end }}
+            defaultMode: 420
+      containers:
+        - name: {{ .Chart.Name }}-php
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.php.pullPolicy }}
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - mountPath: /srv/api/config/packages/dependencies.yaml
+              subPath: dependencies.yaml
+              name: dependencies
+              readOnly: true
+            - mountPath: /var/run/certs/app
+              name: app-certificates
+              readOnly: true
+            {{- if .Values.security.saml.enabled }}
+            - mountPath: /var/run/certs/idp
+              name: idp-certificate
+              readOnly: true
+            {{- end }}
+          env:
+            - name: APP_ENV
+              value: {{ .Values.config.env }}
+            - name: TRUSTED_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  key: trusted-hosts
+                  name: {{ .Chart.Name }}
+            - name: TRUSTED_PROXIES
+              valueFrom:
+                configMapKeyRef:
+                  key: trusted-proxies
+                  name: {{ .Chart.Name }}
+            - name: CORS_ALLOW_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  key: app-cors-allow-origin
+                  name: {{ .Chart.Name }}
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  key: app-version
+                  name: {{ .Chart.Name }}
+            - name: APP_DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  key: debug
+                  name: {{ .Chart.Name }}
+            - name: APP_CACHE
+              valueFrom:
+                configMapKeyRef:
+                  key: cache
+                  name: {{ .Chart.Name }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: database-url
+                  name: {{ .Chart.Name }}
+            - name: APP_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: url
+                  name: {{ .Chart.Name }}
+            - name: APP_CERT
+              value: '/var/run/certs/tls.crt'
+            - name: APP_KEY
+              value: '/var/run/certs/tls.key'
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-host
+                  name: {{ .Chart.Name }}
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-port
+                  name: {{ .Chart.Name }}
+            {{- end }}
+            - name: SAML_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  key: saml-enabled
+                  name: {{ .Chart.Name }}
+            {{- if .Values.security.saml.enabled }}
+            - name: SAML_METADATA_LOCATION
+              valueFrom:
+                secretKeyRef:
+                  key: saml-metadata-location
+                  name: {{ .Chart.Name }}
+            - name: SAML_SIGN_ON_URL
+              valueFrom:
+                secretKeyRef:
+                  key: saml-single-sign-on-url
+                  name: {{ .Chart.Name }}
+            - name: SAML_LOGOUT_URL
+              valueFrom:
+                secretKeyRef:
+                  key: saml-single-logout-url
+                  name: {{ .Chart.Name }}
+            - name: SAML_IDP_CERT
+              value: '/var/run/idp/idp.crt'
+            {{- end }}
+        - name: {{ .Chart.Name }}-nginx
+          securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.nginx.pullPolicy }}
+          env:
+            - name: PHP_SERVICE
+              value: localhost
+            - name: NGINX_HOST
+              value: localhost
+            - name: BACKENDS
+              value: localhost
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

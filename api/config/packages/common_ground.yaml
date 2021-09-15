@@ -61,8 +61,6 @@ parameters:
     env(BADGES): ""
 
     env(APP_MODE): "digispoof"
-    env(APP_CERT): ""
-    env(APP_KEY): ""
 
     env(APP_SHASIGN): ""
 
