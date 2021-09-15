@@ -5,8 +5,8 @@ parameters:
   env(SAML_SIGN_ON_URL): 'https://example.com/saml2'
   env(SAML_LOGOUT_URL): 'https://example.com/saml2'
   env(SAML_IDP_CERT): '/srv/api/composer.json'
-  env(APP_CERT): '/srv/api/composer.json'
-  env(APP_KEY): '/srv/api/composer.json'
+  env(APP_CERT): '/var/certs/certificate.crt'
+  env(APP_KEY): '/var/certs/certificate.key'
 
   artifactUrl: 'https://digispoof.demodam.nl/artifact'
   app_cert: '%env(APP_CERT)%'
@@ -22,41 +22,41 @@ parameters:
 
   saml_enabled: '%env(bool:SAML_ENABLED)%'
 
-#saml:
-#  idp:
-#    entityId: '%env(SAML_METADATA_LOCATION)%'
-#    singleSignOnService:
-#      url: '%env(SAML_SIGN_ON_URL)%'
-#      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-#    singleLogoutService:
-#      url: '%env(SAML_LOGOUT_URL)%'
-#      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-#    x509cert: '%env(file:SAML_IDP_CERT)%'
-#  sp:
-#    entityId: '%env(APP_URL)%/saml'
-#    assertionConsumerService:
-#      url: '%env(APP_URL)%/saml/SLO/artifact'
-#      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
-#    singleLogoutService:
-#      url: '%env(APP_URL)%/saml/logout'
-#      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-#    privateKey: '%env(file:APP_KEY)%'
-#    x509cert: '%env(file:APP_CERT)%'
+saml:
+  idp:
+    entityId: '%env(SAML_METADATA_LOCATION)%'
+    singleSignOnService:
+      url: '%env(SAML_SIGN_ON_URL)%'
+      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+    singleLogoutService:
+      url: '%env(SAML_LOGOUT_URL)%'
+      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+    x509cert: '%env(file:SAML_IDP_CERT)%'
+  sp:
+    entityId: '%env(APP_URL)%/saml'
+    assertionConsumerService:
+      url: '%env(APP_URL)%/saml/SLO/artifact'
+      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact'
+    singleLogoutService:
+      url: '%env(APP_URL)%/saml/logout'
+      binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+    privateKey: '%env(file:APP_KEY)%'
+    x509cert: '%env(file:APP_CERT)%'
   # Optional settings
-#  baseurl: '%env(APP_URL)%'
-#  strict: false
-#  debug: true
-#  security:
-#    nameIdEncrypted:       false
-#    authnRequestsSigned:   true
-#    logoutRequestSigned:   false
-#    logoutResponseSigned:  false
-#    wantMessagesSigned:    false
-#    wantAssertionsSigned:  false
-#    wantNameIdEncrypted:   false
-#    requestedAuthnContext:
-#      - 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
-#    signMetadata: true
-#    wantXMLValidation: true
-#    signatureAlgorithm: 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-#    digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256'
+  baseurl: '%env(APP_URL)%'
+  strict: false
+  debug: true
+  security:
+    nameIdEncrypted:       false
+    authnRequestsSigned:   true
+    logoutRequestSigned:   false
+    logoutResponseSigned:  false
+    wantMessagesSigned:    false
+    wantAssertionsSigned:  false
+    wantNameIdEncrypted:   false
+    requestedAuthnContext:
+      - 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
+    signMetadata: true
+    wantXMLValidation: true
+    signatureAlgorithm: 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+    digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256'
