@@ -394,6 +394,7 @@ App\Entity\Attribute:
     person_contactPreference:
         name: contactPreference
         type: string
+        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']
         entity: '@person'
 
     person_contactPreferenceOther:
@@ -480,6 +481,7 @@ App\Entity\Attribute:
     employee_userGroupIds:
         name: organizationId
         type: array
+        enum: ['']
         entity: '@employee'
     employee_userId:
         name: userId
