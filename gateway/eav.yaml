@@ -666,7 +666,8 @@ App\Entity\Attribute:
         entity: '@employee'
     employee_userGroupIds:
         name: userGroupIds
-        type: array
+        type: string
+        multiple: true
         entity: '@employee'
     employee_userId:
         name: userId

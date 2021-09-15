@@ -344,7 +344,7 @@ class ValidationService
                     }
                 }
                 else {
-                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getResponse()->getBody()->getContents());
+                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getMessage());
                 }
             }
         );
