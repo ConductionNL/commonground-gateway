@@ -481,12 +481,71 @@ App\Entity\Attribute:
     employee_userGroupIds:
         name: organizationId
         type: array
-        enum: ['']
         entity: '@employee'
     employee_userId:
         name: userId
         type: string
         entity: '@employee'
+    # Participation
+    # TODO datamodel question: do we want these properties (providerId, providerName <- are these from the organization of the Person? ) to be added to Participation or to Person? 
+    # TODO In the OAS is stated that either providerName, providerId or providerNote is required. This requires extra code/logic    
+    participation_providerId:
+        name: providerId
+        type: string
+        maxLength: 36
+        entity: '@participation'
+    participation_providerName:
+        name: providerName
+        type: string
+        entity: '@participation'
+    participation_providerNote:
+        name: providerNote
+        type: string
+        maxLength: 255
+        entity: '@participation'
+    participation_offerName:
+        name: offerName
+        type: string
+        maxLength: 255
+        entity: '@participation'
+    participation_offerCourse:
+        name: offerCourse
+        type: string
+        enum: ['LANGUAGE', 'MATH', 'DIGITAL', 'OTHER']
+        entity: '@participation'
+    participation_learningNeedOutcome:
+        name: learningNeedOutcome
+        type: object
+        entity: '@participation'
+        object: '@learningNeedOutcome'
+    participation_isFormal:
+        name: isFormal
+        type: boolean
+        entity: '@participation'
+    participation_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'IN_A_GROUP']
+        entity: '@participation'
+    participation_totalClassHours:
+        name: totalClassHours
+        type: float
+        entity: '@participation'
+    participation_certificateWillBeAwarded:
+        name: certificateWillBeAwarded
+        type: boolean
+        entity: '@participation'
+    participation_engagements:
+        name: engagements
+        type: string
+        maxLength: 255
+        entity: '@participation'
+    participation_learningNeedId:
+        name: learningNeedId
+        type: string
+        maxLength: 36
+        required: true
+        entity: '@participation'
     # Education
     education_groupFormation:
         name: groupFormation
