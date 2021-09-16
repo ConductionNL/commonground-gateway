@@ -316,8 +316,10 @@ class ValidationService
             // $onFulfilled
             function ($response) use ($post, $objectEntity, $url) {
                 $result = json_decode($response->getBody()->getContents(), true);
-                if(array_key_exists('id',$result)){
+                if(array_key_exists('id',$result) && !strpos($url, $result['id'])){
+
                     $objectEntity->setUri($url.'/'.$result['id']);
+
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 }
                 else{
