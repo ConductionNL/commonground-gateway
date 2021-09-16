@@ -59,9 +59,7 @@ class UserController extends AbstractController
         } else {
             return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
         }
-        $response = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users', 'id' => "{$user['id']}/token"], ['type' => 'SET_PASSWORD']);
-        $message = $commonGroundService->createResource(['reciever' => $user['username'], 'sender' => 'taalhuizen@biscutrecht.nl', 'content' => "{$response['token']}", 'type' => 'email', 'status' => 'queued', 'service' => '/services/'.$commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0]['id'], 'subject' => 'password reset token'], ['component' => 'bs', 'type' => 'messages']);
-
+        $this->authenticationService->sendTokenMail($user, 'Password reset token');
         return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
     }
 
