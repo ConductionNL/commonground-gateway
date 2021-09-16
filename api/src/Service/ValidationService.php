@@ -344,13 +344,13 @@ class ValidationService
         // Do validation for attribute depending on its format
         switch ($attribute->getFormat()) {
             case 'email':
-                if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
-                    $objectEntity->addError($attribute->getName(),'Expects an email, ' . $value . ' is not a valid email.');
+                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
                 }
                 break;
             case 'uuid':
                 if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
-                    $objectEntity->addError($attribute->getName(),'Expects a uuid, ' . $value . ' is not a valid uuid.');
+                    $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
                 }
                 break;
             default:
