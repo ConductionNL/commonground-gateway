@@ -168,9 +168,15 @@ class ObjectEntity
      */
     private ?array $externalResult = [];
 
+    /**
+     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     */
+    private $responceLogs;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
+        $this->responceLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -427,5 +433,35 @@ class ObjectEntity
             $subresources->add($subresource);
         }
         return $subresources;
+    }
+
+    /**
+     * @return Collection|GatewayResponceLog[]
+     */
+    public function getResponceLogs(): Collection
+    {
+        return $this->responceLogs;
+    }
+
+    public function addResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if (!$this->responceLogs->contains($responceLog)) {
+            $this->responceLogs[] = $responceLog;
+            $responceLog->setObjectEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if ($this->responceLogs->removeElement($responceLog)) {
+            // set the owning side to null (unless already changed)
+            if ($responceLog->getObjectEntity() === $this) {
+                $responceLog->setObjectEntity(null);
+            }
+        }
+
+        return $this;
     }
 }

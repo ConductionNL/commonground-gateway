@@ -1,5 +1,5 @@
 parameters:
-  env(SAML_ENABLED): 'false'
+  env(SAML_ENABLED): 'true'
 
   env(SAML_METADATA_LOCATION): 'https://example.com/saml/metadata'
   env(SAML_SIGN_ON_URL): 'https://example.com/saml2'
@@ -11,14 +11,15 @@ parameters:
   artifactUrl: 'https://digispoof.demodam.nl/artifact'
   app_cert: '%env(APP_CERT)%'
   app_key: '%env(APP_KEY)%'
-  app_x509_cert: '%env(file:APP_CERT)%'
-  app_rsa_key: '%env(file:APP_KEY)%'
+  app_x509_cert: '%env(default::file:APP_CERT)%'
+  app_rsa_key: '%env(default::file:APP_KEY)%'
 
-  saml_x509_cert: '%env(file:SAML_IDP_CERT)%'
+  saml_x509_cert: '%env(default::file:SAML_IDP_CERT)%'
 
   saml_login_url: "%env(SAML_SIGN_ON_URL)%"
   saml_logout_url: "%env(SAML_LOGOUT_URL)%"
   saml_metadata_url: "%env(SAML_METADATA_LOCATION)%"
+
 
   saml_enabled: '%env(bool:SAML_ENABLED)%'
 
@@ -31,7 +32,7 @@ saml:
     singleLogoutService:
       url: '%env(SAML_LOGOUT_URL)%'
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-    x509cert: '%env(file:SAML_IDP_CERT)%'
+    x509cert: '%env(default: :file:SAML_IDP_CERT)%'
   sp:
     entityId: '%env(APP_URL)%/saml'
     assertionConsumerService:
@@ -40,8 +41,8 @@ saml:
     singleLogoutService:
       url: '%env(APP_URL)%/saml/logout'
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-    privateKey: '%env(file:APP_KEY)%'
-    x509cert: '%env(file:APP_CERT)%'
+    privateKey: '%env(default: :file:APP_KEY)%'
+    x509cert: '%env(default: :file:APP_CERT)%'
   # Optional settings
   baseurl: '%env(APP_URL)%'
   strict: false

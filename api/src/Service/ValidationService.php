@@ -402,7 +402,9 @@ class ValidationService
         // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
         foreach($objectEntity->getObjectValues() as $value){
             // Lets prefend the posting of values that we store localy
-            unset($post[$value->getAttribute()->getName()]);
+            if(!$value->getAttribute()->getPersistToGateway()){
+                unset($post[$value->getAttribute()->getName()]);
+            }
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
             if($value->getAttribute()->getMultiple() && $value->getObjects()){
@@ -419,9 +421,19 @@ class ValidationService
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($post, $objectEntity, $url) {
+
+                if($objectEntity->getEntity()->getGateway()->getLogging()){
+                    $gatewayResponceLog = New GatewayResponceLog;
+                    $gatewayResponceLog->setObjectEntity($objectEntity);
+                    $gatewayResponceLog->setResponce($response);
+                    $this->em->persist($gatewayResponceLog);
+                }
+
                 $result = json_decode($response->getBody()->getContents(), true);
-                if(array_key_exists('id',$result)){
+                if(array_key_exists('id',$result) && !strpos($url, $result['id'])){
+
                     $objectEntity->setUri($url.'/'.$result['id']);
+
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 }
                 else{
@@ -437,6 +449,14 @@ class ValidationService
             },
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
+
+                /* @todo wat dachten we van een logging service? */
+                $gatewayResponceLog = New GatewayResponceLog;
+                $gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponceLog->setResponce($error->getResponse());
+                $this->em->persist($gatewayResponceLog);
+                $this->em->flush();
+
                 /* @todo lelijke code */
                 if($error->getResponse()){
                     $error = json_decode($error->getResponse()->getBody()->getContents(), true);
@@ -449,11 +469,12 @@ class ValidationService
                     else {
                         $error_message =  $error->getResponse()->getBody()->getContents();
                     }
-                    $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message);
                 }
                 else {
-                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getMessage());
+                    $error_message =  $error->getMessage();
                 }
+                /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
+                $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message.'. (see /gateway_logs/'.$gatewayResponceLog->getId().') for a full error report');
             }
         );
 

@@ -421,6 +421,22 @@ class Attribute
     private $validations;
 
     /**
+     *
+     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $persistToGateway = false;
+
+    /**
+     *
+     * Whether or not this property is searchable
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $searchable = false;
+
+    /**
      * @var Datetime The moment this request was created
      *
      * @Groups({"read"})
@@ -961,6 +977,30 @@ class Attribute
     public function setDateModified(\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPersistToGateway(): ?bool
+    {
+        return $this->persistToGateway;
+    }
+
+    public function setPersistToGateway(?bool $persistToGateway): self
+    {
+        $this->persistToGateway = $persistToGateway;
+
+        return $this;
+    }
+
+    public function getSearchable(): ?bool
+    {
+        return $this->searchable;
+    }
+
+    public function setSearchable(?bool $searchable): self
+    {
+        $this->searchable = $searchable;
 
         return $this;
     }
