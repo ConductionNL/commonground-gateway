@@ -70,11 +70,11 @@ spec:
               subPath: dependencies.yaml
               name: dependencies
               readOnly: true
-            - mountPath: /var/run/certs/app
+            - mountPath: /var/run/certs
               name: app-certificates
               readOnly: true
             {{- if .Values.security.saml.enabled }}
-            - mountPath: /var/run/certs/idp
+            - mountPath: /var/run/idp
               name: idp-certificate
               readOnly: true
             {{- end }}
@@ -165,7 +165,7 @@ spec:
             - name: SAML_LOGOUT_URL
               valueFrom:
                 secretKeyRef:
-                  key: saml-single-logout-url
+                  key: saml-logout-url
                   name: {{ .Chart.Name }}
             - name: SAML_IDP_CERT
               value: '/var/run/idp/idp.crt'
