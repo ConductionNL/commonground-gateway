@@ -56,7 +56,7 @@ class ValidationService
             }
             // Check if this field is required
             elseif ($attribute->getRequired()){
-                $objectEntity->addError($attribute->getName(),'this attribute is required');
+                $objectEntity->addError($attribute->getName(),'This attribute is required');
             } else {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
@@ -66,7 +66,7 @@ class ValidationService
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
             $promise = $this->createPromise($objectEntity, $post);
-            $this->promises[] = $promise;
+            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
             $objectEntity->addPromise($promise);
         }
 
@@ -82,14 +82,25 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
-        // TODO: check if value is null, and if so, should we continue other validations? (!$attribute->getNullable())
-        // TODO: something with defaultValue
+        // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
+        if (is_null($value)) {
+            if ($attribute->getDefaultValue()) {
+                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+            } elseif (!$attribute->getNullable()) {
+                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Nullable is not set for this attribute)');
+            } else {
+                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            }
+            // We should not continue other validations after this!
+            return $objectEntity;
+        }
+
         // TODO: something with unique
 
         if ($attribute->getMultiple()) {
             // If multiple, this is an array, validation for an array:
             if (!is_array($value)) {
-                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this value)');
+                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this attribute)');
             }
             if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
                 $objectEntity->addError($attribute->getName(),'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
@@ -117,12 +128,12 @@ class ValidationService
                     $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
                 }
             } else {
-                // TODO: maybe move an merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
+                // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
                 // This is an array of objects
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
                 foreach($value as $object) {
                     if (!is_array($object)) {
-                        $objectEntity->addError($attribute->getName(),'Multiple is set for this value. Expecting an array of objects.');
+                        $objectEntity->addError($attribute->getName(),'Multiple is set for this attribute. Expecting an array of objects.');
                         break;
                     }
                     if(array_key_exists('id', $object)) {
@@ -140,7 +151,7 @@ class ValidationService
                     $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
 
                     // if no errors we can add this subObject tot the valueObject array of objects
-//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...
+//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
                         $subObject->getValueByAttribute($attribute)->setValue($subObject);
                         $valueObject->addObject($subObject);
 //                    }
@@ -148,9 +159,6 @@ class ValidationService
             }
         } else {
             // Multiple == false, so this is not an array
-
-            // TODO validate for enum, here or in validateAttributeType function
-
             $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $value);
             $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
         }
@@ -173,6 +181,13 @@ class ValidationService
      */
     private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        // Validation for enum (if attribute type is not object or boolean)
+        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+            $enumValues = '[' . implode( ", ", $attribute->getEnum() ) . ']';
+            $errorMessage = $attribute->getMultiple() ? 'All items in this array must be one of the following values: ' : 'Must be one of the following values: ';
+            $objectEntity->addError($attribute->getName(), $errorMessage . $enumValues . ' (' . $value . ' is not).');
+        }
+
         // Do validation for attribute depending on its type
         switch ($attribute->getType()) {
             case 'object':
@@ -249,7 +264,7 @@ class ValidationService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', failed to parse string to DateTime.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime.');
                 }
                 break;
             default:
