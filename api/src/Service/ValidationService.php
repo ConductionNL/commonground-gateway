@@ -299,7 +299,9 @@ class ValidationService
         // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
         foreach($objectEntity->getObjectValues() as $value){
             // Lets prefend the posting of values that we store localy
-            unset($post[$value->getAttribute()->getName()]);
+            if(!$value->getAttribute()->getPersistToGateway()){
+                unset($post[$value->getAttribute()->getName()]);
+            }
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
             if($value->getAttribute()->getMultiple() && $value->getObjects()){

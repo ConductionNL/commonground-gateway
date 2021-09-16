@@ -428,6 +428,14 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     *
+     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $persistToGateway = false;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -934,6 +942,18 @@ class Attribute
     public function setDateModified(\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPersistToGateway(): ?bool
+    {
+        return $this->persistToGateway;
+    }
+
+    public function setPersistToGateway(?bool $persistToGateway): self
+    {
+        $this->persistToGateway = $persistToGateway;
 
         return $this;
     }

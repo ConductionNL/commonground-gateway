@@ -23,6 +23,15 @@ class EavController extends AbstractController
         $this->serializerService = new SerializerService($serializer);
     }
 
+    /**
+     * @Route("/eav/docs", name="blog_list")
+     */
+    public function DocsAction(?string $id, Request $request, EavService $eavService): Response
+    {
+
+        return $this->render('docs.html.twig');
+    }
+
     public function extraAction(?string $id, Request $request, EavService $eavService): Response
     {
         $offset = strlen('dynamic_eav_');
