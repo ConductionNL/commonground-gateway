@@ -18,6 +18,7 @@ class ValidationService
     private CommonGroundService $commonGroundService;
     private GatewayService $gatewayService;
     private CacheInterface $cache;
+    public $promises = []; //TODO: use ObjectEntity->promises instead!
 
     public function __construct(
         EntityManagerInterface $em,
@@ -39,10 +40,8 @@ class ValidationService
      */
     public function validateEntity (ObjectEntity $objectEntity, array $post): ObjectEntity
     {
-
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
-
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
@@ -64,10 +63,10 @@ class ValidationService
             }
         }
 
-        // Dit is de plek waarop we weten of er een appi call moet worden gemaakt
+        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
-            $promise =$this->createPromise($objectEntity, $post);
-            $this->promises[]=$promise;
+            $promise = $this->createPromise($objectEntity, $post);
+            $this->promises[] = $promise;
             $objectEntity->addPromise($promise);
         }
 
