@@ -267,6 +267,8 @@ class ValidationService
      */
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        if ($attribute->getFormat() == null) return $objectEntity;
+        
         // Do validation for attribute depending on its format
         switch ($attribute->getFormat()) {
             case 'email':
