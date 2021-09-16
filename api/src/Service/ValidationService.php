@@ -334,17 +334,21 @@ class ValidationService
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
                 /* @todo lelijke code */
-                if(json_decode($error, true)){
-                    $error = json_decode($error, true);
-                    if(array_key_exists('hydra:description',$error)){
-                        $objectEntity->addError('gateway endpoint', $error['hydra:description']);
+                if($error->getResponse()){
+                    $error = json_decode($error->getResponse()->getBody()->getContents(), true);
+                    if($error && array_key_exists('message', $error)){
+                        $error_message = $error['message'];
                     }
-                    if(array_key_exists('message',$error)){
-                        $objectEntity->addError('gateway endpoint', $error['message']);
+                    elseif($error && array_key_exists('hydra:description', $error)){
+                        $error_message = $error['hydra:description'];
                     }
+                    else {
+                        $error_message =  $error->getResponse()->getBody()->getContents();
+                    }
+                    $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message);
                 }
                 else {
-                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getResponse()->getBody()->getContents());
+                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getMessage());
                 }
             }
         );
