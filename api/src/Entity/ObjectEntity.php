@@ -270,23 +270,6 @@ class ObjectEntity
         if ($hasErrors == true && $this->getSubresourceOf()) {
             $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors);
         }
-        // Do the same for resources under this one if set to false
-        /* @todo wilco de opdracht was upward waarom downward? kost snelheid is er een argument?
-        /*
-        elseif ($hasErrors == false) {
-            $subResources = $this->getSubresources();
-            foreach ($subResources as $subResource) {
-                if (get_class($subResource) == ObjectEntity::class) {
-                    $subResource->setHasErrors($hasErrors);
-                    continue;
-                }
-                // If a subresource is a list of subresources (example cc/person->cc/emails)
-                foreach ($subResource as $listSubResource) {
-                    $listSubResource->setHasErrors($hasErrors);
-                }
-            }
-        }
-        */
 
         return $this;
     }
@@ -323,14 +306,14 @@ class ObjectEntity
         foreach ($subResources as $subresource) {
             if (!$subresource) continue; // can be null because of subresource/object fields being set to null
             if (get_class($subresource) == ObjectEntity::class) {
-                if ($subresource->hasErrors) {
+                if ($subresource->getHasErrors()) {
                     $allErrors = $subresource->getAllErrors();
                 }
                 continue;
             }
             // If a subresource is a list of subresources (example cc/person->cc/emails)
             foreach ($subresource as $listSubresource) {
-                if ($listSubresource->hasErrors) {
+                if ($listSubresource->getHasErrors()) {
                     $allErrors = array_merge($allErrors, $listSubresource->getAllErrors());
                 }
             }

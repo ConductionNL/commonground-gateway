@@ -21,6 +21,7 @@ class ValidationService
     private CommonGroundService $commonGroundService;
     private GatewayService $gatewayService;
     private CacheInterface $cache;
+    public $promises = []; //TODO: use ObjectEntity->promises instead!
 
     public function __construct(
         EntityManagerInterface $em,
@@ -42,10 +43,8 @@ class ValidationService
      */
     public function validateEntity (ObjectEntity $objectEntity, array $post): ObjectEntity
     {
-
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
-
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
@@ -67,10 +66,10 @@ class ValidationService
             }
         }
 
-        // Dit is de plek waarop we weten of er een appi call moet worden gemaakt
+        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
-            $promise =$this->createPromise($objectEntity, $post);
-            $this->promises[]=$promise;
+            $promise = $this->createPromise($objectEntity, $post);
+            $this->promises[] = $promise;
             $objectEntity->addPromise($promise);
         }
 
@@ -144,10 +143,10 @@ class ValidationService
                     $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
 
                     // if no errors we can add this subObject tot the valueObject array of objects
-                    if (!$subObject->getHasErrors()) {
+//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...
                         $subObject->getValueByAttribute($attribute)->setValue($subObject);
                         $valueObject->addObject($subObject);
-                    }
+//                    }
                 }
             }
         } else {
@@ -271,6 +270,8 @@ class ValidationService
      */
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        if ($attribute->getFormat() == null) return $objectEntity;
+
         // Do validation for attribute depending on its format
         switch ($attribute->getFormat()) {
             case 'email':
