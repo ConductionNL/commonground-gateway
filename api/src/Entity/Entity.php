@@ -167,11 +167,17 @@ class Entity
      */
     private ?string $route = null;
 
+    /**
+     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     */
+    private $responceLogs;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
+        $this->responceLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -378,6 +384,36 @@ class Entity
     public function setRoute(?string $route): self
     {
         $this->route = $route;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GatewayResponceLog[]
+     */
+    public function getResponceLogs(): Collection
+    {
+        return $this->responceLogs;
+    }
+
+    public function addResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if (!$this->responceLogs->contains($responceLog)) {
+            $this->responceLogs[] = $responceLog;
+            $responceLog->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if ($this->responceLogs->removeElement($responceLog)) {
+            // set the owning side to null (unless already changed)
+            if ($responceLog->getEntity() === $this) {
+                $responceLog->setEntity(null);
+            }
+        }
 
         return $this;
     }

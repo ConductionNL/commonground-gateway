@@ -238,6 +238,7 @@ class EavService
             return $this->returnErrors($object);
         }
 
+        // TODO: use (ObjectEntity) $object->promises instead
         /* this way of working is way vasther then passing stuff trough the object's, lets also implement this for error checks */
         if(!empty($this->validationService->promises)){
             Utils::settle($this->validationService->promises)->wait();
@@ -269,14 +270,30 @@ class EavService
     /* @todo typecast the request */
     public function handleSearch(string $entityName, $request): array
     {
+        $limit = (int) ($request->query->get('limit') ?? 25); // These type casts are not redundant!
+        $page = (int) ($request->query->get('page') ?? 1);
+        $start = (int) ($request->query->get('start') ?? 1);
+
+        if ($start > 1) {
+            $offset = $start-1;
+        } else {
+            $offset = ($page-1)*$limit;
+        }
+
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
-        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity);
+        $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, []); // todo custom sql to count instead of getting items.
+        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, [], $offset, $limit);
         $results = ['results'=>[]];
         foreach($objects as $object){
             $results['results'][] = $this->renderResult($object);
         }
-        $results['total'] = count( $results['results']);
+        $results['total'] = count($total);
+        $results['limit'] = $limit;
+        $results['pages'] = ceil($results['total'] / $limit);
+        $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
+        $results['page'] = floor($offset / $limit)+1;
+        $results['start'] = $offset+1;
 
         return $results;
     }

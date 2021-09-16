@@ -406,6 +406,27 @@ class Attribute
     private $maxDate;
 
     /**
+     * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
+     */
+    private $validations;
+
+    /**
+     *
+     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $persistToGateway = false;
+
+    /**
+     *
+     * Whether or not this property is searchable
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $searchable = false;
+
+    /**
      * @var Datetime The moment this request was created
      *
      * @Groups({"read"})
@@ -513,6 +534,7 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
+        $this->type = 'object';
         $this->object = $object;
 
         return $this;
@@ -695,6 +717,11 @@ class Attribute
     {
         $this->type = $type;
 
+        // If the atribute type is changes away from an object we need to drop the object
+        if($type != 'object' and $this->object ){
+            unset($this->object);
+        }
+
         return $this;
     }
 
@@ -854,6 +881,55 @@ class Attribute
         return $this;
     }
 
+
+    public function getValidations(): ?array
+    {
+        $validations = [];
+        $validations['maximum']             = $this->getMaximum();
+        $validations['exclusiveMaximum']    = $this->getExclusiveMaximum();
+        $validations['minimum']             = $this->getMinimum();
+        $validations['exclusiveMinimum']    = $this->getExclusiveMinimum();
+        $validations['maxLength']           = $this->getMaxLength();
+        $validations['minLength']           = $this->getMinLength();
+        $validations['maxItems']            = $this->getMaxItems();
+        $validations['minItems']            = $this->getMinItems();
+        $validations['uniqueItems']         = $this->getUniqueItems();
+        $validations['maxProperties']       = $this->getMaxProperties();
+        $validations['minProperties']       = $this->getMinProperties();
+        $validations['required']            = $this->getRequired();
+        $validations['enum']                = $this->getEnum();
+        $validations['allOf']               = $this->getAllOf();
+        $validations['anyOf']               = $this->getAnyOf();
+        $validations['oneOf']               = $this->getOneOf();
+        $validations['defaultValue']        = $this->getDefaultValue();
+
+
+        return $validations;
+    }
+
+    public function setValidations(?array $validations): self
+    {
+        if(array_key_exists('maximum',$validations)){           $this->getMaximum($validations['maximum']);}
+        if(array_key_exists('exclusiveMaximum',$validations)){  $this->getExclusiveMaximum($validations['exclusiveMaximum']);}
+        if(array_key_exists('minimum',$validations)){           $this->getMinimum($validations['minimum']);}
+        if(array_key_exists('exclusiveMinimum',$validations)){  $this->getExclusiveMinimum($validations['exclusiveMinimum']);}
+        if(array_key_exists('maxLength',$validations)){         $this->getMaxLength($validations['maxLength']);}
+        if(array_key_exists('minLength',$validations)){         $this->getMinLength($validations['minLength']);}
+        if(array_key_exists('maxItems',$validations)){          $this->getMaxItems($validations['maxItems']);}
+        if(array_key_exists('minItems',$validations)){          $this->getMinItems($validations['minItems']);}
+        if(array_key_exists('uniqueItems',$validations)){       $this->getUniqueItems($validations['uniqueItems']);}
+        if(array_key_exists('maxProperties',$validations)){     $this->getMaxProperties($validations['maxProperties']);}
+        if(array_key_exists('minProperties',$validations)){     $this->getMinProperties($validations['minProperties']);}
+        if(array_key_exists('required',$validations)){          $this->getRequired($validations['required']);}
+        if(array_key_exists('enum',$validations)){              $this->getEnum($validations['enum']);}
+        if(array_key_exists('allOf',$validations)){             $this->getAllOf($validations['allOf']);}
+        if(array_key_exists('anyOf',$validations)){             $this->getAnyOf($validations['anyOf']);}
+        if(array_key_exists('oneOf',$validations)){             $this->getOneOf($validations['oneOf']);}
+        if(array_key_exists('defaultValue',$validations)){      $this->getDefaultValue($validations['defaultValue']);}
+
+        return $this;
+    }
+
     public function getDateCreated(): ?\DateTimeInterface
     {
         return $this->dateCreated;
@@ -874,6 +950,30 @@ class Attribute
     public function setDateModified(\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPersistToGateway(): ?bool
+    {
+        return $this->persistToGateway;
+    }
+
+    public function setPersistToGateway(?bool $persistToGateway): self
+    {
+        $this->persistToGateway = $persistToGateway;
+
+        return $this;
+    }
+
+    public function getSearchable(): ?bool
+    {
+        return $this->searchable;
+    }
+
+    public function setSearchable(?bool $searchable): self
+    {
+        $this->searchable = $searchable;
 
         return $this;
     }
