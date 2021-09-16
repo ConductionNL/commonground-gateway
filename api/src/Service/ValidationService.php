@@ -6,6 +6,7 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use App\Entity\GatewayResponceLog;
 use App\Service\GatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -335,6 +336,15 @@ class ValidationService
             },
             // $onRejected
             function ($error) use ($post, $objectEntity ) {
+
+                /* @todo wat dachten we van een logging service? */
+                $gatewayResponceLog = New GatewayResponceLog;
+                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
+                $gatewayResponceLog->setEntity($objectEntity->getEntity());
+                $gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponceLog->setResponce($error->getResponse());
+                $this->em->persist($gatewayResponceLog);
+
                 /* @todo lelijke code */
                 if($error->getResponse()){
                     $error = json_decode($error->getResponse()->getBody()->getContents(), true);
