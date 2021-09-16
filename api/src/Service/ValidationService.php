@@ -140,10 +140,10 @@ class ValidationService
                     $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
 
                     // if no errors we can add this subObject tot the valueObject array of objects
-                    if (!$subObject->getHasErrors()) {
+//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...
                         $subObject->getValueByAttribute($attribute)->setValue($subObject);
                         $valueObject->addObject($subObject);
-                    }
+//                    }
                 }
             }
         } else {
@@ -268,7 +268,7 @@ class ValidationService
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         if ($attribute->getFormat() == null) return $objectEntity;
-        
+
         // Do validation for attribute depending on its format
         switch ($attribute->getFormat()) {
             case 'email':
