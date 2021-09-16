@@ -344,6 +344,7 @@ class ValidationService
                 $gatewayResponceLog->setObjectEntity($objectEntity);
                 $gatewayResponceLog->setResponce($error->getResponse());
                 $this->em->persist($gatewayResponceLog);
+                $this->em->flush();
 
                 /* @todo lelijke code */
                 if($error->getResponse()){
@@ -357,11 +358,12 @@ class ValidationService
                     else {
                         $error_message =  $error->getResponse()->getBody()->getContents();
                     }
-                    $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message);
                 }
                 else {
-                    $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error->getMessage());
+                    $error_message =  $error->getMessage();
                 }
+                /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
+                $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message.'. (see /gateway_logs/'.$gatewayResponceLog->getId().') for a full error report');
             }
         );
 
