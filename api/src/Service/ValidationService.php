@@ -5,8 +5,6 @@ namespace App\Service;
 use App\Entity\Attribute;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
-use App\Entity\GatewayResponceLog;
-use App\Service\GatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -59,7 +57,7 @@ class ValidationService
             }
             // Check if this field is required
             elseif ($attribute->getRequired()){
-                $objectEntity->addError($attribute->getName(),'this attribute is required');
+                $objectEntity->addError($attribute->getName(),'This attribute is required');
             } else {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
@@ -69,7 +67,7 @@ class ValidationService
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
             $promise = $this->createPromise($objectEntity, $post);
-            $this->promises[] = $promise;
+            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
             $objectEntity->addPromise($promise);
         }
 
@@ -85,77 +83,32 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
-        // TODO: check if value is null, and if so, should we continue other validations? (!$attribute->getNullable())
-        // TODO: something with defaultValue
-        // TODO: something with unique
+        // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
+        if (is_null($value)) {
+            if ($attribute->getDefaultValue()) {
+                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+            } elseif (!$attribute->getNullable()) {
+                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Nullable is not set for this attribute)');
+            } else {
+                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            }
+            // We should not continue other validations after this!
+            return $objectEntity;
+        }
 
         if ($attribute->getMultiple()) {
             // If multiple, this is an array, validation for an array:
-            if (!is_array($value)) {
-                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this value)');
-            }
-            if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
-                $objectEntity->addError($attribute->getName(),'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
-            }
-            if ($attribute->getMaxItems() && count($value) > $attribute->getMaxItems()) {
-                $objectEntity->addError($attribute->getName(),'The maximum array length of this attribute is ' . $attribute->getMaxItems() . '.');
-            }
-            if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
-                // TODOmaybe:check this in another way so all kinds of arrays work with it.
-                $containsStringKey = false;
-                foreach ($value as $arrayItem) {
-                    if (is_array($arrayItem) && count(array_filter(array_keys($arrayItem), 'is_string')) > 0){
-                        $containsStringKey = true; break;
-                    }
-                }
-                if (!$containsStringKey && count($value) !== count(array_unique($value))) {
-                    $objectEntity->addError($attribute->getName(),'Must be an array of unique items');
-                }
-            }
-
-            // Then validate all items in this array
-            if ($attribute->getType() != 'object') {
-                foreach($value as $item) {
-                    $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
-                    $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
-                }
-            } else {
-                // TODO: maybe move an merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
-                // This is an array of objects
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
-                foreach($value as $object) {
-                    if (!is_array($object)) {
-                        $objectEntity->addError($attribute->getName(),'Multiple is set for this value. Expecting an array of objects.');
-                        break;
-                    }
-                    if(array_key_exists('id', $object)) {
-                        $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->get($object['id']);
-                    }
-                    else {
-                        $subObject = New ObjectEntity();
-                        $subObject->setSubresourceOf($valueObject);
-                        $subObject->setEntity($attribute->getObject());
-                    }
-                    $subObject = $this->validateEntity($subObject, $object);
-
-                    // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
-                    $this->em->persist($subObject);
-                    $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
-
-                    // if no errors we can add this subObject tot the valueObject array of objects
-//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...
-                        $subObject->getValueByAttribute($attribute)->setValue($subObject);
-                        $valueObject->addObject($subObject);
-//                    }
-                }
-            }
+            $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this is not an array
-
-            // TODO validate for enum, here or in validateAttributeType function
-
             $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $value);
             $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
+        }
+
+        if ($attribute->getMustBeUnique()) {
+            $objectEntity = $this->validateAttributeUnique($objectEntity, $attribute, $value);
+            // We should not continue other validations after this!
+            if ($objectEntity->getHasErrors()) return $objectEntity;
         }
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
@@ -174,8 +127,124 @@ class ValidationService
      * @return ObjectEntity
      * @throws Exception
      */
+    private function validateAttributeUnique(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    {
+        $values = $attribute->getAttributeValues()->filter(function (Value $valueObject) use ($value) {
+            switch ($valueObject->getAttribute()->getType()) {
+                //TODO:
+//                case 'object':
+//                    return $valueObject->getObjects() == $value;
+                case 'string':
+                    return $valueObject->getStringValue() == $value;
+                case 'number':
+                    return $valueObject->getNumberValue() == $value;
+                case 'integer':
+                    return $valueObject->getIntegerValue() == $value;
+                case 'boolean':
+                    return $valueObject->getBooleanValue() == $value;
+                case 'datetime':
+                    return $valueObject->getDateTimeValue() == new DateTime($value);
+                default:
+                    return false;
+            }
+        });
+
+        if (count($values) > 0) {
+            if ($attribute->getType() == 'boolean') $value = $value ? 'true' : 'false';
+            $objectEntity->addError($attribute->getName(),'Must be unique, there already exists an object with this value: ' . $value . '.');
+        }
+
+        return $objectEntity;
+    }
+
+    /** TODO:
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param $value
+     * @return ObjectEntity
+     * @throws Exception
+     */
+    private function validateAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    {
+        // If multiple, this is an array, validation for an array:
+        if (!is_array($value)) {
+            $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this attribute)');
+        }
+        if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
+            $objectEntity->addError($attribute->getName(),'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
+        }
+        if ($attribute->getMaxItems() && count($value) > $attribute->getMaxItems()) {
+            $objectEntity->addError($attribute->getName(),'The maximum array length of this attribute is ' . $attribute->getMaxItems() . '.');
+        }
+        if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
+            // TODOmaybe:check this in another way so all kinds of arrays work with it.
+            $containsStringKey = false;
+            foreach ($value as $arrayItem) {
+                if (is_array($arrayItem) && count(array_filter(array_keys($arrayItem), 'is_string')) > 0){
+                    $containsStringKey = true; break;
+                }
+            }
+            if (!$containsStringKey && count($value) !== count(array_unique($value))) {
+                $objectEntity->addError($attribute->getName(),'Must be an array of unique items');
+            }
+        }
+
+        // Then validate all items in this array
+        if ($attribute->getType() != 'object') {
+            foreach($value as $item) {
+                $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
+                $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
+            }
+        } else {
+            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
+            // This is an array of objects
+            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            foreach($value as $object) {
+                if (!is_array($object)) {
+                    $objectEntity->addError($attribute->getName(),'Multiple is set for this attribute. Expecting an array of objects.');
+                    break;
+                }
+                if(array_key_exists('id', $object)) {
+                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->get($object['id']);
+                }
+                else {
+                    $subObject = New ObjectEntity();
+                    $subObject->setSubresourceOf($valueObject);
+                    $subObject->setEntity($attribute->getObject());
+                }
+                $subObject = $this->validateEntity($subObject, $object);
+
+                // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
+                $this->em->persist($subObject);
+                $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
+
+                // if no errors we can add this subObject tot the valueObject array of objects
+//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
+                $subObject->getValueByAttribute($attribute)->setValue($subObject);
+                $valueObject->addObject($subObject);
+//                    }
+            }
+        }
+
+        return $objectEntity;
+    }
+
+    /** TODO:
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param $value
+     * @return ObjectEntity
+     * @throws Exception
+     */
     private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        // Validation for enum (if attribute type is not object or boolean)
+        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+            $enumValues = '[' . implode( ", ", $attribute->getEnum() ) . ']';
+            $errorMessage = $attribute->getMultiple() ? 'All items in this array must be one of the following values: ' : 'Must be one of the following values: ';
+            $objectEntity->addError($attribute->getName(), $errorMessage . $enumValues . ' (' . $value . ' is not).');
+        }
+
         // Do validation for attribute depending on its type
         switch ($attribute->getType()) {
             case 'object':
@@ -252,11 +321,11 @@ class ValidationService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', failed to parse string to DateTime.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime.');
                 }
                 break;
             default:
-                $objectEntity->addError($attribute->getName(),'has an an unknown type: [' . $attribute->getType() . ']');
+                $objectEntity->addError($attribute->getName(),'Has an an unknown type: [' . $attribute->getType() . ']');
         }
 
         return $objectEntity;
@@ -275,13 +344,22 @@ class ValidationService
         // Do validation for attribute depending on its format
         switch ($attribute->getFormat()) {
             case 'email':
-                var_dump('email');
+                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
+                }
                 break;
             case 'uuid':
-                var_dump('uuid');
+                if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
+                    $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
+                }
+                break;
+            case 'url':
+                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_URL)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an url format, ' . $value . ' is not a valid url.');
+                }
                 break;
             default:
-                $objectEntity->addError($attribute->getName(),'has an an unknown format: [' . $attribute->getFormat() . ']');
+                $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
         }
 
         return $objectEntity;

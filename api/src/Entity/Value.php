@@ -300,6 +300,10 @@ class Value
                 case 'integer':
                     return $this->setIntegerValue($value);
                 case 'boolean':
+                    if (is_string($value)) {
+                        // This is used for defaultValue, this is always a string type instead of a boolean
+                        $value = $value === 'true';
+                    }
                     return $this->setBooleanValue($value);
                 case 'number':
                     return $this->setNumberValue($value);

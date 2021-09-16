@@ -85,7 +85,7 @@ class Attribute
      * @Assert\Length(max = 255)
      * @Assert\Choice({"string", "integer", "boolean", "number", "datetime", "object"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $type;
 
@@ -94,7 +94,6 @@ class Attribute
      *
      * @example string
      *
-     * @Assert\NotBlank
      * @Assert\Length(max = 255)
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -340,6 +339,17 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $nullable;
+
+    /**
+     * @var bool Whether or not this property must be unique
+     *
+     * @example false
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $mustBeUnique;
 
     /**
      * @var bool Whether or not this property is read only
@@ -708,7 +718,7 @@ class Attribute
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -718,7 +728,7 @@ class Attribute
         $this->type = $type;
 
         // If the atribute type is changes away from an object we need to drop the object
-        if($type != 'object' and $this->object ){
+        if($type != 'object' and $this->object ) {
             unset($this->object);
         }
 
@@ -809,6 +819,18 @@ class Attribute
         return $this;
     }
 
+    public function getMustBeUnique(): ?bool
+    {
+        return $this->mustBeUnique;
+    }
+
+    public function setMustBeUnique(bool $mustBeUnique): self
+    {
+        $this->mustBeUnique = $mustBeUnique;
+
+        return $this;
+    }
+
     public function getReadOnly(): ?bool
     {
         return $this->readOnly;
@@ -884,6 +906,7 @@ class Attribute
 
     public function getValidations(): ?array
     {
+        //TODO: this list of validations is not complete!
         $validations = [];
         $validations['maximum']             = $this->getMaximum();
         $validations['exclusiveMaximum']    = $this->getExclusiveMaximum();
@@ -902,30 +925,34 @@ class Attribute
         $validations['anyOf']               = $this->getAnyOf();
         $validations['oneOf']               = $this->getOneOf();
         $validations['defaultValue']        = $this->getDefaultValue();
-
+        $validations['nullable']            = $this->getNullable();
+        $validations['mustBeUnique']        = $this->getMustBeUnique();
 
         return $validations;
     }
 
     public function setValidations(?array $validations): self
     {
-        if(array_key_exists('maximum',$validations)){           $this->getMaximum($validations['maximum']);}
-        if(array_key_exists('exclusiveMaximum',$validations)){  $this->getExclusiveMaximum($validations['exclusiveMaximum']);}
-        if(array_key_exists('minimum',$validations)){           $this->getMinimum($validations['minimum']);}
-        if(array_key_exists('exclusiveMinimum',$validations)){  $this->getExclusiveMinimum($validations['exclusiveMinimum']);}
-        if(array_key_exists('maxLength',$validations)){         $this->getMaxLength($validations['maxLength']);}
-        if(array_key_exists('minLength',$validations)){         $this->getMinLength($validations['minLength']);}
-        if(array_key_exists('maxItems',$validations)){          $this->getMaxItems($validations['maxItems']);}
-        if(array_key_exists('minItems',$validations)){          $this->getMinItems($validations['minItems']);}
-        if(array_key_exists('uniqueItems',$validations)){       $this->getUniqueItems($validations['uniqueItems']);}
-        if(array_key_exists('maxProperties',$validations)){     $this->getMaxProperties($validations['maxProperties']);}
-        if(array_key_exists('minProperties',$validations)){     $this->getMinProperties($validations['minProperties']);}
-        if(array_key_exists('required',$validations)){          $this->getRequired($validations['required']);}
-        if(array_key_exists('enum',$validations)){              $this->getEnum($validations['enum']);}
-        if(array_key_exists('allOf',$validations)){             $this->getAllOf($validations['allOf']);}
-        if(array_key_exists('anyOf',$validations)){             $this->getAnyOf($validations['anyOf']);}
-        if(array_key_exists('oneOf',$validations)){             $this->getOneOf($validations['oneOf']);}
-        if(array_key_exists('defaultValue',$validations)){      $this->getDefaultValue($validations['defaultValue']);}
+        //TODO: this list of validations is not complete!
+        if(array_key_exists('maximum',$validations)){           $this->setMaximum($validations['maximum']);}
+        if(array_key_exists('exclusiveMaximum',$validations)){  $this->setExclusiveMaximum($validations['exclusiveMaximum']);}
+        if(array_key_exists('minimum',$validations)){           $this->setMinimum($validations['minimum']);}
+        if(array_key_exists('exclusiveMinimum',$validations)){  $this->setExclusiveMinimum($validations['exclusiveMinimum']);}
+        if(array_key_exists('maxLength',$validations)){         $this->setMaxLength($validations['maxLength']);}
+        if(array_key_exists('minLength',$validations)){         $this->setMinLength($validations['minLength']);}
+        if(array_key_exists('maxItems',$validations)){          $this->setMaxItems($validations['maxItems']);}
+        if(array_key_exists('minItems',$validations)){          $this->setMinItems($validations['minItems']);}
+        if(array_key_exists('uniqueItems',$validations)){       $this->setUniqueItems($validations['uniqueItems']);}
+        if(array_key_exists('maxProperties',$validations)){     $this->setMaxProperties($validations['maxProperties']);}
+        if(array_key_exists('minProperties',$validations)){     $this->setMinProperties($validations['minProperties']);}
+        if(array_key_exists('required',$validations)){          $this->setRequired($validations['required']);}
+        if(array_key_exists('enum',$validations)){              $this->setEnum($validations['enum']);}
+        if(array_key_exists('allOf',$validations)){             $this->setAllOf($validations['allOf']);}
+        if(array_key_exists('anyOf',$validations)){             $this->setAnyOf($validations['anyOf']);}
+        if(array_key_exists('oneOf',$validations)){             $this->setOneOf($validations['oneOf']);}
+        if(array_key_exists('defaultValue',$validations)){      $this->setDefaultValue($validations['defaultValue']);}
+        if(array_key_exists('nullable',$validations)){          $this->setNullable($validations['nullable']);}
+        if(array_key_exists('mustBeUnique',$validations)){      $this->setMustBeUnique($validations['mustBeUnique']);}
 
         return $this;
     }
