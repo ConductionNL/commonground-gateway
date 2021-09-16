@@ -79,7 +79,7 @@ class EavDocumentationService
             $filesystem->mkdir('public/eav');
         }
 
-        $filesystem->dumpFile('public/eav/schema.json', json_encode($docs));
+        $filesystem->dumpFile('public/eav/schema.json', json_encode($docs, JSON_UNESCAPED_SLASHES));
         $filesystem->dumpFile('public/eav/schema.yaml',  Yaml::dump($docs));
 
         return true;
@@ -103,32 +103,72 @@ class EavDocumentationService
             "termsOfService"=>"http://example.com/terms/",  /*@todo pull from config */
             "contact"=> [
                 "name"=> "Gateway Support", /*@todo pull from config */
-                "url"=> "http://www.conduction.nl/contact", /*@todo pull from config */
-                "email"=> "info@conduction.nl" /*@todo pull from config */
+                'url'=> 'http://www.conduction.nl/contact', /*@todo pull from config */
+                'email'=> "info@conduction.nl" /*@todo pull from config */
             ],
-            "license"=> [
+            'license'=> [
                 "name"=> "Apache 2.0", /*@todo pull from config */
-                "url"=> "https://www.apache.org/licenses/LICENSE-2.0.html" /*@todo pull from config */
+                "url"=> 'https://www.apache.org/licenses/LICENSE-2.0.html' /*@todo pull from config */
             ],
           "version"=>"1.0.1"
         ];
         $docs['servers']=[
-            ["url"=>"/api/eav/data","description"=>"Gateway server"]
+            ["url"=>'/api/eav/data','description'=>'Gateway server']
         ];
+        $docs['tags'] = [];
 
         // General reusable components for the documentation
         $docs['components']=[
             "schemas"=>[
-                "ErrorModel",
-                "DeleteModel"
+                "MessageModel" =>[
+                    "type"=>"object",
+                    "properties"=>[
+                        "message" => ["type"=>"string","format"=>"string","decription"=>"The message"],
+                        "type" => ["type"=>"string","format"=>"string","decription"=>"the type of error","default"=>"error"],
+                        "data"=> ["type"=>"array","format"=>"string","decription"=>"the data concerning this message"],
+                    ],
+
+                ],
+                "ListModel" =>[
+                    "type"=>"object",
+                    "properties"=>[
+                        "result" => ["type"=>"array","decription"=>"The results of your query"],
+                        "total" => ["type"=>"integer","decription"=>"The total amount of items that match your current query"],
+                        "pages"=> ["type"=>"integer","decription"=>"the amount of pages in the dataset based on your current limit"],
+                        "page"=> ["type"=>"integer","decription"=>"the curent page of your dataset"],
+                        "limit"=> ["type"=>"integer","decription"=>"the desired items per resultset or page","default" =>25],
+                        "start"=> ["type"=>"integer","decription"=>"thsetarting position (or offset) of your dataset","default" =>1],
+                    ],
+
+                ]
             ],
             "responces"=>[
-                "error"=>[
+                "ErrorResponce"=>[
                     "description"=>"error payload",
                     "content"=>[
                         "application/json" => [
                             "schema"=>[
-                                "\$ref"=>'#/components/schemas/ErrorModel'
+                                '$ref'=>'#/components/schemas/MessageModel'
+                            ]
+                        ]
+                    ]
+                ],
+                "DeleteResponce"=>[
+                    "description"=>"Succesfully deleted",
+                    "content"=>[
+                        "application/json" => [
+                            "schema"=>[
+                                '$ref'=>'#/components/schemas/MessageModel'
+                            ]
+                        ]
+                    ]
+                ],
+                "ListResponce"=>[
+                    "description"=>"List payload",
+                    "content"=>[
+                        "application/json" => [
+                            "schema"=>[
+                                '$ref'=>'#/components/schemas/ListModel'
                             ]
                         ]
                     ]
@@ -188,12 +228,12 @@ class EavDocumentationService
         $docs['paths']['/'.$this->toSnakeCase($entity->getName()).'/{id}'] = $this->getItemPaths($entity);
 
         /* @todo this only goes one deep */
-        $docs['components']['schemas'][$this->toCamelCase($entity->getName())] = $this->getItemSchema($entity);
+        $docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
 
         // create the tag
-        $docs['tags'] = [
-            "name"=>$entity->getName(),
-	        "description">$entity->getDescription()
+        $docs['tags'][] = [
+            "name"=>ucfirst($entity->getName()),
+	        "description"=>$entity->getDescription()
         ];
 
         return $docs;
@@ -211,35 +251,30 @@ class EavDocumentationService
             "get" => [
                 "description"=>"Get a filterd list of ".$entity->getName()." objects",
                 "summary"=>"Get a ".$entity->getName()."list",
-                "operationId"=>"getPetsById",
+                "operationId"=>"get".$this->toCamelCase($entity->getName()),
+                "tags"=>[ucfirst($entity->getName())],
                 "responses"=>[
-                    "default"=>[
-                        "description"=>"error payload",
-                        "content"=>[
-                            "application/json" => [
-                                "schema"=>[
-                                    "\$ref"=>'#/components/schemas/ErrorModel'
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
+                    "200"=>['$ref'=>'#/components/responces/ListResponce'],
+                    "404"=>['$ref'=>'#/components/responces/ErrorResponce']
+                ],
             ],
             "post" => [
                 "description"=>"Creates a new".$entity->getName()." object",
                 "summary"=>"Create a ".$entity->getName(),
-                "operationId"=>"getPetsById",
+                "operationId"=>"post".$this->toCamelCase($entity->getName()),
+                "tags"=>[ucfirst($entity->getName())],
                 "responses"=>[
-                    "default"=>[
-                        "description"=>"error payload",
+                    "202"=>[
+                        "description"=>"succesfully created ".$entity->getName(),
                         "content"=>[
                             "application/json" => [
                                 "schema"=>[
-                                    "\$ref"=>'#/components/schemas/ErrorModel'
-                                ]
+                                   '$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))
+                               ]
                             ]
                         ]
-                    ]
+                    ],
+                    "404"=>['$ref'=>'#/components/responces/ErrorResponce']
                 ]
             ],
         ];
@@ -265,17 +300,9 @@ class EavDocumentationService
                 "description"=>ucfirst($type)." a ".$entity->getName(),
                 "summary"=>ucfirst($type)." a ".$entity->getName(),
                 "operationId"=>$type.$this->toCamelCase($entity->getName())."ById",
+                "tags"=>[ucfirst($entity->getName())],
                 "responses"=>[
-                    "default"=>[
-                        "description"=>"error payload",
-                        "content"=>[
-                            "application/json" => [
-                                "schema"=>[
-                                    "\$ref"=>'#/components/schemas/ErrorModel'
-                                ]
-                            ]
-                        ]
-                    ]
+                    "404"=>['$ref'=>'#/components/responces/ErrorResponce']
                 ]
             ];
 
@@ -283,35 +310,26 @@ class EavDocumentationService
             switch ($type) {
                 case 'put':
                     $docs[$type]["responses"]["200"] = [
-                        "description"=>"put responce",
+                        "description"=>"succesfully created ".$entity->getName(),
                         "content"=>[
                             "application/json" => [
                                 "schema"=>[
-                                    "\$ref"=>'#/components/schemas/'.$this->toCamelCase($entity->getName())
+                                    '$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))
                                 ]
                             ]
                         ]
                     ];
                 case 'delete':
-                    $docs[$type]["responses"]["200"] = [
-                        "description"=>"delete responce",
-                        "content"=>[
-                            "application/json" => [
-                                "schema"=>[
-                                    "\$ref"=>'#/components/schemas/DeleteModel'
-                                ]
-                            ]
-                        ]
-                    ];
+                    $docs[$type]["responses"]["204"] = ['$ref'=>'#/components/responces/DeleteResponce'];
             }
         }
 
         // Pat parameters
-        $docs['parameters'] = [
-            // Each parameter is a loose array
-            "\$ref"=>'#/components/parameters/ID'
-
-        ];
+        //$docs['parameters'] = [
+        //    // Each parameter is a loose array
+        //    "\$ref"=>'#/components/parameters/ID'
+        //
+        //];
 
         return $docs;
     }
@@ -334,7 +352,7 @@ class EavDocumentationService
         foreach($entity->getAttributes() as $attribute){
 
             // Handle requireded fields
-            if($attribute->getRequired()){
+            if($attribute->getRequired() and $attribute->getRequired() != null){
                 $schema['required'][] = $attribute->getName();
             }
 
@@ -345,9 +363,10 @@ class EavDocumentationService
                 "description"=>$attribute->getDescription(),
             ];
 
+
             // The attribute might be a scheme on its own
             if($attribute->getObject()){
-                $schema['properties'][$attribute->getName()] = ["\$ref"=>"#/components/schemas/".$attribute->getObject()->getName()];
+                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
                 // that also means that we don't have to do the rest
                 continue;
             }
@@ -359,7 +378,7 @@ class EavDocumentationService
 
             /* @todo ow nooz a loopin a loop */
             foreach($attribute->getValidations() as $validator => $validation){
-                if(!array_key_exists($validator, $this->supportedValidators)){
+                if(!array_key_exists($validator, $this->supportedValidators) && $validation != null){
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }
             }
