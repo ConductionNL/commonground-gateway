@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use function GuzzleHttp\json_decode;
 
+
 class EavController extends AbstractController
 {
     private SerializerService $serializerService;
@@ -26,10 +27,10 @@ class EavController extends AbstractController
     /**
      * @Route("/eav/docs", name="blog_list")
      */
-    public function DocsAction(?string $id, Request $request, EavService $eavService): Response
+    public function DocsAction(): Response
     {
 
-        return $this->render('docs.html.twig');
+        return $this->render('eav/docs.html.twig');
     }
 
     public function extraAction(?string $id, Request $request, EavService $eavService): Response
