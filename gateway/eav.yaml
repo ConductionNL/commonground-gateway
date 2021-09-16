@@ -409,12 +409,11 @@ App\Entity\Attribute:
         type: string
         # @todo select multiple in Att 1 but single in the Taalhuizen-service
         enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED', 'WIDOW']
-        multiple: true
         entity: '@generalDetails'
     generalDetails_childrenCount:
         name: childrenCount
         type: integer #type in att 1 is string
-        maxLength: 255
+        maxLength: 255 #this allows 999 children
         entity: '@generalDetails'
     generalDetails_childrenDatesOfBirth:
         name: childrenDatesOfBirth
@@ -489,7 +488,7 @@ App\Entity\Attribute:
         entity: '@dutchNTDetails'
     dutchNTDetails_inNetherlandsSinceYear:
         name: inNetherlandsSinceYear
-        type: string #DateTime?
+        type: integer #DateTime?
         entity: '@dutchNTDetails'
     dutchNTDetails_languageInDailyLife:
         name: languageInDailyLife
@@ -612,6 +611,7 @@ App\Entity\Attribute:
     employee_targetGroupPreferences:
         name: targetGroupPreferences
         type: string
+        multiple: true
         enum: ['NT1', 'NT2']
         entity: '@employee'
     employee_volunteeringPreference:
@@ -637,20 +637,10 @@ App\Entity\Attribute:
         type: string
         enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
         entity: '@employee'
-    employee_education:
-        name: education
-        type: object
-        entity: '@employee'
-        object: '@education'
     employee_doesCurrentlyFollowCourse:
         name: doesCurrentlyFollowCourse
         type: boolean
         entity: '@employee'
-    employee_followingCourse:
-        name: followingCourse
-        type: object
-        entity: '@employee'
-        object: '@education'
     employee_otherRelevantCertificates:
         name: otherRelevantCertificates
         type: string
@@ -663,8 +653,9 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@employee'
     employee_userGroupIds:
-        name: organizationId
-        type: array
+        name: userGroupIds
+        type: string
+        multiple: true
         entity: '@employee'
     employee_userId:
         name: userId
