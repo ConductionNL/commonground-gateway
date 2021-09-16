@@ -238,6 +238,7 @@ class EavService
             return $this->returnErrors($object);
         }
 
+        // TODO: use (ObjectEntity) $object->promises instead
         /* this way of working is way vasther then passing stuff trough the object's, lets also implement this for error checks */
         if(!empty($this->validationService->promises)){
             Utils::settle($this->validationService->promises)->wait();
