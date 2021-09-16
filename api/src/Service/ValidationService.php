@@ -353,6 +353,11 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
                 }
                 break;
+            case 'url':
+                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_URL)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an url format, ' . $value . ' is not a valid url.');
+                }
+                break;
             default:
                 $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
         }
