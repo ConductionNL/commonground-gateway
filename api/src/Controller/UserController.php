@@ -13,9 +13,11 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -39,10 +41,28 @@ class UserController extends AbstractController
 
     /**
      * @Route("login", methods={"POST"})
+     * @Route("users/login", methods={"POST"})
      */
     public function LoginAction(Request $request, CommonGroundService $commonGroundService)
     {
+    }
 
+    /**
+     * @Route("users/request_password_reset", methods={"POST"})
+     */
+    public function resetAction(Request $request, CommonGroundService $commonGroundService)
+    {
+        $data = json_decode($request->getContent(), true);
+        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $data['username']])['hydra:member'];
+        if(count($users) > 0){
+            $user = $users[0];
+        } else {
+            return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
+        }
+        $response = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users', 'id' => "{$user['id']}/token"], ['type' => 'SET_PASSWORD']);
+        $message = $commonGroundService->createResource(['reciever' => $user['username'], 'sender' => 'taalhuizen@biscutrecht.nl', 'content' => "{$response['token']}", 'type' => 'email', 'status' => 'queued', 'service' => '/services/'.$commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0]['id'], 'subject' => 'password reset token'], ['component' => 'bs', 'type' => 'messages']);
+
+        return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
     }
 
     /**

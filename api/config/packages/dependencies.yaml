@@ -19,4 +19,7 @@ parameters:
             auth: apikey
             location: https://conduction.demodam.nl/api/v1/cc
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-            
+        bs:
+            auth: apikey
+            location: https://conduction.demodam.nl/api/v1/bs
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
