@@ -359,6 +359,13 @@ class Gateway
      */
     private $responceLogs;
 
+    /**
+     * Setting logging to true will couse ALL responces to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $logging;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -546,6 +553,18 @@ class Gateway
                 $responceLog->setGateway(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLogging(): ?bool
+    {
+        return $this->logging;
+    }
+
+    public function setLogging(?bool $logging): self
+    {
+        $this->logging = $logging;
 
         return $this;
     }

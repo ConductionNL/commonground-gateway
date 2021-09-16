@@ -316,6 +316,14 @@ class ValidationService
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($post, $objectEntity, $url) {
+
+                if($objectEntity->getEntity()->getGateway()->getLogging()){
+                    $gatewayResponceLog = New GatewayResponceLog;
+                    $gatewayResponceLog->setObjectEntity($objectEntity);
+                    $gatewayResponceLog->setResponce($response);
+                    $this->em->persist($gatewayResponceLog);
+                }
+
                 $result = json_decode($response->getBody()->getContents(), true);
                 if(array_key_exists('id',$result) && !strpos($url, $result['id'])){
 
@@ -339,8 +347,6 @@ class ValidationService
 
                 /* @todo wat dachten we van een logging service? */
                 $gatewayResponceLog = New GatewayResponceLog;
-                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
-                $gatewayResponceLog->setEntity($objectEntity->getEntity());
                 $gatewayResponceLog->setObjectEntity($objectEntity);
                 $gatewayResponceLog->setResponce($error->getResponse());
                 $this->em->persist($gatewayResponceLog);
