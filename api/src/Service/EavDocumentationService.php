@@ -58,6 +58,15 @@ class EavDocumentationService
             'additionalProperties',
             'default',
         ];
+
+        // Lets define the validator that we support for docummentation right now
+        $this->supportedTypes = [
+            'string',
+            'date',
+            'date-time',
+            'integer',
+            'array',
+        ];
     }
 
 
@@ -238,7 +247,7 @@ class EavDocumentationService
 
         // create the tag
         $docs['tags'][] = [
-            "name"=>ucfirst($entity->getName()),
+            "name"=>$entity->getName(),
 	        "description"=>$entity->getDescription()
         ];
 
@@ -268,7 +277,17 @@ class EavDocumentationService
                 "description"=>"Creates a new".$entity->getName()." object",
                 "summary"=>"Create a ".$entity->getName(),
                 "operationId"=>"post".$this->toCamelCase($entity->getName()),
-                "tags"=>[ucfirst($entity->getName())],
+                "tags"=>[$entity->getName()],
+                "requestBody"=>[
+                    "description"=>"Create ".$entity->getName(),
+                    "content"=>[
+                        "application/json" => [
+                            "schema"=>[
+                                '$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))
+                            ]
+                        ]
+                    ]
+                ],
                 "responses"=>[
                     "201"=>[
                         "description"=>"succesfully created ".$entity->getName(),
@@ -315,6 +334,16 @@ class EavDocumentationService
             // Type specific path responces
             switch ($type) {
                 case 'put':
+                    $docs[$type]["requestBody"] = [
+                        "description"=>"Update ".$entity->getName(),
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    '$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))
+                                ]
+                            ]
+                        ]
+                    ];
                     $docs[$type]["responses"]["200"] = [
                         "description"=>"succesfully created ".$entity->getName(),
                         "content"=>[
@@ -355,6 +384,22 @@ class EavDocumentationService
 
         ];
 
+        // Lets see if there are external properties
+        if(!empty($entity->getGateway()->getPaths()) && array_key_exists('/'.$entity->getEndpoint(),$entity->getGateway()->getPaths() ) && $externalSchema = $entity->getGateway()->getPaths()['/'.$entity->getEndpoint()]){
+
+            // Lets get the correct schema
+            foreach($schema['properties'] as $key => $property){
+                // We only want to port supported types
+                //if(!array_key_exists($property['type'], $this->supportedValidators)){
+                //    continue;
+                //}
+
+                // Das magic
+                //$schema['properties'][$key] = $property;
+            }
+        }
+
+        // Add our own properties
         foreach($entity->getAttributes() as $attribute){
 
             // Handle requireded fields

@@ -71,6 +71,7 @@ class GatewayOasCommand extends Command
 
             // Lets build a nice table
             foreach($gateway->getPaths() as $key=>$path){
+                if(!array_key_exists('properties', $path)){$path['properties'] = [];} // want we kennen schemas zonder properties
                 $rows[] = [$gateway->getName(), $key, count($path['properties'])];
             }
 
