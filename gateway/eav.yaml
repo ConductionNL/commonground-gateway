@@ -178,9 +178,10 @@ App\Entity\Entity:
         endpoint: 'organizations'
     education:
         name: education
-        description: apikey
-        gateway: '@mrc_api'
-        endpoint: 'education'
+        description: the education of an employee or student
+#        description: apikey
+#        gateway: '@mrc_api'
+#        endpoint: 'education'
     availability:
         name: availability
         description: the availability of this employee (7 days of the week, each with a morning, afternoon and evening)
@@ -192,49 +193,21 @@ App\Entity\Entity:
         
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
-    # education 
-#    education_name:
-#        name: name
-#        type: string
-#        maxLength: 255
-#        entity: '@education' 
-#    education_startDate:
-#        name: startDate
-#        type: string #DateTime?
-#        entity: '@education'
-#    education_endDate:
-#        name: endDate
-#        type: string #DateTime?
-#        entity: '@education'
-#    education_institution:
-#        name: institution
-#        type: string
-#        maxLength: 255
-#        entity: '@education'
-#    education_iscedEducationLevelCode:
-#        name: iscedEducationLevelCode
-#        type: string
-#        maxLength: 255
-#        entity: '@education'  
-#    education_degreeGrantedStatus:
-#        name: degreeGrantedStatus
-#        type: string
-#        maxLength: 255
-#        entity: '@education'
+    # Education (for matching mrc/education, these are the only eav attributes:)
 #    education_groupFormation:
 #        name: groupFormation
 #        type: string
-#        enum: ['INDIVIDUALLY', 'GROUP']
+#        enum: [ 'INDIVIDUALLY', 'GROUP' ]
 #        entity: '@education'
 #    education_teacherProfessionalism:
 #        name: teacherProfessionalism
 #        type: string
-#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        enum: [ 'PROFESSIONAL', 'VOLUNTEER', 'BOTH' ]
 #        entity: '@education'
 #    education_courseProfessionalism:
 #        name: courseProfessionalism
 #        type: string
-#        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+#        enum: [ 'PROFESSIONAL', 'VOLUNTEER', 'BOTH' ]
 #        entity: '@education'
 #    education_providesCertificate:
 #        name: providesCertificate
@@ -243,7 +216,59 @@ App\Entity\Attribute:
 #    education_amountOfHours:
 #        name: amountOfHours
 #        type: integer
-#        entity: '@education'   
+#        entity: '@education'
+    # Education (If we do not save education in mrc, but 100% as eav Entity)
+    education_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@education' 
+    education_startDate:
+        name: startDate
+        type: datetime
+        entity: '@education'
+    education_endDate:
+        name: endDate
+        type: datetime
+        entity: '@education'
+    education_institution:
+        name: institution
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_iscedEducationLevelCode:
+        name: iscedEducationLevelCode
+        type: string
+        maxLength: 255
+        entity: '@education'  
+    education_degreeGrantedStatus:
+        name: degreeGrantedStatus
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'GROUP']
+        entity: '@education'
+    education_teacherProfessionalism:
+        name: teacherProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_courseProfessionalism:
+        name: courseProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_providesCertificate:
+        name: providesCertificate
+        type: boolean
+        entity: '@education'
+    education_amountOfHours:
+        name: amountOfHours
+        type: integer
+        entity: '@education'   
     # student
     student_person:
         name: person
@@ -347,7 +372,8 @@ App\Entity\Attribute:
     educationDetails_education:
         name: education
         type: object
-        entity: '@education'
+        entity: '@educationDetails'
+        object: '@education'
     # courseDetails @todo check
     courseDetails_isFollowingCourseRightNow:
         name: isFollowingCourseRightNow
@@ -356,7 +382,8 @@ App\Entity\Attribute:
     courseDetails_course:
         name: course
         type: object
-        entity: '@education'
+        entity: '@courseDetails'
+        object: '@education'
     # availabilityDetails
     availabilityDetails_availability:
         name: availability
@@ -724,30 +751,6 @@ App\Entity\Attribute:
 #        maxLength: 36
 #        required: true
 #        entity: '@participation'
-    # Education
-    education_groupFormation:
-        name: groupFormation
-        type: string
-        enum: ['INDIVIDUALLY', 'GROUP']
-        entity: '@education'
-    education_teacherProfessionalism:
-        name: teacherProfessionalism
-        type: string
-        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
-        entity: '@education'
-    education_courseProfessionalism:
-        name: courseProfessionalism
-        type: string
-        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
-        entity: '@education'
-    education_providesCertificate:
-        name: providesCertificate
-        type: boolean
-        entity: '@education'
-    education_amountOfHours:
-        name: amountOfHours
-        type: integer
-        entity: '@education'
     #registration
 #    registration_student:
 #        name: person
