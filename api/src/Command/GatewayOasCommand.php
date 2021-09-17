@@ -9,6 +9,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use App\Service\GatewayDocumentationService;
 use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableSeparator;
 
 class GatewayOasCommand extends Command
 {
@@ -60,11 +62,30 @@ class GatewayOasCommand extends Command
         // starts and displays the progress bar
         $progressBar->start();
 
+        $rows = [];
+
         foreach ($gateways as $gateway){
-            $gateway = $this->getPathsForGateway->getPaths($gateway);
+            $gateway = $this->gatewayDocumentationService->getPathsForGateway($gateway);
             $progressBar->advance();
+            //$this->em->persist($gateway);
+
+            // Lets build a nice table
+            foreach($gateway->getPaths() as $key=>$path){
+                $rows[] = [$gateway->getName(), $key, count($path['properties'])];
+            }
+
         }
 
+        $output->writeln('Found the following paths to parse');
+
+        $table = new Table($output);
+        $table
+            ->setHeaders(['Gateway', 'Path', 'Properties'])
+            ->setRows($rows)
+        ;
+        $table->render();
+
+        //$this->em->flush();
 
         // (it's equivalent to returning int(0))
 

@@ -101,6 +101,11 @@ class GatewayDocumentationService
     {
         $paths = [];
 
+        // Apperently the are OAS files without paths out there
+        if(!array_key_exists('paths', $oas)){
+            return $paths;
+        }
+
         foreach($oas['paths'] as $path=>$methods){
             // We dont want to pick up the id endpoint
             if(str_contains($path,'{id}')){continue;}
