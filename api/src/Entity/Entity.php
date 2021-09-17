@@ -78,18 +78,6 @@ class Entity
     private $endpoint;
 
     /**
-     * @var string The type of this Entity
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $type;
-
-    /**
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
@@ -205,18 +193,6 @@ class Entity
     public function setEndpoint(string $endpoint): self
     {
         $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): self
-    {
-        $this->type = $type;
 
         return $this;
     }

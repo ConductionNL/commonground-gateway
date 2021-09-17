@@ -220,7 +220,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if no errors we can add this subObject tot the valueObject array of objects
 //                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
@@ -270,7 +270,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if not we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -496,7 +496,7 @@ class ValidationService
     private function notify(ObjectEntity $objectEntity, string $method)
     {
         // TODO: move this function to a notificationService?
-        $topic = $objectEntity->getEntity()->getType() ?? $objectEntity->getEntity()->getName();
+        $topic = $objectEntity->getEntity()->getName();
         switch ($method) {
             case 'POST':
                 $action = 'Create';
@@ -510,7 +510,7 @@ class ValidationService
         }
         if (isset($action)) {
             $notification = [
-                'topic' => $topic, //TODO:
+                'topic' => $topic,
                 'action' => $action,
                 'resource' => $objectEntity->getUri()
             ];
@@ -523,19 +523,15 @@ class ValidationService
      * @param $id
      * @return string
      */
-    public function createUri($type, $id): string
+    public function createUri($entityName, $id): string
     {
-        //TODO: change this to work better? (known to cause problems) used it to generate the @id / @eav for eav objects (intern and extern objects).
+        //TODO: change how this uri is generated? use $entityName? or just remove $entityName
         if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             $uri = "https://";
         } else {
             $uri = "http://";
         }
         $uri .= $_SERVER['HTTP_HOST'];
-        // if not localhost add /api/v1 ?
-        if ($_SERVER['HTTP_HOST'] != 'localhost') {
-            $uri .= '/api/v1/eav';
-        }
-        return $uri . '/object_entities/' . $type . '/' . $id;
+        return $uri . '/object_entities/' . $id;
     }
 }
