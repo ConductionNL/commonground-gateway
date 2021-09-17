@@ -274,14 +274,15 @@ class GatewayResponceLog
     {
         $this->setStatusCode($response->getStatusCode());
         $this->setReasonPhrase($response->getReasonPhrase());
-        $this->setProtocol($response->getProtocol());
+//        $this->setProtocol($response->getProtocol());
         $this->setProtocolVersion($response->getProtocolVersion());
         $this->setHeaders($response->getHeaders());
-        $this->setContent($response->getBody()->getContent());
-        $this->setSuccesfull($response->isSuccessful()); // true
-        $this->setInformation($response->isInformational());
-        $this->setRedirect($response->isRedirect());
-        $this->setClientError($response->isClientError());
-        $this->setServerError($response->isServerError());
+//        $this->setContent($response->getBody()->getContent());
+//        $this->setSuccesfull($response->isSuccessful()); // true
+//        $this->setInformation($response->isInformational());
+//        $this->setRedirect($response->isRedirect());
+//        $this->setClientError($response->isClientError());
+//        $this->setServerError($response->isServerError());
+        return $this;
     }
 }
