@@ -265,7 +265,7 @@ class EavDocumentationService
         $docs = [
             "get" => [
                 "description"=>"Get a filterd list of ".$entity->getName()." objects",
-                "summary"=>"Get a ".$entity->getName()."list",
+                "summary"=>"Get a ".$entity->getName()." list",
                 "operationId"=>"get".$this->toCamelCase($entity->getName()),
                 "tags"=>[ucfirst($entity->getName())],
                 "responses"=>[
