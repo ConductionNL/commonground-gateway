@@ -113,7 +113,7 @@ class EavDocumentationService
           "version"=>"1.0.1"
         ];
         $docs['servers']=[
-            ["url"=>'/api/eav/data','description'=>'Gateway server']
+            ["url"=>'/','description'=>'Gateway server']
         ];
         $docs['tags'] = [];
 
@@ -132,7 +132,7 @@ class EavDocumentationService
                 "ListModel" =>[
                     "type"=>"object",
                     "properties"=>[
-                        "result" => ["type"=>"array","decription"=>"The results of your query"],
+                        "results" => ["type"=>"array","decription"=>"The results of your query"],
                         "total" => ["type"=>"integer","decription"=>"The total amount of items that match your current query"],
                         "pages"=> ["type"=>"integer","decription"=>"the amount of pages in the dataset based on your current limit"],
                         "page"=> ["type"=>"integer","decription"=>"the curent page of your dataset"],
@@ -224,11 +224,17 @@ class EavDocumentationService
     public function addEntityToDocs(Entity $entity, array $docs): array
     {
 
-        $docs['paths']['/'.$this->toSnakeCase($entity->getName())] = $this->getCollectionPaths($entity);
-        $docs['paths']['/'.$this->toSnakeCase($entity->getName()).'/{id}'] = $this->getItemPaths($entity);
-
         /* @todo this only goes one deep */
         $docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
+
+        // Lets only add the main entities as root
+        if(!$entity->getRoute()){
+            return $docs;
+        }
+
+        $docs['paths'][$entity->getRoute()] = $this->getCollectionPaths($entity);
+        $docs['paths'][$entity->getRoute().'/{id}'] = $this->getItemPaths($entity);
+
 
         // create the tag
         $docs['tags'][] = [
