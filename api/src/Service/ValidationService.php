@@ -192,6 +192,7 @@ class ValidationService
 
         // Then validate all items in this array
         if ($attribute->getType() != 'object') {
+            // TODO: check if value is an array!!!
             foreach($value as $item) {
                 $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
                 $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
