@@ -7,6 +7,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use App\Service\GatewayDocumentationService;
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class GatewayOasCommand extends Command
 {
@@ -40,10 +41,29 @@ class GatewayOasCommand extends Command
 
         // this method must return an integer number with the "exit status code"
         // of the command. You can also use these constants to make code more readable
+        $output->writeln([
+            'Gateway Document Creator',
+            '============',
+            'This script will get the OAS documentation for gateway\'s (if provided) and parse them to usable information in order to help user configure gateways',
+        ]);
 
-        // return this if there was no problem running the command
+        $gateways = $this->em->getRepository('App:Gateway')->findAll();
+
+        $output->writeln('Found '.count($gateways).' gateways to parse');
+
+        // creates a new progress bar (50 units)
+        $progressBar = new ProgressBar($output, count($gateways));
+
+        // starts and displays the progress bar
+        $progressBar->start();
+
+        foreach ($gateways as $gateway){
+            $gateway = $this->getPathsForGateway->getPaths($gateway);
+            $progressBar->advance();
+        }
+
+
         // (it's equivalent to returning int(0))
-        $this->gatewayDocumentationService->getPaths();
 
         return Command::SUCCESS;
 

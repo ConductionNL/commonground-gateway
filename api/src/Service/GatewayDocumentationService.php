@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,38 +42,54 @@ class GatewayDocumentationService
      */
     public function getPaths()
     {
+        $paths = [];
+
         foreach ($this->em->getRepository('App:Gateway')->findAll() as $gateway){
             if($gateway->getDocumentation()){
-                try{
-                    // Get the docs
-                    $response = $this->client->get($gateway->getDocumentation());
-                    $response = $response->getBody()->getContents();
-                    // Handle json
-                    if($oas = json_decode($response, true)){
-                    }
-                    // back up for yaml
-                    elseif($oas = Yaml::parse($response)){
-                    }
 
-                    $gateway->setOas($oas);
-                    $gateway->setPaths($this->getPathsFromOas($oas));
+                $gateway = $this->getPathsForGateway($gateway);
 
-                    /* @todo throw error */
-                    continue;
-                }
-                catch (\Guzzle\Http\Exception\BadResponseException $e)
-                {
-                    $raw_response = explode("\n", $e->getResponse());
-                    throw new IDPException(end($raw_response));
-                }
-                //$oas = $client->;
-
-                //$this->em->persist($gateway);
+                $this->em->persist($gateway);
             }
             continue;
         }
+        $this->em->flush();
 
-        //$this->em->flush();
+        return $paths;
+    }
+
+
+    /**
+     * This functions loop trough the available information per gateway to retrieve paths
+     *
+     * @return boolean returns true if succcesfull or false on failure
+     */
+    public function getPathsForGateway(Gateway $gateway)
+    {
+        try{
+            // Get the docs
+            if(empty($gateway->getOas()) && $gateway->getDocumentation()){
+                $response = $this->client->get($gateway->getDocumentation());
+                $response = $response->getBody()->getContents();
+                // Handle json
+                if($oas = json_decode($response, true)){
+                }
+                // back up for yaml
+                elseif($oas = Yaml::parse($response)){
+                }
+
+                $gateway->setOas($oas);
+            }
+
+            $gateway->setPaths($this->getPathsFromOas($gateway->getOas()));
+        }
+        catch (\Guzzle\Http\Exception\BadResponseException $e)
+        {
+            $raw_response = explode("\n", $e->getResponse());
+            throw new IDPException(end($raw_response));
+        }
+
+        return $gateway;
     }
 
     /**
@@ -107,8 +124,6 @@ class GatewayDocumentationService
             $paths[$path] = $schema;
         }
 
-        var_dump($paths);
-
         return $paths;
     }
 
@@ -124,6 +139,12 @@ class GatewayDocumentationService
         // lets pick up on general schemes
         if(array_key_exists('$ref', $schema)){
             $schema = $oas['components']['schemas'][$this->idFromRef($schema['$ref'])];
+        }
+
+        // Apperently the are schemes without properties.....
+        if(!array_key_exists('properties',$schema['properties']))
+        {
+            return $schema;
         }
 
         $properties = $schema['properties'];
