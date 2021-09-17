@@ -182,14 +182,6 @@ App\Entity\Entity:
 #        description: apikey
 #        gateway: '@mrc_api'
 #        endpoint: 'education'
-    availability:
-        name: availability
-        description: the availability of this employee (7 days of the week, each with a morning, afternoon and evening)
-#        transformations:
-#            availabilityNotes: memo
-    availabilityDay:
-        name: availabilityDay
-        description: the availabilityDay of an availability (one of the 7 days of the week, with a morning, afternoon and evening)
         
 App\Entity\Attribute:
     # lets first hook our objects and sub objects together
@@ -387,9 +379,10 @@ App\Entity\Attribute:
     # availabilityDetails
     availabilityDetails_availability:
         name: availability
-        type: object
+        type: string
+        multiple: true
+        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
         entity: '@availabilityDetails'
-        object: '@availability'
     availabilityDetails_availabilityNotes:
         name: availabilityNotes
         type: string
@@ -627,9 +620,9 @@ App\Entity\Attribute:
         required: true
     employee_availability:
         name: availability
-        type: object
+        type: string
+        multiple: true
         entity: '@employee'
-        object: '@availability'
     employee_availabilityNotes:
         name: availabilityNotes
         type: string
@@ -805,65 +798,4 @@ App\Entity\Attribute:
         name: hasPermissionToSendInformationAboutLibraries
         type: boolean
         entity: '@permissionDetails'
-        required: true
-        
-    #availabilityDay
-    availabilityDay_morning:
-        name: morning
-        type: boolean
-        entity: '@availabilityDay'
-        required: true
-    availabilityDay_afternoon:
-        name: afternoon
-        type: boolean
-        entity: '@availabilityDay'
-        required: true
-    availabilityDay_evening:
-        name: evening
-        type: boolean
-        entity: '@availabilityDay'
-        required: true
-        
-    #availability
-    availability_monday:
-        name: monday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_tuesday:
-        name: tuesday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_wednesday:
-        name: wednesday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_thursday:
-        name: thursday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_friday:
-        name: friday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_saturday:
-        name: saturday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
-        required: true
-    availability_sunday:
-        name: sunday
-        type: object
-        entity: '@availability'
-        object: '@availabilityDay'
         required: true
