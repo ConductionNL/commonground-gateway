@@ -384,7 +384,7 @@ App\Entity\Attribute:
     # if civicIntegrationDetails_civicIntegrationRequirement == CURRENTLY_WORKING_ON_INTEGRATION:    
     civicIntegrationDetails_civicIntegrationRequirementFinishDate:
         name: civicIntegrationRequirementFinishDate
-        type: string #DateTime?
+        type: datetime
         entity: '@civicIntegrationDetails'
     # generalDetails
     generalDetails_countryOfOrigin:
@@ -417,9 +417,9 @@ App\Entity\Attribute:
         entity: '@generalDetails'
     generalDetails_childrenDatesOfBirth:
         name: childrenDatesOfBirth
-        type: string
-        maxLength: 255
-        entity: '@referrerDetails'
+        type: datetime
+        multiple: true
+        entity: '@generalDetails'
     # referrerDetails
     referrerDetails_referringOrganization:
         name: referringOrganization
