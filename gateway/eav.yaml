@@ -60,10 +60,12 @@ App\Entity\Gateway:
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/rc
 #        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
 
+# NOTE: The type of Entities is used for notifications! If set this is the topic for notifications send for this Entity (else name of the Entity is used)
 App\Entity\Entity:
     user:
         route: '/api/users'
         name: users
+        type: 'uc/users'
         description: apikey
         gateway: '@uc_api'
         endpoint: 'users'   
@@ -71,6 +73,7 @@ App\Entity\Entity:
     student:
         route: '/api/students'
         name: students
+        type: 'edu/participants'
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participants'
@@ -114,6 +117,7 @@ App\Entity\Entity:
     person:
         route: '/api/persons'
         name: persons
+        type: 'cc/people'
         description: apikey
         gateway: '@contacten_api'
         endpoint: 'people'
@@ -122,6 +126,7 @@ App\Entity\Entity:
         description: the permissions that this person has given
     memo:
         name: memo
+        type: 'memo/memos'
         description: apikey
         gateway: '@memo_api'
         endpoint: 'memos'
@@ -129,6 +134,7 @@ App\Entity\Entity:
     employee:
         route: '/api/employees'
         name: employees
+        type: 'mrc/employees'
         description: apikey
         gateway: '@mrc_api'
         endpoint: 'employees'
@@ -138,6 +144,7 @@ App\Entity\Entity:
     student_dosier_event:
         route: '/api/student_dosier_events'
         name: student dosier events
+        type: 'edu/student_dosier_events'
         description: apikey
         gateway: '@edu_api'
         endpoint: 'student_dosier_events'
@@ -145,6 +152,7 @@ App\Entity\Entity:
     document:
         route: '/api/documents'
         name: documents
+        type: 'wrc/documents'
         description: apikey
         gateway: '@wrc_api'
         endpoint: 'documents'
@@ -152,20 +160,22 @@ App\Entity\Entity:
     test_result:
         route: '/api/test_results'
         name: test results
+        type: 'edu/test_results'
         description: apikey
         gateway: '@edu_api'
-        endpoint: 'test_results'
+        endpoint: 'test_results' #TODO results not test_results?
 #LearningNeed stuff
     learning_needs:
         route: '/api/learning_needs'
         name: learning needs
         description: apikey
-        gateway: '@edu_api'
+        gateway: '@edu_api' #TODO eav not edu?
         endpoint: 'learning_needs'
 #Participation stuff
     participation:
         route: '/api/participations'
         name: participations
+        type: 'edu/participations'
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participations'
@@ -173,6 +183,7 @@ App\Entity\Entity:
     organization:
         route: '/api/organizations'
         name: organizations
+        type: 'cc/organizations'
         description: apikey
         gateway: '@contacten_api'
         endpoint: 'organizations'

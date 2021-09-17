@@ -34,7 +34,7 @@ class ValidationService
         $this->cache = $cache;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param array $post
      * @return ObjectEntity
@@ -75,7 +75,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -121,7 +121,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -158,7 +158,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -230,7 +230,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -332,7 +332,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -366,7 +366,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param array $post
      * @return PromiseInterface
@@ -421,7 +421,7 @@ class ValidationService
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($post, $objectEntity, $url) {
+            function ($response) use ($post, $objectEntity, $url, $method, $component) {
 
                 if($objectEntity->getEntity()->getGateway()->getLogging()){
                     $gatewayResponceLog = New GatewayResponceLog;
@@ -441,7 +441,11 @@ class ValidationService
                     $objectEntity->setUri($url);
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
+
                 $objectEntity->setExternalResult($result);
+
+                // Notify notification component
+                $this->notify($objectEntity, $method);
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);
@@ -482,7 +486,36 @@ class ValidationService
         return $promise;
     }
 
-    /** TODO:
+    /** TODO: docs
+     * @param ObjectEntity $objectEntity
+     * @param string $method
+     */
+    private function notify(ObjectEntity $objectEntity, string $method)
+    {
+        // TODO: move this function to a notificationService?
+        $topic = $objectEntity->getEntity()->getType() ?? $objectEntity->getEntity()->getName();
+        switch ($method) {
+            case 'POST':
+                $action = 'Create';
+                break;
+            case 'PUT':
+                $action = 'Update';
+                break;
+            case 'DELETE':
+                $action = 'Delete';
+                break;
+        }
+        if (isset($action)) {
+            $notification = [
+                'topic' => $topic, //TODO:
+                'action' => $action,
+                'resource' => $objectEntity->getUri()
+            ];
+            $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
+        }
+    }
+
+    /** TODO: docs
      * @param $type
      * @param $id
      * @return string
