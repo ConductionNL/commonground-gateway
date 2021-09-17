@@ -247,7 +247,7 @@ class EavDocumentationService
 
         // create the tag
         $docs['tags'][] = [
-            "name"=>$entity->getName(),
+            "name"=>ucfirst($entity->getName()),
 	        "description"=>$entity->getDescription()
         ];
 
@@ -277,7 +277,7 @@ class EavDocumentationService
                 "description"=>"Creates a new".$entity->getName()." object",
                 "summary"=>"Create a ".$entity->getName(),
                 "operationId"=>"post".$this->toCamelCase($entity->getName()),
-                "tags"=>[$entity->getName()],
+                "tags"=>[ucfirst($entity->getName())],
                 "requestBody"=>[
                     "description"=>"Create ".$entity->getName(),
                     "content"=>[
@@ -385,17 +385,23 @@ class EavDocumentationService
         ];
 
         // Lets see if there are external properties
-        if(!empty($entity->getGateway()->getPaths()) && array_key_exists('/'.$entity->getEndpoint(),$entity->getGateway()->getPaths() ) && $externalSchema = $entity->getGateway()->getPaths()['/'.$entity->getEndpoint()]){
+        if(
+            $entity->getGateway() &&
+            !empty($entity->getGateway()->getPaths()) &&
+            array_key_exists('/'.$entity->getEndpoint(),$entity->getGateway()->getPaths() ) &&
+            $externalSchema = $entity->getGateway()->getPaths()['/'.$entity->getEndpoint()]
+        ){
 
             // Lets get the correct schema
-            foreach($schema['properties'] as $key => $property){
+            foreach($externalSchema['properties'] as $key => $property){
                 // We only want to port supported types
                 //if(!array_key_exists($property['type'], $this->supportedValidators)){
                 //    continue;
                 //}
 
                 // Das magic
-                //$schema['properties'][$key] = $property;
+                $property['externalDocs'] = $entity->getGateway()->getLocation();
+                $schema['properties'][$key] = $property;
             }
         }
 
@@ -411,7 +417,7 @@ class EavDocumentationService
             $schema['properties'][$attribute->getName()] = [
                 "type"=>$attribute->getType(),
                 "title"=>$attribute->getName(),
-                "description"=>$attribute->getDescription(),
+                "description"=>"EAV Object:".$attribute->getDescription(),
             ];
 
 

@@ -144,6 +144,8 @@ class GatewayDocumentationService
      */
     public function getSchema(array $oas, array $schema, int $level = 1): array
     {
+        var_dump($level);
+
         // lets pick up on general schemes
         if(array_key_exists('$ref', $schema)){
             $schema = $oas['components']['schemas'][$this->idFromRef($schema['$ref'])];
@@ -159,14 +161,51 @@ class GatewayDocumentationService
 
         /* @todo change this to array filter and clear it up*/
         // We need to check for sub schemes
-        foreach($properties as $key=>$property){
+        foreach($properties as $key => $property){
+            // Lets see if we have main stuf
             if(array_key_exists('$ref',$property)){
+
                 // we only go 5 levels deep
-                if($level > 5){
-                    unset($properties[$key]);
+                if($level > 3){
+                    unset($schema['properties'][$key]);
                     continue;
                 }
-                $property = $this->getSchema($oas, $property, $level++);
+                $schema['properties'][$key] = $this->getSchema($oas, $property, $level +1);
+            }
+            // The schema might also be in an array
+            if(array_key_exists('items',$property) && array_key_exists('$ref',$property['items'])){
+
+                // we only go 5 levels deep
+                if($level > 2){
+                    unset($schema['properties'][$key]['items']);
+                    continue;
+                }
+                $schema['properties'][$key]['items'] = [$this->getSchema($oas, $schema['properties'][$key]['items'], $level +1)];
+            }
+            // Any of
+            if(array_key_exists('anyOf',$property)){
+                foreach($property['anyOf'] as $anyOfkey=>$value){
+                    if(array_key_exists('$ref',$value)){
+                        if($level > 2){
+                            unset($schema['properties'][$key]['anyOf'][$anyOfkey]);
+                            continue;
+                        }
+                        $schema['properties'][$key]['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['properties'][$key]['anyOf'][$anyOfkey], $level +1)];
+                    }
+                }
+            }
+        }
+
+        // Any of
+        if(array_key_exists('anyOf',$schema)){
+            foreach($schema['anyOf'] as $anyOfkey=>$value){
+                if(array_key_exists('$ref',$value)){
+                    if($level > 2){
+                        unset($schema['anyOf'][$anyOfkey]);
+                        continue;
+                    }
+                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level +1)];
+                }
             }
         }
 

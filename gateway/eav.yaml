@@ -4,61 +4,61 @@ App\Entity\Gateway:
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/edu
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/education-component/master/api/public/schema/openapi.yaml
     contacten_api:
         name: contacten component
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
     mrc_api:
         name: medewerker catalogus
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
     memo_api:
         name: memo component
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/memo-component/master/api/public/schema/openapi.yaml
 #    arc_api:
 #        name: agenda service
 #        auth: apikey
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#        documentation: https://raw.githubusercontent.com/ConductionNL/agendaservice/master/api/public/schema/openapi.yaml
 #    bs_api:
 #        name: bericht service
 #        auth: apikey
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/bs
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#        documentation: https://raw.githubusercontent.com/ConductionNL/berichtservice/master/api/public/schema/openapi.yaml
     uc_api:
         name: user component
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/user-component/master/api/public/schema/openapi.yaml
     wrc_api:
         name: webresource catalogus
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
 #    nrc_api:
 #        name: notification component
 #        auth: apikey
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/nrc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#        documentation: https://raw.githubusercontent.com/ConductionNL/Notification-component/master/api/public/schema/openapi.yaml
 #    rc_api:
 #        name: review component
 #        auth: apikey
 #        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
 #        location: https://taalhuizen-bisc.commonground.nu/api/v1/rc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+#        documentation: https://raw.githubusercontent.com/ConductionNL/review-component/master/api/public/schema/openapi.yaml
 
 App\Entity\Entity:
     user:

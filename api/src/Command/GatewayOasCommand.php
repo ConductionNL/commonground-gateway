@@ -66,6 +66,7 @@ class GatewayOasCommand extends Command
 
         foreach ($gateways as $gateway){
             $gateway = $this->gatewayDocumentationService->getPathsForGateway($gateway);
+            $this->em->persist($gateway);
             $progressBar->advance();
             //$this->em->persist($gateway);
 
@@ -86,7 +87,7 @@ class GatewayOasCommand extends Command
         ;
         $table->render();
 
-        //$this->em->flush();
+        $this->em->flush();
 
         // (it's equivalent to returning int(0))
 
