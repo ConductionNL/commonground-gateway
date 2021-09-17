@@ -34,7 +34,7 @@ class ValidationService
         $this->cache = $cache;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param array $post
      * @return ObjectEntity
@@ -75,7 +75,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -121,7 +121,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -158,7 +158,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -169,7 +169,10 @@ class ValidationService
     {
         // If multiple, this is an array, validation for an array:
         if (!is_array($value)) {
-            $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this attribute)');
+            $objectEntity->addError($attribute->getName(),'Expects array, ' . gettype($value) . ' given. (Multiple is set for this attribute)');
+
+            // Lets not continue validation if $value is not an array (because this will cause weird 500s!!!)
+            return $objectEntity;
         }
         if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
             $objectEntity->addError($attribute->getName(),'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
@@ -192,7 +195,7 @@ class ValidationService
 
         // Then validate all items in this array
         if ($attribute->getType() != 'object') {
-            foreach($value as $item) {
+            foreach ($value as $item) {
                 $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
                 $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
             }
@@ -217,7 +220,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if no errors we can add this subObject tot the valueObject array of objects
 //                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
@@ -230,7 +233,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -267,7 +270,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getType(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if not we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -332,7 +335,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -366,7 +369,7 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO:
+    /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param array $post
      * @return PromiseInterface
@@ -421,7 +424,7 @@ class ValidationService
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($post, $objectEntity, $url) {
+            function ($response) use ($post, $objectEntity, $url, $method, $component) {
 
                 if($objectEntity->getEntity()->getGateway()->getLogging()){
                     $gatewayResponceLog = New GatewayResponceLog;
@@ -441,7 +444,11 @@ class ValidationService
                     $objectEntity->setUri($url);
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
+
                 $objectEntity->setExternalResult($result);
+
+                // Notify notification component
+                $this->notify($objectEntity, $method);
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);
@@ -482,24 +489,49 @@ class ValidationService
         return $promise;
     }
 
-    /** TODO:
+    /** TODO: docs
+     * @param ObjectEntity $objectEntity
+     * @param string $method
+     */
+    private function notify(ObjectEntity $objectEntity, string $method)
+    {
+        // TODO: move this function to a notificationService?
+        $topic = $objectEntity->getEntity()->getName();
+        switch ($method) {
+            case 'POST':
+                $action = 'Create';
+                break;
+            case 'PUT':
+                $action = 'Update';
+                break;
+            case 'DELETE':
+                $action = 'Delete';
+                break;
+        }
+        if (isset($action)) {
+            $notification = [
+                'topic' => $topic,
+                'action' => $action,
+                'resource' => $objectEntity->getUri()
+            ];
+            $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
+        }
+    }
+
+    /** TODO: docs
      * @param $type
      * @param $id
      * @return string
      */
-    public function createUri($type, $id): string
+    public function createUri($entityName, $id): string
     {
-        //TODO: change this to work better? (known to cause problems) used it to generate the @id / @eav for eav objects (intern and extern objects).
+        //TODO: change how this uri is generated? use $entityName? or just remove $entityName
         if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             $uri = "https://";
         } else {
             $uri = "http://";
         }
         $uri .= $_SERVER['HTTP_HOST'];
-        // if not localhost add /api/v1 ?
-        if ($_SERVER['HTTP_HOST'] != 'localhost') {
-            $uri .= '/api/v1/eav';
-        }
-        return $uri . '/object_entities/' . $type . '/' . $id;
+        return $uri . '/object_entities/' . $id;
     }
 }
