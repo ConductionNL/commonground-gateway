@@ -366,6 +366,16 @@ class Gateway
      */
     private $logging;
 
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $oas = [];
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $paths = [];
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -565,6 +575,30 @@ class Gateway
     public function setLogging(?bool $logging): self
     {
         $this->logging = $logging;
+
+        return $this;
+    }
+
+    public function getOas(): ?array
+    {
+        return $this->oas;
+    }
+
+    public function setOas(?array $oas): self
+    {
+        $this->oas = $oas;
+
+        return $this;
+    }
+
+    public function getPaths(): ?array
+    {
+        return $this->paths;
+    }
+
+    public function setPaths(?array $paths): self
+    {
+        $this->paths = $paths;
 
         return $this;
     }

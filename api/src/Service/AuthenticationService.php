@@ -252,4 +252,24 @@ class AuthenticationService
         return $authentications[0];
     }
 
+    public function sendTokenMail(array $user, string $subject): bool
+    {
+        $response = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users', 'id' => "{$user['id']}/token"], ['type' => 'SET_PASSWORD']);
+
+        $service = $this->commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0];
+
+        $message = $this->commonGroundService->createResource(
+            [
+                'reciever' => $user['username'],
+                'sender' => 'taalhuizen@biscutrecht.nl',
+                'content' => "{$response['token']}",
+                'type' => 'email',
+                'status' => 'queued',
+                'service' => '/services/'.$service['id'],
+                'subject' => $subject,
+            ],
+            ['component' => 'bs', 'type' => 'messages']);
+        return true;
+    }
+
 }

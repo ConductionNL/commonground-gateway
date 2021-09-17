@@ -59,7 +59,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
      */
     public function supports(Request $request)
     {
-        return 'app_user_login' === $request->attributes->get('_route')
+        return ('app_user_login' === $request->attributes->get('_route') || 'app_user_login_1' === $request->attributes->get('_route'))
             && $request->isMethod('POST');
     }
 
