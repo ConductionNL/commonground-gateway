@@ -170,6 +170,9 @@ class ValidationService
         // If multiple, this is an array, validation for an array:
         if (!is_array($value)) {
             $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Multiple is set for this attribute)');
+
+            // Lets not continue validation if $value is not an array (because this will cause weird 500s!!!)
+            return $objectEntity;
         }
         if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
             $objectEntity->addError($attribute->getName(),'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
@@ -192,8 +195,7 @@ class ValidationService
 
         // Then validate all items in this array
         if ($attribute->getType() != 'object') {
-            // TODO: check if value is an array!!!
-            foreach($value as $item) {
+            foreach ($value as $item) {
                 $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
                 $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
             }
