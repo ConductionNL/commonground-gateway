@@ -270,7 +270,7 @@ class EavDocumentationService
                 "operationId"=>"post".$this->toCamelCase($entity->getName()),
                 "tags"=>[ucfirst($entity->getName())],
                 "responses"=>[
-                    "202"=>[
+                    "201"=>[
                         "description"=>"succesfully created ".$entity->getName(),
                         "content"=>[
                             "application/json" => [
