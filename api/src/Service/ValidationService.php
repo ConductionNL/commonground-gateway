@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\GatewayResponceLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -275,36 +276,36 @@ class ValidationService
                 break;
             case 'string':
                 if (!is_string($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. ('.$value.')');
                 }
                 if ($attribute->getMinLength() && strlen($value) < $attribute->getMinLength()) {
-                    $objectEntity->addError($attribute->getName(),'Is to short, minimum length is ' . $attribute->getMinLength() . '.');
+                    $objectEntity->addError($attribute->getName(),$value.' is to short, minimum length is ' . $attribute->getMinLength() . '.');
                 }
                 if ($attribute->getMaxLength() && strlen($value) > $attribute->getMaxLength()) {
-                    $objectEntity->addError($attribute->getName(),'Is to long, maximum length is ' . $attribute->getMaxLength() . '.');
+                    $objectEntity->addError($attribute->getName(),$value.' is to long, maximum length is ' . $attribute->getMaxLength() . '.');
                 }
                 break;
             case 'number':
                 if (!is_integer($value) && !is_float($value) && gettype($value) != 'float' && gettype($value) != 'double') {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. ('.$value.')');
                 }
                 break;
             case 'integer':
                 if (!is_integer($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. ('.$value.')');
                 }
                 if ($attribute->getMinimum()) {
                     if ($attribute->getExclusiveMinimum() && $value <= $attribute->getMinimum()) {
-                        $objectEntity->addError($attribute->getName(),'Must be higher than ' . $attribute->getMinimum() . '.');
+                        $objectEntity->addError($attribute->getName(),'Must be higher than ' . $attribute->getMinimum() . ' ('.$value.' is not).');
                     } elseif ($value < $attribute->getMinimum()) {
-                        $objectEntity->addError($attribute->getName(),'Must be ' . $attribute->getMinimum() . ' or higher.');
+                        $objectEntity->addError($attribute->getName(),'Must be ' . $attribute->getMinimum() . ' or higher ('.$value.' is not).');
                     }
                 }
                 if ($attribute->getMaximum()) {
                     if ($attribute->getExclusiveMaximum() && $value >= $attribute->getMaximum()) {
-                        $objectEntity->addError($attribute->getName(),'Must be lower than ' . $attribute->getMaximum() . '.');
+                        $objectEntity->addError($attribute->getName(),'Must be lower than ' . $attribute->getMaximum() . '  ('.$value.' is not).');
                     } elseif ($value > $attribute->getMaximum()) {
-                        $objectEntity->addError($attribute->getName(),'Must be ' . $attribute->getMaximum() . ' or lower.');
+                        $objectEntity->addError($attribute->getName(),'Must be ' . $attribute->getMaximum() . ' or lower  ('.$value.' is not).');
                     }
                 }
                 if ($attribute->getMultipleOf() && $value % $attribute->getMultipleOf() != 0) {
@@ -313,7 +314,7 @@ class ValidationService
                 break;
             case 'boolean':
                 if (!is_bool($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. ('.$value.')');
                 }
                 break;
             case 'date':
@@ -321,7 +322,7 @@ class ValidationService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime.');
+                    $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')');
                 }
                 break;
             default:

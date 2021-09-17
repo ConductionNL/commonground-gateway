@@ -290,9 +290,8 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
                 return $this->setArrayValue($value);
-                //TODO something about array of datetime's, see how we do it with type object
             }
             switch ($this->getAttribute()->getType()) {
                 case 'string':
@@ -308,6 +307,14 @@ class Value
                 case 'number':
                     return $this->setNumberValue($value);
                 case 'datetime':
+                    // if multiple is true value should be an array
+                    if ($this->getAttribute()->getMultiple()) {
+                        foreach ($value as &$datetime) {
+                            $datetime = new DateTime($datetime);
+                        }
+                        return $this->setArrayValue($value);
+                    }
+                    // else $value = DateTime (string)
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'object':
                     if ($value == null) {
@@ -332,9 +339,8 @@ class Value
     public function getValue()
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
                 return $this->getArrayValue();
-                //TODO something about array of datetime's, see how we do it with type object
             }
             switch ($this->getAttribute()->getType()) {
                 case 'string':
@@ -346,8 +352,15 @@ class Value
                 case 'number':
                     return $this->getNumberValue();
                 case 'datetime':
+                    if ($this->getAttribute()->getMultiple()) {
+                        $datetimeArray = $this->getArrayValue();
+                        foreach ($datetimeArray as &$datetime) {
+                            $datetime = $datetime->format('Y-m-d\TH:i:sP');
+                        }
+                        return $datetimeArray;
+                    }
                     $datetime = $this->getDateTimeValue();
-                    return $datetime->format('Y-m-d\TH:i:sP');;
+                    return $datetime->format('Y-m-d\TH:i:sP');
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
