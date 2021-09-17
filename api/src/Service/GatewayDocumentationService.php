@@ -112,19 +112,22 @@ class GatewayDocumentationService
 
             // er are going to assume that a post gives the complete opbject, so we are going to use the general post
             if(!array_key_exists('post',$methods)){var_dump("no post method"); continue;}
-            if(!array_key_exists('responses',$methods['post'])){var_dump("no responces in method"); continue;} // Wierd stuf, but a api might not have responces
-            if(!array_key_exists("201",$methods['post']['responses'])){var_dump("no status 201 in responces"); continue;} //We want the 201 responce (item created)
+            if(!array_key_exists('requestBody',$methods['post'])){var_dump("no requestBody in method"); continue;} // Wierd stuf, but a api might not have a requestBody
+            if(!array_key_exists('content',$methods['post']['requestBody'])){var_dump("no requestBody in method"); continue;}
+            if(!array_key_exists('application/json',$methods['post']['requestBody']['content'])){var_dump("no json schema present"); continue;}
+            if(!array_key_exists('schema',$methods['post']['requestBody']['content']['application/json'])){var_dump("no json schema present"); continue;}
 
-            $response = $methods['post']['responses']["201"];
+
+
+            $schema = $methods['post']['requestBody']["content"]['application/json']['schema'];
             // lets pick up on general schemes
-            if(array_key_exists('$ref', $response)){
-                $response = $oas['components']['responses'][$this->idFromRef($response['$ref'])];
+            if(array_key_exists('$ref', $schema) && array_key_exists($this->idFromRef($schema['$ref']), $oas['components']['schemas'])){
+                $schema = $oas['components']['schemas'][$this->idFromRef($schema['$ref'])];
+            }
+            elseif(array_key_exists('$ref', $schema) && array_key_exists($this->idFromRef($schema['$ref']), $oas['components']['schemas'])){
+                var_dump("referenced schema ".$schema['$ref']." is not pressent in the components.schemas array");
             }
 
-            if(!array_key_exists("content",$response)){var_dump("no content responces"); continue;} //We want the 201 responce (item created)
-            if(!array_key_exists('application/json',$response['content'])){var_dump("no  application/json content in responce list"); continue;} //We want the 201 responce (item created)
-
-            $schema = $response['content']['application/json']['schema'];
             $schema = $this->getSchema($oas,$schema);
             $paths[$path] = $schema;
         }
@@ -141,13 +144,15 @@ class GatewayDocumentationService
      */
     public function getSchema(array $oas, array $schema, int $level = 1): array
     {
+        var_dump($level);
+
         // lets pick up on general schemes
         if(array_key_exists('$ref', $schema)){
             $schema = $oas['components']['schemas'][$this->idFromRef($schema['$ref'])];
         }
 
         // Apperently the are schemes without properties.....
-        if(!array_key_exists('properties',$schema['properties']))
+        if(!array_key_exists('properties', $schema))
         {
             return $schema;
         }
@@ -156,14 +161,51 @@ class GatewayDocumentationService
 
         /* @todo change this to array filter and clear it up*/
         // We need to check for sub schemes
-        foreach($properties as $key=>$property){
+        foreach($properties as $key => $property){
+            // Lets see if we have main stuf
             if(array_key_exists('$ref',$property)){
+
                 // we only go 5 levels deep
-                if($level > 5){
-                    unset($properties[$key]);
+                if($level > 3){
+                    unset($schema['properties'][$key]);
                     continue;
                 }
-                $property = $this->getSchema($oas, $property, $level++);
+                $schema['properties'][$key] = $this->getSchema($oas, $property, $level +1);
+            }
+            // The schema might also be in an array
+            if(array_key_exists('items',$property) && array_key_exists('$ref',$property['items'])){
+
+                // we only go 5 levels deep
+                if($level > 2){
+                    unset($schema['properties'][$key]['items']);
+                    continue;
+                }
+                $schema['properties'][$key]['items'] = [$this->getSchema($oas, $schema['properties'][$key]['items'], $level +1)];
+            }
+            // Any of
+            if(array_key_exists('anyOf',$property)){
+                foreach($property['anyOf'] as $anyOfkey=>$value){
+                    if(array_key_exists('$ref',$value)){
+                        if($level > 2){
+                            unset($schema['properties'][$key]['anyOf'][$anyOfkey]);
+                            continue;
+                        }
+                        $schema['properties'][$key]['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['properties'][$key]['anyOf'][$anyOfkey], $level +1)];
+                    }
+                }
+            }
+        }
+
+        // Any of
+        if(array_key_exists('anyOf',$schema)){
+            foreach($schema['anyOf'] as $anyOfkey=>$value){
+                if(array_key_exists('$ref',$value)){
+                    if($level > 2){
+                        unset($schema['anyOf'][$anyOfkey]);
+                        continue;
+                    }
+                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level +1)];
+                }
             }
         }
 

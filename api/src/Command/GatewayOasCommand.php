@@ -66,11 +66,13 @@ class GatewayOasCommand extends Command
 
         foreach ($gateways as $gateway){
             $gateway = $this->gatewayDocumentationService->getPathsForGateway($gateway);
+            $this->em->persist($gateway);
             $progressBar->advance();
             //$this->em->persist($gateway);
 
             // Lets build a nice table
             foreach($gateway->getPaths() as $key=>$path){
+                if(!array_key_exists('properties', $path)){$path['properties'] = [];} // want we kennen schemas zonder properties
                 $rows[] = [$gateway->getName(), $key, count($path['properties'])];
             }
 
@@ -85,7 +87,7 @@ class GatewayOasCommand extends Command
         ;
         $table->render();
 
-        //$this->em->flush();
+        $this->em->flush();
 
         // (it's equivalent to returning int(0))
 
