@@ -300,25 +300,24 @@ class ObjectEntity
 
     public function getAllErrors(): ?array
     {
-        /* @todo gelaagd teruggeven */
-        $allErrors = [];
+        $allErrors = $this->getErrors();
         $subResources = $this->getSubresources();
         foreach ($subResources as $subresource) {
             if (!$subresource) continue; // can be null because of subresource/object fields being set to null
             if (get_class($subresource) == ObjectEntity::class) {
                 if ($subresource->getHasErrors()) {
-                    $allErrors = $subresource->getAllErrors();
+                    $allErrors[$subresource->getSubresourceOf()->getAttribute()->getName()] = $subresource->getAllErrors();
                 }
                 continue;
             }
             // If a subresource is a list of subresources (example cc/person->cc/emails)
-            foreach ($subresource as $listSubresource) {
+            foreach ($subresource as $key => $listSubresource) {
                 if ($listSubresource->getHasErrors()) {
-                    $allErrors = array_merge($allErrors, $listSubresource->getAllErrors());
+                    $allErrors[$listSubresource->getSubresourceOf()->getAttribute()->getName()][$key] = $listSubresource->getAllErrors();
                 }
             }
         }
-        return array_merge($allErrors, $this->getErrors());
+        return $allErrors;
     }
 
 
