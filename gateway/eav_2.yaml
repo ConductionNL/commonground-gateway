@@ -819,6 +819,13 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             type: COURSE
+    education_courseType:
+        name: course_type
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+        requiredIf:
+            type: COURSE
     education_group:
         name: group
         type: string
