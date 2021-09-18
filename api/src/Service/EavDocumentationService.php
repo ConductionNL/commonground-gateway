@@ -386,6 +386,7 @@ class EavDocumentationService
 
         // Lets see if there are external properties
         if(
+            $entity->getExtend() &&
             $entity->getGateway() &&
             !empty($entity->getGateway()->getPaths()) &&
             array_key_exists('/'.$entity->getEndpoint(),$entity->getGateway()->getPaths() ) &&

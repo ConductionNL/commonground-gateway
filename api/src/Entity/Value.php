@@ -119,7 +119,7 @@ class Value
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $attribute;
+    private Atribute $attribute;
 
     /**
      * @Groups({"write"})
@@ -240,9 +240,14 @@ class Value
 
     public function addObject(ObjectEntity $object): self
     {
+        // handle subresources
         if (!$this->objects->contains($object)) {
             $this->objects[] = $object;
             $object->setSubresourceOf($this);
+        }
+        //Handle inversed by
+        if($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute())->getObjects()->contains($this->getObjectEntity())){
+            $object->getValueByAttribute($this->getAttribute())->addObject($this->getObjectEntity());
         }
 
         return $this;

@@ -125,6 +125,26 @@ App\Entity\Entity:
     education:
         name: education
         description: the education details of this person
+        
+    # LearningNeed object
+    learningNeed:
+        name: LearningNeed
+        description: the education details of this person
+        
+    # LearningResult object
+    learningResult:
+        name: LearningResult
+        description: the education details of this person
+        
+    # cource object
+    cource:
+        name: cource
+        description: the education details of this person
+        
+    # participation object
+    participation:
+        name: participation
+        description: the education details of this person
 
 App\Entity\Attribute:
 
@@ -159,6 +179,7 @@ App\Entity\Attribute:
         required: true
         entity: '@user'
         object: '@person'
+        inversedBy: user
     user_userGroups:
         name: userGroups
         type: object
@@ -209,7 +230,7 @@ App\Entity\Attribute:
         entity: '@organization'
         persistToGateway: true
     organization_address:
-        name: address
+        name: addresses
         type: object
         multiple: true
         entity: '@organization'
@@ -217,7 +238,7 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
     organization_telephone:
-        name: telephone
+        name: telephones
         type: object
         multiple: true
         entity: '@organization'
@@ -225,7 +246,7 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
     organization_email:
-        name: email
+        name: emails
         type: object
         multiple: true
         entity: '@organization'
@@ -306,8 +327,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@address'
-        persistToGateway: true
-        
+        persistToGateway: true      
 
 
     # Person Properties
@@ -413,21 +433,21 @@ App\Entity\Attribute:
         object: '@person'
         cascade: true
     person_address:
-        name: address
+        name: addresses
         type: object
         multiple: true
         entity: '@person'
         object: '@address'
         cascade: true
     person_telephone:
-        name: telephone
+        name: telephones
         type: object
         multiple: true
         entity: '@person'
         object: '@telephone'
         cascade: true
     person_email:
-        name: email
+        name: emails
         type: object
         multiple: true
         entity: '@person'
@@ -439,6 +459,21 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@user'
         cascade: true
+        inversedBy: person
+    person_employee:
+        name: employee
+        type: object
+        entity: '@person'
+        object: '@user'
+        cascade: false
+        inversedBy: person
+    person_student:
+        name: student
+        type: object
+        entity: '@person'
+        object: '@user'
+        cascade: false
+        inversedBy: person
         
     # Employee  Properties
     employee_person:
@@ -447,6 +482,7 @@ App\Entity\Attribute:
         entity: '@employee'
         object: '@person'
         cascade: true
+        inversedBy: employee
     employee_organization:
         name: languageHouse
         type: object
@@ -456,8 +492,8 @@ App\Entity\Attribute:
     employee_intake:
         name: intake
         type: object
-        entity: '@employeeIntake'
-        object: '@organization'
+        entity: '@employee'
+        object: '@employeeIntake'
         cascade: true
     employee_education:
         name: educations
@@ -474,6 +510,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@person'
         cascade: true
+        inversedBy: student
     student_languageHouse:
         name: languageHouse
         type: object
@@ -498,6 +535,20 @@ App\Entity\Attribute:
         multiple: true
         entity: '@student'
         object: '@education'
+        cascade: true
+    student_participations:
+        name: participations
+        type: object
+        multiple: true
+        entity: '@student'
+        object: '@participation'
+        cascade: true
+    student_learningNeeds:
+        name: learningNeeds
+        type: object
+        multiple: true
+        entity: '@student'
+        object: '@learningNeed'
         cascade: true
         
     employeeIntake_targetGroupPreferences:
@@ -654,12 +705,13 @@ App\Entity\Attribute:
         enum: [ 'KLIKTIK', 'USING_WHATSAPP', 'USING_SKYPE', 'DEVICE_FUNCTIONALITIES', 'DIGITAL_GOVERNMENT', 'RESERVE_BOOKS_IN_LIBRARY', 'ADS_ON_MARKTPLAATS',  'READ_FOR_CHILDREN', 'UNDERSTAND_PRESCRIPTIONS', 'WRITE_APPLICATION_LETTER', 'WRITE_POSTCARD_FOR_FAMILY', 'DO_ADMINISTRATION', 'CALCULATIONS_FOR_RECIPES', 'OTHER']
         multiple: true
         entity: '@studentIntake'
-    # if motivationDetails_desiredSkills == OTHER: 
     studentIntake_desiredSkillsOther:
         name: desiredSkillsOther
         type: string
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            - desiredSkills: OTHER
     studentIntake_hasTriedThisBefore:
         name: hasTriedThisBefore
         type: boolean
@@ -725,8 +777,7 @@ App\Entity\Attribute:
         name: hasPermissionToSendInformationAboutLibraries
         type: boolean
         entity: '@studentIntake'
-        required: true
-        
+        required: true       
 
 
     # Education properties
@@ -803,3 +854,63 @@ App\Entity\Attribute:
         name: finish_date
         type: datetime
         entity: '@civicIntegration'
+        
+
+    # LearningNeed properties
+    learningNeed_learningResult:
+        name: learningResult
+        type: object
+        multiple: true
+        entity: '@learningNeed'
+        object: '@learningResult'
+        cascade: true
+        inversedBy: learningNeed
+    learningNeed_student:
+        name: student
+        type: object
+        entity: '@learningNeed'
+        object: '@student'
+        cascade: true
+        inversedBy: learningNeeds
+
+    # LearningResult properties
+    learningResult_learningNeed:
+        name: learningNeed
+        type: object
+        entity: '@learningResult'
+        object: '@learningNeed'
+        cascade: false
+        inversedBy: learningResult
+
+    # cource properties
+    cource_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@cource'
+    cource_description:
+        name: description
+        type: string
+        maxLength: 255
+        entity: '@cource'
+    cource_organization:
+        name: organization
+        type: object
+        entity: '@cource'
+        object: '@organization'
+        cascade: false
+
+    # participation properties
+    participation_cource:
+        name: cource
+        type: object
+        entity: '@participation'
+        object: '@cource'
+        cascade: false
+    participation_student:
+        name: student
+        type: object
+        entity: '@participation'
+        object: '@student'
+        cascade: true
+        inversedBy: participations

@@ -10,6 +10,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinColumn;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -395,28 +396,31 @@ class ObjectEntity
         return $this;
     }
 
-
+    /**
+     * Get an value based on a atribut
+     *
+     * @param Attribute $attribute the attribute that you are searching for
+     * @return Value Iether the current value for this atribute or a new value for the atribute if there isnt a current value
+     *
+     */
     public function getValueByAttribute(Attribute $attribute): Value
     {
         // Check if value with this attribute exists for this ObjectEntity
-        /* @todo dit gaat nu fout op put uiteraard */
-        /*
-        $value = $this->getObjectValues()->filter(function (Value $value) use ($attribute) {
-            return $value->getAttribute() === $attribute;
-        });
+        $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
 
-        if (count($value) > 0) {
-            return $value[0];
+        $values = $this->getObjectValues()->matching($criteria);
+
+        if($values->isEmpty()){
+            // If no value with this attribute was found
+            $value = new Value();
+            $value->setAttribute($attribute);
+            $value->setObjectEntity($this);
+            $this->addObjectValue($value);
+
+            return $value;
         }
-        */
 
-        // If no value with this attribute was found
-        $value = new Value();
-        $value->setAttribute($attribute);
-        $value->setObjectEntity($this);
-        $this->addObjectValue($value);
-
-        return $value;
+        return $values->first();
     }
 
     public function getSubresources()
@@ -463,4 +467,38 @@ class ObjectEntity
 
         return $this;
     }
+
+    /**
+     * Checks conditional logic on values
+     *
+     * @return $this
+     */
+    public function checkConditionlLogic(): self
+    {
+        // lets cascade
+        foreach($this->getSubresources() as $subresource){
+            $subresource->checkConditionlLogic();
+        }
+
+        /* @todo we should only check values that actuale have conditional logic optmimalisation */
+        // do the actual chack
+        foreach($this->getObjectValues() as $value){
+            if(empty($value->getAttribute()->getRequiredIf())){
+                continue;
+            }
+            // Oke loop the conditions
+            foreach($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue){
+                // we only have a problem if the current value is empty
+                if($value->getValue()){continue;}
+                // so lets see if we should have a value
+                if($this->getValueByAttribute($this->getEntity()->getAtributeByName($conditionProperty))->getValue() == $conditionValue){
+                    $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                }
+            }
+        }
+
+
+        return $this;
+    }
+
 }

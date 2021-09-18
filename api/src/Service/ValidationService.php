@@ -65,6 +65,16 @@ class ValidationService
             }
         }
 
+        // Check post for not allowed properties
+        foreach($post as $key=>$value){
+            if(!$entity->getAtributeByName($key)){
+                $objectEntity->addError($key,'Does not exsist on this property');
+            }
+        }
+
+        // Check optional conditional logic
+        $objectEntity->checkConditionlLogic();
+
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
             $promise = $this->createPromise($objectEntity, $post);
@@ -403,8 +413,10 @@ class ValidationService
             Utils::settle($objectEntity->getPromises())->wait();
         }
 
+
         // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
         foreach($objectEntity->getObjectValues() as $value){
+
             // Lets prefend the posting of values that we store localy
             if(!$value->getAttribute()->getPersistToGateway()){
                 unset($post[$value->getAttribute()->getName()]);

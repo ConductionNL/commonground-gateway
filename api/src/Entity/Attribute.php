@@ -267,6 +267,17 @@ class Attribute
     private $minProperties;
 
     /**
+     * @var string If the atribute targerts an object that object might have an inversedBy field allowing an two way connection
+     *
+     * @example property
+     *
+     * @Assert\Type("string")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $inversedBy;
+
+    /**
      * @var bool Only whether or not this property is required
      *
      * @example false
@@ -285,7 +296,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $requiredIf;
+    private $requiredIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -1046,4 +1057,19 @@ class Attribute
 
         return $this;
     }
+
+    public function getInversedBy(): ?bool
+    {
+        return $this->inversedBy;
+    }
+
+    public function setInversedBy(?bool $inversedBy): self
+    {
+        $this->inversedBy = $inversedBy;
+
+        return $this;
+    }
+
+
+
 }
