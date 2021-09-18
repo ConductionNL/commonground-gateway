@@ -219,6 +219,27 @@ class EavDocumentationService
             $docs = $this->addEntityToDocs($entity, $docs);
         }
 
+        /* This is hacky */
+        $docs = $this->addOtherRoutes($docs);
+
+        return $docs;
+    }
+
+    /**
+     * This adds the non EAV routes
+     *
+     * @param array $docs
+     * @return array
+     */
+    public function addOtherRoutes(array $docs): array
+    {
+
+        //$docs['paths']['reports/{type}'] =
+
+        $docs['tags'][] = [
+            "name"=>'Reports',
+            "description"=>'Administratice reports about this environment'
+        ];
 
         return $docs;
     }
@@ -392,7 +413,6 @@ class EavDocumentationService
             array_key_exists('/'.$entity->getEndpoint(),$entity->getGateway()->getPaths() ) &&
             $externalSchema = $entity->getGateway()->getPaths()['/'.$entity->getEndpoint()]
         ){
-
             // Lets get the correct schema
             foreach($externalSchema['properties'] as $key => $property){
                 // We only want to port supported types
@@ -418,9 +438,20 @@ class EavDocumentationService
             $schema['properties'][$attribute->getName()] = [
                 "type"=>$attribute->getType(),
                 "title"=>$attribute->getName(),
-                "description"=>"EAV Object:".$attribute->getDescription(),
+                "description"=>"(EAV Object) ".$attribute->getDescription(),
             ];
 
+            // Handle conditional logic
+            if($attribute->getRequiredIf()){
+                foreach($attribute->getRequiredIf() as $requiredIfKey=>$requiredIfValue){
+                    $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.$requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
+                }
+            }
+
+            // Handle inversed by
+            if($attribute->getInversedBy()){
+                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this object is inversed by the '.$attribute->getInversedBy().' of its subobject)';
+            }
 
             // The attribute might be a scheme on its own
             if($attribute->getObject()){
