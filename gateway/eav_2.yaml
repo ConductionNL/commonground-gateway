@@ -81,7 +81,6 @@ App\Entity\Entity:
     
     # Person Object
     person:
-        route: '/api/persons'
         name: persons
         description: Dit object beschrijft een persoon en alleen eigenschappen die specifiek bij een persoon horen.
         gateway: '@contacten_api'
@@ -176,14 +175,6 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-    user_person:
-        name: person
-        description: To which person does the user belong?
-        type: object
-        required: true
-        entity: '@user'
-        object: '@person'
-        inversedBy: user
     user_userGroups:
         name: userGroups
         description: In what usergroups does the user resides. 
@@ -474,21 +465,6 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@user'
         cascade: true
-        inversedBy: person
-    person_employee:
-        name: employee
-        type: object
-        entity: '@person'
-        object: '@user'
-        cascade: false
-        inversedBy: person
-    person_student:
-        name: student
-        type: object
-        entity: '@person'
-        object: '@user'
-        cascade: false
-        inversedBy: person
         
     # Employee  Properties
     employee_person:
@@ -498,7 +474,6 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
-        inversedBy: employee
     employee_organization:
         name: languageHouse
         type: object
@@ -527,7 +502,6 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
-        inversedBy: student
     student_languageHouse:
         name: languageHouse
         type: object
@@ -592,6 +566,8 @@ App\Entity\Attribute:
         name: experienceWithTargetGroupYesReason
         type: string
         entity: '@employeeIntake'
+        requiredIf:
+            hasExperienceWithTargetGroup: true
     employeeIntake_currentEducation:
         name: currentEducation
         type: string
@@ -813,6 +789,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@education'
+        required: true
     education_description:
         name: description
         type: string
@@ -840,6 +817,8 @@ App\Entity\Attribute:
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
+        requiredIf:
+            type: COURSE
     education_group:
         name: group
         type: string
@@ -863,6 +842,7 @@ App\Entity\Attribute:
         type: boolean
         description: Whether tis eduction or course grants a degree or diploma
         entity: '@education'
+        required: true
     education_degreeGranted:
         name: degreeGranted
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
@@ -898,23 +878,8 @@ App\Entity\Attribute:
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
-        inversedBy: learningNeed
-    learningNeed_student:
-        name: student
-        type: object
-        entity: '@learningNeed'
-        object: '@student'
-        cascade: true
-        inversedBy: learningNeeds
 
     # LearningResult properties
-    learningResult_learningNeed:
-        name: learningNeed
-        type: object
-        entity: '@learningResult'
-        object: '@learningNeed'
-        cascade: false
-        inversedBy: learningResult
 
     # course properties
     course_name:
@@ -941,10 +906,3 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@course'
         cascade: false
-    participation_student:
-        name: student
-        type: object
-        entity: '@participation'
-        object: '@student'
-        cascade: true
-        inversedBy: participations

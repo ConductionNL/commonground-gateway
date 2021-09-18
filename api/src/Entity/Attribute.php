@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible atribute on an Entity
+ * An possible attribute on an Entity
  *
  * @category Entity
  *
@@ -267,7 +267,7 @@ class Attribute
     private $minProperties;
 
     /**
-     * @var string If the atribute targerts an object that object might have an inversedBy field allowing an two way connection
+     * @var string If the attribute targerts an object that object might have an inversedBy field allowing an two way connection
      *
      * @example property
      *
@@ -768,7 +768,7 @@ class Attribute
     {
         $this->type = $type;
 
-        // If the atribute type is changes away from an object we need to drop the object
+        // If the attribute type is changes away from an object we need to drop the object
         if($type != 'object' and $this->object ) {
             unset($this->object);
         }

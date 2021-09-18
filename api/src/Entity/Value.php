@@ -21,7 +21,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * A value for a given atribute on an Object Entity.
+ * A value for a given attribute on an Object Entity.
  *
  * @category Entity
  *
@@ -119,7 +119,7 @@ class Value
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private Atribute $attribute;
+    private Attribute $attribute;
 
     /**
      * @Groups({"write"})
@@ -369,7 +369,7 @@ class Value
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
-                        return $objects[0];
+                        return $objects->first();
                     }
                     if (count($objects) == 0) {
                         return null;
