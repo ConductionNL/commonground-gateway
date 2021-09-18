@@ -67,7 +67,7 @@ class ValidationService
 
         // Check post for not allowed properties
         foreach($post as $key=>$value){
-            if(!$entity->getAtributeByName($key)){
+            if(!$entity->getAttributeByName($key)){
                 $objectEntity->addError($key,'Does not exsist on this property');
             }
         }
@@ -387,7 +387,7 @@ class ValidationService
     function createPromise(ObjectEntity $objectEntity, array $post): PromiseInterface
     {
 
-        // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een atrubte zijn gevangen
+        // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
         $query = [];

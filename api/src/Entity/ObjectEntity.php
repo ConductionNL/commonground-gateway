@@ -248,7 +248,11 @@ class ObjectEntity
 
     public function getSubresourceOf(): ?Value
     {
-        return $this->subresourceOf;
+        // Lets prevent upwards recursion
+        if(! $this->getSubresources()->contains($this->subresourceOf)){
+            return $this->subresourceOf;
+        }
+        return null;
     }
 
     public function setSubresourceOf(?Value $subresourceOf): self
@@ -263,13 +267,13 @@ class ObjectEntity
         return $this->hasErrors;
     }
 
-    public function setHasErrors(bool $hasErrors): self
+    public function setHasErrors(bool $hasErrors, int $level = 1): self
     {
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && $this->getSubresourceOf()) {
-            $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors);
+        if ($hasErrors == true && $this->getSubresourceOf() && $level <0 5 && !$this->getSubresources()->contains($this->getSubresourceOf())) {
+            $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
         }
 
         return $this;
@@ -397,10 +401,10 @@ class ObjectEntity
     }
 
     /**
-     * Get an value based on a atribut
+     * Get an value based on a attribut
      *
      * @param Attribute $attribute the attribute that you are searching for
-     * @return Value Iether the current value for this atribute or a new value for the atribute if there isnt a current value
+     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
      *
      */
     public function getValueByAttribute(Attribute $attribute): Value
@@ -423,7 +427,24 @@ class ObjectEntity
         return $values->first();
     }
 
-    public function getSubresources()
+
+    /*
+     * A recursion save way of getting subresources
+     */
+    public function getAllSubresources(?ArrayCollection $result):ArrayCollection
+    {
+        $subresources = $this->getSubresources($result);
+
+        foreach ($subresources as $subresource){
+            if(!$result->contains($subresource)){
+                $result->add($subresource);
+            }
+        }
+
+        return $result;
+    }
+
+    public function getSubresources(?ArrayCollection $result): ArrayCollection
     {
         // Get all values of this ObjectEntity with attribute type object
         $values = $this->getObjectValues()->filter(function (Value $value) {
@@ -433,7 +454,11 @@ class ObjectEntity
         $subresources = new ArrayCollection();
         foreach ($values as $value) {
             $subresource = $value->getValue();
-            $subresources->add($subresource);
+
+            // We do not want to nest a parent object .... To prevent recursion
+            if(!$subresource == $this->getSubresourceOf()){
+                $subresources->add($subresource);
+            }
         }
         return $subresources;
     }
@@ -491,7 +516,7 @@ class ObjectEntity
                 // we only have a problem if the current value is empty
                 if($value->getValue()){continue;}
                 // so lets see if we should have a value
-                if($this->getValueByAttribute($this->getEntity()->getAtributeByName($conditionProperty))->getValue() == $conditionValue){
+                if($this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
                     $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                 }
             }

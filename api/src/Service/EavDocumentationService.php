@@ -434,7 +434,7 @@ class EavDocumentationService
                 $schema['required'][] = $attribute->getName();
             }
 
-            // Add the atribute
+            // Add the attribute
             $schema['properties'][$attribute->getName()] = [
                 "type"=>$attribute->getType(),
                 "title"=>$attribute->getName(),

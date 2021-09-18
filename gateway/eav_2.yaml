@@ -81,7 +81,6 @@ App\Entity\Entity:
     
     # Person Object
     person:
-        route: '/api/persons'
         name: persons
         description: apikey
         gateway: '@contacten_api'
@@ -577,6 +576,8 @@ App\Entity\Attribute:
         name: experienceWithTargetGroupYesReason
         type: string
         entity: '@employeeIntake'
+        requiredIf:
+            hasExperienceWithTargetGroup: true
     employeeIntake_currentEducation:
         name: currentEducation
         type: string
@@ -798,6 +799,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@education'
+        required: true
     education_description:
         name: description
         type: string
@@ -825,6 +827,8 @@ App\Entity\Attribute:
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
+        requiredIf:
+            type: COURSE
     education_group:
         name: group
         type: string
@@ -848,6 +852,7 @@ App\Entity\Attribute:
         type: boolean
         description: Whether tis eduction or cource grants a degree or diploma
         entity: '@education'
+        required: true
     education_degreeGranted:
         name: degreeGranted
         description: Whether or not a degree or diploma has been granted from this eduction or cource to the student

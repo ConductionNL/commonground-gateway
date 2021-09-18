@@ -237,13 +237,13 @@ class Entity
 
 
     /**
-     * Get an value based on a atribut
+     * Get an value based on a attribut
      *
      * @param  string $name the name of the attribute that you are searching for
-     * @return Atribute|Boolean Iether the found atribute or false if no atribute could be found
+     * @return Attribute|Boolean Iether the found attribute or false if no attribute could be found
      *
      */
-    public function getAtributeByName(string $name): Value
+    public function getAttributeByName(string $name): Attribute
     {
         // Check if value with this attribute exists for this ObjectEntity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
