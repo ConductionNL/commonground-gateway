@@ -484,6 +484,7 @@ App\Entity\Attribute:
         type: object
         entity: '@employee'
         object: '@person'
+        required: true
         cascade: true
         inversedBy: employee
     employee_organization:
@@ -512,6 +513,7 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@person'
+        required: true
         cascade: true
         inversedBy: student
     student_languageHouse:
