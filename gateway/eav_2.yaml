@@ -41,7 +41,7 @@ App\Entity\Entity:
     user:
         route: '/api/users'
         name: users
-        description: apikey
+        description: Dit endpoint behandeld alle functionaliteit rondom users of gebruikers. 
         gateway: '@uc_api'
         endpoint: 'users'  
         extend: false
@@ -50,7 +50,7 @@ App\Entity\Entity:
     userGroup:
         route: '/api/userGroups'
         name: userGroups
-        description: apikey
+        description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet. 
         gateway: '@uc_api'
         endpoint: 'groups'
         extend: false
@@ -59,98 +59,99 @@ App\Entity\Entity:
     organization:
         route: '/api/organizations'
         name: organizations
-        description: apikey
+        description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
         gateway: '@contacten_api'
         endpoint: 'organizations'
         extend: false
         
-    #Email
+    #Email Object
     email:
         name: email
-        description: description
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. 
     
-    #Telefoon
+    #Telefoon Object
     telephone:
         name: telephone
-        description: description
+        description: Dit object beschrijft een telefoonnummer welke gekoppeld kan worden aan een persoon of organisatie.
     
-    #Adress
+    #Address Object
     address:
         name: address
-        description: description
+        description: Dit object beschrijft een adres welke gekoppeld kan worden aan een persoon of organisatie.
     
     # Person Object
     person:
         route: '/api/persons'
         name: persons
-        description: apikey
+        description: Dit object beschrijft een persoon en alleen eigenschappen die specifiek bij een persoon horen.
         gateway: '@contacten_api'
         endpoint: 'people'
         extend: false
 
-    # Employee object
+    # Employee Object
     employee:
         route: '/api/employees'
         name: employees
-        description: apikey
+        description: Dit object beschrijft een medewerker en alleen eigenschappen die specifiek bij een medewerker horen.
         gateway: '@mrc_api'
         endpoint: 'employees'
         extend: false
 
-    #Student stuff
+    #Student Object
     student:
         route: '/api/students'
         name: students
-        description: apikey
+        description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
         gateway: '@edu_api'
         endpoint: 'participants'
         extend: false
             
-    # Student Intake object
+    # Medewerker Intake object
     employeeIntake:
         name: employee_intake
-        description: description
+        description: Bij een nieuwe medewerker wordt een intake gedaan om te kijken waar de medewerker best beste ingezet kan worden
     
     # Student Intake object
     studentIntake:
         name: student_intake
-        description: description
+        description: Bij een nieuwe student of deelnemer wordt een intake gedaan om te kijken wat zijn taalniveau is en wat hij of zij wil leren
 
     # Civic Integration  object
     civicIntegration:
         name: civic_integration
-        description: description
+        description: Indit object slaan we informatie op ten opzichte van de inburgering
             
     # Education object
     education:
         name: education
-        description: the education details of this person
+        description: Het educatie object maakt het mogelijk alle vormen van leertrajecten die een persoon zou kunnen volgen te beschrijven en behandelen. Een leertraject zou een volledige MBO studie kunnen zijn maar ook een cursus.
         
     # LearningNeed object
     learningNeed:
         name: LearningNeed
-        description: the education details of this person
+        description: Het learningNeed object beschrijft de leerbehoefte van de student.
         
     # LearningResult object
     learningResult:
         name: LearningResult
-        description: the education details of this person
+        description: Het learningResult object beschrijft de leerresultaten van de student.
         
-    # cource object
-    cource:
-        name: cource
-        description: the education details of this person
+    # course object
+    course:
+        name: course
+        description: 
         
     # participation object
     participation:
         name: participation
-        description: the education details of this person
+        description: 
 
 App\Entity\Attribute:
 
-    # User atributes
+    # User attributes
     user_username:
         name: username
+        description: Usualy an email address.
         type: string
         maxLength: 255
         required: true
@@ -159,6 +160,7 @@ App\Entity\Attribute:
         persistToGateway: true
     user_locale:
         name: locale
+        description: Location setting for the user.
         type: string
         maxLength: 255
         required: true
@@ -167,6 +169,7 @@ App\Entity\Attribute:
         persistToGateway: true
     user_organization:
         name: organization
+        description: To which organization does the user belong?
         type: object
         required: true
         persistToGateway: true
@@ -175,6 +178,7 @@ App\Entity\Attribute:
         object: '@organization'
     user_person:
         name: person
+        description: To which person does the user belong?
         type: object
         required: true
         entity: '@user'
@@ -182,6 +186,7 @@ App\Entity\Attribute:
         inversedBy: user
     user_userGroups:
         name: userGroups
+        description: In what usergroups does the user resides. 
         type: object
         multiple: true
         required: true
@@ -193,6 +198,7 @@ App\Entity\Attribute:
     # UserGroup (security) properties
     userGroup_organization:
         name: organization
+        description: To which organization does this usergroup belong?
         type: object
         required: true
         entity: '@userGroup'
@@ -201,6 +207,7 @@ App\Entity\Attribute:
         cascade: false
     userGroup_name:
         name: name
+        description: What is the name of this usergroup?
         type: string
         maxLength: 255
         required: true
@@ -208,6 +215,7 @@ App\Entity\Attribute:
         persistToGateway: true
     userGroup_description:
         name: description
+        description: What is the function of this usergroup? To which parts of the application does it give access?
         type: string
         maxLength: 2550
         required: true
@@ -217,6 +225,7 @@ App\Entity\Attribute:
     # Organization properties
     organization_name:
         name: name
+        description: What is the name of the organization.
         type: string
         maxLength: 255
         mustBeUnique: true
@@ -224,13 +233,15 @@ App\Entity\Attribute:
         persistToGateway: true
     organization_type:
         name: type
+        description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
         type: string
         required: true
-        enum: ['taalhuis', 'bisc', 'verwijder']
+        enum: ['taalhuis', 'bisc', 'verwijzer','aanbieder']
         entity: '@organization'
         persistToGateway: true
     organization_address:
         name: addresses
+        description: Where is the organization located?
         type: object
         multiple: true
         entity: '@organization'
@@ -239,6 +250,7 @@ App\Entity\Attribute:
         cascade: true
     organization_telephone:
         name: telephones
+        description: The telephone number of the organization.
         type: object
         multiple: true
         entity: '@organization'
@@ -247,6 +259,7 @@ App\Entity\Attribute:
         cascade: true
     organization_email:
         name: emails
+        description: The email address of the organization.
         type: object
         multiple: true
         entity: '@organization'
@@ -483,6 +496,7 @@ App\Entity\Attribute:
         type: object
         entity: '@employee'
         object: '@person'
+        required: true
         cascade: true
         inversedBy: employee
     employee_organization:
@@ -511,6 +525,7 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@person'
+        required: true
         cascade: true
         inversedBy: student
     student_languageHouse:
@@ -841,16 +856,16 @@ App\Entity\Attribute:
     education_hours:
         name: hours
         type: integer
-        description: The total amount of hours this education or cource takes 
+        description: The total amount of hours this education or course takes 
         entity: '@education'
     education_degree:
         name: degree
         type: boolean
-        description: Whether tis eduction or cource grants a degree or diploma
+        description: Whether tis eduction or course grants a degree or diploma
         entity: '@education'
     education_degreeGranted:
         name: degreeGranted
-        description: Whether or not a degree or diploma has been granted from this eduction or cource to the student
+        description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
         entity: '@education'      
 
@@ -901,30 +916,30 @@ App\Entity\Attribute:
         cascade: false
         inversedBy: learningResult
 
-    # cource properties
-    cource_name:
+    # course properties
+    course_name:
         name: name
         type: string
         maxLength: 255
-        entity: '@cource'
-    cource_description:
+        entity: '@course'
+    course_description:
         name: description
         type: string
         maxLength: 255
-        entity: '@cource'
-    cource_organization:
+        entity: '@course'
+    course_organization:
         name: organization
         type: object
-        entity: '@cource'
+        entity: '@course'
         object: '@organization'
         cascade: false
 
     # participation properties
-    participation_cource:
-        name: cource
+    participation_course:
+        name: course
         type: object
         entity: '@participation'
-        object: '@cource'
+        object: '@course'
         cascade: false
     participation_student:
         name: student
