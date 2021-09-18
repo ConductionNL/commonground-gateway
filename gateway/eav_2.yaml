@@ -172,13 +172,6 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-    user_person:
-        name: person
-        type: object
-        required: true
-        entity: '@user'
-        object: '@person'
-        inversedBy: user
     user_userGroups:
         name: userGroups
         type: object
@@ -460,21 +453,6 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@user'
         cascade: true
-        inversedBy: person
-    person_employee:
-        name: employee
-        type: object
-        entity: '@person'
-        object: '@user'
-        cascade: false
-        inversedBy: person
-    person_student:
-        name: student
-        type: object
-        entity: '@person'
-        object: '@user'
-        cascade: false
-        inversedBy: person
         
     # Employee  Properties
     employee_person:
@@ -483,7 +461,6 @@ App\Entity\Attribute:
         entity: '@employee'
         object: '@person'
         cascade: true
-        inversedBy: employee
     employee_organization:
         name: languageHouse
         type: object
@@ -511,7 +488,6 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@person'
         cascade: true
-        inversedBy: student
     student_languageHouse:
         name: languageHouse
         type: object
@@ -888,23 +864,8 @@ App\Entity\Attribute:
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
-        inversedBy: learningNeed
-    learningNeed_student:
-        name: student
-        type: object
-        entity: '@learningNeed'
-        object: '@student'
-        cascade: true
-        inversedBy: learningNeeds
 
     # LearningResult properties
-    learningResult_learningNeed:
-        name: learningNeed
-        type: object
-        entity: '@learningResult'
-        object: '@learningNeed'
-        cascade: false
-        inversedBy: learningResult
 
     # cource properties
     cource_name:
@@ -931,10 +892,3 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@cource'
         cascade: false
-    participation_student:
-        name: student
-        type: object
-        entity: '@participation'
-        object: '@student'
-        cascade: true
-        inversedBy: participations

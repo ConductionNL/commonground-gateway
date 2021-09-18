@@ -174,6 +174,13 @@ class ObjectEntity
      */
     private $responceLogs;
 
+    /*
+     * recursion stack
+     *
+     * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
+     */
+    private ArrayCollection $recursionStack;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
@@ -248,10 +255,8 @@ class ObjectEntity
 
     public function getSubresourceOf(): ?Value
     {
-        // Lets prevent upwards recursion
-        if(! $this->getSubresources()->contains($this->subresourceOf)){
-            return $this->subresourceOf;
-        }
+        return $this->subresourceOf;
+
         return null;
     }
 
@@ -272,7 +277,7 @@ class ObjectEntity
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && $this->getSubresourceOf() && $level <0 5 && !$this->getSubresources()->contains($this->getSubresourceOf())) {
+        if ($hasErrors == true && $this->getSubresourceOf() && $level < 5 && !$this->getSubresources()->contains($this->getSubresourceOf())) {
             $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
         }
 
@@ -433,7 +438,7 @@ class ObjectEntity
      */
     public function getAllSubresources(?ArrayCollection $result):ArrayCollection
     {
-        $subresources = $this->getSubresources($result);
+        $subresources = $this->getSubresources();
 
         foreach ($subresources as $subresource){
             if(!$result->contains($subresource)){
@@ -444,21 +449,28 @@ class ObjectEntity
         return $result;
     }
 
-    public function getSubresources(?ArrayCollection $result): ArrayCollection
+    /**
+     * Function to get al the subresources of this object entity
+     *
+     * @return ArrayCollection the subresources of this object entity
+     */
+    public function getSubresources(): ArrayCollection
     {
         // Get all values of this ObjectEntity with attribute type object
-        $values = $this->getObjectValues()->filter(function (Value $value) {
-            return $value->getAttribute()->getType() === 'object';
-        });
+        //$values = $this->getObjectValues()->filter(function (Value $value) {
+        //    return $value->getAttribute()->getType() === 'object';
+        //});
 
         $subresources = new ArrayCollection();
-        foreach ($values as $value) {
-            $subresource = $value->getValue();
+        foreach ($this->getObjectValues() as $value) {
+            $subresources = new ArrayCollection(
+                array_merge($subresources->toArray(), $value->getObjects()->toArray())
+            );
+        }
 
-            // We do not want to nest a parent object .... To prevent recursion
-            if(!$subresource == $this->getSubresourceOf()){
-                $subresources->add($subresource);
-            }
+        // let prevent downward recursion
+        if($subresources->contains($this->getSubresourceOf())){
+            $subresources->remove($this->getSubresourceOf());
         }
         return $subresources;
     }
@@ -501,8 +513,10 @@ class ObjectEntity
     public function checkConditionlLogic(): self
     {
         // lets cascade
-        foreach($this->getSubresources() as $subresource){
-            $subresource->checkConditionlLogic();
+        if(!$this->getSubresources()->isEmpty()){
+            foreach($this->getSubresources() as $subresource){
+                $subresource->checkConditionlLogic();
+            }
         }
 
         /* @todo we should only check values that actuale have conditional logic optmimalisation */

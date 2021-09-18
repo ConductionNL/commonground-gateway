@@ -265,22 +265,41 @@ class ValidationService
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
-                // Lets see if the object already exists
-                if(!$valueObject->getValue()) {
-                    $subObject = New ObjectEntity();
-                    $subObject->setEntity($attribute->getObject());
-                    $subObject->setSubresourceOf($valueObject);
-                    $valueObject->setValue($subObject);
-                } else {
-                    $subObject = $valueObject->getValue();
+                /* @todo check if is have multpile objects but multiple is false and throw error */
+                //var_dump($subObject->getName());
+                // TODO: more validation for type object?
+                if(!$attribute->getMultiple()){
+                    // Lets see if the object already exists
+                    if(!$valueObject->getValue()) {
+                        $subObject = New ObjectEntity();
+                        $subObject->setEntity($attribute->getObject());
+                        $subObject->setSubresourceOf($valueObject);
+                        $valueObject->setValue($subObject);
+                    } else {
+                        $subObject = $valueObject->getValue();
+                        $subObject = $this->validateEntity($subObject, $value);
+                    }
+                    $this->em->persist($subObject);
+                }
+                else{
+                    $subObjects = $valueObject->getObjects();
+                    if($subObjects->isEmpty()){
+                        $subObject = New ObjectEntity();
+                        $subObject->setEntity($attribute->getObject());
+                        $subObject->setSubresourceOf($valueObject);
+                        $valueObject->addObject($subObject);
+                        $this->em->persist($subObject);
+                    }
+                    // Loop trough the subs
+                    foreach($valueObject->getObjects() as $subObject){
+                        $subObject = $this->validateEntity($subObject, $value);
+                        $this->em->persist($subObject);
+                    }
                 }
 
-                // TODO: more validation for type object?
-                $subObject = $this->validateEntity($subObject, $value);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
-                $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
+                // $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if not we can push it into our object
                 if (!$objectEntity->getHasErrors()) {

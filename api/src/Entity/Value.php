@@ -369,7 +369,7 @@ class Value
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
-                        return $objects[0];
+                        return $objects->first();
                     }
                     if (count($objects) == 0) {
                         return null;
