@@ -274,6 +274,7 @@ class ValidationService
                         $subObject = New ObjectEntity();
                         $subObject->setEntity($attribute->getObject());
                         $subObject->setSubresourceOf($valueObject);
+                        $subObject = $this->validateEntity($subObject, $value);
                         $valueObject->setValue($subObject);
                     } else {
                         $subObject = $valueObject->getValue();
@@ -287,16 +288,14 @@ class ValidationService
                         $subObject = New ObjectEntity();
                         $subObject->setEntity($attribute->getObject());
                         $subObject->setSubresourceOf($valueObject);
+                        $subObject = $this->validateEntity($subObject, $value);
                         $valueObject->addObject($subObject);
-                        $this->em->persist($subObject);
                     }
                     // Loop trough the subs
                     foreach($valueObject->getObjects() as $subObject){
-                        $subObject = $this->validateEntity($subObject, $value);
-                        $this->em->persist($subObject);
+                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
                     }
                 }
-
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 // $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
@@ -427,19 +426,23 @@ class ValidationService
         }
 
         // If we are depend on subresources on another api we need to wait for those to resolve (we might need there id's for this resoure)
-        /* @to the bug of setting the promise on the wrong object blocks this */
-        if(!$objectEntity->getHasPromises()){
-            Utils::settle($objectEntity->getPromises())->wait();
+        /* @todo dit systeem gaat maar 1 level diep */
+        $promises = [];
+        foreach($objectEntity->getSubresources() as $sub){
+            $promises = array_merge($promises,$sub->getPromises());
         }
 
+        if(!empty($promises)){ Utils::settle($promises)->wait();}
 
-        // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
+
+
+        // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach($objectEntity->getObjectValues() as $value){
 
             // Lets prefend the posting of values that we store localy
-            if(!$value->getAttribute()->getPersistToGateway()){
-                unset($post[$value->getAttribute()->getName()]);
-            }
+            //if(!$value->getAttribute()->getPersistToGateway()){
+            //    unset($post[$value->getAttribute()->getName()]);
+            // }
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
             if($value->getAttribute()->getMultiple() && $value->getObjects()){
