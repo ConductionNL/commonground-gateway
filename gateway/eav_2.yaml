@@ -202,7 +202,7 @@ App\Entity\Attribute:
         entity: '@organization'
         persistToGateway: true
     organization_type:
-        name: availability
+        name: type
         type: string
         required: true
         enum: ['taalhuis', 'bisc', 'verwijder']
