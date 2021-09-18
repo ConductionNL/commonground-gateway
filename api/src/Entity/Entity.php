@@ -10,7 +10,9 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use EasyRdf\Literal\Boolean;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -232,6 +234,29 @@ class Entity
 
         return $this;
     }
+
+
+    /**
+     * Get an value based on a atribut
+     *
+     * @param  string $name the name of the attribute that you are searching for
+     * @return Atribute|Boolean Iether the found atribute or false if no atribute could be found
+     *
+     */
+    public function getAtributeByName(string $name): Value
+    {
+        // Check if value with this attribute exists for this ObjectEntity
+        $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
+
+        $attributes = $this->getAttributes()->matching($criteria);
+
+        if($attributes->isEmpty()){
+            return false;
+        }
+
+        return $attributes->first();
+    }
+
 
     /**
      * @return Collection|Attribute[]
