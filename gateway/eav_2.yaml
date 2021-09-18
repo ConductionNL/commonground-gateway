@@ -151,7 +151,7 @@ App\Entity\Attribute:
     # User attributes
     user_username:
         name: username
-        description: Usualy an email address
+        description: Usualy an email address.
         type: string
         maxLength: 255
         required: true
@@ -160,6 +160,7 @@ App\Entity\Attribute:
         persistToGateway: true
     user_locale:
         name: locale
+        description: Location setting for the user.
         type: string
         maxLength: 255
         required: true
@@ -168,6 +169,7 @@ App\Entity\Attribute:
         persistToGateway: true
     user_organization:
         name: organization
+        description: To which organization does the user belong?
         type: object
         required: true
         persistToGateway: true
@@ -176,6 +178,7 @@ App\Entity\Attribute:
         object: '@organization'
     user_person:
         name: person
+        description: To which person does the user belong?
         type: object
         required: true
         entity: '@user'
@@ -183,6 +186,7 @@ App\Entity\Attribute:
         inversedBy: user
     user_userGroups:
         name: userGroups
+        description: In what usergroups does the user resides. 
         type: object
         multiple: true
         required: true
@@ -194,6 +198,7 @@ App\Entity\Attribute:
     # UserGroup (security) properties
     userGroup_organization:
         name: organization
+        description: To which organization does this usergroup belong?
         type: object
         required: true
         entity: '@userGroup'
@@ -202,6 +207,7 @@ App\Entity\Attribute:
         cascade: false
     userGroup_name:
         name: name
+        description: What is the name of this usergroup?
         type: string
         maxLength: 255
         required: true
@@ -209,6 +215,7 @@ App\Entity\Attribute:
         persistToGateway: true
     userGroup_description:
         name: description
+        description: What is the function of this usergroup? To which parts of the application does it give access?
         type: string
         maxLength: 2550
         required: true
@@ -218,6 +225,7 @@ App\Entity\Attribute:
     # Organization properties
     organization_name:
         name: name
+        description: What is the name of the organization.
         type: string
         maxLength: 255
         mustBeUnique: true
@@ -225,6 +233,7 @@ App\Entity\Attribute:
         persistToGateway: true
     organization_type:
         name: type
+        description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
         type: string
         required: true
         enum: ['taalhuis', 'bisc', 'verwijzer','aanbieder']
@@ -232,6 +241,7 @@ App\Entity\Attribute:
         persistToGateway: true
     organization_address:
         name: addresses
+        description: Where is the organization located?
         type: object
         multiple: true
         entity: '@organization'
@@ -240,6 +250,7 @@ App\Entity\Attribute:
         cascade: true
     organization_telephone:
         name: telephones
+        description: The telephone number of the organization.
         type: object
         multiple: true
         entity: '@organization'
@@ -248,6 +259,7 @@ App\Entity\Attribute:
         cascade: true
     organization_email:
         name: emails
+        description: The email address of the organization.
         type: object
         multiple: true
         entity: '@organization'
