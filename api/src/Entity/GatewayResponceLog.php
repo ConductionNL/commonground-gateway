@@ -47,7 +47,7 @@ class GatewayResponceLog
     private $reasonPhrase;
 
     /**
-     * @ORM\Column(type="string", length=25), nullable=true
+     * @ORM\Column(type="string", length=25, nullable=true)
      */
     private $protocol;
 
@@ -277,7 +277,7 @@ class GatewayResponceLog
 //        $this->setProtocol($response->getProtocol());
         $this->setProtocolVersion($response->getProtocolVersion());
         $this->setHeaders($response->getHeaders());
-        $this->setContent($response->getBody()->getContent());
+        $this->setContent((string)$response->getBody());
 //        $this->setSuccesfull($response->isSuccessful()); // true
 //        $this->setInformation($response->isInformational());
 //        $this->setRedirect($response->isRedirect());

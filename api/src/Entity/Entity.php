@@ -243,11 +243,10 @@ class Entity
      * @return Attribute|Boolean Iether the found attribute or false if no attribute could be found
      *
      */
-    public function getAttributeByName(string $name): Attribute
+    public function getAttributeByName(string $name)
     {
         // Check if value with this attribute exists for this ObjectEntity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
-
         $attributes = $this->getAttributes()->matching($criteria);
 
         if($attributes->isEmpty()){

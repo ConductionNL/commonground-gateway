@@ -498,7 +498,7 @@ class ValidationService
 
                 /* @todo lelijke code */
                 if($error->getResponse()){
-                    $error = json_decode($error->getResponse()->getBody()->getContents(), true);
+                    $error = json_decode((string)$error->getResponse()->getBody(), true);
                     if($error && array_key_exists('message', $error)){
                         $error_message = $error['message'];
                     }
@@ -506,7 +506,7 @@ class ValidationService
                         $error_message = $error['hydra:description'];
                     }
                     else {
-                        $error_message =  $error->getResponse()->getBody()->getContents();
+                        $error_message =  (string)$error->getResponse()->getBody();
                     }
                 }
                 else {
