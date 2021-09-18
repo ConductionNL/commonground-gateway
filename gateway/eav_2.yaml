@@ -1,0 +1,805 @@
+App\Entity\Gateway:
+    edu_api:
+        name: educatie component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/edu
+        documentation: https://raw.githubusercontent.com/ConductionNL/education-component/master/api/public/schema/openapi.yaml
+    contacten_api:
+        name: contacten component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
+        documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
+    mrc_api:
+        name: medewerker catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
+        documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
+    memo_api:
+        name: memo component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
+        documentation: https://raw.githubusercontent.com/ConductionNL/memo-component/master/api/public/schema/openapi.yaml
+    uc_api:
+        name: user component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
+        documentation: https://raw.githubusercontent.com/ConductionNL/user-component/master/api/public/schema/openapi.yaml
+    wrc_api:
+        name: webresource catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
+        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
+
+App\Entity\Entity:
+    # User object
+    user:
+        route: '/api/users'
+        name: users
+        description: apikey
+        gateway: '@uc_api'
+        endpoint: 'users'  
+        extend: false
+
+    # UserGroup (security) object
+    userGroup:
+        route: '/api/userGroups'
+        name: userGroups
+        description: apikey
+        gateway: '@uc_api'
+        endpoint: 'groups'
+        extend: false
+        
+    # Organization Object
+    organization:
+        route: '/api/organizations'
+        name: organizations
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'organizations'
+        extend: false
+        
+    #Email
+    email:
+        name: email
+        description: description
+    
+    #Telefoon
+    telephone:
+        name: telephone
+        description: description
+    
+    #Adress
+    address:
+        name: address
+        description: description
+    
+    # Person Object
+    person:
+        route: '/api/persons'
+        name: persons
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'people'
+        extend: false
+
+    # Employee object
+    employee:
+        route: '/api/employees'
+        name: employees
+        description: apikey
+        gateway: '@mrc_api'
+        endpoint: 'employees'
+        extend: false
+
+    #Student stuff
+    student:
+        route: '/api/students'
+        name: students
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participants'
+        extend: false
+            
+    # Student Intake object
+    employeeIntake:
+        name: employee_intake
+        description: description
+    
+    # Student Intake object
+    studentIntake:
+        name: student_intake
+        description: description
+
+    # Civic Integration  object
+    civicIntegration:
+        name: civic_integration
+        description: description
+            
+    # Education object
+    education:
+        name: education
+        description: the education details of this person
+
+App\Entity\Attribute:
+
+    # User atributes
+    user_username:
+        name: username
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@user'
+        mustBeUnique: true
+        persistToGateway: true
+    user_locale:
+        name: locale
+        type: string
+        maxLength: 255
+        required: true
+        defaultValue: nl-NL
+        entity: '@user'
+        persistToGateway: true
+    user_organization:
+        name: organization
+        type: object
+        required: true
+        persistToGateway: true
+        cascade: false
+        entity: '@user'
+        object: '@organization'
+    user_person:
+        name: person
+        type: object
+        required: true
+        entity: '@user'
+        object: '@person'
+    user_userGroups:
+        name: userGroups
+        type: object
+        multiple: true
+        required: true
+        entity: '@user'
+        object: '@userGroup'
+        persistToGateway: true
+        cascade: false
+
+    # UserGroup (security) properties
+    userGroup_organization:
+        name: organization
+        type: object
+        required: true
+        entity: '@userGroup'
+        object: '@organization'
+        persistToGateway: true
+        cascade: false
+    userGroup_name:
+        name: name
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@userGroup'
+        persistToGateway: true
+    userGroup_description:
+        name: description
+        type: string
+        maxLength: 2550
+        required: true
+        entity: '@userGroup'
+        persistToGateway: true
+
+    # Organization properties
+    organization_name:
+        name: name
+        type: string
+        maxLength: 255
+        mustBeUnique: true
+        entity: '@organization'
+        persistToGateway: true
+    organization_type:
+        name: availability
+        type: string
+        required: true
+        enum: ['taalhuis', 'bisc', 'verwijder']
+        entity: '@organization'
+        persistToGateway: true
+    organization_address:
+        name: address
+        type: object
+        multiple: true
+        entity: '@organization'
+        object: '@address'
+        persistToGateway: true
+        cascade: true
+    organization_telephone:
+        name: telephone
+        type: object
+        multiple: true
+        entity: '@organization'
+        object: '@telephone'
+        persistToGateway: true
+        cascade: true
+    organization_email:
+        name: email
+        type: object
+        multiple: true
+        entity: '@organization'
+        object: '@email'
+        persistToGateway: true
+        cascade: true
+    
+    # Email
+    email_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@email'
+        persistToGateway: true
+    email_email:
+        name: email
+        type: string
+        maxLength: 255
+        required: true
+        format: email
+        entity: '@email'
+        persistToGateway: true
+    
+    #Telephone
+    telephone_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@telephone'
+        persistToGateway: true
+    telephone_telephone:
+        name: telephone
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@telephone'
+        persistToGateway: true
+        
+    # Address
+    address_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+    address_street:
+        name: street
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+    address_houseNumber:
+        name: houseNumber
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+    address_houseNumberSuffix:
+        name: houseNumberSuffix
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+    address_postalCode:
+        name: postalCode
+        type: string
+        maxLength: 255
+        persistToGateway: true
+        entity: '@address'
+    address_locality:
+        name: locality
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+    address_country:
+        name: country
+        type: string
+        maxLength: 255
+        entity: '@address'
+        persistToGateway: true
+        
+
+
+    # Person Properties
+    person_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: '@person'
+        persistToGateway: true
+    person_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: '@person'
+        persistToGateway: true
+    person_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: '@person'
+        persistToGateway: true
+    person_birthday:
+        name: birthday
+        type: date
+        entity: '@person'
+        persistToGateway: true
+    person_birthplace:
+        name: birthplace
+        type: object
+        entity: '@person'
+        object: '@address'
+        persistToGateway: true
+    person_country:
+        name: country
+        type: string
+        maxLength: 255
+        entity: '@person'
+        persistToGateway: true
+    person_gender:
+        name: gender
+        type: string
+        enum: ['MALE', 'FEMALE', 'X']
+        entity: '@person'
+        persistToGateway: true
+    person_maritalStatus:
+        name: maritalStatus
+        type: string
+        enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED','WIDOW']
+        entity: '@person'
+        persistToGateway: true
+    person_primaryLanguage:
+        name: primaryLanguage
+        type: string
+        maxLength: 255
+        entity: '@person'
+        persistToGateway: true
+    person_speakingLanguages:
+        name: speakingLanguages
+        type: string
+        maxLength: 255
+        entity: '@person'
+        persistToGateway: true
+    person_contactPreference:
+        name: contactPreference
+        type: string
+        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']
+        entity: '@person'
+    person_contactPreferenceOther: # if person_contactPreference == OTHER:
+        name: contactPreferenceOther
+        type: string
+        entity: '@person'
+    person_availability:
+        name: availability
+        type: string
+        multiple: true
+        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
+        entity: '@person'
+    person_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        maxLength: 255
+        entity: '@person'
+    person_parents:
+        name: parents
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@person'
+        cascade: true
+    person_partners:
+        name: partners
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@person'
+        cascade: true
+    person_children:
+        name: children
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@person'
+        cascade: true
+    person_address:
+        name: address
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@address'
+        cascade: true
+    person_telephone:
+        name: telephone
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@telephone'
+        cascade: true
+    person_email:
+        name: email
+        type: object
+        multiple: true
+        entity: '@person'
+        object: '@email'
+        cascade: true
+    person_user:
+        name: user
+        type: object
+        entity: '@person'
+        object: '@user'
+        cascade: true
+        
+    # Employee  Properties
+    employee_person:
+        name: person
+        type: object
+        entity: '@employee'
+        object: '@person'
+        cascade: true
+    employee_organization:
+        name: languageHouse
+        type: object
+        entity: '@employee'
+        object: '@organization'
+        cascade: false
+    employee_intake:
+        name: intake
+        type: object
+        entity: '@employeeIntake'
+        object: '@organization'
+        cascade: true
+    employee_education:
+        name: educations
+        type: object
+        multiple: true
+        entity: '@employee'
+        object: '@education'
+        cascade: true 
+
+    # student properties
+    student_person:
+        name: person
+        type: object
+        entity: '@student'
+        object: '@person'
+        cascade: true
+    student_languageHouse:
+        name: languageHouse
+        type: object
+        entity: '@student'
+        object: '@organization'
+        cascade: false
+    student_intake:
+        name: intake
+        type: object
+        entity: '@student'
+        object: '@studentIntake'
+        cascade: true
+    student_civicIntegration:
+        name: civicIntegration
+        type: object
+        entity: '@student'
+        object: '@civicIntegration'
+        cascade: true
+    student_education:
+        name: educations
+        type: object
+        multiple: true
+        entity: '@student'
+        object: '@education'
+        cascade: true
+        
+    employeeIntake_targetGroupPreferences:
+        name: targetGroupPreferences
+        type: string
+        multiple: true
+        enum: ['NT1', 'NT2']
+        entity: '@employeeIntake'
+    employeeIntake_volunteeringPreference:
+        name: volunteeringPreference
+        type: string
+        maxLength: 255
+        entity: '@employeeIntake'
+    employeeIntake_gotHereVia:
+        name: gotHereVia
+        type: string
+        maxLength: 255
+        entity: '@employeeIntake'
+    employeeIntake_hasExperienceWithTargetGroup:
+        name: hasExperienceWithTargetGroup
+        type: boolean
+        entity: '@employeeIntake'
+    employeeIntake_experienceWithTargetGroupYesReason:
+        name: experienceWithTargetGroupYesReason
+        type: string
+        entity: '@employeeIntake'
+    employeeIntake_currentEducation:
+        name: currentEducation
+        type: string
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@employeeIntake'
+    employeeIntake_doesCurrentlyFollowCourse:
+        name: doesCurrentlyFollowCourse
+        type: boolean
+        entity: '@employeeIntake'
+    employeeIntake_otherRelevantCertificates:
+        name: otherRelevantCertificates
+        type: string
+        maxLength: 255
+        entity: '@employeeIntake'  
+
+
+    # Student Intake properties
+    studentIntake_date:
+        name: date
+        type: datetime
+        entity: '@studentIntake'
+    studentIntake_status:
+        name: status
+        type: string
+        enum: ['REFERRED', 'ACTIVE', 'COMPLETED']
+        defaultValue: 'REFERRED'
+        entity: '@studentIntake'
+    studentIntake_referringOrganization:
+        name: referringOrganization
+        type: string
+        enum: [ 'UWV', 'SOCIAL_SERVICE', 'LIBRARY', 'WELFARE_WORK',  'NEIGHBORHOOD_TEAM', 'VOLUNTEER_ORGANIZATION', 'LANGUAGE_PROVIDER', 'OTHER']
+        entity: '@studentIntake'
+    studentIntake_referringOrganizationOther: # if referrerDetails_referringOrganization == OTHER: 
+        name: referringOrganizationOther
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_foundVia:
+        name: foundVia
+        type: string
+        enum: ['VOLUNTEER_CENTER', 'LIBRARY_WEBSITE', 'SOCIAL_MEDIA', 'NEWSPAPER', 'VIA_VIA', 'OTHER']
+        entity: '@studentIntake'
+    studentIntake_foundViaOther: #if backgroundDetails_foundVia == OTHER:   
+        name: foundViaOther
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_wentToLanguageHouseBefore:
+        name: wentToLanguageHouseBefore
+        type: boolean
+        entity: '@studentIntake'
+    #if backgroundDetails_wentToLanguageHouseBefore == true:     
+    studentIntake_wentToLanguageHouseBeforeReason:
+        name: wentToLanguageHouseBeforeReason
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_wentToLanguageHouseBeforeYear:
+        name: wentToLanguageHouseBeforeYear
+        type: integer # taalhuizen-service is the type float
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_network:
+        name: network
+        type: string
+        # select multiple
+        enum: ['HOUSEHOLD_MEMBERS', 'NEIGHBORS', 'FAMILY_MEMBERS', 'AID_WORKERS', 'FRIENDS_ACQUAINTANCES', 'PEOPLE_AT_MOSQUE_CHURCH', 'ACQUAINTANCES_SPEAKING_OWN_LANGUAGE', 'ACQUAINTANCES_SPEAKING_DUTCH']
+        multiple: true
+        entity: '@studentIntake'
+    studentIntake_participationLadder:
+        name: participationLadder
+        type: string
+        # type in taalhuis service is integer 
+        # select single
+        enum: ['1 geïsoleerd', '2 sociale contacten buiten huis', '3 deelname georganiseerde activiteiten', '4 vrijwilligers werk/maatschappelijke activering', '5 betaald werk met ondersteuning', '6 betaald werk']
+        entity: '@studentIntake'
+    # dutchNTDetails
+    studentIntake_dutchNTLevel:
+        name: dutchNTLevel
+        type: string
+        enum: ['NT1', 'NT2']
+        entity: '@studentIntake'
+    studentIntake_inNetherlandsSinceYear:
+        name: inNetherlandsSinceYear
+        type: integer #DateTime?
+        entity: '@studentIntake'
+    studentIntake_languageInDailyLife:
+        name: languageInDailyLife
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_knowsLatinAlphabet:
+        name: knowsLatinAlphabet
+        type: boolean
+        entity: '@studentIntake'
+    studentIntake_lastKnownLevel:
+        name: lastKnownLevel
+        type: string
+        enum: ['A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'UNKNOWN']
+        entity: '@studentIntake'
+    studentIntake_trainedForJob:
+        name: trainedForJob
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_lastJob:
+        name: lastJob
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_dayTimeActivities:
+        name: dayTimeActivities
+        type: string
+        enum: ['SEARCHING_FOR_JOB', 'RE_INTEGRATION', 'SCHOOL', 'VOLUNTEER_JOB', 'JOB', 'OTHER' ]
+        multiple: true #select multiple
+        entity: '@studentIntake'
+    # if jobDetails_dayTimeActivities == OTHER:    
+    studentIntake_dayTimeActivitiesOther:
+        name: dayTimeActivitiesOther
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    # motivationDetails
+    studentIntake_desiredSkills:
+        name: desiredSkills
+        type: string
+        #select multiple
+        enum: [ 'KLIKTIK', 'USING_WHATSAPP', 'USING_SKYPE', 'DEVICE_FUNCTIONALITIES', 'DIGITAL_GOVERNMENT', 'RESERVE_BOOKS_IN_LIBRARY', 'ADS_ON_MARKTPLAATS',  'READ_FOR_CHILDREN', 'UNDERSTAND_PRESCRIPTIONS', 'WRITE_APPLICATION_LETTER', 'WRITE_POSTCARD_FOR_FAMILY', 'DO_ADMINISTRATION', 'CALCULATIONS_FOR_RECIPES', 'OTHER']
+        multiple: true
+        entity: '@studentIntake'
+    # if motivationDetails_desiredSkills == OTHER: 
+    studentIntake_desiredSkillsOther:
+        name: desiredSkillsOther
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_hasTriedThisBefore:
+        name: hasTriedThisBefore
+        type: boolean
+        entity: '@studentIntake'
+    studentIntake_hasTriedThisBeforeExplanation:
+        name: hasTriedThisBeforeExplanation
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_whyWantTheseskills:
+        name: whyWantTheseskills
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_whyWantThisNow:
+        name: whyWantThisNow
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_desiredLearningMethod:
+        name: desiredLearningMethod
+        type: string
+        #select multiple
+        enum: ['IN_A_GROUP', 'ONE_ON_ONE', 'HOME_ENVIRONMENT', 'IN_LIBRARY_OR_OTHER', 'ONLINE']
+        multiple: true
+        entity: '@studentIntake'
+    studentIntake_remarks:
+        name: remarks
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
+    studentIntake_speakingLevel:
+        name: speakingLevel
+        type: string
+        enum: ['BEGINNER', 'REASONABLE', 'ADVANCED']
+        entity: '@studentIntake'
+    studentIntake_readingTestResult:
+        name: readingTestResult
+        type: string
+        enum: ['CAN_NOT_READ', 'A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+        entity: '@studentIntake'
+    studentIntake_writingTestResult:
+        name: writingTestResult
+        type: string
+        enum: ['CAN_NOT_WRITE', 'WRITE_NAW_DETAILS', 'WRITE_SIMPLE_TEXTS', 'WRITE_SIMPLE_LETTERS']
+        entity: '@studentIntake'
+    studentIntake_didSignPermissionForm:
+        name: didSignPermissionForm
+        type: boolean
+        entity: '@studentIntake'
+        required: true
+    studentIntake_hasPermissionToShareDataWithProviders:
+        name: hasPermissionToShareDataWithProviders
+        type: boolean
+        entity: '@studentIntake'
+        required: true
+    studentIntake_hasPermissionToShareDataWithLibraries:
+        name: hasPermissionToShareDataWithLibraries
+        type: boolean
+        entity: '@studentIntake'
+        required: true
+    studentIntake_hasPermissionToSendInformationAboutLibraries:
+        name: hasPermissionToSendInformationAboutLibraries
+        type: boolean
+        entity: '@studentIntake'
+        required: true
+        
+
+
+    # Education properties
+    education_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_description:
+        name: description
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_type:
+        name: type
+        type: string
+        required: true
+        enum: ['EDUCATION', 'COURSE']
+        entity: '@education'
+    education_level:
+        name: level
+        type: string
+        required: true
+        enum: ['HBO', 'WO']
+        entity: '@education'
+    education_institution:
+        name: institution
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_teacherType:
+        name: teacher_type
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_group:
+        name: group
+        type: string
+        enum: ['INDIVIDUALLY', 'GROUP']
+        entity: '@education'
+    education_startDate:
+        name: startDate
+        type: datetime
+        entity: '@education'
+    education_endDate:
+        name: endDate
+        type: datetime
+        entity: '@education'
+    education_hours:
+        name: hours
+        type: integer
+        entity: '@education'
+    education_degree:
+        name: degree
+        type: boolean
+        entity: '@education'
+    education_degreeGranted:
+        name: degreeGranted
+        type: boolean
+        entity: '@education'      
+
+    # Civic Integration properties
+    civicIntegration_requirement:
+        name: requirement
+        type: string
+        enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
+        entity: '@civicIntegration'
+    civicIntegration_reason: # if civicIntegrationDetails_civicIntegrationRequirement == NO: 
+        name: reason
+        type: string
+        enum: ['FINISHED', 'FROM_EU_COUNTRY', 'EXEMPTED_OR_ZROUTE']
+        entity: '@civicIntegration'
+    civicIntegration_finishDate: # if civicIntegrationDetails_civicIntegrationRequirement == CURRENTLY_WORKING_ON_INTEGRATION:  
+        name: finish_date
+        type: datetime
+        entity: '@civicIntegration'

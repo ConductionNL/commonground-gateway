@@ -103,6 +103,13 @@ class Entity
     private $description;
 
     /**
+     * wheter or not the properties of the original object are automaticly include
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $extend = false;
+
+    /**
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
@@ -390,6 +397,18 @@ class Entity
                 $responceLog->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getExtend(): ?bool
+    {
+        return $this->extend;
+    }
+
+    public function setExtend(?bool $extend): self
+    {
+        $this->extend = $extend;
 
         return $this;
     }

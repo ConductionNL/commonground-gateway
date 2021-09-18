@@ -278,6 +278,16 @@ class Attribute
     private $required;
 
     /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $requiredIf;
+
+    /**
      * @var array An array of possible values, input is limited to this array]
      *
      * @Groups({"read", "write"})
@@ -435,6 +445,14 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
+
+    /**
+     *
+     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities)
+     *
+     * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
+     */
+    private $cascade = false;
 
     /**
      * @var Datetime The moment this request was created
@@ -702,6 +720,18 @@ class Attribute
     public function setRequired(?bool $required): self
     {
         $this->required = $required;
+
+        return $this;
+    }
+
+    public function getRequiredIf(): ?array
+    {
+        return $this->requiredIf;
+    }
+
+    public function setRequiredIf(?array $requiredIf): self
+    {
+        $this->requiredIf = $requiredIf;
 
         return $this;
     }
@@ -1001,6 +1031,18 @@ class Attribute
     public function setSearchable(?bool $searchable): self
     {
         $this->searchable = $searchable;
+
+        return $this;
+    }
+
+    public function getCascade(): ?bool
+    {
+        return $this->cascade;
+    }
+
+    public function setCascade(?bool $cascade): self
+    {
+        $this->cascade = $cascade;
 
         return $this;
     }
