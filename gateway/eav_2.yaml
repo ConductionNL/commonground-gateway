@@ -396,10 +396,12 @@ App\Entity\Attribute:
         type: string
         enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']
         entity: '@person'
-    person_contactPreferenceOther: # if person_contactPreference == OTHER:
+    person_contactPreferenceOther: 
         name: contactPreferenceOther
         type: string
         entity: '@person'
+        requiredIf:
+            contactPreference: OTHER
     person_availability:
         name: availability
         type: string
@@ -588,7 +590,11 @@ App\Entity\Attribute:
         name: otherRelevantCertificates
         type: string
         maxLength: 255
-        entity: '@employeeIntake'  
+        entity: '@employeeIntake'
+    employeeIntake_isVOGChecked:
+        name: isVOGChecked
+        type: boolean
+        entity: '@employeeIntake'
 
 
     # Student Intake properties
@@ -607,17 +613,21 @@ App\Entity\Attribute:
         type: string
         enum: [ 'UWV', 'SOCIAL_SERVICE', 'LIBRARY', 'WELFARE_WORK',  'NEIGHBORHOOD_TEAM', 'VOLUNTEER_ORGANIZATION', 'LANGUAGE_PROVIDER', 'OTHER']
         entity: '@studentIntake'
-    studentIntake_referringOrganizationOther: # if referrerDetails_referringOrganization == OTHER: 
+    studentIntake_referringOrganizationOther:
         name: referringOrganizationOther
         type: string
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            referrerDetails_referringOrganization: OTHER
     studentIntake_foundVia:
         name: foundVia
         type: string
         enum: ['VOLUNTEER_CENTER', 'LIBRARY_WEBSITE', 'SOCIAL_MEDIA', 'NEWSPAPER', 'VIA_VIA', 'OTHER']
         entity: '@studentIntake'
-    studentIntake_foundViaOther: #if backgroundDetails_foundVia == OTHER:   
+        requiredIf:
+            referringOrganizationOther: OTHER
+    studentIntake_foundViaOther: 
         name: foundViaOther
         type: string
         maxLength: 255
@@ -625,13 +635,14 @@ App\Entity\Attribute:
     studentIntake_wentToLanguageHouseBefore:
         name: wentToLanguageHouseBefore
         type: boolean
-        entity: '@studentIntake'
-    #if backgroundDetails_wentToLanguageHouseBefore == true:     
+        entity: '@studentIntake'    
     studentIntake_wentToLanguageHouseBeforeReason:
         name: wentToLanguageHouseBeforeReason
         type: string
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            wentToLanguageHouseBefore: true
     studentIntake_wentToLanguageHouseBeforeYear:
         name: wentToLanguageHouseBeforeYear
         type: integer # taalhuizen-service is the type float
@@ -690,13 +701,14 @@ App\Entity\Attribute:
         type: string
         enum: ['SEARCHING_FOR_JOB', 'RE_INTEGRATION', 'SCHOOL', 'VOLUNTEER_JOB', 'JOB', 'OTHER' ]
         multiple: true #select multiple
-        entity: '@studentIntake'
-    # if jobDetails_dayTimeActivities == OTHER:    
+        entity: '@studentIntake' 
     studentIntake_dayTimeActivitiesOther:
         name: dayTimeActivitiesOther
         type: string
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            dayTimeActivities: OTHER
     # motivationDetails
     studentIntake_desiredSkills:
         name: desiredSkills
@@ -711,7 +723,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@studentIntake'
         requiredIf:
-            - desiredSkills: OTHER
+            desiredSkills: OTHER
     studentIntake_hasTriedThisBefore:
         name: hasTriedThisBefore
         type: boolean
@@ -829,13 +841,16 @@ App\Entity\Attribute:
     education_hours:
         name: hours
         type: integer
+        description: The total amount of hours this education or cource takes 
         entity: '@education'
     education_degree:
         name: degree
         type: boolean
+        description: Whether tis eduction or cource grants a degree or diploma
         entity: '@education'
     education_degreeGranted:
         name: degreeGranted
+        description: Whether or not a degree or diploma has been granted from this eduction or cource to the student
         type: boolean
         entity: '@education'      
 
@@ -845,15 +860,19 @@ App\Entity\Attribute:
         type: string
         enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
         entity: '@civicIntegration'
-    civicIntegration_reason: # if civicIntegrationDetails_civicIntegrationRequirement == NO: 
+    civicIntegration_reason: 
         name: reason
         type: string
         enum: ['FINISHED', 'FROM_EU_COUNTRY', 'EXEMPTED_OR_ZROUTE']
         entity: '@civicIntegration'
-    civicIntegration_finishDate: # if civicIntegrationDetails_civicIntegrationRequirement == CURRENTLY_WORKING_ON_INTEGRATION:  
-        name: finish_date
+        requiredIf:
+            requirement: NO
+    civicIntegration_finishDate: 
+        name: requirement
         type: datetime
         entity: '@civicIntegration'
+        requiredIf:
+            requirement: CURRENTLY_WORKING_ON_INTEGRATION
         
 
     # LearningNeed properties
