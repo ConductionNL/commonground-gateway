@@ -129,7 +129,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"all"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist"})
      * @MaxDepth(1)
      */
     private $objectValues;
@@ -172,7 +172,7 @@ class ObjectEntity
     private ArrayCollection $recursionStack;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects")
+     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
     private $subresourceOf;
 
@@ -230,7 +230,7 @@ class ObjectEntity
     public function addObjectValue(Value $objectValue): self
     {
         if (!$this->objectValues->contains($objectValue)) {
-            $this->objectValues[] = $objectValue;
+            $this->objectValues->add($objectValue);
             $objectValue->setObjectEntity($this);
         }
 
@@ -509,7 +509,7 @@ class ObjectEntity
     public function addResponceLog(GatewayResponceLog $responceLog): self
     {
         if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs[] = $responceLog;
+            $this->responceLogs->add($responceLog);
             $responceLog->setObjectEntity($this);
         }
 
