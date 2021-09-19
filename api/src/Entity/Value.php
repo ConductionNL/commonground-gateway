@@ -106,14 +106,6 @@ class Value
     private $dateTimeValue;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, fetch="EAGER", mappedBy="subresourceOf", cascade={"all"})
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Collection $objects;
-
-    /**
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
      * @ORM\JoinColumn(nullable=false)
@@ -128,6 +120,11 @@ class Value
      * @MaxDepth(1)
      */
     private $objectEntity;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
+     */
+    private $objects;
 
     public function __construct()
     {
@@ -372,7 +369,10 @@ class Value
                         return $objects->first();
                     }
                     if (count($objects) == 0) {
-                        return null;
+                        $subObject = New ObjectEntity();
+                        $subObject->setEntity($this->getAttribute()->getObject());
+                        $subObject->addSubresourceOf($this);
+                        $this->addObject($subObject);
                     }
                     return $objects;
             }

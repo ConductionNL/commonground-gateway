@@ -265,6 +265,45 @@ class ValidationService
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
+                // Lets check for cascading
+                /* todo make switch */
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)){
+                    $objectEntity->addError($attribute->getName(),'Is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                    break;
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    foreach($value as $arraycheck) {
+                        if(!is_string($arraycheck)){
+                            $objectEntity->addError($attribute->getName(),'Contians a value that is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                            break;
+                        }
+                    }
+                }
+                // Lets handle the stuf
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)){
+                    // Object ophalen
+                    if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        break;
+                    }
+                    // object toeveogen
+                    $valueObject->addObject($subObject);
+
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    foreach($value as $arraycheck) {
+                        if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        }
+                        else{
+                            // object toeveogen
+                            $valueObject->addObject($subObject);
+                        }
+                    }
+                }
+
+
+
                 /* @todo check if is have multpile objects but multiple is false and throw error */
                 //var_dump($subObject->getName());
                 // TODO: more validation for type object?
@@ -455,6 +494,12 @@ class ValidationService
                 $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
             }
         }
+
+        // We want to clear some stuf upp dh
+        if(array_key_exists('id',$post)){unset($post['id']);}
+        if(array_key_exists('@context',$post)){unset($post['@context']);}
+        if(array_key_exists('@id',$post)){unset($post['@id']);}
+        if(array_key_exists('@type',$post)){unset($post['@type']);}
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled

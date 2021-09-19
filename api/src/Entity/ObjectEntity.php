@@ -135,16 +135,6 @@ class ObjectEntity
     private $objectValues;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects", cascade={"persist"})
-     *
-     * @JoinColumn(onDelete="CASCADE")
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Value $subresourceOf = null;
-
-    /**
      * @Groups({"read"})
      */
     private bool $hasErrors = false;
@@ -181,10 +171,16 @@ class ObjectEntity
      */
     private ArrayCollection $recursionStack;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects")
+     */
+    private $subresourceOf;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
         $this->responceLogs = new ArrayCollection();
+        $this->subresourceOf = new ArrayCollection();
     }
 
     public function getId()
@@ -253,20 +249,6 @@ class ObjectEntity
         return $this;
     }
 
-    public function getSubresourceOf(): ?Value
-    {
-        return $this->subresourceOf;
-
-        return null;
-    }
-
-    public function setSubresourceOf(?Value $subresourceOf): self
-    {
-        $this->subresourceOf = $subresourceOf;
-
-        return $this;
-    }
-
     public function getHasErrors(): bool
     {
         return $this->hasErrors;
@@ -277,8 +259,10 @@ class ObjectEntity
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && $this->getSubresourceOf() && $level < 5 && !$this->getSubresources()->contains($this->getSubresourceOf())) {
-            $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
+        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+            foreach($this->getSubresourceOf() as $resource){
+                $resource->setHasErrors($hasErrors, $level + 1);
+            }
         }
 
         return $this;
@@ -336,13 +320,15 @@ class ObjectEntity
         return $this->hasErrors;
     }
 
-    public function setHasPromises(bool $hasPromises): self
+    public function setHasPromises(bool $hasPromises, int $level = 1): self
     {
         $this->hasPromises = $hasPromises;
 
         // Do the same for resources above this one if set to true
-        if ($hasPromises == true && $this->getSubresourceOf()) {
-            $this->getSubresourceOf()->getObjectEntity()->setHasPromises($hasPromises);
+        if ($hasPromises == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+            foreach($this->getSubresourceOf() as $resource){
+                $resource->setHasPromises($hasPromises, $level + 1);
+            }
         }
 
         return $this;
@@ -425,7 +411,6 @@ class ObjectEntity
             $value->setAttribute($attribute);
             $value->setObjectEntity($this);
             $this->addObjectValue($value);
-
             return $value;
         }
 
@@ -536,6 +521,30 @@ class ObjectEntity
             }
         }
 
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Value[]
+     */
+    public function getSubresourceOf(): Collection
+    {
+        return $this->subresourceOf;
+    }
+
+    public function addSubresourceOf(Value $subresourceOf): self
+    {
+        if (!$this->subresourceOf->contains($subresourceOf)) {
+            $this->subresourceOf[] = $subresourceOf;
+        }
+
+        return $this;
+    }
+
+    public function removeSubresourceOf(Value $subresourceOf): self
+    {
+        $this->subresourceOf->removeElement($subresourceOf);
 
         return $this;
     }
