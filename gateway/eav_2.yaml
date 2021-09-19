@@ -523,6 +523,7 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@organization'
+        required: true
         cascade: false
     student_intake:
         name: intake
@@ -626,7 +627,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@studentIntake'
         requiredIf:
-            referrerDetails_referringOrganization: OTHER
+            referringOrganization: OTHER
     studentIntake_foundVia:
         name: foundVia
         type: string
