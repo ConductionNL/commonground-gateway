@@ -32,7 +32,7 @@ class GatewayResponceLog
     private $entity;
 
     /**
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="responceLogs")
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responceLogs")
      */
     private $objectEntity;
 

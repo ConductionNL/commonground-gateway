@@ -438,8 +438,23 @@ class EavDocumentationService
             $schema['properties'][$attribute->getName()] = [
                 "type"=>$attribute->getType(),
                 "title"=>$attribute->getName(),
-                "description"=>"(EAV Object) ".$attribute->getDescription(),
+                "description"=>$attribute->getDescription(),
             ];
+
+            var_dump($attribute->getName());
+            var_dump($attribute->getCascade());
+            // The attribute might be a scheme on its own
+            if($attribute->getObject() && $attribute->getCascade()){
+                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+                // that also means that we don't have to do the rest
+                //continue;
+            }
+            elseif($attribute->getObject() && !$attribute->getCascade()){
+                var_dump('non-cascading object');
+                $schema['properties'][$attribute->getName()]['type'] = "string";
+                $schema['properties'][$attribute->getName()]['format'] = "uuid";
+                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
+            }
 
             // Handle conditional logic
             if($attribute->getRequiredIf()){
@@ -453,12 +468,6 @@ class EavDocumentationService
                 $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this object is inversed by the '.$attribute->getInversedBy().' of its subobject)';
             }
 
-            // The attribute might be a scheme on its own
-            if($attribute->getObject()){
-                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
-                // that also means that we don't have to do the rest
-                continue;
-            }
 
             /* @todo we nee to add supoort for https://swagger.io/specification/#schema-object
              *

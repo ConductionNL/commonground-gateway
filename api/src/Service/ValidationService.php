@@ -223,7 +223,7 @@ class ValidationService
                 }
                 else {
                     $subObject = New ObjectEntity();
-                    $subObject->setSubresourceOf($valueObject);
+                    $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
                 }
                 $subObject = $this->validateEntity($subObject, $object);
@@ -265,15 +265,61 @@ class ValidationService
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
+                // Lets check for cascading
+                /* todo make switch */
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)){
+                    $objectEntity->addError($attribute->getName(),'Is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                    break;
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    foreach($value as $arraycheck) {
+                        if(!is_string($arraycheck)){
+                            $objectEntity->addError($attribute->getName(),'Contians a value that is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                            break;
+                        }
+                    }
+                }
+
+                if(!$valueObject->getValue()) {
+                    $subObject = New ObjectEntity();
+                    $subObject->setEntity($attribute->getObject());
+                    $subObject->addSubresourceOf($valueObject);
+                    $valueObject->addObject($subObject);
+                }
+
+                // Lets handle the stuf
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)){
+                    // Object ophalen
+                    if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        break;
+                    }
+                    // object toeveogen
+                    $valueObject->addObject($subObject);
+                    break;
+
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    foreach($value as $arraycheck) {
+                        if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
+                        }
+                        else{
+                            // object toeveogen
+                            $valueObject->addObject($subObject);
+                        }
+                    }
+                    break;
+                }
+
+
+
                 /* @todo check if is have multpile objects but multiple is false and throw error */
                 //var_dump($subObject->getName());
                 // TODO: more validation for type object?
                 if(!$attribute->getMultiple()){
                     // Lets see if the object already exists
                     if(!$valueObject->getValue()) {
-                        $subObject = New ObjectEntity();
-                        $subObject->setEntity($attribute->getObject());
-                        $subObject->setSubresourceOf($valueObject);
                         $subObject = $this->validateEntity($subObject, $value);
                         $valueObject->setValue($subObject);
                     } else {
@@ -287,7 +333,7 @@ class ValidationService
                     if($subObjects->isEmpty()){
                         $subObject = New ObjectEntity();
                         $subObject->setEntity($attribute->getObject());
-                        $subObject->setSubresourceOf($valueObject);
+                        $subObject->addSubresourceOf($valueObject);
                         $subObject = $this->validateEntity($subObject, $value);
                         $valueObject->addObject($subObject);
                     }
@@ -455,6 +501,12 @@ class ValidationService
                 $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
             }
         }
+
+        // We want to clear some stuf upp dh
+        if(array_key_exists('id',$post)){unset($post['id']);}
+        if(array_key_exists('@context',$post)){unset($post['@context']);}
+        if(array_key_exists('@id',$post)){unset($post['@id']);}
+        if(array_key_exists('@type',$post)){unset($post['@type']);}
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
