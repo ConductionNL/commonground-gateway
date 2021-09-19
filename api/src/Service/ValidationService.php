@@ -495,9 +495,21 @@ class ValidationService
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
             if($value->getAttribute()->getMultiple() && $value->getObjects()){
+                // Lets whipe the current values (we will use Uri's)
+                $post[$value->getAttribute()->getName()] = [];
+
                 /* @todo this loop in loop is a death sin */
                 foreach ($value->getObjects() as $objectToUri){
-                    $post[$value->getAttribute()->getName()][] =   $objectToUri->getUri();
+                    /* @todo the hacky hack hack */
+                    // If it is a an internal url we want to us an internal id
+                    if($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()){
+                        $postEndpoint = explode($objectToUri->getEntity()->getEndpoint(), $objectToUri->getUri());
+                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().$postEndpoint[1];
+                    }
+                    else{
+                        $ubjectUri = $objectToUri->getUri();
+                    }
+                    $post[$value->getAttribute()->getName()][] = $ubjectUri;
                 }
             }
             elseif($value->getObjects()->first()){
@@ -510,6 +522,9 @@ class ValidationService
         if(array_key_exists('@context',$post)){unset($post['@context']);}
         if(array_key_exists('@id',$post)){unset($post['@id']);}
         if(array_key_exists('@type',$post)){unset($post['@type']);}
+
+        // var_dump($url);
+        //var_dump($post);
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
@@ -549,7 +564,8 @@ class ValidationService
 
                 /* @todo wat dachten we van een logging service? */
                 $gatewayResponceLog = New GatewayResponceLog;
-                $gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
+                //$gatewayResponceLog->setObjectEntity($objectEntity);
                 $gatewayResponceLog->setResponce($error->getResponse());
                 $this->em->persist($gatewayResponceLog);
                 $this->em->flush();
