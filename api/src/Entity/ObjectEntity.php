@@ -318,7 +318,10 @@ class ObjectEntity
 
         foreach($values as $value){
             foreach ($value->getObjects() as $subResource) {
-                $allErrors[$value->getAttribute()->getName()] = $subResource->getAllErrors();
+                $subErrors = $subResource->getAllErrors();
+                if(!empty($subErrors)){
+                    $allErrors[$value->getAttribute()->getName()] =$subErrors;
+                }
             }
         }
         /*
