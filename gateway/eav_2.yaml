@@ -67,17 +67,23 @@ App\Entity\Entity:
     #Email Object
     email:
         name: email
-        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. 
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie.
+        gateway: '@contacten_api'
+        endpoint: 'emails'
     
     #Telefoon Object
     telephone:
         name: telephone
         description: Dit object beschrijft een telefoonnummer welke gekoppeld kan worden aan een persoon of organisatie.
+        gateway: '@contacten_api'
+        endpoint: 'telephones'
     
     #Address Object
     address:
         name: address
         description: Dit object beschrijft een adres welke gekoppeld kan worden aan een persoon of organisatie.
+        gateway: '@contacten_api'
+        endpoint: 'addresses'
     
     # Person Object
     person:
@@ -136,10 +142,20 @@ App\Entity\Entity:
         description: Het learningResult object beschrijft de leerresultaten van de student.
         
     # course object
+    program:
+        name: program
+        description: Een opleiding zo als aangeboden door een taalhuis
+
+    # course object
     course:
         name: course
-        description: 
-        
+        description: Een curus of vak zo als aangeboden door een taalhuis, 
+
+    # courseGroup object
+    courseGroup:
+        name: courseGroup
+        description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
+
     # participation object
     participation:
         name: participation
