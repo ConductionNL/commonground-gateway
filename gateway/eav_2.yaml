@@ -825,14 +825,14 @@ App\Entity\Attribute:
         requiredIf:
             doesCurrentlyFollowCourse: YES
     education_teacherType:
-        name: teacher_type
+        name: teachertype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
         requiredIf:
             type: COURSE
     education_courseType:
-        name: course_type
+        name: coursetype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
