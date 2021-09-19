@@ -436,10 +436,12 @@ App\Entity\Attribute:
     person_children:
         name: children
         type: integer
-    person_children_birthdays:
+        entity: '@person'
+    person_childrenbirthdays:
         name: children
         type: date
         multiple: true
+        entity: '@person'
     person_address:
         name: addresses
         type: object
@@ -614,6 +616,11 @@ App\Entity\Attribute:
         entity: '@studentIntake'
         requiredIf:
             referringOrganization: OTHER
+    studentIntake_referringOrganizationEmail:
+        name: referringOrganizationEmail
+        type: string
+        maxLength: 255
+        entity: '@studentIntake'
     studentIntake_foundVia:
         name: foundVia
         type: string
