@@ -578,10 +578,6 @@ App\Entity\Attribute:
         type: string
         enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
         entity: '@employeeIntake'
-    employeeIntake_doesCurrentlyFollowCourse:
-        name: doesCurrentlyFollowCourse
-        type: boolean
-        entity: '@employeeIntake'
     employeeIntake_otherRelevantCertificates:
         name: otherRelevantCertificates
         type: string
