@@ -123,8 +123,8 @@ App\Entity\Entity:
 
     # Civic Integration  object
     civicIntegration:
-        name: civic_integration
-        description: Indit object slaan we informatie op ten opzichte van de inburgering
+        name: civicIntegration
+        description: In dit object slaan we informatie op ten opzichten van de inburgering
             
     # Education object
     education:
@@ -377,9 +377,9 @@ App\Entity\Attribute:
         persistToGateway: true
     person_birthplace:
         name: birthplace
-        type: object
+        type: string
         entity: '@person'
-        object: '@address'
+        maxLength: 255
         persistToGateway: true
     person_country:
         name: country
@@ -438,7 +438,7 @@ App\Entity\Attribute:
         type: integer
         entity: '@person'
     person_childrenbirthdays:
-        name: children
+        name: childrenbirthdays
         type: date
         multiple: true
         entity: '@person'
@@ -459,6 +459,7 @@ App\Entity\Attribute:
     person_email:
         name: emails
         type: object
+        mustBeUnique: true
         multiple: true
         entity: '@person'
         object: '@email'
@@ -506,6 +507,13 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
+    student_civicIntegration:
+        name: civicIntegration
+        type: object
+        entity: '@student'
+        object: '@civicIntegration'
+        required: false
+        cascade: true
     student_languageHouse:
         name: languageHouse
         type: object
@@ -518,12 +526,6 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@studentIntake'
-        cascade: true
-    student_civicintegration:
-        name: civicintegration
-        type: object
-        entity: '@student'
-        object: '@civicintegration'
         cascade: true
     student_education:
         name: educations
@@ -546,7 +548,8 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@learningNeed'
         cascade: true
-        
+
+      # Employee Intake properties   
     employeeIntake_targetGroupPreferences:
         name: targetGroupPreferences
         type: string
@@ -882,22 +885,22 @@ App\Entity\Attribute:
         entity: '@education'      
 
     # Civic Integration properties
-    civicintegration_requirement:
+    civicIntegration_requirement:
         name: requirement
         type: string
         enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
-        entity: '@civicintegration'
-    civicintegration_reason: 
+        entity: '@civicIntegration'
+    civicIntegration_reason: 
         name: reason
         type: string
         enum: ['FINISHED', 'FROM_EU_COUNTRY', 'EXEMPTED_OR_ZROUTE']
-        entity: '@civicintegration'
+        entity: '@civicIntegration'
         requiredIf:
             requirement: NO
-    civicintegration_finishDate: 
+    civicIntegration_finishDate: 
         name: finishDate
         type: datetime
-        entity: '@civicintegration'
+        entity: '@civicIntegration'
         requiredIf:
             requirement: CURRENTLY_WORKING_ON_INTEGRATION
         
