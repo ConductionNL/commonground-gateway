@@ -640,6 +640,8 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            foundVia: OTHER
     studentIntake_wentToLanguageHouseBefore:
         name: wentToLanguageHouseBefore
         type: boolean
@@ -822,13 +824,17 @@ App\Entity\Attribute:
         name: level
         type: string
         required: true
-        enum: ['HBO', 'WO']
+        enum: ['HBO', 'WO', 'PROFFESIONAL_EDUCATION','LANGUAGE_COURSE','OTHER']
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_institution:
         name: institution
         type: string
         maxLength: 255
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_teacherType:
         name: teacher_type
         type: string
@@ -848,19 +854,27 @@ App\Entity\Attribute:
         type: string
         enum: ['INDIVIDUALLY', 'GROUP']
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_startDate:
         name: startDate
         type: datetime
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_endDate:
         name: endDate
         type: datetime
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_hours:
         name: hours
         type: integer
         description: The total amount of hours this education or course takes 
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_degree:
         name: degree
         type: boolean
@@ -871,6 +885,11 @@ App\Entity\Attribute:
         name: degreeGranted
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
+        entity: '@education'
+    education_doesCurrentlyFollowCourse:
+        name: doesCurrentlyFollowCourse
+        type: string
+        enum: ['YES', 'NO', 'NO_UNTIL_DATE']
         entity: '@education'      
 
     # Civic Integration properties
@@ -887,7 +906,7 @@ App\Entity\Attribute:
         requiredIf:
             requirement: NO
     civicIntegration_finishDate: 
-        name: requirement
+        name: finishDate
         type: datetime
         entity: '@civicIntegration'
         requiredIf:
