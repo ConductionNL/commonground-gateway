@@ -294,12 +294,15 @@ class ValidationService
                         $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
                         break;
                     }
+
                     // object toeveogen
+                    $valueObject->getObjects()->clear(); // We start with a deafult object
                     $valueObject->addObject($subObject);
                     break;
 
                 }
                 if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    $valueObject->getObjects()->clear();
                     foreach($value as $arraycheck) {
                         if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
                             $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
