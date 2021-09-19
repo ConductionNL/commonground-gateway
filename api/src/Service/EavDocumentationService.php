@@ -333,7 +333,7 @@ class EavDocumentationService
                     ]
                 ]
             ];
-        */
+        
         $docs['tags']['paths']['users/reset_password'] = [];
         // $docs['tags']['paths']['reports/learning_needs'] = [];
         // $docs['tags']['paths']['reports/students'] = [];
