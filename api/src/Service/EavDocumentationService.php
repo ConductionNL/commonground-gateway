@@ -241,6 +241,7 @@ class EavDocumentationService
             "description" => 'Administratice reports about this environment'
         ];
 
+        /*
         $docs['tags']['paths']['users/login'] =
             [
                 "post" => [
@@ -279,7 +280,7 @@ class EavDocumentationService
                                             "locale" => ["type" => "string", "decription" => "The users langouge", "example" => "nl"],
                                             "person" => ["type" => "string", "decription" => "The url of the person object for the user"],
                                             "roles" => ["type" => "array", "decription" => "The users roles"],
-                                            "userGroups" => ["type" => "arry", "decription" => "The users sercurity groups"],
+                                            "userGroups" => ["type" => "array", "decription" => "The users sercurity groups"],
                                             "jwtToken" => ["type" => "string", "decription" => "The jwtToken for authorisation", "example" => "eyJhbGciOiJSUzUxMiJ9.eyJ1c2VySWQiOiJjNTNmMTdlYS04OWQ2LTRjZDMtOGEyNi1lODdjYTE0ODY4OGQiLCJyb2xlcyI6WyJ1c2VyIl0sInNlc3Npb24iOiIxNzQ5ZjdhYy0yNGI5LTQxZjAtOTBiYy04MjJmZjEyZjUxY2QiLCJjc3JmVG9rZW4iOiJjYTE4ZmFjOGVjZTU3NzE5NWNjLmtncUQ4TFFpbGVwNFhiblpORDZ1TWV0R0tSUkg3TDJCMFVsYkgwcGJhdGsuMFdETGlQbHQ5OWdTREl1V1kzVHNCcDBmSEZ4M3FkRFg0RE1RVkFNNUJKVG1STEdEM2tmdGpUc196ZyIsImlzcyI6Imh0dHBzOlwvXC90YWFsaHVpemVuLWJpc2MuY29tbW9uZ3JvdW5kLm51XC9hcGlcL3YyXC91YyIsImlhcyI6MTYzMjA5MzA5OSwiZXhwIjoxNjMyNTI1MDk5fQ.S_ikVB5TtGl8mobvNEeQsGF6txf3kgtks6lENlXcwaoykOy3vIwtFv-ppIXJH0hbUHBoyQ7cX2fVS5pXi2h-pTm-IbXtWUVSbcN-3YIE3WbFEGHoWeHV2ZP1gQf3dqUjMwyFlnazFUFm-eK6Ui3MDfs28FFs_xCsRa4lu3hkJ4iYGl-EeKnLOJHuSUXy3KIbdPIeBwy3iTeNAXn8ExYKfLRAioE98ojOlQoV9wiRJahjy7JXMl51xHmq1BxxAW2D1pZStOf5UUk9XCSf4tWkrsc0iNktLyLB1-eGOVTpzYVYQw0CcMUnjJU3ZfXKO7-Z77kXSZK6AjKv3bcp18C_VUsb0_LHCLi0f_I4fikL-iSkJ8Hu7iLfSXTGe50pNbHC_2DHywWYcFy8sqMpTwn_Auwr-UzFBNwkPF6UiyzFYN8kN_60riw2uTxN18xF8dLG8xZ5WCkMm3SVmYAO4BgmWNrHvxC0P1kz9UVIYKxjzMy77zEyaeAxOaEa6o4u3K1aOFskFUMgJ7wYOfChnKTvrotQoy44HcOttIfqEZC-yfsFPPcCJ7SOc7IIcKTmmZynQcL_8oYPXtL0W7C7uCYOGjB5L-MqTlr9XbJXaSEPcDmRZO0EkOOGP3X6AUwDS_vo1On2ELbJvW5NRLpj51f8eeA9ezSBnvdueIVs11MqYrs"],
                                             "csrfToken" => ["type" => "string", "decription" => "The csef token", "example" => "ca18fac8ece577195cc.kgqD8LQilep4XbnZND6uMetGKRRH7L2B0UlbH0pbatk.0WDLiPlt99gSDIuWY3TsBp0fHFx3qdDX4DMQVAM5BJTmRLGD3kftjTs_zg"],
                                             "@self" => ["type" => "string", "decription" => "The login event", "example" => "https://taalhuizen-bisc.commonground.nu/api/v2/uc/loginusers/c53f17ea-89d6-4cd3-8a26-e87ca148688d"],
@@ -294,7 +295,6 @@ class EavDocumentationService
                 ]
             ];
 
-        /*
         $docs['tags']['paths']['users/request_password_reset'] =
             [
                 "post" => [
@@ -333,7 +333,7 @@ class EavDocumentationService
                     ]
                 ]
             ];
-        
+
         $docs['tags']['paths']['users/reset_password'] = [];
         // $docs['tags']['paths']['reports/learning_needs'] = [];
         // $docs['tags']['paths']['reports/students'] = [];
