@@ -519,11 +519,11 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@studentIntake'
         cascade: true
-    student_civicIntegration:
-        name: civicIntegration
+    student_civicintegration:
+        name: civicintegration
         type: object
         entity: '@student'
-        object: '@civicIntegration'
+        object: '@civicintegration'
         cascade: true
     student_education:
         name: educations
@@ -882,22 +882,22 @@ App\Entity\Attribute:
         entity: '@education'      
 
     # Civic Integration properties
-    civicIntegration_requirement:
+    civicintegration_requirement:
         name: requirement
         type: string
         enum: ['YES', 'NO', 'CURRENTLY_WORKING_ON_INTEGRATION']
-        entity: '@civicIntegration'
-    civicIntegration_reason: 
+        entity: '@civicintegration'
+    civicintegration_reason: 
         name: reason
         type: string
         enum: ['FINISHED', 'FROM_EU_COUNTRY', 'EXEMPTED_OR_ZROUTE']
-        entity: '@civicIntegration'
+        entity: '@civicintegration'
         requiredIf:
             requirement: NO
-    civicIntegration_finishDate: 
+    civicintegration_finishDate: 
         name: finishDate
         type: datetime
-        entity: '@civicIntegration'
+        entity: '@civicintegration'
         requiredIf:
             requirement: CURRENTLY_WORKING_ON_INTEGRATION
         
