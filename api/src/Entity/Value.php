@@ -119,12 +119,12 @@ class Value
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $objectEntity;
+    private $objectEntity; // parent object
 
     /**
      * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
      */
-    private $objects;
+    private $objects; // sub objects
 
     public function __construct()
     {
@@ -237,12 +237,17 @@ class Value
 
     public function addObject(ObjectEntity $object): self
     {
-        // handle subresources
+        // let add this
         if (!$this->objects->contains($object)) {
-            $this->objects[] = $object;
-            $object->setSubresourceOf($this);
+            $this->objects->add($object);
         }
+        // handle subresources
+        if(!$object->getSubresourceOf()->contains($this)){
+            $object->addSubresourceOf($this);
+        }
+
         //Handle inversed by
+        /* @todo */
         if($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute())->getObjects()->contains($this->getObjectEntity())){
             $object->getValueByAttribute($this->getAttribute())->addObject($this->getObjectEntity());
         }
@@ -254,8 +259,8 @@ class Value
     {
         if ($this->objects->removeElement($object)) {
             // set the owning side to null (unless already changed)
-            if ($object->getSubresourceOf() === $this) {
-                $object->setSubresourceOf(null);
+            if ($object->getSubresourceOf()->contains($this)) {
+                $object->getSubresourceOf()->removeElement($this);
             }
         }
 
@@ -369,10 +374,7 @@ class Value
                         return $objects->first();
                     }
                     if (count($objects) == 0) {
-                        $subObject = New ObjectEntity();
-                        $subObject->setEntity($this->getAttribute()->getObject());
-                        $subObject->addSubresourceOf($this);
-                        $this->addObject($subObject);
+                        return null;
                     }
                     return $objects;
             }
