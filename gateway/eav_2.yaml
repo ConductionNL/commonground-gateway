@@ -433,27 +433,13 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@person'
-    person_parents:
-        name: parents
-        type: object
-        multiple: true
-        entity: '@person'
-        object: '@person'
-        cascade: true
-    person_partners:
-        name: partners
-        type: object
-        multiple: true
-        entity: '@person'
-        object: '@person'
-        cascade: true
     person_children:
         name: children
-        type: object
+        type: integer
+    person_children_birthdays:
+        name: children
+        type: date
         multiple: true
-        entity: '@person'
-        object: '@person'
-        cascade: true
     person_address:
         name: addresses
         type: object
