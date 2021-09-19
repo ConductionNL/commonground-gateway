@@ -53,11 +53,21 @@ class UserController extends AbstractController
      */
     public function apiLoginAction(Request $request, CommonGroundService $commonGroundService)
     {
+        $status = 200;
         $data = json_decode($request->getContent(), true);
         $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password']],['component' => 'uc', 'type' => 'login'], false, false,false, false);
 
+        if(!$user) {
+            $status = 403;
+            $user = [
+                "message" => "Invalid credentials",
+                "type" => "error",
+                "path" => 'users/login',
+                "data" => ["username"=>$data['username']],
+            ];
+        }
 
-        return new Response(json_encode($user), 200, ['Content-type' => 'application/json']);
+        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
 
     }
 
