@@ -512,8 +512,15 @@ class ValidationService
                     $post[$value->getAttribute()->getName()][] = $ubjectUri;
                 }
             }
-            elseif($value->getObjects()->first()){
+            elseif($value->getObjects()->first())
+            {
                 $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+            }
+
+            // Lets check if we actually want to send this to the gateway
+            if(!$value->getAttribute()->getPersistToGateway())
+            {
+                unset($post[$value->getAttribute()->getName()]);
             }
         }
 
@@ -523,7 +530,7 @@ class ValidationService
         if(array_key_exists('@id',$post)){unset($post['@id']);}
         if(array_key_exists('@type',$post)){unset($post['@type']);}
 
-        // var_dump($url);
+        //var_dump($url);
         //var_dump($post);
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(

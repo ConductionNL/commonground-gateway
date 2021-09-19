@@ -241,6 +241,10 @@ class EavDocumentationService
             "description"=>'Administratice reports about this environment'
         ];
 
+        // $docs['tags']['paths']['users/login'] = []
+        // $docs['tags']['paths']['users/reset'] = []
+        // $docs['tags']['paths']['reports/learning_needs'] = []
+        // $docs['tags']['paths']['reports/students'] = []
         return $docs;
     }
 
@@ -289,8 +293,26 @@ class EavDocumentationService
                 "summary"=>"Get a ".$entity->getName()." list",
                 "operationId"=>"get".$this->toCamelCase($entity->getName()),
                 "tags"=>[ucfirst($entity->getName())],
+                "parameters"=>$this->getFilterParameters($entity),
                 "responses"=>[
-                    "200"=>['$ref'=>'#/components/responces/ListResponce'],
+                    "200"=>[
+                        "description"=>"List payload",
+                        "content"=>[
+                            "application/json" => [
+                                "schema"=>[
+                                    "type"=>"object",
+                                    "properties"=>[
+                                        "results" => ["type"=>"array","decription"=>"The results of your query","items"=>['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))]],
+                                        "total" => ["type"=>"integer","decription"=>"The total amount of items that match your current query"],
+                                        "pages"=> ["type"=>"integer","decription"=>"the amount of pages in the dataset based on your current limit"],
+                                        "page"=> ["type"=>"integer","decription"=>"the curent page of your dataset"],
+                                        "limit"=> ["type"=>"integer","decription"=>"the desired items per resultset or page","default" =>25],
+                                        "start"=> ["type"=>"integer","decription"=>"thsetarting position (or offset) of your dataset","default" =>1],
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ],
                     "404"=>['$ref'=>'#/components/responces/ErrorResponce']
                 ],
             ],
@@ -441,8 +463,6 @@ class EavDocumentationService
                 "description"=>$attribute->getDescription(),
             ];
 
-            var_dump($attribute->getName());
-            var_dump($attribute->getCascade());
             // The attribute might be a scheme on its own
             if($attribute->getObject() && $attribute->getCascade()){
                 $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
@@ -450,7 +470,6 @@ class EavDocumentationService
                 //continue;
             }
             elseif($attribute->getObject() && !$attribute->getCascade()){
-                var_dump('non-cascading object');
                 $schema['properties'][$attribute->getName()]['type'] = "string";
                 $schema['properties'][$attribute->getName()]['format'] = "uuid";
                 $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
@@ -518,5 +537,28 @@ class EavDocumentationService
          * turns and deletes all spaces.
          */
         return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('',$dontStrip).']+/', ' ',$string))));
+    }
+
+    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    {
+        $parameters = [];
+
+        foreach($Entity->getAttributes() as $attribute){
+            if($attribute->getType() == 'string' && $attribute->getSearchable()){
+                $parameters[]= [
+                    "name"=>$prefix.$attribute->getName(),
+                    "in"=>"query",
+                    "description"=>"Search ".$prefix.$attribute->getName().' on an exact match of the string',
+                    "required"=>false,
+                    "style"=>"simple"
+                ];
+            }
+            elseif($attribute->getObject()  && $level < 5){
+                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.',  $level+1));
+            }
+            continue;
+        }
+
+        return $parameters;
     }
 }
