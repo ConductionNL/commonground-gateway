@@ -47,10 +47,25 @@ class UserController extends AbstractController
     {
     }
 
+
+    /**
+     * @Route("api/users/login", methods={"POST"})
+     */
+    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService)
+    {
+        $data = json_decode($request->getContent(), true);
+        $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password']],['component' => 'uc', 'type' => 'login'], false, false,false, false);
+
+
+        return new Response(json_encode($user), 200, ['Content-type' => 'application/json']);
+
+    }
+
     /**
      * @Route("users/request_password_reset", methods={"POST"})
+     * @Route("api/users/request_password_reset", methods={"POST"})
      */
-    public function resetAction(Request $request, CommonGroundService $commonGroundService)
+    public function requestResetAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
         $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $data['username']])['hydra:member'];
@@ -62,6 +77,20 @@ class UserController extends AbstractController
         $this->authenticationService->sendTokenMail($user, 'Password reset token');
         return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
     }
+
+
+    /**
+     * @Route("users/reset_password", methods={"POST"})
+     * @Route("api/users/reset_password", methods={"POST"})
+     */
+    public function resetAction(Request $request, CommonGroundService $commonGroundService)
+    {
+        $data = json_decode($request->getContent(), true);
+        $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token'], false, false,false,false);
+
+        return new Response(json_encode($user), 200, ['Content-type' => 'application/json']);
+    }
+
 
     /**
      * @Route("login/digispoof")
