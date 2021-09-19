@@ -241,6 +241,10 @@ class EavDocumentationService
             "description"=>'Administratice reports about this environment'
         ];
 
+        // $docs['tags']['paths']['users/login'] = []
+        // $docs['tags']['paths']['users/reset'] = []
+        // $docs['tags']['paths']['reports/learning_needs'] = []
+        // $docs['tags']['paths']['reports/students'] = []
         return $docs;
     }
 
