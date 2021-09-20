@@ -582,9 +582,10 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    private function toArray(int $level = 1): array
+    public function toArray(int $level = 1): array
     {
         $array = [];
+        $array['id'] = (string) $this->getId();
         foreach($this->getObjectValues() as $value){
             if(!$value->getObjects()->isEmpty() && $level < 5){
                 foreach($value->getObjects() as $object){
