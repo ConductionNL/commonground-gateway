@@ -40,7 +40,7 @@ class ValidationService
      * @return ObjectEntity
      * @throws Exception
      */
-    public function validateEntity (ObjectEntity $objectEntity, array $post): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
@@ -273,6 +273,9 @@ class ValidationService
         // Do validation for attribute depending on its type
         switch ($attribute->getType()) {
             case 'object':
+                //TODO: @Ruben if attribute->getMultiple == true, a lot is already done in validateAttributeMultiple() if type == 'object'
+                // because of how multiple is checked in validateAttribute()! I think most of the code for multiple/cascade here is never reached
+
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
@@ -312,7 +315,7 @@ class ValidationService
                     break;
 
                 }
-                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                if(!$attribute->getCascade() && $attribute->getMultiple()) {
                     $valueObject->getObjects()->clear();
                     foreach($value as $arraycheck) {
                         if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
