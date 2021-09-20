@@ -4,12 +4,22 @@ security:
         authenticationProvider:
             id: App\Security\User\AuthenticationProvider
     firewalls:
+        create_user:
+            anonymous: true
+            pattern: (^/api/users|^/api/users/$|^/api/eav/data/users|^/api/eav/data/users/$)
+            methods: [ POST ]
+        documentation:
+            anonymous: true
+            pattern: (^/api|^/api/$|^/api/docs|^/api/docs/$|^/eav/docs|^/eav/docs/$|^/api/organizations)
+            methods: [ GET ]
+        login:
+            pattern: (^/api/users/login|^/api/users/login$|^/users/login|^/users/login/$|^/login|^/login/$)
+            anonymous: true
         main:
-            anonymous: ~
-            pattern: ^/
             logout:
                 path: app_user_logout
                 target: app_user_redirect
+
             stateless: false
             provider: authenticationProvider
             guard:
@@ -28,4 +38,4 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+#        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }
