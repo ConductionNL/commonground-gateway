@@ -65,6 +65,16 @@ class ValidationService
             }
         }
 
+        // Check post for not allowed properties
+        foreach($post as $key=>$value){
+            if(!$entity->getAttributeByName($key)){
+                $objectEntity->addError($key,'Does not exsist on this property');
+            }
+        }
+
+        // Check optional conditional logic
+        $objectEntity->checkConditionlLogic();
+
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
             $promise = $this->createPromise($objectEntity, $post);
@@ -213,7 +223,7 @@ class ValidationService
                 }
                 else {
                     $subObject = New ObjectEntity();
-                    $subObject->setSubresourceOf($valueObject);
+                    $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
                 }
                 $subObject = $this->validateEntity($subObject, $object);
@@ -255,22 +265,89 @@ class ValidationService
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
-                // Lets see if the object already exists
+                // Lets check for cascading
+                /* todo make switch */
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)){
+                    $objectEntity->addError($attribute->getName(),'Is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                    break;
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    foreach($value as $arraycheck) {
+                        if(!is_string($arraycheck)){
+                            $objectEntity->addError($attribute->getName(),'Contians a value that is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                            break;
+                        }
+                    }
+                }
+
                 if(!$valueObject->getValue()) {
                     $subObject = New ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
-                    $subObject->setSubresourceOf($valueObject);
-                    $valueObject->setValue($subObject);
-                } else {
-                    $subObject = $valueObject->getValue();
+                    $subObject->addSubresourceOf($valueObject);
+                    $valueObject->addObject($subObject);
                 }
 
+                // Lets handle the stuf
+                if(!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)){
+                    // Object ophalen
+                    if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        break;
+                    }
+
+                    // object toeveogen
+                    $valueObject->getObjects()->clear(); // We start with a deafult object
+                    $valueObject->addObject($subObject);
+                    break;
+
+                }
+                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                    $valueObject->getObjects()->clear();
+                    foreach($value as $arraycheck) {
+                        if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
+                        }
+                        else{
+                            // object toeveogen
+                            $valueObject->addObject($subObject);
+                        }
+                    }
+                    break;
+                }
+
+
+
+                /* @todo check if is have multpile objects but multiple is false and throw error */
+                //var_dump($subObject->getName());
                 // TODO: more validation for type object?
-                $subObject = $this->validateEntity($subObject, $value);
+                if(!$attribute->getMultiple()){
+                    // Lets see if the object already exists
+                    if(!$valueObject->getValue()) {
+                        $subObject = $this->validateEntity($subObject, $value);
+                        $valueObject->setValue($subObject);
+                    } else {
+                        $subObject = $valueObject->getValue();
+                        $subObject = $this->validateEntity($subObject, $value);
+                    }
+                    $this->em->persist($subObject);
+                }
+                else{
+                    $subObjects = $valueObject->getObjects();
+                    if($subObjects->isEmpty()){
+                        $subObject = New ObjectEntity();
+                        $subObject->setEntity($attribute->getObject());
+                        $subObject->addSubresourceOf($valueObject);
+                        $subObject = $this->validateEntity($subObject, $value);
+                        $valueObject->addObject($subObject);
+                    }
+                    // Loop trough the subs
+                    foreach($valueObject->getObjects() as $subObject){
+                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
+                    }
+                }
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
-                $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
+                // $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if not we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -377,7 +454,7 @@ class ValidationService
     function createPromise(ObjectEntity $objectEntity, array $post): PromiseInterface
     {
 
-        // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een atrubte zijn gevangen
+        // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
         $query = [];
@@ -398,29 +475,63 @@ class ValidationService
         }
 
         // If we are depend on subresources on another api we need to wait for those to resolve (we might need there id's for this resoure)
-        /* @to the bug of setting the promise on the wrong object blocks this */
-        if(!$objectEntity->getHasPromises()){
-            Utils::settle($objectEntity->getPromises())->wait();
+        /* @todo dit systeem gaat maar 1 level diep */
+        $promises = [];
+        foreach($objectEntity->getSubresources() as $sub){
+            $promises = array_merge($promises,$sub->getPromises());
         }
 
-        // At this point in time we have the object values (becuse this is post vallidation) so we can use those to filter the post
+        if(!empty($promises)){ Utils::settle($promises)->wait();}
+
+
+
+        // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach($objectEntity->getObjectValues() as $value){
+
             // Lets prefend the posting of values that we store localy
-            if(!$value->getAttribute()->getPersistToGateway()){
-                unset($post[$value->getAttribute()->getName()]);
-            }
+            //if(!$value->getAttribute()->getPersistToGateway()){
+            //    unset($post[$value->getAttribute()->getName()]);
+            // }
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
             if($value->getAttribute()->getMultiple() && $value->getObjects()){
+                // Lets whipe the current values (we will use Uri's)
+                $post[$value->getAttribute()->getName()] = [];
+
                 /* @todo this loop in loop is a death sin */
                 foreach ($value->getObjects() as $objectToUri){
-                    $post[$value->getAttribute()->getName()][] =   $objectToUri->getUri();
+                    /* @todo the hacky hack hack */
+                    // If it is a an internal url we want to us an internal id
+                    if($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()){
+                        $postEndpoint = explode($objectToUri->getEntity()->getEndpoint(), $objectToUri->getUri());
+                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().$postEndpoint[1];
+                    }
+                    else{
+                        $ubjectUri = $objectToUri->getUri();
+                    }
+                    $post[$value->getAttribute()->getName()][] = $ubjectUri;
                 }
             }
-            elseif($value->getObjects()->first()){
+            elseif($value->getObjects()->first())
+            {
                 $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
             }
+
+            // Lets check if we actually want to send this to the gateway
+            if(!$value->getAttribute()->getPersistToGateway())
+            {
+                unset($post[$value->getAttribute()->getName()]);
+            }
         }
+
+        // We want to clear some stuf upp dh
+        if(array_key_exists('id',$post)){unset($post['id']);}
+        if(array_key_exists('@context',$post)){unset($post['@context']);}
+        if(array_key_exists('@id',$post)){unset($post['@id']);}
+        if(array_key_exists('@type',$post)){unset($post['@type']);}
+
+        //var_dump($url);
+        //var_dump($post);
 
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
@@ -460,14 +571,15 @@ class ValidationService
 
                 /* @todo wat dachten we van een logging service? */
                 $gatewayResponceLog = New GatewayResponceLog;
-                $gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
+                //$gatewayResponceLog->setObjectEntity($objectEntity);
                 $gatewayResponceLog->setResponce($error->getResponse());
                 $this->em->persist($gatewayResponceLog);
                 $this->em->flush();
 
                 /* @todo lelijke code */
                 if($error->getResponse()){
-                    $error = json_decode($error->getResponse()->getBody()->getContents(), true);
+                    $error = json_decode((string)$error->getResponse()->getBody(), true);
                     if($error && array_key_exists('message', $error)){
                         $error_message = $error['message'];
                     }
@@ -475,7 +587,7 @@ class ValidationService
                         $error_message = $error['hydra:description'];
                     }
                     else {
-                        $error_message =  $error->getResponse()->getBody()->getContents();
+                        $error_message =  (string)$error->getResponse()->getBody();
                     }
                 }
                 else {

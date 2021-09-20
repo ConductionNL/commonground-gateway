@@ -32,7 +32,7 @@ class GatewayResponceLog
     private $entity;
 
     /**
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="responceLogs")
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responceLogs")
      */
     private $objectEntity;
 
@@ -47,7 +47,7 @@ class GatewayResponceLog
     private $reasonPhrase;
 
     /**
-     * @ORM\Column(type="string", length=25)
+     * @ORM\Column(type="string", length=25, nullable=true)
      */
     private $protocol;
 
@@ -62,7 +62,7 @@ class GatewayResponceLog
     private $headers = [];
 
     /**
-     * @ORM\Column(type="blob")
+     * @ORM\Column(type="blob", nullable=true)
      */
     private $content;
 
@@ -277,7 +277,7 @@ class GatewayResponceLog
 //        $this->setProtocol($response->getProtocol());
         $this->setProtocolVersion($response->getProtocolVersion());
         $this->setHeaders($response->getHeaders());
-//        $this->setContent($response->getBody()->getContent());
+        $this->setContent((string)$response->getBody());
 //        $this->setSuccesfull($response->isSuccessful()); // true
 //        $this->setInformation($response->isInformational());
 //        $this->setRedirect($response->isRedirect());

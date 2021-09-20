@@ -21,7 +21,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * A value for a given atribute on an Object Entity.
+ * A value for a given attribute on an Object Entity.
  *
  * @category Entity
  *
@@ -106,20 +106,12 @@ class Value
     private $dateTimeValue;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, fetch="EAGER", mappedBy="subresourceOf", cascade={"all"})
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Collection $objects;
-
-    /**
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $attribute;
+    private Attribute $attribute;
 
     /**
      * @Groups({"write"})
@@ -127,7 +119,12 @@ class Value
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $objectEntity;
+    private $objectEntity; // parent object
+
+    /**
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
+     */
+    private $objects; // sub objects
 
     public function __construct()
     {
@@ -240,9 +237,19 @@ class Value
 
     public function addObject(ObjectEntity $object): self
     {
+        // let add this
         if (!$this->objects->contains($object)) {
-            $this->objects[] = $object;
-            $object->setSubresourceOf($this);
+            $this->objects->add($object);
+        }
+        // handle subresources
+        if(!$object->getSubresourceOf()->contains($this)){
+            $object->addSubresourceOf($this);
+        }
+
+        //Handle inversed by
+        /* @todo */
+        if($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute())->getObjects()->contains($this->getObjectEntity())){
+            $object->getValueByAttribute($this->getAttribute())->addObject($this->getObjectEntity());
         }
 
         return $this;
@@ -252,8 +259,8 @@ class Value
     {
         if ($this->objects->removeElement($object)) {
             // set the owning side to null (unless already changed)
-            if ($object->getSubresourceOf() === $this) {
-                $object->setSubresourceOf(null);
+            if ($object->getSubresourceOf()->contains($this)) {
+                $object->getSubresourceOf()->removeElement($this);
             }
         }
 
@@ -364,7 +371,7 @@ class Value
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
-                        return $objects[0];
+                        return $objects->first();
                     }
                     if (count($objects) == 0) {
                         return null;

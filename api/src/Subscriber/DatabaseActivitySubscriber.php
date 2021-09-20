@@ -61,13 +61,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
 
         // if this subscriber only applies to certain entity types,
         // add some code to check the entity type as early as possible
-        if (!$objectEntity instanceof ObjectEntity ) {
-            return;
-        }
-        if(!$objectEntity->getEntity() ){
-            return;
-        }
-        if(!$objectEntity->getEntity()->getGateway()){
+        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity()|| !$objectEntity->getEntity()->getGateway() || !$objectEntity->getUri() ) {
             return;
         }
 

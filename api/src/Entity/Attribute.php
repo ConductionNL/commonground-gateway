@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible atribute on an Entity
+ * An possible attribute on an Entity
  *
  * @category Entity
  *
@@ -267,6 +267,17 @@ class Attribute
     private $minProperties;
 
     /**
+     * @var string If the attribute targerts an object that object might have an inversedBy field allowing an two way connection
+     *
+     * @example property
+     *
+     * @Assert\Type("string")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $inversedBy;
+
+    /**
      * @var bool Only whether or not this property is required
      *
      * @example false
@@ -276,6 +287,27 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $required;
+
+    /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $requiredIf = [];
+
+
+    /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $forbidenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -435,6 +467,14 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
+
+    /**
+     *
+     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities)
+     *
+     * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
+     */
+    private $cascade = false;
 
     /**
      * @var Datetime The moment this request was created
@@ -706,6 +746,31 @@ class Attribute
         return $this;
     }
 
+    public function getRequiredIf(): ?array
+    {
+        return $this->requiredIf;
+    }
+
+    public function setRequiredIf(?array $requiredIf): self
+    {
+        $this->requiredIf = $requiredIf;
+
+        return $this;
+    }
+
+
+    public function getForbidenIf(): ?array
+    {
+        return $this->forbidenIf;
+    }
+
+    public function setForbidenIf(?array $forbidenIf): self
+    {
+        $this->forbidenIf = $forbidenIf;
+
+        return $this;
+    }
+
     public function getEnum(): ?array
     {
         return $this->enum;
@@ -727,7 +792,7 @@ class Attribute
     {
         $this->type = $type;
 
-        // If the atribute type is changes away from an object we need to drop the object
+        // If the attribute type is changes away from an object we need to drop the object
         if($type != 'object' and $this->object ) {
             unset($this->object);
         }
@@ -1004,4 +1069,31 @@ class Attribute
 
         return $this;
     }
+
+    public function getCascade(): ?bool
+    {
+        return $this->cascade;
+    }
+
+    public function setCascade(?bool $cascade): self
+    {
+        $this->cascade = $cascade;
+
+        return $this;
+    }
+
+    public function getInversedBy(): ?bool
+    {
+        return $this->inversedBy;
+    }
+
+    public function setInversedBy(?bool $inversedBy): self
+    {
+        $this->inversedBy = $inversedBy;
+
+        return $this;
+    }
+
+
+
 }
