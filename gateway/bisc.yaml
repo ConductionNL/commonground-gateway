@@ -382,6 +382,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@person'
+        required: true
         persistToGateway: true
     person_birthday:
         name: birthday
