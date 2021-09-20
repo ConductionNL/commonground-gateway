@@ -390,7 +390,7 @@ App\Entity\Attribute:
         type: string
         entity: '@person'
         maxLength: 255
-        persistToGateway: true
+        persistToGateway: false
     person_country:
         name: country
         type: string
@@ -420,7 +420,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@person'
-        persistToGateway: true
+        persistToGateway: false
     person_contactPreference:
         name: contactPreference
         type: string
@@ -519,6 +519,7 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
+        persistToGateway: true
     student_civicIntegration:
         name: civicIntegration
         type: object
