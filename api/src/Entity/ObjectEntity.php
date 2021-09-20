@@ -560,10 +560,44 @@ class ObjectEntity
                     $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                 }
             }
+            // Oke loop the conditions
+            /*
+            foreach($value->getAttribute()->getForbidenIf() as $conditionProperty=>$conditionValue){
+                // we only have a problem if the current value is full
+                if(!$value->getValue()){continue;}
+                // so lets see if we should have a value
+                if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
+                    $this->addError($value->getAttribute()->getName(), 'Is forbidden becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                }
+            }
+            */
         }
 
 
         return $this;
+    }
+
+    /**
+     * Convienance API for throwing an data object and is children into an array
+     *
+     * @return array the array holding all the data     *
+     */
+    private function toArray(int $level = 1): array
+    {
+        $array = [];
+        foreach($this->getObjectValues() as $value){
+            if(!$value->getObjects()->isEmpty() && $level < 5){
+                foreach($value->getObjects() as $object){
+                    $array[$value->getAttribute()->getName()]  = $object->toArray($level + 1);
+                }
+
+            }
+            else{
+                $array[$value->getAttribute()->getName()] = $value->getValue();
+            }
+        }
+
+        return $array;
     }
 
     /**
