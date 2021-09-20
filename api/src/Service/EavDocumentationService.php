@@ -403,7 +403,7 @@ class EavDocumentationService
 
         $docs['paths']['reports/learning_needs'] =
             [
-                "post" => [
+                "get" => [
                     "description" => "Generates the Learning Needs cvs report",
                     "summary" => "Learning Needs'",
                     "operationId" => "reports_learning_needs",
@@ -419,7 +419,7 @@ class EavDocumentationService
 
         $docs['paths']['reports/students'] =
             [
-                "post" => [
+                "get" => [
                     "description" => "Generates the Students cvs report",
                     "summary" => "Students",
                     "operationId" => "reports_students",
