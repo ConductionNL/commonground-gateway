@@ -108,7 +108,7 @@ class EavDocumentationService
         $docs['openapi'] = '3.0.3';
         $docs['info'] = [
             "title"=>"Commonground Gateway EAV endpoints", /*@todo pull from config */
-            "description"=>"This documentation contains the EAV endpoints on your commonground gateway.",  /*@todo pull from config */
+            "description"=>"This documentation contains the endpoints on your commonground gateway.",  /*@todo pull from config */
             "termsOfService"=>"http://example.com/terms/",  /*@todo pull from config */
             "contact"=> [
                 "name"=> "Gateway Support", /*@todo pull from config */
@@ -468,7 +468,6 @@ class EavDocumentationService
                     ]
                 ]
             ];
-
         return $docs;
     }
 
@@ -517,7 +516,7 @@ class EavDocumentationService
                 "summary"=>"Get a ".$entity->getName()." list",
                 "operationId"=>"get".$this->toCamelCase($entity->getName()),
                 "tags"=>[ucfirst($entity->getName())],
-                "parameters"=>$this->getFilterParameters($entity),
+                "parameters"=>array_merge($this->gePaginationParameters(),$this->getFilterParameters($entity)),
                 "responses"=>[
                     "200"=>[
                         "description"=>"List payload",
@@ -763,6 +762,40 @@ class EavDocumentationService
         return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('',$dontStrip).']+/', ' ',$string))));
     }
 
+
+    public function gePaginationParameters(): array
+    {
+        $parameters = [];
+        //
+        $parameters[]= [
+            "name"=>"start",
+            "in"=>"query",
+            "description"=>"The start number or offset of you list",
+            "required"=>false,
+            "style"=>"simple"
+        ];
+        //
+        $parameters[]= [
+            "name"=>"limit",
+            "in"=>"query",
+            "description"=>"the total items pe list/page that you want returned",
+            "required"=>false,
+            "style"=>"simple",
+        ];
+        //
+        $parameters[]= [
+            "name"=>"page",
+            "in"=>"query",
+            "description"=>"The page that you want returned",
+            "required"=>false,
+            "style"=>"simple"
+        ];
+
+
+
+        return $parameters;
+    }
+
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         $parameters = [];
@@ -777,7 +810,7 @@ class EavDocumentationService
                     "style"=>"simple"
                 ];
             }
-            elseif($attribute->getObject()  && $level < 5){
+            elseif($attribute->getObject()  && $level < 1){
                 $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.',  $level+1));
             }
             continue;

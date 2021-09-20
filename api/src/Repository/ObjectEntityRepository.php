@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\ObjectEntity;
+use App\Entity\Entity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -32,6 +33,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         if(!empty($filters)){
             $filterCheck = $this->getFilterParameters($entity);
+            $query ->leftJoin('o.objectValues', 'value');
+            $level = 0;
 
             foreach($filters as $key=>$value){
                 if(!in_array($key,$filterCheck)){
@@ -39,6 +42,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     continue;
                 }
 
+                // let not dive to deep
+                if (!strpos($key, '.')) {
+                $query->andWhere('value.stringValue = :'.$key)
+                      ->setParameter($key, $value);
+                }
+                else{
+                    if($level == 0){
+                        $query ->leftJoin('value.objectEntity', 'subObject');
+                        $query ->leftJoin('subObject.objectValues', 'subValue');
+                    }
+                    $query->andWhere('subValue.stringValue = :'.$key)
+                        ->setParameter($key, $value);
+                }
+
+                //var_dump($key.':'.$value);
 
                 // lets suport level 1
             }
@@ -52,16 +70,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()
         ;
-
     }
 
 
-    private function getFilterParameters(ObjectEntity $Entity, string $prefix = '', int $level = 1): array
+    private function getAllValues(string $atribute, string $value): array
+    {
+
+    }
+
+    private function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         $filters = [];
 
         foreach($Entity->getAttributes() as $attribute){
-            if($attribute->getType() == 'string'){
+            if($attribute->getType() == 'string' && $attribute->getSearchable()){
                 $filters[]= $prefix.$attribute->getName();
             }
             elseif($attribute->getObject()  && $level < 5){

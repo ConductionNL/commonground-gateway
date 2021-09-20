@@ -246,6 +246,7 @@ App\Entity\Attribute:
         mustBeUnique: true
         entity: '@organization'
         persistToGateway: true
+        searchable: true
     organization_type:
         name: type
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
@@ -254,6 +255,7 @@ App\Entity\Attribute:
         enum: ['taalhuis', 'bisc', 'verwijzer','aanbieder']
         entity: '@organization'
         persistToGateway: true
+        searchable: true
     organization_address:
         name: addresses
         description: Where is the organization located?
@@ -616,6 +618,7 @@ App\Entity\Attribute:
         enum: ['REFERRED', 'ACTIVE', 'COMPLETED']
         defaultValue: 'REFERRED'
         entity: '@studentIntake'
+        searchable: true
     studentIntake_referringOrganization:
         name: referringOrganization
         type: string
