@@ -13,6 +13,9 @@ parameters:
     app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
     app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
 
+    env(REDIS_HOST): redis
+    env(REDIS_PORT): 6379
+
     # Application Parameters
     env(APP_ENV): "prod"
     env(APP_DEBUG):

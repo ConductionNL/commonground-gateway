@@ -160,7 +160,7 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity=GatewayResponceLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
      */
     private $responceLogs;
 
