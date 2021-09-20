@@ -1,4 +1,4 @@
-{{- with .Values.fixtures }}
+{{- if .Values.fixtures }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,5 +6,8 @@ metadata:
   labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 data:
-{{ . | toYaml | indent 2 }}
+  {{- range $file, $values := .Values.fixtures }}
+  {{ $file }}: |
+{{ $values | toYaml | indent 6 }}
+  {{- end }}
 {{- end }}

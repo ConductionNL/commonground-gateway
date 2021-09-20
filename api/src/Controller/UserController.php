@@ -117,6 +117,16 @@ class UserController extends AbstractController
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
+        if(!$data || !array_key_exists('jwtToken', $data)){
+            $status = 403;
+            $user = [
+                "message" => "Invalid token",
+                "type" => "error",
+                "path" => 'users/logout',
+                "data" => $data,
+            ];
+            return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        }
         $user = $commonGroundService->createResource(['jwtToken' => $data['jwtToken']],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
 
         if(!$user) {
@@ -144,8 +154,8 @@ class UserController extends AbstractController
             $user = [
                 "message" => "Invalid token",
                 "type" => "error",
-                "path" => 'users/login',
-                "data" => [],
+                "path" => 'users/me',
+                "data" => $data,
             ];
             return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
         }
