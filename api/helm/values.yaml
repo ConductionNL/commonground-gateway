@@ -61,7 +61,8 @@ redis:
   enabled: true
   architecture: standalone
   redisPort: 6379
-  usePassword: false
+  auth:
+    enabled: false
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
