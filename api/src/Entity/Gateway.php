@@ -10,6 +10,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
@@ -352,6 +354,33 @@ class Gateway
      */
     private ?string $documentation = null;
 
+    /**
+     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="gateway", orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $responceLogs;
+
+    /**
+     * Setting logging to true will couse ALL responces to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $logging;
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $oas = [];
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $paths = [];
+
+    public function __construct()
+    {
+        $this->responceLogs = new ArrayCollection();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -504,6 +533,72 @@ class Gateway
     public function setDocumentation(?string $documentation): self
     {
         $this->documentation = $documentation;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GatewayResponceLog[]
+     */
+    public function getResponceLogs(): Collection
+    {
+        return $this->responceLogs;
+    }
+
+    public function addResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if (!$this->responceLogs->contains($responceLog)) {
+            $this->responceLogs[] = $responceLog;
+            $responceLog->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if ($this->responceLogs->removeElement($responceLog)) {
+            // set the owning side to null (unless already changed)
+            if ($responceLog->getGateway() === $this) {
+                $responceLog->setGateway(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getLogging(): ?bool
+    {
+        return $this->logging;
+    }
+
+    public function setLogging(?bool $logging): self
+    {
+        $this->logging = $logging;
+
+        return $this;
+    }
+
+    public function getOas(): ?array
+    {
+        return $this->oas;
+    }
+
+    public function setOas(?array $oas): self
+    {
+        $this->oas = $oas;
+
+        return $this;
+    }
+
+    public function getPaths(): ?array
+    {
+        return $this->paths;
+    }
+
+    public function setPaths(?array $paths): self
+    {
+        $this->paths = $paths;
 
         return $this;
     }

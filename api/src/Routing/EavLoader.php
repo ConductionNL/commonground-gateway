@@ -59,8 +59,10 @@ class EavLoader extends Loader
         $routes = [];
         try{
             $entities = $this->entityManager->getRepository('App:Entity')->findAll();
-        } catch(\Doctrine\DBAL\Exception\ConnectionException|\Doctrine\DBAL\Exception\TableNotFoundException $e) {
+        } catch(\Doctrine\DBAL\Exception\ConnectionException|\Doctrine\DBAL\Exception\TableNotFoundException|\Doctrine\DBAL\Exception\InvalidFieldNameException $e) {
             return [];
+        } catch(\Exception $e){
+            throw new \Exception(get_class($e));
         }
 
         foreach($entities as $entity)
