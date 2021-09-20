@@ -277,6 +277,7 @@ App\Entity\Attribute:
         description: The email address of the organization.
         type: object
         multiple: true
+        mustBeUnique: true
         entity: '@organization'
         object: '@email'
         persistToGateway: true
@@ -295,6 +296,7 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         format: email
+        mustBeUnique: true
         entity: '@email'
         persistToGateway: true
     
