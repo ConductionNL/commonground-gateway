@@ -429,6 +429,11 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
                 }
                 break;
+            case 'telephone':
+                if (!is_string($value) || (preg_match('/^\+?[1-9]\d{1,14}$/', $value) !== 1)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an telephone format, ' . $value . ' is not a valid phone number that conforms to the E.164 standard.');
+                }
+                break;
             case 'uuid':
                 if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
                     $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
