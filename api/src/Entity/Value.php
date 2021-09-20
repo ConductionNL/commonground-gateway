@@ -21,7 +21,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * A value for a given atribute on an Object Entity.
+ * A value for a given attribute on an Object Entity.
  *
  * @category Entity
  *
@@ -106,20 +106,12 @@ class Value
     private $dateTimeValue;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, fetch="EAGER", mappedBy="subresourceOf", cascade={"all"})
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Collection $objects;
-
-    /**
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $attribute;
+    private Attribute $attribute;
 
     /**
      * @Groups({"write"})
@@ -127,7 +119,12 @@ class Value
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
-    private $objectEntity;
+    private $objectEntity; // parent object
+
+    /**
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
+     */
+    private $objects; // sub objects
 
     public function __construct()
     {
@@ -240,9 +237,19 @@ class Value
 
     public function addObject(ObjectEntity $object): self
     {
+        // let add this
         if (!$this->objects->contains($object)) {
-            $this->objects[] = $object;
-            $object->setSubresourceOf($this);
+            $this->objects->add($object);
+        }
+        // handle subresources
+        if(!$object->getSubresourceOf()->contains($this)){
+            $object->addSubresourceOf($this);
+        }
+
+        //Handle inversed by
+        /* @todo */
+        if($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute())->getObjects()->contains($this->getObjectEntity())){
+            $object->getValueByAttribute($this->getAttribute())->addObject($this->getObjectEntity());
         }
 
         return $this;
@@ -252,8 +259,8 @@ class Value
     {
         if ($this->objects->removeElement($object)) {
             // set the owning side to null (unless already changed)
-            if ($object->getSubresourceOf() === $this) {
-                $object->setSubresourceOf(null);
+            if ($object->getSubresourceOf()->contains($this)) {
+                $object->getSubresourceOf()->removeElement($this);
             }
         }
 
@@ -290,9 +297,8 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
                 return $this->setArrayValue($value);
-                //TODO something about array of datetime's, see how we do it with type object
             }
             switch ($this->getAttribute()->getType()) {
                 case 'string':
@@ -300,10 +306,22 @@ class Value
                 case 'integer':
                     return $this->setIntegerValue($value);
                 case 'boolean':
+                    if (is_string($value)) {
+                        // This is used for defaultValue, this is always a string type instead of a boolean
+                        $value = $value === 'true';
+                    }
                     return $this->setBooleanValue($value);
                 case 'number':
                     return $this->setNumberValue($value);
                 case 'datetime':
+                    // if multiple is true value should be an array
+                    if ($this->getAttribute()->getMultiple()) {
+                        foreach ($value as &$datetime) {
+                            $datetime = new DateTime($datetime);
+                        }
+                        return $this->setArrayValue($value);
+                    }
+                    // else $value = DateTime (string)
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'object':
                     if ($value == null) {
@@ -328,9 +346,8 @@ class Value
     public function getValue()
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
                 return $this->getArrayValue();
-                //TODO something about array of datetime's, see how we do it with type object
             }
             switch ($this->getAttribute()->getType()) {
                 case 'string':
@@ -342,12 +359,19 @@ class Value
                 case 'number':
                     return $this->getNumberValue();
                 case 'datetime':
+                    if ($this->getAttribute()->getMultiple()) {
+                        $datetimeArray = $this->getArrayValue();
+                        foreach ($datetimeArray as &$datetime) {
+                            $datetime = $datetime->format('Y-m-d\TH:i:sP');
+                        }
+                        return $datetimeArray;
+                    }
                     $datetime = $this->getDateTimeValue();
-                    return $datetime->format('Y-m-d\TH:i:sP');;
+                    return $datetime->format('Y-m-d\TH:i:sP');
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
-                        return $objects[0];
+                        return $objects->first();
                     }
                     if (count($objects) == 0) {
                         return null;

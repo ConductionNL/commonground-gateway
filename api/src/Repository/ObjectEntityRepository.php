@@ -26,9 +26,26 @@ class ObjectEntityRepository extends ServiceEntityRepository
    // typecast deze shizle
     public function findByEntity($entity, $filters = [],  $offset = 0, $limit = 25 )
     {
-        return $this->createQueryBuilder('o')
+        $query = $this->createQueryBuilder('o')
             ->andWhere('o.entity = :entity')
-            ->setParameter('entity', $entity)
+            ->setParameter('entity', $entity);
+
+        if(!empty($filters)){
+            $filterCheck = $this->getFilterParameters($entity);
+
+            foreach($filters as $key=>$value){
+                if(!in_array($key,$filterCheck)){
+                    unset($filters[$key]);
+                    continue;
+                }
+
+
+                // lets suport level 1
+            }
+        }
+
+
+        return $query
             // filters toevoegen
             ->setFirstResult( $offset )
             ->setMaxResults( $limit )
@@ -38,7 +55,25 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     }
 
-    // Filter functie schrijven, checken op betaande atributen, zelf looping     
+
+    private function getFilterParameters(ObjectEntity $Entity, string $prefix = '', int $level = 1): array
+    {
+        $filters = [];
+
+        foreach($Entity->getAttributes() as $attribute){
+            if($attribute->getType() == 'string'){
+                $filters[]= $prefix.$attribute->getName();
+            }
+            elseif($attribute->getObject()  && $level < 5){
+                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.',  $level+1));
+            }
+            continue;
+        }
+
+        return $filters;
+    }
+
+    // Filter functie schrijven, checken op betaande atributen, zelf looping
     // voorbeeld filter student.generaldDesription.landoforigen=NL
     //                  entity.atribute.propert['name'=landoforigen]
     //                  (objectEntity.value.objectEntity.value.name=landoforigen and

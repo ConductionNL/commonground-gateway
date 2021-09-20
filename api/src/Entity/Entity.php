@@ -10,7 +10,9 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use EasyRdf\Literal\Boolean;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -78,18 +80,6 @@ class Entity
     private $endpoint;
 
     /**
-     * @var string The type of this Entity
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $type;
-
-    /**
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
@@ -113,6 +103,13 @@ class Entity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $description;
+
+    /**
+     * wheter or not the properties of the original object are automaticly include
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $extend = false;
 
     /**
      * @Groups({"read","write"})
@@ -209,18 +206,6 @@ class Entity
         return $this;
     }
 
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
     public function getName(): ?string
     {
         return $this->name;
@@ -249,6 +234,28 @@ class Entity
 
         return $this;
     }
+
+
+    /**
+     * Get an value based on a attribut
+     *
+     * @param  string $name the name of the attribute that you are searching for
+     * @return Attribute|Boolean Iether the found attribute or false if no attribute could be found
+     *
+     */
+    public function getAttributeByName(string $name)
+    {
+        // Check if value with this attribute exists for this ObjectEntity
+        $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
+        $attributes = $this->getAttributes()->matching($criteria);
+
+        if($attributes->isEmpty()){
+            return false;
+        }
+
+        return $attributes->first();
+    }
+
 
     /**
      * @return Collection|Attribute[]
@@ -414,6 +421,18 @@ class Entity
                 $responceLog->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getExtend(): ?bool
+    {
+        return $this->extend;
+    }
+
+    public function setExtend(?bool $extend): self
+    {
+        $this->extend = $extend;
 
         return $this;
     }
