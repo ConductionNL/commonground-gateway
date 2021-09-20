@@ -68,7 +68,7 @@ class ValidationService
         // Check post for not allowed properties
         foreach($post as $key=>$value){
             if(!$entity->getAttributeByName($key)){
-                $objectEntity->addError($key,'Does not exsist on this property');
+                $objectEntity->addError($key,'Does not exist on this property');
             }
         }
 
@@ -219,7 +219,18 @@ class ValidationService
                     break;
                 }
                 if(array_key_exists('id', $object)) {
-                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->get($object['id']);
+                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
+                        return $item->getId() == $object['id'];
+                    });
+                    if (empty($subObject)) {
+                        $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
+                        break;
+                    } elseif (count($subObject) > 1) {
+                        $objectEntity->addError($attribute->getName(),'More than 1 object found with this id: '.$object['id']);
+                        break;
+                    }
+                    unset($object['id']);
+                    $subObject = $subObject->first();
                 }
                 else {
                     $subObject = New ObjectEntity();
