@@ -128,21 +128,21 @@ class UserController extends AbstractController
      */
     public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $data = json_decode($request->getContent(), true);
-        if(!$data || !array_key_exists('jwtToken', $data)){
+        $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+        if(!$token){
             $status = 403;
             $user = [
                 "message" => "Invalid token",
                 "type" => "error",
                 "path" => 'users/me',
-                "data" => $data,
+                "data" => $token,
             ];
             return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
         }
 
 
         // split the jwt
-        $tokenParts = explode('.', $data['jwtToken']);
+        $tokenParts = explode('.', $token);
         $header = base64_decode($tokenParts[0]);
         $payload = base64_decode($tokenParts[1]);
         $signature_provided = $tokenParts[2];
@@ -153,7 +153,7 @@ class UserController extends AbstractController
                 "message" => "Invalid token",
                 "type" => "error",
                 "path" => 'users/login',
-                "data" => ["jwtToken"=>$data['jwtToken']],
+                "data" => ["jwtToken"=>$token],
             ];
         }
         else{
