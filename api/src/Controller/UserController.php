@@ -98,7 +98,38 @@ class UserController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token'], false, false,false,false);
 
-        return new Response(json_encode($user), 200, ['Content-type' => 'application/json']);
+        if(!$user) {
+            $status = 403;
+            $user = [
+                "message" => "Invalid token",
+                "type" => "error",
+                "path" => 'users/login',
+                "data" => ["username"=>$data['username']],
+            ];
+        }
+
+        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * @Route("api/users/logout", methods={"POST"})
+     */
+    public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
+    {
+        $data = json_decode($request->getContent(), true);
+        $user = $commonGroundService->createResource(['jwtToken' => $data['jwtToken']],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
+
+        if(!$user) {
+            $status = 403;
+            $user = [
+                "message" => "Invalid token",
+                "type" => "error",
+                "path" => 'users/login',
+                "data" => ["username"=>$data['username']],
+            ];
+        }
+
+        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
     }
 
 

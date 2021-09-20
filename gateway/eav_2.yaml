@@ -123,8 +123,8 @@ App\Entity\Entity:
 
     # Civic Integration  object
     civicIntegration:
-        name: civic_integration
-        description: Indit object slaan we informatie op ten opzichte van de inburgering
+        name: civicIntegration
+        description: In dit object slaan we informatie op ten opzichten van de inburgering
             
     # Education object
     education:
@@ -277,6 +277,7 @@ App\Entity\Attribute:
         description: The email address of the organization.
         type: object
         multiple: true
+        mustBeUnique: true
         entity: '@organization'
         object: '@email'
         persistToGateway: true
@@ -295,6 +296,7 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         format: email
+        mustBeUnique: true
         entity: '@email'
         persistToGateway: true
     
@@ -385,9 +387,9 @@ App\Entity\Attribute:
         persistToGateway: true
     person_birthplace:
         name: birthplace
-        type: object
+        type: string
         entity: '@person'
-        object: '@address'
+        maxLength: 255
         persistToGateway: true
     person_country:
         name: country
@@ -446,7 +448,7 @@ App\Entity\Attribute:
         type: integer
         entity: '@person'
     person_childrenbirthdays:
-        name: children
+        name: childrenbirthdays
         type: date
         multiple: true
         entity: '@person'
@@ -467,6 +469,7 @@ App\Entity\Attribute:
     person_email:
         name: emails
         type: object
+        mustBeUnique: true
         multiple: true
         entity: '@person'
         object: '@email'
@@ -516,6 +519,13 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
+    student_civicIntegration:
+        name: civicIntegration
+        type: object
+        entity: '@student'
+        object: '@civicIntegration'
+        required: false
+        cascade: true
     student_languageHouse:
         name: languageHouse
         type: object
@@ -528,12 +538,6 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@studentIntake'
-        cascade: true
-    student_civicIntegration:
-        name: civicIntegration
-        type: object
-        entity: '@student'
-        object: '@civicIntegration'
         cascade: true
     student_education:
         name: educations
@@ -556,7 +560,8 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@learningNeed'
         cascade: true
-        
+
+      # Employee Intake properties   
     employeeIntake_targetGroupPreferences:
         name: targetGroupPreferences
         type: string
@@ -835,14 +840,14 @@ App\Entity\Attribute:
         requiredIf:
             doesCurrentlyFollowCourse: YES
     education_teacherType:
-        name: teacher_type
+        name: teachertype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
         requiredIf:
             type: COURSE
     education_courseType:
-        name: course_type
+        name: coursetype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
