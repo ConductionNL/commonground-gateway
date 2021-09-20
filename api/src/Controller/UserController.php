@@ -134,6 +134,52 @@ class UserController extends AbstractController
 
 
     /**
+     * @Route("api/users/me", methods={"get"})
+     */
+    public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
+    {
+        $data = json_decode($request->getContent(), true);
+        if(!$data || !array_key_exists('jwtToken', $data)){
+            $status = 403;
+            $user = [
+                "message" => "Invalid token",
+                "type" => "error",
+                "path" => 'users/login',
+                "data" => [],
+            ];
+            return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        }
+
+
+        // split the jwt
+        $tokenParts = explode('.', $data['jwtToken']);
+        $header = base64_decode($tokenParts[0]);
+        $payload = base64_decode($tokenParts[1]);
+        $signature_provided = $tokenParts[2];
+
+        if(!$payload = json_decode($payload, true)){
+            $status = 403;
+            $user = [
+                "message" => "Invalid token",
+                "type" => "error",
+                "path" => 'users/login',
+                "data" => ["jwtToken"=>$data['jwtToken']],
+            ];
+        }
+        else{
+            /* @todo hier willen we de user inclusief de organisatie terug geven vanuit de gateway */
+            $status = 200;
+            //var_dump($payload);
+            //die;
+            $user = $payload; //$commonGroundService->getResource(['component' => 'uc', 'type' => 'user','id'=>$payload['userId']]);
+        }
+
+
+        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+    }
+
+
+    /**
      * @Route("login/digispoof")
      */
     public function DigispoofAction(Request $request, CommonGroundService $commonGroundService)

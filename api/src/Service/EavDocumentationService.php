@@ -360,6 +360,42 @@ class EavDocumentationService
                     ]
                 ]
             ];
+
+        $docs['paths']['users/me'] =
+            [
+                "get" => [
+                    "description" => "Requests the current user data based on the user token provided at login",
+                    "summary" => "Current User",
+                    "operationId" => "get_me",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Create a reset token",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "jwtToken" => ["type" => "string", "decription" => "The jwt token for wich to get the user"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Request handled ",
+                            "content" => [
+                                "application/json" => [
+                                    "schema" => [
+                                        '$ref'=>'#/components/schemas/Users'
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
         $docs['paths']['users/reset_password'] =
             [
                 "post" => [
