@@ -241,14 +241,13 @@ class EavDocumentationService
             "description" => 'Administratice reports about this environment'
         ];
 
-        /*
-        $docs['tags']['paths']['users/login'] =
+        $docs['paths']['/users/login'] =
             [
                 "post" => [
                     "description" => "Test user credentials and return a JWT token",
                     "summary" => "Login",
                     "operationId" => "login",
-                    "tags" => "Users",
+                    "tags" => ["Users"],
                     "requestBody" => [
                         "description" => "Create a login request",
                         "content" => [
@@ -264,7 +263,7 @@ class EavDocumentationService
                         ]
                     ],
                     "responses" => [
-                        "201" => [
+                        "200" => [
                             "description" => "Login succefull",
                             "content" => [
                                 "application/json" => [
@@ -290,20 +289,49 @@ class EavDocumentationService
                                 ]
                             ]
                         ],
-                        "404" => ['$ref' => '#/components/responces/ErrorResponce']
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
                     ]
                 ]
             ];
 
-        $docs['tags']['paths']['users/request_password_reset'] =
+        $docs['paths']['/users/logout'] =
             [
                 "post" => [
-                    "description" => "Requests a reset token to be sent to the user by email",
-                    "summary" => "Reset Request",
-                    "operationId" => "reset_request",
-                    "tags" => "Users",
+                    "description" => "Logout the user by destroying the JWT token server side",
+                    "summary" => "Logout",
+                    "operationId" => "Logout",
+                    "tags" => ["Users"],
                     "requestBody" => [
-                        "description" => "Create a login request",
+                        "description" => "Create a logout request",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "jwtToken" => ["type" => "string", "decription" => "The jwtToken to destroy"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "202" => [
+                            "description" => "Logout succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['users/request_password_reset'] =
+            [
+                "post" => [
+                    "description" => "Requests a reset token to be sent to the user by email, from a security point of view this endpoint wil always return a 200 responce to prevent fishing for user names",
+                    "summary" => "Request token",
+                    "operationId" => "request_token",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Create a reset token",
                         "content" => [
                             "application/json" => [
                                 "schema" => [
@@ -316,8 +344,47 @@ class EavDocumentationService
                         ]
                     ],
                     "responses" => [
-                        "201" => [
-                            "description" => "Login succefull",
+                        "200" => [
+                            "description" => "Request handled ",
+                            "content" => [
+                                "application/json" => [
+                                    "schema" => [
+                                        "type" => "object",
+                                        "properties" => [
+                                            "username" => ["type" => "string", "decription" => "The username"],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+        $docs['paths']['users/reset_password'] =
+            [
+                "post" => [
+                    "description" => "Resets the users password trough suplieng a new password and securty token, as a security step the user name is also required",
+                    "summary" => "Reset password",
+                    "operationId" => "reset_password",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Reset the user password",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "username" => ["type" => "string", "decription" => "The username"],
+                                        "password" => ["type" => "string", "decription" => "The password"],
+                                        "token" => ["type" => "string", "decription" => "The password reset token"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Reset succefull",
                             "content" => [
                                 "application/json" => [
                                     "schema" => [
@@ -329,15 +396,43 @@ class EavDocumentationService
                                 ]
                             ]
                         ],
-                        "404" => ['$ref' => '#/components/responces/ErrorResponce']
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
                     ]
                 ]
             ];
 
-        $docs['tags']['paths']['users/reset_password'] = [];
-        // $docs['tags']['paths']['reports/learning_needs'] = [];
-        // $docs['tags']['paths']['reports/students'] = [];
-        */
+        $docs['paths']['reports/learning_needs'] =
+            [
+                "get" => [
+                    "description" => "Generates the Learning Needs cvs report",
+                    "summary" => "Learning Needs'",
+                    "operationId" => "reports_learning_needs",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['reports/students'] =
+            [
+                "get" => [
+                    "description" => "Generates the Students cvs report",
+                    "summary" => "Students",
+                    "operationId" => "reports_students",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
         return $docs;
     }
 
