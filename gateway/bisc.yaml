@@ -314,6 +314,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         required: true
+        format: telephone
         entity: '@telephone'
         persistToGateway: true
         

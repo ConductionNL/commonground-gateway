@@ -134,8 +134,8 @@ class UserController extends AbstractController
             $user = [
                 "message" => "Invalid token",
                 "type" => "error",
-                "path" => 'users/login',
-                "data" => [],
+                "path" => 'users/me',
+                "data" => $data,
             ];
             return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
         }
