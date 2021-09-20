@@ -122,7 +122,7 @@ class EavDocumentationService
           "version"=>"1.0.1"
         ];
         $docs['servers']=[
-            ["url"=>'/','description'=>'Gateway server']
+            ["url"=>'/api','description'=>'Gateway server']
         ];
         $docs['tags'] = [];
 
@@ -237,14 +237,202 @@ class EavDocumentationService
         //$docs['paths']['reports/{type}'] =
 
         $docs['tags'][] = [
-            "name"=>'Reports',
-            "description"=>'Administratice reports about this environment'
+            "name" => 'Reports',
+            "description" => 'Administratice reports about this environment'
         ];
 
-        // $docs['tags']['paths']['users/login'] = []
-        // $docs['tags']['paths']['users/reset'] = []
-        // $docs['tags']['paths']['reports/learning_needs'] = []
-        // $docs['tags']['paths']['reports/students'] = []
+        $docs['paths']['/users/login'] =
+            [
+                "post" => [
+                    "description" => "Test user credentials and return a JWT token",
+                    "summary" => "Login",
+                    "operationId" => "login",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Create a login request",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "username" => ["type" => "string", "decription" => "The username"],
+                                        "password" => ["type" => "string", "decription" => "The password"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Login succefull",
+                            "content" => [
+                                "application/json" => [
+                                    "schema" => [
+                                        "type" => "object",
+                                        "properties" => [
+                                            "@context" => ["type" => "string", "decription" => "The internal datataype of the object", "example" => "/contexts/User"],
+                                            "@id" => ["type" => "string", "decription" => "The url of the obbject", "example" => "https://taalhuizen-bisc.commonground.nu/api/v2/uc/loginusers/c53f17ea-89d6-4cd3-8a26-e87ca148688d"],
+                                            "@type" => ["type" => "string", "decription" => "The linked data type of the object", "example" => "User"],
+                                            "id" => ["type" => "string", "decription" => "The id of this user", "example" => "c53f17ea-89d6-4cd3-8a26-e87ca148688d"],
+                                            "organization" => ["type" => "string", "decription" => "The organizations that this user belongs to", "example" => "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/3a885f21-6884-4128-8182-56aa8dd57a4f"],
+                                            "username" => ["type" => "string", "decription" => "The username", "example" => "test@bisc.nl"],
+                                            "locale" => ["type" => "string", "decription" => "The users langouge", "example" => "nl"],
+                                            "person" => ["type" => "string", "decription" => "The url of the person object for the user"],
+                                            "roles" => ["type" => "array", "decription" => "The users roles"],
+                                            "userGroups" => ["type" => "array", "decription" => "The users sercurity groups"],
+                                            "jwtToken" => ["type" => "string", "decription" => "The jwtToken for authorisation", "example" => "eyJhbGciOiJSUzUxMiJ9.eyJ1c2VySWQiOiJjNTNmMTdlYS04OWQ2LTRjZDMtOGEyNi1lODdjYTE0ODY4OGQiLCJyb2xlcyI6WyJ1c2VyIl0sInNlc3Npb24iOiIxNzQ5ZjdhYy0yNGI5LTQxZjAtOTBiYy04MjJmZjEyZjUxY2QiLCJjc3JmVG9rZW4iOiJjYTE4ZmFjOGVjZTU3NzE5NWNjLmtncUQ4TFFpbGVwNFhiblpORDZ1TWV0R0tSUkg3TDJCMFVsYkgwcGJhdGsuMFdETGlQbHQ5OWdTREl1V1kzVHNCcDBmSEZ4M3FkRFg0RE1RVkFNNUJKVG1STEdEM2tmdGpUc196ZyIsImlzcyI6Imh0dHBzOlwvXC90YWFsaHVpemVuLWJpc2MuY29tbW9uZ3JvdW5kLm51XC9hcGlcL3YyXC91YyIsImlhcyI6MTYzMjA5MzA5OSwiZXhwIjoxNjMyNTI1MDk5fQ.S_ikVB5TtGl8mobvNEeQsGF6txf3kgtks6lENlXcwaoykOy3vIwtFv-ppIXJH0hbUHBoyQ7cX2fVS5pXi2h-pTm-IbXtWUVSbcN-3YIE3WbFEGHoWeHV2ZP1gQf3dqUjMwyFlnazFUFm-eK6Ui3MDfs28FFs_xCsRa4lu3hkJ4iYGl-EeKnLOJHuSUXy3KIbdPIeBwy3iTeNAXn8ExYKfLRAioE98ojOlQoV9wiRJahjy7JXMl51xHmq1BxxAW2D1pZStOf5UUk9XCSf4tWkrsc0iNktLyLB1-eGOVTpzYVYQw0CcMUnjJU3ZfXKO7-Z77kXSZK6AjKv3bcp18C_VUsb0_LHCLi0f_I4fikL-iSkJ8Hu7iLfSXTGe50pNbHC_2DHywWYcFy8sqMpTwn_Auwr-UzFBNwkPF6UiyzFYN8kN_60riw2uTxN18xF8dLG8xZ5WCkMm3SVmYAO4BgmWNrHvxC0P1kz9UVIYKxjzMy77zEyaeAxOaEa6o4u3K1aOFskFUMgJ7wYOfChnKTvrotQoy44HcOttIfqEZC-yfsFPPcCJ7SOc7IIcKTmmZynQcL_8oYPXtL0W7C7uCYOGjB5L-MqTlr9XbJXaSEPcDmRZO0EkOOGP3X6AUwDS_vo1On2ELbJvW5NRLpj51f8eeA9ezSBnvdueIVs11MqYrs"],
+                                            "csrfToken" => ["type" => "string", "decription" => "The csef token", "example" => "ca18fac8ece577195cc.kgqD8LQilep4XbnZND6uMetGKRRH7L2B0UlbH0pbatk.0WDLiPlt99gSDIuWY3TsBp0fHFx3qdDX4DMQVAM5BJTmRLGD3kftjTs_zg"],
+                                            "@self" => ["type" => "string", "decription" => "The login event", "example" => "https://taalhuizen-bisc.commonground.nu/api/v2/uc/loginusers/c53f17ea-89d6-4cd3-8a26-e87ca148688d"],
+                                            "name" => ["type" => "string", "decription" => "The user id", "example" => "c53f17ea-89d6-4cd3-8a26-e87ca148688d"],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['/users/logout'] =
+            [
+                "post" => [
+                    "description" => "Logout the user by destroying the JWT token server side",
+                    "summary" => "Logout",
+                    "operationId" => "Logout",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Create a logout request",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "jwtToken" => ["type" => "string", "decription" => "The jwtToken to destroy"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "202" => [
+                            "description" => "Logout succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['users/request_password_reset'] =
+            [
+                "post" => [
+                    "description" => "Requests a reset token to be sent to the user by email, from a security point of view this endpoint wil always return a 200 responce to prevent fishing for user names",
+                    "summary" => "Request token",
+                    "operationId" => "request_token",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Create a reset token",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "username" => ["type" => "string", "decription" => "The username"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Request handled ",
+                            "content" => [
+                                "application/json" => [
+                                    "schema" => [
+                                        "type" => "object",
+                                        "properties" => [
+                                            "username" => ["type" => "string", "decription" => "The username"],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+        $docs['paths']['users/reset_password'] =
+            [
+                "post" => [
+                    "description" => "Resets the users password trough suplieng a new password and securty token, as a security step the user name is also required",
+                    "summary" => "Reset password",
+                    "operationId" => "reset_password",
+                    "tags" => ["Users"],
+                    "requestBody" => [
+                        "description" => "Reset the user password",
+                        "content" => [
+                            "application/json" => [
+                                "schema" => [
+                                    "type" => "object",
+                                    "properties" => [
+                                        "username" => ["type" => "string", "decription" => "The username"],
+                                        "password" => ["type" => "string", "decription" => "The password"],
+                                        "token" => ["type" => "string", "decription" => "The password reset token"],
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Reset succefull",
+                            "content" => [
+                                "application/json" => [
+                                    "schema" => [
+                                        "type" => "object",
+                                        "properties" => [
+                                            "username" => ["type" => "string", "decription" => "The username"],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['reports/learning_needs'] =
+            [
+                "get" => [
+                    "description" => "Generates the Learning Needs cvs report",
+                    "summary" => "Learning Needs'",
+                    "operationId" => "reports_learning_needs",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['reports/students'] =
+            [
+                "get" => [
+                    "description" => "Generates the Students cvs report",
+                    "summary" => "Students",
+                    "operationId" => "reports_students",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
         return $docs;
     }
 
