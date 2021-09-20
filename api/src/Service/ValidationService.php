@@ -66,8 +66,8 @@ class ValidationService
         }
 
         // Check post for not allowed properties
-        foreach($post as $key=>$value){
-            if(!$entity->getAttributeByName($key)){
+        foreach($post as $key=>$value) {
+            if(!$entity->getAttributeByName($key) && $key != 'id') {
                 $objectEntity->addError($key,'Does not exist on this property');
             }
         }
@@ -229,7 +229,6 @@ class ValidationService
                         $objectEntity->addError($attribute->getName(),'More than 1 object found with this id: '.$object['id']);
                         break;
                     }
-                    unset($object['id']);
                     $subObject = $subObject->first();
                 }
                 else {
