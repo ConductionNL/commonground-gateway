@@ -401,8 +401,37 @@ class EavDocumentationService
                 ]
             ];
 
-        // $docs['tags']['paths']['reports/learning_needs'] = [];
-        // $docs['tags']['paths']['reports/students'] = [];
+        $docs['paths']['reports/learning_needs'] =
+            [
+                "post" => [
+                    "description" => "Generates the Learning Needs cvs report",
+                    "summary" => "Learning Needs'",
+                    "operationId" => "reports_learning_needs",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
+
+        $docs['paths']['reports/students'] =
+            [
+                "post" => [
+                    "description" => "Generates the Students cvs report",
+                    "summary" => "Students",
+                    "operationId" => "reports_students",
+                    "tags" => ["Reports"],
+                    "responses" => [
+                        "200" => [
+                            "description" => "Download succefull",
+                        ],
+                        "401" => ['$ref' => '#/components/responces/ErrorResponce']
+                    ]
+                ]
+            ];
 
         return $docs;
     }
