@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Chart.Name }}-certificate
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+type: kubernetes.io/tls
+stringData:
+  tls.crt: {{ .Values.security.certificate.certificate | quote }}
+  tls.key: {{ .Values.security.certificate.privateKey | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Chart.Name }}-idpcertificate
+  labels:
+  {{- include "commonground-gateway.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  idp.crt: {{ .Values.security.saml.idp.certificate.certificate | quote }}

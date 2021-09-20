@@ -1,0 +1,617 @@
+App\Entity\Gateway:
+    edu_api:
+        name: educatie component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/edu
+        documentation: https://raw.githubusercontent.com/ConductionNL/education-component/master/api/public/schema/openapi.yaml
+    contacten_api:
+        name: contacten component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
+        documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
+    mrc_api:
+        name: medewerker catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
+        documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
+    memo_api:
+        name: memo component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
+        documentation: https://raw.githubusercontent.com/ConductionNL/memo-component/master/api/public/schema/openapi.yaml
+#    arc_api:
+#        name: agenda service
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/arc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/agendaservice/master/api/public/schema/openapi.yaml
+#    bs_api:
+#        name: bericht service
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/bs
+#        documentation: https://raw.githubusercontent.com/ConductionNL/berichtservice/master/api/public/schema/openapi.yaml
+    uc_api:
+        name: user component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
+        documentation: https://raw.githubusercontent.com/ConductionNL/user-component/master/api/public/schema/openapi.yaml
+    wrc_api:
+        name: webresource catalogus
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
+        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
+#    nrc_api:
+#        name: notification component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/nrc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/Notification-component/master/api/public/schema/openapi.yaml
+#    rc_api:
+#        name: review component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/rc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/review-component/master/api/public/schema/openapi.yaml
+
+App\Entity\Entity:
+    user:
+        route: '/api/users'
+        name: users
+        description: apikey
+        gateway: '@uc_api'
+        endpoint: 'users'   
+#Student stuff
+    student:
+        route: '/api/students'
+        name: students
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participants'
+    civicIntegrationDetails:
+        name: civicIntegrationDetails
+        description: the civic integration details of this person
+    generalDetails:
+        name: generalDetails
+        description: the general details of this person 
+    referrerDetails:
+        name: referrerDetails
+        description: the referrer details of this person
+    backgroundDetails:
+        name: backgroundDetails
+        description: the background details of this person
+    dutchNTDetails:
+        name: dutchNTDetails
+        description: the dutch NT details of this person
+    jobDetails:
+        name: jobDetails
+        description: the job details of this person
+    motivationDetails:
+        name: motivationDetails
+        description: the motivation details of this person
+    educationDetails:
+        name: educationDetails
+        description: the education details of this person
+    courseDetails:
+        name: courseDetails
+        description: the course details of this person   
+    availabilityDetails:
+        name: availabilityDetails
+        description: the availability details of this person
+    #regitration is basically a student clone
+#    registration:
+#        route: '/api/registrations'
+#        name: registrations
+#        description: apikey
+#        gateway: '@edu_api'
+#        endpoint: 'participants'
+    person:
+        route: '/api/persons'
+        name: persons
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'people'
+    permissionDetails:
+        name: permissionDetails
+        description: the permissions that this person has given
+    memo:
+        name: memo
+        description: apikey
+        gateway: '@memo_api'
+        endpoint: 'memos'
+#Employee stuff
+    employee:
+        route: '/api/employees'
+        name: employees
+        description: apikey
+        gateway: '@mrc_api'
+        endpoint: 'employees'
+#        transformations:
+#            followingCourse: education
+#StudentDossier stuff
+    student_dosier_event:
+        route: '/api/student_dosier_events'
+        name: student dosier events
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'student_dosier_events'
+#Document stuff
+    document:
+        route: '/api/documents'
+        name: documents
+        description: apikey
+        gateway: '@wrc_api'
+        endpoint: 'documents'
+#TestResult stuff
+    test_result:
+        route: '/api/test_results'
+        name: test results
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'test_results' #TODO results not test_results?
+#LearningNeed stuff
+    learning_needs:
+        route: '/api/learning_needs'
+        name: learning needs
+        description: apikey
+        gateway: '@edu_api' #TODO eav not edu?
+        endpoint: 'learning_needs'
+#Participation stuff
+    participation:
+        route: '/api/participations'
+        name: participations
+        description: apikey
+        gateway: '@edu_api'
+        endpoint: 'participations'
+    # Organization stuff
+    organization:
+        route: '/api/organizations'
+        name: organizations
+        description: apikey
+        gateway: '@contacten_api'
+        endpoint: 'organizations'
+    education:
+        name: education
+        description: the education of an employee or student
+#        description: apikey
+#        gateway: '@mrc_api'
+#        endpoint: 'education'
+        
+App\Entity\Attribute:
+    # lets first hook our objects and sub objects together
+    # Education (for matching mrc/education, these are the only eav attributes:)
+#    education_groupFormation:
+#        name: groupFormation
+#        type: string
+#        enum: [ 'INDIVIDUALLY', 'GROUP' ]
+#        entity: '@education'
+#    education_teacherProfessionalism:
+#        name: teacherProfessionalism
+#        type: string
+#        enum: [ 'PROFESSIONAL', 'VOLUNTEER', 'BOTH' ]
+#        entity: '@education'
+#    education_courseProfessionalism:
+#        name: courseProfessionalism
+#        type: string
+#        enum: [ 'PROFESSIONAL', 'VOLUNTEER', 'BOTH' ]
+#        entity: '@education'
+#    education_providesCertificate:
+#        name: providesCertificate
+#        type: boolean
+#        entity: '@education'
+#    education_amountOfHours:
+#        name: amountOfHours
+#        type: integer
+#        entity: '@education'
+    # Education (If we do not save education in mrc, but 100% as eav Entity)
+    education_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: '@education' 
+    education_startDate:
+        name: startDate
+        type: datetime
+        entity: '@education'
+    education_endDate:
+        name: endDate
+        type: datetime
+        entity: '@education'
+    education_institution:
+        name: institution
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_iscedEducationLevelCode:
+        name: iscedEducationLevelCode
+        type: string
+        maxLength: 255
+        entity: '@education'  
+    education_degreeGrantedStatus:
+        name: degreeGrantedStatus
+        type: string
+        maxLength: 255
+        entity: '@education'
+    education_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'GROUP']
+        entity: '@education'
+    education_teacherProfessionalism:
+        name: teacherProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_courseProfessionalism:
+        name: courseProfessionalism
+        type: string
+        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
+        entity: '@education'
+    education_providesCertificate:
+        name: providesCertificate
+        type: boolean
+        entity: '@education'
+    education_amountOfHours:
+        name: amountOfHours
+        type: integer
+        entity: '@education'   
+    # student
+    student_person:
+        name: person
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_generalDetails:
+        name: generalDetails
+        type: object
+        entity: '@student'
+        object: '@generalDetails'
+    student_referrerDetails:
+        name: referrerDetails
+        type: object
+        entity: '@student'
+        object: '@referrerDetails'
+    student_backgroundDetails:
+        name: backgroundDetails
+        type: object
+        entity: '@student'
+        object: '@backgroundDetails'
+    student_dutchNTDetails:
+        name: dutchNTDetails
+        type: object
+        entity: '@student'
+        object: '@dutchNTDetails'
+    student_registrar:
+        name: registrar
+        type: object
+        entity: '@student'
+        object: '@person'
+    student_permissionDetails:
+        name: permissionDetails
+        type: object
+        entity: '@student'
+        object: '@permissionDetails'
+    student_jobDetails:
+        name: jobDetails
+        type: object
+        entity: '@student'
+        object: '@jobDetails'
+    student_motivationDetails:
+        name: motivationDetails
+        type: object
+        entity: '@student'
+        object: '@motivationDetails'
+    student_educationDetails:
+        name: educationDetails
+        type: object
+        entity: '@student'
+        object: '@educationDetails'
+    student_courseDetails:
+        name: courseDetails
+        type: object
+        entity: '@student'
+        object: '@courseDetails'   
+    student_availabilityDetails:
+        name: availabilityDetails
+        type: object
+        entity: '@student'
+        object: '@availabilityDetails'
+    student_languageHouseId:
+        name: languageHouseId
+        type: string
+        required: true
+        entity: '@student'
+    student_speakingLevel:
+        name: speakingLevel
+        type: string
+        enum: ['BEGINNER', 'REASONABLE', 'ADVANCED']
+        entity: '@student'
+    student_readingTestResult:
+        name: readingTestResult
+        type: string
+        enum: ['CAN_NOT_READ', 'A0', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+        entity: '@student'
+    student_writingTestResult:
+        name: writingTestResult
+        type: string
+        enum: ['CAN_NOT_WRITE', 'WRITE_NAW_DETAILS', 'WRITE_SIMPLE_TEXTS', 'WRITE_SIMPLE_LETTERS']
+        entity: '@student'
+    student_status:
+        name: status
+        type: string
+        enum: ['REFERRED', 'ACTIVE', 'COMPLETED']
+        defaultValue: 'REFERRED'
+        required: true
+        entity: '@student'
+    # educationDetails @todo check
+    educationDetails_followingEducationRightNow:
+        name: followingEducationRightNow
+        type: string
+        # select single
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@educationDetails'       
+    educationDetails_education:
+        name: education
+        type: object
+        entity: '@educationDetails'
+        object: '@education'
+    # courseDetails @todo check
+    courseDetails_isFollowingCourseRightNow:
+        name: isFollowingCourseRightNow
+        type: boolean
+        entity: '@courseDetails'
+    courseDetails_course:
+        name: course
+        type: object
+        entity: '@courseDetails'
+        object: '@education'
+    # availabilityDetails
+    availabilityDetails_availability:
+        name: availability
+        type: string
+        multiple: true
+        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
+        entity: '@availabilityDetails'
+    availabilityDetails_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        maxLength: 255
+        entity: '@availabilityDetails'
+        #TODO: should be a memo^
+    # civicIntegrationDetails
+    # generalDetails
+    generalDetails_countryOfOrigin:
+        name: countryOfOrigin
+        type: string
+        maxLength: 255
+        # enum: ISO list of countries?
+        entity: '@generalDetails'
+    generalDetails_nativeLanguage:
+        name: nativeLanguage
+        type: string
+        maxLength: 255
+        entity: '@generalDetails'
+    generalDetails_otherLanguages:
+        name: otherLanguages
+        type: string
+        maxLength: 255
+        entity: '@generalDetails'
+    # Here we want to add an abstract construction    
+    generalDetails_familyComposition:
+        name: familyComposition
+        type: string
+        # @todo select multiple in Att 1 but single in the Taalhuizen-service
+        enum: ['MARRIED_PARTNER', 'SINGLE', 'DIVORCED', 'WIDOW']
+        entity: '@generalDetails'
+    generalDetails_childrenCount:
+        name: childrenCount
+        type: integer #type in att 1 is string
+        maxLength: 255 #this allows 999 children
+        entity: '@generalDetails'
+    generalDetails_childrenDatesOfBirth:
+        name: childrenDatesOfBirth
+        type: datetime
+        multiple: true
+        entity: '@generalDetails'
+        
+    
+    referrerDetails_email:
+        name: email
+        type: string
+        maxLength: 255
+        entity: '@referrerDetails'
+    # backgroundDetails
+    
+ 
+    # person
+    person_contactPreference:
+        name: contactPreference
+        type: string
+        enum: ['PHONECALL', 'WHATSAPP', 'EMAIL', 'OTHER']        
+        entity: '@person'
+    # if person_contactPreference == OTHER:
+    person_contactPreferenceOther:
+        name: contactPreferenceOther
+        type: string
+        entity: '@person'
+    # user
+    user_person:
+        name: person
+        type: object
+        entity: '@user'
+        object: '@person'
+        required: true
+    # Employee
+    employee_person:
+        name: person
+        type: object
+        entity: '@employee'
+        object: '@person'
+        required: true
+    employee_availability:
+        name: availability
+        type: string
+        multiple: true
+        entity: '@employee'
+    employee_availabilityNotes:
+        name: availabilityNotes
+        type: string
+        maxLength: 2550
+        entity: '@employee'
+        #TODO should be a memo ^
+    employee_targetGroupPreferences:
+        name: targetGroupPreferences
+        type: string
+        multiple: true
+        enum: ['NT1', 'NT2']
+        entity: '@employee'
+    employee_volunteeringPreference:
+        name: volunteeringPreference
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_gotHereVia:
+        name: gotHereVia
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_hasExperienceWithTargetGroup:
+        name: hasExperienceWithTargetGroup
+        type: boolean
+        entity: '@employee'
+    employee_experienceWithTargetGroupYesReason:
+        name: experienceWithTargetGroupYesReason
+        type: string
+        entity: '@employee'
+    employee_currentEducation:
+        name: currentEducation
+        type: string
+        enum: ['YES', 'NO', 'NO_BUT_DID_EARLIER']
+        entity: '@employee'
+    employee_doesCurrentlyFollowCourse:
+        name: doesCurrentlyFollowCourse
+        type: boolean
+        entity: '@employee'
+    employee_otherRelevantCertificates:
+        name: otherRelevantCertificates
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    # TODO datamodel question: do we want these properties (organizationId, userGroupIds, userId) to be added to Employee or to Person? 
+    employee_organizationId:
+        name: organizationId
+        type: string
+        maxLength: 255
+        entity: '@employee'
+    employee_userGroupIds:
+        name: userGroupIds
+        type: string
+        multiple: true
+        entity: '@employee'
+    employee_userId:
+        name: userId
+        type: string
+        entity: '@employee'
+    # Participation
+    # TODO datamodel question: do we want these properties (providerId, providerName <- are these from the organization of the Person? ) to be added to Participation or to Person? 
+    # TODO In the OAS is stated that either providerName, providerId or providerNote is required. This requires extra code/logic    
+    
+    # TODO Fix learningNeedOutcome (is this a full eav object or based on edu/result?)
+#    participation_providerId:
+#        name: providerId
+#        type: string
+#        maxLength: 36
+#        entity: '@participation'
+#    participation_providerName:
+#        name: providerName
+#        type: string
+#        entity: '@participation'
+#    participation_providerNote:
+#        name: providerNote
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_offerName:
+#        name: offerName
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_offerCourse:
+#        name: offerCourse
+#        type: string
+#        enum: ['LANGUAGE', 'MATH', 'DIGITAL', 'OTHER']
+#        entity: '@participation'
+#    participation_learningNeedOutcome:
+#        name: learningNeedOutcome
+#        type: object
+#        entity: '@participation'
+#        object: '@learningNeedOutcome'
+#    participation_isFormal:
+#        name: isFormal
+#        type: boolean
+#        entity: '@participation'
+#    participation_groupFormation:
+#        name: groupFormation
+#        type: string
+#        enum: ['INDIVIDUALLY', 'IN_A_GROUP']
+#        entity: '@participation'
+#    participation_totalClassHours:
+#        name: totalClassHours
+#        type: float
+#        entity: '@participation'
+#    participation_certificateWillBeAwarded:
+#        name: certificateWillBeAwarded
+#        type: boolean
+#        entity: '@participation'
+#    participation_engagements:
+#        name: engagements
+#        type: string
+#        maxLength: 255
+#        entity: '@participation'
+#    participation_learningNeedId:
+#        name: learningNeedId
+#        type: string
+#        maxLength: 36
+#        required: true
+#        entity: '@participation'
+    #registration
+#    registration_student:
+#        name: person
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
+#    registration_registrar:
+#        name: registrar
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
+#    registration_languageHouseId:
+#        name: languageHouseId
+#        type: string
+#        entity: '@registration'
+#        required: true
+#    registration_permissionDetails:
+#        name: permissionDetails
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@permissionDetails'
+#    registration_memo:
+#        name: memo
+#        type: string
+#        entity: '@registration'
+#    organisation_person:
+#        name: person
+#        type: object
+#        entity: '@registration'
+#        required: true
+#        object: '@person'
+    # permissionDetails 
