@@ -572,7 +572,9 @@ class ValidationService
                 $gatewayResponceLog = New GatewayResponceLog;
                 $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
                 //$gatewayResponceLog->setObjectEntity($objectEntity);
-                $gatewayResponceLog->setResponce($error->getResponse());
+                if($error->getResponse()){
+                    $gatewayResponceLog->setResponce();
+                }
                 $this->em->persist($gatewayResponceLog);
                 $this->em->flush();
 
