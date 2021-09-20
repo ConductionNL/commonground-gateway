@@ -68,7 +68,7 @@ class ValidationService
         // Check post for not allowed properties
         foreach($post as $key=>$value){
             if(!$entity->getAttributeByName($key)){
-                $objectEntity->addError($key,'Does not exsist on this property');
+                $objectEntity->addError($key,'Does not exist on this property');
             }
         }
 
@@ -219,7 +219,18 @@ class ValidationService
                     break;
                 }
                 if(array_key_exists('id', $object)) {
-                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->get($object['id']);
+                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
+                        return $item->getId() == $object['id'];
+                    });
+                    if (empty($subObject)) {
+                        $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
+                        break;
+                    } elseif (count($subObject) > 1) {
+                        $objectEntity->addError($attribute->getName(),'More than 1 object found with this id: '.$object['id']);
+                        break;
+                    }
+                    unset($object['id']);
+                    $subObject = $subObject->first();
                 }
                 else {
                     $subObject = New ObjectEntity();
@@ -427,6 +438,11 @@ class ValidationService
             case 'email':
                 if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
+                }
+                break;
+            case 'telephone':
+                if (!is_string($value) || (preg_match('/^\+?[1-9]\d{1,14}$/', $value) !== 1)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an telephone format, ' . $value . ' is not a valid phone number that conforms to the E.164 standard.');
                 }
                 break;
             case 'uuid':
