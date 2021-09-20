@@ -59,8 +59,7 @@ nginx:
 
 redis:
   enabled: true
-  cluster:
-    enabled: false
+  architecture: standalone
   redisPort: 6379
   usePassword: false
   pullPolicy: IfNotPresent
