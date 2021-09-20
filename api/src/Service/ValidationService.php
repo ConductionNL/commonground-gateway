@@ -272,9 +272,6 @@ class ValidationService
         // Do validation for attribute depending on its type
         switch ($attribute->getType()) {
             case 'object':
-                //TODO: @Ruben if attribute->getMultiple == true, a lot is already done in validateAttributeMultiple() if type == 'object'
-                // because of how multiple is checked in validateAttribute()! I think most of the code for multiple/cascade here is never reached
-
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
@@ -304,7 +301,7 @@ class ValidationService
                 if(!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)){
                     // Object ophalen
                     if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getObject()->getName());
                         break;
                     }
 
@@ -318,7 +315,7 @@ class ValidationService
                     $valueObject->getObjects()->clear();
                     foreach($value as $arraycheck) {
                         if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getObject()->getName());
                         }
                         else{
                             // object toeveogen
