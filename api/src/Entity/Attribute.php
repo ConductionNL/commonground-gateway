@@ -298,6 +298,17 @@ class Attribute
      */
     private $requiredIf = [];
 
+
+    /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $forbidenIf = [];
+
     /**
      * @var array An array of possible values, input is limited to this array]
      *
@@ -743,6 +754,19 @@ class Attribute
     public function setRequiredIf(?array $requiredIf): self
     {
         $this->requiredIf = $requiredIf;
+
+        return $this;
+    }
+
+
+    public function getForbidenIf(): ?array
+    {
+        return $this->forbidenIf;
+    }
+
+    public function setForbidenIf(?array $forbidenIf): self
+    {
+        $this->forbidenIf = $forbidenIf;
 
         return $this;
     }

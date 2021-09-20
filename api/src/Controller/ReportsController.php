@@ -23,45 +23,36 @@ use function GuzzleHttp\json_decode;
  */
 class ReportsController extends AbstractController
 {
-    private SerializerService $serializerService;
-    private RequestInterface $request;
-    private EntityManagerInterface $em;
-
-
-    public function __contstruct(SerializerService $serializerService, RequestInterface $request, EntityManagerInterface $em)
-    {
-        $this->serializerService = $serializerService;
-        $this->request = $request;;
-        $this->em = $em;
-    }
-
     /**
      * @Route("/students")
      */
-    public function StudentsAction(): BinaryFileResponse
+    public function StudentsAction(EntityManagerInterface $em): BinaryFileResponse
     {
 
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>'student']);
-        $results = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity);
+        $entity= $this->getDoctrine()->getRepository("App:Entity")->findOneBy(['name'=>'students']);
+        $results = $this->getDoctrine()->getRepository("App:ObjectEntity")->findByEntity($entity);
 
         $data = [
             ['ID deelnemer', 'Datum intake', 'Status', 'Roepnaam', 'Tussenvoegsel', 'Achternaam', 'Taalhuis'],
         ];
 
         // Get results an loop trough them to add them to data
-        /*
+
         foreach($results as $result){
+
+            $result = $result->toArray();
+
             $data[] = [
-                ,//'ID deelnemer',
-                ,//'Datum intake',
-                ,//'Status',
-                ,//'Roepnaam',
-                ,//'Tussenvoegsel',
-                ,//'Achternaam',
-                //'Taalhuis'
+                $result['id'],//'ID deelnemer',
+                $result['intake']['date'],//'Datum intake',
+                $result['intake']['status'],//'Status',
+                $result['person']['givenName'],//'Roepnaam',
+                $result['person']['additionalName'],//'Tussenvoegsel',
+                $result['person']['familyName'],//'Achternaam',
+                $result['languageHouse']['name'] //'Taalhuis'
             ];
         }
-        */
+
 
         return $this->createCsvResponce('students',$data);
     }
@@ -69,33 +60,30 @@ class ReportsController extends AbstractController
     /**
      * @Route("/learning_needs")
      */
-    public function LearningNeedsAction(): BinaryFileResponse
+    public function LearningNeedsAction(EntityManagerInterface $em): BinaryFileResponse
     {
-
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>'learningNeed']);
-        $results = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity);
+        $entity= $this->getDoctrine()->getRepository("App:Entity")->findOneBy(['name'=>'learningNeeds']);
+        $results = $em->getRepository("App:ObjectEntity")->findByEntity($entity);
 
         $data = [
-            ['ID leervraag', 'Kort omschrijving', 'Motivatie', 'Werkwoord', 'Onderwerp', 'Onderwerp: Anders, namelijk: ', 'Toepassing', 'Toepassing: Anders, namelijk:', 'Niveau', 'Niveau: Anders, namelijk: ', 'Gewenste aanbod', 'Geadviseerd aanbod', 'Is er een verschil tussen wens en advies', 'Is er een verschil tussen wens en advies: a, want: anders', 'Afspraken', 'ID deelnemer', 'Datum intake', 'Status', 'Roepnaam', 'Tussenvoegsel', 'Achternaam', 'Taalhuis', 'ID Aanbieder', 'Aanbieder', 'Aanbieder: Anders, namelijk:', 'Start deelname', 'Einde deelname', 'Reden einde deelname', 'Naam aanbod', 'Type curcus', ' Leeruitkomst Werkwoord', 'Leeruitkomst Onderwerp', 'Leeruitkomst Toepassing', 'Leeruitkomst Niveau', 'Toets', ' Toetsdatum', 'Toelichting']
+            [   'ID leervraag',
+                'Kort omschrijving',
+                'Motivatie',
+                'Werkwoord',
+                'Onderwerp', 'Onderwerp: Anders, namelijk: ', 'Toepassing', 'Toepassing: Anders, namelijk:', 'Niveau', 'Niveau: Anders, namelijk: ', 'Gewenste aanbod', 'Geadviseerd aanbod', 'Is er een verschil tussen wens en advies', 'Is er een verschil tussen wens en advies: a, want: anders', 'Afspraken', 'ID deelnemer', 'Datum intake', 'Status', 'Roepnaam', 'Tussenvoegsel', 'Achternaam', 'Taalhuis', 'ID Aanbieder', 'Aanbieder', 'Aanbieder: Anders, namelijk:', 'Start deelname', 'Einde deelname', 'Reden einde deelname', 'Naam aanbod', 'Type curcus', ' Leeruitkomst Werkwoord', 'Leeruitkomst Onderwerp', 'Leeruitkomst Toepassing', 'Leeruitkomst Niveau', 'Toets', ' Toetsdatum', 'Toelichting']
         ];
 
         // Get results an loop trough them to add them to data
-        /*
         foreach($results as $result){
+            $result = $result->toArray();
+
             $data[] = [
-                ,//'ID deelnemer',
-                ,//'Datum intake',
-                ,//'Status',
-                ,//'Roepnaam',
-                ,//'Tussenvoegsel',
-                ,//'Achternaam',
-                //'Taalhuis'
+                $result['id']
             ];
         }
-        */
 
 
-        return $this->createCsvResponce('learning_needs'.$data);
+        return $this->createCsvResponce('learning_needs',$data);
     }
 
     /**

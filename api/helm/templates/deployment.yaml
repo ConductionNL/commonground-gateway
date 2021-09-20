@@ -51,7 +51,7 @@ spec:
             defaultMode: 420
         {{- end }}
         {{- if .Values.fixtures }}
-        - name: idp-certificate
+        - name: fixtures
           configMap:
             name: {{ .Chart.Name }}-fixtures
             defaultMode: 420

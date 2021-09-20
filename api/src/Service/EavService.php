@@ -270,6 +270,7 @@ class EavService
     /* @todo typecast the request */
     public function handleSearch(string $entityName, $request): array
     {
+        $query = $request->query->all();;
         $limit = (int) ($request->query->get('limit') ?? 25); // These type casts are not redundant!
         $page = (int) ($request->query->get('page') ?? 1);
         $start = (int) ($request->query->get('start') ?? 1);
@@ -282,8 +283,8 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
-        $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, []); // todo custom sql to count instead of getting items.
-        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, [], $offset, $limit);
+        $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
+        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query, $offset, $limit);
         $results = ['results'=>[]];
         foreach($objects as $object){
             $results['results'][] = $this->renderResult($object);
