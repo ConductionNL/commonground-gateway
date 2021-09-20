@@ -382,6 +382,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@person'
+        required: true
         persistToGateway: true
     person_birthday:
         name: birthday
@@ -833,7 +834,7 @@ App\Entity\Attribute:
         name: level
         type: string
         required: true
-        enum: ['HBO', 'WO', 'PROFFESIONAL_EDUCATION','LANGUAGE_COURSE','OTHER']
+        enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
