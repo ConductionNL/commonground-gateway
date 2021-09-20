@@ -40,7 +40,7 @@ class ValidationService
      * @return ObjectEntity
      * @throws Exception
      */
-    public function validateEntity (ObjectEntity $objectEntity, array $post): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
@@ -66,8 +66,8 @@ class ValidationService
         }
 
         // Check post for not allowed properties
-        foreach($post as $key=>$value){
-            if(!$entity->getAttributeByName($key)){
+        foreach($post as $key=>$value) {
+            if(!$entity->getAttributeByName($key) && $key != 'id') {
                 $objectEntity->addError($key,'Does not exist on this property');
             }
         }
@@ -229,7 +229,6 @@ class ValidationService
                         $objectEntity->addError($attribute->getName(),'More than 1 object found with this id: '.$object['id']);
                         break;
                     }
-                    unset($object['id']);
                     $subObject = $subObject->first();
                 }
                 else {
@@ -302,7 +301,7 @@ class ValidationService
                 if(!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)){
                     // Object ophalen
                     if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getObject()->getName());
                         break;
                     }
 
@@ -312,11 +311,11 @@ class ValidationService
                     break;
 
                 }
-                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                if(!$attribute->getCascade() && $attribute->getMultiple()) {
                     $valueObject->getObjects()->clear();
                     foreach($value as $arraycheck) {
                         if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getObject()->getName());
                         }
                         else{
                             // object toeveogen
