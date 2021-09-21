@@ -42,15 +42,13 @@ class ReportsController extends AbstractController
 
             $result = $result->toArray();
 
-            $data[] = [
-                $result['id'],//'ID deelnemer',
-                $result['intake']['date'],//'Datum intake',
-                $result['intake']['status'],//'Status',
-                $result['person']['givenName'],//'Roepnaam',
-                $result['person']['additionalName'],//'Tussenvoegsel',
-                $result['person']['familyName'],//'Achternaam',
-                $result['languageHouse']['name'] //'Taalhuis'
-            ];
+            $data[] = $result['id'] ?? null;
+            $data[] = $result['intake']['date'] ?? null;
+            $data[] = $result['intake']['status'] ?? null;
+            $data[] = $result['person']['givenName'] ?? null;
+            $data[] = $result['person']['additionalName'] ?? null;
+            $data[] = $result['person']['familyName'] ?? null;
+            $data[] = $result['languageHouse']['name'] ?? null;
         }
 
 
