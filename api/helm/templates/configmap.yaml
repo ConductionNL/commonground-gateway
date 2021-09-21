@@ -1,0 +1,19 @@
+{{- $redisServiceName := include "redis.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+  {{- include "commonground-gateway.labels" . | nindent 4 }}
+data:
+  app-version: {{ .Values.config.version | quote }}
+  app-cors-allow-origin: {{ .Values.config.corsAllowOrigin | quote }}
+  cache: {{ .Values.config.cache | quote }}
+  debug: {{ .Values.config.debug | quote }}
+  trusted-proxies: {{ join "," .Values.config.trustedProxies }}
+  trusted-hosts: {{ .Values.config.trustedHosts | quote }}
+  url: {{ printf "https://%s%s" .Values.ingress.hostname .Values.ingress.path | quote }}
+  {{- if .Values.redis.enabled }}
+  redis-host: {{ printf "%s-headless" $redisServiceName | quote }}
+  redis-port: {{ .Values.redis.redisPort | toString | quote }}
+  {{- end }}

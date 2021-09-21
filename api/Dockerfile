@@ -5,6 +5,7 @@ RUN apk add --no-cache \
 		file \
 		gettext \
 		git \
+		bash \
 	;
 
 ARG APCU_VERSION=5.1.17
@@ -17,6 +18,7 @@ RUN set -eux; \
 		libpng-dev \
 		postgresql-dev \
 		zlib-dev \
+		gmp-dev \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
@@ -27,6 +29,7 @@ RUN set -eux; \
 		pdo_mysql \
 		pcntl \
 		gd \
+		gmp \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \
@@ -67,7 +70,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
 RUN set -eux; \
-	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative; \
+	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative --no-scripts; \
 	composer clear-cache
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
 
@@ -80,7 +83,7 @@ ARG APP_ENV=prod
 COPY composer.json composer.lock symfony.lock ./
 
 RUN set -eux; \
-	composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest; \
+	composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --no-scripts; \
 	composer clear-cache
 
 # copy only specifically what we need
@@ -90,6 +93,8 @@ COPY config config/
 COPY public public/
 COPY src src/
 COPY templates templates/
+COPY migrations migrations/
+COPY fixtures fixtures/
 
 RUN apk add --no-cache $PHPIZE_DEPS \
 	&& pecl install xdebug-2.9.2 \
@@ -99,7 +104,6 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
-	composer run-script --no-dev post-install-cmd; \
 	chmod +x bin/console; sync
 
 VOLUME /srv/api/var

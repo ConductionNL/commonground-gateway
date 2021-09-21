@@ -1,0 +1,84 @@
+App\Entity\Gateway:
+    gateway_1:
+        name: pdc
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://conduction.demodam.nl/api/v1/pdc
+        #documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
+    gateway_2:
+        name: brp
+        auth: username-password
+        username: begraven
+        password: demodam
+        location: http://vrij-brp.demodam.nl/haal-centraal-brp-bevragen/api/v1.3
+        #documentation: https://raw.githubusercontent.com/ConductionNL/brpservice/master/api/public/schema/openapi.yaml
+        accept: application/hal+json
+    gateway_3:
+        name: catalogi
+        auth: jwt
+        accept: "*/*"
+        secret: JANvmvtUWVyCBMbScZdd2EqXTeyapsCxpbZD7MwUHZUyu8grLu
+        jwtId: conduction
+        location: https://open-zaak.demodam.nl/catalogi/api/v1
+        documentation: https://github.com/VNG-Realisatie/catalogi-api/raw/master/src/openapi.yaml
+    gateway_4:
+        name: zaken
+        auth: jwt
+        accept: "*/*"
+        secret: JANvmvtUWVyCBMbScZdd2EqXTeyapsCxpbZD7MwUHZUyu8grLu
+        jwtId: conduction
+        location: https://open-zaak.demodam.nl/zaken/api/v1
+        #documentation: https://github.com/VNG-Realisatie/zaken-api/raw/master/src/openapi.yaml
+    gateway_5:
+        name: autorisaties
+        auth: jwt
+        accept: "*/*"
+        secret: JANvmvtUWVyCBMbScZdd2EqXTeyapsCxpbZD7MwUHZUyu8grLu
+        jwtId: conduction
+        location: https://open-zaak.demodam.nl/autorisaties/api/v1
+        #documentation: https://github.com/VNG-Realisatie/autorisaties-api/raw/master/src/openapi.yaml
+    gateway_6:
+        name: besluiten
+        auth: jwt
+        accept: "*/*"
+        secret: JANvmvtUWVyCBMbScZdd2EqXTeyapsCxpbZD7MwUHZUyu8grLu
+        jwtId: conduction
+        location: https://open-zaak.demodam.nl/besluiten/api/v1
+        #documentation: https://github.com/VNG-Realisatie/besluiten-api/raw/master/src/openapi.yaml
+    gateway_7:
+        name: documenten
+        auth: jwt
+        accept: "*/*"
+        secret: JANvmvtUWVyCBMbScZdd2EqXTeyapsCxpbZD7MwUHZUyu8grLu
+        jwtId: conduction
+        location: https://open-zaak.demodam.nl/documenten/api/v1
+        #documentation: https://github.com/VNG-Realisatie/documenten-api/raw/master/src/openapi.yaml
+    gateway_8:
+        name: logging
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://conduction.demodam.nl/api/v1/lgc
+        #documentation: https://raw.githubusercontent.com/ConductionNL/loggingcomponent/master/api/public/schema/openapi.yaml
+    gateway_9:
+        name: waardepapieren-register
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://waardepapieren.demodam.nl/api/v1/register
+        #documentation: https://github.com/ConductionNL/waardepapieren-register/raw/master/api/public/schema/openapi.yaml
+    gateway_10:
+        name: waardepapieren-service
+        auth: apikey
+        apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        location: https://waardepapieren.demodam.nl/api/v1/service
+        #documentation: https://github.com/ConductionNL/waardepapieren-register/raw/master/api/public/schema/openapi.yaml
+        
+App\Entity\Authentication:
+    authentication_1:
+        name: conduction
+        authenticateUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+        tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+        clientId: 85ef6bac-98b4-47fb-ae68-f248b91f6dde
+        secret: 2_sIrT0BXCv..v_nP~UX_tF012RifW5a80
+        scopes:
+            - openid
+            - profile
