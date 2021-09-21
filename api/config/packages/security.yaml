@@ -6,19 +6,19 @@ security:
     firewalls:
         create_user:
             anonymous: true
-            pattern: (^/api/users|^/api/users/$|^/api/eav/data/users|^/api/eav/data/users/$)
+            pattern: (^/api/users$|^/api/users/$|^/api/eav/data/users$|^/api/eav/data/users/$|^/api/organizations$)
             methods: [ POST ]
         documentation:
             anonymous: true
-            pattern: (^/api|^/api/$|^/api/docs|^/api/docs/$|^/eav/docs|^/eav/docs/$|^/api/organizations)
+            pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$|^/api/organizations$)
             methods: [ GET ]
         login:
-            pattern: (^/api/users/login|^/api/users/login$|^/users/login|^/users/login/$|^/login|^/login/$)
+            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$)
             anonymous: true
         main:
-            logout:
-                path: app_user_logout
-                target: app_user_redirect
+#            logout:
+#                path: app_user_logout
+#                target: app_user_redirect
 
             stateless: false
             provider: authenticationProvider
@@ -28,7 +28,7 @@ security:
                     - App\Security\OauthAuthenticator
                     - App\Security\BasicAuthAuthenticator
                     - App\Security\UserTokenAuthenticator
-                entry_point: App\Security\OauthAuthenticator
+                entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 
