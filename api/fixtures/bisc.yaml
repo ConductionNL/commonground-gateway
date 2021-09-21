@@ -587,6 +587,7 @@ App\Entity\Attribute:
     employeeIntake_experienceWithTargetGroupYesReason:
         name: experienceWithTargetGroupYesReason
         type: string
+        maxLength: 255
         entity: '@employeeIntake'
         requiredIf:
             hasExperienceWithTargetGroup: true
