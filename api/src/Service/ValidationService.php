@@ -222,7 +222,7 @@ class ValidationService
                     $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
                         return $item->getId() == $object['id'];
                     });
-                    if (empty($subObject)) {
+                    if (count($subObject) == 0) {
                         $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
                         break;
                     } elseif (count($subObject) > 1) {
@@ -233,9 +233,11 @@ class ValidationService
                 }
                 else {
                     $subObject = New ObjectEntity();
+
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
                 }
+
                 $subObject = $this->validateEntity($subObject, $object);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
