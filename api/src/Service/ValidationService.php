@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class ValidationService
@@ -222,7 +223,7 @@ class ValidationService
                     $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
                         return $item->getId() == $object['id'];
                     });
-                    if (empty($subObject)) {
+                    if (count($subObject) == 0) {
                         $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
                         break;
                     } elseif (count($subObject) > 1) {
@@ -233,9 +234,11 @@ class ValidationService
                 }
                 else {
                     $subObject = New ObjectEntity();
+
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
                 }
+
                 $subObject = $this->validateEntity($subObject, $object);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
@@ -274,6 +277,12 @@ class ValidationService
             case 'object':
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
+
+                // If this object is given as a uuid (string) it should be valid, if not throw error
+                if (is_string($value) && Uuid::isValid($value) == false) {
+                    $objectEntity->addError($attribute->getName(), 'The given value is a invalid object or a invalid uuid.');
+                    break;
+                }
 
                 // Lets check for cascading
                 /* todo make switch */
