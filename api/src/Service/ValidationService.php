@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class ValidationService
@@ -274,6 +275,12 @@ class ValidationService
             case 'object':
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
+
+                // If this object is given as a uuid (string) it should be valid, if not throw error
+                if (is_string($value) && Uuid::isValid($value) == false) {
+                    $objectEntity->addError($attribute->getName(), 'The given value is a invalid object or a invalid uuid.');
+                    break;
+                }
 
                 // Lets check for cascading
                 /* todo make switch */
