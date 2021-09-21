@@ -215,17 +215,13 @@ class ValidationService
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach($value as $object) {
                 if (!is_array($object)) {
-                    var_dump('1');
-                    die;
                     $objectEntity->addError($attribute->getName(),'Multiple is set for this attribute. Expecting an array of objects.');
                     break;
                 }
                 if(array_key_exists('id', $object)) {
-
                     $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
                         return $item->getId() == $object['id'];
                     });
-
                     if (count($subObject) == 0) {
                         $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
                         break;
