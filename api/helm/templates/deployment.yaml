@@ -51,7 +51,7 @@ spec:
             defaultMode: 420
         {{- end }}
         {{- if .Values.fixtures }}
-        - name: idp-certificate
+        - name: fixtures
           configMap:
             name: {{ .Chart.Name }}-fixtures
             defaultMode: 420
@@ -70,11 +70,11 @@ spec:
               subPath: dependencies.yaml
               name: dependencies
               readOnly: true
-            - mountPath: /var/run/certs/app
+            - mountPath: /var/run/certs
               name: app-certificates
               readOnly: true
             {{- if .Values.security.saml.enabled }}
-            - mountPath: /var/run/certs/idp
+            - mountPath: /var/run/idp
               name: idp-certificate
               readOnly: true
             {{- end }}
@@ -130,10 +130,12 @@ spec:
                 configMapKeyRef:
                   key: url
                   name: {{ .Chart.Name }}
+            {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
             - name: APP_CERT
               value: '/var/run/certs/tls.crt'
             - name: APP_KEY
               value: '/var/run/certs/tls.key'
+            {{- end }}
             {{- if .Values.redis.enabled }}
             - name: REDIS_HOST
               valueFrom:
@@ -165,7 +167,7 @@ spec:
             - name: SAML_LOGOUT_URL
               valueFrom:
                 secretKeyRef:
-                  key: saml-single-logout-url
+                  key: saml-logout-url
                   name: {{ .Chart.Name }}
             - name: SAML_IDP_CERT
               value: '/var/run/idp/idp.crt'

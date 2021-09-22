@@ -10,6 +10,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinColumn;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -128,20 +129,10 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"all"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"})
      * @MaxDepth(1)
      */
     private $objectValues;
-
-    /**
-     * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Value::class, fetch="EAGER", inversedBy="objects", cascade={"persist"})
-     *
-     * @JoinColumn(onDelete="CASCADE")
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Value $subresourceOf = null;
 
     /**
      * @Groups({"read"})
@@ -168,9 +159,28 @@ class ObjectEntity
      */
     private ?array $externalResult = [];
 
+    /**
+     * @ORM\ManyToMany(targetEntity=GatewayResponceLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     */
+    private $responceLogs;
+
+    /*
+     * recursion stack
+     *
+     * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
+     */
+    private ArrayCollection $recursionStack;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
+     */
+    private $subresourceOf;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
+        $this->responceLogs = new ArrayCollection();
+        $this->subresourceOf = new ArrayCollection();
     }
 
     public function getId()
@@ -220,7 +230,7 @@ class ObjectEntity
     public function addObjectValue(Value $objectValue): self
     {
         if (!$this->objectValues->contains($objectValue)) {
-            $this->objectValues[] = $objectValue;
+            $this->objectValues->add($objectValue);
             $objectValue->setObjectEntity($this);
         }
 
@@ -239,48 +249,21 @@ class ObjectEntity
         return $this;
     }
 
-    public function getSubresourceOf(): ?Value
-    {
-        return $this->subresourceOf;
-    }
-
-    public function setSubresourceOf(?Value $subresourceOf): self
-    {
-        $this->subresourceOf = $subresourceOf;
-
-        return $this;
-    }
-
     public function getHasErrors(): bool
     {
         return $this->hasErrors;
     }
 
-    public function setHasErrors(bool $hasErrors): self
+    public function setHasErrors(bool $hasErrors, int $level = 1): self
     {
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && $this->getSubresourceOf()) {
-            $this->getSubresourceOf()->getObjectEntity()->setHasErrors($hasErrors);
-        }
-        // Do the same for resources under this one if set to false
-        /* @todo wilco de opdracht was upward waarom downward? kost snelheid is er een argument?
-        /*
-        elseif ($hasErrors == false) {
-            $subResources = $this->getSubresources();
-            foreach ($subResources as $subResource) {
-                if (get_class($subResource) == ObjectEntity::class) {
-                    $subResource->setHasErrors($hasErrors);
-                    continue;
-                }
-                // If a subresource is a list of subresources (example cc/person->cc/emails)
-                foreach ($subResource as $listSubResource) {
-                    $listSubResource->setHasErrors($hasErrors);
-                }
+        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+            foreach($this->getSubresourceOf() as $resource){
+                $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
             }
         }
-        */
 
         return $this;
     }
@@ -297,39 +280,71 @@ class ObjectEntity
         return $this;
     }
 
-    public function addError(string $attributeName, string $error): array
+    /**
+     * Adds ans error to the error stack of this object
+     *
+     * @param string $attributeName the atribute that throws the error
+     * @param string $error the error message
+     * @return array all of the errors so far
+     */
+    public function addError(string $attributeName, string $error): self
     {
+        $errors = $this->getErrors();
+
         if (!$this->hasErrors) {
             $this->setHasErrors(true);
         }
 
+        // If the key already exisits we need to switch it to an array
+        if(array_key_exists($attributeName, $errors) and !is_array($errors[$attributeName])){
+            $errors[$attributeName] = [$errors[$attributeName]];
+        }
         //TODO: check if error is already in array?
-        $this->errors[$attributeName] = $error;
+        if(array_key_exists($attributeName, $errors)){
+            $errors[$attributeName][] = $error;
+        }
+        else{
+            $errors[$attributeName] = $error;
+        }
 
-        return $this->errors;
+        return $this->setErrors($errors);
     }
 
     public function getAllErrors(): ?array
     {
-        /* @todo gelaagd teruggeven */
-        $allErrors = [];
-        $subResources = $this->getSubresources();
+        $allErrors = $this->getErrors();
+        //$subResources = $this->getSubresources();
+        $values = $this->getObjectValues();
+
+        foreach($values as $value){
+            foreach ($value->getObjects() as $subResource) {
+                $subErrors = $subResource->getAllErrors();
+                if(!empty($subErrors)){
+                    $allErrors[$value->getAttribute()->getName()] =$subErrors;
+                }
+            }
+        }
+        /*
         foreach ($subResources as $subresource) {
             if (!$subresource) continue; // can be null because of subresource/object fields being set to null
             if (get_class($subresource) == ObjectEntity::class) {
-                if ($subresource->hasErrors) {
-                    $allErrors = $subresource->getAllErrors();
+                if ($subresource->getHasErrors()) {
+                    foreach($subresource->getSubresourceOf() as $subSubResource){
+                        $allErrors[$subSubResource->getAttribute()->getName()] = $subSubResource->getAllErrors();
+                    }
                 }
                 continue;
             }
             // If a subresource is a list of subresources (example cc/person->cc/emails)
-            foreach ($subresource as $listSubresource) {
-                if ($listSubresource->hasErrors) {
-                    $allErrors = array_merge($allErrors, $listSubresource->getAllErrors());
+            foreach ($subresource as $key => $listSubresource) {
+                if ($listSubresource->getHasErrors()) {
+                    $allErrors[$listSubresource->getSubresourceOf()->getAttribute()->getName()][$key] = $listSubresource->getAllErrors();
                 }
             }
         }
-        return array_merge($allErrors, $this->getErrors());
+        */
+
+        return $allErrors;
     }
 
 
@@ -338,13 +353,15 @@ class ObjectEntity
         return $this->hasErrors;
     }
 
-    public function setHasPromises(bool $hasPromises): self
+    public function setHasPromises(bool $hasPromises, int $level = 1): self
     {
         $this->hasPromises = $hasPromises;
 
         // Do the same for resources above this one if set to true
-        if ($hasPromises == true && $this->getSubresourceOf()) {
-            $this->getSubresourceOf()->getObjectEntity()->setHasPromises($hasPromises);
+        if ($hasPromises == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+            foreach($this->getSubresourceOf() as $resource){
+                $resource->getObjectEntity()->setHasPromises($hasPromises, $level + 1);
+            }
         }
 
         return $this;
@@ -383,6 +400,8 @@ class ObjectEntity
         $allPromises = [];
         $subResources = $this->getSubresources();
         foreach ($subResources as $subResource) {
+
+
             if (get_class($subResource) == ObjectEntity::class) {
                 $allPromises = $subResource->getAllPromises();
                 continue;
@@ -407,42 +426,208 @@ class ObjectEntity
         return $this;
     }
 
-
+    /**
+     * Get an value based on a attribut
+     *
+     * @param Attribute $attribute the attribute that you are searching for
+     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
+     *
+     */
     public function getValueByAttribute(Attribute $attribute): Value
     {
         // Check if value with this attribute exists for this ObjectEntity
-        /* @todo dit gaat nu fout op put uiteraard */
-        /*
-        $value = $this->getObjectValues()->filter(function (Value $value) use ($attribute) {
-            return $value->getAttribute() === $attribute;
-        });
+        $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
 
-        if (count($value) > 0) {
-            return $value[0];
+        $values = $this->getObjectValues()->matching($criteria);
+
+        if($values->isEmpty()){
+            // If no value with this attribute was found
+            $value = new Value();
+            $value->setAttribute($attribute);
+            $value->setObjectEntity($this);
+            $this->addObjectValue($value);
+            return $value;
         }
-        */
 
-        // If no value with this attribute was found
-        $value = new Value();
-        $value->setAttribute($attribute);
-        $value->setObjectEntity($this);
-        $this->addObjectValue($value);
-
-        return $value;
+        return $values->first();
     }
 
-    public function getSubresources()
+
+    /*
+     * A recursion save way of getting subresources
+     */
+    public function getAllSubresources(?ArrayCollection $result):ArrayCollection
+    {
+        $subresources = $this->getSubresources();
+
+        foreach ($subresources as $subresource){
+            if(!$result->contains($subresource)){
+                $result->add($subresource);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Function to get al the subresources of this object entity
+     *
+     * @return ArrayCollection the subresources of this object entity
+     */
+    public function getSubresources(): ArrayCollection
     {
         // Get all values of this ObjectEntity with attribute type object
-        $values = $this->getObjectValues()->filter(function (Value $value) {
-            return $value->getAttribute()->getType() === 'object';
-        });
+        //$values = $this->getObjectValues()->filter(function (Value $value) {
+        //    return $value->getAttribute()->getType() === 'object';
+        //});
 
-        $subresources = new ArrayCollection();
-        foreach ($values as $value) {
-            $subresource = $value->getValue();
-            $subresources->add($subresource);
+
+        /*
+        $values = $this->getObjectValues();
+        foreach($values as $value){
+            foreach ($value->getObjects() as $object) {
+                var_dump("found:");
+            }
         }
+        */
+        $subresources = new ArrayCollection();
+        foreach ($this->getObjectValues() as $value){
+            foreach($value->getObjects() as $objectEntity){
+                // prevent double work and downward recurions
+                $subresources->add($objectEntity);
+            }
+        }
+
         return $subresources;
     }
+
+    /**
+     * @return Collection|GatewayResponceLog[]
+     */
+    public function getResponceLogs(): Collection
+    {
+        return $this->responceLogs;
+    }
+
+    public function addResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if (!$this->responceLogs->contains($responceLog)) {
+            $this->responceLogs->add($responceLog);
+            $responceLog->setObjectEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    {
+        if ($this->responceLogs->removeElement($responceLog)) {
+            // set the owning side to null (unless already changed)
+            if ($responceLog->getObjectEntity() === $this) {
+                $responceLog->setObjectEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Checks conditional logic on values
+     *
+     * @return $this
+     */
+    public function checkConditionlLogic(): self
+    {
+        // lets cascade
+        if(!$this->getSubresources()->isEmpty()){
+            foreach($this->getSubresources() as $subresource){
+                $subresource->checkConditionlLogic();
+            }
+        }
+
+        /* @todo we should only check values that actuale have conditional logic optmimalisation */
+        // do the actual chack
+        foreach($this->getObjectValues() as $value){
+            if(empty($value->getAttribute()->getRequiredIf())){
+                continue;
+            }
+            // Oke loop the conditions
+            foreach($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue){
+                // we only have a problem if the current value is empty
+                if($value->getValue()){continue;}
+                // so lets see if we should have a value
+                if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
+                    $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                }
+            }
+            // Oke loop the conditions
+            /*
+            foreach($value->getAttribute()->getForbidenIf() as $conditionProperty=>$conditionValue){
+                // we only have a problem if the current value is full
+                if(!$value->getValue()){continue;}
+                // so lets see if we should have a value
+                if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
+                    $this->addError($value->getAttribute()->getName(), 'Is forbidden becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                }
+            }
+            */
+        }
+
+
+        return $this;
+    }
+
+    /**
+     * Convienance API for throwing an data object and is children into an array
+     *
+     * @return array the array holding all the data     *
+     */
+    public function toArray(int $level = 1): array
+    {
+        $array = [];
+        $array['id'] = (string) $this->getId();
+        foreach($this->getObjectValues() as $value){
+            if(!$value->getObjects()->isEmpty() && $level < 5){
+                foreach($value->getObjects() as $object){
+                    $array[$value->getAttribute()->getName()]  = $object->toArray($level + 1);
+                }
+
+            }
+            else{
+                $array[$value->getAttribute()->getName()] = $value->getValue();
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @return Collection|Value[]
+     */
+    public function getSubresourceOf(): Collection
+    {
+        return $this->subresourceOf;
+    }
+
+    public function addSubresourceOf(Value $subresourceOf): self
+    {
+        // let add this
+        if (!$this->subresourceOf->contains($subresourceOf)) {
+            $this->subresourceOf->add($subresourceOf);
+        }
+        // Lets make this twoway
+        if (!$subresourceOf->getObjects()->contains($this)) {
+            $subresourceOf->addObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubresourceOf(Value $subresourceOf): self
+    {
+        $this->subresourceOf->removeElement($subresourceOf);
+
+        return $this;
+    }
+
 }

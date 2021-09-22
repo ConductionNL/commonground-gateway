@@ -61,13 +61,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
 
         // if this subscriber only applies to certain entity types,
         // add some code to check the entity type as early as possible
-        if (!$objectEntity instanceof ObjectEntity ) {
-            return;
-        }
-        if(!$objectEntity->getEntity() ){
-            return;
-        }
-        if(!$objectEntity->getEntity()->getGateway()){
+        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity()|| !$objectEntity->getEntity()->getGateway() || !$objectEntity->getUri() ) {
             return;
         }
 
@@ -81,6 +75,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
                 /* @todo figure out how to this promise style */
                 $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
                 $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '');
+                $result = json_decode($result->getBody()->getContents(), true);
                 $objectEntity->setExternalResult($result);
                 $item->set($result);
                 //$item->expiresAt(new \DateTime('tomorrow'));

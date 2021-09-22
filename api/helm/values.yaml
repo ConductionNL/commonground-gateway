@@ -47,22 +47,22 @@ security:
       location: http://contactcatalogus
 
 php:
-  repository: docker.io/conduction/commonground-gateway-php
+  repository: ghcr.io/conductionnl/commonground-gateway-php
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
 nginx:
-  repository: docker.io/conduction/commonground-gateway-nginx
+  repository: ghcr.io/conductionnl/commonground-gateway-nginx
   pullPolicy: Always
   tag: "latest"
 
 redis:
   enabled: true
-  cluster:
-    enabled: false
+  architecture: standalone
   redisPort: 6379
-  usePassword: false
+  auth:
+    enabled: false
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

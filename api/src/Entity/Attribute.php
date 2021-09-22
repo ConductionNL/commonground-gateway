@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible atribute on an Entity
+ * An possible attribute on an Entity
  *
  * @category Entity
  *
@@ -85,7 +85,7 @@ class Attribute
      * @Assert\Length(max = 255)
      * @Assert\Choice({"string", "integer", "boolean", "number", "datetime", "object"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $type;
 
@@ -94,7 +94,6 @@ class Attribute
      *
      * @example string
      *
-     * @Assert\NotBlank
      * @Assert\Length(max = 255)
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -268,6 +267,17 @@ class Attribute
     private $minProperties;
 
     /**
+     * @var string If the attribute targerts an object that object might have an inversedBy field allowing an two way connection
+     *
+     * @example property
+     *
+     * @Assert\Type("string")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $inversedBy;
+
+    /**
      * @var bool Only whether or not this property is required
      *
      * @example false
@@ -277,6 +287,27 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $required;
+
+    /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $requiredIf = [];
+
+
+    /**
+     * @var array conditional requiremends for field
+     *
+     * @example false
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $forbidenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -340,6 +371,17 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $nullable;
+
+    /**
+     * @var bool Whether or not this property must be unique
+     *
+     * @example false
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $mustBeUnique;
 
     /**
      * @var bool Whether or not this property is read only
@@ -409,6 +451,30 @@ class Attribute
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
     private $validations;
+
+    /**
+     *
+     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $persistToGateway = false;
+
+    /**
+     *
+     * Whether or not this property is searchable
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $searchable = false;
+
+    /**
+     *
+     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities)
+     *
+     * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
+     */
+    private $cascade = false;
 
     /**
      * @var Datetime The moment this request was created
@@ -680,6 +746,31 @@ class Attribute
         return $this;
     }
 
+    public function getRequiredIf(): ?array
+    {
+        return $this->requiredIf;
+    }
+
+    public function setRequiredIf(?array $requiredIf): self
+    {
+        $this->requiredIf = $requiredIf;
+
+        return $this;
+    }
+
+
+    public function getForbidenIf(): ?array
+    {
+        return $this->forbidenIf;
+    }
+
+    public function setForbidenIf(?array $forbidenIf): self
+    {
+        $this->forbidenIf = $forbidenIf;
+
+        return $this;
+    }
+
     public function getEnum(): ?array
     {
         return $this->enum;
@@ -692,7 +783,7 @@ class Attribute
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -701,8 +792,8 @@ class Attribute
     {
         $this->type = $type;
 
-        // If the atribute type is changes away from an object we need to drop the object
-        if($type != 'object' and $this->object ){
+        // If the attribute type is changes away from an object we need to drop the object
+        if($type != 'object' and $this->object ) {
             unset($this->object);
         }
 
@@ -793,6 +884,18 @@ class Attribute
         return $this;
     }
 
+    public function getMustBeUnique(): ?bool
+    {
+        return $this->mustBeUnique;
+    }
+
+    public function setMustBeUnique(bool $mustBeUnique): self
+    {
+        $this->mustBeUnique = $mustBeUnique;
+
+        return $this;
+    }
+
     public function getReadOnly(): ?bool
     {
         return $this->readOnly;
@@ -868,6 +971,7 @@ class Attribute
 
     public function getValidations(): ?array
     {
+        //TODO: this list of validations is not complete!
         $validations = [];
         $validations['maximum']             = $this->getMaximum();
         $validations['exclusiveMaximum']    = $this->getExclusiveMaximum();
@@ -886,30 +990,34 @@ class Attribute
         $validations['anyOf']               = $this->getAnyOf();
         $validations['oneOf']               = $this->getOneOf();
         $validations['defaultValue']        = $this->getDefaultValue();
-
+        $validations['nullable']            = $this->getNullable();
+        $validations['mustBeUnique']        = $this->getMustBeUnique();
 
         return $validations;
     }
 
     public function setValidations(?array $validations): self
     {
-        if(array_key_exists('maximum',$validations)){           $this->getMaximum($validations['maximum']);}
-        if(array_key_exists('exclusiveMaximum',$validations)){  $this->getExclusiveMaximum($validations['exclusiveMaximum']);}
-        if(array_key_exists('minimum',$validations)){           $this->getMinimum($validations['minimum']);}
-        if(array_key_exists('exclusiveMinimum',$validations)){  $this->getExclusiveMinimum($validations['exclusiveMinimum']);}
-        if(array_key_exists('maxLength',$validations)){         $this->getMaxLength($validations['maxLength']);}
-        if(array_key_exists('minLength',$validations)){         $this->getMinLength($validations['minLength']);}
-        if(array_key_exists('maxItems',$validations)){          $this->getMaxItems($validations['maxItems']);}
-        if(array_key_exists('minItems',$validations)){          $this->getMinItems($validations['minItems']);}
-        if(array_key_exists('uniqueItems',$validations)){       $this->getUniqueItems($validations['uniqueItems']);}
-        if(array_key_exists('maxProperties',$validations)){     $this->getMaxProperties($validations['maxProperties']);}
-        if(array_key_exists('minProperties',$validations)){     $this->getMinProperties($validations['minProperties']);}
-        if(array_key_exists('required',$validations)){          $this->getRequired($validations['required']);}
-        if(array_key_exists('enum',$validations)){              $this->getEnum($validations['enum']);}
-        if(array_key_exists('allOf',$validations)){             $this->getAllOf($validations['allOf']);}
-        if(array_key_exists('anyOf',$validations)){             $this->getAnyOf($validations['anyOf']);}
-        if(array_key_exists('oneOf',$validations)){             $this->getOneOf($validations['oneOf']);}
-        if(array_key_exists('defaultValue',$validations)){      $this->getDefaultValue($validations['defaultValue']);}
+        //TODO: this list of validations is not complete!
+        if(array_key_exists('maximum',$validations)){           $this->setMaximum($validations['maximum']);}
+        if(array_key_exists('exclusiveMaximum',$validations)){  $this->setExclusiveMaximum($validations['exclusiveMaximum']);}
+        if(array_key_exists('minimum',$validations)){           $this->setMinimum($validations['minimum']);}
+        if(array_key_exists('exclusiveMinimum',$validations)){  $this->setExclusiveMinimum($validations['exclusiveMinimum']);}
+        if(array_key_exists('maxLength',$validations)){         $this->setMaxLength($validations['maxLength']);}
+        if(array_key_exists('minLength',$validations)){         $this->setMinLength($validations['minLength']);}
+        if(array_key_exists('maxItems',$validations)){          $this->setMaxItems($validations['maxItems']);}
+        if(array_key_exists('minItems',$validations)){          $this->setMinItems($validations['minItems']);}
+        if(array_key_exists('uniqueItems',$validations)){       $this->setUniqueItems($validations['uniqueItems']);}
+        if(array_key_exists('maxProperties',$validations)){     $this->setMaxProperties($validations['maxProperties']);}
+        if(array_key_exists('minProperties',$validations)){     $this->setMinProperties($validations['minProperties']);}
+        if(array_key_exists('required',$validations)){          $this->setRequired($validations['required']);}
+        if(array_key_exists('enum',$validations)){              $this->setEnum($validations['enum']);}
+        if(array_key_exists('allOf',$validations)){             $this->setAllOf($validations['allOf']);}
+        if(array_key_exists('anyOf',$validations)){             $this->setAnyOf($validations['anyOf']);}
+        if(array_key_exists('oneOf',$validations)){             $this->setOneOf($validations['oneOf']);}
+        if(array_key_exists('defaultValue',$validations)){      $this->setDefaultValue($validations['defaultValue']);}
+        if(array_key_exists('nullable',$validations)){          $this->setNullable($validations['nullable']);}
+        if(array_key_exists('mustBeUnique',$validations)){      $this->setMustBeUnique($validations['mustBeUnique']);}
 
         return $this;
     }
@@ -937,4 +1045,55 @@ class Attribute
 
         return $this;
     }
+
+    public function getPersistToGateway(): ?bool
+    {
+        return $this->persistToGateway;
+    }
+
+    public function setPersistToGateway(?bool $persistToGateway): self
+    {
+        $this->persistToGateway = $persistToGateway;
+
+        return $this;
+    }
+
+    public function getSearchable(): ?bool
+    {
+        return $this->searchable;
+    }
+
+    public function setSearchable(?bool $searchable): self
+    {
+        $this->searchable = $searchable;
+
+        return $this;
+    }
+
+    public function getCascade(): ?bool
+    {
+        return $this->cascade;
+    }
+
+    public function setCascade(?bool $cascade): self
+    {
+        $this->cascade = $cascade;
+
+        return $this;
+    }
+
+    public function getInversedBy(): ?bool
+    {
+        return $this->inversedBy;
+    }
+
+    public function setInversedBy(?bool $inversedBy): self
+    {
+        $this->inversedBy = $inversedBy;
+
+        return $this;
+    }
+
+
+
 }
