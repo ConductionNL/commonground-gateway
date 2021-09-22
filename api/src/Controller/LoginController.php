@@ -39,13 +39,13 @@ class LoginController extends AbstractController
     }
 
 
-    public function getObject(string $uri, EavService $eavService): array
+    public function getObject(string $uri, EavService $eavService): ?array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if($object instanceof ObjectEntity){
             return $eavService->renderResult($object);
         }
-        return [];
+        return null;
     }
     /**
      * @Route("/me")
