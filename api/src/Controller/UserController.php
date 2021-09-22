@@ -117,10 +117,10 @@ class UserController extends AbstractController
         } catch (ClientException $exception){
             $status = 403;
             $user = [
-                "message" => "Invalid token",
+                "message" => "Invalid token, username or password",
                 "type" => "error",
                 "path" => 'users/reset_password',
-                "data" => ["token"=>$data['token']],
+                "data" => ["username" => $data['username'], 'password' => $data['password'], "token"=>$data['token']],
             ];
         }
 
