@@ -49,6 +49,7 @@ class LoginController extends AbstractController
     }
     /**
      * @Route("/me")
+     * @Route("api/users/me", methods={"get"})
      */
     public function MeAction(Request $request, CommonGroundService $commonGroundService, EavService $eavService)
     {
