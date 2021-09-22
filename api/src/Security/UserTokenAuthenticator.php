@@ -65,7 +65,11 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
         $publicKey = $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']);
-        $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
+        try{
+            $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
+        } catch(\Exception $exception) {
+            throw new AuthenticationException('The provided token is not valid');
+        }
 
         $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], true, false, true, false, false);
         $session = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
@@ -85,7 +89,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
                 $user['roles'][$key] = "ROLE_$role";
             }
         }
-        return new AuthenticationUser($user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null);
+        return new AuthenticationUser($user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }
 
     public function checkCredentials($credentials, UserInterface $user)
