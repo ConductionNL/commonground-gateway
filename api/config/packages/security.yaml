@@ -4,12 +4,26 @@ security:
         authenticationProvider:
             id: App\Security\User\AuthenticationProvider
     firewalls:
+        create_user:
+            anonymous: true
+            pattern: (^/api/users$|^/api/users/$|^/api/eav/data/users$|^/api/eav/data/users/$|^/api/organizations$)
+            methods: [ POST ]
+        password_reset:
+            anonymous: true
+            pattern: (^/api/users/request_password_reset/$|^/api/users/request_password_reset$|^/api/users/reset_password/$|^/api/users/reset_password$|^/users/request_password_reset/$|^/users/request_password_reset$|^/users/reset_password/$|^/users/reset_password$)
+            methods: [ POST ]
+        documentation:
+            anonymous: true
+            pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$|^/api/organizations$)
+            methods: [ GET ]
+        login:
+            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$)
+            anonymous: true
         main:
-            anonymous: ~
-            pattern: ^/
-            logout:
-                path: app_user_logout
-                target: app_user_redirect
+#            logout:
+#                path: app_user_logout
+#                target: app_user_redirect
+
             stateless: false
             provider: authenticationProvider
             guard:
@@ -17,7 +31,8 @@ security:
                     - App\Security\DigispoofAuthenticator
                     - App\Security\OauthAuthenticator
                     - App\Security\BasicAuthAuthenticator
-                entry_point: App\Security\OauthAuthenticator
+                    - App\Security\UserTokenAuthenticator
+                entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 
@@ -27,4 +42,4 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+#        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }
