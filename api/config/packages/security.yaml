@@ -8,6 +8,10 @@ security:
             anonymous: true
             pattern: (^/api/users$|^/api/users/$|^/api/eav/data/users$|^/api/eav/data/users/$|^/api/organizations$)
             methods: [ POST ]
+        password_reset:
+            anonymous: true
+            pattern: (^/api/users/request_password_reset/$|^/api/users/request_password_reset$|^/api/users/reset_password/$|^/api/users/reset_password$|^/users/request_password_reset/$|^/users/request_password_reset$|^/users/reset_password/$|^/users/reset_password$)
+            methods: [ POST ]
         documentation:
             anonymous: true
             pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$|^/api/organizations$)
