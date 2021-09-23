@@ -116,20 +116,10 @@ class UserController extends AbstractController
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $data = json_decode($request->getContent(), true);
-        $user = $commonGroundService->createResource(['jwtToken' => $data['jwtToken']],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
+        $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+        $user = $commonGroundService->createResource(['jwtToken' => $token],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
 
-        if(!$user) {
-            $status = 403;
-            $user = [
-                "message" => "Invalid token",
-                "type" => "error",
-                "path" => 'users/login',
-                "data" => ["username"=>$data['username']],
-            ];
-        }
-
-        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        return new Response(json_encode(['status' => 'logout successful']), 200, ['Content-type' => 'application/json']);
     }
 
 
@@ -138,21 +128,21 @@ class UserController extends AbstractController
      */
     public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $data = json_decode($request->getContent(), true);
-        if(!$data || !array_key_exists('jwtToken', $data)){
+        $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+        if(!$token){
             $status = 403;
             $user = [
                 "message" => "Invalid token",
                 "type" => "error",
-                "path" => 'users/login',
-                "data" => [],
+                "path" => 'users/me',
+                "data" => $token,
             ];
             return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
         }
 
 
         // split the jwt
-        $tokenParts = explode('.', $data['jwtToken']);
+        $tokenParts = explode('.', $token);
         $header = base64_decode($tokenParts[0]);
         $payload = base64_decode($tokenParts[1]);
         $signature_provided = $tokenParts[2];
@@ -163,7 +153,7 @@ class UserController extends AbstractController
                 "message" => "Invalid token",
                 "type" => "error",
                 "path" => 'users/login',
-                "data" => ["jwtToken"=>$data['jwtToken']],
+                "data" => ["jwtToken"=>$token],
             ];
         }
         else{

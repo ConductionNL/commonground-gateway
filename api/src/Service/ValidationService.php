@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class ValidationService
@@ -40,7 +41,7 @@ class ValidationService
      * @return ObjectEntity
      * @throws Exception
      */
-    public function validateEntity (ObjectEntity $objectEntity, array $post): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
@@ -66,9 +67,9 @@ class ValidationService
         }
 
         // Check post for not allowed properties
-        foreach($post as $key=>$value){
-            if(!$entity->getAttributeByName($key)){
-                $objectEntity->addError($key,'Does not exsist on this property');
+        foreach($post as $key=>$value) {
+            if(!$entity->getAttributeByName($key) && $key != 'id') {
+                $objectEntity->addError($key,'Does not exist on this property');
             }
         }
 
@@ -219,13 +220,25 @@ class ValidationService
                     break;
                 }
                 if(array_key_exists('id', $object)) {
-                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->get($object['id']);
+                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function(ObjectEntity $item) use($object) {
+                        return $item->getId() == $object['id'];
+                    });
+                    if (count($subObject) == 0) {
+                        $objectEntity->addError($attribute->getName(),'No existing object found with this id: '.$object['id']);
+                        break;
+                    } elseif (count($subObject) > 1) {
+                        $objectEntity->addError($attribute->getName(),'More than 1 object found with this id: '.$object['id']);
+                        break;
+                    }
+                    $subObject = $subObject->first();
                 }
                 else {
                     $subObject = New ObjectEntity();
+
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
                 }
+
                 $subObject = $this->validateEntity($subObject, $object);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
@@ -265,6 +278,12 @@ class ValidationService
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
+                // If this object is given as a uuid (string) it should be valid, if not throw error
+                if (is_string($value) && Uuid::isValid($value) == false) {
+                    $objectEntity->addError($attribute->getName(), 'The given value is a invalid object or a invalid uuid.');
+                    break;
+                }
+
                 // Lets check for cascading
                 /* todo make switch */
                 if(!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)){
@@ -291,7 +310,7 @@ class ValidationService
                 if(!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)){
                     // Object ophalen
                     if(!$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getEntity()->getName());
+                        $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . $value . ' of type '. $attribute->getObject()->getName());
                         break;
                     }
 
@@ -301,11 +320,11 @@ class ValidationService
                     break;
 
                 }
-                if(!$attribute->getCascade() && $attribute->getMultiple()){
+                if(!$attribute->getCascade() && $attribute->getMultiple()) {
                     $valueObject->getObjects()->clear();
                     foreach($value as $arraycheck) {
                         if(is_string($value) && !$subObject = $this->em->getRepository("App:ObjectEntity")->find($value)){
-                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getEntity()->getName());
+                            $objectEntity->addError($attribute->getName(),'Could not find an object with id ' . (string) $value . ' of type '. $attribute->getObject()->getName());
                         }
                         else{
                             // object toeveogen
@@ -429,6 +448,11 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
                 }
                 break;
+            case 'telephone':
+                if (!is_string($value) || (preg_match('/^\+?[1-9]\d{1,14}$/', $value) !== 1)) {
+                    $objectEntity->addError($attribute->getName(),'Expects an telephone format, ' . $value . ' is not a valid phone number that conforms to the E.164 standard.');
+                }
+                break;
             case 'uuid':
                 if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
                     $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
@@ -503,8 +527,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()){
-                        $postEndpoint = explode($objectToUri->getEntity()->getEndpoint(), $objectToUri->getUri());
-                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().$postEndpoint[1];
+                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     }
                     else{
                         $ubjectUri = $objectToUri->getUri();
@@ -573,7 +596,9 @@ class ValidationService
                 $gatewayResponceLog = New GatewayResponceLog;
                 $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
                 //$gatewayResponceLog->setObjectEntity($objectEntity);
-                $gatewayResponceLog->setResponce($error->getResponse());
+                if($error->getResponse()){
+                    $gatewayResponceLog->setResponce($error->getResponse());
+                }
                 $this->em->persist($gatewayResponceLog);
                 $this->em->flush();
 
