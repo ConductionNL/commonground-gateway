@@ -15,6 +15,9 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Respect\Validation\Validator;
+use Respect\Validation\Exceptions\ValidationException;
+use Respect\Validation\Exceptions\NestedValidationException;
+
 
 class ValidationService
 {
@@ -254,76 +257,273 @@ class ValidationService
         return $objectEntity;
     }
 
+
     /**
+     * This function hydrates an object(tree) (new style)
+     *
+     * The act of hydrating means filling objects with values from a post
+     *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param $value
      * @return ObjectEntity
      */
-    private function validateType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    private function hydrate(ObjectEntity $objectEntity, $post): ObjectEntity
     {
-        // First we need to do type validation
+        $entity = $objectEntity->getEntity();
+        foreach($entity->getAttributes() as $attribute) {
+            // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
+            if (key_exists($attribute->getName(), $post)) {
+                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($post[$attribute->getName()]);
+            }
+            // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
+            elseif ($attribute->getDefaultValue()) {
+                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+            }
+            /* @todo this feels wierd, should we PUT "value":null if we want to delete? */
+            //else {
+            //    // handling the setting to null of exisiting variables
+            //    $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            //}
+        }
 
+        // Check post for not allowed properties
+        foreach($post as $key=>$value) {
+            if($key != 'id' && !$entity->getAttributeByName($key)) {
+                $objectEntity->addError($key,'Property '.(string) $key.' not exist on this object');
+            }
+        }
+    }
+
+    /* @todo ik mis nog een set value functie die cascading en dergenlijke afhandeld */
+
+    /**
+     * This function validates an object (new style)
+     *
+     * @param ObjectEntity $objectEntity
+     * @return ObjectEntity
+     */
+    private function validate(ObjectEntity $objectEntity): ObjectEntity
+    {
+        // Lets loop trough the objects values and check those
+        foreach($objectEntity->getObjectValues() as $value){
+            if($value->getAttribute()->getMultiple()){
+                foreach($value->getValue() as $key=>$tempValue){
+                    $objectEntity = $this->validateValue($value, $tempValue, $key);
+                }
+            }
+            else{
+                $objectEntity = $this->validateValue($value, $value->getValue());
+            }
+        }
+
+        // It is now here that we know if we have errors or not
+
+        /* @todo lets create an promise */
 
         return $objectEntity;
     }
 
     /**
-     * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
+     * This function validates a given value for an object (new style)
+     *
+     * @param Value $valueObject
      * @param $value
      * @return ObjectEntity
      */
-    private function validateValue(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    private function validateValue(Value $valueObject, $value): ObjectEntity
     {
-        $validations = $attribute->getValidations();
+        // Set up the validator
+        $validator = new Validator();
+        $objectEntity = $value->getObjectEntity();
 
-        foreach($validations as $validation => $config){
-            switch ($validation) {
-                case 'multipleOf':
-                    break;
-                case 'maximum':
-                    break;
-                case 'exclusiveMaximum':
-                    break;
-                case 'minimum':
-                    break;
-                case 'exclusiveMinimum':
-                    break;
-                case 'maxLength':
-                    break;
-                case 'minLength':
-                    break;
-                case 'maxItems':
-                    break;
-                case 'minItems':
-                    break;
-                case 'uniqueItems':
-                    break;
-                case 'maxProperties':
-                    break;
-                case 'minProperties':
-                    break;
-                case 'minDate':
-                    break;
-                case 'maxDate':
-                    break;
-                case 'required':
-                    if(!$value){
-                        $objectEntity->addError($attribute->getName(),'This attribute is required');
-                    }
-                    break;
-                case 'forbiden':
-                    if($value){
-                        $objectEntity->addError($attribute->getName(),'This attribute is forbiden');
-                    }
-                    break;
-                default:
-                    $objectEntity->addError($attribute->getName(),'Has an an unknown validation: [' . (string) $validation . '] set to'. (string) $config);
-            }
+        $validator = $this->validateType($valueObject, $validator);
+        $validator = $this->validateFormat($valueObject, $validator, $value);
+        $validator = $this->validateValidations($valueObject, $validator);
+
+        // Lets roll the actual validation
+        try {
+            $validator->assert($value);
+        } catch(NestedValidationException $exception) {
+            $objectEntity->addError($value->getAttribute()->getName(),$exception->getMessages());
         }
 
         return $objectEntity;
+    }
+
+
+    /**
+     * This function handles the type part of value validation
+     *
+     * @param ObjectEntity $objectEntity
+     * @param $value
+     * @param array $validations
+     * @param Validator $validator
+     * @return Validator
+     */
+    private function validateType(Value $valueObject, Validator $validator, $value): Validator
+    {
+        // if no type is provided we dont validate
+        if ($type = $valueObject->getAttribute()->getType() == null) return $validator;
+        /* @todo we realy might consider throwing an error */
+
+        // In order not to allow any respect/validation function to be called we explicatly call those containing formats
+        $basicTypes = ['bool','string','int','array','float'];
+
+        // new route
+        if(in_array($type, $basicTypes)){
+            $validator->type($type);
+        }
+        else{
+            // The are some uncoverd types so we will have to add those manualy
+            switch ($type) {
+                case 'date':
+                    $validator->date();
+                    break;
+                case 'datetime':
+                    $validator->dateTime();
+                    break;
+                case 'number':
+                    $validator->number();
+                    break;
+                case 'object':
+                    // We dont validate an object normaly but hand it over to its own validator
+                    $this->validate($value);
+                    break;
+                default:
+                    // we should never end up here
+                    /* @todo throw an custom error */
+            }
+        }
+
+        return $validator;
+    }
+
+    /**
+     * Format validation
+     *
+     * Format validation is done using the [respect/validation](https://respect-validation.readthedocs.io/en/latest/) packadge for php
+     *
+     * @param Value $valueObject
+     * @param Validator $validator
+     * @return Validator
+     */
+    private function validateFormat(Value $valueObject, Validator $validator): Validator
+    {
+        // if no format is provided we dont validate
+        if ($format = $valueObject->getAttribute()->getFormat() == null) return $validator;
+
+        // In order not to allow any respect/validation function to be called we explicatly call those containing formats
+        $allowedFormats = ['countryCode','bsn','url','uuid','email','phone','json'];
+
+        // new route
+        if(in_array($format, $allowedFormats)){
+            $validator->$format();
+        }
+
+        return $validator;
+    }
+
+    /**
+     * This function handles the validator part of value validation
+     *
+     * @param ObjectEntity $objectEntity
+     * @param $value
+     * @param array $validations
+     * @param Validator $validator
+     * @return Validator
+     */
+    private function validateValidations(Value $valueObject,  Validator $validator): Validator
+    {
+        $validations = $valueObject->getAttribute()->getValidations();
+        foreach($validations as $validation => $config){
+            switch ($validation) {
+                case 'multipleOf':
+                    $validator->multiple($config);
+                case 'maximum':
+                case 'exclusiveMaximum': // doet niks
+                case 'minimum':
+                case 'exclusiveMinimum': // doet niks
+                    $min = $validations['minimum'] ?? null;
+                    $max = $validations['maximum'] ?? null;
+                    $validator->between($min, $max);
+                    break;
+                case 'minLength':
+                case 'maxLength':
+                    $min = $validations['minLength'] ?? null;
+                    $max = $validations['maxLength'] ?? null;
+                    $validator->length($min, $max);
+                    break;
+                case 'maxItems':
+                case 'minItems':
+                    $min = $validations['minItems'] ?? null;
+                    $max = $validations['maxItems'] ?? null;
+                    $validator->length($min, $max);
+                    break;
+                case 'uniqueItems':
+                    $validator->unique();
+                case 'maxProperties':
+                case 'minProperties':
+                    $min = $validations['minProperties'] ?? null;
+                    $max = $validations['maxProperties'] ?? null;
+                    $validator->length($min, $max);
+                case 'minDate':
+                case 'maxDate':
+                    $min = new DateTime($validations['minDate'] ?? null);
+                    $max = new DateTime($validations['maxDate'] ?? null);
+                    $validator->length($min, $max);
+                    break;
+                case 'required':
+                    $validator->notEmpty();
+                    break;
+                case 'forbidden':
+                    $validator->not(Validator::notEmpty());
+                    break;
+                case 'conditionals':
+                    /// here we go
+                    foreach($config as $con){
+                        // Lets check if the referenced value is present
+                        if($conValue = $objectEntity->getValueByName($con['property'])->value){
+                            switch ($con['condition']) {
+                                case '==':
+                                    if($conValue == $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                                case '!=':
+                                    if($conValue != $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                                case '<=':
+                                    if($conValue <= $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                                case '>=':
+                                    if($conValue >= $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                                case '>':
+                                    if($conValue > $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                                case '<':
+                                    if($conValue < $con['value']){
+                                        $validator = $this-> validateValue($objectEntity, $value, $con['validations'], $validator);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    // we should never end up here
+                    //$objectEntity->addError($attribute->getName(),'Has an an unknown validation: [' . (string) $validation . '] set to'. (string) $config);
+            }
+        }
+
+        return $validator;
     }
 
 
@@ -502,7 +702,11 @@ class ValidationService
         return $objectEntity;
     }
 
-    /** TODO: docs
+    /**
+     * Format validation
+     *
+     * Format validation is done using the [respect/validation](https://respect-validation.readthedocs.io/en/latest/) packadge for php
+     *
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
      * @param $value
@@ -510,9 +714,11 @@ class ValidationService
      */
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        // if no format is provided we dont validate
         if ($attribute->getFormat() == null) return $objectEntity;
 
-        $allowedValidations = ['countryCode','bsn','url','uuid','email','phone'];
+        // In order not to allow any respect/validation function to be called we explicatly call those containing formats
+        $allowedValidations = ['countryCode','bsn','url','uuid','email','phone','json'];
         $format = $attribute->getFormat();
 
         // new route
@@ -524,37 +730,8 @@ class ValidationService
             }
             return $objectEntity;
         }
-        else{
-            $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
-        }
 
-        // Do validation for attribute depending on its format
-        switch ($format) {
-            case 'email':
-                if (!is_string($value) || !Validator::email()->validate($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
-                }
-                break;
-            case 'telephone':
-                if (!is_string($value) || !Validator::phone()->validate($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects an telephone format, ' . $value . ' is not a valid phone number that conforms to the E.164 standard.');
-                }
-                break;
-            case 'uuid':
-                if (!is_string($value) || !Validator::uuid()->validate($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
-                }
-                break;
-            case 'url':
-                if (!is_string($value) || !Validator::url()->validate($value)) {
-                    $objectEntity->addError($attribute->getName(),'Expects an url format, ' . $value . ' is not a valid url.');
-                }
-                break;
-            default:
-                $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
-        }
-
-        return $objectEntity;
+        $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
     }
 
     /** TODO: docs

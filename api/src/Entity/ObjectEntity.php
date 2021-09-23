@@ -287,7 +287,7 @@ class ObjectEntity
      * @param string $error the error message
      * @return array all of the errors so far
      */
-    public function addError(string $attributeName, string $error): self
+    public function addError(string $attributeName, string $error, $key = null): self
     {
         $errors = $this->getErrors();
 
