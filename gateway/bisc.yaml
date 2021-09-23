@@ -314,7 +314,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         required: true
-        format: telephone
+        format: phone
         entity: '@telephone'
         persistToGateway: true
 
@@ -358,10 +358,10 @@ App\Entity\Attribute:
     address_country:
         name: country
         type: string
+        format: countryCode
         maxLength: 255
         entity: '@address'
         persistToGateway: true
-
 
     # Person Properties
     person_givenName:
@@ -921,7 +921,7 @@ App\Entity\Attribute:
         type: datetime
         entity: '@civicIntegration'
         requiredIf:
-            requirement: CURRENTLY_WORKING_ON_INTEGRATION
+            - requirement: CURRENTLY_WORKING_ON_INTEGRATION
 
 
     # LearningNeed properties

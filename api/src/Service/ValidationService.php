@@ -14,6 +14,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Respect\Validation\Validator;
 
 class ValidationService
 {
@@ -253,6 +254,79 @@ class ValidationService
         return $objectEntity;
     }
 
+    /**
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param $value
+     * @return ObjectEntity
+     */
+    private function validateType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    {
+        // First we need to do type validation
+
+
+        return $objectEntity;
+    }
+
+    /**
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param $value
+     * @return ObjectEntity
+     */
+    private function validateValue(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    {
+        $validations = $attribute->getValidations();
+
+        foreach($validations as $validation => $config){
+            switch ($validation) {
+                case 'multipleOf':
+                    break;
+                case 'maximum':
+                    break;
+                case 'exclusiveMaximum':
+                    break;
+                case 'minimum':
+                    break;
+                case 'exclusiveMinimum':
+                    break;
+                case 'maxLength':
+                    break;
+                case 'minLength':
+                    break;
+                case 'maxItems':
+                    break;
+                case 'minItems':
+                    break;
+                case 'uniqueItems':
+                    break;
+                case 'maxProperties':
+                    break;
+                case 'minProperties':
+                    break;
+                case 'minDate':
+                    break;
+                case 'maxDate':
+                    break;
+                case 'required':
+                    if(!$value){
+                        $objectEntity->addError($attribute->getName(),'This attribute is required');
+                    }
+                    break;
+                case 'forbiden':
+                    if($value){
+                        $objectEntity->addError($attribute->getName(),'This attribute is forbiden');
+                    }
+                    break;
+                default:
+                    $objectEntity->addError($attribute->getName(),'Has an an unknown validation: [' . (string) $validation . '] set to'. (string) $config);
+            }
+        }
+
+        return $objectEntity;
+    }
+
+
     /** TODO: docs
      * @param ObjectEntity $objectEntity
      * @param Attribute $attribute
@@ -438,25 +512,41 @@ class ValidationService
     {
         if ($attribute->getFormat() == null) return $objectEntity;
 
+        $allowedValidations = ['countryCode','bsn','url','uuid','email','phone'];
+        $format = $attribute->getFormat();
+
+        // new route
+        if(in_array($attribute->getFormat(), $allowedValidations)){
+            try {
+                Validator::$format()->check($value);
+            } catch(ValidationException $exception) {
+                $objectEntity->addError($attribute->getName(),$exception->getMessage());
+            }
+            return $objectEntity;
+        }
+        else{
+            $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
+        }
+
         // Do validation for attribute depending on its format
-        switch ($attribute->getFormat()) {
+        switch ($format) {
             case 'email':
-                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                if (!is_string($value) || !Validator::email()->validate($value)) {
                     $objectEntity->addError($attribute->getName(),'Expects an email format, ' . $value . ' is not a valid email.');
                 }
                 break;
             case 'telephone':
-                if (!is_string($value) || (preg_match('/^\+?[1-9]\d{1,14}$/', $value) !== 1)) {
+                if (!is_string($value) || !Validator::phone()->validate($value)) {
                     $objectEntity->addError($attribute->getName(),'Expects an telephone format, ' . $value . ' is not a valid phone number that conforms to the E.164 standard.');
                 }
                 break;
             case 'uuid':
-                if (!is_string($value) || (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $value) !== 1)) {
+                if (!is_string($value) || !Validator::uuid()->validate($value)) {
                     $objectEntity->addError($attribute->getName(),'Expects a uuid format, ' . $value . ' is not a valid uuid.');
                 }
                 break;
             case 'url':
-                if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_URL)) {
+                if (!is_string($value) || !Validator::url()->validate($value)) {
                     $objectEntity->addError($attribute->getName(),'Expects an url format, ' . $value . ' is not a valid url.');
                 }
                 break;
