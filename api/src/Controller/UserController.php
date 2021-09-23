@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\ApplicationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use GuzzleHttp\Exception\ClientException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -96,17 +97,33 @@ class UserController extends AbstractController
     public function resetAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
-        $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token'], false, false,false,false);
-
-        if(!$user) {
+        if(!isset($data['username']) || !isset($data['password']) || !isset($data['token'])){
             $status = 403;
             $user = [
-                "message" => "Invalid token",
+                "message" => "Data missing",
                 "type" => "error",
-                "path" => 'users/login',
-                "data" => ["username"=>$data['username']],
+                "path" => 'users/reset_password',
+                "data" => [],
+            ];
+            isset($data['username']) ?? $user['data']['username'] = null;
+            isset($data['password']) ?? $user['data']['password'] = null;
+            isset($data['token']) ?? $user['data']['token'] = null;
+            return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        }
+        try{
+            $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token']);
+            $status = 200;
+            $user['username'] = $data['username'];
+        } catch (ClientException $exception){
+            $status = 403;
+            $user = [
+                "message" => "Invalid token, username or password",
+                "type" => "error",
+                "path" => 'users/reset_password',
+                "data" => ["username" => $data['username'], 'password' => $data['password'], "token"=>$data['token']],
             ];
         }
+
 
         return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
     }
@@ -124,7 +141,6 @@ class UserController extends AbstractController
 
 
     /**
-     * @Route("api/users/me", methods={"get"})
      */
     public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
     {

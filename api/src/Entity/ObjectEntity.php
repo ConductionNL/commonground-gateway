@@ -548,7 +548,7 @@ class ObjectEntity
         /* @todo we should only check values that actuale have conditional logic optmimalisation */
         // do the actual chack
         foreach($this->getObjectValues() as $value){
-            if(empty($value->getAttribute()->getRequiredIf())){
+            if(count($value->getAttribute()->getRequiredIf())==0){
                 continue;
             }
             // Oke loop the conditions
