@@ -24,7 +24,7 @@ security:
 #                path: app_user_logout
 #                target: app_user_redirect
 
-            stateless: false
+            stateless: true
             provider: authenticationProvider
             guard:
                 authenticators:
