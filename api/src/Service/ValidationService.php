@@ -73,9 +73,6 @@ class ValidationService
             }
         }
 
-        // Check optional conditional logic
-        $objectEntity->checkConditionlLogic();
-
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if(!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()){
             $promise = $this->createPromise($objectEntity, $post);
