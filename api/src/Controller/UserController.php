@@ -98,7 +98,7 @@ class UserController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         if(!isset($data['username']) || !isset($data['password']) || !isset($data['token'])){
-            $status = 403;
+            $status = 400;
             $user = [
                 "message" => "Data missing",
                 "type" => "error",
@@ -115,7 +115,7 @@ class UserController extends AbstractController
             $status = 200;
             $user['username'] = $data['username'];
         } catch (ClientException $exception){
-            $status = 403;
+            $status = 400;
             $user = [
                 "message" => "Invalid token, username or password",
                 "type" => "error",
