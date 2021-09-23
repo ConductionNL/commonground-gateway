@@ -7,6 +7,8 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\CommonGroundBundle\Service\SerializerService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -26,17 +28,19 @@ class EavService
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
+    private SerializerService $serializerService;
 
     /* @wilco waar hebben we onderstaande voor nodig? */
     private string $entityName;
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+        $this->serializerService = $serializerService;
     }
 
     /**
@@ -205,10 +209,11 @@ class EavService
         if(array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
+
         return new Response(
-            json_encode($result),
+            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
             $responseType,
-            ['content-type' => 'application/json']
+            ['content-type' => $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))]
         );
     }
 
