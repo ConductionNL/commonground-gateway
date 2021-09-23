@@ -39,7 +39,11 @@ class AuthenticationUser implements UserInterface, EquatableInterface
 
     private $email;
 
-    public function __construct(string $username = '', string $password = '', string $firstName = '', string $lastName = '', string $name = '', string $salt = null, array $roles = [], string $email = '', $locale = null)
+    private $organization;
+
+    private $person;
+
+    public function __construct(string $username = '', string $password = '', string $firstName = '', string $lastName = '', string $name = '', string $salt = null, array $roles = [], string $email = '', $locale = null, ?string $organization = null, ?string $person = null)
     {
         $this->username = $username;
         $this->password = $password;
@@ -51,6 +55,8 @@ class AuthenticationUser implements UserInterface, EquatableInterface
         $this->isActive = true;
         $this->email = $email;
         $this->locale = $locale; // The language of this user
+        $this->organization = $organization;
+        $this->person = $person;
     }
 
     public function __toString()
@@ -96,6 +102,15 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     public function getEmail()
     {
         return $this->email;
+    }
+
+    public function getOrganization()
+    {
+        return $this->organization;
+    }
+    public function getPerson()
+    {
+        return $this->person;
     }
 
     public function getLocale()
