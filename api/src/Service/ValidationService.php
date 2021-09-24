@@ -351,7 +351,7 @@ class ValidationService
 
 
     /**
-     * This function handles the type part of value validation
+     * This function handles the type part of value validation (new style)
      *
      * @param ObjectEntity $objectEntity
      * @param $value
@@ -401,7 +401,7 @@ class ValidationService
     }
 
     /**
-     * Format validation
+     * Format validation (new style)
      *
      * Format validation is done using the [respect/validation](https://respect-validation.readthedocs.io/en/latest/) packadge for php
      *
@@ -426,7 +426,7 @@ class ValidationService
     }
 
     /**
-     * This function handles the validator part of value validation
+     * This function handles the validator part of value validation (new style)
      *
      * @param ObjectEntity $objectEntity
      * @param $value
@@ -484,6 +484,7 @@ class ValidationService
                     /// here we go
                     foreach($config as $con){
                         // Lets check if the referenced value is present
+                        /* @tdo this isnt array proof */
                         if($conValue = $objectEntity->getValueByName($con['property'])->value){
                             switch ($con['condition']) {
                                 case '==':
