@@ -129,7 +129,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("api/users/logout", methods={"POST"})
+     * @Route("api/users/logout", methods={"POST", "GET"})
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
