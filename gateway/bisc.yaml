@@ -314,7 +314,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         required: true
-        format: telephone
+        format: phone
         entity: '@telephone'
         persistToGateway: true
 
@@ -358,10 +358,10 @@ App\Entity\Attribute:
     address_country:
         name: country
         type: string
+        format: countryCode
         maxLength: 255
         entity: '@address'
         persistToGateway: true
-
 
     # Person Properties
     person_givenName:
@@ -644,8 +644,6 @@ App\Entity\Attribute:
         type: string
         enum: ['VOLUNTEER_CENTER', 'LIBRARY_WEBSITE', 'SOCIAL_MEDIA', 'NEWSPAPER', 'VIA_VIA', 'OTHER']
         entity: '@studentIntake'
-        requiredIf:
-            referringOrganizationOther: OTHER
     studentIntake_foundViaOther:
         name: foundViaOther
         type: string
@@ -669,6 +667,8 @@ App\Entity\Attribute:
         type: integer # taalhuizen-service is the type float
         maxLength: 255
         entity: '@studentIntake'
+        requiredIf:
+            wentToLanguageHouseBefore: true
     studentIntake_network:
         name: network
         type: string
@@ -834,11 +834,10 @@ App\Entity\Attribute:
     education_level:
         name: level
         type: string
-        required: true
         enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
         entity: '@education'
         requiredIf:
-            doesCurrentlyFollowCourse: YES
+            type: EDUCATION
     education_institution:
         name: institution
         type: string
@@ -846,6 +845,7 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
+            type: COURSE
     education_teacherType:
         name: teachertype
         type: string
@@ -867,6 +867,7 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
+            type: COURSE
     education_startDate:
         name: startDate
         type: datetime
@@ -878,7 +879,9 @@ App\Entity\Attribute:
         type: datetime
         entity: '@education'
         requiredIf:
-            doesCurrentlyFollowCourse: YES
+            doesCurrentlyFollowCourse:
+                - YES
+                - NO_UNTIL_DATE
     education_hours:
         name: hours
         type: integer
@@ -886,12 +889,14 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
+            type: COURSE
     education_degree:
         name: degree
         type: boolean
         description: Whether tis eduction or course grants a degree or diploma
         entity: '@education'
-        required: true
+        requiredIf:
+            doesCurrentlyFollowCourse: YES
     education_degreeGranted:
         name: degreeGranted
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
