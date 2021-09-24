@@ -17,7 +17,7 @@ security:
             pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$)
             methods: [ GET ]
         login:
-            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$)
+            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$|^/saml|^/login)
             anonymous: true
         main:
             logout:
