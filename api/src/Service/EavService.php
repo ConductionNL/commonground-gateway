@@ -253,6 +253,9 @@ class EavService
             }
         }
 
+        // Check optional conditional logic
+        $object->checkConditionlLogic();
+
         // Afther guzzle has cleared we need to again check for errors
         if($object->getHasErrors()) {
             return $this->returnErrors($object);

@@ -314,6 +314,10 @@ class Value
                 case 'number':
                     return $this->setNumberValue($value);
                 case 'datetime':
+                    // if we auto convert null to a date time we would alwasy default to current_timestamp, so lets tackle that
+                    if(!$value){
+                        return $this->setDateTimeValue(null);
+                    }
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as &$datetime) {
@@ -359,6 +363,11 @@ class Value
                 case 'number':
                     return $this->getNumberValue();
                 case 'datetime':
+                    // We dont want to format null
+                    if(!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple()){
+                        return null;
+                    }
+                    // If we do have a value we want to format that
                     if ($this->getAttribute()->getMultiple()) {
                         $datetimeArray = $this->getArrayValue();
                         foreach ($datetimeArray as &$datetime) {
