@@ -365,6 +365,9 @@ class ValidationService
         if ($type = $valueObject->getAttribute()->getType() == null) return $validator;
         /* @todo we realy might consider throwing an error */
 
+        // Let be a bit compasionate and compatable
+        $type = str_replace(['integer','boolean','text'],['int','bool','string'],$type);
+
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
         $basicTypes = ['bool','string','int','array','float'];
 
@@ -732,6 +735,8 @@ class ValidationService
         }
 
         $objectEntity->addError($attribute->getName(),'Has an an unknown format: [' . $attribute->getFormat() . ']');
+
+        return $objectEntity;
     }
 
     /** TODO: docs
