@@ -133,8 +133,13 @@ class UserController extends AbstractController
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
-        $user = $commonGroundService->createResource(['jwtToken' => $token],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
+        if($request->headers->has('Authorization')){
+            $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+            $user = $commonGroundService->createResource(['jwtToken' => $token],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
+        }
+
+
+        $this->session->clear();
 
         return new Response(json_encode(['status' => 'logout successful']), 200, ['Content-type' => 'application/json']);
     }

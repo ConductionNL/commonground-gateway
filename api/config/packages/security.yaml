@@ -20,11 +20,10 @@ security:
             pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$)
             anonymous: true
         main:
-#            logout:
-#                path: app_user_logout
-#                target: app_user_redirect
-
-            stateless: true
+            logout:
+                path: app_user_logout
+                target: app_user_redirect
+            stateless: false
             provider: authenticationProvider
             guard:
                 authenticators:
