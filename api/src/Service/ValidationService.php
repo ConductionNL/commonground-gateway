@@ -725,7 +725,7 @@ class ValidationService
         if ($attribute->getFormat() == null) return $objectEntity;
 
         $format = $attribute->getFormat();
-        
+
         // Let be a bit compasionate and compatable
         $format = str_replace(['telephone'],['phone'],$format);
 
@@ -733,7 +733,7 @@ class ValidationService
         $allowedValidations = ['countryCode','bsn','url','uuid','email','phone','json'];
 
         // new route
-        if(in_array($attribute->getFormat(), $allowedValidations)){
+        if(in_array($format, $allowedValidations)){
             try {
                 Validator::$format()->check($value);
             } catch(ValidationException $exception) {
