@@ -398,6 +398,7 @@ App\Entity\Attribute:
     person_country:
         name: country
         type: string
+        format: countryCode
         maxLength: 255
         entity: '@person'
         persistToGateway: true
