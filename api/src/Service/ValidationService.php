@@ -723,6 +723,9 @@ class ValidationService
     {
         // if no format is provided we dont validate
         if ($attribute->getFormat() == null) return $objectEntity;
+        
+        // Let be a bit compasionate and compatable
+        $format = str_replace(['telephone'],['phone'],$format);
 
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
         $allowedValidations = ['countryCode','bsn','url','uuid','email','phone','json'];
