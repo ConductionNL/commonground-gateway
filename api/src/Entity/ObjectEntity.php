@@ -287,7 +287,7 @@ class ObjectEntity
      * @param string $error the error message
      * @return array all of the errors so far
      */
-    public function addError(string $attributeName, string $error): self
+    public function addError(string $attributeName, string $error, $key = null): self
     {
         $errors = $this->getErrors();
 
@@ -556,9 +556,40 @@ class ObjectEntity
                 // we only have a problem if the current value is empty
                 if($value->getValue()){continue;}
                 // so lets see if we should have a value
-                if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
-                    $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                //var_dump($conditionProperty);
+                //var_dump($conditionValue);
+                //var_dump($this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue());
+
+                if(is_array($conditionValue)){
+                    foreach ($conditionValue as $convar){
+                        // Hacky
+                        //if($convar == 'true'  ) {$convar = true;}
+                        //if($convar == 'false'  ) {$convar = false;}
+                        $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                        if(!is_array($checkAgainst) && $checkAgainst  == $convar){
+                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                        }
+                        elseif(is_array($checkAgainst) && in_array($convar, $checkAgainst)){
+                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                        }
+                    }
                 }
+                else{
+                    // Hacky
+                    //if($conditionValue == 'true'  ) {$conditionValue = true;}
+                    //if($conditionValue == 'false'  ) {$conditionValue = false;}
+                    $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                    if(!is_array($checkAgainst) && $checkAgainst == $conditionValue){
+                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                    }
+                    elseif(is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)){
+                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                    }
+
+                }
+
+
+
             }
             // Oke loop the conditions
             /*
