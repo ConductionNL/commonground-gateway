@@ -19,6 +19,9 @@ security:
         login:
             pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$|^/saml|^/login)
             anonymous: true
+        me:
+            pattern: (^/me$|^/api/users/me$)
+            anonymous: true
         main:
             logout:
                 path: app_user_logout
