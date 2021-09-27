@@ -18,8 +18,7 @@ parameters:
 
   saml_login_url: "%env(SAML_SIGN_ON_URL)%"
   saml_logout_url: "%env(SAML_LOGOUT_URL)%"
-  saml_metadata_url: "%env(SAML_METADATA_LOCATION)%"
-
+  saml_metadata_url: "%env(SAML_METADATA_LOCATION)%"  
 
   saml_enabled: '%env(bool:SAML_ENABLED)%'
 
@@ -32,7 +31,7 @@ saml:
     singleLogoutService:
       url: '%env(SAML_LOGOUT_URL)%'
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-    x509cert: '%env(default: :file:SAML_IDP_CERT)%'
+    x509cert: '%env(file:SAML_IDP_CERT)%'
   sp:
     entityId: '%env(APP_URL)%/saml'
     assertionConsumerService:
@@ -41,8 +40,9 @@ saml:
     singleLogoutService:
       url: '%env(APP_URL)%/saml/logout'
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-    privateKey: '%env(default: :file:APP_KEY)%'
-    x509cert: '%env(default: :file:APP_CERT)%'
+    privateKey: '%env(file:APP_KEY)%'
+    x509cert: '%env(file:APP_CERT)%'
+    fallback: 'test'
   # Optional settings
   baseurl: '%env(APP_URL)%'
   strict: false
