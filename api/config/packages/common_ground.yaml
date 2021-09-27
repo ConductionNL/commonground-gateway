@@ -107,15 +107,10 @@ parameters:
     idin_id: "%env(IDIN_ID)%"
     idin_secret: "%env(IDIN_SECRET)%"
     badges: "%env(BADGES)%"
-    saml_x509_cert: "%env(SAML_X509_CERT)%"
-    saml_private_key: "%env(SAML_PRIVATE_KEY)%"
 
     app_shasign: "%env(APP_SHASIGN)%"
 
     mode: "%env(APP_MODE)%"
-
-    app_certificate: "%env(APP_CERT)%"
-    app_ssl_key: "%env(APP_KEY)%"
 
     # Busnes Engine
     env(APP_COMMONGROUND_BE_LOCATION): "https://ac.%env(APP_DOMAIN)%"
