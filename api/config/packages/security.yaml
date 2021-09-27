@@ -1,8 +1,10 @@
 security:
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        authenticationProvider:
-            id: App\Security\User\AuthenticationProvider
+        commongroundUserProvider:
+            id: Conduction\CommonGroundBundle\Security\User\CommongroundUserProvider
+#        authenticationProvider:
+#            id: App\Security\User\AuthenticationProvider
     firewalls:
         create_user:
             anonymous: true
@@ -17,7 +19,7 @@ security:
             pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$)
             methods: [ GET ]
         login:
-            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$|^/saml|^/login)
+            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$|^/saml$|^/saml/login|^/login)
             anonymous: true
         me:
             pattern: (^/me$|^/api/users/me$)
@@ -30,11 +32,11 @@ security:
             provider: authenticationProvider
             guard:
                 authenticators:
+                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
                     - App\Security\DigispoofAuthenticator
                     - App\Security\OauthAuthenticator
                     - App\Security\BasicAuthAuthenticator
                     - App\Security\UserTokenAuthenticator
-                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
                 entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
