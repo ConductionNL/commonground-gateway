@@ -774,12 +774,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/saml-bundle.git",
-                "reference": "792d9635cb22c0bacffb2a0e64b58cd8c304dba5"
+                "reference": "bc03376661b0a150ea78d94e3286818ad5e01803"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/792d9635cb22c0bacffb2a0e64b58cd8c304dba5",
-                "reference": "792d9635cb22c0bacffb2a0e64b58cd8c304dba5",
+                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/bc03376661b0a150ea78d94e3286818ad5e01803",
+                "reference": "bc03376661b0a150ea78d94e3286818ad5e01803",
                 "shasum": ""
             },
             "require": {
@@ -825,7 +825,7 @@
                 "issues": "https://github.com/ConductionNL/ConductionCommonGroundBundle/issues",
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
-            "time": "2021-09-16T08:15:19+00:00"
+            "time": "2021-09-27T12:33:30+00:00"
         },
         {
             "name": "doctrine/annotations",
