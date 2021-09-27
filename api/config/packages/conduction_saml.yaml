@@ -42,7 +42,6 @@ saml:
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
     privateKey: '%env(file:APP_KEY)%'
     x509cert: '%env(file:APP_CERT)%'
-    fallback: 'test'
   # Optional settings
   baseurl: '%env(APP_URL)%'
   strict: false
