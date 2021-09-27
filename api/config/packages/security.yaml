@@ -2,7 +2,7 @@ security:
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
         authenticationProvider:
-            id: Conduction\SamlBundle\Security\User\CommongroundUserProvider
+            id: Conduction\CommonGroundBundle\Security\User\CommongroundUserProvider
     firewalls:
         create_user:
             anonymous: true
