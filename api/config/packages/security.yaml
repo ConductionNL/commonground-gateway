@@ -4,25 +4,8 @@ security:
         authenticationProvider:
             id: Conduction\SamlBundle\Security\User\AuthenticationProvider
     firewalls:
-        create_user:
-            anonymous: true
-            pattern: (^/api/users$|^/api/users/$|^/api/eav/data/users$|^/api/eav/data/users/$)
-            methods: [ POST ]
-        password_reset:
-            anonymous: true
-            pattern: (^/api/users/request_password_reset/$|^/api/users/request_password_reset$|^/api/users/reset_password/$|^/api/users/reset_password$|^/users/request_password_reset/$|^/users/request_password_reset$|^/users/reset_password/$|^/users/reset_password$)
-            methods: [ POST ]
-        documentation:
-            anonymous: true
-            pattern: (^/api$|^/api/$|^/api/docs$|^/api/docs/$|^/eav/docs$|^/eav/docs/$)
-            methods: [ GET ]
-        login:
-            pattern: (^/api/users/login$|^/api/users/login$|^/users/login$|^/users/login/$|^/login$|^/login/$|^/saml$|^/saml/login|^/login)
-            anonymous: true
-        me:
-            pattern: (^/me$|^/api/users/me$)
-            anonymous: true
         main:
+            anonymous: ~
             logout:
                 path: app_user_logout
                 target: app_user_redirect
@@ -45,4 +28,12 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-#        - { path: ^/api, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        # Documentation
+        - { path: ^/api/docs, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        # User posts
+        - { path: ^/api/users, methods: ['POST'], roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/users/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        # API
+        - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
