@@ -133,11 +133,13 @@ App\Entity\Entity:
 
     # LearningNeed object
     learningNeed:
+        route: '/api/learning_needs'
         name: LearningNeed
         description: Het learningNeed object beschrijft de leerbehoefte van de student.
 
     # LearningResult object
     learningResult:
+        route: '/api/learning_results'
         name: LearningResult
         description: Het learningResult object beschrijft de leerresultaten van de student.
 
@@ -940,7 +942,66 @@ App\Entity\Attribute:
         cascade: true
 
     # LearningResult properties
-
+    learningResult_verb:
+        name: verb
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@learningResult'
+    learningResult_subject:
+        name: subject
+        type: string
+        required: true
+        enum: ['DUTCH_READ','DUTCH_WRITE','MATHEMATICS_NUMBERS','MATHEMATICS_PROPORTIONS','MATHEMATICS_MEASUREMENT_AND_GEOMETRY','THEMATICS_RELATIONS','DIGITAL_SKILLS_USING_ICT_SYSTEMS','DIGITAL_SKILLS_LOOKING_FOR_INFORMATION','DIGITAL_SKILLS_PROCESSING_AND_PRESENTING_INFORMATION','DIGITAL_SKILLS_COMMUNICATION','KNOWLEDGE','SKILLS','ATTITUDE','BEHAVIOUR', 'OTHER']
+        entity: '@learningResult'
+    learningResult_subjectOther:
+        name: subjectOther
+        type: string
+        maxLength: 255
+        entity: '@learningResult'
+        requiredIf:
+            subject: 'OTHER'
+    learningResult_application:
+        name: application
+        type: string
+        required: true  
+        enum: ['FAMILY AND UPBRINGING', 'LABOR_MARKET_AND_WORK','HEALTH_AND_WELLBEING','LIVING_AND_NEIGHBORHOOD','SELF-SUSTAINABILITY', 'OTHER']
+        entity: '@learningResult'
+    learningResult_applicationOther:
+        name: applicationOther
+        type: string
+        maxLength: 255
+        entity: '@learningResult'
+        requiredIf:
+            application: 'OTHER'
+    learningResult_level:
+        name: level
+        type: string
+        required: true
+        enum: ['INFLUX', 'NLQF_1 ','NLQF_2','NLQF_3 ','NLQF_4 ', 'OTHER']
+        entity: '@learningResult'        
+    learningResult_levelOther:
+        name: levelOther
+        type: string
+        maxLength: 255
+        entity: '@learningResult'
+        requiredIf:
+            level: 'OTHER'
+    learningResult_test:
+        name: test
+        type: string
+        maxLength: 255
+        entity: '@learningResult'
+    learningResult_testDate:
+        name: testDate
+        type: date
+        entity: '@learningResult'
+    learningResult_explanation:
+        name: explanation
+        type: string
+        maxLength: 2500
+        entity: '@learningResult'
+            
     # course properties
     course_name:
         name: name
