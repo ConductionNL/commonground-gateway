@@ -939,13 +939,58 @@ App\Entity\Attribute:
 
 
     # LearningNeed properties
-    learningNeed_learningResult:
-        name: learningResult
-        type: object
-        multiple: true
+    learningNeed_description:
+        name: description
+        type: string
+        required: true
+        maxLength: 255
         entity: '@learningNeed'
-        object: '@learningResult'
-        cascade: true
+    learningNeed_motivation:
+        name: motivation
+        type: string
+        required: true
+        maxLength: 255
+        entity: '@learningNeed'
+    learningNeed_desiredOffer:
+        name: desiredOffer
+        type: string
+        required: true
+        maxLength: 255
+        entity: '@learningNeed'
+    learningNeed_advisedOffer:
+        name: advisedOffer
+        type: string
+        required: true
+        maxLength: 255
+        entity: '@learningNeed'
+    learningNeed_offerDifference:
+        name: offerDifference
+        type: string
+        required: true
+        enum: ['NO', 'YES_NOT_OFFERED_IN_TRAVEL_RANGE', 'YES_QUEUE', 'YES_OTHER']
+        entity: '@learningNeed'
+    learningNeed_offerDifferenceOther:
+        name: offerDifferenceOther
+        type: string
+        enum: ['NO', 'YES_NOT_OFFERED_IN_TRAVEL_RANGE', 'YES_QUEUE', 'YES_OTHER']
+        entity: '@learningNeed'
+        requiredIf:
+            offerDifference: 'YES_OTHER'
+    learningNeed_agreements:
+        name: afspraken
+        type: string
+        maxLength: 255
+        entity: '@learningNeed'
+        
+#   TODO: Add learningNeed_result
+    
+#    learningNeed_learningResult:
+#        name: learningResult
+#        type: object
+#        multiple: true
+#        entity: '@learningNeed'
+#        object: '@learningResult'
+#        cascade: true
 
     # LearningResult properties
     learningResult_verb:
@@ -1028,11 +1073,97 @@ App\Entity\Attribute:
 
     # participation properties
     participation_course:
-        name: course
+        name: provider
         type: object
         entity: '@participation'
         object: '@course'
         cascade: false
+    participation_providerOther:
+        name: providerOther
+        type: string
+        maxLength: 255
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_explanation:
+        name: explanation
+        type: string
+        maxLength: 2555
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_startParticipation:
+        name: startParticipation
+        type: date
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_endParticipation:
+        name: endParticipation
+        type: date
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_reasonEndParticipation:
+        name: reasonEndParticipation
+        type: string
+        enum: ['MOVED','WORK','ILLNESS+HEALTH','DECEASED','COMPLETED_SUCCESSFULLY','FAMILY_CIRCUMSTANCES','DOES_NOT_MEET_PARTICIPANT_EXPECTATIONS','OTHER']
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_offerName:
+        name: offerName
+        type: string
+        maxLength: 255
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER' 'OTHER'
+      participation_offerType:
+          name: offerType
+          type: string
+          enum: ['']
+          entity: '@participation'
+          requiredIf:
+              provider: 'OTHER'
+    participation_formality:
+        name: formality
+        type: string
+        enum: ['FORMAL','INFORMAL']
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_groupType:
+        name: participation_groupType
+        type: string
+        enum: ['']
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_start:
+        name: start
+        type: date
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_degree:
+        name: degree
+        type: boolean
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_end:
+        name: end
+        type: date
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
+    participation_agreement:
+        name: agreement
+        type: string
+        maxLength: 2550
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'        
 
     # Contact Moment
     contactMoment_employee:
