@@ -162,6 +162,12 @@ App\Entity\Entity:
     participation:
         name: participation
         description:
+            
+    # participation object
+    contactMoment:
+        route: '/api/contact_moment'
+        name: contactMoment
+        description:
 
 App\Entity\Attribute:
 
@@ -1027,6 +1033,39 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@course'
         cascade: false
+
+    # Contact Moment
+    contactMoment_employee:
+        name: employee
+        type: object
+        required: true
+        entity: '@contactMoment'
+        object: '@employee'
+        cascade: false
+    contactMoment_student:
+        name: student
+        type: object
+        required: true
+        entity: '@contactMoment'
+        object: '@student'
+        cascade: false
+    contactMoment_type:
+        name: type
+        type: string
+        required: true
+        enum: ['REMARK','INFORMATION-FOR-STORYTELLING','INTAKE','FOLLOW-UP_TALK','FINAL_TALK']
+        entity: '@contactMoment'
+    contactMoment_date:
+        name: date
+        type: date
+        required: true
+        entity: '@contactMoment'
+    contactMoment_explanation:
+        name: explanation
+        type: string
+        maxLength: 2500
+        required: true
+        entity: '@contactMoment'
 
 # Basic setup for bisc
 
