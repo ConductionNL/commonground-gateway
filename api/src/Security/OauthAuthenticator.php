@@ -9,7 +9,7 @@
 
 namespace App\Security;
 
-use App\Security\User\AuthenticationUser;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Security\User\CommongroundUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
