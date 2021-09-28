@@ -701,6 +701,12 @@ class EavDocumentationService
             // Handle conditional logic
             if($attribute->getRequiredIf()){
                 foreach($attribute->getRequiredIf() as $requiredIfKey=>$requiredIfValue){
+                    /* @todo lelijk */
+                    if(is_array()){
+                        foreach($requiredIfValue as $requiredIfVal){
+                            $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.$requiredIfKey.' property equals '.(string) $requiredIfVal.' )';
+                        }
+                    }
                     $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.$requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
                 }
             }
@@ -810,7 +816,7 @@ class EavDocumentationService
                     "style"=>"simple"
                 ];
             }
-            elseif($attribute->getObject()  && $level < 1){
+            elseif($attribute->getObject()  && $level < 5){
                 $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.',  $level+1));
             }
             continue;
