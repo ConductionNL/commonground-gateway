@@ -34,6 +34,3 @@ security:
         # User posts
         - { path: ^/api/users, methods: ['POST'], roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/users/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-
-        # API
-        - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
