@@ -813,7 +813,11 @@ App\Entity\Attribute:
         type: boolean
         entity: '@studentIntake'
         required: true
-
+    studentIntake_memo:
+        name: memo
+        type: string
+        maxLength: 2500
+        entity: '@studentIntake'
 
     # Education properties
     education_name:
