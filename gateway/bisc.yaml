@@ -1120,7 +1120,7 @@ App\Entity\Attribute:
         type: integer
         entity: '@course'
     course_evaluations:
-        name: evaluations
+        name: evaluationsparticipation_offerType
         type: string
         maxLength: 255
         entity: '@course'
@@ -1130,7 +1130,6 @@ App\Entity\Attribute:
         entity: '@course'
         object: '@organization'
         cascade: false
-
     # participation properties
     participation_course:
         name: provider
@@ -1177,14 +1176,14 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER' 'OTHER'
-      participation_offerType:
-          name: offerType
-          type: string
-          enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
-          entity: '@participation'
-          requiredIf:
-              provider: 'OTHER'
+            provider: 'OTHER'
+    participation_offerType:
+        name: offerType
+        type: string
+        enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
+        entity: '@participation'
+        requiredIf:
+            provider: 'OTHER'
     participation_formality:
         name: formality
         type: string
