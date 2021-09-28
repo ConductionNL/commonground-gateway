@@ -972,24 +972,22 @@ App\Entity\Attribute:
     learningNeed_offerDifferenceOther:
         name: offerDifferenceOther
         type: string
-        enum: ['NO', 'YES_NOT_OFFERED_IN_TRAVEL_RANGE', 'YES_QUEUE', 'YES_OTHER']
         entity: '@learningNeed'
         requiredIf:
             desireAndAdviseDifference: YES_OTHER
     learningNeed_agreements:
-        name: afspraken
+        name: agreements
         type: string
         maxLength: 255
+        entity: '@learningNeed'    
+    learningNeed_learningResult:
+        name: learningResult
+        type: object
+        required: true
+        multiple: true
         entity: '@learningNeed'
-#   TODO: Add learningNeed_result
-    
-#    learningNeed_learningResult:
-#        name: learningResult
-#        type: object
-#        multiple: true
-#        entity: '@learningNeed'
-#        object: '@learningResult'
-#        cascade: true
+        object: '@learningResult'
+        cascade: true
 
     # LearningResult properties
     learningResult_verb:
