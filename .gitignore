@@ -7,3 +7,7 @@ api/helm/kubeconfig.yaml
 
 api/helm/*-kubeconfig.yaml
 api/helm/kubeconfig*
+
+
+api/public/bundles
+
