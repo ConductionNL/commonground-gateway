@@ -20,7 +20,7 @@ parameters:
     env(APP_ENV): "prod"
     env(APP_DEBUG):
     env(APP_CACHE):
-    env(APP_AUTH): false
+    env(APP_AUTH): true
     env(AUDITTRAIL_ENABLED): ""
     env(NOTIFICATION_ENABLED):
     env(APP_VERSION): "1.0.0"

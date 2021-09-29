@@ -131,7 +131,12 @@ class EavService
             $object = $this->getObject($id, $request->getMethod(), $entity);
         }
 
-//        $this->authorizationService->checkAuthorization(['IS_AUTHENTICATED_FULLY']);
+        $properties = $this->authorizationService->checkAuthorization($this->authorizationService->getEavRequiredRoles($request, $entityName));
+        if(count($properties) > 0){
+            $serializationOptions = ['attributes' => $properties];
+        } else {
+            $serializationOptions = [];
+        }
 
         /*
          * Handeling data mutantions
@@ -214,9 +219,9 @@ class EavService
         if(array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
-
+        
         return new Response(
-            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), $serializationOptions),
             $responseType,
             ['content-type' => $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))]
         );
