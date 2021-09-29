@@ -553,8 +553,8 @@ class ObjectEntity
             }
             // Oke loop the conditions
             foreach($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue){
-                // we only have a problem if the current value is empty
-                if($value->getValue()){continue;}
+                // we only have a problem if the current value is empty and bools might be false when empty
+                if($value->getValue() || $value->getAttribute()->getType() == 'bool'){continue;}
                 // so lets see if we should have a value
                 //var_dump($conditionProperty);
                 //var_dump($conditionValue);
@@ -585,11 +585,7 @@ class ObjectEntity
                     elseif(is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)){
                         $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                     }
-
                 }
-
-
-
             }
             // Oke loop the conditions
             /*
