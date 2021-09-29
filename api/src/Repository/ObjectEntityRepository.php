@@ -31,12 +31,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameter('entity', $entity);
 
+
         if(!empty($filters)){
             $filterCheck = $this->getFilterParameters($entity);
             $query ->leftJoin('o.objectValues', 'value');
             $level = 0;
 
+
             foreach($filters as $key=>$value){
+                // Symfony has the tendency to replace . with _ on query parameters
+                $key = str_replace(['_'],['.'],$key);
+                // Lets see if this is an allowed filter
                 if(!in_array($key,$filterCheck)){
                     unset($filters[$key]);
                     continue;
@@ -47,21 +52,26 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query->andWhere('value.stringValue = :'.$key)
                       ->setParameter($key, $value);
                 }
+                /*@todo right now we only search on e level deep, lets make that 5 */
                 else{
+                    $key= explode('.',$key);
+                    // only one deep right now
+                    //if(count($key) == 2){
                     if($level == 0){
-                        $query ->leftJoin('value.objectEntity', 'subObject');
-                        $query ->leftJoin('subObject.objectValues', 'subValue');
+                        $level++;
+                        //var_dump($key[0]);
+                        //($key[1]);
+                        $query ->leftJoin('value.objects', 'subObjects'.$level);
+                        $query ->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
                     }
-                    $query->andWhere('subValue.stringValue = :'.$key)
-                        ->setParameter($key, $value);
+
+                    $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
                 }
 
-                //var_dump($key.':'.$value);
 
                 // lets suport level 1
             }
         }
-
 
         return $query
             // filters toevoegen

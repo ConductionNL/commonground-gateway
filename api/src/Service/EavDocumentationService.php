@@ -702,12 +702,14 @@ class EavDocumentationService
             if($attribute->getRequiredIf()){
                 foreach($attribute->getRequiredIf() as $requiredIfKey=>$requiredIfValue){
                     /* @todo lelijk */
-                    if(is_array()){
+                    if(is_array($requiredIfValue)){
                         foreach($requiredIfValue as $requiredIfVal){
-                            $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.$requiredIfKey.' property equals '.(string) $requiredIfVal.' )';
+                            $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfVal.' )';
                         }
                     }
-                    $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.$requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
+                    else{
+                        $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
+                    }
                 }
             }
 
