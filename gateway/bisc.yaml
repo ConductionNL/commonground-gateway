@@ -160,12 +160,13 @@ App\Entity\Entity:
 
     # participation object
     participation:
+        route: '/api/participations'
         name: participation
         description:
             
     # participation object
     contactMoment:
-        route: '/api/contact_moment'
+        route: '/api/contact_moments'
         name: contactMoment
         description:
 
@@ -1191,7 +1192,7 @@ App\Entity\Attribute:
     participation_groupType:
         name: participation_groupType
         type: string
-        enum: ['']
+        enum: ['OTHER']
         entity: '@participation'
         requiredIf:
             provider: 'OTHER'
@@ -1219,7 +1220,15 @@ App\Entity\Attribute:
         maxLength: 2550
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'        
+            provider: 'OTHER'
+    participation_learningResult:
+        name: learningResult
+        type: object
+        required: true
+        multiple: true
+        entity: '@participation'
+        object: '@learningResult'
+        cascade: true
 
     # Contact Moment
     contactMoment_employee:
