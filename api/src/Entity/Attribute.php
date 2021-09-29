@@ -793,6 +793,8 @@ class Attribute
     {
         $this->type = $type;
 
+
+
         // If the attribute type is changes away from an object we need to drop the object
         if($type != 'object' and $this->object ) {
             unset($this->object);
