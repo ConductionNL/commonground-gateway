@@ -4,6 +4,8 @@
 namespace App\Controller;
 
 
+use App\Service\AuthenticationService;
+use App\Service\AuthorizationService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,7 +35,7 @@ class EavController extends AbstractController
         return $this->render('eav/docs.html.twig');
     }
 
-    public function extraAction(?string $id, Request $request, EavService $eavService): Response
+    public function extraAction(?string $id, Request $request, EavService $eavService, AuthorizationService $authorizationService): Response
     {
         $offset = strlen('dynamic_eav_');
         $entityName = substr($request->attributes->get('_route'), $offset, strpos($request->attributes->get('_route'), strtolower($request->getMethod())) - 1 - $offset);

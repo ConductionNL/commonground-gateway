@@ -18,6 +18,7 @@ use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
@@ -29,18 +30,20 @@ class EavService
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
     private SerializerService $serializerService;
+    private AuthorizationService $authorizationService;
 
     /* @wilco waar hebben we onderstaande voor nodig? */
     private string $entityName;
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, AuthorizationService $authorizationService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
+        $this->authorizationService = $authorizationService;
     }
 
     /**
@@ -127,6 +130,8 @@ class EavService
             $entity = $this->getEntity($entityName);
             $object = $this->getObject($id, $request->getMethod(), $entity);
         }
+
+//        $this->authorizationService->checkAuthorization(['IS_AUTHENTICATED_FULLY']);
 
         /*
          * Handeling data mutantions

@@ -20,7 +20,7 @@ parameters:
     env(APP_ENV): "prod"
     env(APP_DEBUG):
     env(APP_CACHE):
-    env(APP_AUTH):
+    env(APP_AUTH): false
     env(AUDITTRAIL_ENABLED): ""
     env(NOTIFICATION_ENABLED):
     env(APP_VERSION): "1.0.0"
@@ -71,7 +71,7 @@ parameters:
     app_container: "%env(APP_CONTAINER)%"
     app_debug: "%env(APP_DEBUG)%"
     app_cache: "%env(APP_CACHE)%"
-    app_auth: "%env(APP_AUTH)%"
+    app_auth: "%env(bool:APP_AUTH)%"
     app_audittrail: "%env(AUDITTRAIL_ENABLED)%"
     app_notification: "%env(NOTIFICATION_ENABLED)%"
     app_version: "%env(APP_VERSION)%"

@@ -78,7 +78,7 @@ class EavLoader extends Loader
     {
         $path = "$path/{id}";
         $defaults = [
-            '_controller'   => 'App\Controller\EavController:extraAction',
+            '_controller'   => 'App\Controller\EavController::extraAction',
         ];
         $requirements = [
             'id'    => '\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b',
@@ -89,7 +89,7 @@ class EavLoader extends Loader
     public function createPluralRoute(string $path, string $method): Route
     {
         $defaults = [
-            '_controller'   => 'App\Controller\EavController:extraAction',
+            '_controller'   => 'App\Controller\EavController::extraAction',
         ];
         return new Route($path, $defaults, [], [], null, [], [$method]);
     }
