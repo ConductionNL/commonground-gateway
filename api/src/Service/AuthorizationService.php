@@ -4,6 +4,7 @@
 namespace App\Service;
 
 
+use App\Entity\Attribute;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -41,24 +42,10 @@ class AuthorizationService
         $this->security = $security;
     }
 
-    public function getScopes(array $properties, string $base): array
+    public function getRequiredScopes(string $method, Attribute $attribute): array
     {
-        $scopes = ['main_scope' => $base];
-        foreach($properties as $property){
-            $scopes['sub_scopes'][] = $base.'.'.$property;
-        }
-        return $scopes;
-    }
-
-    public function getEavRequiredRoles(Request $request, string $entityName): array
-    {
-        if($request->getMethod() == Request::METHOD_POST || $request->getMethod() == Request::METHOD_PUT){
-            $content = json_decode($request->getContent(), true);
-        } else {
-            $content = [];
-        }
-        $scopes = $this->getScopes(array_keys($content), $request->getMethod().'.'.$entityName);
-
+        $scopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
+        $scopes['sub_scope'] = $scopes['base_scope'].'.'.$attribute->getName();
 
         return $scopes;
     }
@@ -78,7 +65,6 @@ class AuthorizationService
         } else {
             throw new AuthenticationException('Authentication Required');
         }
-
     }
 
     public function getScopesFromRoles(array $roles): array
@@ -93,46 +79,22 @@ class AuthorizationService
         return $scopes;
     }
 
-    public function getProperties(array $scopes, string $base): array
+    public function checkAuthorization(array $scopes): void
     {
-        $properties = [];
-        foreach($scopes as $scope){
-            if(strpos($scope, $base) !== false){
-                $scopeArray = explode('.', $scope);
-                $properties[] = end($scopeArray);
-            }
-        }
-        return $properties;
-    }
-
-    public function checkSubScopes(array $scopes, array $grantedScopes): void
-    {
-        if(isset($scopes['sub_scopes'])){
-            foreach($scopes['sub_scopes'] as $subScope){
-                if(!in_array($subScope, $grantedScopes)){
-                    throw new AccessDeniedException('Insufficient Access');
-                }
-            }
-        }
-    }
-
-    public function checkAuthorization(array $scopes): array
-    {
-        $properties = [];
 
         if(!$this->parameterBag->get('app_auth')){
-            return $properties;
+            return;
         } elseif($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')){
             $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
-            if(in_array($scopes['main_scope'], $grantedScopes)){
-                return $properties;
-            }
+
         } else {
             $grantedScopes = $this->getScopesForAnonymous();
         }
-        $this->checkSubScopes($scopes, $grantedScopes);
+        if(in_array($scopes['base_scope'], $grantedScopes) || in_array($scopes['sub_scope'], $grantedScopes)){
+            return;
+        }
 
-        return $this->getProperties($grantedScopes, $scopes['main_scope']);
+        throw new AccessDeniedException('Insufficient Access');
     }
 
     public function serializeAccessDeniedException(string $contentType, SerializerService $serializerService, AccessDeniedException $exception): Response

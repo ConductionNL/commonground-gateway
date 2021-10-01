@@ -18,6 +18,7 @@ use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
@@ -131,13 +132,6 @@ class EavService
             $object = $this->getObject($id, $request->getMethod(), $entity);
         }
 
-        $properties = $this->authorizationService->checkAuthorization($this->authorizationService->getEavRequiredRoles($request, $entityName));
-        if(count($properties) > 0){
-            $serializationOptions = ['attributes' => $properties];
-        } else {
-            $serializationOptions = [];
-        }
-
         /*
          * Handeling data mutantions
          */
@@ -219,9 +213,9 @@ class EavService
         if(array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
-        
+
         return new Response(
-            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), $serializationOptions),
+            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
             $responseType,
             ['content-type' => $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))]
         );
@@ -356,21 +350,27 @@ class EavService
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
             if ($attribute->getType() == 'object') {
-                if ($value->getValue() == null) {
-                    $response[$attribute->getName()] = null;
+                try {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+
+                    if ($value->getValue() == null) {
+                        $response[$attribute->getName()] = null;
+                        continue;
+                    }
+                    if (!$attribute->getMultiple()) {
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue());
+                        continue;
+                    }
+                    $objects = $value->getValue();
+                    $objectsArray = [];
+                    foreach ($objects as $object) {
+                        $objectsArray[] = $this->renderResult($object);
+                    }
+                    $response[$attribute->getName()] = $objectsArray;
+                    continue;
+                } catch(AccessDeniedException $exception) {
                     continue;
                 }
-                if (!$attribute->getMultiple()) {
-                    $response[$attribute->getName()] = $this->renderResult($value->getValue());
-                    continue;
-                }
-                $objects = $value->getValue();
-                $objectsArray = [];
-                foreach ($objects as $object) {
-                    $objectsArray[] = $this->renderResult($object);
-                }
-                $response[$attribute->getName()] = $objectsArray;
-                continue;
             }
             $response[$attribute->getName()] = $value->getValue();
 

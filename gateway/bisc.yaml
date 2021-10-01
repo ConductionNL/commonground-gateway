@@ -46,14 +46,14 @@ App\Entity\Entity:
         endpoint: 'users'
         extend: false
 
-    # UserGroup (security) object
-    usergroup:
-        route: '/api/user_groups'
-        name: user_groups
-        description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet.
-        gateway: '@uc_api'
-        endpoint: 'groups'
-        extend: false
+#    # UserGroup (security) object
+#    usergroup:
+#        route: '/api/user_groups'
+#        name: user_groups
+#        description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet.
+#        gateway: '@uc_api'
+#        endpoint: 'groups'
+#        extend: false
 
     # Organization Object
     organization:
@@ -207,43 +207,42 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-    #    user_usergroups:
-    #        name: userGroups
-    #        description: In what usergroups does the user resides.
-    #        type: object
-    #        multiple: true
-    #        required: true
-    #        entity: '@user'
-    #        object: '@usergroup'
-    #        persistToGateway: true
-    #        cascade: false
-
-    # UserGroup (security) properties
-    userGroup_organization:
-        name: organization
-        description: To which organization does this usergroup belong?
-        type: object
+    user_usergroups:
+        name: userGroups
+        description: In what usergroups does the user resides.
+        type: string
+        multiple: true
         required: true
-        entity: '@usergroup'
-        object: '@organization'
+        entity: '@user'
         persistToGateway: true
         cascade: false
-    userGroup_name:
-        name: name
-        description: What is the name of this usergroup?
-        type: string
-        maxLength: 255
-        required: true
-        entity: '@usergroup'
-        persistToGateway: true
-    userGroup_description:
-        name: description
-        description: What is the function of this usergroup? To which parts of the application does it give access?
-        type: string
-        maxLength: 2550
-        required: true
-        entity: '@usergroup'
-        persistToGateway: true
+
+    # UserGroup (security) properties
+#    userGroup_organization:
+#        name: organization
+#        description: To which organization does this usergroup belong?
+#        type: object
+#        required: true
+#        entity: '@usergroup'
+#        object: '@organization'
+#        persistToGateway: true
+#        cascade: false
+#    userGroup_name:
+#        name: name
+#        description: What is the name of this usergroup?
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@usergroup'
+#        persistToGateway: true
+#    userGroup_description:
+#        name: description
+#        description: What is the function of this usergroup? To which parts of the application does it give access?
+#        type: string
+#        maxLength: 2550
+#        required: true
+#        entity: '@usergroup'
+#        persistToGateway: true
 
     # Organization properties
     organization_name:

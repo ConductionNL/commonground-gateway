@@ -17,6 +17,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Respect\Validation\Validator;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Exceptions\NestedValidationException;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 
 class ValidationService
@@ -26,17 +27,21 @@ class ValidationService
     private GatewayService $gatewayService;
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
+    private AuthorizationService $authorizationService;
 
     public function __construct(
         EntityManagerInterface $em,
         CommonGroundService $commonGroundService,
         GatewayService $gatewayService,
-        CacheInterface $cache)
+        CacheInterface $cache,
+        AuthorizationService $authorizationService
+    )
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->cache = $cache;
+        $this->authorizationService = $authorizationService;
     }
 
     /** TODO: docs
@@ -96,6 +101,12 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        try{
+            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+        } catch(AccessDeniedException $e){
+            $objectEntity->addError($attribute->getName(), $e->getMessage());
+        }
+
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
         if (is_null($value)) {
             if ($attribute->getDefaultValue()) {
