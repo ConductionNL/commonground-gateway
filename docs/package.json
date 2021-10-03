@@ -4,6 +4,7 @@
   "private": true,
   "description": "Commonground Gateway",
   "author": "Ruben van der Linde",
+  "repro": "https://github.com/ConductionNL/commonground-gateway",
   "keywords": [
     "gatsby"
   ],
@@ -12,12 +13,14 @@
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "deploy": "gatsby build --prefix-paths && gh-pages -d public"
   },
   "dependencies": {
     "gatsby": "^3.13.1",
     "gatsby-source-filesystem": "^3.14.0",
     "gatsby-transformer-remark": "^4.11.0",
+    "gh-pages": "^3.2.3",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   }

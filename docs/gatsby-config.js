@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: "/commonground-gateway",
   siteMetadata: {
     siteUrl: "https://www.yourdomain.tld",
     title: "Commonground Gateway",
