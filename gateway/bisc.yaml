@@ -986,16 +986,14 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@learningNeed'
-        
-#   TODO: Add learningNeed_result
-    
-#    learningNeed_learningResult:
-#        name: learningResult
-#        type: object
-#        multiple: true
-#        entity: '@learningNeed'
-#        object: '@learningResult'
-#        cascade: true
+            
+    learningNeed_learningResult:
+        name: learningResult
+        type: object
+        multiple: true
+        entity: '@learningNeed'
+        object: '@learningResult'
+        cascade: true
 
     # LearningResult properties
     learningResult_verb:
