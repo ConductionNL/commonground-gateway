@@ -977,7 +977,7 @@ App\Entity\Attribute:
     learningNeed_offerDifferenceOther:
         name: offerDifferenceOther
         type: string
-        enum: ['NO', 'YES_NOT_OFFERED_IN_TRAVEL_RANGE', 'YES_QUEUE', 'YES_OTHER']
+        maxLength: 255
         entity: '@learningNeed'
         requiredIf:
             offerDifference: 'YES_OTHER'
