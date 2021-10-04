@@ -14,7 +14,7 @@ export default function Template({ data, location }) {
   return (
     <Layout>
       <SEO title="Proto component commonground" />
-      <Background backgroundColor="#CC0000">
+      <Background backgroundColor="#4376FC">
 
       <nav>
         <Container>

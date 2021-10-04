@@ -39,11 +39,11 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `Demodam`,
-        short_name: `demodam`,
+        name: `Commonground Gateway`,
+        short_name: `Commonground gateway`,
         start_url: `/`,
         display: `standalone`,
-        icon: `src/images/utrecht_logo.svg`,
+        icon: `src/images/conduction_logo.svg`,
       },
     },
     `gatsby-plugin-i18n`,

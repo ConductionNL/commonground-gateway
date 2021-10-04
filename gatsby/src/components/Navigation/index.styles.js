@@ -9,7 +9,7 @@ export const StyledNav = styled.div`
   padding-top: ${(p) => p.theme.tokens.spacing04};
   padding-bottom: ${(p) => p.theme.tokens.spacing04};
   white-space: nowrap;
-  background-color: #CC0000;
+  background-color: #4376FC;
 
   a {
     text-decoration: none;
