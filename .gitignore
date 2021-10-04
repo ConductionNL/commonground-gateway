@@ -7,3 +7,5 @@ api/helm/kubeconfig.yaml
 
 api/helm/*-kubeconfig.yaml
 api/helm/kubeconfig*
+
+site/
