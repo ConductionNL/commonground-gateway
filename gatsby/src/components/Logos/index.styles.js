@@ -4,7 +4,7 @@ import { mediaQueries } from '@commonground/design-system'
 export const StyledContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  background-color: #2A5587;
+  background-color: #202F3E;
   align-items: center;
   margin-top: ${(p) => p.theme.tokens.spacing06};
   margin-bottom: ${(p) => p.theme.tokens.spacing06};

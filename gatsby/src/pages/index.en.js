@@ -31,7 +31,7 @@ const IndexPage = ({location}) => (
         </Section>
       </Container>
     </Background>
-    <Background backgroundColor="#2A5587">
+    <Background backgroundColor="#202F3E">
       <Container>
         <Logos/>
       </Container>
@@ -96,32 +96,32 @@ const IndexPage = ({location}) => (
       </Section>
     </Container>
 
-    <Background backgroundColor="#2A5587">
-      <Container>
-        <Section>
-          <Heading align="center" fontSize="2rem">Roadmap</Heading>
-        </Section>
-      </Container>
-    </Background>
+    {/*<Background backgroundColor="#202F3E">*/}
+    {/*  <Container>*/}
+    {/*    <Section>*/}
+    {/*      <Heading align="center" fontSize="2rem">Roadmap</Heading>*/}
+    {/*    </Section>*/}
+    {/*  </Container>*/}
+    {/*</Background>*/}
 
-    <Container>
-      <Timeline>
-        <Timeline.ContainerGreen align="left">
-          <Timeline.Content>
-            <Span fontSize="0.9rem">Juni 2021</Span>
-            <Heading as="h3" fontSize="1.5rem">Kick-off</Heading>
-            <p>Lancering van PDC</p>
-          </Timeline.Content>
-        </Timeline.ContainerGreen>
-        <Timeline.ContainerGreen align="right">
-          <Timeline.Content>
-            <Span fontSize="0.9rem">Juli 2021</Span>
-            <Heading as="h3" fontSize="1.5rem">Resultaat</Heading>
-            <p>Component installeerbaar</p>
-          </Timeline.Content>
-        </Timeline.ContainerGreen>
-      </Timeline>
-    </Container>
+    {/*<Container>*/}
+    {/*  <Timeline>*/}
+    {/*    <Timeline.ContainerGreen align="left">*/}
+    {/*      <Timeline.Content>*/}
+    {/*        <Span fontSize="0.9rem">Juni 2021</Span>*/}
+    {/*        <Heading as="h3" fontSize="1.5rem">Kick-off</Heading>*/}
+    {/*        <p>Lancering van PDC</p>*/}
+    {/*      </Timeline.Content>*/}
+    {/*    </Timeline.ContainerGreen>*/}
+    {/*    <Timeline.ContainerGreen align="right">*/}
+    {/*      <Timeline.Content>*/}
+    {/*        <Span fontSize="0.9rem">Juli 2021</Span>*/}
+    {/*        <Heading as="h3" fontSize="1.5rem">Resultaat</Heading>*/}
+    {/*        <p>Component installeerbaar</p>*/}
+    {/*      </Timeline.Content>*/}
+    {/*    </Timeline.ContainerGreen>*/}
+    {/*  </Timeline>*/}
+    {/*</Container>*/}
     <Footer/>
   </Layout>
 )

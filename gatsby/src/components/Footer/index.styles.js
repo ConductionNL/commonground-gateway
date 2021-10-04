@@ -1,7 +1,7 @@
 import styled from 'styled-components/macro'
 
 export const StyledFooter = styled.div`
-  background-color: #2A5587;
+  background-color: #202F3E;
 
   padding-left: ${(p) => p.theme.tokens.spacing04};
   padding-right: ${(p) => p.theme.tokens.spacing04};
