@@ -982,7 +982,7 @@ App\Entity\Attribute:
         requiredIf:
             offerDifference: 'YES_OTHER'
     learningNeed_agreements:
-        name: afspraken
+        name: agreements
         type: string
         maxLength: 255
         entity: '@learningNeed'
