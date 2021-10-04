@@ -1,10 +1,10 @@
 module.exports = {
   siteMetadata: {
-    title: `Commonground Gateway`,
-    description: `The Commonground gateway is a ..`,
-    author: `Conduction`,
-    repositoryUrl: `https://github.com/ConductionNL/commonground-gateway`,
-    slackUrl: `https://slack.com`,
+    title: `Producten en diensten catalogus`,
+    description: `Demodam is a fictitious municipal website that shows which reusable open source products and services are available for municipalities. This website hosts the community governance and demodam information.`,
+    author: `The Demodam Community`,
+    repositoryUrl: `https://github.com/demodam/demodam.org/`,
+    slackUrl: `https://samenorganiseren.slack.com/archives/C01S2QM81V4`,
     languages: ['en' ,'nl'],
     defaultLanguage: 'nl'
   },

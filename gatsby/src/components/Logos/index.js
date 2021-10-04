@@ -2,6 +2,8 @@ import React from 'react'
 import { StyledContainer } from './index.styles.js'
 
 import conduction from '../../images/conduction_logo_blauw.svg'
+// import conduction2 from 'images/conduction_logo_blauw.svg'
+
 
 
 
