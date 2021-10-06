@@ -160,12 +160,13 @@ App\Entity\Entity:
 
     # participation object
     participation:
+        route: '/api/participations'
         name: participation
         description:
             
     # participation object
     contactMoment:
-        route: '/api/contact_moment'
+        route: '/api/contact_moments'
         name: contactMoment
         description:
 
@@ -972,25 +973,22 @@ App\Entity\Attribute:
     learningNeed_offerDifferenceOther:
         name: offerDifferenceOther
         type: string
-        enum: ['NO', 'YES_NOT_OFFERED_IN_TRAVEL_RANGE', 'YES_QUEUE', 'YES_OTHER']
         entity: '@learningNeed'
         requiredIf:
             offerDifference: 'YES_OTHER'
     learningNeed_agreements:
-        name: afspraken
+        name: agreements
         type: string
         maxLength: 255
+        entity: '@learningNeed'    
+    learningNeed_learningResult:
+        name: learningResult
+        type: object
+        required: true
+        multiple: true
         entity: '@learningNeed'
-        
-#   TODO: Add learningNeed_result
-    
-#    learningNeed_learningResult:
-#        name: learningResult
-#        type: object
-#        multiple: true
-#        entity: '@learningNeed'
-#        object: '@learningResult'
-#        cascade: true
+        object: '@learningResult'
+        cascade: true
 
     # LearningResult properties
     learningResult_verb:
@@ -1194,7 +1192,7 @@ App\Entity\Attribute:
     participation_groupType:
         name: participation_groupType
         type: string
-        enum: ['']
+        enum: ['OTHER']
         entity: '@participation'
         requiredIf:
             provider: 'OTHER'
@@ -1222,7 +1220,15 @@ App\Entity\Attribute:
         maxLength: 2550
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'        
+            provider: 'OTHER'
+    participation_learningResult:
+        name: learningResult
+        type: object
+        required: true
+        multiple: true
+        entity: '@participation'
+        object: '@learningResult'
+        cascade: true
 
     # Contact Moment
     contactMoment_employee:

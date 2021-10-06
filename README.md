@@ -14,8 +14,15 @@ $ mkdocs serve
 
 The (non-)technical product page is based on gatsby and can als be published localy, jsut navigate to the repostory and then to de docs directory. (make sure to [install gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on you machine first doh) 
 ```cli
-$ cd /pages
+$ cd /product-page
 $ gatsby develop
 ```
-##
+
+Its is also posible to update the product page dicetly from the reposotry by running the pre-configures deploy command for the product-page direcotry, or 
+```cli
+$ cd /product-page
+$ npm run deploy
+```
+
+## Updat
       
