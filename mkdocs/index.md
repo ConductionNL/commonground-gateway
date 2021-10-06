@@ -1,19 +1,11 @@
-# Overview
+The commonground web gateway aims at providing an easy out of the box experience for developers, be it either in local development or production environments. It does that by providing a no nonsense api design to be the ajax engine under any modern progesive web app. But it could also be used the navigate the complexities of an microservice ecosystem form an application point of view or handle an omni-channel strategy. 
 
-The pages contain the technical documantion for the commonground gateway project, for a general overview and of the poject and non technical documantation [view]()
+Anyways, you can read the full sales pitch on the product page. 
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
-
-## Commands
-
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+This however is the technical documentation where we can read a bit more about  
+- Features
+Roadmap
+Security
+Installation
+Design Decisions
+Contributing

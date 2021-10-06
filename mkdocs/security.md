@@ -1,6 +1,6 @@
 # Security
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+ad
 
-## Documentation
-We host technical documentation on read the doc's and general user information on githhub pages, to make documentation compatible with githb we document in in markdown (ins stead of restructerd text) documentation is parst of the projects and containded withing the /docs folder
+## Separation between webservice and code
+The Web Gateway has a strict separation between the webservice used to communicate to the internet, its business logic (contained in separate container) and  the data. This is developed in line with the “landingzone” principle. Meaning that the place that is actually exposed to the internet dosn’t provide code or business logic and does not have access to the database 
