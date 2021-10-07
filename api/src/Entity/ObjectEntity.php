@@ -554,7 +554,7 @@ class ObjectEntity
             // Oke loop the conditions
             foreach($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue){
                 // we only have a problem if the current value is empty and bools might be false when empty
-                if($value->getValue() || $value->getAttribute()->getType() == 'bool'){continue;}
+                if($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))){;continue;}
                 // so lets see if we should have a value
                 //var_dump($conditionProperty);
                 //var_dump($conditionValue);
