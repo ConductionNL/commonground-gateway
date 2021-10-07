@@ -213,8 +213,20 @@ class EavService
         return new Response(
             $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
             $responseType,
-            ['content-type' => $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))]
+            ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
         );
+    }
+
+    private function handleContentType(string $accept): string
+    {
+        switch ($accept) {
+            case "text/csv":
+            case "application/json":
+            case "application/hal+json":
+                return $accept;
+            default:
+                return "application/ld+json";
+        }
     }
 
     public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
