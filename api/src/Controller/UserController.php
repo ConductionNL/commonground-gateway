@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\ApplicationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use GuzzleHttp\Exception\ClientException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -96,53 +97,77 @@ class UserController extends AbstractController
     public function resetAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
-        $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token'], false, false,false,false);
-
-        if(!$user) {
-            $status = 403;
+        if(!isset($data['username']) || !isset($data['password']) || !isset($data['token'])){
+            $status = 400;
             $user = [
-                "message" => "Invalid token",
+                "message" => "Data missing",
                 "type" => "error",
-                "path" => 'users/login',
-                "data" => ["username"=>$data['username']],
+                "path" => 'users/reset_password',
+                "data" => [],
+            ];
+            isset($data['username']) ?? $user['data']['username'] = null;
+            isset($data['password']) ?? $user['data']['password'] = null;
+            isset($data['token']) ?? $user['data']['token'] = null;
+            return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        }
+        try{
+            $user = $commonGroundService->createResource(['username' => $data['username'],'password' => $data['password'],'token' => $data['token'] ],['component' => 'uc', 'type' => 'users/token']);
+            $status = 200;
+            $user['username'] = $data['username'];
+        } catch (ClientException $exception){
+            $status = 400;
+            $user = [
+                "message" => "Invalid token, username or password",
+                "type" => "error",
+                "path" => 'users/reset_password',
+                "data" => ["username" => $data['username'], 'password' => $data['password'], "token"=>$data['token']],
             ];
         }
+
 
         return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
     }
 
     /**
-     * @Route("api/users/logout", methods={"POST"})
+     * @Route("api/users/logout", methods={"POST", "GET"})
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $token = substr($request->headers('Authorization'), strlen('Bearer '));
-        $user = $commonGroundService->createResource(['jwtToken' => $token],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
-
-        return new Response(json_encode(['status' => 'logout successful']), 200, ['Content-type' => 'application/json']);
+        if($request->headers->has('Authorization')){
+            $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+            $user = $commonGroundService->createResource(['jwtToken' => $token],['component' => 'uc', 'type' => 'logout'], false, false,false,false);
+        }
+        $request->getSession()->invalidate();
+        $response = new Response(
+            json_encode(['status' => 'logout successful']),
+            200,
+            [
+                'Content-type' => 'application/json'
+            ]);
+        $response->headers->clearCookie('PHPSESSID');
+        return $response;
     }
 
 
     /**
-     * @Route("api/users/me", methods={"get"})
      */
     public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
     {
-        $data = json_decode($request->getContent(), true);
-        if(!$data || !array_key_exists('jwtToken', $data)){
+        $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
+        if(!$token){
             $status = 403;
             $user = [
                 "message" => "Invalid token",
                 "type" => "error",
                 "path" => 'users/me',
-                "data" => $data,
+                "data" => $token,
             ];
             return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
         }
 
 
         // split the jwt
-        $tokenParts = explode('.', $data['jwtToken']);
+        $tokenParts = explode('.', $token);
         $header = base64_decode($tokenParts[0]);
         $payload = base64_decode($tokenParts[1]);
         $signature_provided = $tokenParts[2];
@@ -153,7 +178,7 @@ class UserController extends AbstractController
                 "message" => "Invalid token",
                 "type" => "error",
                 "path" => 'users/login',
-                "data" => ["jwtToken"=>$data['jwtToken']],
+                "data" => ["jwtToken"=>$token],
             ];
         }
         else{

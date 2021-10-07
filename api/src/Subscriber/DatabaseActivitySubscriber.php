@@ -47,12 +47,14 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
     // to both the entity object of the event and the entity manager itself
     public function postLoad(LifecycleEventArgs $args): void
     {
-        $this->logActivity('load', $args);
+        /* @todo hotfix */
+        // $this->logActivity('load', $args);
     }
 
     public function postRemove(LifecycleEventArgs $args): void
     {
-        $this->logActivity('remove', $args);
+        /* @todo hotfix */
+        // $this->logActivity('remove', $args);
     }
 
     private function logActivity(string $action, LifecycleEventArgs $args): void
@@ -75,6 +77,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
                 /* @todo figure out how to this promise style */
                 $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
                 $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '');
+                $result = json_decode($result->getBody()->getContents(), true);
                 $objectEntity->setExternalResult($result);
                 $item->set($result);
                 //$item->expiresAt(new \DateTime('tomorrow'));
