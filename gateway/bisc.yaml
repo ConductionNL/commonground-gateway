@@ -414,7 +414,7 @@ App\Entity\Attribute:
     person_gender:
         name: gender
         type: string
-        enum: ['MALE', 'FEMALE', 'X']
+        enum: ['Male', 'Female', 'X']
         entity: '@person'
         persistToGateway: true
     person_maritalStatus:
