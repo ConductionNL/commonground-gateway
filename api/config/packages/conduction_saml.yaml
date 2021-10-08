@@ -4,9 +4,9 @@ parameters:
     env(SAML_METADATA_LOCATION): 'https://example.com/saml/metadata'
     env(SAML_SIGN_ON_URL): 'https://example.com/saml2'
     env(SAML_LOGOUT_URL): 'https://example.com/saml2'
-    env(SAML_IDP_CERT): '/srv/api/composer.json'
-    env(APP_CERT): '/var/certs/certificate.crt'
-    env(APP_KEY): '/var/certs/certificate.key'
+    env(SAML_IDP_CERT): ''
+    env(APP_CERT): ''
+    env(APP_KEY): ''
     env(SAML_ARTIFACT_METHOD): 'POST'
 
     artifactUrl: 'https://digispoof.demodam.nl/artifact'
