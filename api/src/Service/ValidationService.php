@@ -113,8 +113,8 @@ class ValidationService
             // If multiple, this is an array, validation for an array:
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
-            // Multiple == false, so this should not be an array
-            if (is_array($value)) {
+            // Multiple == false, so this should not be an array (unless it is an object)
+            if (is_array($value) && $attribute->getType() != 'object') {
                 $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)

@@ -248,9 +248,8 @@ class Value
         }
 
         //Handle inversed by
-        /* @todo */
-        if($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute())->getObjects()->contains($this->getObjectEntity())){
-            $object->getValueByAttribute($this->getAttribute())->addObject($this->getObjectEntity());
+        if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())){
+            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
         }
 
         return $this;

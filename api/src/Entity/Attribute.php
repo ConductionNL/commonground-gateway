@@ -268,13 +268,11 @@ class Attribute
     private $minProperties;
 
     /**
-     * @var string If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
+     * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
      *
-     * @example property
-     *
-     * @Assert\Type("string")
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @Groups({"read","write"})
+     * @ORM\OneToOne(targetEntity=Attribute::class)
+     * @MaxDepth(1)
      */
     private $inversedBy;
 
@@ -1130,12 +1128,12 @@ class Attribute
         return $this;
     }
 
-    public function getInversedBy(): ?bool
+    public function getInversedBy(): ?Attribute
     {
         return $this->inversedBy;
     }
 
-    public function setInversedBy(?bool $inversedBy): self
+    public function setInversedBy(?Attribute $inversedBy): self
     {
         $this->inversedBy = $inversedBy;
 
