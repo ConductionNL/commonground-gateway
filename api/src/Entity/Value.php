@@ -62,7 +62,7 @@ class Value
      * @var string The actual value if is of type string
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $stringValue;
 
@@ -303,6 +303,7 @@ class Value
                 return $this->setArrayValue($value);
             }
             switch ($this->getAttribute()->getType()) {
+                case 'file':
                 case 'string':
                     return $this->setStringValue($value);
                 case 'integer':
@@ -361,6 +362,7 @@ class Value
                 return $this->getArrayValue();
             }
             switch ($this->getAttribute()->getType()) {
+                case 'file':
                 case 'string':
                     return $this->getStringValue();
                 case 'integer':

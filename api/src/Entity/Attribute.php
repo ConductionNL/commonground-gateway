@@ -83,7 +83,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "int", "bool","float","number", "datetime","date", "object"})
+     * @Assert\Choice({"string", "int", "bool","float","number", "datetime", "date", "file", "object"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -447,6 +447,27 @@ class Attribute
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $maxDate;
+
+    /**
+     * @var string *Can only be used in combination with type file* The maximum allowed file size in KB
+     *
+     * @example 32
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="float", nullable=true)
+     */
+    private $maxFileSize;
+
+    //TODO: make this an enum?
+    /**
+     * @var string *Can only be used in combination with type file* The type of the file
+     *
+     * @example image/png
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $fileType;
 
     /**
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
@@ -967,6 +988,30 @@ class Attribute
     public function setMaxDate(?string $maxDate): self
     {
         $this->maxDate = $maxDate;
+
+        return $this;
+    }
+
+    public function getMaxFileSize(): ?float
+    {
+        return $this->maxFileSize;
+    }
+
+    public function setMaxFileSize(?float $maxFileSize): self
+    {
+        $this->maxFileSize = $maxFileSize;
+
+        return $this;
+    }
+
+    public function getFileType(): ?string
+    {
+        return $this->fileType;
+    }
+
+    public function setFileType(?string $fileType): self
+    {
+        $this->fileType = $fileType;
 
         return $this;
     }

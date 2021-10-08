@@ -293,6 +293,15 @@ App\Entity\Attribute:
         object: '@email'
         persistToGateway: true
         cascade: true
+#    FOR FILE TESTING, TODO: REMOVE!!!
+#    organization_file:
+#        name: file
+#        description: The file of the organization.
+#        type: file
+#        multiple: true
+#        maxFileSize: 32
+#        fileType: 'image/jpeg'
+#        entity: '@organization'
 
     # Email
     email_name:
