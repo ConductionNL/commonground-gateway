@@ -318,7 +318,10 @@ class Value
                 case 'date':
                 case 'datetime':
                     // if we auto convert null to a date time we would always default to current_timestamp, so lets tackle that
-                    if(!$value){
+                    if(!$value) {
+                        if ($this->getAttribute()->getMultiple()) {
+                            return $this->setArrayValue(null);
+                        }
                         return $this->setDateTimeValue(null);
                     }
                     // if multiple is true value should be an array
@@ -371,7 +374,8 @@ class Value
                     $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';
 
                     // We don't want to format null
-                    if(!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple()){
+                    if((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
+                        || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())) {
                         return null;
                     }
                     // If we do have a value we want to format that
