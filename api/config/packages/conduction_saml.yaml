@@ -25,7 +25,7 @@ parameters:
 
     env(SAML_CERTIFICATE): '%env(default::file:APP_CERT)%'
     env(SAML_PRIVATEKEY): '%env(default::file:APP_KEY)%'
-    env(SAML_IDP_CERTIFICATE): '%env(default::file:SAML_IDP_CERTIFICATE)%'
+    env(SAML_IDP_CERTIFICATE): '%env(default::file:SAML_IDP_CERT)%'
 
 
 saml:
