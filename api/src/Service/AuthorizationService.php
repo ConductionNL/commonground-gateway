@@ -94,7 +94,7 @@ class AuthorizationService
             return;
         }
 
-        throw new AccessDeniedException('Insufficient Access');
+        throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} are required");
     }
 
     public function serializeAccessDeniedException(string $contentType, SerializerService $serializerService, AccessDeniedException $exception): Response

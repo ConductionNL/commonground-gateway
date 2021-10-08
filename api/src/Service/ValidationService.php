@@ -59,22 +59,21 @@ class ValidationService
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
-            elseif ($attribute->getDefaultValue()) {
+        elseif ($attribute->getDefaultValue()) {
                 $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
             }
             // Check if this field is nullable
-            elseif ($attribute->getNullable()) {
+        elseif ($attribute->getNullable()) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
             // Check if this field is required
-            elseif ($attribute->getRequired()){
+        elseif ($attribute->getRequired()){
                 $objectEntity->addError($attribute->getName(),'This attribute is required');
             } else {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
         }
-
         // Check post for not allowed properties
         foreach($post as $key=>$value) {
             if(!$entity->getAttributeByName($key) && $key != 'id') {
@@ -104,6 +103,7 @@ class ValidationService
         try{
             $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
         } catch(AccessDeniedException $e){
+            var_dump($attribute->getEntity()->getName(), $attribute->getName());
             $objectEntity->addError($attribute->getName(), $e->getMessage());
         }
 
@@ -765,7 +765,6 @@ class ValidationService
      */
     function createPromise(ObjectEntity $objectEntity, array $post): PromiseInterface
     {
-
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
@@ -806,7 +805,7 @@ class ValidationService
             // }
 
             // then we can check if we need to insert uri for the linked data of subobjects in other api's
-            if($value->getAttribute()->getMultiple() && $value->getObjects()){
+            if($value->getAttribute()->getMultiple() && count($value->getObjects()) > 0){
                 // Lets whipe the current values (we will use Uri's)
                 $post[$value->getAttribute()->getName()] = [];
 
