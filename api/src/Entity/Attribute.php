@@ -268,7 +268,7 @@ class Attribute
     private $minProperties;
 
     /**
-     * @var string If the attribute targerts an object that object might have an inversedBy field allowing an two way connection
+     * @var string If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
      *
      * @example property
      *
