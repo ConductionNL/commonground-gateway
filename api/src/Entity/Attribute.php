@@ -83,7 +83,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "integer", "boolean", "number", "datetime", "object"})
+     * @Assert\Choice({"string", "int", "bool","float","number", "datetime","date", "object"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -95,6 +95,7 @@ class Attribute
      * @example string
      *
      * @Assert\Length(max = 255)
+     * @Assert\Choice({"countryCode","bsn","url","uuid","email","phone","json"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -267,7 +268,7 @@ class Attribute
     private $minProperties;
 
     /**
-     * @var string If the attribute targerts an object that object might have an inversedBy field allowing an two way connection
+     * @var string If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
      *
      * @example property
      *
@@ -791,6 +792,8 @@ class Attribute
     public function setType(string $type): self
     {
         $this->type = $type;
+
+
 
         // If the attribute type is changes away from an object we need to drop the object
         if($type != 'object' and $this->object ) {

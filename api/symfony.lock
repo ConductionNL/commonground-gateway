@@ -297,6 +297,12 @@
             "ref": "471aed0fbf5620b8d7f92b7a5ebbbf6c0945c27a"
         }
     },
+    "respect/stringifier": {
+        "version": "0.2.0"
+    },
+    "respect/validation": {
+        "version": "2.2.3"
+    },
     "robrichards/xmlseclibs": {
         "version": "3.1.1"
     },

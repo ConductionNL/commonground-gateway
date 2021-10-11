@@ -7,6 +7,8 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\CommonGroundBundle\Service\SerializerService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -26,17 +28,19 @@ class EavService
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
+    private SerializerService $serializerService;
 
     /* @wilco waar hebben we onderstaande voor nodig? */
     private string $entityName;
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
+        $this->serializerService = $serializerService;
     }
 
     /**
@@ -79,16 +83,29 @@ class EavService
      * @param string|null $id
      * @param string $method
      * @param Entity $entity
-     * @return ObjectEntity|null
+     * @return ObjectEntity|array|null
      */
-    public function getObject(?string $id, string $method, Entity $entity): ?ObjectEntity
+    public function getObject(?string $id, string $method, Entity $entity)
     {
         if($id) {
             $object = $this->em->getRepository("App:ObjectEntity")->findOneBy(['id'=>Uuid::fromString($id)]);
             if(!$object) {
-                throw new HttpException(400, "No object found with this id: $id");
+                return [
+                    "message" => "No object found with this id: $id",
+                    "type" => "Bad Request",
+                    "path" => $entity->getName(),
+                    "data" => ["id" => $id],
+                ];
             } elseif ($entity != $object->getEntity()) {
-                throw new HttpException(400,"There is a mismatch between the provided ({$entity->getName()}) entity and the entity already atached to the object ({$object->getEntity()->getName()})");
+                return [
+                    "message" => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
+                    "type" => "Bad Request",
+                    "path" => $entity->getName(),
+                    "data" => [
+                        "providedEntityName" => $entity->getName(),
+                        "attachedEntityName" => $object->getEntity()->getName()
+                    ],
+                ];
             }
             return $object;
         }
@@ -122,6 +139,13 @@ class EavService
         if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
             $entity = $this->getEntity($entityName);
             $object = $this->getObject($id, $request->getMethod(), $entity);
+            if (is_array($object)) {
+                return new Response(
+                    $this->serializerService->serialize(new ArrayCollection($object), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                    Response::HTTP_BAD_REQUEST,
+                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                );
+            }
         }
 
         /*
@@ -205,11 +229,24 @@ class EavService
         if(array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
+
         return new Response(
-            json_encode($result),
+            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
             $responseType,
-            ['content-type' => 'application/json']
+            ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
         );
+    }
+
+    private function handleContentType(string $accept): string
+    {
+        switch ($accept) {
+            case "text/csv":
+            case "application/json":
+            case "application/hal+json":
+                return $accept;
+            default:
+                return "application/ld+json";
+        }
     }
 
     public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
@@ -247,6 +284,9 @@ class EavService
                 echo $promise->wait();
             }
         }
+
+        // Check optional conditional logic
+        $object->checkConditionlLogic();
 
         // Afther guzzle has cleared we need to again check for errors
         if($object->getHasErrors()) {

@@ -86,7 +86,7 @@ parameters:
     app_subdomain: "%env(APP_SUBDOMAIN)%"
     app_subpath: "%env(APP_SUBPATH)%"
     app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
-    app_url: "%env(APP_URL)%"
+    app_url: "%env(trimtrailingslash:APP_URL)%"
     app_demo: "%env(APP_DEMO)%"
     app_web: "%env(APP_WEB)%"
     app_internal: "%env(APP_INTERNAL)%"
@@ -107,15 +107,10 @@ parameters:
     idin_id: "%env(IDIN_ID)%"
     idin_secret: "%env(IDIN_SECRET)%"
     badges: "%env(BADGES)%"
-    saml_x509_cert: "%env(SAML_X509_CERT)%"
-    saml_private_key: "%env(SAML_PRIVATE_KEY)%"
 
     app_shasign: "%env(APP_SHASIGN)%"
 
     mode: "%env(APP_MODE)%"
-
-    app_certificate: "%env(APP_CERT)%"
-    app_ssl_key: "%env(APP_KEY)%"
 
     # Busnes Engine
     env(APP_COMMONGROUND_BE_LOCATION): "https://ac.%env(APP_DOMAIN)%"
