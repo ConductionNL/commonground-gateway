@@ -170,11 +170,13 @@ App\Entity\Entity:
         name: contactMoment
         description:
 
-#    FOR INVERSEDBY TESTING, TODO: REMOVE!!!            
+#    FOR INVERSEDBY TESTING, TODO: REMOVE!!!    
+#    # testInversedBy
 #    testInversedBy:
 #        route: '/api/test_inversed_bys'
 #        name: testInversedBy
-#        
+#
+#    # testInversedBy2
 #    testInversedBy2:
 #        route: '/api/test_inversed_by2s'
 #        name: testInversedBy2
@@ -193,6 +195,7 @@ App\Entity\Attribute:
 #        name: testInversedBy2
 #        type: object
 #        required: false
+#        multiple: true
 #        entity: '@testInversedBy'
 #        object: '@testInversedBy2'
 #        cascade: true
@@ -209,6 +212,7 @@ App\Entity\Attribute:
 #        name: testInversedBy
 #        type: object
 #        required: false
+#        multiple: true
 #        entity: '@testInversedBy2'
 #        object: '@testInversedBy'
 #        cascade: true

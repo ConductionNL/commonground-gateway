@@ -398,7 +398,13 @@ class EavService
                 $objects = $value->getValue();
                 $objectsArray = [];
                 foreach ($objects as $object) {
-                    $objectsArray[] = $this->renderResult($object);
+                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+                    if (!$maxDepth->contains($object)) {
+                        $objectsArray[] = $this->renderResult($object, $maxDepth);
+                    } else {
+                        // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+                        $objectsArray[] = ["@id" => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+                    }
                 }
                 $response[$attribute->getName()] = $objectsArray;
                 continue;
