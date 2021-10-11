@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -215,12 +216,12 @@ class Value
         return $this;
     }
 
-    public function getDateTimeValue(): ?\DateTimeInterface
+    public function getDateTimeValue(): ?DateTimeInterface
     {
         return $this->dateTimeValue;
     }
 
-    public function setDateTimeValue(?\DateTimeInterface $dateTimeValue): self
+    public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
 
@@ -297,7 +298,8 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object'
+                && $this->getAttribute()->getType() != 'datetime' && $this->getAttribute()->getType() != 'date') {
                 return $this->setArrayValue($value);
             }
             switch ($this->getAttribute()->getType()) {
@@ -313,9 +315,13 @@ class Value
                     return $this->setBooleanValue($value);
                 case 'number':
                     return $this->setNumberValue($value);
+                case 'date':
                 case 'datetime':
-                    // if we auto convert null to a date time we would alwasy default to current_timestamp, so lets tackle that
-                    if(!$value){
+                    // if we auto convert null to a date time we would always default to current_timestamp, so lets tackle that
+                    if(!$value) {
+                        if ($this->getAttribute()->getMultiple()) {
+                            return $this->setArrayValue(null);
+                        }
                         return $this->setDateTimeValue(null);
                     }
                     // if multiple is true value should be an array
@@ -350,7 +356,8 @@ class Value
     public function getValue()
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object' && $this->getAttribute()->getType() != 'datetime') {
+            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object'
+                && $this->getAttribute()->getType() != 'datetime' && $this->getAttribute()->getType() != 'date') {
                 return $this->getArrayValue();
             }
             switch ($this->getAttribute()->getType()) {
@@ -362,21 +369,25 @@ class Value
                     return $this->getBooleanValue();
                 case 'number':
                     return $this->getNumberValue();
+                case 'date':
                 case 'datetime':
-                    // We dont want to format null
-                    if(!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple()){
+                    $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';
+
+                    // We don't want to format null
+                    if((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
+                        || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())) {
                         return null;
                     }
                     // If we do have a value we want to format that
                     if ($this->getAttribute()->getMultiple()) {
                         $datetimeArray = $this->getArrayValue();
                         foreach ($datetimeArray as &$datetime) {
-                            $datetime = $datetime->format('Y-m-d\TH:i:sP');
+                            $datetime = $datetime->format($format);
                         }
                         return $datetimeArray;
                     }
                     $datetime = $this->getDateTimeValue();
-                    return $datetime->format('Y-m-d\TH:i:sP');
+                    return $datetime->format($format);
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
