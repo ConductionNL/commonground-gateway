@@ -228,7 +228,7 @@ class ValidationService
             }
         } else {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
-            // This is an array of objects
+            // This is an array of object
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach($value as $object) {
                 if (!is_array($object)) {
@@ -261,11 +261,7 @@ class ValidationService
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
-                // if no errors we can add this subObject tot the valueObject array of objects
-//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
-                $subObject->getValueByAttribute($attribute)->setValue($subObject);
-                $valueObject->addObject($subObject);
-//                    }
+                $valueObject->setValue($subObject);
             }
         }
 
