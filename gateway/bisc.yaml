@@ -45,6 +45,17 @@ App\Entity\Entity:
         gateway: '@uc_api'
         endpoint: 'users'
         extend: false
+        availableProperties:
+            - username
+            - roles
+            - userGroups
+        usedProperties:
+            - username
+            - password
+            - organization
+            - roles
+            - userGroups
+            - emailValidated
 
     # UserGroup (security) object
     usergroup:
