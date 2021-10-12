@@ -49,6 +49,12 @@ class ValidationService
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
+            // Only save the attributes that are used
+            if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
+                $objectEntity->addError($attribute->getName(),'This attribute is disabled for this entity');
+                continue;
+            }
+
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);

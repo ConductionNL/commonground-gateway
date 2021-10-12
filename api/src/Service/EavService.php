@@ -45,17 +45,26 @@ class EavService
 
     /**
      * @param string $entityName
-     * @return Entity
+     * @return Entity|array
      */
-    public function getEntity(string $entityName): Entity
+    public function getEntity(string $entityName)
     {
-
-        if(!$entityName){
-            throw new HttpException(400, 'No entity name provided');
+        if (!$entityName) {
+            return [
+                "message" => "No entity name provided",
+                "type" => "Bad Request",
+                "path" => "entity",
+                "data" => [],
+            ];
         }
         $entity = $this->em->getRepository("App:Entity")->findOneBy(['name' => $entityName]);
-        if(!$entity || !($entity instanceof Entity)){
-            throw new HttpException(400, 'Could not establish an entity for '.$entityName);
+        if (!$entity || !($entity instanceof Entity)) {
+            return [
+                "message" => "Could not establish an entity for ".$entityName,
+                "type" => "Bad Request",
+                "path" => "entity",
+                "data" => ["Entity Name" => $entityName],
+            ];
         }
 
         return $entity;
@@ -138,6 +147,13 @@ class EavService
         /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
         if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
             $entity = $this->getEntity($entityName);
+            if (is_array($entity)) {
+                return new Response(
+                    $this->serializerService->serialize(new ArrayCollection($entity), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                    Response::HTTP_BAD_REQUEST,
+                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                );
+            }
             $object = $this->getObject($id, $request->getMethod(), $entity);
             if (is_array($object)) {
                 return new Response(
@@ -326,7 +342,7 @@ class EavService
         $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query, $offset, $limit);
         $results = ['results'=>[]];
-        foreach($objects as $object){
+        foreach($objects as $object) {
             $results['results'][] = $this->renderResult($object);
         }
         $results['total'] = count($total);
@@ -383,6 +399,10 @@ class EavService
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
+            // Only render the attributes that are used
+            if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
+                continue;
+            }
             if ($attribute->getType() == 'object') {
                 if ($value->getValue() == null) {
                     $response[$attribute->getName()] = null;

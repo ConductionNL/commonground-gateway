@@ -63,6 +63,12 @@ App\Entity\Entity:
         gateway: '@contacten_api'
         endpoint: 'organizations'
         extend: false
+        usedProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
 
     #Email Object
     email:

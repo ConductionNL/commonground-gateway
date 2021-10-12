@@ -165,16 +165,20 @@ class Entity
     private ?string $route = null;
 
     /**
+     * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $availableProperties;
+    private ?array $availableProperties;
 
     /**
+     * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $usedProperties;
+    private ?array $usedProperties;
 
     /**
      * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
@@ -403,6 +407,30 @@ class Entity
     public function setRoute(?string $route): self
     {
         $this->route = $route;
+
+        return $this;
+    }
+
+    public function getAvailableProperties(): ?array
+    {
+        return $this->availableProperties;
+    }
+
+    public function setAvailableProperties(?array $availableProperties): self
+    {
+        $this->availableProperties = $availableProperties;
+
+        return $this;
+    }
+
+    public function getUsedProperties(): ?array
+    {
+        return $this->usedProperties;
+    }
+
+    public function setUsedProperties(?array $usedProperties): self
+    {
+        $this->usedProperties = $usedProperties;
 
         return $this;
     }
