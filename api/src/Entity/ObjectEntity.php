@@ -435,6 +435,10 @@ class ObjectEntity
      */
     public function getValueByAttribute(Attribute $attribute): Value
     {
+        if (!$this->getEntity()->getAttributes()->contains($attribute)) {
+            $this->addError($attribute->getName(), 'The entity: ' . $this->getEntity()->getName() . ' does not have this attribute. (intern getValueByAttribute error)');
+        }
+
         // Check if value with this attribute exists for this ObjectEntity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
 

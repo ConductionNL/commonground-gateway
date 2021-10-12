@@ -49,6 +49,15 @@ class ValidationService
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
+            // Only save the attributes that are used.
+            if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
+                if (key_exists($attribute->getName(), $post)) {
+                    // throw an error if a value is given for a disabled attribute.
+                    $objectEntity->addError($attribute->getName(),'This attribute is disabled for this entity');
+                }
+                continue;
+            }
+
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
@@ -219,7 +228,7 @@ class ValidationService
             }
         } else {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
-            // This is an array of objects
+            // This is an array of object
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach($value as $object) {
                 if (!is_array($object)) {
@@ -252,11 +261,7 @@ class ValidationService
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
-                // if no errors we can add this subObject tot the valueObject array of objects
-//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
-                $subObject->getValueByAttribute($attribute)->setValue($subObject);
-                $valueObject->addObject($subObject);
-//                    }
+                $valueObject->setValue($subObject);
             }
         }
 
@@ -840,7 +845,7 @@ class ValidationService
 
 
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
-        foreach($objectEntity->getObjectValues() as $value){
+        foreach($objectEntity->getObjectValues() as $value) {
 
             // Lets prefend the posting of values that we store localy
             //if(!$value->getAttribute()->getPersistToGateway()){
@@ -909,6 +914,13 @@ class ValidationService
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 
+                // Only show/use the available properties for the external response/result
+                if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
+                    $availableProperties = $objectEntity->getEntity()->getAvailableProperties();
+                    $result = array_filter($result, function ($key) use($availableProperties) {
+                        return in_array($key, $availableProperties);
+                    }, ARRAY_FILTER_USE_KEY);
+                }
                 $objectEntity->setExternalResult($result);
 
                 // Notify notification component
