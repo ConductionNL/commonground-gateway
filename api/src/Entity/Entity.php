@@ -165,6 +165,18 @@ class Entity
     private ?string $route = null;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $availableProperties;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $usedProperties;
+
+    /**
      * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
     private $responceLogs;
