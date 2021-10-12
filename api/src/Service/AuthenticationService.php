@@ -90,7 +90,7 @@ class AuthenticationService
     {
         $data = $this->retrieveJWTContents($token);
 
-        if (strtotime('now') >= $data['exp']) {
+        if (!is_array($token) || !array_key_exists('exp', $token) || strtotime('now') >= $data['exp']) {
             return false;
         }
 
@@ -113,8 +113,12 @@ class AuthenticationService
 
     public function retrieveJWTContents($token): array
     {
-        $json = base64_decode(explode('.', $token)[1]);
-        return json_decode($json, true);
+        try {
+            $json = base64_decode(explode('.', $token))[1];
+            return json_decode($json, true);
+        } catch (\Exception $exception) {
+            return [];
+        }
     }
 
     /**

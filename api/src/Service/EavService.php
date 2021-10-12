@@ -358,7 +358,7 @@ class EavService
     }
 
     // TODO: Change this to be more efficient? (same foreach as in prepareEntity) or even move it to a different service?
-    public function renderResult(ObjectEntity $result): array
+    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null): array
     {
         $response = [];
 
@@ -375,6 +375,12 @@ class EavService
         if(array_key_exists('id',$response)){$response['@gateway/id'] = $response['id'];}
         if(array_key_exists('@type',$response)){$response['@gateway/type'] = $response['@type'];}
 
+        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($result);
+
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
             if ($attribute->getType() == 'object') {
@@ -383,23 +389,32 @@ class EavService
                     continue;
                 }
                 if (!$attribute->getMultiple()) {
-                    $response[$attribute->getName()] = $this->renderResult($value->getValue());
+                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+                    if (!$maxDepth->contains($value->getValue())) {
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth);
+                    }
                     continue;
                 }
                 $objects = $value->getValue();
                 $objectsArray = [];
                 foreach ($objects as $object) {
-                    $objectsArray[] = $this->renderResult($object);
+                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+                    if (!$maxDepth->contains($object)) {
+                        $objectsArray[] = $this->renderResult($object, $maxDepth);
+                    } else {
+                        // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+                        $objectsArray[] = ["@id" => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+                    }
                 }
                 $response[$attribute->getName()] = $objectsArray;
                 continue;
             }
             $response[$attribute->getName()] = $value->getValue();
 
-            // Lets isnert the object that we are extending
+            // Lets insert the object that we are extending
         }
 
-        // Lets make ik personal
+        // Lets make it personal
         $response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
