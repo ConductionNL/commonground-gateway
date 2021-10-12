@@ -849,7 +849,7 @@ class ValidationService
 
 
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
-        foreach($objectEntity->getObjectValues() as $value){
+        foreach($objectEntity->getObjectValues() as $value) {
 
             // Lets prefend the posting of values that we store localy
             //if(!$value->getAttribute()->getPersistToGateway()){
@@ -918,6 +918,13 @@ class ValidationService
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 
+                // Only show/use the available properties for the external response/result
+                if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
+                    $availableProperties = $objectEntity->getEntity()->getAvailableProperties();
+                    $result = array_filter($result, function ($key) use($availableProperties) {
+                        return in_array($key, $availableProperties);
+                    }, ARRAY_FILTER_USE_KEY);
+                }
                 $objectEntity->setExternalResult($result);
 
                 // Notify notification component

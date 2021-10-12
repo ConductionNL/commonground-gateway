@@ -384,6 +384,7 @@ class EavService
 
 
         // Lets start with the external results
+        // TODO: for get (item and collection) calls this seems to only contain the @uri, not the full extern object (result) !!! as if setExternalResult is not saved properly?
         $response = array_merge($response, $result->getExternalResult());
 
         // Lets move some stuff out of the way

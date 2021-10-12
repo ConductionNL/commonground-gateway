@@ -63,6 +63,16 @@ App\Entity\Entity:
         gateway: '@contacten_api'
         endpoint: 'organizations'
         extend: false
+        # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
+        # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
+        availableProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
+        # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
+        # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
         usedProperties:
             - name
             - type
@@ -76,6 +86,9 @@ App\Entity\Entity:
         description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'emails'
+        availableProperties:
+            - name
+            - email
 
     #Telefoon Object
     telephone:
@@ -83,6 +96,9 @@ App\Entity\Entity:
         description: Dit object beschrijft een telefoonnummer welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'telephones'
+        availableProperties:
+            - name
+            - telephone
 
     #Address Object
     address:
@@ -90,6 +106,14 @@ App\Entity\Entity:
         description: Dit object beschrijft een adres welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'addresses'
+        availableProperties:
+            - name
+            - street
+            - houseNumber
+            - houseNumberSuffix
+            - postalCode
+            - locality
+            - country
 
     # Person Object
     person:
@@ -98,6 +122,28 @@ App\Entity\Entity:
         gateway: '@contacten_api'
         endpoint: 'people'
         extend: false
+        availableProperties:
+            - givenName
+            - additionalName
+            - familyName
+            - birthday
+            - primaryLanguage
+            - birthplace
+            - gender
+            - speakingLanguages
+            - maritalStatus
+            - addresses
+            - telephones
+            - emails
+            - contactPreference
+            # These: are only stored in the gateway, not external. Example, this could be removed
+#            - contactPreferenceOther
+#            - availability
+#            - availabilityNotes
+#            - children
+#            - childrenbirthdays
+#            - country
+#            - user
 
     # Employee Object
     employee:
@@ -107,6 +153,7 @@ App\Entity\Entity:
         gateway: '@mrc_api'
         endpoint: 'employees'
         extend: false
+        availableProperties: []
 
     #Student Object
     student:
@@ -116,6 +163,8 @@ App\Entity\Entity:
         gateway: '@edu_api'
         endpoint: 'participants'
         extend: false
+        availableProperties:
+            - status
 
     # Medewerker Intake object
     employeeIntake:
