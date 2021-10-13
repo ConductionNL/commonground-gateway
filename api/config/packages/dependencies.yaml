@@ -4,8 +4,6 @@ parameters:
             auth: apikey
             location: http://conduction.demodam.nl/api/v1/brp
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-            username: begraven
-            password: demodam
             accept: application/hal+json
         ds:
             auth: apikey

@@ -435,6 +435,10 @@ class ObjectEntity
      */
     public function getValueByAttribute(Attribute $attribute): Value
     {
+        if (!$this->getEntity()->getAttributes()->contains($attribute)) {
+            $this->addError($attribute->getName(), 'The entity: ' . $this->getEntity()->getName() . ' does not have this attribute. (intern getValueByAttribute error)');
+        }
+
         // Check if value with this attribute exists for this ObjectEntity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
 
@@ -491,7 +495,7 @@ class ObjectEntity
         }
         */
         $subresources = new ArrayCollection();
-        foreach ($this->getObjectValues() as $value){
+        foreach ($this->getObjectValues() as $value) {
             foreach($value->getObjects() as $objectEntity){
                 // prevent double work and downward recurions
                 $subresources->add($objectEntity);
@@ -536,12 +540,21 @@ class ObjectEntity
      *
      * @return $this
      */
-    public function checkConditionlLogic(): self
+    public function checkConditionlLogic(ArrayCollection $maxDepth = null): self
     {
+        // Lets keep track of objects we already checked, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($this);
+
         // lets cascade
         if(!$this->getSubresources()->isEmpty()){
-            foreach($this->getSubresources() as $subresource){
-                $subresource->checkConditionlLogic();
+            foreach($this->getSubresources() as $subresource) {
+                // Do not call recursive function if we reached maxDepth (if we already checked this object before)
+                if (!$maxDepth->contains($subresource)) {
+                    $subresource->checkConditionlLogic($maxDepth);
+                }
             }
         }
 

@@ -45,17 +45,26 @@ class EavService
 
     /**
      * @param string $entityName
-     * @return Entity
+     * @return Entity|array
      */
-    public function getEntity(string $entityName): Entity
+    public function getEntity(string $entityName)
     {
-
-        if(!$entityName){
-            throw new HttpException(400, 'No entity name provided');
+        if (!$entityName) {
+            return [
+                "message" => "No entity name provided",
+                "type" => "Bad Request",
+                "path" => "entity",
+                "data" => [],
+            ];
         }
         $entity = $this->em->getRepository("App:Entity")->findOneBy(['name' => $entityName]);
-        if(!$entity || !($entity instanceof Entity)){
-            throw new HttpException(400, 'Could not establish an entity for '.$entityName);
+        if (!$entity || !($entity instanceof Entity)) {
+            return [
+                "message" => "Could not establish an entity for ".$entityName,
+                "type" => "Bad Request",
+                "path" => "entity",
+                "data" => ["Entity Name" => $entityName],
+            ];
         }
 
         return $entity;
@@ -138,6 +147,13 @@ class EavService
         /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
         if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
             $entity = $this->getEntity($entityName);
+            if (is_array($entity)) {
+                return new Response(
+                    $this->serializerService->serialize(new ArrayCollection($entity), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                    Response::HTTP_BAD_REQUEST,
+                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                );
+            }
             $object = $this->getObject($id, $request->getMethod(), $entity);
             if (is_array($object)) {
                 return new Response(
@@ -326,7 +342,7 @@ class EavService
         $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query, $offset, $limit);
         $results = ['results'=>[]];
-        foreach($objects as $object){
+        foreach($objects as $object) {
             $results['results'][] = $this->renderResult($object);
         }
         $results['total'] = count($total);
@@ -358,7 +374,7 @@ class EavService
     }
 
     // TODO: Change this to be more efficient? (same foreach as in prepareEntity) or even move it to a different service?
-    public function renderResult(ObjectEntity $result): array
+    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null): array
     {
         $response = [];
 
@@ -368,6 +384,7 @@ class EavService
 
 
         // Lets start with the external results
+        // TODO: for get (item and collection) calls this seems to only contain the @uri, not the full extern object (result) !!! as if setExternalResult is not saved properly?
         $response = array_merge($response, $result->getExternalResult());
 
         // Lets move some stuff out of the way
@@ -375,31 +392,50 @@ class EavService
         if(array_key_exists('id',$response)){$response['@gateway/id'] = $response['id'];}
         if(array_key_exists('@type',$response)){$response['@gateway/type'] = $response['@type'];}
 
+        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($result);
+
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
+            // Only render the attributes that are used
+            if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
+                continue;
+            }
             if ($attribute->getType() == 'object') {
                 if ($value->getValue() == null) {
                     $response[$attribute->getName()] = null;
                     continue;
                 }
                 if (!$attribute->getMultiple()) {
-                    $response[$attribute->getName()] = $this->renderResult($value->getValue());
+                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+                    if (!$maxDepth->contains($value->getValue())) {
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth);
+                    }
                     continue;
                 }
                 $objects = $value->getValue();
                 $objectsArray = [];
                 foreach ($objects as $object) {
-                    $objectsArray[] = $this->renderResult($object);
+                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+                    if (!$maxDepth->contains($object)) {
+                        $objectsArray[] = $this->renderResult($object, $maxDepth);
+                    } else {
+                        // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+                        $objectsArray[] = ["@id" => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+                    }
                 }
                 $response[$attribute->getName()] = $objectsArray;
                 continue;
             }
             $response[$attribute->getName()] = $value->getValue();
 
-            // Lets isnert the object that we are extending
+            // Lets insert the object that we are extending
         }
 
-        // Lets make ik personal
+        // Lets make it personal
         $response['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());

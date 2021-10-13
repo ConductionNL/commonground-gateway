@@ -153,6 +153,11 @@ spec:
                 secretKeyRef:
                   key: saml-enabled
                   name: {{ include "commonground-gateway.fullname" }}
+            - name: DIGID_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  key: digid-enabled
+                  name: {{ include "commonground-gateway.fullname" }}
             {{- if .Values.security.saml.enabled }}
             - name: SAML_METADATA_LOCATION
               valueFrom:
@@ -171,6 +176,25 @@ spec:
                   name: {{ include "commonground-gateway.fullname" }}
             - name: SAML_IDP_CERT
               value: '/var/run/idp/idp.crt'
+            {{- end }}
+            {{- if .Values.security.digid.enabled }}
+            - name: DIGID_METADATA_LOCATION
+              valueFrom:
+                  secretKeyRef:
+                      key: digid-metadata-location
+                      name: {{ include "commonground-gateway.fullname" }}
+            - name: DIGID_SIGN_ON_URL
+              valueFrom:
+                  secretKeyRef:
+                      key: digid-single-sign-on-url
+                      name: {{ include "commonground-gateway.fullname" }}
+            - name: DIGID_LOGOUT_URL
+              valueFrom:
+                  secretKeyRef:
+                      key: digid-logout-url
+                      name: {{ include "commonground-gateway.fullname" }}
+            - name: DIGID_IDP_CERT
+              value: '/var/run/idp/digid_idp.crt'
             {{- end }}
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}

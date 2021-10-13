@@ -49,6 +49,15 @@ class ValidationService
     {
         $entity = $objectEntity->getEntity();
         foreach($entity->getAttributes() as $attribute) {
+            // Only save the attributes that are used.
+            if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
+                if (key_exists($attribute->getName(), $post)) {
+                    // throw an error if a value is given for a disabled attribute.
+                    $objectEntity->addError($attribute->getName(),'This attribute is disabled for this entity');
+                }
+                continue;
+            }
+
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
@@ -113,7 +122,13 @@ class ValidationService
             // If multiple, this is an array, validation for an array:
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
-            // Multiple == false, so this is not an array
+            // Multiple == false, so this should not be an array (unless it is an object)
+            if (is_array($value) && $attribute->getType() != 'object') {
+                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
+
+                // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
+                return $objectEntity;
+            }
             $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $value);
             $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
         }
@@ -213,7 +228,7 @@ class ValidationService
             }
         } else {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
-            // This is an array of objects
+            // This is an array of object
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach($value as $object) {
                 if (!is_array($object)) {
@@ -246,11 +261,7 @@ class ValidationService
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
-                // if no errors we can add this subObject tot the valueObject array of objects
-//                    if (!$subObject->getHasErrors()) { // TODO: put this back?, with this if statement errors of subresources will not be shown, bug...?
-                $subObject->getValueByAttribute($attribute)->setValue($subObject);
-                $valueObject->addObject($subObject);
-//                    }
+                $valueObject->setValue($subObject);
             }
         }
 
@@ -431,11 +442,10 @@ class ValidationService
     /**
      * This function handles the validator part of value validation (new style)
      *
-     * @param ObjectEntity $objectEntity
-     * @param $value
-     * @param array $validations
+     * @param Value $valueObject
      * @param Validator $validator
      * @return Validator
+     * @throws Exception
      */
     private function validateValidations(Value $valueObject,  Validator $validator): Validator
     {
@@ -476,6 +486,10 @@ class ValidationService
                     $min = new DateTime($validations['minDate'] ?? null);
                     $max = new DateTime($validations['maxDate'] ?? null);
                     $validator->length($min, $max);
+                    break;
+                case 'maxFileSize':
+                case 'fileType':
+                    //TODO
                     break;
                 case 'required':
                     $validator->notEmpty();
@@ -702,11 +716,55 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')');
                 }
                 break;
+            case 'file':
+                $valueString = strlen($value) > 75 ? substr($value,0,75).'...' : $value;
+                $base64 = explode(",",$value);
+                if ( base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
+                    $objectEntity->addError($attribute->getName(),'Expects a valid base64 encoded string. ('.$valueString.' is not)');
+                } else {
+                    if ($attribute->getMaxFileSize()) {
+                        $fileSize = $this->getBase64Size($value);
+                        if ($fileSize > $attribute->getMaxFileSize()) {
+                            $objectEntity->addError($attribute->getName(),'This file is to big (' . number_format($fileSize, 2, ',', '') . ' KB), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' KB. ('.$valueString.')');
+                        }
+                    }
+                    if ($attribute->getFileType()) {
+                        // We could just use $base64[0] to get the file type form that substring,
+                        // but if a base64 without data:...;base64, is given this will work as well:
+                        $imgdata = base64_decode(end($base64));
+                        $f = finfo_open();
+                        $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
+                        if ($mime_type != $attribute->getFileType()) {
+                            $objectEntity->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$valueString.')');
+                        }
+                        finfo_close($f);
+                    }
+                }
+                break;
             default:
                 $objectEntity->addError($attribute->getName(),'Has an an unknown type: [' . $attribute->getType() . ']');
         }
 
         return $objectEntity;
+    }
+
+    /**
+     * Gets the memory size of a base64 file
+     *
+     * @param $base64
+     * @return Exception|float|int
+     */
+    public function getBase64Size($base64){ //return memory size in B, KB, MB
+        try{
+            $size_in_bytes = (int) (strlen(rtrim($base64, '=')) * 3 / 4);
+            $size_in_kb    = $size_in_bytes / 1024;
+            $size_in_mb    = $size_in_kb / 1024;
+
+            return $size_in_kb;
+        }
+        catch(Exception $e){
+            return $e;
+        }
     }
 
     /**
@@ -787,7 +845,7 @@ class ValidationService
 
 
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
-        foreach($objectEntity->getObjectValues() as $value){
+        foreach($objectEntity->getObjectValues() as $value) {
 
             // Lets prefend the posting of values that we store localy
             //if(!$value->getAttribute()->getPersistToGateway()){
@@ -856,6 +914,13 @@ class ValidationService
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 
+                // Only show/use the available properties for the external response/result
+                if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
+                    $availableProperties = $objectEntity->getEntity()->getAvailableProperties();
+                    $result = array_filter($result, function ($key) use($availableProperties) {
+                        return in_array($key, $availableProperties);
+                    }, ARRAY_FILTER_USE_KEY);
+                }
                 $objectEntity->setExternalResult($result);
 
                 // Notify notification component
