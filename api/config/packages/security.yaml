@@ -13,7 +13,8 @@ security:
             provider: authenticationProvider
             guard:
                 authenticators:
-#                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
+                    - Conduction\DigidBundle\Security\CommongroundDigidAuthenticator
+                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
                     - App\Security\DigispoofAuthenticator
                     - App\Security\OauthAuthenticator
                     - App\Security\BasicAuthAuthenticator

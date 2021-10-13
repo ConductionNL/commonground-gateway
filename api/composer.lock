@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "565bab8586a4d9cdb98525a6b42716e2",
+    "content-hash": "b58773ba22a0c1b93e0c3e9ced792755",
     "packages": [
         {
             "name": "api-platform/api-pack",
@@ -767,6 +767,67 @@
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
             "time": "2021-08-26T13:16:41+00:00"
+        },
+        {
+            "name": "conduction/digidbundle",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ConductionNL/digid-bundle.git",
+                "reference": "7f786f6342ca9e9a2d0ad4bbc55ffca65442e80d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/7f786f6342ca9e9a2d0ad4bbc55ffca65442e80d",
+                "reference": "7f786f6342ca9e9a2d0ad4bbc55ffca65442e80d",
+                "shasum": ""
+            },
+            "require": {
+                "conduction/commongroundbundle": "v2.*-dev | dev-feature-gateway",
+                "conduction/samlbundle": "dev-master",
+                "guzzlehttp/guzzle": "^6.3",
+                "onelogin/php-saml": "^4.0",
+                "php": "^7.4.0",
+                "ramsey/uuid": "^3.8",
+                "symfony/cache": "^5.0@stable",
+                "symfony/console": "^5.0@stable",
+                "symfony/event-dispatcher": "^5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Conduction\\DigidBundle\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Robert Zondervan",
+                    "email": "robert@conduction.nl"
+                },
+                {
+                    "name": "Conduction",
+                    "homepage": "https://conduction.nl"
+                }
+            ],
+            "description": "Symfony Bundle for DigiD configuration",
+            "homepage": "https://conduction.nl",
+            "keywords": [
+                "saml"
+            ],
+            "support": {
+                "email": "ruben@conduction.nl",
+                "issues": "https://github.com/ConductionNL/digid-bundle/issues",
+                "source": "https://github.com/ConductionNL/digid-bundle"
+            },
+            "time": "2021-10-04T14:48:30+00:00"
         },
         {
             "name": "conduction/samlbundle",
@@ -10194,6 +10255,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "conduction/commongroundbundle": 20,
+        "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
     },
     "prefer-stable": true,
