@@ -3,7 +3,26 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-10-13T15:23:01.43173642+02:00"
+    created: "2021-10-13T15:25:11.68122941+02:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 10.9.5
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 15.3.2
+    description: A Helm chart for Kubernetes
+    digest: bfc6135f6c542f18c1f3dae0ef05132585dfe37889d49cf5d365ea09afca4e75
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2021-10-13T15:25:11.665367973+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -25,7 +44,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2021-10-13T15:23:01.441338985+02:00"
+    created: "2021-10-13T15:25:11.689324694+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -59,7 +78,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2021-10-13T15:23:01.452787799+02:00"
+    created: "2021-10-13T15:25:11.698703582+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -88,4 +107,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2021-10-13T15:23:01.415125543+02:00"
+generated: "2021-10-13T15:25:11.651658347+02:00"
