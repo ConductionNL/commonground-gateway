@@ -5,8 +5,8 @@ parameters:
     env(SAML_SIGN_ON_URL): 'https://example.com/saml2'
     env(SAML_LOGOUT_URL): 'https://example.com/saml2'
     env(SAML_IDP_CERT): ''
-    env(APP_CERT): ''
-    env(APP_KEY): ''
+    env(APP_CERT): '/var/certs/certificate.crt'
+    env(APP_KEY): '/var/certs/certificate.key'
     env(SAML_ARTIFACT_METHOD): 'POST'
 
     artifactUrl: 'https://digispoof.demodam.nl/artifact'
@@ -23,9 +23,11 @@ parameters:
 
     saml_enabled: '%env(bool:SAML_ENABLED)%'
 
-    env(SAML_CERTIFICATE): '%env(default::file:APP_CERT)%'
-    env(SAML_PRIVATEKEY): '%env(default::file:APP_KEY)%'
-    env(SAML_IDP_CERTIFICATE): '%env(default::file:SAML_IDP_CERT)%'
+    env(SAML_CERTIFICATE): '%env(default:saml_default:file:APP_CERT)%'
+    env(SAML_PRIVATEKEY): '%env(default:saml_default:file:APP_KEY)%'
+    env(SAML_IDP_CERTIFICATE): '%env(default:saml_default:file:SAML_IDP_CERT)%'
+    
+    saml_default: 'abcd'
 
 
 saml:
