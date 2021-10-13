@@ -40,6 +40,9 @@
     "conduction/commongroundbundle": {
         "version": "dev-feature-gateway"
     },
+    "conduction/digidbundle": {
+        "version": "dev-master"
+    },
     "conduction/samlbundle": {
         "version": "dev-master"
     },
