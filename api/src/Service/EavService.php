@@ -191,10 +191,10 @@ class EavService
         if (((strpos($route, 'object_collection') !== false || strpos($route, 'item') !== false) && $request->getMethod() == 'GET'))
         {
             /* @todo catch missing data and trhow error */
-            if(!$entityName){
+            if(!$entityName) {
                 /* throw error */
             }
-            if(!$id && $route == 'get_eav_object'){
+            if(!$id && $route == 'get_eav_object') {
                 /* throw error */
             }
 
