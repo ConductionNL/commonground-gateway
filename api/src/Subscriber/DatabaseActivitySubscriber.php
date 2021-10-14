@@ -1,17 +1,17 @@
 <?php
-// src/Subscriber/DatabaseActivitySubscriber.php
-namespace App\Subscriber;
 
+// src/Subscriber/DatabaseActivitySubscriber.php
+
+namespace App\Subscriber;
 
 use App\Entity\ObjectEntity;
 use App\Service\EavService;
 use App\Service\GatewayService;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class DatabaseActivitySubscriber implements EventSubscriberInterface
 {
@@ -24,7 +24,8 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
         EavService $eavService,
         GatewayService $gatewayService,
         CommonGroundService $commonGroundService,
-        CacheInterface $cache)
+        CacheInterface $cache
+    )
     {
         $this->eavService = $eavService;
         $this->gatewayService = $gatewayService;
@@ -63,17 +64,16 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
 
         // if this subscriber only applies to certain entity types,
         // add some code to check the entity type as early as possible
-        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity()|| !$objectEntity->getEntity()->getGateway() || !$objectEntity->getUri() ) {
+        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity() || !$objectEntity->getEntity()->getGateway() || !$objectEntity->getUri()) {
             return;
         }
 
-        if($action == 'load'){
+        if ($action == 'load') {
             $item = $this->cache->getItem('commonground_'.md5($objectEntity->getUri()));
             // lets try to hit the cach
             if ($item->isHit()) {
-                $objectEntity->setExternalResult($item->get()) ;
-            }
-            else{
+                $objectEntity->setExternalResult($item->get());
+            } else {
                 /* @todo figure out how to this promise style */
                 $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
                 $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '');
@@ -83,21 +83,18 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
                 //$item->expiresAt(new \DateTime('tomorrow'));
                 $this->cache->save($item);
             }
-        }
-        elseif($action == 'remove'){
+        } elseif ($action == 'remove') {
             /* @todo we should check is an entity is not ussed elswhere before removing it */
             $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
             /* @todo we need to do some abstraction to log these calls, something like an callWrapper at the eav service  */
-            $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '',[],[],false, 'DELETE');
+            $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '', [], [], false, 'DELETE');
             // Lets see if we need to clear the cache
             $item = $this->cache->getItem('commonground_'.md5($objectEntity->getUri()));
-            if($item->isHit()){
+            if ($item->isHit()) {
                 $this->cache->delete('commonground_'.md5($objectEntity->getUri()));
             }
-        }
-        else{
+        } else {
             /* @todo throe execption */
         }
-
     }
 }

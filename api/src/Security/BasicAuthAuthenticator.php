@@ -9,13 +9,10 @@
 
 namespace App\Security;
 
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
-use Conduction\CommonGroundBundle\Security\User\CommongroundUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\ORM\EntityManagerInterface;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use GuzzleHttp\Exception\ClientException;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -24,17 +21,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
 class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 {
-
     private $params;
     private $commonGroundService;
     private $router;
@@ -71,12 +66,11 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['username'])|| !isset($data['password'])) {
-            throw New BadRequestException('Username and password are required');
+        if (!isset($data['username']) || !isset($data['password'])) {
+            throw new BadRequestException('Username and password are required');
         }
 
         return $data;
-
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
@@ -90,7 +84,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         try {
             $user = $this->commonGroundService->createResource($credentials, ['component' => 'uc', 'type' => 'login']);
         } catch (ClientException $e) {
-            throw New BadRequestException($e->getResponse()->getBody()->getContents());
+            throw new BadRequestException($e->getResponse()->getBody()->getContents());
         }
 
         $person = [];
@@ -105,7 +99,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
             $credentials['password'],
             $person['givenName'] ?? '',
             $person['familyName'] ?? '',
-            $person['givenName'] . " " . $person['familyName'] ?? '',
+            $person['givenName'].' '.$person['familyName'] ?? '',
             null,
             ['ROLE_USER'],
             $credentials['username']
@@ -119,7 +113,6 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-
         $result = [];
         $result['token'] = $this->authenticationService->generateJwt();
 
@@ -128,12 +121,11 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
             Response::HTTP_OK,
             ['content-type' => 'application/json']
         );
-
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        throw New BadRequestException("Invalid username + password combination");
+        throw new BadRequestException('Invalid username + password combination');
     }
 
     /**
