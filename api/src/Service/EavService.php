@@ -188,8 +188,7 @@ class EavService
         /*
          * Handeling reading requests
          */
-        if (((strpos($route, 'object_collection') !== false || strpos($route, 'item') !== false) && $request->getMethod() == 'GET'))
-        {
+        if (((strpos($route, 'object_collection') !== false || strpos($route, 'item') !== false) && $request->getMethod() == 'GET')) {
             /* @todo catch missing data and trhow error */
             if(!$entityName) {
                 /* throw error */
