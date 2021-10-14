@@ -70,7 +70,7 @@ class Attribute
      * )
      * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $name;
 
@@ -447,12 +447,12 @@ class Attribute
     private $maxDate;
 
     /**
-     * @var string *Can only be used in combination with type file* The maximum allowed file size in KB
+     * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
      *
-     * @example 32
+     * @example 32000
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="float", nullable=true)
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $maxFileSize;
 
@@ -990,12 +990,12 @@ class Attribute
         return $this;
     }
 
-    public function getMaxFileSize(): ?float
+    public function getMaxFileSize(): ?int
     {
         return $this->maxFileSize;
     }
 
-    public function setMaxFileSize(?float $maxFileSize): self
+    public function setMaxFileSize(?int $maxFileSize): self
     {
         $this->maxFileSize = $maxFileSize;
 

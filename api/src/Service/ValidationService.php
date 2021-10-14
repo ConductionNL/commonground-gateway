@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\File;
 use App\Entity\GatewayResponceLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
@@ -123,7 +124,7 @@ class ValidationService
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object)
-            if (is_array($value) && $attribute->getType() != 'object') {
+            if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
                 $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
@@ -141,7 +142,7 @@ class ValidationService
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
-        if (!$objectEntity->getHasErrors() && $attribute->getType() != 'object') {
+        if (!$objectEntity->getHasErrors() && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
             $objectEntity->getValueByAttribute($attribute)->setValue($value);
         }
 
@@ -642,7 +643,7 @@ class ValidationService
                     }
                     $this->em->persist($subObject);
                 }
-                else{
+                else {
                     $subObjects = $valueObject->getObjects();
                     if($subObjects->isEmpty()){
                         $subObject = New ObjectEntity();
@@ -717,29 +718,70 @@ class ValidationService
                 }
                 break;
             case 'file':
-                $valueString = strlen($value) > 75 ? substr($value,0,75).'...' : $value;
-                $base64 = explode(",",$value);
+                if (!array_key_exists('base64', $value)) {
+                    $objectEntity->addError($attribute->getName().'.base64','Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    break;
+                }
+                $valueString = strlen($value['base64']) > 75 ? substr($value['base64'],0,75).'...' : $value['base64'];
+                $base64 = explode(",",$value['base64']);
+
+                // Get file size
+                $fileSize = $this->getBase64Size($value['base64']);
+
+                // Get mime_type
+                $imgdata = base64_decode(end($base64));
+                $f = finfo_open();
+                $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
+                finfo_close($f);
                 if ( base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
-                    $objectEntity->addError($attribute->getName(),'Expects a valid base64 encoded string. ('.$valueString.' is not)');
+                    $objectEntity->addError($attribute->getName().'.base64','Expects a valid base64 encoded string. ('.$valueString.' is not)');
                 } else {
                     if ($attribute->getMaxFileSize()) {
-                        $fileSize = $this->getBase64Size($value);
                         if ($fileSize > $attribute->getMaxFileSize()) {
-                            $objectEntity->addError($attribute->getName(),'This file is to big (' . number_format($fileSize, 2, ',', '') . ' KB), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' KB. ('.$valueString.')');
+                            $objectEntity->addError($attribute->getName().'.base64','This file is to big (' . $fileSize . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes. ('.$valueString.')');
                         }
                     }
                     if ($attribute->getFileType()) {
                         // We could just use $base64[0] to get the file type form that substring,
                         // but if a base64 without data:...;base64, is given this will work as well:
-                        $imgdata = base64_decode(end($base64));
-                        $f = finfo_open();
-                        $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
                         if ($mime_type != $attribute->getFileType()) {
-                            $objectEntity->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$valueString.')');
+                            $objectEntity->addError($attribute->getName().'.base64','Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$valueString.')');
                         }
-                        finfo_close($f);
                     }
                 }
+
+                // lets see if we already have a value object
+                $valueObject = $objectEntity->getValueByAttribute($attribute);
+
+                if (!$valueObject->getValue()) {
+                    $file = new File();
+                } else {
+                    $file = $valueObject->getValue();
+                }
+
+                if (array_key_exists('filename', $value)) {
+                    $file->setName($value['filename']);
+                } else {
+                    // persist so we can get the id
+                    $this->em->persist($file);
+                    $file->setName($file->getId()); //TODO cast to string?
+                }
+
+                $extension = explode("/",$mime_type);
+                if (count($extension) > 1) {
+                    $file->setExtension($extension[1]);
+                } else {
+                    $file->setExtension($extension[0]);
+                }
+                $file->setMimeType($mime_type);
+                $file->setSize($fileSize);
+                $file->setBase64(end($base64));
+
+                // if no errors we can push it into our object
+                if (!$objectEntity->getHasErrors()) {
+                    $objectEntity->getValueByAttribute($attribute)->setValue($file);
+                }
+
                 break;
             default:
                 $objectEntity->addError($attribute->getName(),'Has an an unknown type: [' . $attribute->getType() . ']');
@@ -760,7 +802,7 @@ class ValidationService
             $size_in_kb    = $size_in_bytes / 1024;
             $size_in_mb    = $size_in_kb / 1024;
 
-            return $size_in_kb;
+            return $size_in_bytes;
         }
         catch(Exception $e){
             return $e;

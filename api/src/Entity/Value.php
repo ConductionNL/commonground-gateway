@@ -64,7 +64,7 @@ class Value
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $stringValue;
+    private $stringValue; //TODO make this type=string again!?
 
     /**
      * @var integer Integer if the value is type integer
@@ -108,6 +108,13 @@ class Value
 
     /**
      * @Groups({"read","write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=File::class, mappedBy="value", cascade={"persist", "remove"})
+     */
+    private $files;
+
+    /**
+     * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
@@ -123,12 +130,14 @@ class Value
     private $objectEntity; // parent object
 
     /**
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
      */
     private $objects; // sub objects
 
     public function __construct()
     {
+        $this->files = new ArrayCollection();
         $this->objects = new ArrayCollection();
     }
 
@@ -267,6 +276,36 @@ class Value
         return $this;
     }
 
+    /**
+     * @return Collection|File[]
+     */
+    public function getFiles(): Collection
+    {
+        return $this->files;
+    }
+
+    public function addFile(File $file): self
+    {
+        if (!$this->files->contains($file)) {
+            $this->files->add($file);
+            $file->setValue($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFile(File $file): self
+    {
+        if ($this->files->removeElement($file)) {
+            // set the owning side to null (unless already changed)
+            if ($file->getValue() === $this) {
+                $file->setValue(null);
+            }
+        }
+
+        return $this;
+    }
+
     public function getAttribute(): ?Attribute
     {
         return $this->attribute;
@@ -297,12 +336,11 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object'
-                && $this->getAttribute()->getType() != 'datetime' && $this->getAttribute()->getType() != 'date') {
+            $doNotSetArrayTypes = array("object", "datetime", "date", "file");
+            if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotSetArrayTypes)) {
                 return $this->setArrayValue($value);
             }
             switch ($this->getAttribute()->getType()) {
-                case 'file':
                 case 'string':
                     return $this->setStringValue($value);
                 case 'integer':
@@ -333,6 +371,19 @@ class Value
                     }
                     // else $value = DateTime (string)
                     return $this->setDateTimeValue(new DateTime($value));
+                case 'file':
+                    if ($value == null) {
+                        return $this;
+                    }
+                    // if multiple is true value should be an array
+                    if ($this->getAttribute()->getMultiple()) {
+                        foreach ($value as $file) {
+                            $this->addFile($file);
+                        }
+                        return $this;
+                    }
+                    // else $value = File::class
+                    return $this->addFile($value);
                 case 'object':
                     if ($value == null) {
                         return $this;
@@ -356,12 +407,11 @@ class Value
     public function getValue()
     {
         if ($this->getAttribute()) {
-            if ($this->getAttribute()->getMultiple() && $this->getAttribute()->getType() != 'object'
-                && $this->getAttribute()->getType() != 'datetime' && $this->getAttribute()->getType() != 'date') {
+            $doNotGetArrayTypes = array("object", "datetime", "date", "file");
+            if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 return $this->getArrayValue();
             }
             switch ($this->getAttribute()->getType()) {
-                case 'file':
                 case 'string':
                     return $this->getStringValue();
                 case 'integer':
@@ -389,6 +439,15 @@ class Value
                     }
                     $datetime = $this->getDateTimeValue();
                     return $datetime->format($format);
+                case 'file':
+                    $files = $this->getFiles();
+                    if (!$this->getAttribute()->getMultiple()) {
+                        return $files->first();
+                    }
+                    if (count($files) == 0) {
+                        return null;
+                    }
+                    return $files;
                 case 'object':
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
