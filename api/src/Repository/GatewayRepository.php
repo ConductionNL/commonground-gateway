@@ -18,5 +18,4 @@ class GatewayRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Gateway::class);
     }
-
 }

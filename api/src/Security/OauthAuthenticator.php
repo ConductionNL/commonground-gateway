@@ -9,29 +9,24 @@
 
 namespace App\Security;
 
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
-use Conduction\CommonGroundBundle\Security\User\CommongroundUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
 class OauthAuthenticator extends AbstractGuardAuthenticator
 {
-
     private $params;
     private $commonGroundService;
     private $router;
@@ -66,7 +61,6 @@ class OauthAuthenticator extends AbstractGuardAuthenticator
      */
     public function getCredentials(Request $request)
     {
-
         $code = $request->query->get('code');
         $method = $this->session->get('method');
         $identifier = $this->session->get('identifier');
@@ -91,7 +85,7 @@ class OauthAuthenticator extends AbstractGuardAuthenticator
             '',
             $credentials['givenName'],
             $credentials['familyName'],
-            $credentials['givenName'] . " " . $credentials['familyName'],
+            $credentials['givenName'].' '.$credentials['familyName'],
             null,
             ['ROLE_USER'],
             $credentials['email']
@@ -118,7 +112,8 @@ class OauthAuthenticator extends AbstractGuardAuthenticator
     {
         return new RedirectResponse($this->router->generate(
             'app_user_authenticate',
-            ['method' => $this->session->get('method'), 'identifier' => $this->session->get('identifier')]));
+            ['method' => $this->session->get('method'), 'identifier' => $this->session->get('identifier')]
+        ));
     }
 
     /**

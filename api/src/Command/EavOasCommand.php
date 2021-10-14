@@ -1,19 +1,19 @@
 <?php
 
 // src/Command/CreateUserCommand.php
+
 namespace App\Command;
 
+use App\Service\EavDocumentationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\EavDocumentationService;
 
 class EavOasCommand extends Command
 {
     // the name of the command (the part after "bin/console")
     protected static $defaultName = 'eav:documentation';
     protected EavDocumentationService $eavDocumentationService;
-
 
     public function __construct(EavDocumentationService $eavDocumentationService)
     {
@@ -30,8 +30,7 @@ class EavOasCommand extends Command
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command allows you to create a OAS files for your EAV entities')
-        ;
+            ->setHelp('This command allows you to create a OAS files for your EAV entities');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

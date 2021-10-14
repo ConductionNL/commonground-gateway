@@ -115,7 +115,7 @@ class GatewayResponceLog
 
     public function setEntity(?Entity $entity): self
     {
-        if($entity->getGateway()){
+        if ($entity->getGateway()) {
             $this->setGateway($entity->getGateway());
         }
         $this->entity = $entity;
@@ -130,7 +130,7 @@ class GatewayResponceLog
 
     public function setObjectEntity(?ObjectEntity $objectEntity): self
     {
-        if($objectEntity->getEntity()){
+        if ($objectEntity->getEntity()) {
             $this->setEntity($objectEntity->getEntity());
         }
         $this->objectEntity = $objectEntity;
@@ -277,7 +277,7 @@ class GatewayResponceLog
 //        $this->setProtocol($response->getProtocol());
         $this->setProtocolVersion($response->getProtocolVersion());
         $this->setHeaders($response->getHeaders());
-        $this->setContent((string)$response->getBody());
+        $this->setContent((string) $response->getBody());
 //        $this->setSuccesfull($response->isSuccessful()); // true
 //        $this->setInformation($response->isInformational());
 //        $this->setRedirect($response->isRedirect());
