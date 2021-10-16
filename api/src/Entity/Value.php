@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
@@ -67,7 +66,7 @@ class Value
     private $stringValue; //TODO make this type=string again!?
 
     /**
-     * @var integer Integer if the value is type integer
+     * @var int Integer if the value is type integer
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
@@ -83,7 +82,7 @@ class Value
     private $numberValue;
 
     /**
-     * @var boolean Boolean if the value is type boolean
+     * @var bool Boolean if the value is type boolean
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
@@ -252,12 +251,12 @@ class Value
             $this->objects->add($object);
         }
         // handle subresources
-        if(!$object->getSubresourceOf()->contains($this)){
+        if (!$object->getSubresourceOf()->contains($this)) {
             $object->addSubresourceOf($this);
         }
 
         //Handle inversed by
-        if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())){
+        if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
             $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
         }
 
@@ -350,16 +349,18 @@ class Value
                         // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
                     }
+
                     return $this->setBooleanValue($value);
                 case 'number':
                     return $this->setNumberValue($value);
                 case 'date':
                 case 'datetime':
                     // if we auto convert null to a date time we would always default to current_timestamp, so lets tackle that
-                    if(!$value) {
+                    if (!$value) {
                         if ($this->getAttribute()->getMultiple()) {
                             return $this->setArrayValue(null);
                         }
+
                         return $this->setDateTimeValue(null);
                     }
                     // if multiple is true value should be an array
@@ -367,6 +368,7 @@ class Value
                         foreach ($value as &$datetime) {
                             $datetime = new DateTime($datetime);
                         }
+
                         return $this->setArrayValue($value);
                     }
                     // else $value = DateTime (string)
@@ -393,6 +395,7 @@ class Value
                         foreach ($value as $object) {
                             $this->addObject($object);
                         }
+
                         return $this;
                     }
                     // else $value = ObjectEntity::class
@@ -425,7 +428,7 @@ class Value
                     $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';
 
                     // We don't want to format null
-                    if((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
+                    if ((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
                         || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())) {
                         return null;
                     }
@@ -435,9 +438,11 @@ class Value
                         foreach ($datetimeArray as &$datetime) {
                             $datetime = $datetime->format($format);
                         }
+
                         return $datetimeArray;
                     }
                     $datetime = $this->getDateTimeValue();
+
                     return $datetime->format($format);
                 case 'file':
                     $files = $this->getFiles();
@@ -456,6 +461,7 @@ class Value
                     if (count($objects) == 0) {
                         return null;
                     }
+
                     return $objects;
             }
         } else {

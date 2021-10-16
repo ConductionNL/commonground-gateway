@@ -12,7 +12,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\JoinColumn;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -21,7 +20,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Description
+ * Description.
  *
  * @category Entity
  *
@@ -78,14 +77,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "description"="Returns the created object"
  *          }
  *      },
-*          "get_eav_object"={
-*              "method"="GET",
-*              "path"="/eav/data/{entity}/{id}",
-*              "swagger_context" = {
-*                  "summary"="Get object with objectEntity id",
-*               "description"="Returns the object"
-*              }
-*          },
+ *          "get_eav_object"={
+ *              "method"="GET",
+ *              "path"="/eav/data/{entity}/{id}",
+ *              "swagger_context" = {
+ *                  "summary"="Get object with objectEntity id",
+ *               "description"="Returns the object"
+ *              }
+ *          },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -261,7 +260,7 @@ class ObjectEntity
 
         // Do the same for resources above this one if set to true
         if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
-            foreach($this->getSubresourceOf() as $resource){
+            foreach ($this->getSubresourceOf() as $resource) {
                 $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
             }
         }
@@ -282,10 +281,11 @@ class ObjectEntity
     }
 
     /**
-     * Adds ans error to the error stack of this object
+     * Adds ans error to the error stack of this object.
      *
      * @param string $attributeName the atribute that throws the error
-     * @param string $error the error message
+     * @param string $error         the error message
+     *
      * @return array all of the errors so far
      */
     public function addError(string $attributeName, string $error, $key = null): self
@@ -297,14 +297,13 @@ class ObjectEntity
         }
 
         // If the key already exisits we need to switch it to an array
-        if(array_key_exists($attributeName, $errors) and !is_array($errors[$attributeName])){
+        if (array_key_exists($attributeName, $errors) and !is_array($errors[$attributeName])) {
             $errors[$attributeName] = [$errors[$attributeName]];
         }
         //TODO: check if error is already in array?
-        if(array_key_exists($attributeName, $errors)){
+        if (array_key_exists($attributeName, $errors)) {
             $errors[$attributeName][] = $error;
-        }
-        else{
+        } else {
             $errors[$attributeName] = $error;
         }
 
@@ -317,11 +316,11 @@ class ObjectEntity
         //$subResources = $this->getSubresources();
         $values = $this->getObjectValues();
 
-        foreach($values as $value){
+        foreach ($values as $value) {
             foreach ($value->getObjects() as $subResource) {
                 $subErrors = $subResource->getAllErrors();
-                if(!empty($subErrors)){
-                    $allErrors[$value->getAttribute()->getName()] =$subErrors;
+                if (!empty($subErrors)) {
+                    $allErrors[$value->getAttribute()->getName()] = $subErrors;
                 }
             }
         }
@@ -348,7 +347,6 @@ class ObjectEntity
         return $allErrors;
     }
 
-
     public function getHasPromises(): bool
     {
         return $this->hasErrors;
@@ -360,7 +358,7 @@ class ObjectEntity
 
         // Do the same for resources above this one if set to true
         if ($hasPromises == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
-            foreach($this->getSubresourceOf() as $resource){
+            foreach ($this->getSubresourceOf() as $resource) {
                 $resource->getObjectEntity()->setHasPromises($hasPromises, $level + 1);
             }
         }
@@ -375,7 +373,7 @@ class ObjectEntity
 
     public function setPromises(?array $promises): self
     {
-        if(!$this->hasPromises) {
+        if (!$this->hasPromises) {
             $this->setHasPromises(true);
         }
 
@@ -389,7 +387,7 @@ class ObjectEntity
         //TODO: check if promise is already in array?
         $this->promises[] = $promise;
 
-        if(!$this->hasPromises) {
+        if (!$this->hasPromises) {
             $this->setHasPromises(true);
         }
 
@@ -401,8 +399,6 @@ class ObjectEntity
         $allPromises = [];
         $subResources = $this->getSubresources();
         foreach ($subResources as $subResource) {
-
-
             if (get_class($subResource) == ObjectEntity::class) {
                 $allPromises = $subResource->getAllPromises();
                 continue;
@@ -412,6 +408,7 @@ class ObjectEntity
                 $allPromises = array_merge($allPromises, $listSubResource->getAllPromises());
             }
         }
+
         return array_merge($allPromises, $this->errors);
     }
 
@@ -428,16 +425,16 @@ class ObjectEntity
     }
 
     /**
-     * Get an value based on a attribut
+     * Get an value based on a attribut.
      *
      * @param Attribute $attribute the attribute that you are searching for
-     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
      *
+     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
      */
     public function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
-            $this->addError($attribute->getName(), 'The entity: ' . $this->getEntity()->getName() . ' does not have this attribute. (intern getValueByAttribute error)');
+            $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
         }
 
         // Check if value with this attribute exists for this ObjectEntity
@@ -445,28 +442,28 @@ class ObjectEntity
 
         $values = $this->getObjectValues()->matching($criteria);
 
-        if($values->isEmpty()){
+        if ($values->isEmpty()) {
             // If no value with this attribute was found
             $value = new Value();
             $value->setAttribute($attribute);
             $value->setObjectEntity($this);
             $this->addObjectValue($value);
+
             return $value;
         }
 
         return $values->first();
     }
 
-
     /*
      * A recursion save way of getting subresources
      */
-    public function getAllSubresources(?ArrayCollection $result):ArrayCollection
+    public function getAllSubresources(?ArrayCollection $result): ArrayCollection
     {
         $subresources = $this->getSubresources();
 
-        foreach ($subresources as $subresource){
-            if(!$result->contains($subresource)){
+        foreach ($subresources as $subresource) {
+            if (!$result->contains($subresource)) {
                 $result->add($subresource);
             }
         }
@@ -475,7 +472,7 @@ class ObjectEntity
     }
 
     /**
-     * Function to get al the subresources of this object entity
+     * Function to get al the subresources of this object entity.
      *
      * @return ArrayCollection the subresources of this object entity
      */
@@ -485,7 +482,6 @@ class ObjectEntity
         //$values = $this->getObjectValues()->filter(function (Value $value) {
         //    return $value->getAttribute()->getType() === 'object';
         //});
-
 
         /*
         $values = $this->getObjectValues();
@@ -497,7 +493,7 @@ class ObjectEntity
         */
         $subresources = new ArrayCollection();
         foreach ($this->getObjectValues() as $value) {
-            foreach($value->getObjects() as $objectEntity){
+            foreach ($value->getObjects() as $objectEntity) {
                 // prevent double work and downward recurions
                 $subresources->add($objectEntity);
             }
@@ -537,7 +533,7 @@ class ObjectEntity
     }
 
     /**
-     * Checks conditional logic on values
+     * Checks conditional logic on values.
      *
      * @return $this
      */
@@ -550,8 +546,8 @@ class ObjectEntity
         $maxDepth->add($this);
 
         // lets cascade
-        if(!$this->getSubresources()->isEmpty()){
-            foreach($this->getSubresources() as $subresource) {
+        if (!$this->getSubresources()->isEmpty()) {
+            foreach ($this->getSubresources() as $subresource) {
                 // Do not call recursive function if we reached maxDepth (if we already checked this object before)
                 if (!$maxDepth->contains($subresource)) {
                     $subresource->checkConditionlLogic($maxDepth);
@@ -561,42 +557,41 @@ class ObjectEntity
 
         /* @todo we should only check values that actuale have conditional logic optmimalisation */
         // do the actual chack
-        foreach($this->getObjectValues() as $value){
-            if(count($value->getAttribute()->getRequiredIf())==0){
+        foreach ($this->getObjectValues() as $value) {
+            if (count($value->getAttribute()->getRequiredIf()) == 0) {
                 continue;
             }
             // Oke loop the conditions
-            foreach($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue){
+            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
-                if($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))){;continue;}
+                if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
+                    continue;
+                }
                 // so lets see if we should have a value
                 //var_dump($conditionProperty);
                 //var_dump($conditionValue);
                 //var_dump($this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue());
 
-                if(is_array($conditionValue)){
-                    foreach ($conditionValue as $convar){
+                if (is_array($conditionValue)) {
+                    foreach ($conditionValue as $convar) {
                         // Hacky
                         //if($convar == 'true'  ) {$convar = true;}
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
-                        if(!is_array($checkAgainst) && $checkAgainst  == $convar){
+                        if (!is_array($checkAgainst) && $checkAgainst == $convar) {
                             $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
-                        }
-                        elseif(is_array($checkAgainst) && in_array($convar, $checkAgainst)){
+                        } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
                             $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
                         }
                     }
-                }
-                else{
+                } else {
                     // Hacky
                     //if($conditionValue == 'true'  ) {$conditionValue = true;}
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
-                    if(!is_array($checkAgainst) && $checkAgainst == $conditionValue){
+                    if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
                         $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
-                    }
-                    elseif(is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)){
+                    } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
                         $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                     }
                 }
@@ -614,12 +609,11 @@ class ObjectEntity
             */
         }
 
-
         return $this;
     }
 
     /**
-     * Convienance API for throwing an data object and is children into an array
+     * Convienance API for throwing an data object and is children into an array.
      *
      * @return array the array holding all the data     *
      */
@@ -627,14 +621,12 @@ class ObjectEntity
     {
         $array = [];
         $array['id'] = (string) $this->getId();
-        foreach($this->getObjectValues() as $value){
-            if(!$value->getObjects()->isEmpty() && $level < 5){
-                foreach($value->getObjects() as $object){
-                    $array[$value->getAttribute()->getName()]  = $object->toArray($level + 1);
+        foreach ($this->getObjectValues() as $value) {
+            if (!$value->getObjects()->isEmpty() && $level < 5) {
+                foreach ($value->getObjects() as $object) {
+                    $array[$value->getAttribute()->getName()] = $object->toArray($level + 1);
                 }
-
-            }
-            else{
+            } else {
                 $array[$value->getAttribute()->getName()] = $value->getValue();
             }
         }
@@ -670,5 +662,4 @@ class ObjectEntity
 
         return $this;
     }
-
 }
