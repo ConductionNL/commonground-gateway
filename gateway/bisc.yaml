@@ -90,6 +90,7 @@ App\Entity\Entity:
             - telephones
             - addresses
             - emails
+#            - file # FOR FILE TESTING, TODO: REMOVE!!!
 
     #Email Object
     email:
@@ -359,6 +360,14 @@ App\Entity\Attribute:
         object: '@email'
         persistToGateway: true
         cascade: true
+## FOR FILE TESTING, TODO: REMOVE!!!
+#    organization_file:
+#        name: file
+#        type: file
+##        multiple: true
+#        maxFileSize: 20000
+#        fileType: 'image/jpeg'
+#        entity: '@organization'
 
     # Email
     email_name:

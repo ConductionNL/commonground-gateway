@@ -171,6 +171,7 @@ class ObjectEntity
     private ArrayCollection $recursionStack;
 
     /**
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
     private $subresourceOf;

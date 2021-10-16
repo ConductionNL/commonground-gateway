@@ -3,15 +3,22 @@
 namespace App\Service;
 
 use App\Entity\Entity;
+use App\Entity\File;
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Paginator;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -128,6 +135,7 @@ class EavService
 
         // We will always need an $entity
 
+
         // Get  a body
         if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
@@ -142,6 +150,7 @@ class EavService
         if (!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false) && $request->getMethod() == 'GET')) {
             $entity = $this->getEntity($entityName);
             if (is_array($entity)) {
+                // TODO: make a class for this / re-use code for this
                 return new Response(
                     $this->serializerService->serialize(new ArrayCollection($entity), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
                     Response::HTTP_BAD_REQUEST,
@@ -150,6 +159,7 @@ class EavService
             }
             $object = $this->getObject($id, $request->getMethod(), $entity);
             if (is_array($object)) {
+                // TODO: make a class for this / re-use code for this
                 return new Response(
                     $this->serializerService->serialize(new ArrayCollection($object), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
                     Response::HTTP_BAD_REQUEST,
@@ -158,11 +168,118 @@ class EavService
             }
         }
 
+        // Get  a body
+        if ($request->getContent()) {
+            $body = json_decode($request->getContent(), true);
+        }
+        // If we have no body but are using form-data instead: //TODO find a better way to deal with form-data?
+        else {
+            // get other input values from form-data and put it in $body ($request->get('name'))
+            $body = [];
+            foreach ($entity->getAttributes() as $attribute) {
+                if ($attribute->getType() != 'file' && $request->get($attribute->getName())) {
+                    $body[$attribute->getName()] = $request->get($attribute->getName());
+                }
+            }
+
+            if (count($request->files) > 0) {
+                // TODO: Some of this, or maybe all code should be moved to the validationService, when request can be used there as well!
+
+                // TODO: should we use maxResult 1 here? if we find more than 1 shouldn't we throw an error?
+                // Check if this entity has an attribute with type file
+                $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('type', 'file'))->setMaxResults(1);
+                $attributes = $entity->getAttributes()->matching($criteria);
+
+                // If no attribute with type file found, throw an error
+                if ($attributes->isEmpty()) {
+                    // TODO: make a class for this / re-use code for this
+                    $error = [
+                        "message" => "No attribute with type file found for this entity",
+                        "type" => "Bad Request",
+                        "path" => $entity->getName(),
+                        "data" => [],
+                    ];
+                    return new Response(
+                        $this->serializerService->serialize(new ArrayCollection($error), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                        Response::HTTP_BAD_REQUEST,
+                        ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                    );
+                }
+                // Else set attribute to the attribute with type = file
+                $attribute = $attributes->first();
+
+                if ($attribute->getMultiple()) {
+                    // Loop through all files, validate them and store them in the files ArrayCollection
+                    $value = $object->getValueByAttribute($attribute);
+                    if (!$value->getValue()) {
+                        $value = new ArrayCollection();
+                    } else {
+                        $value = $value->getValue();
+                    }
+                    foreach ($request->files as $file) {
+                        // TODO Move duplicate code to function, see else statement
+
+                        // Validate this file //TODO should be moved to validationService
+                        if ($attribute->getMaxFileSize()) {
+                            if ($file->getSize() > $attribute->getMaxFileSize()) {
+                                $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
+                            }
+                        }
+                        if ($attribute->getFileType()) {
+                            if ($file->getClientMimeType() != $attribute->getFileType()) {
+                                $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
+                            }
+                        }
+
+                        $fileObject = new File(); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
+                        $fileObject->setName($file->getClientOriginalName());
+                        $fileObject->setExtension($file->getClientOriginalExtension());
+                        $fileObject->setMimeType($file->getClientMimeType());
+                        $fileObject->setSize($file->getSize());
+                        $fileObject->setBase64($this->uploadToBase64($file));
+                        $value->add($fileObject); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
+                    }
+                } else {
+                    $file = $request->files->get($attribute->getName());
+                    $value = $object->getValueByAttribute($attribute);
+                    // TODO Move duplicate code to function, see foreach in if ^^^
+
+                    // Validate this file //TODO should be moved to validationService
+                    if ($attribute->getMaxFileSize()) {
+                        if ($file->getSize() > $attribute->getMaxFileSize()) {
+                            $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
+                        }
+                    }
+                    if ($attribute->getFileType()) {
+                        if ($file->getClientMimeType() != $attribute->getFileType()) {
+                            $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
+                        }
+                    }
+
+                    if (!$value->getValue()) {
+                        $value = new File();
+                    } else {
+                        $value = $value->getValue();
+                    }
+                    $value->setName($file->getClientOriginalName());
+                    $value->setExtension($file->getClientOriginalExtension());
+                    $value->setMimeType($file->getClientMimeType());
+                    $value->setSize($file->getSize());
+                    $value->setBase64($this->uploadToBase64($file));
+                }
+
+                // Save the files in the correct Value for this ObjectEntity (by using the attribute with type = file)
+                if (!$object->getHasErrors()) {
+                    $object->getValueByAttribute($attribute)->setValue($value);
+                }
+            }
+        }
+
         /*
          * Handeling data mutantions
          */
         if (strpos($route, 'collection') !== false && $request->getMethod() == 'POST') {
-            $this->checkRequest($entityName, $body, $id, $request->getMethod());
+            $this->checkRequest($entityName, $body, $id, $request->getMethod(), $request->files);
             // Transfer the variable to the service
             $result = $this->handleMutation($object, $body);
             $responseType = Response::HTTP_CREATED;
@@ -172,7 +289,7 @@ class EavService
          * Handeling data mutantions
          */
         if (strpos($route, 'item') !== false && $request->getMethod() == 'PUT') {
-            $this->checkRequest($entityName, $body, $id, $request->getMethod());
+            $this->checkRequest($entityName, $body, $id, $request->getMethod(), $request->files);
             // Transfer the variable to the service
             $result = $this->handleMutation($object, $body);
             $responseType = Response::HTTP_OK;
@@ -242,6 +359,13 @@ class EavService
         );
     }
 
+    private function uploadToBase64(UploadedFile $file) : string
+    {
+        $content = base64_encode($file->openFile()->fread($file->getSize()));
+        $mimeType= $file->getClientMimeType();
+        return "data:".$mimeType.";base64,".$content;
+    }
+
     private function handleContentType(string $accept): string
     {
         switch ($accept) {
@@ -254,15 +378,15 @@ class EavService
         }
     }
 
-    public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
+    public function checkRequest(string $entityName, array $body, ?string $id, string $method, FileBag $files): void
     {
-        if (!$entityName) {
-            throw new HttpException(400, 'An entity name should be provided for this route');
+        if(!$entityName) {
+            throw new HttpException(400,'An entity name should be provided for this route');
         }
-        if (!$body) {
-            throw new HttpException(400, 'An body should be provided for this route');
+        if(!$body and count($files) == 0) {
+            throw new HttpException(400, 'A body should be provided for this route');
         }
-        if (!$id && $method == 'PUT') {
+        if(!$id &&  $method == 'PUT') {
             throw new HttpException(400, 'An id should be provided for this route');
         }
     }
@@ -422,6 +546,22 @@ class EavService
                 }
                 $response[$attribute->getName()] = $objectsArray;
                 continue;
+            } elseif ($attribute->getType() == 'file') {
+                if ($value->getValue() == null) {
+                    $response[$attribute->getName()] = null;
+                    continue;
+                }
+                if (!$attribute->getMultiple()) {
+                    $response[$attribute->getName()] = $this->renderFileResult($value->getValue());
+                    continue;
+                }
+                $files = $value->getValue();
+                $filesArray = [];
+                foreach ($files as $file) {
+                    $filesArray[] = $this->renderFileResult($file);
+                }
+                $response[$attribute->getName()] = $filesArray;
+                continue;
             }
             $response[$attribute->getName()] = $value->getValue();
 
@@ -435,5 +575,16 @@ class EavService
         $response['id'] = $result->getId();
 
         return $response;
+    }
+
+    private function renderFileResult(File $file): array
+    {
+        return [
+            "name" => $file->getName(),
+            "extension" => $file->getExtension(),
+            "mimeType" => $file->getMimeType(),
+            "size" => $file->getSize(),
+            "base64" => $file->getBase64(),
+        ];
     }
 }
