@@ -1,16 +1,16 @@
 <?php
 
 // src/Command/CreateUserCommand.php
+
 namespace App\Command;
 
+use App\Service\GatewayDocumentationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use App\Service\GatewayDocumentationService;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableSeparator;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class GatewayOasCommand extends Command
 {
@@ -19,8 +19,7 @@ class GatewayOasCommand extends Command
     protected GatewayDocumentationService $gatewayDocumentationService;
     protected EntityManagerInterface $em;
 
-
-    public function __construct(GatewayDocumentationService $gatewayDocumentationService,EntityManagerInterface $em)
+    public function __construct(GatewayDocumentationService $gatewayDocumentationService, EntityManagerInterface $em)
     {
         $this->gatewayDocumentationService = $gatewayDocumentationService;
         $this->em = $em;
@@ -36,8 +35,7 @@ class GatewayOasCommand extends Command
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command allows you to create a OAS files for your EAV entities')
-        ;
+            ->setHelp('This command allows you to create a OAS files for your EAV entities');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -64,18 +62,19 @@ class GatewayOasCommand extends Command
 
         $rows = [];
 
-        foreach ($gateways as $gateway){
+        foreach ($gateways as $gateway) {
             $gateway = $this->gatewayDocumentationService->getPathsForGateway($gateway);
             $this->em->persist($gateway);
             $progressBar->advance();
             //$this->em->persist($gateway);
 
             // Lets build a nice table
-            foreach($gateway->getPaths() as $key=>$path){
-                if(!array_key_exists('properties', $path)){$path['properties'] = [];} // want we kennen schemas zonder properties
+            foreach ($gateway->getPaths() as $key=>$path) {
+                if (!array_key_exists('properties', $path)) {
+                    $path['properties'] = [];
+                } // want we kennen schemas zonder properties
                 $rows[] = [$gateway->getName(), $key, count($path['properties'])];
             }
-
         }
 
         $output->writeln('Found the following paths to parse');
@@ -83,8 +82,7 @@ class GatewayOasCommand extends Command
         $table = new Table($output);
         $table
             ->setHeaders(['Gateway', 'Path', 'Properties'])
-            ->setRows($rows)
-        ;
+            ->setRows($rows);
         $table->render();
 
         $this->em->flush();

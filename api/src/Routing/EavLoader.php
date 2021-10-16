@@ -1,8 +1,6 @@
 <?php
 
-
 namespace App\Routing;
-
 
 use App\Entity\Entity;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,8 +29,7 @@ class EavLoader extends Loader
         $routes = new RouteCollection();
         $paths = $this->getEntityRoutes();
 
-        foreach($paths as $path)
-        {
+        foreach ($paths as $path) {
             $routes->add("dynamic_eav_{$path['entity']}_get_item", $this->createSingularRoute($path['path'], 'get'));
             $routes->add("dynamic_eav_{$path['entity']}_put_item", $this->createSingularRoute($path['path'], 'put'));
             $routes->add("dynamic_eav_{$path['entity']}_delete_item", $this->createSingularRoute($path['path'], 'delete'));
@@ -55,22 +52,22 @@ class EavLoader extends Loader
 
     public function getEntityRoutes(): array
     {
-
         $routes = [];
-        try{
+
+        try {
             $entities = $this->entityManager->getRepository('App:Entity')->findAll();
-        } catch(\Doctrine\DBAL\Exception\ConnectionException|\Doctrine\DBAL\Exception\TableNotFoundException|\Doctrine\DBAL\Exception\InvalidFieldNameException $e) {
+        } catch (\Doctrine\DBAL\Exception\ConnectionException|\Doctrine\DBAL\Exception\TableNotFoundException|\Doctrine\DBAL\Exception\InvalidFieldNameException $e) {
             return [];
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception(get_class($e));
         }
 
-        foreach($entities as $entity)
-        {
-            if($entity instanceof Entity && $entity->getRoute()){
-                $routes[] = ['path' => $entity->getRoute(),'entity' => $entity->getName()];
+        foreach ($entities as $entity) {
+            if ($entity instanceof Entity && $entity->getRoute()) {
+                $routes[] = ['path' => $entity->getRoute(), 'entity' => $entity->getName()];
             }
         }
+
         return $routes;
     }
 
@@ -83,6 +80,7 @@ class EavLoader extends Loader
         $requirements = [
             'id'    => '\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b',
         ];
+
         return new Route($path, $defaults, $requirements, [], null, [], [$method]);
     }
 
@@ -91,6 +89,7 @@ class EavLoader extends Loader
         $defaults = [
             '_controller'   => 'App\Controller\EavController:extraAction',
         ];
+
         return new Route($path, $defaults, [], [], null, [], [$method]);
     }
 }
