@@ -102,7 +102,10 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
             $person['givenName'].' '.$person['familyName'] ?? '',
             null,
             ['ROLE_USER'],
-            $credentials['username']
+            $credentials['username'],
+            null,
+            isset($person) ? $person['organization'] : null,
+            isset($person) ? $person['@id'] : null
         );
     }
 
