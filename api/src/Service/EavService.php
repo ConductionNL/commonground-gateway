@@ -217,7 +217,7 @@ class EavService
         if (strpos($route, 'collection') !== false && $request->getMethod() == 'POST') {
             $this->checkRequest($entityName, $body, $id, $request->getMethod());
             // Transfer the variable to the service
-            $result = $this->handleMutation($object, $body);
+            $result = $this->handleMutation($object, $body, $fields);
             $responseType = Response::HTTP_CREATED;
         }
 
@@ -335,7 +335,7 @@ class EavService
     /*
      * This function handles data mutations on EAV Objects
      */
-    public function handleMutation(ObjectEntity $object, array $body)
+    public function handleMutation(ObjectEntity $object, array $body, $fields)
     {
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
@@ -466,7 +466,7 @@ class EavService
 
             // Lets deal with fields filtering
             if(is_array($fields) and !array_key_exists($attribute->getName(), $fields)){
-               // continue;
+               continue;
             }
 
             // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
