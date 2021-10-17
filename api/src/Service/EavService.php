@@ -8,6 +8,8 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
@@ -29,18 +31,20 @@ class EavService
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
     private SerializerService $serializerService;
+    private SerializerInterface $serializer;
 
     /* @wilco waar hebben we onderstaande voor nodig? */
     private string $entityName;
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -143,23 +147,50 @@ class EavService
         // The id might be contained somwhere else, lets test for that
         //$id = $this->eavService->getId($body, $id);
 
+        $contentType =  $request->headers->get('accept');
+        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+        $acceptHeaderToSerialiazation = [
+            "application/json"=>"json",
+            "application/ld+json"=>"jsonld",
+            "application/json+ld"=>"jsonld",
+            "application/hal+json"=>"jsonhal",
+            "application/json+hal"=>"jsonhal",
+            "application/xml"=>"xml",
+            "text/csv"=>"csv",
+            "text/yaml"=>"yaml",
+        ];
+        if(array_key_exists($contentType,$acceptHeaderToSerialiazation)){
+            $renderType = $acceptHeaderToSerialiazation[$contentType];
+        }
+        else{
+            $contentType = 'application/json';
+            $renderType = 'json';
+        }
+
+        //var_dump($renderType);
+
+        // Lets allow for filtering specific fields
+        $serializationContext = [];
+        if($request->query->get('fields')){
+
+        }
 
         /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
         if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
             $entity = $this->getEntity($entityName);
             if (is_array($entity)) {
                 return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($entity), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                    $this->serializerService->serialize(new ArrayCollection($entity), $renderType, $serializationContext),
                     Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                    ['content-type' => $contentType]
                 );
             }
             $object = $this->getObject($id, $request->getMethod(), $entity);
             if (is_array($object)) {
                 return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($object), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+                    $this->serializerService->serialize(new ArrayCollection($object), $renderType, $serializationContext),
                     Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+                    ['content-type' => $contentType]
                 );
             }
         }
@@ -218,8 +249,14 @@ class EavService
             }
 
             // Transfer the variable to the service
-            $result = $this->handleSearch($entityName, $request);
-            $responseType = Response::HTTP_OK;
+            return new Response(
+                $this->serializerService->serialize(new ArrayCollection($this->handleSearch($entityName, $request)), $renderType, $serializationContext),
+                $responseType = Response::HTTP_OK,
+                ['content-type' => $contentType]
+            );
+
+
+
         }
 
         /*
@@ -341,10 +378,19 @@ class EavService
         $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
         $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query, $offset, $limit);
-        $results = ['results'=>[]];
+
+        $results = [];
         foreach($objects as $object) {
-            $results['results'][] = $this->renderResult($object);
+            $results[] = $this->renderResult($object);
         }
+
+        // Lets skip the pritty styff when dealing with csv
+        if(in_array($request->headers->get('accept'),['text/csv'])){
+            return $results;
+        }
+
+        // If not lets make it pritty
+        $results = ['results'=>$results];
         $results['total'] = count($total);
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
