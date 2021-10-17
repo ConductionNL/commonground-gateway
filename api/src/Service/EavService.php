@@ -23,6 +23,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\Utils;
+use Adbar\Dot;
 use function GuzzleHttp\json_decode;
 
 class EavService
@@ -167,15 +168,27 @@ class EavService
             $renderType = 'json';
         }
 
-        //var_dump($renderType);
-
         // Lets allow for filtering specific fields
         $fields = $request->query->get('fields');
 
-         // Lets deal with a comma seperated list
-        if($fields && !is_array($fields)){
-            $fields = explode(',',$fields);
+
+        if($fields){
+            // Lets deal with a comma seperated list
+            if(!is_array($fields)){
+                $fields = explode(',',$fields);
+
+            }
+
+            $dot = New Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach($fields as $field => $value){
+                $dot->add($value, true);
+            }
+
+            $fields = $dot->all();
         }
+
+
         // @todo we should also condsider dot arrays when building the fields array
 
         /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
@@ -450,11 +463,26 @@ class EavService
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
+
+            // Lets deal with fields filtering
+            if(is_array($fields) and !array_key_exists($attribute->getName(), $fields)){
+               // continue;
+            }
+
+            // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
             // Only render the attributes that are used
             if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
                 continue;
             }
             if ($attribute->getType() == 'object') {
+
+                if(is_array($fields)){
+                    $subFields = $fields[$attribute->getName()];
+                }
+                else{
+                    $subFields = null;
+                }
+
                 if ($value->getValue() == null) {
                     $response[$attribute->getName()] = null;
                     continue;
@@ -462,7 +490,7 @@ class EavService
                 if (!$attribute->getMultiple()) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($value->getValue())) {
-                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth, $fields);
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth, $subFields);
                     }
                     continue;
                 }
@@ -471,7 +499,7 @@ class EavService
                 foreach ($objects as $object) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($object)) {
-                        $objectsArray[] = $this->renderResult($object, $maxDepth, $fields);
+                        $objectsArray[] = $this->renderResult($object, $maxDepth, $subFields);
                     } else {
                         // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
                         $objectsArray[] = ["@id" => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
@@ -490,11 +518,6 @@ class EavService
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
         $response['id'] = $result->getId();
-
-        // Lets deal with fields filtering
-        if(is_array($fields)){
-            $response = array_intersect_key($response, array_flip($fields));
-        }
 
         return $response;
     }
