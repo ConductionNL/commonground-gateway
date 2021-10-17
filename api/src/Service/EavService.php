@@ -170,17 +170,20 @@ class EavService
         //var_dump($renderType);
 
         // Lets allow for filtering specific fields
-        $serializationContext = [];
-        if($request->query->get('fields')){
+        $fields = $request->query->get('fields');
 
+         // Lets deal with a comma seperated list
+        if($fields && !is_array($fields)){
+            $fields = explode(',',$fields);
         }
+        // @todo we should also condsider dot arrays when building the fields array
 
         /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
         if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
             $entity = $this->getEntity($entityName);
             if (is_array($entity)) {
                 return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($entity), $renderType, $serializationContext),
+                    $this->serializerService->serialize(new ArrayCollection($entity), $renderType, []),
                     Response::HTTP_BAD_REQUEST,
                     ['content-type' => $contentType]
                 );
@@ -188,7 +191,7 @@ class EavService
             $object = $this->getObject($id, $request->getMethod(), $entity);
             if (is_array($object)) {
                 return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($object), $renderType, $serializationContext),
+                    $this->serializerService->serialize(new ArrayCollection($object), $renderType, []),
                     Response::HTTP_BAD_REQUEST,
                     ['content-type' => $contentType]
                 );
@@ -211,7 +214,7 @@ class EavService
         if (strpos($route, 'item') !== false && $request->getMethod() == 'PUT') {
             $this->checkRequest($entityName, $body, $id, $request->getMethod());
             // Transfer the variable to the service
-            $result = $this->handleMutation($object, $body);
+            $result = $this->handleMutation($object, $body, $fields);
             $responseType = Response::HTTP_OK;
         }
 
@@ -230,7 +233,7 @@ class EavService
             }
 
             // Transfer the variable to the service
-            $result = $this->handleGet($object, $request);
+            $result = $this->handleGet($object, $request, $fields);
             $responseType = Response::HTTP_OK;
         }
 
@@ -248,9 +251,10 @@ class EavService
                 /* throw error */
             }
 
+
             // Transfer the variable to the service
             return new Response(
-                $this->serializerService->serialize(new ArrayCollection($this->handleSearch($entityName, $request)), $renderType, $serializationContext),
+                $this->serializerService->serialize(new ArrayCollection($this->handleSearch($entityName, $request, $fields)), $renderType, []),
                 $responseType = Response::HTTP_OK,
                 ['content-type' => $contentType]
             );
@@ -284,7 +288,7 @@ class EavService
         }
 
         return new Response(
-            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+            $this->serializerService->serialize(new ArrayCollection($result), $renderType, []),
             $responseType,
             ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
         );
@@ -350,18 +354,18 @@ class EavService
         $this->em->persist($object);
         $this->em->flush();
 
-        return $this->renderResult($object);
+        return $this->renderResult($object, null, $fields);
     }
 
     /* @todo typecast the request */
-    public function handleGet(ObjectEntity $object, $request): array
+    public function handleGet(ObjectEntity $object, Request $request, $fields): array
     {
 
-        return $this->renderResult($object);
+        return $this->renderResult($object, null, $fields);
     }
 
     /* @todo typecast the request */
-    public function handleSearch(string $entityName, $request): array
+    public function handleSearch(string $entityName, Request $request,  $fields): array
     {
         $query = $request->query->all();;
         $limit = (int) ($request->query->get('limit') ?? 25); // These type casts are not redundant!
@@ -381,7 +385,7 @@ class EavService
 
         $results = [];
         foreach($objects as $object) {
-            $results[] = $this->renderResult($object);
+            $results[] = $this->renderResult($object, null, $fields);
         }
 
         // Lets skip the pritty styff when dealing with csv
@@ -420,7 +424,7 @@ class EavService
     }
 
     // TODO: Change this to be more efficient? (same foreach as in prepareEntity) or even move it to a different service?
-    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null): array
+    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null, $fields): array
     {
         $response = [];
 
@@ -458,7 +462,7 @@ class EavService
                 if (!$attribute->getMultiple()) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($value->getValue())) {
-                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth);
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth, $fields);
                     }
                     continue;
                 }
@@ -467,7 +471,7 @@ class EavService
                 foreach ($objects as $object) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($object)) {
-                        $objectsArray[] = $this->renderResult($object, $maxDepth);
+                        $objectsArray[] = $this->renderResult($object, $maxDepth, $fields);
                     } else {
                         // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
                         $objectsArray[] = ["@id" => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
@@ -486,6 +490,11 @@ class EavService
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
         $response['id'] = $result->getId();
+
+        // Lets deal with fields filtering
+        if(is_array($fields)){
+            $response = array_intersect_key($response, array_flip($fields));
+        }
 
         return $response;
     }
