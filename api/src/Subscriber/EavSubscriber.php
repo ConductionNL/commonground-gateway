@@ -59,10 +59,7 @@ class EavSubscriber implements EventSubscriberInterface
         ])){
             return;
         }
-
-        $entityName = $event->getRequest()->attributes->get("entity");
-        $entity =  $this->entityManager->getRepository("App:Entity")->findOneBy(['name' => $entityName]);
-        $response = $this->eavService->handleRequest($event->getRequest(), $entity);
+        $response = $this->eavService->handleRequest($event->getRequest());
 
         $event->setResponse($response);
     }
