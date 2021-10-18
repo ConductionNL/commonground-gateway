@@ -181,8 +181,8 @@ class GatewayService
      */
     public function retrieveExport(Response $response, $extension, $fileName): Response
     {
-        $content = $responce->getContent();
-        switch ($responce->headers->Get('content-type')){
+        $content = $response->getContent();
+        switch ($response->headers->Get('content-type')){
             case 'application/json':
                 $content = json_decode($content, true);
                 // Lets deal with an results array
@@ -227,5 +227,8 @@ class GatewayService
         $date = $date->format('Ymd_His');
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$fileName->getName()}_{$date}.{$extension}");
         $response->headers->set('Content-Disposition', $disposition);
+        $response->headers->set('content-type', $contentType);
+
+        return $response; 
     }
 }

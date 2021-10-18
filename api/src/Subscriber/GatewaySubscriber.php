@@ -56,7 +56,6 @@ class GatewaySubscriber implements EventSubscriberInterface
         if(strpos( $event->getRequest()->attributes->get('name'), '.' ) && $renderType = explode('.', $event->getRequest()->attributes->get('name'))){
             $path = $renderType[0];
             $renderType = end($renderType);
-
         }
         elseif(strpos( $event->getRequest()->attributes->get('endpoint'), '.' ) && $renderType = explode('.', $event->getRequest()->attributes->get('endpoint'))){
             $id = $renderType[0];
