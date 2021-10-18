@@ -49,6 +49,20 @@ class GatewaySubscriber implements EventSubscriberInterface
             $event->getRequest()->headers->all(),
         );
 
+        // Lets see if we need to render a file
+        // @todo dit is echt but lellijke code
+        if(strpos( $event->getRequest()->attributes->get('name'), '.' ) && $renderType = explode('.', $event->getRequest()->attributes->get('name'))){
+            $path = $renderType[0];
+            $renderType = end($renderType);
+        }
+        elseif(strpos( $event->getRequest()->attributes->get('endpoint'), '.' ) && $renderType = explode('.', $event->getRequest()->attributes->get('endpoint'))){
+            $id = $renderType[0];
+            $renderType = end($renderType);
+        }
+        if($renderType){
+            $response = $this->gatewayService->retrieveExport($response, $renderType, $path);
+        }
+
         $event->setResponse($response);
     }
 }

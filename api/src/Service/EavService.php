@@ -7,6 +7,9 @@ use App\Entity\File;
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +25,11 @@ use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\String\Inflector\EnglishInflector;
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Promise\Utils;
+use Adbar\Dot;
+use function GuzzleHttp\json_decode;
 
 class EavService
 {
@@ -29,18 +37,20 @@ class EavService
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
     private SerializerService $serializerService;
+    private SerializerInterface $serializer;
 
     /* @wilco waar hebben we onderstaande voor nodig? */
     private string $entityName;
     private ?string $uuid;
     private array $body;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -59,6 +69,10 @@ class EavService
             ];
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
+        if (!$entity || !($entity instanceof Entity)) {
+            $entity = $this->em->getRepository("App:Entity")->findOneBy(['route' => $entityName]);
+        }
+
         if (!$entity || !($entity instanceof Entity)) {
             return [
                 'message' => 'Could not establish an entity for '.$entityName,
@@ -129,12 +143,11 @@ class EavService
         return null;
     }
 
-    public function handleRequest(Request $request, string $entityName): Response
+    public function handleRequest(Request $request): Response
     {
-        $route = $request->attributes->get('_route');
-
-        // We will always need an $entity
-
+        // Lets get our base stuff
+        $path = $request->attributes->get('entity');
+        $id = $request->attributes->get('id');
 
         // Get  a body
         if ($request->getContent()) {
@@ -142,221 +155,177 @@ class EavService
         }
 
         // Checking and validating the id
-        $id = $request->attributes->get('id');
-        // The id might be contained somwhere else, lets test for that
-        //$id = $this->eavService->getId($body, $id);
-
-        /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
-        if (!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false) && $request->getMethod() == 'GET')) {
-            $entity = $this->getEntity($entityName);
-            if (is_array($entity)) {
-                // TODO: make a class for this / re-use code for this
-                return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($entity), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
-                    Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
-                );
-            }
-            $object = $this->getObject($id, $request->getMethod(), $entity);
-            if (is_array($object)) {
-                // TODO: make a class for this / re-use code for this
-                return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($object), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
-                    Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
-                );
-            }
+        $contentType =  $request->headers->get('accept');
+        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+        $acceptHeaderToSerialiazation = [
+            "application/json"=>"json",
+            "application/ld+json"=>"jsonld",
+            "application/json+ld"=>"jsonld",
+            "application/hal+json"=>"jsonhal",
+            "application/json+hal"=>"jsonhal",
+            "application/xml"=>"xml",
+            "text/csv"=>"csv",
+            "text/yaml"=>"yaml",
+        ];
+        if(array_key_exists($contentType,$acceptHeaderToSerialiazation)){
+            $renderType = $acceptHeaderToSerialiazation[$contentType];
         }
+        else{
+            $contentType = 'application/json';
+            $renderType = 'json';
+        }
+
+        $renderTypes = ['json','jsonld','jsonhal','xml','csv','yaml'];
+        $supportedExtensions = ['json','jsonld','jsonhal','xml','csv','yaml'];
+        $extension = false;
+        $responseType = Response::HTTP_OK;
+
+        // Lets pull a render type form the extension if we have any
+        if(strpos( $path, '.' ) && $renderType = explode('.', $path)){
+            $path = $renderType[0];
+            $renderType = end($renderType);
+            $extension = $renderType;
+
+        }
+        elseif(strpos( $id, '.' ) && $renderType = explode('.', $id)){
+            $id = $renderType[0];
+            $renderType = end($renderType);
+            $extension = $renderType;
+        }
+        else{
+            $renderType = 'json';
+        }
+
+        // If we overrule the content type then we must adjust the return header acordingly
+        if($extension){
+            $contentType = array_search($extension, $acceptHeaderToSerialiazation);
+        }
+
+        // Let do a backup to defeault to an allowed render type
+        if($renderType && !in_array($renderType, $renderTypes)){
+            $result = [
+                "message" => "The rendering of this type is not suported, suported types are ".implode(',',$renderTypes),
+                "type" => "Bad Request",
+                "path" => $path,
+                "data" => ["rendertype" => $renderType],
+            ];
+        }
+
+        // Lets allow for filtering specific fields
+        $fields = $request->query->get('fields');
 
         // Get  a body
-        if ($request->getContent()) {
+        if($request->getContent()){
             $body = json_decode($request->getContent(), true);
         }
-        // If we have no body but are using form-data instead: //TODO find a better way to deal with form-data?
-        else {
-            // get other input values from form-data and put it in $body ($request->get('name'))
-            $body = [];
-            foreach ($entity->getAttributes() as $attribute) {
-                if ($attribute->getType() != 'file' && $request->get($attribute->getName())) {
-                    $body[$attribute->getName()] = $request->get($attribute->getName());
-                }
+
+
+        if($fields){
+            // Lets deal with a comma seperated list
+            if(!is_array($fields)){
+                $fields = explode(',',$fields);
+
             }
 
-            if (count($request->files) > 0) {
-                // TODO: Some of this, or maybe all code should be moved to the validationService, when request can be used there as well!
+            $dot = New Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach($fields as $field => $value){
+                $dot->add($value, true);
+            }
 
-                // TODO: should we use maxResult 1 here? if we find more than 1 shouldn't we throw an error?
-                // Check if this entity has an attribute with type file
-                $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('type', 'file'))->setMaxResults(1);
-                $attributes = $entity->getAttributes()->matching($criteria);
+            $fields = $dot->all();
+        }
 
-                // If no attribute with type file found, throw an error
-                if ($attributes->isEmpty()) {
-                    // TODO: make a class for this / re-use code for this
-                    $error = [
-                        "message" => "No attribute with type file found for this entity",
+        // Lets handle the entity
+        $entity = $this->getEntity($path);
+        // What if we canot find an entity?
+        if(is_array($entity)){
+            $result = $entity;
+            $entity = false;
+        }
+
+        // Lets create an object
+        if($entity && ($id || $request->getMethod() == 'POST')){
+            $object = $this->getObject($id, $request->getMethod() , $entity);
+        }
+
+        // Lets setup a switchy kinda thingy to handle the input
+        // Its a enity endpoint
+        if($entity && $id){
+            switch ($request->getMethod()){
+                case 'GET':
+                    $result = $this->handleGet($object, $request, $fields);
+                    $responseType = Response::HTTP_OK;
+                    break;
+                case 'PUT':
+                    // Transfer the variable to the service
+                    $result = $this->handleMutation($object, $body, $fields);
+                    $responseType = Response::HTTP_OK;
+                    break;
+                case 'DELETE':
+                    $result = $this->handleDelete($object, $request);
+                    $responseType = Response::HTTP_NO_CONTENT;
+                    break;
+                default:
+                    $result =  [
+                        "message" => "This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE",
                         "type" => "Bad Request",
-                        "path" => $entity->getName(),
-                        "data" => [],
+                        "path" => $path,
+                        "data" => ["method" => $request->getMethod()],
                     ];
-                    return new Response(
-                        $this->serializerService->serialize(new ArrayCollection($error), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
-                        Response::HTTP_BAD_REQUEST,
-                        ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
-                    );
-                }
-                // Else set attribute to the attribute with type = file
-                $attribute = $attributes->first();
-
-                if ($attribute->getMultiple()) {
-                    // Loop through all files, validate them and store them in the files ArrayCollection
-                    $value = $object->getValueByAttribute($attribute);
-                    if (!$value->getValue()) {
-                        $value = new ArrayCollection();
-                    } else {
-                        $value = $value->getValue();
-                    }
-                    foreach ($request->files as $file) {
-                        // TODO Move duplicate code to function, see else statement
-
-                        // Validate this file //TODO should be moved to validationService
-                        if ($attribute->getMaxFileSize()) {
-                            if ($file->getSize() > $attribute->getMaxFileSize()) {
-                                $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
-                            }
-                        }
-                        if ($attribute->getFileType()) {
-                            if ($file->getClientMimeType() != $attribute->getFileType()) {
-                                $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
-                            }
-                        }
-
-                        $fileObject = new File(); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
-                        $fileObject->setName($file->getClientOriginalName());
-                        $fileObject->setExtension($file->getClientOriginalExtension());
-                        $fileObject->setMimeType($file->getClientMimeType());
-                        $fileObject->setSize($file->getSize());
-                        $fileObject->setBase64($this->uploadToBase64($file));
-                        $value->add($fileObject); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
-                    }
-                } else {
-                    $file = $request->files->get($attribute->getName());
-                    $value = $object->getValueByAttribute($attribute);
-                    // TODO Move duplicate code to function, see foreach in if ^^^
-
-                    // Validate this file //TODO should be moved to validationService
-                    if ($attribute->getMaxFileSize()) {
-                        if ($file->getSize() > $attribute->getMaxFileSize()) {
-                            $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
-                        }
-                    }
-                    if ($attribute->getFileType()) {
-                        if ($file->getClientMimeType() != $attribute->getFileType()) {
-                            $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
-                        }
-                    }
-
-                    if (!$value->getValue()) {
-                        $value = new File();
-                    } else {
-                        $value = $value->getValue();
-                    }
-                    $value->setName($file->getClientOriginalName());
-                    $value->setExtension($file->getClientOriginalExtension());
-                    $value->setMimeType($file->getClientMimeType());
-                    $value->setSize($file->getSize());
-                    $value->setBase64($this->uploadToBase64($file));
-                }
-
-                // Save the files in the correct Value for this ObjectEntity (by using the attribute with type = file)
-                if (!$object->getHasErrors()) {
-                    $object->getValueByAttribute($attribute)->setValue($value);
-                }
+                    $responseType = Response::HTTP_BAD_REQUEST;
+                    break;
+            }
+        }
+        // its an collection endpoind
+        elseif($entity){
+            switch ($request->getMethod()){
+                case 'GET':
+                    $result =  $this->handleSearch($entity->getName(), $request, $fields, $extension);
+                    $responseType = Response::HTTP_OK;
+                    break;
+                case 'POST':
+                    // Transfer the variable to the service
+                    $result = $this->handleMutation($object, $body, $fields);
+                    $responseType = Response::HTTP_CREATED;
+                    break;
+                default:
+                    $result =  [
+                        "message" => "This method is not allowed on this endpoint, allowed methods are GET and POST",
+                        "type" => "Bad Request",
+                        "path" => $path,
+                        "data" => ["method" => $request->getMethod()],
+                    ];
+                    $responseType = Response::HTTP_BAD_REQUEST;
+                    break;
             }
         }
 
-        /*
-         * Handeling data mutantions
-         */
-        if (strpos($route, 'collection') !== false && $request->getMethod() == 'POST') {
-            $this->checkRequest($entityName, $body, $id, $request->getMethod(), $request->files);
-            // Transfer the variable to the service
-            $result = $this->handleMutation($object, $body);
-            $responseType = Response::HTTP_CREATED;
-        }
-
-        /*
-         * Handeling data mutantions
-         */
-        if (strpos($route, 'item') !== false && $request->getMethod() == 'PUT') {
-            $this->checkRequest($entityName, $body, $id, $request->getMethod(), $request->files);
-            // Transfer the variable to the service
-            $result = $this->handleMutation($object, $body);
-            $responseType = Response::HTTP_OK;
-        }
-
-        /*
-         * Handeling reading requests
-         */
-        if (((strpos($route, 'object_collection') !== false || strpos($route, 'item') !== false) && $request->getMethod() == 'GET')) {
-            /* @todo catch missing data and trhow error */
-            if (!$entityName) {
-                /* throw error */
-            }
-            if (!$id && $route == 'get_eav_object') {
-                /* throw error */
-            }
-
-            // Transfer the variable to the service
-            $result = $this->handleGet($object, $request);
-            $responseType = Response::HTTP_OK;
-        }
-
-        /*
-         * Handeling search requests
-         */
-        if ((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false) && $request->getMethod() == 'GET') {
-            /* @todo catch missing data and trhow error */
-            if (!$entityName) {
-                /* throw error */
-            }
-            if (!$id && $route == 'get_eav_object') {
-                /* throw error */
-            }
-
-            // Transfer the variable to the service
-            $result = $this->handleSearch($entityName, $request);
-            $responseType = Response::HTTP_OK;
-        }
-
-        /*
-         * Handeling deletions
-         */
-        if ($request->getMethod() == 'DELETE') {
-
-            /* @todo catch missing data and trhow error */
-            if (!$entityName) {
-                /* throw error */
-            }
-            if (!$id) {
-                /* throw error */
-            }
-
-            // Transfer the variable to the service
-            $result = $this->handleDelete($object, $request);
-            $responseType = Response::HTTP_NO_CONTENT;
-        }
-
-        /* @todo we can support more then just json */
-        if (array_key_exists('type', $result) && $result['type'] == 'error') {
+        // If we have an error we want to set the responce type to error
+        if($result && array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
 
-        return new Response(
-            $this->serializerService->serialize(new ArrayCollection($result), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
+        // Let seriliaze the shizle
+        $result =  $this->serializerService->serialize(new ArrayCollection($result), $renderType, []);
+
+        // Let return the shizle
+        $response = new Response(
+            $result,
             $responseType,
-            ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
+            ['content-type' => $contentType]
         );
+
+        // Let intervene if it is  a known file extension
+        if($entity && in_array($extension, $supportedExtensions)){
+            $date = new \DateTime();
+            $date = $date->format('Ymd_His');
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$extension}");
+            $response->headers->set('Content-Disposition', $disposition);
+        }
+
+
+        return $response;
     }
 
     private function uploadToBase64(UploadedFile $file) : string
@@ -378,7 +347,7 @@ class EavService
         }
     }
 
-    public function checkRequest(string $entityName, array $body, ?string $id, string $method, FileBag $files): void
+    public function checkRequest($entityName, array $body, ?string $id, string $method): void
     {
         if(!$entityName) {
             throw new HttpException(400,'An entity name should be provided for this route');
@@ -394,7 +363,7 @@ class EavService
     /*
      * This function handles data mutations on EAV Objects
      */
-    public function handleMutation(ObjectEntity $object, array $body)
+    public function handleMutation(ObjectEntity $object, array $body, $fields)
     {
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
@@ -426,17 +395,18 @@ class EavService
         $this->em->persist($object);
         $this->em->flush();
 
-        return $this->renderResult($object);
+        return $this->renderResult($object, null, $fields);
     }
 
     /* @todo typecast the request */
-    public function handleGet(ObjectEntity $object, $request): array
+    public function handleGet(ObjectEntity $object, Request $request, $fields): array
     {
-        return $this->renderResult($object);
+
+        return $this->renderResult($object, null, $fields);
     }
 
     /* @todo typecast the request */
-    public function handleSearch(string $entityName, $request): array
+    public function handleSearch(string $entityName, Request $request,  $fields, $extension): array
     {
         $query = $request->query->all();
         $limit = (int) ($request->query->get('limit') ?? 25); // These type casts are not redundant!
@@ -450,13 +420,22 @@ class EavService
         }
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
-        $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
-        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
-        $results = ['results'=>[]];
-        foreach ($objects as $object) {
-            $results['results'][] = $this->renderResult($object);
+        $entity= $this->em->getRepository("App:Entity")->findOneBy(['name'=>$entityName]);
+        $total = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
+        $objects = $this->em->getRepository("App:ObjectEntity")->findByEntity($entity, $query, $offset, $limit);
+
+        $results = [];
+        foreach($objects as $object) {
+            $results[] = $this->renderResult($object, null, $fields);
         }
+
+        // Lets skip the pritty styff when dealing with csv
+        if(in_array($request->headers->get('accept'),['text/csv']) || in_array($extension, ['csv'])){
+            return $results;
+        }
+
+        // If not lets make it pritty
+        $results = ['results'=>$results];
         $results['total'] = count($total);
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
@@ -486,7 +465,7 @@ class EavService
     }
 
     // TODO: Change this to be more efficient? (same foreach as in prepareEntity) or even move it to a different service?
-    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null): array
+    public function renderResult(ObjectEntity $result, ArrayCollection $maxDepth = null, $fields): array
     {
         $response = [];
 
@@ -517,11 +496,26 @@ class EavService
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
+
+            // Lets deal with fields filtering
+            if(is_array($fields) and !array_key_exists($attribute->getName(), $fields)){
+               continue;
+            }
+
+            // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
             // Only render the attributes that are used
             if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
                 continue;
             }
             if ($attribute->getType() == 'object') {
+
+                if(is_array($fields)){
+                    $subFields = $fields[$attribute->getName()];
+                }
+                else{
+                    $subFields = null;
+                }
+
                 if ($value->getValue() == null) {
                     $response[$attribute->getName()] = null;
                     continue;
@@ -529,7 +523,7 @@ class EavService
                 if (!$attribute->getMultiple()) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($value->getValue())) {
-                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth);
+                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $maxDepth, $subFields);
                     }
                     continue;
                 }
@@ -538,7 +532,7 @@ class EavService
                 foreach ($objects as $object) {
                     // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
                     if (!$maxDepth->contains($object)) {
-                        $objectsArray[] = $this->renderResult($object, $maxDepth);
+                        $objectsArray[] = $this->renderResult($object, $maxDepth, $subFields);
                     } else {
                         // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
                         $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
