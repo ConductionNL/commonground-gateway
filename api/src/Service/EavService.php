@@ -131,9 +131,11 @@ class EavService
         return null;
     }
 
-    public function handleRequest(Request $request, string $entityName): Response
+    public function handleRequest(Request $request, string $entityName, ?string $renderType, ?string $route): Response
     {
-        $route = $request->attributes->get('_route');
+        if(!$route){
+            $route = $request->attributes->get('_route');
+        }
 
         // We will always need an $entity
 
@@ -160,10 +162,10 @@ class EavService
             "text/csv"=>"csv",
             "text/yaml"=>"yaml",
         ];
-        if(array_key_exists($contentType,$acceptHeaderToSerialiazation)){
+        if(array_key_exists($contentType,$acceptHeaderToSerialiazation) && !$renderType){
             $renderType = $acceptHeaderToSerialiazation[$contentType];
         }
-        else{
+        elseif(!$renderType){
             $contentType = 'application/json';
             $renderType = 'json';
         }
@@ -271,9 +273,6 @@ class EavService
                 $responseType = Response::HTTP_OK,
                 ['content-type' => $contentType]
             );
-
-
-
         }
 
         /*
@@ -296,7 +295,7 @@ class EavService
         }
 
         /* @todo we can support more then just json */
-        if(array_key_exists('type',$result ) && $result['type']== 'error'){
+        if($result && array_key_exists('type',$result ) && $result['type']== 'error'){
             $responseType = Response::HTTP_BAD_REQUEST;
         }
 
