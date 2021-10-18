@@ -27,9 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\Utils;
 use Adbar\Dot;
-use function GuzzleHttp\json_decode;
 
 class EavService
 {
