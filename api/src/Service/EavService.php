@@ -131,11 +131,12 @@ class EavService
         return null;
     }
 
-    public function handleRequest(Request $request, string $entityName, ?string $renderType, ?string $route): Response
+    public function handleRequest(Request $request, Entity $entity): Response
     {
-        if(!$route){
-            $route = $request->attributes->get('_route');
-        }
+        $id = $entity->getId();
+
+
+
 
         // We will always need an $entity
 
@@ -146,9 +147,6 @@ class EavService
         }
 
         // Checking and validating the id
-        $id = $request->attributes->get("id");
-        // The id might be contained somwhere else, lets test for that
-        //$id = $this->eavService->getId($body, $id);
 
         $contentType =  $request->headers->get('accept');
         // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
@@ -191,27 +189,6 @@ class EavService
         }
 
 
-        // @todo we should also condsider dot arrays when building the fields array
-
-        /*@todo deze check voelt wierd aan, als op  entity endpoints hebben we het object al */
-        if(!((strpos($route, 'objects_collection') !== false || strpos($route, 'get_collection') !== false)&& $request->getMethod() == 'GET')){
-            $entity = $this->getEntity($entityName);
-            if (is_array($entity)) {
-                return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($entity), $renderType, []),
-                    Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $contentType]
-                );
-            }
-            $object = $this->getObject($id, $request->getMethod(), $entity);
-            if (is_array($object)) {
-                return new Response(
-                    $this->serializerService->serialize(new ArrayCollection($object), $renderType, []),
-                    Response::HTTP_BAD_REQUEST,
-                    ['content-type' => $contentType]
-                );
-            }
-        }
 
         /*
          * Handeling data mutantions
@@ -318,7 +295,7 @@ class EavService
         }
     }
 
-    public function checkRequest(string $entityName, array $body, ?string $id, string $method): void
+    public function checkRequest($entityName, array $body, ?string $id, string $method): void
     {
         if(!$entityName){
             throw new HttpException(400,'An entity name should be provided for this route');

@@ -21,11 +21,22 @@ use function GuzzleHttp\json_decode;
 class ZZController extends AbstractController
 {
     /**
-     * @Route("/api/{route}", name="dynamic_route_entity")
-     * @Route("/api/{route}/{id}", name="dynamic_route_collection")
+     * @Route("/api/{path}", name="dynamic_route_entity")
+     * @Route("/api/{path}/{id}", name="dynamic_route_collection")
      */
-    public function dynamicAction(?string $route, ?string $id, Request $request, EavService $eavService, EntityManagerInterface $em, SerializerInterface $serializer): Response
+    public function dynamicAction(?string $path, ?string $id, Request $request, EavService $eavService, EntityManagerInterface $em, SerializerInterface $serializer): Response
     {
+
+
+        // @todo this should be in an service
+        // @todo /api should never be part of an route but we use it everywhere as custom route (alowing the gateway to exacpe the /api endindpoint
+        $path = '/api/'.$path;
+
+        $entity = $em->getRepository("App:Entity")->findOneBy(['route' => $path]);
+        if(!$entity){
+            // @todo throw error
+        }
+
 
 
         $contentType =  $request->headers->get('accept');
@@ -54,8 +65,8 @@ class ZZController extends AbstractController
         $extension = false;
 
         // Lets pull a render type form the extension if we have any
-        if(strpos( $route, '.' ) && $renderType = explode('.', $route)){
-            $route =$renderType[0];
+        if(strpos( $path, '.' ) && $renderType = explode('.', $path)){
+            $path =$renderType[0];
             $renderType = end($renderType);
             $extension = $renderType;
 
@@ -77,6 +88,11 @@ class ZZController extends AbstractController
         // Lets allow for filtering specific fields
         $fields = $request->query->get('fields');
 
+        // Get  a body
+        if($request->getContent()){
+            $body = json_decode($request->getContent(), true);
+        }
+
 
         if($fields){
             // Lets deal with a comma seperated list
@@ -94,38 +110,37 @@ class ZZController extends AbstractController
             $fields = $dot->all();
         }
 
-        // @todo this should be in an service
-        // @todo /api should never be part of an route but we use it everywhere as custom route (alowing the gateway to exacpe the /api endindpoint
-        $route = '/api/'.$route;
-
-        $entity = $em->getRepository("App:Entity")->findOneBy(['route' => $route]);
-        if(!$entity){
-            // @todo throw error
-        }
 
         // Lets setup a switchy kinda thingy to handle the input
         // Its a enity endpoint
         if($id){
             switch ($request->getMethod()){
                 case 'GET':
-                    echo "i equals 0";
+                    $result = $eavService->handleGet($entity, $request, $fields);
                     $responseType = Response::HTTP_OK;
                     break;
                 case 'PUT':
-                    echo "i equals 0";
+                    // Transfer the variable to the service
+                    $result = $eavService->handleMutation($entity, $body, $fields);
                     $responseType = Response::HTTP_OK;
                     break;
                 case 'DELETE':
-                    echo "i equals 0";
+                    $result = $this->handleDelete($entity, $request);
                     $responseType = Response::HTTP_NO_CONTENT;
                     break;
                 default:
-                    // @todo throw error
+                    $result =  [
+                        "message" => "This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE",
+                        "type" => "Bad Request",
+                        "path" => $path,
+                        "data" => ["method" => $request->getMethod()],
+                    ];
                     $responseType = Response::HTTP_BAD_REQUEST;
                     break;
             }
         }
-        //its an collection endpoind
+
+        // its an collection endpoind
         else{
             switch ($request->getMethod()){
                 case 'GET':
@@ -133,14 +148,25 @@ class ZZController extends AbstractController
                     $responseType = Response::HTTP_OK;
                     break;
                 case 'POST':
-                    echo "i equals 0";
+                    // Transfer the variable to the service
+                    $result = $eavService->handleMutation($entity, $body, $fields);
                     $responseType = Response::HTTP_CREATED;
                     break;
                 default:
-                    // @todo throw error
+                    $result =  [
+                        "message" => "This method is not allowed on this endpoint, allowed methods are GET and POST",
+                        "type" => "Bad Request",
+                        "path" => $path,
+                        "data" => ["method" => $request->getMethod()],
+                    ];
                     $responseType = Response::HTTP_BAD_REQUEST;
                     break;
             }
+        }
+
+        // If we have an error we want to set the responce type to error
+        if($result && array_key_exists('type',$result ) && $result['type']== 'error'){
+            $responseType = Response::HTTP_BAD_REQUEST;
         }
 
         // Let seriliaze the shizle
@@ -151,10 +177,12 @@ class ZZController extends AbstractController
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
             $response = new Response($result, 200, [
-                'Content-type'=> 'application/csv',
+                'content-type'=> $contentType,
             ]);
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$extension}");
             $response->headers->set('Content-Disposition', $disposition);
+
+            return $response;
         }
 
         // @todo the handleRequest should be ocay with an entitye as an entity instead of tis name (more fail proof) and flexible
