@@ -163,6 +163,10 @@ class GatewayService
      */
     public function retrieveGateway(string $gateway): Gateway
     {
+        if(strpos( $gateway, '.' ) && $renderType = explode('.', $gateway)){
+            $gateway = $renderType[0];
+        }
+
         $gateways = $this->entityManager->getRepository('App\Entity\Gateway')->findBy(['name' => $gateway]);
 
         if (count($gateways) == 0 || !$gateways[0] instanceof Gateway) {
@@ -229,6 +233,6 @@ class GatewayService
         $response->headers->set('Content-Disposition', $disposition);
         $response->headers->set('content-type', $contentType);
 
-        return $response; 
+        return $response;
     }
 }
