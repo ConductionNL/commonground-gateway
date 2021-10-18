@@ -7,6 +7,7 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -171,4 +172,60 @@ class GatewayService
         return $gateways[0];
     }
 
+    /**
+     * Turns the gateway responce into a downloadable file.
+     *
+     * @param Response $responce The responce to turn into a download.
+     * @param string $extension The extension of the requested file e.g. csv
+     * @return Response The retrieved Gateway object.
+     */
+    public function retrieveExport(Response $response, $extension, $fileName): Response
+    {
+        $content = $responce->getContent();
+        switch ($responce->headers->Get('content-type')){
+            case 'application/json':
+                $content = json_decode($content, true);
+                // Lets deal with an results array
+                if(array_key_exists('results', $content)){
+                    $content= $content['resuts'];
+                }
+                break;
+            case 'application/ld+json':
+            case 'application/json+ld':
+                $content = json_decode($content, true);
+            // Lets deal with an results array
+            if(array_key_exists('results', $content)){
+                $content= $content['resuts'];
+            }
+                break;
+            case 'application/hal+json':
+            case 'application/json+hal':
+                $content = json_decode($content, true);
+                $content= $content['items'];
+                break;
+            case 'application/xml':
+                break;
+            default:
+                // @todo throw unsuported type error
+        }
+
+        // @todo deze array is dubbel met de EavService
+        $acceptHeaderToSerialiazation = [
+            "application/json"=>"json",
+            "application/ld+json"=>"jsonld",
+            "application/json+ld"=>"jsonld",
+            "application/hal+json"=>"jsonhal",
+            "application/json+hal"=>"jsonhal",
+            "application/xml"=>"xml",
+            "text/csv"=>"csv",
+            "text/yaml"=>"yaml",
+        ];
+
+        $contentType = array_search($extension, $acceptHeaderToSerialiazation);
+
+        $date = new \DateTime();
+        $date = $date->format('Ymd_His');
+        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$fileName->getName()}_{$date}.{$extension}");
+        $response->headers->set('Content-Disposition', $disposition);
+    }
 }
