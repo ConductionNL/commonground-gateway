@@ -228,8 +228,8 @@ class EavService
         if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
         }
-        // If we have no body but are using form-data instead: //TODO find a better way to deal with form-data?
-        else {
+        // If we have no body but are using form-data with a POST call instead: //TODO find a better way to deal with form-data?
+        elseif($request->getMethod() == 'POST') {
             // get other input values from form-data and put it in $body ($request->get('name'))
             $body = [];
             foreach ($entity->getAttributes() as $attribute) {
@@ -265,7 +265,6 @@ class EavService
                 // Else set attribute to the attribute with type = file
                 $attribute = $attributes->first();
 
-                $value = $object->getValueByAttribute($attribute);
                 if ($attribute->getMultiple()) {
                     // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
                     $files = $request->files->get($attribute->getName());
@@ -274,74 +273,14 @@ class EavService
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($files as $file) {
-                            // TODO Move duplicate code to function, see else statement
-
-                            // Validate this file //TODO should be moved to validationService
-                            if ($attribute->getMaxFileSize()) {
-                                if ($file->getSize() > $attribute->getMaxFileSize()) {
-                                    $object->addError($attribute->getName(), 'This file is to big ('.$file->getSize().' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes.');
-                                }
-                            }
-                            if ($attribute->getFileType()) {
-                                if ($file->getClientMimeType() != $attribute->getFileType()) {
-                                    $object->addError($attribute->getName(), 'Expects a file of type '.$attribute->getFileType().', not '.$file->getClientMimeType().'.');
-                                }
-                            }
-
-                            // Find file by filename
-                            $fileObject = $value->getFiles()->filter(function (File $item) use ($file) {
-                                return $item->getName() == $file->getClientOriginalName();
-                            });
-                            if (count($fileObject) > 1) {
-                                $object->addError($attribute->getName(), 'More than 1 file found with this name: '.$file->getClientOriginalName());
-                                break;
-                            } else {
-                                // No existing file found for this value, so lets create a new one
-                                $fileObject = new File();
-                            }
-
-                            // If no errors actually add the file
-                            if (!$object->getHasErrors()) {
-                                $fileObject->setName($file->getClientOriginalName());
-                                $fileObject->setExtension($file->getClientOriginalExtension());
-                                $fileObject->setMimeType($file->getClientMimeType());
-                                $fileObject->setSize($file->getSize());
-                                $fileObject->setBase64($this->uploadToBase64($file));
-                                $value->addFile($fileObject);
-                            }
+                            $object = $this->validationService->validateFile($object, $attribute, $this->validationService->uploadedFileToFileArray($file, $file->getClientOriginalName()));
                         }
                     }
                 } else {
                     $file = $request->files->get($attribute->getName());
-                    // TODO Move duplicate code to function, see foreach in if ^^^
 
-                    // Validate this file //TODO should be moved to validationService
-                    if ($attribute->getMaxFileSize()) {
-                        if ($file->getSize() > $attribute->getMaxFileSize()) {
-                            $object->addError($attribute->getName(), 'This file is to big ('.$file->getSize().' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes.');
-                        }
-                    }
-                    if ($attribute->getFileType()) {
-                        if ($file->getClientMimeType() != $attribute->getFileType()) {
-                            $object->addError($attribute->getName(), 'Expects a file of type '.$attribute->getFileType().', not '.$file->getClientMimeType().'.');
-                        }
-                    }
-
-                    // If no errors actually add (/update) the file
-                    if (!$object->getHasErrors()) {
-                        if (!$value->getValue()) {
-                            $fileObject = new File();
-                        } else {
-                            $fileObject = $value->getValue();
-                        }
-                        $fileObject->setName($file->getClientOriginalName());
-                        $fileObject->setExtension($file->getClientOriginalExtension());
-                        $fileObject->setMimeType($file->getClientMimeType());
-                        $fileObject->setSize($file->getSize());
-                        $fileObject->setBase64($this->uploadToBase64($file));
-
-                        $value->setValue($fileObject);
-                    }
+                    // Validate (and create/update) this file
+                    $object = $this->validationService->validateFile($object, $attribute, $this->validationService->uploadedFileToFileArray($file));
                 }
             }
         }
@@ -422,14 +361,6 @@ class EavService
         }
 
         return $response;
-    }
-
-    private function uploadToBase64(UploadedFile $file): string
-    {
-        $content = base64_encode($file->openFile()->fread($file->getSize()));
-        $mimeType = $file->getClientMimeType();
-
-        return 'data:'.$mimeType.';base64,'.$content;
     }
 
     private function handleContentType(string $accept): string

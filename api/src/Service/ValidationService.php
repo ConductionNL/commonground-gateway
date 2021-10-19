@@ -18,6 +18,7 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ValidationService
 {
@@ -293,76 +294,9 @@ class ValidationService
                     $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
-                $fileString = strlen($file['base64']) > 75 ? substr($file['base64'], 0, 75).'...' : $file['base64'];
-                $base64 = explode(',', $file['base64']);
 
-                // Get file size
-                $fileSize = $this->getBase64Size($file['base64']);
-
-                // Get mime_type
-                $imgdata = base64_decode(end($base64));
-                $f = finfo_open();
-                $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
-                finfo_close($f);
-                if (base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
-                    $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects a valid base64 encoded string. ('.$fileString.' is not)');
-                } else {
-                    if ($attribute->getMaxFileSize()) {
-                        if ($fileSize > $attribute->getMaxFileSize()) {
-                            $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'This file is to big ('.$fileSize.' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$fileString.')');
-                        }
-                    }
-                    if ($attribute->getFileType()) {
-                        // We could just use $base64[0] to get the file type form that substring,
-                        // but if a base64 without data:...;base64, is given this will work as well:
-                        if ($mime_type != $attribute->getFileType()) {
-                            $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects a file of type '.$attribute->getFileType().', not '.$mime_type.'. ('.$fileString.')');
-                        }
-                    }
-                }
-
-                if (array_key_exists('filename', $file)) {
-                    // Find file by filename (this can be the uuid of the file object)
-                    $fileObject = $valueObject->getFiles()->filter(function (File $item) use ($file) {
-                        return $item->getName() == $file['filename'];
-                    });
-                    if (count($fileObject) > 1) {
-                        $objectEntity->addError($attribute->getName(), 'More than 1 file found with this name: '.$file['filename']);
-                        break;
-                    }
-                }
-
-                // if no errors we can update or create a File
-                if (!$objectEntity->getHasErrors()) {
-
-                    // Update existing file if we found one using the given filename
-                    if (isset($fileObject) && count($fileObject) == 1) {
-                        $fileObject = $fileObject->first();
-                    } else {
-                        // Create a new file
-                        $fileObject = new File();
-                    }
-
-                    $extension = explode('/', $mime_type);
-                    if (count($extension) > 1) {
-                        $fileObject->setExtension($extension[1]);
-                    } else {
-                        $fileObject->setExtension($extension[0]);
-                    }
-                    $fileObject->setMimeType($mime_type);
-                    $fileObject->setSize($fileSize);
-                    $fileObject->setBase64(end($base64));
-
-                    if (array_key_exists('filename', $file)) {
-                        $fileObject->setName($file['filename']);
-                    } else {
-                        // persist so we can get the id
-                        $this->em->persist($fileObject);
-                        $fileObject->setName($fileObject->getId());
-                    }
-
-                    $valueObject->addFile($fileObject);
-                }
+                // Validate (and create/update) this file
+                $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($file, $key));
             }
         } else {
             foreach ($value as $item) {
@@ -832,66 +766,9 @@ class ValidationService
                     $objectEntity->addError($attribute->getName().'.base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
-                $valueString = strlen($value['base64']) > 75 ? substr($value['base64'], 0, 75).'...' : $value['base64'];
-                $base64 = explode(',', $value['base64']);
 
-                // Get file size
-                $fileSize = $this->getBase64Size($value['base64']);
-
-                // Get mime_type
-                $imgdata = base64_decode(end($base64));
-                $f = finfo_open();
-                $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
-                finfo_close($f);
-                if (base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
-                    $objectEntity->addError($attribute->getName().'.base64', 'Expects a valid base64 encoded string. ('.$valueString.' is not)');
-                } else {
-                    if ($attribute->getMaxFileSize()) {
-                        if ($fileSize > $attribute->getMaxFileSize()) {
-                            $objectEntity->addError($attribute->getName().'.base64', 'This file is to big ('.$fileSize.' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$valueString.')');
-                        }
-                    }
-                    if ($attribute->getFileType()) {
-                        // We could just use $base64[0] to get the file type form that substring,
-                        // but if a base64 without data:...;base64, is given this will work as well:
-                        if ($mime_type != $attribute->getFileType()) {
-                            $objectEntity->addError($attribute->getName().'.base64', 'Expects a file of type '.$attribute->getFileType().', not '.$mime_type.'. ('.$valueString.')');
-                        }
-                    }
-                }
-
-                // if no errors we can update or creat the File
-                if (!$objectEntity->getHasErrors()) {
-
-                    // lets see if we already have a value object
-                    $valueObject = $objectEntity->getValueByAttribute($attribute);
-
-                    if (!$valueObject->getValue()) {
-                        $file = new File();
-                    } else {
-                        $file = $valueObject->getValue();
-                    }
-
-                    $extension = explode('/', $mime_type);
-                    if (count($extension) > 1) {
-                        $file->setExtension($extension[1]);
-                    } else {
-                        $file->setExtension($extension[0]);
-                    }
-                    $file->setMimeType($mime_type);
-                    $file->setSize($fileSize);
-                    $file->setBase64(end($base64));
-
-                    if (array_key_exists('filename', $value)) {
-                        $file->setName($value['filename']);
-                    } else {
-                        // persist so we can get the id
-                        $this->em->persist($file);
-                        $file->setName($file->getId());
-                    }
-
-                    $objectEntity->getValueByAttribute($attribute)->setValue($file);
-                }
+                // Validate (and create/update) this file
+                $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($value));
 
                 break;
             default:
@@ -902,13 +779,104 @@ class ValidationService
     }
 
     /**
+     * Validates a file
+     *
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param array $fileArray
+     * @return ObjectEntity
+     * @throws Exception
+     */
+    public function validateFile(ObjectEntity $objectEntity, Attribute $attribute, array $fileArray): ObjectEntity
+    {
+        $value = $objectEntity->getValueByAttribute($attribute);
+        $key = $fileArray['key'] ? '['.$fileArray['key'].']' : '';
+        $shortBase64String = strlen($fileArray['base64']) > 75 ? substr($fileArray['base64'], 0, 75).'...' : $fileArray['base64'];
+
+        // Validate base64 string (for raw json body input)
+        $explode_base64 = explode(',', $fileArray['base64']);
+        if (base64_encode(base64_decode(end($explode_base64), true)) !== end($explode_base64)) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a valid base64 encoded string. ('.$shortBase64String.' is not)');
+        }
+        // Validate max file size
+        if ($attribute->getMaxFileSize() && $fileArray['size'] > $attribute->getMaxFileSize()) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'This file is to big ('.$fileArray['size'].' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$shortBase64String.')');
+        }
+        // Validate mime type
+        if ($attribute->getFileType() && $fileArray['mimeType'] != $attribute->getFileType()) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file of type '.$attribute->getFileType().', not '.$fileArray['mimeType'].'. ('.$shortBase64String.')');
+        }
+
+        if ($fileArray['name']) {
+            // Find file by filename (this can be the uuid of the file object)
+            $fileObject = $value->getFiles()->filter(function (File $item) use ($fileArray) {
+                return $item->getName() == $fileArray['name'];
+            });
+            if (count($fileObject) > 1) {
+                $objectEntity->addError($attribute->getName().$key.'.name', 'More than 1 file found with this name: '.$fileArray['name']);
+            }
+            // (If we found 0 or 1, continue...)
+        }
+
+        // If no errors we can update or create a File
+        if (!$objectEntity->getHasErrors()) {
+            if (isset($fileObject) && count($fileObject) == 1) {
+                // Update existing file if we found one using the given file name
+                $fileObject = $fileObject->first();
+            } else {
+                // Create a new file
+                $fileObject = new File();
+            }
+            $this->em->persist($fileObject); // For getting the id if no name is given
+            $fileObject->setName($fileArray['name'] ?? $fileObject->getId());
+            $fileObject->setExtension($fileArray['extension']);
+            $fileObject->setMimeType($fileArray['mimeType']);
+            $fileObject->setSize($fileArray['size']);
+            $fileObject->setBase64($fileArray['base64']);
+
+            $value->addFile($fileObject);
+        }
+
+        return $objectEntity;
+    }
+
+    /**
+     * Create a file array (matching the Entity File) from an array containing at least a base64 string and maybe a filename (not required).
+     *
+     * @param array $file
+     * @return array
+     */
+    private function base64ToFileArray(array $file, string $key = null): array
+    {
+        // Get mime_type from base64
+        $explode_base64 = explode(',', $file['base64']);
+        $imgdata = base64_decode(end($explode_base64));
+        $f = finfo_open();
+        $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
+        finfo_close($f);
+
+        // Get extension from mime_type
+        $explode_mime_type = explode('/', $mime_type);
+
+        // Create file data
+        return [
+            "name" => array_key_exists('filename', $file) ? $file['filename'] : null,
+            "extension" => end($explode_mime_type),
+            "mimeType" => $mime_type,
+            "size" => $this->getBase64Size($file['base64']),
+            "base64" => $file['base64'],
+            "key" => $key, // Pass this through for showing correct error messages with multiple files
+        ];
+    }
+
+    /**
      * Gets the memory size of a base64 file.
      *
      * @param $base64
      *
      * @return Exception|float|int
      */
-    public function getBase64Size($base64)
+    private function getBase64Size($base64)
     { //return memory size in B, KB, MB
         try {
             $size_in_bytes = (int) (strlen(rtrim($base64, '=')) * 3 / 4);
@@ -919,6 +887,38 @@ class ValidationService
         } catch (Exception $e) {
             return $e;
         }
+    }
+
+    /**
+     * Create a file array (matching the Entity File) from an UploadedFile object.
+     *
+     * @param UploadedFile $file
+     * @return array
+     */
+    public function uploadedFileToFileArray(UploadedFile $file, string $key = null): array
+    {
+        return [
+            "name" => $file->getClientOriginalName() ?? null,
+            "extension" => $file->getClientOriginalExtension() ?? null,
+            "mimeType" => $file->getClientMimeType() ?? null,
+            "size" => $file->getSize() ?? null,
+            "base64" => $this->uploadToBase64($file),
+            "key" => $key, // Pass this through for showing correct error messages with multiple files
+        ];
+    }
+
+    /**
+     * Create a base64 string from an UploadedFile object.
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    private function uploadToBase64(UploadedFile $file): string
+    {
+        $content = base64_encode($file->openFile()->fread($file->getSize()));
+        $mimeType = $file->getClientMimeType();
+
+        return 'data:'.$mimeType.';base64,'.$content;
     }
 
     /**
