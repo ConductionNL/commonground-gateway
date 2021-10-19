@@ -15,11 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
@@ -321,10 +319,11 @@ class EavService
     }
 
     /**
-     * Creates a body array from the given key+values when using form-data for an POST or PUT (excl. attribute of type file)
+     * Creates a body array from the given key+values when using form-data for an POST or PUT (excl. attribute of type file).
      *
      * @param Request $request
-     * @param Entity $entity
+     * @param Entity  $entity
+     *
      * @return array
      */
     private function handleFormDataBody(Request $request, Entity $entity): array
@@ -341,10 +340,10 @@ class EavService
     }
 
     /**
-     * Handles file validation and mutations for form-data
+     * Handles file validation and mutations for form-data.
      *
-     * @param Request $request
-     * @param Entity $entity
+     * @param Request      $request
+     * @param Entity       $entity
      * @param ObjectEntity $objectEntity
      */
     private function handleFormDataFiles(Request $request, Entity $entity, ObjectEntity $objectEntity)
@@ -362,6 +361,7 @@ class EavService
                     'path'    => $entity->getName(),
                     'data'    => [],
                 ];
+
                 return ['result' => $result];
             } else {
                 // Else set attribute to the attribute with type = file
@@ -383,6 +383,7 @@ class EavService
                     // Validate (and create/update) this file
                     $objectEntity = $this->validationService->validateFile($objectEntity, $attribute, $this->validationService->uploadedFileToFileArray($value));
                 }
+
                 return $objectEntity;
             }
         }

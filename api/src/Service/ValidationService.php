@@ -779,13 +779,15 @@ class ValidationService
     }
 
     /**
-     * Validates a file
+     * Validates a file.
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param array $fileArray
-     * @return ObjectEntity
+     * @param Attribute    $attribute
+     * @param array        $fileArray
+     *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function validateFile(ObjectEntity $objectEntity, Attribute $attribute, array $fileArray): ObjectEntity
     {
@@ -844,6 +846,7 @@ class ValidationService
      * Create a file array (matching the Entity File) from an array containing at least a base64 string and maybe a filename (not required).
      *
      * @param array $file
+     *
      * @return array
      */
     private function base64ToFileArray(array $file, string $key = null): array
@@ -860,12 +863,12 @@ class ValidationService
 
         // Create file data
         return [
-            "name" => array_key_exists('filename', $file) ? $file['filename'] : null,
-            "extension" => end($explode_mime_type),
-            "mimeType" => $mime_type,
-            "size" => $this->getBase64Size($file['base64']),
-            "base64" => $file['base64'],
-            "key" => $key, // Pass this through for showing correct error messages with multiple files
+            'name'      => array_key_exists('filename', $file) ? $file['filename'] : null,
+            'extension' => end($explode_mime_type),
+            'mimeType'  => $mime_type,
+            'size'      => $this->getBase64Size($file['base64']),
+            'base64'    => $file['base64'],
+            'key'       => $key, // Pass this through for showing correct error messages with multiple files
         ];
     }
 
@@ -893,17 +896,18 @@ class ValidationService
      * Create a file array (matching the Entity File) from an UploadedFile object.
      *
      * @param UploadedFile $file
+     *
      * @return array
      */
     public function uploadedFileToFileArray(UploadedFile $file, string $key = null): array
     {
         return [
-            "name" => $file->getClientOriginalName() ?? null,
-            "extension" => $file->getClientOriginalExtension() ?? null,
-            "mimeType" => $file->getClientMimeType() ?? null,
-            "size" => $file->getSize() ?? null,
-            "base64" => $this->uploadToBase64($file),
-            "key" => $key, // Pass this through for showing correct error messages with multiple files
+            'name'      => $file->getClientOriginalName() ?? null,
+            'extension' => $file->getClientOriginalExtension() ?? null,
+            'mimeType'  => $file->getClientMimeType() ?? null,
+            'size'      => $file->getSize() ?? null,
+            'base64'    => $this->uploadToBase64($file),
+            'key'       => $key, // Pass this through for showing correct error messages with multiple files
         ];
     }
 
@@ -911,6 +915,7 @@ class ValidationService
      * Create a base64 string from an UploadedFile object.
      *
      * @param UploadedFile $file
+     *
      * @return string
      */
     private function uploadToBase64(UploadedFile $file): string
