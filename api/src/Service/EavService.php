@@ -226,7 +226,7 @@ class EavService
         if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
         }
-        // If we have no body but are using form-data with a POST call instead: //TODO find a better way to deal with form-data?
+        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
         elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
             // get other input values from form-data and put it in $body ($request->get('name'))
             $body = $this->handleFormDataBody($request, $entity);
