@@ -207,7 +207,36 @@ class EavService
         // Lets allow for filtering specific fields
         $fields = $request->query->get('fields');
 
-        // Get  a body
+        if($fields){
+            // Lets deal with a comma seperated list
+            if(!is_array($fields)){
+                $fields = explode(',',$fields);
+
+            }
+
+            $dot = New Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach($fields as $field => $value){
+                $dot->add($value, true);
+            }
+
+            $fields = $dot->all();
+        }
+
+        // Lets handle the entity
+        $entity = $this->getEntity($path);
+        // What if we canot find an entity?
+        if(is_array($entity)){
+            $result = $entity;
+            $entity = false;
+        }
+
+        // Lets create an object
+        if($entity && ($id || $request->getMethod() == 'POST')){
+            $object = $this->getObject($id, $request->getMethod() , $entity);
+        }
+
+        // Get a body
         if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
         }
@@ -326,36 +355,6 @@ class EavService
                     }
                 }
             }
-        }
-
-
-        if($fields){
-            // Lets deal with a comma seperated list
-            if(!is_array($fields)){
-                $fields = explode(',',$fields);
-
-            }
-
-            $dot = New Dot();
-            // Lets turn the from dor attat into an propper array
-            foreach($fields as $field => $value){
-                $dot->add($value, true);
-            }
-
-            $fields = $dot->all();
-        }
-
-        // Lets handle the entity
-        $entity = $this->getEntity($path);
-        // What if we canot find an entity?
-        if(is_array($entity)){
-            $result = $entity;
-            $entity = false;
-        }
-
-        // Lets create an object
-        if($entity && ($id || $request->getMethod() == 'POST')){
-            $object = $this->getObject($id, $request->getMethod() , $entity);
         }
 
         // Lets setup a switchy kinda thingy to handle the input
