@@ -208,40 +208,54 @@ class EavService
                 // Else set attribute to the attribute with type = file
                 $attribute = $attributes->first();
 
+                $value = $object->getValueByAttribute($attribute);
                 if ($attribute->getMultiple()) {
-                    // Loop through all files, validate them and store them in the files ArrayCollection
-                    $value = $object->getValueByAttribute($attribute);
-                    if (!$value->getValue()) {
-                        $value = new ArrayCollection();
+                    // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
+                    $files = $request->files->get($attribute->getName());
+                    if (!is_array($files)) {
+                        $object->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: ' . $attribute->getName() . '[])');
                     } else {
-                        $value = $value->getValue();
-                    }
-                    foreach ($request->files as $file) {
-                        // TODO Move duplicate code to function, see else statement
+                        // Loop through all files, validate them and store them in the files ArrayCollection
+                        foreach ($files as $file) {
+                            // TODO Move duplicate code to function, see else statement
 
-                        // Validate this file //TODO should be moved to validationService
-                        if ($attribute->getMaxFileSize()) {
-                            if ($file->getSize() > $attribute->getMaxFileSize()) {
-                                $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
+                            // Validate this file //TODO should be moved to validationService
+                            if ($attribute->getMaxFileSize()) {
+                                if ($file->getSize() > $attribute->getMaxFileSize()) {
+                                    $object->addError($attribute->getName(),'This file is to big (' . $file->getSize() . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes.');
+                                }
+                            }
+                            if ($attribute->getFileType()) {
+                                if ($file->getClientMimeType() != $attribute->getFileType()) {
+                                    $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
+                                }
+                            }
+
+                            // Find file by filename
+                            $fileObject = $value->getFiles()->filter(function (File $item) use ($file) {
+                                return $item->getName() == $file->getClientOriginalName();
+                            });
+                            if (count($fileObject) > 1) {
+                                $object->addError($attribute->getName(), 'More than 1 file found with this name: '.$file->getClientOriginalName());
+                                break;
+                            } else {
+                                // No existing file found for this value, so lets create a new one
+                                $fileObject = new File();
+                            }
+
+                            // If no errors actually add the file
+                            if (!$object->getHasErrors()) {
+                                $fileObject->setName($file->getClientOriginalName());
+                                $fileObject->setExtension($file->getClientOriginalExtension());
+                                $fileObject->setMimeType($file->getClientMimeType());
+                                $fileObject->setSize($file->getSize());
+                                $fileObject->setBase64($this->uploadToBase64($file));
+                                $value->addFile($fileObject);
                             }
                         }
-                        if ($attribute->getFileType()) {
-                            if ($file->getClientMimeType() != $attribute->getFileType()) {
-                                $object->addError($attribute->getName(),'Expects a file of type ' . $attribute->getFileType() . ', not ' . $file->getClientMimeType() . '.');
-                            }
-                        }
-
-                        $fileObject = new File(); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
-                        $fileObject->setName($file->getClientOriginalName());
-                        $fileObject->setExtension($file->getClientOriginalExtension());
-                        $fileObject->setMimeType($file->getClientMimeType());
-                        $fileObject->setSize($file->getSize());
-                        $fileObject->setBase64($this->uploadToBase64($file));
-                        $value->add($fileObject); // TODO check if we need to update an existing file! (use file name to find the correct file to update from $value->getFiles() ?)
                     }
                 } else {
                     $file = $request->files->get($attribute->getName());
-                    $value = $object->getValueByAttribute($attribute);
                     // TODO Move duplicate code to function, see foreach in if ^^^
 
                     // Validate this file //TODO should be moved to validationService
@@ -256,21 +270,21 @@ class EavService
                         }
                     }
 
-                    if (!$value->getValue()) {
-                        $value = new File();
-                    } else {
-                        $value = $value->getValue();
-                    }
-                    $value->setName($file->getClientOriginalName());
-                    $value->setExtension($file->getClientOriginalExtension());
-                    $value->setMimeType($file->getClientMimeType());
-                    $value->setSize($file->getSize());
-                    $value->setBase64($this->uploadToBase64($file));
-                }
+                    // If no errors actually add (/update) the file
+                    if (!$object->getHasErrors()) {
+                        if (!$value->getValue()) {
+                            $fileObject = new File();
+                        } else {
+                            $fileObject = $value->getValue();
+                        }
+                        $fileObject->setName($file->getClientOriginalName());
+                        $fileObject->setExtension($file->getClientOriginalExtension());
+                        $fileObject->setMimeType($file->getClientMimeType());
+                        $fileObject->setSize($file->getSize());
+                        $fileObject->setBase64($this->uploadToBase64($file));
 
-                // Save the files in the correct Value for this ObjectEntity (by using the attribute with type = file)
-                if (!$object->getHasErrors()) {
-                    $object->getValueByAttribute($attribute)->setValue($value);
+                        $value->setValue($fileObject);
+                    }
                 }
             }
         }

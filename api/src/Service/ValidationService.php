@@ -243,22 +243,17 @@ class ValidationService
         }
 
         // Then validate all items in this array
-        if ($attribute->getType() != 'object') {
-            foreach ($value as $item) {
-                $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
-                $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
-            }
-        } else {
+        if ($attribute->getType() == 'object') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
             // This is an array of object
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach ($value as $object) {
                 if (!is_array($object)) {
-                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects.');
+                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (arrays).');
                     break;
                 }
                 if (array_key_exists('id', $object)) {
-                    $subObject = $objectEntity->getValueByAttribute($attribute)->getObjects()->filter(function (ObjectEntity $item) use ($object) {
+                    $subObject = $valueObject->getObjects()->filter(function (ObjectEntity $item) use ($object) {
                         return $item->getId() == $object['id'];
                     });
                     if (count($subObject) == 0) {
@@ -282,7 +277,98 @@ class ValidationService
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
-                $valueObject->setValue($subObject);
+//                $valueObject->setValue($subObject);
+                $valueObject->addObject($subObject);
+            }
+        } elseif ($attribute->getType() == 'file') {
+            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different!!!
+            // This is an array of files
+            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            foreach ($value as $key => $file) {
+                // Validations
+                if (!is_array($file)) {
+                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files (arrays).');
+                    break;
+                }
+                if (!array_key_exists('base64', $file)) {
+                    $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    break;
+                }
+                $fileString = strlen($file['base64']) > 75 ? substr($file['base64'],0,75).'...' : $file['base64'];
+                $base64 = explode(",",$file['base64']);
+
+                // Get file size
+                $fileSize = $this->getBase64Size($file['base64']);
+
+                // Get mime_type
+                $imgdata = base64_decode(end($base64));
+                $f = finfo_open();
+                $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
+                finfo_close($f);
+                if ( base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
+                    $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects a valid base64 encoded string. ('.$fileString.' is not)');
+                } else {
+                    if ($attribute->getMaxFileSize()) {
+                        if ($fileSize > $attribute->getMaxFileSize()) {
+                            $objectEntity->addError($attribute->getName().'['.$key.'].base64','This file is to big (' . $fileSize . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes. ('.$fileString.')');
+                        }
+                    }
+                    if ($attribute->getFileType()) {
+                        // We could just use $base64[0] to get the file type form that substring,
+                        // but if a base64 without data:...;base64, is given this will work as well:
+                        if ($mime_type != $attribute->getFileType()) {
+                            $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$fileString.')');
+                        }
+                    }
+                }
+
+                if (array_key_exists('filename', $file)) {
+                    // Find file by filename (this can be the uuid of the file object)
+                    $fileObject = $valueObject->getFiles()->filter(function (File $item) use ($file) {
+                        return $item->getName() == $file['filename'];
+                    });
+                    if (count($fileObject) > 1) {
+                        $objectEntity->addError($attribute->getName(), 'More than 1 file found with this name: '.$file['filename']);
+                        break;
+                    }
+                }
+
+                // if no errors we can update or create a File
+                if (!$objectEntity->getHasErrors()) {
+
+                    // Update existing file if we found one using the given filename
+                    if (isset($fileObject) && count($fileObject) == 1) {
+                        $fileObject = $fileObject->first();
+                    } else {
+                        // Create a new file
+                        $fileObject = new File();
+                    }
+
+                    $extension = explode("/",$mime_type);
+                    if (count($extension) > 1) {
+                        $fileObject->setExtension($extension[1]);
+                    } else {
+                        $fileObject->setExtension($extension[0]);
+                    }
+                    $fileObject->setMimeType($mime_type);
+                    $fileObject->setSize($fileSize);
+                    $fileObject->setBase64(end($base64));
+
+                    if (array_key_exists('filename', $file)) {
+                        $fileObject->setName($file['filename']);
+                    } else {
+                        // persist so we can get the id
+                        $this->em->persist($fileObject);
+                        $fileObject->setName($fileObject->getId());
+                    }
+
+                    $valueObject->addFile($fileObject);
+                }
+            }
+        } else {
+            foreach ($value as $item) {
+                $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
+                $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
             }
         }
 
@@ -776,35 +862,36 @@ class ValidationService
                     }
                 }
 
-                // lets see if we already have a value object
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
-
-                if (!$valueObject->getValue()) {
-                    $file = new File();
-                } else {
-                    $file = $valueObject->getValue();
-                }
-
-                if (array_key_exists('filename', $value)) {
-                    $file->setName($value['filename']);
-                } else {
-                    // persist so we can get the id
-                    $this->em->persist($file);
-                    $file->setName($file->getId()); //TODO cast to string?
-                }
-
-                $extension = explode("/",$mime_type);
-                if (count($extension) > 1) {
-                    $file->setExtension($extension[1]);
-                } else {
-                    $file->setExtension($extension[0]);
-                }
-                $file->setMimeType($mime_type);
-                $file->setSize($fileSize);
-                $file->setBase64(end($base64));
-
-                // if no errors we can push it into our object
+                // if no errors we can update or creat the File
                 if (!$objectEntity->getHasErrors()) {
+
+                    // lets see if we already have a value object
+                    $valueObject = $objectEntity->getValueByAttribute($attribute);
+
+                    if (!$valueObject->getValue()) {
+                        $file = new File();
+                    } else {
+                        $file = $valueObject->getValue();
+                    }
+
+                    $extension = explode("/",$mime_type);
+                    if (count($extension) > 1) {
+                        $file->setExtension($extension[1]);
+                    } else {
+                        $file->setExtension($extension[0]);
+                    }
+                    $file->setMimeType($mime_type);
+                    $file->setSize($fileSize);
+                    $file->setBase64(end($base64));
+
+                    if (array_key_exists('filename', $value)) {
+                        $file->setName($value['filename']);
+                    } else {
+                        // persist so we can get the id
+                        $this->em->persist($file);
+                        $file->setName($file->getId());
+                    }
+
                     $objectEntity->getValueByAttribute($attribute)->setValue($file);
                 }
 
