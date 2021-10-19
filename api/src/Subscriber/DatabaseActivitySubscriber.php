@@ -25,8 +25,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
         GatewayService $gatewayService,
         CommonGroundService $commonGroundService,
         CacheInterface $cache
-    )
-    {
+    ) {
         $this->eavService = $eavService;
         $this->gatewayService = $gatewayService;
         $this->commonGroundService = $commonGroundService;

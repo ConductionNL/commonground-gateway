@@ -170,7 +170,7 @@ class GatewayService
      */
     public function retrieveGateway(string $gateway): Gateway
     {
-        if(strpos( $gateway, '.' ) && $renderType = explode('.', $gateway)){
+        if (strpos($gateway, '.') && $renderType = explode('.', $gateway)) {
             $gateway = $renderType[0];
         }
 
@@ -186,33 +186,34 @@ class GatewayService
     /**
      * Turns the gateway responce into a downloadable file.
      *
-     * @param Response $responce The responce to turn into a download.
-     * @param string $extension The extension of the requested file e.g. csv
+     * @param Response $responce  The responce to turn into a download.
+     * @param string   $extension The extension of the requested file e.g. csv
+     *
      * @return Response The retrieved Gateway object.
      */
     public function retrieveExport(Response $response, $extension, $fileName): Response
     {
         $content = $response->getContent();
-        switch ($response->headers->Get('content-type')){
+        switch ($response->headers->Get('content-type')) {
             case 'application/json':
                 $content = json_decode($content, true);
                 // Lets deal with an results array
-                if(array_key_exists('results', $content)){
-                    $content= $content['resuts'];
+                if (array_key_exists('results', $content)) {
+                    $content = $content['resuts'];
                 }
                 break;
             case 'application/ld+json':
             case 'application/json+ld':
                 $content = json_decode($content, true);
             // Lets deal with an results array
-            if(array_key_exists('results', $content)){
-                $content= $content['resuts'];
+            if (array_key_exists('results', $content)) {
+                $content = $content['resuts'];
             }
                 break;
             case 'application/hal+json':
             case 'application/json+hal':
                 $content = json_decode($content, true);
-                $content= $content['items'];
+                $content = $content['items'];
                 break;
             case 'application/xml':
                 break;
@@ -222,14 +223,14 @@ class GatewayService
 
         // @todo deze array is dubbel met de EavService
         $acceptHeaderToSerialiazation = [
-            "application/json"=>"json",
-            "application/ld+json"=>"jsonld",
-            "application/json+ld"=>"jsonld",
-            "application/hal+json"=>"jsonhal",
-            "application/json+hal"=>"jsonhal",
-            "application/xml"=>"xml",
-            "text/csv"=>"csv",
-            "text/yaml"=>"yaml",
+            'application/json'    => 'json',
+            'application/ld+json' => 'jsonld',
+            'application/json+ld' => 'jsonld',
+            'application/hal+json'=> 'jsonhal',
+            'application/json+hal'=> 'jsonhal',
+            'application/xml'     => 'xml',
+            'text/csv'            => 'csv',
+            'text/yaml'           => 'yaml',
         ];
 
         $contentType = array_search($extension, $acceptHeaderToSerialiazation);
