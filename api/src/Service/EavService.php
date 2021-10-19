@@ -229,59 +229,16 @@ class EavService
             $body = json_decode($request->getContent(), true);
         }
         // If we have no body but are using form-data with a POST call instead: //TODO find a better way to deal with form-data?
-        elseif($request->getMethod() == 'POST') {
+        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
             // get other input values from form-data and put it in $body ($request->get('name'))
-            $body = [];
-            foreach ($entity->getAttributes() as $attribute) {
-                if ($attribute->getType() != 'file' && $request->get($attribute->getName())) {
-                    $body[$attribute->getName()] = $request->get($attribute->getName());
-                }
-            }
+            $body = $this->handleFormDataBody($request, $entity);
 
-            if (count($request->files) > 0) {
-                // TODO: Some of this, or maybe all code should be moved to the validationService, when request can be used there as well!
-
-                // TODO: should we use maxResult 1 here? if we find more than 1 shouldn't we throw an error?
-                // Check if this entity has an attribute with type file
-                $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('type', 'file'))->setMaxResults(1);
-                $attributes = $entity->getAttributes()->matching($criteria);
-
-                // If no attribute with type file found, throw an error
-                if ($attributes->isEmpty()) {
-                    // TODO: make a class for this / re-use code for this
-                    $error = [
-                        'message' => 'No attribute with type file found for this entity',
-                        'type'    => 'Bad Request',
-                        'path'    => $entity->getName(),
-                        'data'    => [],
-                    ];
-
-                    return new Response(
-                        $this->serializerService->serialize(new ArrayCollection($error), $this->serializerService->getRenderType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'))), []),
-                        Response::HTTP_BAD_REQUEST,
-                        ['content-type' => $this->handleContentType($request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json')))]
-                    );
-                }
-                // Else set attribute to the attribute with type = file
-                $attribute = $attributes->first();
-
-                if ($attribute->getMultiple()) {
-                    // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
-                    $files = $request->files->get($attribute->getName());
-                    if (!is_array($files)) {
-                        $object->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
-                    } else {
-                        // Loop through all files, validate them and store them in the files ArrayCollection
-                        foreach ($files as $file) {
-                            $object = $this->validationService->validateFile($object, $attribute, $this->validationService->uploadedFileToFileArray($file, $file->getClientOriginalName()));
-                        }
-                    }
-                } else {
-                    $file = $request->files->get($attribute->getName());
-
-                    // Validate (and create/update) this file
-                    $object = $this->validationService->validateFile($object, $attribute, $this->validationService->uploadedFileToFileArray($file));
-                }
+            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
+            if (array_key_exists('result', $formDataResult)) {
+                $result = $formDataResult['result'];
+                $responseType = Response::HTTP_BAD_REQUEST;
+            } else {
+                $object = $formDataResult;
             }
         }
 
@@ -363,28 +320,71 @@ class EavService
         return $response;
     }
 
-    private function handleContentType(string $accept): string
+    /**
+     * Creates a body array from the given key+values when using form-data for an POST or PUT (excl. attribute of type file)
+     *
+     * @param Request $request
+     * @param Entity $entity
+     * @return array
+     */
+    private function handleFormDataBody(Request $request, Entity $entity): array
     {
-        switch ($accept) {
-            case 'text/csv':
-            case 'application/json':
-            case 'application/hal+json':
-                return $accept;
-            default:
-                return 'application/ld+json';
+        // get other input values from form-data and put it in $body ($request->get('name'))
+        $body = [];
+        foreach ($entity->getAttributes() as $attribute) {
+            if ($attribute->getType() != 'file' && $request->get($attribute->getName())) {
+                $body[$attribute->getName()] = $request->get($attribute->getName());
+            }
         }
+
+        return $body;
     }
 
-    public function checkRequest($entityName, array $body, ?string $id, string $method): void
+    /**
+     * Handles file validation and mutations for form-data
+     *
+     * @param Request $request
+     * @param Entity $entity
+     * @param ObjectEntity $objectEntity
+     */
+    private function handleFormDataFiles(Request $request, Entity $entity, ObjectEntity $objectEntity)
     {
-        if (!$entityName) {
-            throw new HttpException(400, 'An entity name should be provided for this route');
-        }
-        if (!$body and count($files) == 0) {
-            throw new HttpException(400, 'A body should be provided for this route');
-        }
-        if (!$id && $method == 'PUT') {
-            throw new HttpException(400, 'An id should be provided for this route');
+        if (count($request->files) > 0) {
+            // Check if this entity has an attribute with type file
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('type', 'file'))->setMaxResults(1);
+            $attributes = $entity->getAttributes()->matching($criteria);
+
+            // If no attribute with type file found, throw an error
+            if ($attributes->isEmpty()) {
+                $result = [
+                    'message' => 'No attribute with type file found for this entity',
+                    'type'    => 'Bad Request',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
+                return ['result' => $result];
+            } else {
+                // Else set attribute to the attribute with type = file
+                $attribute = $attributes->first();
+                // Get the value (file(s)) for this attribute
+                $value = $request->files->get($attribute->getName());
+
+                if ($attribute->getMultiple()) {
+                    // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
+                    if (!is_array($value)) {
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
+                    } else {
+                        // Loop through all files, validate them and store them in the files ArrayCollection
+                        foreach ($value as $file) {
+                            $objectEntity = $this->validationService->validateFile($objectEntity, $attribute, $this->validationService->uploadedFileToFileArray($file, $file->getClientOriginalName()));
+                        }
+                    }
+                } else {
+                    // Validate (and create/update) this file
+                    $objectEntity = $this->validationService->validateFile($objectEntity, $attribute, $this->validationService->uploadedFileToFileArray($value));
+                }
+                return $objectEntity;
+            }
         }
     }
 
