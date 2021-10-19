@@ -134,11 +134,13 @@ class EavService
     }
 
     /**
-     * Handles an api request
+     * Handles an api request.
      *
      * @param Request $request
-     * @return Response
+     *
      * @throws Exception
+     *
+     * @return Response
      */
     public function handleRequest(Request $request): Response
     {
@@ -253,14 +255,14 @@ class EavService
         if ($entity && $id) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $path
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $path,
             ]);
         }
         // its an collection endpoind
         elseif ($entity) {
             $endpointResult = $this->handleCollectionEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $path,
-                'entity' => $entity, 'extension' => $extension
+                'entity' => $entity, 'extension' => $extension,
             ]);
         }
         if (isset($endpointResult)) {
@@ -320,9 +322,10 @@ class EavService
     /**
      * Handles file validation and mutations for form-data.
      *
-     * @param Request $request
-     * @param Entity $entity
+     * @param Request      $request
+     * @param Entity       $entity
      * @param ObjectEntity $objectEntity
+     *
      * @throws Exception
      */
     private function handleFormDataFiles(Request $request, Entity $entity, ObjectEntity $objectEntity)
@@ -369,12 +372,14 @@ class EavService
     }
 
     /**
-     * Handles entity endpoints
+     * Handles entity endpoints.
      *
      * @param Request $request
-     * @param array $info Array with some required info, must contain the following keys: object, body, fields & path.
-     * @return array
+     * @param array   $info    Array with some required info, must contain the following keys: object, body, fields & path.
+     *
      * @throws Exception
+     *
+     * @return array
      */
     private function handleEntityEndpoint(Request $request, array $info): array
     {
@@ -406,18 +411,20 @@ class EavService
         }
 
         return [
-            "result" => $result ?? null,
-            "responseType" => $responseType,
+            'result'       => $result ?? null,
+            'responseType' => $responseType,
         ];
     }
 
     /**
-     * Handles collection endpoints
+     * Handles collection endpoints.
      *
      * @param Request $request
-     * @param array $info Array with some required info, must contain the following keys: object, body, fields, path, entity & extension.
-     * @return array
+     * @param array   $info    Array with some required info, must contain the following keys: object, body, fields, path, entity & extension.
+     *
      * @throws Exception
+     *
+     * @return array
      */
     private function handleCollectionEndpoint(Request $request, array $info): array
     {
@@ -444,8 +451,8 @@ class EavService
         }
 
         return [
-            "result" => $result ?? null,
-            "responseType" => $responseType,
+            'result'       => $result ?? null,
+            'responseType' => $responseType,
         ];
     }
 
@@ -453,10 +460,12 @@ class EavService
      * This function handles data mutations on EAV Objects.
      *
      * @param ObjectEntity $object
-     * @param array $body
+     * @param array        $body
      * @param $fields
-     * @return array
+     *
      * @throws Exception
+     *
+     * @return array
      */
     public function handleMutation(ObjectEntity $object, array $body, $fields): array
     {
@@ -494,10 +503,11 @@ class EavService
     }
 
     /**
-     * Handles a get item api call
+     * Handles a get item api call.
      *
      * @param ObjectEntity $object
      * @param $fields
+     *
      * @return array
      */
     public function handleGet(ObjectEntity $object, $fields): array
@@ -506,12 +516,13 @@ class EavService
     }
 
     /**
-     * Handles a search (collection) api call
+     * Handles a search (collection) api call.
      *
-     * @param string $entityName
+     * @param string  $entityName
      * @param Request $request
      * @param $fields
      * @param $extension
+     *
      * @return array|array[]
      */
     public function handleSearch(string $entityName, Request $request, $fields, $extension): array
@@ -555,9 +566,10 @@ class EavService
     }
 
     /**
-     * Handles a delete api call
+     * Handles a delete api call.
      *
      * @param ObjectEntity $object
+     *
      * @return array
      */
     public function handleDelete(ObjectEntity $object): array
@@ -572,6 +584,7 @@ class EavService
      * Builds the error response for an objectEntity that contains errors.
      *
      * @param ObjectEntity $objectEntity
+     *
      * @return array
      */
     public function returnErrors(ObjectEntity $objectEntity)
@@ -587,9 +600,10 @@ class EavService
     /**
      * Renders the result for a ObjectEntity that will be used for the response after a successful api call.
      *
-     * @param ObjectEntity $result
+     * @param ObjectEntity         $result
      * @param ArrayCollection|null $maxDepth
      * @param $fields
+     *
      * @return array
      */
     public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null): array
@@ -701,6 +715,7 @@ class EavService
      * Renders the result for a File that will be used (in renderResult) for the response after a successful api call.
      *
      * @param File $file
+     *
      * @return array
      */
     private function renderFileResult(File $file): array
