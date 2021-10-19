@@ -305,6 +305,8 @@ class EavService
     private function handleFormDataBody(Request $request, Entity $entity): array
     {
         // get other input values from form-data and put it in $body ($request->get('name'))
+        // TODO: Maybe use $request->request->all() and filter out attributes with type = file after that? ...
+        // todo... (so that we can check for input key+values that are not allowed and throw an error/warning instead of just ignoring them)
         $body = [];
         foreach ($entity->getAttributes() as $attribute) {
             if ($attribute->getType() != 'file' && $request->get($attribute->getName())) {
@@ -628,6 +630,7 @@ class EavService
             }
 
             // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
+            // todo @ruben: zie: https://conduction.atlassian.net/browse/BISC-539 (comments) over usedProperties
             // Only render the attributes that are used
             if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
                 continue;
