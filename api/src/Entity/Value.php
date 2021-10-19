@@ -335,7 +335,7 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
-            $doNotSetArrayTypes = array("object", "datetime", "date", "file");
+            $doNotSetArrayTypes = ['object', 'datetime', 'date', 'file'];
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotSetArrayTypes)) {
                 return $this->setArrayValue($value);
             }
@@ -382,6 +382,7 @@ class Value
                         foreach ($value as $file) {
                             $this->addFile($file);
                         }
+
                         return $this;
                     }
                     // else $value = File::class
@@ -410,7 +411,7 @@ class Value
     public function getValue()
     {
         if ($this->getAttribute()) {
-            $doNotGetArrayTypes = array("object", "datetime", "date", "file");
+            $doNotGetArrayTypes = ['object', 'datetime', 'date', 'file'];
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 return $this->getArrayValue();
             }
@@ -452,6 +453,7 @@ class Value
                     if (count($files) == 0) {
                         return null;
                     }
+
                     return $files;
                 case 'object':
                     $objects = $this->getObjects();

@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 
 /**
- * This entity holds the information about a file
+ * This entity holds the information about a file.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},

@@ -32,8 +32,7 @@ class ValidationService
         CommonGroundService $commonGroundService,
         GatewayService $gatewayService,
         CacheInterface $cache
-    )
-    {
+    ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
@@ -133,7 +132,7 @@ class ValidationService
         } else {
             // Multiple == false, so this should not be an array (unless it is an object)
             if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-                $objectEntity->addError($attribute->getName(),'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
+                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
                 return $objectEntity;
@@ -291,11 +290,11 @@ class ValidationService
                     break;
                 }
                 if (!array_key_exists('base64', $file)) {
-                    $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
-                $fileString = strlen($file['base64']) > 75 ? substr($file['base64'],0,75).'...' : $file['base64'];
-                $base64 = explode(",",$file['base64']);
+                $fileString = strlen($file['base64']) > 75 ? substr($file['base64'], 0, 75).'...' : $file['base64'];
+                $base64 = explode(',', $file['base64']);
 
                 // Get file size
                 $fileSize = $this->getBase64Size($file['base64']);
@@ -305,19 +304,19 @@ class ValidationService
                 $f = finfo_open();
                 $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
                 finfo_close($f);
-                if ( base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
-                    $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects a valid base64 encoded string. ('.$fileString.' is not)');
+                if (base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
+                    $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects a valid base64 encoded string. ('.$fileString.' is not)');
                 } else {
                     if ($attribute->getMaxFileSize()) {
                         if ($fileSize > $attribute->getMaxFileSize()) {
-                            $objectEntity->addError($attribute->getName().'['.$key.'].base64','This file is to big (' . $fileSize . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes. ('.$fileString.')');
+                            $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'This file is to big ('.$fileSize.' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$fileString.')');
                         }
                     }
                     if ($attribute->getFileType()) {
                         // We could just use $base64[0] to get the file type form that substring,
                         // but if a base64 without data:...;base64, is given this will work as well:
                         if ($mime_type != $attribute->getFileType()) {
-                            $objectEntity->addError($attribute->getName().'['.$key.'].base64','Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$fileString.')');
+                            $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects a file of type '.$attribute->getFileType().', not '.$mime_type.'. ('.$fileString.')');
                         }
                     }
                 }
@@ -344,7 +343,7 @@ class ValidationService
                         $fileObject = new File();
                     }
 
-                    $extension = explode("/",$mime_type);
+                    $extension = explode('/', $mime_type);
                     if (count($extension) > 1) {
                         $fileObject->setExtension($extension[1]);
                     } else {
@@ -754,8 +753,7 @@ class ValidationService
                         $subObject = $this->validateEntity($subObject, $value);
                     }
                     $this->em->persist($subObject);
-                }
-                else {
+                } else {
                     $subObjects = $valueObject->getObjects();
                     if ($subObjects->isEmpty()) {
                         $subObject = new ObjectEntity();
@@ -831,11 +829,11 @@ class ValidationService
                 break;
             case 'file':
                 if (!array_key_exists('base64', $value)) {
-                    $objectEntity->addError($attribute->getName().'.base64','Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    $objectEntity->addError($attribute->getName().'.base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
-                $valueString = strlen($value['base64']) > 75 ? substr($value['base64'],0,75).'...' : $value['base64'];
-                $base64 = explode(",",$value['base64']);
+                $valueString = strlen($value['base64']) > 75 ? substr($value['base64'], 0, 75).'...' : $value['base64'];
+                $base64 = explode(',', $value['base64']);
 
                 // Get file size
                 $fileSize = $this->getBase64Size($value['base64']);
@@ -845,19 +843,19 @@ class ValidationService
                 $f = finfo_open();
                 $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
                 finfo_close($f);
-                if ( base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
-                    $objectEntity->addError($attribute->getName().'.base64','Expects a valid base64 encoded string. ('.$valueString.' is not)');
+                if (base64_encode(base64_decode(end($base64), true)) !== end($base64)) {
+                    $objectEntity->addError($attribute->getName().'.base64', 'Expects a valid base64 encoded string. ('.$valueString.' is not)');
                 } else {
                     if ($attribute->getMaxFileSize()) {
                         if ($fileSize > $attribute->getMaxFileSize()) {
-                            $objectEntity->addError($attribute->getName().'.base64','This file is to big (' . $fileSize . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes. ('.$valueString.')');
+                            $objectEntity->addError($attribute->getName().'.base64', 'This file is to big ('.$fileSize.' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$valueString.')');
                         }
                     }
                     if ($attribute->getFileType()) {
                         // We could just use $base64[0] to get the file type form that substring,
                         // but if a base64 without data:...;base64, is given this will work as well:
                         if ($mime_type != $attribute->getFileType()) {
-                            $objectEntity->addError($attribute->getName().'.base64','Expects a file of type ' . $attribute->getFileType() . ', not ' . $mime_type . '. ('.$valueString.')');
+                            $objectEntity->addError($attribute->getName().'.base64', 'Expects a file of type '.$attribute->getFileType().', not '.$mime_type.'. ('.$valueString.')');
                         }
                     }
                 }
@@ -874,7 +872,7 @@ class ValidationService
                         $file = $valueObject->getValue();
                     }
 
-                    $extension = explode("/",$mime_type);
+                    $extension = explode('/', $mime_type);
                     if (count($extension) > 1) {
                         $file->setExtension($extension[1]);
                     } else {
@@ -918,8 +916,7 @@ class ValidationService
             $size_in_mb = $size_in_kb / 1024;
 
             return $size_in_bytes;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             return $e;
         }
     }
