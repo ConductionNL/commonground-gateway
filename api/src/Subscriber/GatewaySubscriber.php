@@ -56,10 +56,10 @@ class GatewaySubscriber implements EventSubscriberInterface
             $renderType = end($renderType);
         }
         elseif(strpos( $event->getRequest()->attributes->get('endpoint'), '.' ) && $renderType = explode('.', $event->getRequest()->attributes->get('endpoint'))){
-            $id = $renderType[0];
+            $path = $renderType[0];
             $renderType = end($renderType);
         }
-        if($renderType){
+        if(isset($renderType)){
             $response = $this->gatewayService->retrieveExport($response, $renderType, $path);
         }
 
