@@ -2,7 +2,7 @@ parameters:
   env(DIGID_ENABLED): 'true'
 
   env(DIGID_METADATA_LOCATION): "https://digispoof.demodam.nl/saml/metadata"
-  env(DIGID_SIGN_ON_URL): "https://digispoof.demodam.nl/?type=brp"
+  env(DIGID_SIGN_ON_URL): "https://digispoof.demodam.nl/"
   env(DIGID_LOGOUT_URL): "https://digispoof.demodam.nl"
   env(DIGID_IDP_CERT): '/var/certs/idp.crt'
   env(DIGID_ARTIFACT_METHOD): 'Artifact'
