@@ -192,7 +192,7 @@ class ValidationService
             }
         });
 
-        if (count($values) > 0) {
+        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValueByAttribute($attribute)->getValue() == $value)) {
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
