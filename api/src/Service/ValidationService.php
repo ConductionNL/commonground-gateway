@@ -274,8 +274,8 @@ class ValidationService
                 else {
                     $subObject = new ObjectEntity();
 
-                    $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
+                    $subObject->addSubresourceOf($valueObject);
                 }
 
                 $subObject = $this->validateEntity($subObject, $object);

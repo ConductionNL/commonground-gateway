@@ -1070,14 +1070,15 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@learningNeed'    
-    learningNeed_learningResult:
-        name: learningResult
+    learningNeed_learningResults:
+        name: learningResults
         type: object
-        required: true
+        required: false
         multiple: true
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
+        inversedBy: '@learningResult_learningNeed'
 
     # LearningResult properties
     learningResult_verb:
@@ -1139,6 +1140,12 @@ App\Entity\Attribute:
         type: string
         maxLength: 2500
         entity: '@learningResult'
+    learningResult_learningNeed:
+        name: learningNeed
+        type: object
+        required: false # TODO: this should be true? but that will break cascade for learningNeed_learningResults (@learningNeed)
+        entity: '@learningResult'
+        object: '@learningNeed'
             
     # course properties
     course_name:
