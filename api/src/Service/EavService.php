@@ -57,7 +57,7 @@ class EavService
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if (!($entity instanceof Entity)) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => $entityName]);
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/'.$entityName]);
         }
 
         if (!($entity instanceof Entity)) {
