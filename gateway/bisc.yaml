@@ -997,7 +997,8 @@ App\Entity\Attribute:
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
         entity: '@education'
-        doesCurrentlyFollowCourse: NO_UNTIL_DATE
+        requiredIf:
+            doesCurrentlyFollowCourse: NO_UNTIL_DATE
     education_doesCurrentlyFollowCourse:
         name: doesCurrentlyFollowCourse
         type: string
