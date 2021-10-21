@@ -467,6 +467,7 @@ App\Entity\Attribute:
     person_birthplace:
         name: birthplace
         type: string
+        format: countryCode
         entity: '@person'
         maxLength: 255
         persistToGateway: false
@@ -492,6 +493,7 @@ App\Entity\Attribute:
     person_primaryLanguage:
         name: primaryLanguage
         type: string
+#        format: countryCode #TODO: do we want this here? (Lifely just wants a string¿)
         maxLength: 255
         entity: '@person'
         persistToGateway: true
