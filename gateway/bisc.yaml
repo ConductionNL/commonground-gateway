@@ -913,7 +913,14 @@ App\Entity\Attribute:
         enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
         entity: '@education'
         requiredIf:
-            type: EDUCATION
+# TODO:            
+#            doesCurrentlyFollowCourse:
+#                - YES
+#                - NO_UNTIL_DATE
+#            &
+#            type: EDUCATION
+            doesCurrentlyFollowCourse:
+                - NO_UNTIL_DATE
     education_institution:
         name: institution
         type: string
@@ -921,51 +928,63 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
-            type: COURSE
     education_teacherType:
         name: teachertype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-        requiredIf:
-            type: COURSE
+# TODO:        
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_courseType:
         name: coursetype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-        requiredIf:
-            type: COURSE
     education_group:
         name: group
         type: string
         enum: ['INDIVIDUALLY', 'GROUP']
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO:
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_startDate:
         name: startDate
         type: datetime
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
+# TODO:        
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: EDUCATION
     education_endDate:
         name: endDate
         type: datetime
         entity: '@education'
         requiredIf:
+# TODO:
+#            doesCurrentlyFollowCourse:
+#                - YES
+#                - NO_UNTIL_DATE
+#            &
+#            type: EDUCATION
             doesCurrentlyFollowCourse:
-                - YES
                 - NO_UNTIL_DATE
     education_hours:
         name: hours
         type: integer
         description: The total amount of hours this education or course takes
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO:        
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_degree:
         name: degree
         type: boolean
@@ -978,6 +997,7 @@ App\Entity\Attribute:
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
         entity: '@education'
+        doesCurrentlyFollowCourse: NO_UNTIL_DATE
     education_doesCurrentlyFollowCourse:
         name: doesCurrentlyFollowCourse
         type: string
