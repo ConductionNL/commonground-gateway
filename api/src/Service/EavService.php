@@ -528,6 +528,9 @@ class EavService
     public function handleSearch(string $entityName, Request $request, $fields, $extension): array
     {
         $query = $request->query->all();
+        unset($query['limit']);
+        unset($query['page']);
+        unset($query['start']);
         $limit = (int) ($request->query->get('limit') ?? 25); // These type casts are not redundant!
         $page = (int) ($request->query->get('page') ?? 1);
         $start = (int) ($request->query->get('start') ?? 1);
