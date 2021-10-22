@@ -192,7 +192,7 @@ class ValidationService
             }
         });
 
-        if (count($values) > 0) {
+        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValueByAttribute($attribute)->getValue() == $value)) {
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
@@ -252,6 +252,7 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (arrays).');
                     break;
                 }
+                // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
                 if (array_key_exists('id', $object)) {
                     $subObject = $valueObject->getObjects()->filter(function (ObjectEntity $item) use ($object) {
                         return $item->getId() == $object['id'];
@@ -264,11 +265,17 @@ class ValidationService
                         break;
                     }
                     $subObject = $subObject->first();
-                } else {
+                }
+                // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
+                elseif (count($value) == 1 && count($valueObject->getObjects()) == 1) {
+                    $subObject = $valueObject->getObjects()->first();
+                }
+                // Create a new subObject (ObjectEntity)
+                else {
                     $subObject = new ObjectEntity();
 
-                    $subObject->addSubresourceOf($valueObject);
                     $subObject->setEntity($attribute->getObject());
+                    $subObject->addSubresourceOf($valueObject);
                 }
 
                 $subObject = $this->validateEntity($subObject, $object);

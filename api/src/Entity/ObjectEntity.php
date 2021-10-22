@@ -310,17 +310,25 @@ class ObjectEntity
         return $this->setErrors($errors);
     }
 
-    public function getAllErrors(): ?array
+    public function getAllErrors(ArrayCollection $maxDepth = null): ?array
     {
+        // Lets keep track of objects we got the errors from, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($this);
+
         $allErrors = $this->getErrors();
         //$subResources = $this->getSubresources();
         $values = $this->getObjectValues();
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $subResource) {
-                $subErrors = $subResource->getAllErrors();
-                if (!empty($subErrors)) {
-                    $allErrors[$value->getAttribute()->getName()] = $subErrors;
+                if (!$maxDepth->contains($subResource)) {
+                    $subErrors = $subResource->getAllErrors($maxDepth);
+                    if (!empty($subErrors)) {
+                        $allErrors[$value->getAttribute()->getName()] = $subErrors;
+                    }
                 }
             }
         }
