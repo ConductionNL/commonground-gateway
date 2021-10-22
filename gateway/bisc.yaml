@@ -49,6 +49,7 @@ App\Entity\Entity:
             - username
             - roles
             - userGroups
+            - locale
         usedProperties:
             - username
             - password
@@ -56,6 +57,7 @@ App\Entity\Entity:
             - roles
             - userGroups
             - emailValidated
+            - locale
 
     # UserGroup (security) object
     usergroup:
