@@ -982,7 +982,7 @@ App\Entity\Attribute:
         type: integer
         description: The total amount of hours this education or course takes
         entity: '@education'
-# TODO:        
+# TODO:
 #        requiredIf:
 #            doesCurrentlyFollowCourse: YES
 #            &
