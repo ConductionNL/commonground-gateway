@@ -145,8 +145,8 @@ class EavDocumentationService
     private function getDocumentationComponents(): array
     {
         return [
-            'schemas'=> $this->getComponentsSchemas(),
-            'responses'=> $this->getComponentsResponses(),
+            'schemas'   => $this->getComponentsSchemas(),
+            'responses' => $this->getComponentsResponses(),
             'parameters'=> $this->getComponentsParameters(),
         ];
     }
@@ -657,7 +657,7 @@ class EavDocumentationService
     public function getCollectionPaths(Entity $entity): array
     {
         return [
-            'get' => $this->getCollectionGetPath($entity),
+            'get'  => $this->getCollectionGetPath($entity),
             'post' => $this->getCollectionPostPath($entity),
         ];
     }

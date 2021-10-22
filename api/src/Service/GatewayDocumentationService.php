@@ -134,7 +134,8 @@ class GatewayDocumentationService
      *
      * @param array $oas
      * @param array $schema
-     * @param int $level the level of recursion of this function
+     * @param int   $level  the level of recursion of this function
+     *
      * @return array
      */
     public function getSchema(array $oas, array $schema, int $level = 1): array
@@ -174,7 +175,8 @@ class GatewayDocumentationService
      *
      * @param array $oas
      * @param array $schema
-     * @param int $level the level of recursion of this function
+     * @param int   $level  the level of recursion of this function
+     *
      * @return array
      */
     private function checkForSubSchemas(array $oas, array $schema, int $level): array

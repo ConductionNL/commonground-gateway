@@ -651,6 +651,7 @@ class EavService
      * @param ObjectEntity $result
      * @param $fields
      * @param ArrayCollection|null $maxDepth
+     *
      * @return array
      */
     private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth): array
@@ -696,6 +697,7 @@ class EavService
      * @param Value $value
      * @param $fields
      * @param ArrayCollection $maxDepth
+     *
      * @return array
      */
     private function renderObjects(Value $value, $fields, ArrayCollection $maxDepth): array
@@ -710,6 +712,7 @@ class EavService
 
         if ($value->getValue() == null) {
             $response[$attribute->getName()] = null;
+
             return $response;
         }
 
@@ -719,6 +722,7 @@ class EavService
             if (!$maxDepth->contains($value->getValue())) {
                 $response[$attribute->getName()] = $this->renderResult($value->getValue(), $subFields, $maxDepth);
             }
+
             return $response;
         }
 
@@ -735,6 +739,7 @@ class EavService
             $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
         }
         $response[$attribute->getName()] = $objectsArray;
+
         return $response;
     }
 
@@ -742,6 +747,7 @@ class EavService
      * Renders the files of a value with attribute type 'file' for the renderValues function.
      *
      * @param Value $value
+     *
      * @return array
      */
     private function renderFiles(Value $value): array
@@ -750,10 +756,12 @@ class EavService
 
         if ($value->getValue() == null) {
             $response[$attribute->getName()] = null;
+
             return $response;
         }
         if (!$attribute->getMultiple()) {
             $response[$attribute->getName()] = $this->renderFileResult($value->getValue());
+
             return $response;
         }
         $files = $value->getValue();
