@@ -239,6 +239,7 @@ class EavService
      * Gets the path, id, extension & renderType from the Request.
      *
      * @param Request $request
+     *
      * @return array
      */
     private function getRequestBase(Request $request): array
@@ -262,11 +263,11 @@ class EavService
         }
 
         return [
-            'path' => $path,
-            'id' => $id,
-            'extension' => $extension,
+            'path'       => $path,
+            'id'         => $id,
+            'extension'  => $extension,
             'renderType' => $renderType,
-            'result' => $this->checkAllowedRenderTypes($renderType, $path)
+            'result'     => $this->checkAllowedRenderTypes($renderType, $path),
         ];
     }
 
@@ -275,6 +276,7 @@ class EavService
      *
      * @param string $renderType
      * @param string $path
+     *
      * @return array|null
      */
     private function checkAllowedRenderTypes(string $renderType, string $path): ?array
@@ -289,6 +291,7 @@ class EavService
                 'data'    => ['rendertype' => $renderType],
             ];
         }
+
         return null;
     }
 
@@ -313,6 +316,7 @@ class EavService
         } elseif (!array_key_exists($contentType, $acceptHeaderToSerialiazation)) {
             $contentType = 'application/json';
         }
+
         return $contentType;
     }
 
@@ -395,6 +399,7 @@ class EavService
      * Gets fields from the request to use for filtering specific fields.
      *
      * @param Request $request
+     *
      * @return array
      */
     private function getRequestFields(Request $request): ?array
@@ -768,6 +773,7 @@ class EavService
             if (!$maxDepth->contains($value->getValue())) {
                 return $this->renderResult($value->getValue(), $subFields, $maxDepth);
             }
+
             return ['continue'=>'continue'];
         }
 
@@ -783,6 +789,7 @@ class EavService
             // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
             $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
         }
+
         return $objectsArray;
     }
 
@@ -808,6 +815,7 @@ class EavService
         foreach ($files as $file) {
             $filesArray[] = $this->renderFileResult($file);
         }
+
         return $filesArray;
     }
 
