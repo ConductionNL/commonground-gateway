@@ -3,7 +3,7 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-10-22T08:51:10.293533515+02:00"
+    created: "2021-10-22T11:25:12.7345714+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -14,7 +14,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 15.3.2
     description: A Helm chart for Kubernetes
-    digest: 567fd7a811feb689fe01273b27c61c542410e889e760296c1da46bae8e1b09aa
+    digest: 340c4a56bf3f09e2fb3d889fe6d3e661c9bf54e2ccff2ca9cc3fcd63f78d6183
     name: commonground-gateway
     type: application
     urls:
@@ -22,7 +22,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-10-22T08:51:10.253544242+02:00"
+    created: "2021-10-22T11:25:12.6838071+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -41,7 +41,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-10-22T08:51:10.226617713+02:00"
+    created: "2021-10-22T11:25:12.6486622+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -60,7 +60,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-10-22T08:51:10.208801064+02:00"
+    created: "2021-10-22T11:25:12.6251561+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -82,7 +82,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2021-10-22T08:51:10.302461986+02:00"
+    created: "2021-10-22T11:25:12.7454927+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -116,7 +116,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2021-10-22T08:51:10.312683407+02:00"
+    created: "2021-10-22T11:25:12.7593168+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -145,4 +145,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2021-10-22T08:51:10.192419693+02:00"
+generated: "2021-10-22T11:25:12.6057501+02:00"
