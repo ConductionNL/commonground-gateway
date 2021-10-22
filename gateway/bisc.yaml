@@ -915,7 +915,7 @@ App\Entity\Attribute:
         enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
         entity: '@education'
         requiredIf:
-# TODO:            
+# TODO:
 #            doesCurrentlyFollowCourse:
 #                - YES
 #                - NO_UNTIL_DATE
