@@ -1117,7 +1117,7 @@ App\Entity\Attribute:
         name: level
         type: string
         required: true
-        enum: ['INFLUX', 'NLQF_1 ','NLQF_2','NLQF_3 ','NLQF_4 ', 'OTHER']
+        enum: ['INFLUX', 'NLQF_1','NLQF_2','NLQF_3','NLQF_4', 'OTHER']
         entity: '@learningResult'        
     learningResult_levelOther:
         name: levelOther
