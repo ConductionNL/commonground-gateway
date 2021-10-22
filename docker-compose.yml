@@ -83,6 +83,7 @@ services:
       - "80:80"
     environment:
       - NGINX_HOST=php
+      - NGINX_ENV=${APP_ENV}
 
   # helmPackage:
   #   image: alpine/helm:3.2.1

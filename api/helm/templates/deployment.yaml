@@ -210,6 +210,8 @@ spec:
               value: localhost
             - name: BACKENDS
               value: localhost
+            - name: NGINX_ENV
+              value: {{ .Values.config.env }}
           ports:
             - name: http
               containerPort: 80
