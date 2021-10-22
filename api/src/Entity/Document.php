@@ -112,7 +112,7 @@ class Document
      * @ORM\Column(type="string", length=255)
      */
     private string $documentCreationService;
-    
+
     /**
      * @var string The type of this Document.
      *
