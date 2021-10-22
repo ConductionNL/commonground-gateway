@@ -17,11 +17,6 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource()
- * @ORM\Entity(repositoryClass=FileRepository::class)
- */
-
-/**
  * This entity holds the information about a file.
  *
  * @ApiResource(
