@@ -685,7 +685,7 @@ class EavService
             $response['@gateway/type'] = $response['@type'];
         }
 
-        $response = $this->renderValues($result, $fields, $maxDepth);
+        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
 
         // Lets make it personal
         $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
