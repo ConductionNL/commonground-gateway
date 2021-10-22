@@ -24,7 +24,7 @@ class DocumentService
     }
 
     /**
-     * Get the data for a document and send it to the document creation service
+     * Get the data for a document and send it to the document creation service.
      */
     public function handleDocument(Document $document)
     {
@@ -33,7 +33,7 @@ class DocumentService
     }
 
     /**
-     * Get document data
+     * Get document data.
      */
     private function getData(Document $document): string
     {
@@ -44,7 +44,7 @@ class DocumentService
     }
 
     /**
-     * Sends the data to the document creation service
+     * Sends the data to the document creation service.
      */
     private function sendData(Document $document, string $data)
     {
