@@ -18,5 +18,4 @@ class AuthenticationRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Authentication::class);
     }
-
 }

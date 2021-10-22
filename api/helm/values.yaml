@@ -33,6 +33,8 @@ security:
         certificate: ''
   digid:
     enabled: false
+    certificate: ''
+    privatekey: ''
     idp:
       metadata: ''
       singleSignOnUrl: ''
