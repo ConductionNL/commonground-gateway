@@ -49,6 +49,7 @@ App\Entity\Entity:
             - username
             - roles
             - userGroups
+            - locale
         usedProperties:
             - username
             - password
@@ -56,6 +57,7 @@ App\Entity\Entity:
             - roles
             - userGroups
             - emailValidated
+            - locale
 
     # UserGroup (security) object
     usergroup:
@@ -274,16 +276,16 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-    #    user_usergroups:
-    #        name: userGroups
-    #        description: In what usergroups does the user resides.
-    #        type: object
-    #        multiple: true
-    #        required: true
-    #        entity: '@user'
-    #        object: '@usergroup'
-    #        persistToGateway: true
-    #        cascade: false
+#    user_usergroups:
+#        name: userGroups
+#        description: In what usergroups does the user resides.
+#        type: object
+#        multiple: true
+#        required: true
+#        entity: '@user'
+#        object: '@usergroup'
+#        persistToGateway: true
+#        cascade: false
 
     # UserGroup (security) properties
     userGroup_organization:
