@@ -4,7 +4,7 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\File;
-use App\Entity\GatewayResponceLog;
+use App\Entity\GatewayResponseLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -1071,10 +1071,10 @@ class ValidationService
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
-                    $gatewayResponceLog = new GatewayResponceLog();
-                    $gatewayResponceLog->setObjectEntity($objectEntity);
-                    $gatewayResponceLog->setResponce($response);
-                    $this->em->persist($gatewayResponceLog);
+                    $gatewayResponseLog = new GatewayResponseLog();
+                    $gatewayResponseLog->setObjectEntity($objectEntity);
+                    $gatewayResponseLog->setResponse($response);
+                    $this->em->persist($gatewayResponseLog);
                 }
 
                 $result = json_decode($response->getBody()->getContents(), true);
@@ -1108,13 +1108,13 @@ class ValidationService
             function ($error) use ($objectEntity) {
 
                 /* @todo wat dachten we van een logging service? */
-                $gatewayResponceLog = new GatewayResponceLog();
-                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
-                //$gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponseLog = new GatewayResponseLog();
+                $gatewayResponseLog->setGateway($objectEntity->getEntity()->getGateway());
+                //$gatewayResponseLog->setObjectEntity($objectEntity);
                 if ($error->getResponse()) {
-                    $gatewayResponceLog->setResponce($error->getResponse());
+                    $gatewayResponseLog->setResponse($error->getResponse());
                 }
-                $this->em->persist($gatewayResponceLog);
+                $this->em->persist($gatewayResponseLog);
                 $this->em->flush();
 
                 /* @todo lelijke code */
@@ -1131,7 +1131,7 @@ class ValidationService
                     $error_message = $error->getMessage();
                 }
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponceLog->getId().') for a full error report');
+                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponseLog->getId().') for a full error report');
             }
         );
 

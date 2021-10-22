@@ -130,15 +130,16 @@ class GatewayDocumentationService
     }
 
     /**
-     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
+     * Places a schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
      *
-     * @param the level of recurcion of this function
-     *
-     * @return bool returns true if succcesfull or false on failure
+     * @param array $oas
+     * @param array $schema
+     * @param int $level the level of recursion of this function
+     * @return array
      */
     public function getSchema(array $oas, array $schema, int $level = 1): array
     {
-        var_dump($level);
+//        var_dump($level);
 
         // lets pick up on general schemes
         if (array_key_exists('$ref', $schema)) {
@@ -150,11 +151,37 @@ class GatewayDocumentationService
             return $schema;
         }
 
-        $properties = $schema['properties'];
+        $schema = $this->checkForSubSchemas($oas, $schema, $level);
 
+        // Any of
+        if (array_key_exists('anyOf', $schema)) {
+            foreach ($schema['anyOf'] as $anyOfkey=>$value) {
+                if (array_key_exists('$ref', $value)) {
+                    if ($level > 2) {
+                        unset($schema['anyOf'][$anyOfkey]);
+                        continue;
+                    }
+                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level + 1)];
+                }
+            }
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Checks for sub schemas for the getSchema function.
+     *
+     * @param array $oas
+     * @param array $schema
+     * @param int $level the level of recursion of this function
+     * @return array
+     */
+    private function checkForSubSchemas(array $oas, array $schema, int $level): array
+    {
         /* @todo change this to array filter and clear it up*/
         // We need to check for sub schemes
-        foreach ($properties as $key => $property) {
+        foreach ($schema['properties'] as $key => $property) {
             // Lets see if we have main stuf
             if (array_key_exists('$ref', $property)) {
 
@@ -185,19 +212,6 @@ class GatewayDocumentationService
                         }
                         $schema['properties'][$key]['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['properties'][$key]['anyOf'][$anyOfkey], $level + 1)];
                     }
-                }
-            }
-        }
-
-        // Any of
-        if (array_key_exists('anyOf', $schema)) {
-            foreach ($schema['anyOf'] as $anyOfkey=>$value) {
-                if (array_key_exists('$ref', $value)) {
-                    if ($level > 2) {
-                        unset($schema['anyOf'][$anyOfkey]);
-                        continue;
-                    }
-                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level + 1)];
                 }
             }
         }

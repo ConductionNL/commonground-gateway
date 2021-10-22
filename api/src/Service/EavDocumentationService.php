@@ -145,87 +145,117 @@ class EavDocumentationService
     private function getDocumentationComponents(): array
     {
         return [
-            'schemas'=> [
-                'MessageModel' => [
-                    'type'      => 'object',
-                    'properties'=> [
-                        'message' => ['type'=>'string', 'format'=>'string', 'decription'=>'The message'],
-                        'type'    => ['type'=>'string', 'format'=>'string', 'decription'=>'the type of error', 'default'=>'error'],
-                        'data'    => ['type'=>'array', 'format'=>'string', 'decription'=>'the data concerning this message'],
-                    ],
+            'schemas'=> $this->getComponentsSchemas(),
+            'responses'=> $this->getComponentsResponses(),
+            'parameters'=> $this->getComponentsParameters(),
+        ];
+    }
 
+    /**
+     * Returns schemas for the getDocumentationComponents function.
+     *
+     * @return array[]
+     */
+    private function getComponentsSchemas(): array
+    {
+        return [
+            'MessageModel' => [
+                'type'      => 'object',
+                'properties'=> [
+                    'message' => ['type'=>'string', 'format'=>'string', 'decription'=>'The message'],
+                    'type'    => ['type'=>'string', 'format'=>'string', 'decription'=>'the type of error', 'default'=>'error'],
+                    'data'    => ['type'=>'array', 'format'=>'string', 'decription'=>'the data concerning this message'],
                 ],
-                'ListModel' => [
-                    'type'      => 'object',
-                    'properties'=> [
-                        'results' => ['type'=>'array', 'decription'=>'The results of your query'],
-                        'total'   => ['type'=>'integer', 'decription'=>'The total amount of items that match your current query'],
-                        'pages'   => ['type'=>'integer', 'decription'=>'the amount of pages in the dataset based on your current limit'],
-                        'page'    => ['type'=>'integer', 'decription'=>'the curent page of your dataset'],
-                        'limit'   => ['type'=>'integer', 'decription'=>'the desired items per resultset or page', 'default' =>25],
-                        'start'   => ['type'=>'integer', 'decription'=>'thsetarting position (or offset) of your dataset', 'default' =>1],
-                    ],
 
+            ],
+            'ListModel' => [
+                'type'      => 'object',
+                'properties'=> [
+                    'results' => ['type'=>'array', 'decription'=>'The results of your query'],
+                    'total'   => ['type'=>'integer', 'decription'=>'The total amount of items that match your current query'],
+                    'pages'   => ['type'=>'integer', 'decription'=>'the amount of pages in the dataset based on your current limit'],
+                    'page'    => ['type'=>'integer', 'decription'=>'the curent page of your dataset'],
+                    'limit'   => ['type'=>'integer', 'decription'=>'the desired items per resultset or page', 'default' =>25],
+                    'start'   => ['type'=>'integer', 'decription'=>'thsetarting position (or offset) of your dataset', 'default' =>1],
+                ],
+
+            ],
+        ];
+    }
+
+    /**
+     * Returns responses for the getDocumentationComponents function.
+     *
+     * @return array[]
+     */
+    private function getComponentsResponses(): array
+    {
+        return [
+            'ErrorResponse'=> [
+                'description'=> 'error payload',
+                'content'    => [
+                    'application/json' => [
+                        'schema'=> [
+                            '$ref'=> '#/components/schemas/MessageModel',
+                        ],
+                    ],
                 ],
             ],
-            'responces'=> [
-                'ErrorResponce'=> [
-                    'description'=> 'error payload',
-                    'content'    => [
-                        'application/json' => [
-                            'schema'=> [
-                                '$ref'=> '#/components/schemas/MessageModel',
-                            ],
-                        ],
-                    ],
-                ],
-                'DeleteResponce'=> [
-                    'description'=> 'Succesfully deleted',
-                    'content'    => [
-                        'application/json' => [
-                            'schema'=> [
-                                '$ref'=> '#/components/schemas/MessageModel',
-                            ],
-                        ],
-                    ],
-                ],
-                'ListResponce'=> [
-                    'description'=> 'List payload',
-                    'content'    => [
-                        'application/json' => [
-                            'schema'=> [
-                                '$ref'=> '#/components/schemas/ListModel',
-                            ],
+            'DeleteResponse'=> [
+                'description'=> 'Succesfully deleted',
+                'content'    => [
+                    'application/json' => [
+                        'schema'=> [
+                            '$ref'=> '#/components/schemas/MessageModel',
                         ],
                     ],
                 ],
             ],
-            'parameters'=> [
-                'ID' => [
-                    'name'       => 'id',
-                    'in'         => 'path',
-                    'description'=> 'ID of the object that you want to target',
-                    'required'   => true,
-                    'style'      => 'simple',
+            'ListResponse'=> [
+                'description'=> 'List payload',
+                'content'    => [
+                    'application/json' => [
+                        'schema'=> [
+                            '$ref'=> '#/components/schemas/ListModel',
+                        ],
+                    ],
                 ],
-                'Page' => [
-                    'name'       => 'page',
-                    'in'         => 'path',
-                    'description'=> 'The page of the  list that you want to use',
-                    'style'      => 'simple',
-                ],
-                'Limit' => [
-                    'name'       => 'limit',
-                    'in'         => 'path',
-                    'description'=> 'The total amount of items that you want to include in a list',
-                    'style'      => 'simple',
-                ],
-                'Start' => [
-                    'name'       => 'start',
-                    'in'         => 'path',
-                    'description'=> 'The firts item that you want returned, is used to determine the list offset. E.g. if you start at 50 the first 49 items wil not be returned',
-                    'style'      => 'simple',
-                ],
+            ],
+        ];
+    }
+
+    /**
+     * Returns parameters for the getDocumentationComponents function.
+     *
+     * @return array
+     */
+    private function getComponentsParameters(): array
+    {
+        return [
+            'ID' => [
+                'name'       => 'id',
+                'in'         => 'path',
+                'description'=> 'ID of the object that you want to target',
+                'required'   => true,
+                'style'      => 'simple',
+            ],
+            'Page' => [
+                'name'       => 'page',
+                'in'         => 'path',
+                'description'=> 'The page of the  list that you want to use',
+                'style'      => 'simple',
+            ],
+            'Limit' => [
+                'name'       => 'limit',
+                'in'         => 'path',
+                'description'=> 'The total amount of items that you want to include in a list',
+                'style'      => 'simple',
+            ],
+            'Start' => [
+                'name'       => 'start',
+                'in'         => 'path',
+                'description'=> 'The firts item that you want returned, is used to determine the list offset. E.g. if you start at 50 the first 49 items wil not be returned',
+                'style'      => 'simple',
             ],
         ];
     }
@@ -324,7 +354,7 @@ class EavDocumentationService
                     ],
                 ],
             ],
-            '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+            '401' => ['$ref' => '#/components/responses/ErrorResponse'],
         ];
     }
 
@@ -370,7 +400,7 @@ class EavDocumentationService
             '202' => [
                 'description' => 'Logout succefull',
             ],
-            '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+            '401' => ['$ref' => '#/components/responses/ErrorResponse'],
         ];
     }
 
@@ -478,7 +508,7 @@ class EavDocumentationService
                     ],
                 ],
             ],
-            '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+            '401' => ['$ref' => '#/components/responses/ErrorResponse'],
         ];
     }
 
@@ -536,7 +566,7 @@ class EavDocumentationService
                     ],
                 ],
             ],
-            '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+            '401' => ['$ref' => '#/components/responses/ErrorResponse'],
         ];
     }
 
@@ -557,7 +587,7 @@ class EavDocumentationService
                     '200' => [
                         'description' => 'Download succefull',
                     ],
-                    '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+                    '401' => ['$ref' => '#/components/responses/ErrorResponse'],
                 ],
             ],
         ];
@@ -580,7 +610,7 @@ class EavDocumentationService
                     '200' => [
                         'description' => 'Download succefull',
                     ],
-                    '401' => ['$ref' => '#/components/responces/ErrorResponce'],
+                    '401' => ['$ref' => '#/components/responses/ErrorResponse'],
                 ],
             ],
         ];
@@ -626,42 +656,64 @@ class EavDocumentationService
      */
     public function getCollectionPaths(Entity $entity): array
     {
-        $docs = [
-            'get' => [
-                'description'=> 'Get a filterd list of '.$entity->getName().' objects',
-                'summary'    => 'Get a '.$entity->getName().' list',
-                'operationId'=> 'get'.$this->toCamelCase($entity->getName()),
-                'tags'       => [ucfirst($entity->getName())],
-                'parameters' => array_merge($this->gePaginationParameters(), $this->getFilterParameters($entity)),
-                'responses'  => [
-                    '200'=> [
-                        'description'=> 'List payload',
-                        'content'    => [
-                            'application/json' => [
-                                'schema'=> [
-                                    'type'      => 'object',
-                                    'properties'=> [
-                                        'results' => ['type'=>'array', 'decription'=>'The results of your query', 'items'=>['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))]],
-                                        'total'   => ['type'=>'integer', 'decription'=>'The total amount of items that match your current query'],
-                                        'pages'   => ['type'=>'integer', 'decription'=>'the amount of pages in the dataset based on your current limit'],
-                                        'page'    => ['type'=>'integer', 'decription'=>'the curent page of your dataset'],
-                                        'limit'   => ['type'=>'integer', 'decription'=>'the desired items per resultset or page', 'default' =>25],
-                                        'start'   => ['type'=>'integer', 'decription'=>'thsetarting position (or offset) of your dataset', 'default' =>1],
-                                    ],
+        return [
+            'get' => $this->getCollectionGetPath($entity),
+            'post' => $this->getCollectionPostPath($entity),
+        ];
+    }
+
+    private function getCollectionGetPath(Entity $entity): array
+    {
+        return [
+            'description'=> 'Get a filterd list of '.$entity->getName().' objects',
+            'summary'    => 'Get a '.$entity->getName().' list',
+            'operationId'=> 'get'.$this->toCamelCase($entity->getName()),
+            'tags'       => [ucfirst($entity->getName())],
+            'parameters' => array_merge($this->gePaginationParameters(), $this->getFilterParameters($entity)),
+            'responses'  => [
+                '200'=> [
+                    'description'=> 'List payload',
+                    'content'    => [
+                        'application/json' => [
+                            'schema'=> [
+                                'type'      => 'object',
+                                'properties'=> [
+                                    'results' => ['type'=>'array', 'decription'=>'The results of your query', 'items'=>['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName()))]],
+                                    'total'   => ['type'=>'integer', 'decription'=>'The total amount of items that match your current query'],
+                                    'pages'   => ['type'=>'integer', 'decription'=>'the amount of pages in the dataset based on your current limit'],
+                                    'page'    => ['type'=>'integer', 'decription'=>'the curent page of your dataset'],
+                                    'limit'   => ['type'=>'integer', 'decription'=>'the desired items per resultset or page', 'default' =>25],
+                                    'start'   => ['type'=>'integer', 'decription'=>'thsetarting position (or offset) of your dataset', 'default' =>1],
                                 ],
                             ],
                         ],
                     ],
-                    '404'=> ['$ref'=>'#/components/responces/ErrorResponce'],
+                ],
+                '404'=> ['$ref'=>'#/components/responses/ErrorResponse'],
+            ],
+        ];
+    }
+
+    private function getCollectionPostPath(Entity $entity): array
+    {
+        return [
+            'description'=> 'Creates a new'.$entity->getName().' object',
+            'summary'    => 'Create a '.$entity->getName(),
+            'operationId'=> 'post'.$this->toCamelCase($entity->getName()),
+            'tags'       => [ucfirst($entity->getName())],
+            'requestBody'=> [
+                'description'=> 'Create '.$entity->getName(),
+                'content'    => [
+                    'application/json' => [
+                        'schema'=> [
+                            '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
+                        ],
+                    ],
                 ],
             ],
-            'post' => [
-                'description'=> 'Creates a new'.$entity->getName().' object',
-                'summary'    => 'Create a '.$entity->getName(),
-                'operationId'=> 'post'.$this->toCamelCase($entity->getName()),
-                'tags'       => [ucfirst($entity->getName())],
-                'requestBody'=> [
-                    'description'=> 'Create '.$entity->getName(),
+            'responses'=> [
+                '201'=> [
+                    'description'=> 'succesfully created '.$entity->getName(),
                     'content'    => [
                         'application/json' => [
                             'schema'=> [
@@ -670,23 +722,9 @@ class EavDocumentationService
                         ],
                     ],
                 ],
-                'responses'=> [
-                    '201'=> [
-                        'description'=> 'succesfully created '.$entity->getName(),
-                        'content'    => [
-                            'application/json' => [
-                                'schema'=> [
-                                    '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
-                                ],
-                            ],
-                        ],
-                    ],
-                    '404'=> ['$ref'=>'#/components/responces/ErrorResponce'],
-                ],
+                '404'=> ['$ref'=>'#/components/responses/ErrorResponse'],
             ],
         ];
-
-        return $docs;
     }
 
     /**
@@ -709,11 +747,11 @@ class EavDocumentationService
                 'operationId'=> $type.$this->toCamelCase($entity->getName()).'ById',
                 'tags'       => [ucfirst($entity->getName())],
                 'responses'  => [
-                    '404'=> ['$ref'=>'#/components/responces/ErrorResponce'],
+                    '404'=> ['$ref'=>'#/components/responses/ErrorResponse'],
                 ],
             ];
 
-            // Type specific path responces
+            // Type specific path responses
             switch ($type) {
                 case 'put':
                     $docs[$type]['requestBody'] = [
@@ -737,7 +775,7 @@ class EavDocumentationService
                         ],
                     ];
                 case 'delete':
-                    $docs[$type]['responses']['204'] = ['$ref'=>'#/components/responces/DeleteResponce'];
+                    $docs[$type]['responses']['204'] = ['$ref'=>'#/components/responses/DeleteResponse'];
             }
         }
 

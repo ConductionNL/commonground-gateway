@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
+use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -590,7 +592,7 @@ class EavService
      *
      * @return array
      */
-    public function returnErrors(ObjectEntity $objectEntity)
+    public function returnErrors(ObjectEntity $objectEntity): array
     {
         return [
             'message' => 'The where errors',
@@ -632,6 +634,29 @@ class EavService
             $response['@gateway/type'] = $response['@type'];
         }
 
+        $response = $this->renderValues($result, $fields, $maxDepth);
+
+        // Lets make it personal
+        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['id'] = $result->getId();
+
+        return $response;
+    }
+
+    /**
+     * Renders the values of an ObjectEntity for the renderResult function.
+     *
+     * @param ObjectEntity $result
+     * @param $fields
+     * @param ArrayCollection|null $maxDepth
+     * @return array
+     */
+    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth): array
+    {
+        $response = [];
+
         // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
@@ -653,69 +678,96 @@ class EavService
                 continue;
             }
             if ($attribute->getType() == 'object') {
-                if (is_array($fields)) {
-                    $subFields = $fields[$attribute->getName()];
-                } else {
-                    $subFields = null;
-                }
-
-                if ($value->getValue() == null) {
-                    $response[$attribute->getName()] = null;
-                    continue;
-                }
-                if (!$attribute->getMultiple()) {
-                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-                    if (!$maxDepth->contains($value->getValue())) {
-                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $subFields, $maxDepth);
-                    }
-                    continue;
-                }
-                $objects = $value->getValue();
-                $objectsArray = [];
-                foreach ($objects as $object) {
-                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-                    if (!$maxDepth->contains($object)) {
-                        $objectsArray[] = $this->renderResult($object, $subFields, $maxDepth);
-                    } else {
-                        // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                        $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
-                    }
-                }
-                $response[$attribute->getName()] = $objectsArray;
+                $response = $this->renderObjects($value, $fields, $maxDepth);
                 continue;
             } elseif ($attribute->getType() == 'file') {
-                if ($value->getValue() == null) {
-                    $response[$attribute->getName()] = null;
-                    continue;
-                }
-                if (!$attribute->getMultiple()) {
-                    $response[$attribute->getName()] = $this->renderFileResult($value->getValue());
-                    continue;
-                }
-                $files = $value->getValue();
-                $filesArray = [];
-                foreach ($files as $file) {
-                    $filesArray[] = $this->renderFileResult($file);
-                }
-                $response[$attribute->getName()] = $filesArray;
+                $response = $this->renderFiles($value);
                 continue;
             }
             $response[$attribute->getName()] = $value->getValue();
-
-            // Lets insert the object that we are extending
         }
-
-        // Lets make it personal
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
-        $response['@type'] = ucfirst($result->getEntity()->getName());
-        $response['id'] = $result->getId();
 
         return $response;
     }
 
     /**
-     * Renders the result for a File that will be used (in renderResult) for the response after a successful api call.
+     * Renders the objects of a value with attribute type 'object' for the renderValues function.
+     *
+     * @param Value $value
+     * @param $fields
+     * @param ArrayCollection $maxDepth
+     * @return array
+     */
+    private function renderObjects(Value $value, $fields, ArrayCollection $maxDepth): array
+    {
+        $response = [];
+        $attribute = $value->getAttribute();
+
+        $subFields = null;
+        if (is_array($fields)) {
+            $subFields = $fields[$attribute->getName()];
+        }
+
+        if ($value->getValue() == null) {
+            $response[$attribute->getName()] = null;
+            return $response;
+        }
+
+        // If we have only one Object (because multiple = false)
+        if (!$attribute->getMultiple()) {
+            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+            if (!$maxDepth->contains($value->getValue())) {
+                $response[$attribute->getName()] = $this->renderResult($value->getValue(), $subFields, $maxDepth);
+            }
+            return $response;
+        }
+
+        // If we can have multiple Objects (because multiple = true)
+        $objects = $value->getValue();
+        $objectsArray = [];
+        foreach ($objects as $object) {
+            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+            if (!$maxDepth->contains($object)) {
+                $objectsArray[] = $this->renderResult($object, $subFields, $maxDepth);
+                continue;
+            }
+            // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+        }
+        $response[$attribute->getName()] = $objectsArray;
+        return $response;
+    }
+
+    /**
+     * Renders the files of a value with attribute type 'file' for the renderValues function.
+     *
+     * @param Value $value
+     * @return array
+     */
+    private function renderFiles(Value $value): array
+    {
+        $attribute = $value->getAttribute();
+
+        if ($value->getValue() == null) {
+            $response[$attribute->getName()] = null;
+            return $response;
+        }
+        if (!$attribute->getMultiple()) {
+            $response[$attribute->getName()] = $this->renderFileResult($value->getValue());
+            return $response;
+        }
+        $files = $value->getValue();
+        $filesArray = [];
+        foreach ($files as $file) {
+            $filesArray[] = $this->renderFileResult($file);
+        }
+        $response[$attribute->getName()] = $filesArray;
+
+        return $response;
+    }
+
+    /**
+     * Renders the result for a File that will be used (in renderFiles) for the response after a successful api call.
      *
      * @param File $file
      *
