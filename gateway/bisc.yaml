@@ -288,7 +288,7 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: false
 
-     UserGroup (security) properties
+#     UserGroup (security) properties
     userGroup_organization:
         name: organization
         description: To which organization does this usergroup belong?
