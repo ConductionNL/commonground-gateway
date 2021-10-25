@@ -23,7 +23,21 @@ class EavDocumentationService
         $this->validationService = $validationService;
 
         // Lets define the validator that we support for docummentation right now
-        $this->supportedValidators = [
+        $this->supportedValidators = $this->supportedValidators();
+
+        // Lets define the validator that we support for docummentation right now
+        $this->supportedTypes = [
+            'string',
+            'date',
+            'date-time',
+            'integer',
+            'array',
+        ];
+    }
+
+    private function supportedValidators(): array
+    {
+        return [
             'multipleOf',
             'maximum',
             'exclusiveMaximum',
@@ -44,15 +58,6 @@ class EavDocumentationService
             'items',
             'additionalProperties',
             'default',
-        ];
-
-        // Lets define the validator that we support for docummentation right now
-        $this->supportedTypes = [
-            'string',
-            'date',
-            'date-time',
-            'integer',
-            'array',
         ];
     }
 
