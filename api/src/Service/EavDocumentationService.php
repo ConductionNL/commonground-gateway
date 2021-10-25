@@ -196,9 +196,9 @@ class EavDocumentationService
     private function getComponentsResponses(): array
     {
         return [
-            'ErrorResponse'=> $this->getComponentResponse('error payload'),
+            'ErrorResponse' => $this->getComponentResponse('error payload'),
             'DeleteResponse'=> $this->getComponentResponse('Succesfully deleted'),
-            'ListResponse'=> $this->getComponentResponse('List payload'),
+            'ListResponse'  => $this->getComponentResponse('List payload'),
         ];
     }
 
@@ -206,6 +206,7 @@ class EavDocumentationService
      * Returns a response for the getComponentsResponses function.
      *
      * @param string $description
+     *
      * @return array
      */
     private function getComponentResponse(string $description): array
