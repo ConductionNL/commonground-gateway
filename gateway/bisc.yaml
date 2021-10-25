@@ -288,7 +288,7 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: false
 
-    # UserGroup (security) properties
+     UserGroup (security) properties
     userGroup_organization:
         name: organization
         description: To which organization does this usergroup belong?
@@ -302,38 +302,18 @@ App\Entity\Attribute:
         name: name
         description: What is the name of this usergroup?
         type: string
-        multiple: true
+        maxLength: 255
         required: true
-        entity: '@user'
+        entity: '@usergroup'
         persistToGateway: true
-        cascade: false
-
-    # UserGroup (security) properties
-#    userGroup_organization:
-#        name: organization
-#        description: To which organization does this usergroup belong?
-#        type: object
-#        required: true
-#        entity: '@usergroup'
-#        object: '@organization'
-#        persistToGateway: true
-#        cascade: false
-#    userGroup_name:
-#        name: name
-#        description: What is the name of this usergroup?
-#        type: string
-#        maxLength: 255
-#        required: true
-#        entity: '@usergroup'
-#        persistToGateway: true
-#    userGroup_description:
-#        name: description
-#        description: What is the function of this usergroup? To which parts of the application does it give access?
-#        type: string
-#        maxLength: 2550
-#        required: true
-#        entity: '@usergroup'
-#        persistToGateway: true
+    userGroup_description:
+        name: description
+        description: What is the function of this usergroup? To which parts of the application does it give access?
+        type: string
+        maxLength: 2550
+        required: true
+        entity: '@usergroup'
+        persistToGateway: true
 
     # Organization properties
     organization_name:
