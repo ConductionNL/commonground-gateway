@@ -827,6 +827,19 @@ class EavDocumentationService
         }
 
         // Add our own properties
+        return $this->getItemSchemaProperties($schema, $entity);
+    }
+
+    /**
+     * Generates an OAS3 schema for the properties of an item. For getItemSchema()
+     *
+     * @param array $schema
+     * @param Entity $entity
+     * @return array
+     */
+    private function getItemSchemaProperties(array $schema, Entity $entity): array
+    {
+        // Add our own properties
         foreach ($entity->getAttributes() as $attribute) {
 
             // Handle requireded fields
@@ -835,36 +848,10 @@ class EavDocumentationService
             }
 
             // Add the attribute
-            $schema['properties'][$attribute->getName()] = [
-                'type'       => $attribute->getType(),
-                'title'      => $attribute->getName(),
-                'description'=> $attribute->getDescription(),
-            ];
-
-            // The attribute might be a scheme on its own
-            if ($attribute->getObject() && $attribute->getCascade()) {
-                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
-            // that also means that we don't have to do the rest
-                //continue;
-            } elseif ($attribute->getObject() && !$attribute->getCascade()) {
-                $schema['properties'][$attribute->getName()]['type'] = 'string';
-                $schema['properties'][$attribute->getName()]['format'] = 'uuid';
-                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
-            }
+            $schema = $this->getItemSchemaPropertyBase($schema, $attribute);
 
             // Handle conditional logic
-            if ($attribute->getRequiredIf()) {
-                foreach ($attribute->getRequiredIf() as $requiredIfKey=>$requiredIfValue) {
-                    /* @todo lelijk */
-                    if (is_array($requiredIfValue)) {
-                        foreach ($requiredIfValue as $requiredIfVal) {
-                            $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfVal.' )';
-                        }
-                    } else {
-                        $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
-                    }
-                }
-            }
+            $schema = $this->getItemSchemaPropertyConditions($schema, $attribute);
 
             // Handle inversed by
             if ($attribute->getInversedBy()) {
@@ -880,6 +867,55 @@ class EavDocumentationService
             foreach ($attribute->getValidations() as $validator => $validation) {
                 if (!array_key_exists($validator, $this->supportedValidators) && $validation != null) {
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+        }
+
+        return $schema;
+    }
+
+    private function getItemSchemaPropertyBase(array $schema, Attribute $attribute): array
+    {
+        // Add the attribute
+        $schema['properties'][$attribute->getName()] = [
+            'type'       => $attribute->getType(),
+            'title'      => $attribute->getName(),
+            'description'=> $attribute->getDescription(),
+        ];
+
+        // The attribute might be a scheme on its own
+        if ($attribute->getObject() && $attribute->getCascade()) {
+            $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+            // that also means that we don't have to do the rest
+            //continue;
+        } elseif ($attribute->getObject() && !$attribute->getCascade()) {
+            $schema['properties'][$attribute->getName()]['type'] = 'string';
+            $schema['properties'][$attribute->getName()]['format'] = 'uuid';
+            $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS3 schema for the conditions of a property. For getItemSchemaProperties()
+     *
+     * @param array $schema
+     * @param Attribute $attribute
+     * @return array
+     */
+    private function getItemSchemaPropertyConditions(array $schema, Attribute $attribute): array
+    {
+        // Handle conditional logic
+        if ($attribute->getRequiredIf()) {
+            foreach ($attribute->getRequiredIf() as $requiredIfKey=>$requiredIfValue) {
+                /* @todo lelijk */
+                if (is_array($requiredIfValue)) {
+                    foreach ($requiredIfValue as $requiredIfVal) {
+                        $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfVal.' )';
+                    }
+                } else {
+                    $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this property is required if the '.(string) $requiredIfKey.' property equals '.(string) $requiredIfValue.' )';
                 }
             }
         }
