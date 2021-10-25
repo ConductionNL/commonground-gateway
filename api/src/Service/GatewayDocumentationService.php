@@ -76,6 +76,7 @@ class GatewayDocumentationService
      * Places a schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
      *
      * @param array $oas
+     *
      * @return array
      */
     public function getPathsFromOas(array $oas): array
@@ -93,7 +94,7 @@ class GatewayDocumentationService
                 continue;
             }
 
-            if (!$this->checkOasMethodsKeys($methods)){
+            if (!$this->checkOasMethodsKeys($methods)) {
                 continue;
             }
 
@@ -116,6 +117,7 @@ class GatewayDocumentationService
      * Checks if the methods array contains what we expect it to contain. For getPathsFromOas().
      *
      * @param array $methods
+     *
      * @return bool
      */
     private function checkOasMethodsKeys(array $methods): bool
@@ -123,22 +125,27 @@ class GatewayDocumentationService
         // er are going to assume that a post gives the complete opbject, so we are going to use the general post
         if (!array_key_exists('post', $methods)) {
             var_dump('no post method');
+
             return false;
         }
         if (!array_key_exists('requestBody', $methods['post'])) {
             var_dump('no requestBody in method');
+
             return false;
         } // Wierd stuf, but a api might not have a requestBody
         if (!array_key_exists('content', $methods['post']['requestBody'])) {
             var_dump('no requestBody in method');
+
             return false;
         }
         if (!array_key_exists('application/json', $methods['post']['requestBody']['content'])) {
             var_dump('no json schema present');
+
             return false;
         }
         if (!array_key_exists('schema', $methods['post']['requestBody']['content']['application/json'])) {
             var_dump('no json schema present');
+
             return false;
         }
 
