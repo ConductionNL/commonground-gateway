@@ -276,16 +276,17 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-#    user_usergroups:
-#        name: userGroups
-#        description: In what usergroups does the user resides.
+    user_usergroups:
+        name: userGroups
+        description: In what usergroups does the user resides.
 #        type: object
-#        multiple: true
-#        required: true
-#        entity: '@user'
+        type: string
+        multiple: true
+        required: true
+        entity: '@user'
 #        object: '@usergroup'
-#        persistToGateway: true
-#        cascade: false
+        persistToGateway: true
+        cascade: false
 
     # UserGroup (security) properties
     userGroup_organization:
@@ -301,18 +302,38 @@ App\Entity\Attribute:
         name: name
         description: What is the name of this usergroup?
         type: string
-        maxLength: 255
+        multiple: true
         required: true
-        entity: '@usergroup'
+        entity: '@user'
         persistToGateway: true
-    userGroup_description:
-        name: description
-        description: What is the function of this usergroup? To which parts of the application does it give access?
-        type: string
-        maxLength: 2550
-        required: true
-        entity: '@usergroup'
-        persistToGateway: true
+        cascade: false
+
+    # UserGroup (security) properties
+#    userGroup_organization:
+#        name: organization
+#        description: To which organization does this usergroup belong?
+#        type: object
+#        required: true
+#        entity: '@usergroup'
+#        object: '@organization'
+#        persistToGateway: true
+#        cascade: false
+#    userGroup_name:
+#        name: name
+#        description: What is the name of this usergroup?
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@usergroup'
+#        persistToGateway: true
+#    userGroup_description:
+#        name: description
+#        description: What is the function of this usergroup? To which parts of the application does it give access?
+#        type: string
+#        maxLength: 2550
+#        required: true
+#        entity: '@usergroup'
+#        persistToGateway: true
 
     # Organization properties
     organization_name:

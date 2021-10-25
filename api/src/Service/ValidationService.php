@@ -19,6 +19,7 @@ use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ValidationService
 {
@@ -27,17 +28,20 @@ class ValidationService
     private GatewayService $gatewayService;
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
+    private AuthorizationService $authorizationService;
 
     public function __construct(
         EntityManagerInterface $em,
         CommonGroundService $commonGroundService,
         GatewayService $gatewayService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        AuthorizationService $authorizationService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->cache = $cache;
+        $this->authorizationService = $authorizationService;
     }
 
     /**
@@ -83,7 +87,6 @@ class ValidationService
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
         }
-
         // Check post for not allowed properties
         foreach ($post as $key=>$value) {
             if (!$entity->getAttributeByName($key) && $key != 'id') {
@@ -114,6 +117,12 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        try {
+            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+        } catch (AccessDeniedException $e) {
+            $objectEntity->addError($attribute->getName(), $e->getMessage());
+        }
+
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
         if (is_null($value)) {
             if ($attribute->getDefaultValue()) {
@@ -985,7 +994,6 @@ class ValidationService
      */
     public function createPromise(ObjectEntity $objectEntity, array $post): PromiseInterface
     {
-
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());

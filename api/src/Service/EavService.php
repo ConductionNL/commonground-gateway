@@ -20,7 +20,7 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
@@ -30,14 +30,16 @@ class EavService
     private ValidationService $validationService;
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
+    private AuthorizationService $authorizationService;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
+        $this->authorizationService = $authorizationService;
     }
 
     /**
@@ -730,11 +732,17 @@ class EavService
                 continue;
             }
             if ($attribute->getType() == 'object') {
-                $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
-                if ($response[$attribute->getName()] === ['continue'=>'continue']) {
-                    unset($response[$attribute->getName()]);
+                try {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+
+                    $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    if ($response[$attribute->getName()] === ['continue'=>'continue']) {
+                        unset($response[$attribute->getName()]);
+                    }
+                    continue;
+                } catch (AccessDeniedException $exception) {
+                    continue;
                 }
-                continue;
             } elseif ($attribute->getType() == 'file') {
                 $response[$attribute->getName()] = $this->renderFiles($value);
                 continue;
