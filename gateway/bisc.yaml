@@ -958,7 +958,7 @@ App\Entity\Attribute:
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-# TODO:        
+# TODO:
 #        requiredIf:
 #            doesCurrentlyFollowCourse: YES
 #            &
