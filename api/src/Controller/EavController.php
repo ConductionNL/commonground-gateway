@@ -2,14 +2,10 @@
 
 namespace App\Controller;
 
-
-use App\Service\AuthenticationService;
 use App\Service\AuthorizationService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
-use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,7 +14,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class EavController extends AbstractController
 {
-
     public function __contstruct(SerializerInterface $serializer)
     {
         $this->serializerService = new SerializerService($serializer);
@@ -36,27 +31,31 @@ class EavController extends AbstractController
     {
         $offset = strlen('dynamic_eav_');
         $entityName = substr($request->attributes->get('_route'), $offset, strpos($request->attributes->get('_route'), strtolower($request->getMethod())) - 1 - $offset);
-        try{
+
+        try {
             return $eavService->handleRequest($request, $entityName);
-        } catch(AccessDeniedException $exception){
+        } catch (AccessDeniedException $exception) {
             $contentType = $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'));
-            if($contentType == '*/*'){
+            if ($contentType == '*/*') {
                 $contentType = 'application/ld+json';
             }
+
             return $authorizationService->serializeAccessDeniedException($contentType, $serializerService, $exception);
         }
     }
 
     public function deleteAction(Request $request, EavService $eavService, AuthorizationService $authorizationService, SerializerService $serializerService): Response
     {
-        $entityName = $request->attributes->get("entity");
-        try{
+        $entityName = $request->attributes->get('entity');
+
+        try {
             return $eavService->handleRequest($request, $entityName);
-        } catch(AccessDeniedException $exception){
+        } catch (AccessDeniedException $exception) {
             $contentType = $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'));
-            if($contentType == '*/*'){
+            if ($contentType == '*/*') {
                 $contentType = 'application/ld+json';
             }
+
             return $authorizationService->serializeAccessDeniedException($contentType, $serializerService, $exception);
         }
     }

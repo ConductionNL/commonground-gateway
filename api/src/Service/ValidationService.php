@@ -18,8 +18,8 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ValidationService
 {
@@ -36,8 +36,7 @@ class ValidationService
         GatewayService $gatewayService,
         CacheInterface $cache,
         AuthorizationService $authorizationService
-    )
-    {
+    ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
@@ -81,8 +80,8 @@ class ValidationService
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
             // Check if this field is required
-            elseif ($attribute->getRequired()){
-                $objectEntity->addError($attribute->getName(),'This attribute is required');
+            elseif ($attribute->getRequired()) {
+                $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } else {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
@@ -118,9 +117,9 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
-        try{
+        try {
             $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-        } catch(AccessDeniedException $e){
+        } catch (AccessDeniedException $e) {
             $objectEntity->addError($attribute->getName(), $e->getMessage());
         }
 
