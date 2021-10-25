@@ -839,10 +839,11 @@ class EavDocumentationService
     }
 
     /**
-     * Generates an OAS3 schema for the properties of an item. For getItemSchema()
+     * Generates an OAS3 schema for the properties of an item. For getItemSchema().
      *
-     * @param array $schema
+     * @param array  $schema
      * @param Entity $entity
+     *
      * @return array
      */
     private function getItemSchemaProperties(array $schema, Entity $entity): array
@@ -883,10 +884,11 @@ class EavDocumentationService
     }
 
     /**
-     * Generates an OAS3 schema for the base of a property. For getItemSchemaProperties()
+     * Generates an OAS3 schema for the base of a property. For getItemSchemaProperties().
      *
-     * @param array $schema
+     * @param array     $schema
      * @param Attribute $attribute
+     *
      * @return array
      */
     private function getItemSchemaPropertyBase(array $schema, Attribute $attribute): array
@@ -901,7 +903,7 @@ class EavDocumentationService
         // The attribute might be a scheme on its own
         if ($attribute->getObject() && $attribute->getCascade()) {
             $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
-            // that also means that we don't have to do the rest
+        // that also means that we don't have to do the rest
             //continue;
         } elseif ($attribute->getObject() && !$attribute->getCascade()) {
             $schema['properties'][$attribute->getName()]['type'] = 'string';
@@ -913,10 +915,11 @@ class EavDocumentationService
     }
 
     /**
-     * Generates an OAS3 schema for the conditions of a property. For getItemSchemaProperties()
+     * Generates an OAS3 schema for the conditions of a property. For getItemSchemaProperties().
      *
-     * @param array $schema
+     * @param array     $schema
      * @param Attribute $attribute
+     *
      * @return array
      */
     private function getItemSchemaPropertyConditions(array $schema, Attribute $attribute): array
