@@ -45,6 +45,19 @@ App\Entity\Entity:
         gateway: '@uc_api'
         endpoint: 'users'
         extend: false
+        availableProperties:
+            - username
+            - roles
+            - userGroups
+            - locale
+        usedProperties:
+            - username
+            - password
+            - organization
+            - roles
+            - userGroups
+            - emailValidated
+            - locale
 
 #    # UserGroup (security) object
 #    usergroup:
@@ -63,6 +76,22 @@ App\Entity\Entity:
         gateway: '@contacten_api'
         endpoint: 'organizations'
         extend: false
+        # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
+        # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
+        availableProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
+        # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
+        # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
+        usedProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
 
     #Email Object
     email:
@@ -70,6 +99,9 @@ App\Entity\Entity:
         description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'emails'
+        availableProperties:
+            - name
+            - email
 
     #Telefoon Object
     telephone:
@@ -77,6 +109,9 @@ App\Entity\Entity:
         description: Dit object beschrijft een telefoonnummer welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'telephones'
+        availableProperties:
+            - name
+            - telephone
 
     #Address Object
     address:
@@ -84,6 +119,14 @@ App\Entity\Entity:
         description: Dit object beschrijft een adres welke gekoppeld kan worden aan een persoon of organisatie.
         gateway: '@contacten_api'
         endpoint: 'addresses'
+        availableProperties:
+            - name
+            - street
+            - houseNumber
+            - houseNumberSuffix
+            - postalCode
+            - locality
+            - country
 
     # Person Object
     person:
@@ -92,6 +135,28 @@ App\Entity\Entity:
         gateway: '@contacten_api'
         endpoint: 'people'
         extend: false
+        availableProperties:
+            - givenName
+            - additionalName
+            - familyName
+            - birthday
+            - primaryLanguage
+            - birthplace
+            - gender
+            - speakingLanguages
+            - maritalStatus
+            - addresses
+            - telephones
+            - emails
+            - contactPreference
+            # These: are only stored in the gateway, not external. Example, this could be removed
+#            - contactPreferenceOther
+#            - availability
+#            - availabilityNotes
+#            - children
+#            - childrenbirthdays
+#            - country
+#            - user
 
     # Employee Object
     employee:
@@ -101,6 +166,7 @@ App\Entity\Entity:
         gateway: '@mrc_api'
         endpoint: 'employees'
         extend: false
+        availableProperties: []
 
     #Student Object
     student:
@@ -110,6 +176,8 @@ App\Entity\Entity:
         gateway: '@edu_api'
         endpoint: 'participants'
         extend: false
+        availableProperties:
+            - status
 
     # Medewerker Intake object
     employeeIntake:
@@ -211,6 +279,28 @@ App\Entity\Attribute:
     user_usergroups:
         name: userGroups
         description: In what usergroups does the user resides.
+#        type: object
+        type: string
+        multiple: true
+        required: true
+        entity: '@user'
+#        object: '@usergroup'
+        persistToGateway: true
+        cascade: false
+
+    # UserGroup (security) properties
+    userGroup_organization:
+        name: organization
+        description: To which organization does this usergroup belong?
+        type: object
+        required: true
+        entity: '@usergroup'
+        object: '@organization'
+        persistToGateway: true
+        cascade: false
+    userGroup_name:
+        name: name
+        description: What is the name of this usergroup?
         type: string
         multiple: true
         required: true
@@ -400,6 +490,7 @@ App\Entity\Attribute:
     person_birthplace:
         name: birthplace
         type: string
+        format: countryCode
         entity: '@person'
         maxLength: 255
         persistToGateway: false
@@ -425,6 +516,7 @@ App\Entity\Attribute:
     person_primaryLanguage:
         name: primaryLanguage
         type: string
+#        format: countryCode #TODO: do we want this here? (Lifely just wants a string¿)
         maxLength: 255
         entity: '@person'
         persistToGateway: true
@@ -846,7 +938,14 @@ App\Entity\Attribute:
         enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
         entity: '@education'
         requiredIf:
-            type: EDUCATION
+# TODO:
+#            doesCurrentlyFollowCourse:
+#                - YES
+#                - NO_UNTIL_DATE
+#            &
+#            type: EDUCATION
+            doesCurrentlyFollowCourse:
+                - NO_UNTIL_DATE
     education_institution:
         name: institution
         type: string
@@ -854,51 +953,63 @@ App\Entity\Attribute:
         entity: '@education'
         requiredIf:
             doesCurrentlyFollowCourse: YES
-            type: COURSE
     education_teacherType:
         name: teachertype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-        requiredIf:
-            type: COURSE
+# TODO:        
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_courseType:
         name: coursetype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-        requiredIf:
-            type: COURSE
     education_group:
         name: group
         type: string
         enum: ['INDIVIDUALLY', 'GROUP']
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO:
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_startDate:
         name: startDate
         type: datetime
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
+# TODO:        
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: EDUCATION
     education_endDate:
         name: endDate
         type: datetime
         entity: '@education'
         requiredIf:
+# TODO:
+#            doesCurrentlyFollowCourse:
+#                - YES
+#                - NO_UNTIL_DATE
+#            &
+#            type: EDUCATION
             doesCurrentlyFollowCourse:
-                - YES
                 - NO_UNTIL_DATE
     education_hours:
         name: hours
         type: integer
         description: The total amount of hours this education or course takes
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO:
+#        requiredIf:
+#            doesCurrentlyFollowCourse: YES
+#            &
+#            type: COURSE
     education_degree:
         name: degree
         type: boolean
@@ -911,6 +1022,8 @@ App\Entity\Attribute:
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
         entity: '@education'
+        requiredIf:
+            doesCurrentlyFollowCourse: NO_UNTIL_DATE
     education_doesCurrentlyFollowCourse:
         name: doesCurrentlyFollowCourse
         type: string
@@ -980,14 +1093,15 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@learningNeed'    
-    learningNeed_learningResult:
-        name: learningResult
+    learningNeed_learningResults:
+        name: learningResults
         type: object
-        required: true
+        required: false
         multiple: true
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
+        inversedBy: '@learningResult_learningNeed'
 
     # LearningResult properties
     learningResult_verb:
@@ -1026,7 +1140,7 @@ App\Entity\Attribute:
         name: level
         type: string
         required: true
-        enum: ['INFLUX', 'NLQF_1 ','NLQF_2','NLQF_3 ','NLQF_4 ', 'OTHER']
+        enum: ['INFLUX', 'NLQF_1','NLQF_2','NLQF_3','NLQF_4', 'OTHER']
         entity: '@learningResult'        
     learningResult_levelOther:
         name: levelOther
@@ -1049,6 +1163,12 @@ App\Entity\Attribute:
         type: string
         maxLength: 2500
         entity: '@learningResult'
+    learningResult_learningNeed:
+        name: learningNeed
+        type: object
+        required: false # TODO: this should be true? but that will break cascade for learningNeed_learningResults (@learningNeed)
+        entity: '@learningResult'
+        object: '@learningNeed'
             
     # course properties
     course_name:

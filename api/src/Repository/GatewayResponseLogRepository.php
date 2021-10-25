@@ -2,25 +2,25 @@
 
 namespace App\Repository;
 
-use App\Entity\GatewayResponceLog;
+use App\Entity\GatewayResponseLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method GatewayResponceLog|null find($id, $lockMode = null, $lockVersion = null)
- * @method GatewayResponceLog|null findOneBy(array $criteria, array $orderBy = null)
- * @method GatewayResponceLog[]    findAll()
- * @method GatewayResponceLog[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method GatewayResponseLog|null find($id, $lockMode = null, $lockVersion = null)
+ * @method GatewayResponseLog|null findOneBy(array $criteria, array $orderBy = null)
+ * @method GatewayResponseLog[]    findAll()
+ * @method GatewayResponseLog[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class GatewayResponceLogRepository extends ServiceEntityRepository
+class GatewayResponseLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, GatewayResponceLog::class);
+        parent::__construct($registry, GatewayResponseLog::class);
     }
 
     // /**
-    //  * @return GatewayResponceLog[] Returns an array of GatewayResponceLog objects
+    //  * @return GatewayResponseLog[] Returns an array of GatewayResponseLog objects
     //  */
     /*
     public function findByExampleField($value)
@@ -37,7 +37,7 @@ class GatewayResponceLogRepository extends ServiceEntityRepository
     */
 
     /*
-    public function findOneBySomeField($value): ?GatewayResponceLog
+    public function findOneBySomeField($value): ?GatewayResponseLog
     {
         return $this->createQueryBuilder('g')
             ->andWhere('g.exampleField = :val')

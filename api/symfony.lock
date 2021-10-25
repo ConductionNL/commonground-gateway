@@ -1,4 +1,7 @@
 {
+    "adbario/php-dot-notation": {
+        "version": "2.2.0"
+    },
     "api-platform/api-pack": {
         "version": "v1.3.0"
     },
@@ -39,6 +42,9 @@
     },
     "conduction/commongroundbundle": {
         "version": "dev-feature-gateway"
+    },
+    "conduction/digidbundle": {
+        "version": "dev-master"
     },
     "conduction/samlbundle": {
         "version": "dev-master"

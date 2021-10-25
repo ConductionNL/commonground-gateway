@@ -6,10 +6,13 @@
     "require": {
         "php": "^7.4.0",
         "ext-ctype": "*",
+        "ext-fileinfo": "*",
         "ext-iconv": "*",
+        "adbario/php-dot-notation": "^2.2",
         "api-platform/core": "^2.6",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",
+        "conduction/digidbundle": "dev-master",
         "conduction/samlbundle": "dev-master",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.4",

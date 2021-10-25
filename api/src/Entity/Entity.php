@@ -20,9 +20,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
 /**
- * An entity that functions a an object template for objects that might be stored in the EAV database
+ * An entity that functions a an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -105,7 +104,7 @@ class Entity
     private $description;
 
     /**
-     * wheter or not the properties of the original object are automaticly include
+     * wheter or not the properties of the original object are automaticly include.
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -165,16 +164,32 @@ class Entity
     private ?string $route = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
      */
-    private $responceLogs;
+    private ?array $availableProperties;
+
+    /**
+     * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $usedProperties;
+
+    /**
+     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     */
+    private $responseLogs;
 
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
-        $this->responceLogs = new ArrayCollection();
+        $this->responseLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -235,13 +250,12 @@ class Entity
         return $this;
     }
 
-
     /**
-     * Get an value based on a attribut
+     * Get an value based on a attribut.
      *
-     * @param  string $name the name of the attribute that you are searching for
-     * @return Attribute|Boolean Iether the found attribute or false if no attribute could be found
+     * @param string $name the name of the attribute that you are searching for
      *
+     * @return Attribute|bool Iether the found attribute or false if no attribute could be found
      */
     public function getAttributeByName(string $name)
     {
@@ -249,13 +263,12 @@ class Entity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
         $attributes = $this->getAttributes()->matching($criteria);
 
-        if($attributes->isEmpty()){
+        if ($attributes->isEmpty()) {
             return false;
         }
 
         return $attributes->first();
     }
-
 
     /**
      * @return Collection|Attribute[]
@@ -347,7 +360,7 @@ class Entity
         return $this;
     }
 
-    public function getTransformations(): ? array
+    public function getTransformations(): ?array
     {
         return $this->transformations;
     }
@@ -395,30 +408,54 @@ class Entity
         return $this;
     }
 
-    /**
-     * @return Collection|GatewayResponceLog[]
-     */
-    public function getResponceLogs(): Collection
+    public function getAvailableProperties(): ?array
     {
-        return $this->responceLogs;
+        return $this->availableProperties;
     }
 
-    public function addResponceLog(GatewayResponceLog $responceLog): self
+    public function setAvailableProperties(?array $availableProperties): self
     {
-        if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs[] = $responceLog;
-            $responceLog->setEntity($this);
+        $this->availableProperties = $availableProperties;
+
+        return $this;
+    }
+
+    public function getUsedProperties(): ?array
+    {
+        return $this->usedProperties;
+    }
+
+    public function setUsedProperties(?array $usedProperties): self
+    {
+        $this->usedProperties = $usedProperties;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GatewayResponseLog[]
+     */
+    public function getResponseLogs(): Collection
+    {
+        return $this->responseLogs;
+    }
+
+    public function addResponseLog(GatewayResponseLog $responseLog): self
+    {
+        if (!$this->responseLogs->contains($responseLog)) {
+            $this->responseLogs[] = $responseLog;
+            $responseLog->setEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responseLog): self
     {
-        if ($this->responceLogs->removeElement($responceLog)) {
+        if ($this->responseLogs->removeElement($responseLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getEntity() === $this) {
-                $responceLog->setEntity(null);
+            if ($responseLog->getEntity() === $this) {
+                $responseLog->setEntity(null);
             }
         }
 

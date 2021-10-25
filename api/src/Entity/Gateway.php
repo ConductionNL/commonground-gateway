@@ -9,7 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -21,7 +20,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about a common ground gateway
+ * This entity holds the information about a common ground gateway.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -45,7 +44,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     },
  *      itemOperations={
  * 		    "get"={
- *              "read"=false,
  *              "validate"=false
  *          },
  * 	        "put",
@@ -355,12 +353,12 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="gateway", orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="gateway", orphanRemoval=true, fetch="EXTRA_LAZY")
      */
-    private $responceLogs;
+    private $responseLogs;
 
     /**
-     * Setting logging to true will couse ALL responces to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes
+     * Setting logging to true will couse ALL responses to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes.
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -538,14 +536,14 @@ class Gateway
     }
 
     /**
-     * @return Collection|GatewayResponceLog[]
+     * @return Collection|GatewayResponseLog[]
      */
-    public function getResponceLogs(): Collection
+    public function getResponseLogs(): Collection
     {
         return $this->responceLogs;
     }
 
-    public function addResponceLog(GatewayResponceLog $responceLog): self
+    public function addResponseLog(GatewayResponseLog $responceLog): self
     {
         if (!$this->responceLogs->contains($responceLog)) {
             $this->responceLogs[] = $responceLog;
@@ -555,7 +553,7 @@ class Gateway
         return $this;
     }
 
-    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responceLog): self
     {
         if ($this->responceLogs->removeElement($responceLog)) {
             // set the owning side to null (unless already changed)
@@ -602,5 +600,4 @@ class Gateway
 
         return $this;
     }
-
 }

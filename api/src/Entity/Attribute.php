@@ -19,7 +19,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible attribute on an Entity
+ * An possible attribute on an Entity.
  *
  * @category Entity
  *
@@ -70,7 +70,7 @@ class Attribute
      * )
      * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $name;
 
@@ -83,7 +83,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "int", "bool","float","number", "datetime","date", "object"})
+     * @Assert\Choice({"string", "int", "bool","float","number", "datetime", "date", "file", "object"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -268,13 +268,11 @@ class Attribute
     private $minProperties;
 
     /**
-     * @var string If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
+     * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
      *
-     * @example property
-     *
-     * @Assert\Type("string")
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @Groups({"read","write"})
+     * @ORM\OneToOne(targetEntity=Attribute::class)
+     * @MaxDepth(1)
      */
     private $inversedBy;
 
@@ -298,7 +296,6 @@ class Attribute
      * @ORM\Column(type="array", nullable=true)
      */
     private $requiredIf = [];
-
 
     /**
      * @var array conditional requiremends for field
@@ -449,29 +446,47 @@ class Attribute
     private $maxDate;
 
     /**
+     * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
+     *
+     * @example 32000
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $maxFileSize;
+
+    //TODO: make this an enum?
+    /**
+     * @var string *Can only be used in combination with type file* The type of the file
+     *
+     * @example image/png
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $fileType;
+
+    /**
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
     private $validations;
 
     /**
-     *
-     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)
+     * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $persistToGateway = false;
 
     /**
-     *
-     * Whether or not this property is searchable
+     * Whether or not this property is searchable.
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
 
     /**
-     *
-     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities)
+     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
@@ -759,7 +774,6 @@ class Attribute
         return $this;
     }
 
-
     public function getForbidenIf(): ?array
     {
         return $this->forbidenIf;
@@ -793,10 +807,8 @@ class Attribute
     {
         $this->type = $type;
 
-
-
         // If the attribute type is changes away from an object we need to drop the object
-        if($type != 'object' and $this->object ) {
+        if ($type != 'object' and $this->object) {
             unset($this->object);
         }
 
@@ -971,30 +983,53 @@ class Attribute
         return $this;
     }
 
+    public function getMaxFileSize(): ?int
+    {
+        return $this->maxFileSize;
+    }
+
+    public function setMaxFileSize(?int $maxFileSize): self
+    {
+        $this->maxFileSize = $maxFileSize;
+
+        return $this;
+    }
+
+    public function getFileType(): ?string
+    {
+        return $this->fileType;
+    }
+
+    public function setFileType(?string $fileType): self
+    {
+        $this->fileType = $fileType;
+
+        return $this;
+    }
 
     public function getValidations(): ?array
     {
         //TODO: this list of validations is not complete!
         $validations = [];
-        $validations['maximum']             = $this->getMaximum();
-        $validations['exclusiveMaximum']    = $this->getExclusiveMaximum();
-        $validations['minimum']             = $this->getMinimum();
-        $validations['exclusiveMinimum']    = $this->getExclusiveMinimum();
-        $validations['maxLength']           = $this->getMaxLength();
-        $validations['minLength']           = $this->getMinLength();
-        $validations['maxItems']            = $this->getMaxItems();
-        $validations['minItems']            = $this->getMinItems();
-        $validations['uniqueItems']         = $this->getUniqueItems();
-        $validations['maxProperties']       = $this->getMaxProperties();
-        $validations['minProperties']       = $this->getMinProperties();
-        $validations['required']            = $this->getRequired();
-        $validations['enum']                = $this->getEnum();
-        $validations['allOf']               = $this->getAllOf();
-        $validations['anyOf']               = $this->getAnyOf();
-        $validations['oneOf']               = $this->getOneOf();
-        $validations['defaultValue']        = $this->getDefaultValue();
-        $validations['nullable']            = $this->getNullable();
-        $validations['mustBeUnique']        = $this->getMustBeUnique();
+        $validations['maximum'] = $this->getMaximum();
+        $validations['exclusiveMaximum'] = $this->getExclusiveMaximum();
+        $validations['minimum'] = $this->getMinimum();
+        $validations['exclusiveMinimum'] = $this->getExclusiveMinimum();
+        $validations['maxLength'] = $this->getMaxLength();
+        $validations['minLength'] = $this->getMinLength();
+        $validations['maxItems'] = $this->getMaxItems();
+        $validations['minItems'] = $this->getMinItems();
+        $validations['uniqueItems'] = $this->getUniqueItems();
+        $validations['maxProperties'] = $this->getMaxProperties();
+        $validations['minProperties'] = $this->getMinProperties();
+        $validations['required'] = $this->getRequired();
+        $validations['enum'] = $this->getEnum();
+        $validations['allOf'] = $this->getAllOf();
+        $validations['anyOf'] = $this->getAnyOf();
+        $validations['oneOf'] = $this->getOneOf();
+        $validations['defaultValue'] = $this->getDefaultValue();
+        $validations['nullable'] = $this->getNullable();
+        $validations['mustBeUnique'] = $this->getMustBeUnique();
 
         return $validations;
     }
@@ -1002,25 +1037,63 @@ class Attribute
     public function setValidations(?array $validations): self
     {
         //TODO: this list of validations is not complete!
-        if(array_key_exists('maximum',$validations)){           $this->setMaximum($validations['maximum']);}
-        if(array_key_exists('exclusiveMaximum',$validations)){  $this->setExclusiveMaximum($validations['exclusiveMaximum']);}
-        if(array_key_exists('minimum',$validations)){           $this->setMinimum($validations['minimum']);}
-        if(array_key_exists('exclusiveMinimum',$validations)){  $this->setExclusiveMinimum($validations['exclusiveMinimum']);}
-        if(array_key_exists('maxLength',$validations)){         $this->setMaxLength($validations['maxLength']);}
-        if(array_key_exists('minLength',$validations)){         $this->setMinLength($validations['minLength']);}
-        if(array_key_exists('maxItems',$validations)){          $this->setMaxItems($validations['maxItems']);}
-        if(array_key_exists('minItems',$validations)){          $this->setMinItems($validations['minItems']);}
-        if(array_key_exists('uniqueItems',$validations)){       $this->setUniqueItems($validations['uniqueItems']);}
-        if(array_key_exists('maxProperties',$validations)){     $this->setMaxProperties($validations['maxProperties']);}
-        if(array_key_exists('minProperties',$validations)){     $this->setMinProperties($validations['minProperties']);}
-        if(array_key_exists('required',$validations)){          $this->setRequired($validations['required']);}
-        if(array_key_exists('enum',$validations)){              $this->setEnum($validations['enum']);}
-        if(array_key_exists('allOf',$validations)){             $this->setAllOf($validations['allOf']);}
-        if(array_key_exists('anyOf',$validations)){             $this->setAnyOf($validations['anyOf']);}
-        if(array_key_exists('oneOf',$validations)){             $this->setOneOf($validations['oneOf']);}
-        if(array_key_exists('defaultValue',$validations)){      $this->setDefaultValue($validations['defaultValue']);}
-        if(array_key_exists('nullable',$validations)){          $this->setNullable($validations['nullable']);}
-        if(array_key_exists('mustBeUnique',$validations)){      $this->setMustBeUnique($validations['mustBeUnique']);}
+        if (array_key_exists('maximum', $validations)) {
+            $this->setMaximum($validations['maximum']);
+        }
+        if (array_key_exists('exclusiveMaximum', $validations)) {
+            $this->setExclusiveMaximum($validations['exclusiveMaximum']);
+        }
+        if (array_key_exists('minimum', $validations)) {
+            $this->setMinimum($validations['minimum']);
+        }
+        if (array_key_exists('exclusiveMinimum', $validations)) {
+            $this->setExclusiveMinimum($validations['exclusiveMinimum']);
+        }
+        if (array_key_exists('maxLength', $validations)) {
+            $this->setMaxLength($validations['maxLength']);
+        }
+        if (array_key_exists('minLength', $validations)) {
+            $this->setMinLength($validations['minLength']);
+        }
+        if (array_key_exists('maxItems', $validations)) {
+            $this->setMaxItems($validations['maxItems']);
+        }
+        if (array_key_exists('minItems', $validations)) {
+            $this->setMinItems($validations['minItems']);
+        }
+        if (array_key_exists('uniqueItems', $validations)) {
+            $this->setUniqueItems($validations['uniqueItems']);
+        }
+        if (array_key_exists('maxProperties', $validations)) {
+            $this->setMaxProperties($validations['maxProperties']);
+        }
+        if (array_key_exists('minProperties', $validations)) {
+            $this->setMinProperties($validations['minProperties']);
+        }
+        if (array_key_exists('required', $validations)) {
+            $this->setRequired($validations['required']);
+        }
+        if (array_key_exists('enum', $validations)) {
+            $this->setEnum($validations['enum']);
+        }
+        if (array_key_exists('allOf', $validations)) {
+            $this->setAllOf($validations['allOf']);
+        }
+        if (array_key_exists('anyOf', $validations)) {
+            $this->setAnyOf($validations['anyOf']);
+        }
+        if (array_key_exists('oneOf', $validations)) {
+            $this->setOneOf($validations['oneOf']);
+        }
+        if (array_key_exists('defaultValue', $validations)) {
+            $this->setDefaultValue($validations['defaultValue']);
+        }
+        if (array_key_exists('nullable', $validations)) {
+            $this->setNullable($validations['nullable']);
+        }
+        if (array_key_exists('mustBeUnique', $validations)) {
+            $this->setMustBeUnique($validations['mustBeUnique']);
+        }
 
         return $this;
     }
@@ -1085,18 +1158,15 @@ class Attribute
         return $this;
     }
 
-    public function getInversedBy(): ?bool
+    public function getInversedBy(): ?Attribute
     {
         return $this->inversedBy;
     }
 
-    public function setInversedBy(?bool $inversedBy): self
+    public function setInversedBy(?Attribute $inversedBy): self
     {
         $this->inversedBy = $inversedBy;
 
         return $this;
     }
-
-
-
 }

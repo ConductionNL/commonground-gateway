@@ -11,7 +11,6 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 class GatewayItemSubscriber implements EventSubscriberInterface
 {
-
     private GatewayService $gatewayService;
 
     public function __construct(GatewayService $gatewayService)
@@ -59,7 +58,5 @@ class GatewayItemSubscriber implements EventSubscriberInterface
         );
 
         $event->setResponse($response);
-
     }
-
 }

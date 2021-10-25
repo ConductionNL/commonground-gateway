@@ -4,9 +4,9 @@ parameters:
             auth: username-password
             location: http://vrij-brp.demodam.nl/haal-centraal-brp-bevragen/api/v1.3
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+            accept: application/hal+json
             username: begraven
             password: demodam
-            accept: application/hal+json
         ds:
             auth: apikey
             location: http://digispoof.demodam.nl/

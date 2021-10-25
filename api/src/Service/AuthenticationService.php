@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Authentication;
-use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
@@ -15,12 +14,9 @@ use Jose\Component\Signature\Serializer\CompactSerializer;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 class AuthenticationService
 {
@@ -44,14 +40,13 @@ class AuthenticationService
         $user = $this->retrieveCurrentUser();
 
         $array = [
-          'username' => $user->getUsername(),
-          'password' => $user->getPassword()
+            'username' => $user->getUsername(),
+            'password' => $user->getPassword(),
         ];
 
         $user = $this->commonGroundService->createResource($array, ['component' => 'uc', 'type' => 'login']);
 
         return $user['jwtToken'];
-
     }
 
     /**
@@ -90,12 +85,11 @@ class AuthenticationService
     {
         $data = $this->retrieveJWTContents($token);
 
-        if (strtotime('now') >= $data['exp']) {
+        if (!is_array($token) || !array_key_exists('exp', $token) || strtotime('now') >= $data['exp']) {
             return false;
         }
 
         return true;
-
     }
 
     public function retrieveJWTUser($token): bool
@@ -113,8 +107,13 @@ class AuthenticationService
 
     public function retrieveJWTContents($token): array
     {
-        $json = base64_decode(explode('.', $token)[1]);
-        return json_decode($json, true);
+        try {
+            $json = base64_decode(explode('.', $token))[1];
+
+            return json_decode($json, true);
+        } catch (\Exception $exception) {
+            return [];
+        }
     }
 
     /**
@@ -158,7 +157,6 @@ class AuthenticationService
 
     public function authenticate(string $method, string $identifier, string $code): array
     {
-
         if (!$method || !$identifier) {
             throw new BadRequestException("Method and identifier can't be empty");
         }
@@ -185,7 +183,6 @@ class AuthenticationService
             default:
                 throw new BadRequestException('Authentication method not supported');
         }
-
     }
 
     public function retrieveAdfsData(string $code, Authentication $authentication, string $redirectUrl): array
@@ -206,8 +203,8 @@ class AuthenticationService
         $accessToken = json_decode($response->getBody()->getContents(), true);
 
         $json = base64_decode(explode('.', $accessToken['access_token'])[1]);
-        return json_decode($json, true);
 
+        return json_decode($json, true);
     }
 
     public function handleAuthenticationUrl(string $method, string $identifier, string $redirectUrl): string
@@ -215,7 +212,6 @@ class AuthenticationService
         $authentication = $this->retrieveAuthentication($identifier);
 
         return $this->buildRedirectUrl($method, $redirectUrl, $authentication);
-
     }
 
     public function buildRedirectUrl(string $method, string $redirectUrl, Authentication $authentication): ?string
@@ -233,11 +229,11 @@ class AuthenticationService
 
     public function handleAdfsRedirectUrl(string $redirectUrl, Authentication $authentication): string
     {
-        return $authentication->getAuthenticateUrl() .
-            '?response_type=code&response_mode=query&client_id=' .
-            $authentication->getClientId() . '&^redirect_uri=' .
-            $redirectUrl .
-            '&scope=' .
+        return $authentication->getAuthenticateUrl().
+            '?response_type=code&response_mode=query&client_id='.
+            $authentication->getClientId().'&^redirect_uri='.
+            $redirectUrl.
+            '&scope='.
             implode(' ', $authentication->getScopes());
     }
 
@@ -261,15 +257,16 @@ class AuthenticationService
         $message = $this->commonGroundService->createResource(
             [
                 'reciever' => $user['username'],
-                'sender' => 'taalhuizen@biscutrecht.nl',
-                'content' => "{$response['token']}",
-                'type' => 'email',
-                'status' => 'queued',
-                'service' => '/services/'.$service['id'],
-                'subject' => $subject,
+                'sender'   => 'taalhuizen@biscutrecht.nl',
+                'content'  => "{$response['token']}",
+                'type'     => 'email',
+                'status'   => 'queued',
+                'service'  => '/services/'.$service['id'],
+                'subject'  => $subject,
             ],
-            ['component' => 'bs', 'type' => 'messages']);
+            ['component' => 'bs', 'type' => 'messages']
+        );
+
         return true;
     }
-
 }

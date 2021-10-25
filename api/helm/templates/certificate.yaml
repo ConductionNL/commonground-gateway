@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Chart.Name }}-certificate
+  name: {{ include "commonground-gateway.fullname" . }}-certificate
   labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 type: kubernetes.io/tls
@@ -12,7 +12,7 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Chart.Name }}-idpcertificate
+  name: {{ include "commonground-gateway.fullname" . }}-idpcertificate
   labels:
   {{- include "commonground-gateway.labels" . | nindent 4 }}
 type: Opaque

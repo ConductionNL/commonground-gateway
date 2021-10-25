@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
@@ -9,13 +10,9 @@ use App\Entity\ObjectEntity;
 
 use App\Service\AuthorizationService;
 use App\Service\EavService;
-
-
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\ORM\EntityManagerInterface;
-use SensioLabs\Security\Exception\HttpException;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -58,15 +55,16 @@ class EavSubscriber implements EventSubscriberInterface
         $resource = $event->getControllerResult();
 
         // Make sure we only triggen when needed
-        if(!in_array($route, [
+        if (!in_array($route, [
             'api_object_entities_post_eav_objects_collection',
             'api_object_entities_put_eav_object_item',
             'api_object_entities_delete_eav_object_item',
             'api_object_entities_get_eav_object_collection',
-            'api_object_entities_get_eav_objects_collection'
-        ])){
+            'api_object_entities_get_eav_objects_collection',
+        ])) {
             return;
         }
+        $response = $this->eavService->handleRequest($event->getRequest());
 
         $entityName = $event->getRequest()->attributes->get("entity");
 
