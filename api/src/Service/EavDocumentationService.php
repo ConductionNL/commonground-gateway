@@ -752,31 +752,7 @@ class EavDocumentationService
             ];
 
             // Type specific path responses
-            switch ($type) {
-                case 'put':
-                    $docs[$type]['requestBody'] = [
-                        'description'=> 'Update '.$entity->getName(),
-                        'content'    => [
-                            'application/json' => [
-                                'schema'=> [
-                                    '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
-                                ],
-                            ],
-                        ],
-                    ];
-                    $docs[$type]['responses']['200'] = [
-                        'description'=> 'succesfully created '.$entity->getName(),
-                        'content'    => [
-                            'application/json' => [
-                                'schema'=> [
-                                    '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
-                                ],
-                            ],
-                        ],
-                    ];
-                case 'delete':
-                    $docs[$type]['responses']['204'] = ['$ref'=>'#/components/responses/DeleteResponse'];
-            }
+            $docs = $this->getItemPathTypeResponses($docs, $entity, $type);
         }
 
         // Pat parameters
@@ -785,6 +761,38 @@ class EavDocumentationService
         //    "\$ref"=>'#/components/parameters/ID'
         //
         //];
+
+        return $docs;
+    }
+
+    private function getItemPathTypeResponses(array $docs, Entity $entity, string $type): array
+    {
+        // Type specific path responses
+        switch ($type) {
+            case 'put':
+                $docs[$type]['requestBody'] = [
+                    'description'=> 'Update '.$entity->getName(),
+                    'content'    => [
+                        'application/json' => [
+                            'schema'=> [
+                                '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
+                            ],
+                        ],
+                    ],
+                ];
+                $docs[$type]['responses']['200'] = [
+                    'description'=> 'succesfully created '.$entity->getName(),
+                    'content'    => [
+                        'application/json' => [
+                            'schema'=> [
+                                '$ref'=> '#/components/schemas/'.ucfirst($this->toCamelCase($entity->getName())),
+                            ],
+                        ],
+                    ],
+                ];
+            case 'delete':
+                $docs[$type]['responses']['204'] = ['$ref'=>'#/components/responses/DeleteResponse'];
+        }
 
         return $docs;
     }
@@ -874,6 +882,13 @@ class EavDocumentationService
         return $schema;
     }
 
+    /**
+     * Generates an OAS3 schema for the base of a property. For getItemSchemaProperties()
+     *
+     * @param array $schema
+     * @param Attribute $attribute
+     * @return array
+     */
     private function getItemSchemaPropertyBase(array $schema, Attribute $attribute): array
     {
         // Add the attribute
