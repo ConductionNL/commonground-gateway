@@ -191,33 +191,26 @@ class EavDocumentationService
     private function getComponentsResponses(): array
     {
         return [
-            'ErrorResponse'=> [
-                'description'=> 'error payload',
-                'content'    => [
-                    'application/json' => [
-                        'schema'=> [
-                            '$ref'=> '#/components/schemas/MessageModel',
-                        ],
-                    ],
-                ],
-            ],
-            'DeleteResponse'=> [
-                'description'=> 'Succesfully deleted',
-                'content'    => [
-                    'application/json' => [
-                        'schema'=> [
-                            '$ref'=> '#/components/schemas/MessageModel',
-                        ],
-                    ],
-                ],
-            ],
-            'ListResponse'=> [
-                'description'=> 'List payload',
-                'content'    => [
-                    'application/json' => [
-                        'schema'=> [
-                            '$ref'=> '#/components/schemas/ListModel',
-                        ],
+            'ErrorResponse'=> $this->getComponentResponse('error payload'),
+            'DeleteResponse'=> $this->getComponentResponse('Succesfully deleted'),
+            'ListResponse'=> $this->getComponentResponse('List payload'),
+        ];
+    }
+
+    /**
+     * Returns a response for the getComponentsResponses function.
+     *
+     * @param string $description
+     * @return array
+     */
+    private function getComponentResponse(string $description): array
+    {
+        return [
+            'description'=> $description,
+            'content'    => [
+                'application/json' => [
+                    'schema'=> [
+                        '$ref'=> '#/components/schemas/MessageModel',
                     ],
                 ],
             ],
