@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\Serializer\SerializerInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
@@ -25,8 +26,6 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use GuzzleHttp\Promise\Promise;
-use GuzzleHttp\Promise\Utils;
-use function GuzzleHttp\json_decode;
 
 class EavService
 {

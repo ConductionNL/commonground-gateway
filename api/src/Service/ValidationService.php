@@ -18,9 +18,6 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
-use Respect\Validation\Validator;
-use Respect\Validation\Exceptions\ValidationException;
-use Respect\Validation\Exceptions\NestedValidationException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
