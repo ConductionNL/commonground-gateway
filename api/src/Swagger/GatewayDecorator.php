@@ -121,7 +121,7 @@ final class GatewayDecorator implements NormalizerInterface
     /**
      * Handles allOf for handleOpenApiComponents().
      *
-     * @param array $allOf
+     * @param array   $allOf
      * @param Gateway $gateway
      */
     private function handleOpenApiComponentAllOf(array $allOf, Gateway $gateway)
@@ -144,7 +144,7 @@ final class GatewayDecorator implements NormalizerInterface
     /**
      * Handles the properties for handleOpenApiComponents().
      *
-     * @param array $properties
+     * @param array   $properties
      * @param Gateway $gateway
      */
     private function handleOpenApiComponentProperties(array $properties, Gateway $gateway)
