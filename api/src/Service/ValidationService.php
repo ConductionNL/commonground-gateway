@@ -121,7 +121,6 @@ class ValidationService
         try{
             $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
         } catch(AccessDeniedException $e){
-            var_dump($attribute->getEntity()->getName(), $attribute->getName());
             $objectEntity->addError($attribute->getName(), $e->getMessage());
         }
 
