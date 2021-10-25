@@ -15,17 +15,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Symfony\Component\Serializer\SerializerInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Security;
-use Symfony\Component\String\Inflector\EnglishInflector;
-use GuzzleHttp\Promise\Promise;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
 {
@@ -744,7 +740,7 @@ class EavService
                         unset($response[$attribute->getName()]);
                     }
                     continue;
-                } catch(AccessDeniedException $exception) {
+                } catch (AccessDeniedException $exception) {
                     continue;
                 }
             } elseif ($attribute->getType() == 'file') {

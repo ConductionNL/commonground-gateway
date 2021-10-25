@@ -3,11 +3,6 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\Component;
-use App\Entity\Entity;
-use App\Entity\ObjectCommunication;
-use App\Entity\ObjectEntity;
-
 use App\Service\AuthorizationService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -16,14 +11,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
-use function GuzzleHttp\json_decode;
 
 class EavSubscriber implements EventSubscriberInterface
 {
@@ -66,14 +55,13 @@ class EavSubscriber implements EventSubscriberInterface
         }
         $response = $this->eavService->handleRequest($event->getRequest());
 
-        $entityName = $event->getRequest()->attributes->get("entity");
+        $entityName = $event->getRequest()->attributes->get('entity');
 
-
-        try{
+        try {
             $response = $this->eavService->handleRequest($event->getRequest(), $entityName);
-        } catch(AccessDeniedException $exception){
+        } catch (AccessDeniedException $exception) {
             $contentType = $event->getRequest()->headers->get('Accept', $event->getRequest()->headers->get('accept', 'application/ld+json'));
-            if($contentType == '*/*'){
+            if ($contentType == '*/*') {
                 $contentType = 'application/ld+json';
             }
             $response = $this->authorizationService->serializeAccessDeniedException($contentType, $this->serializerService, $exception);
