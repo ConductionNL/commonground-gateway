@@ -323,11 +323,11 @@ class ObjectEntity
         $values = $this->getObjectValues();
 
         foreach ($values as $value) {
-            foreach ($value->getObjects() as $subResource) {
+            foreach ($value->getObjects() as $key => $subResource) {
                 if (!$maxDepth->contains($subResource)) {
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName()] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName() . '[' . $key . ']'] = $subErrors;
                     }
                 }
             }
