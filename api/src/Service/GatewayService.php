@@ -216,16 +216,7 @@ class GatewayService
         }
 
         // @todo deze array is dubbel met de EavService
-        $acceptHeaderToSerialiazation = [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
-        ];
+        $acceptHeaderToSerialiazation = $this->acceptHeaderToSerialiazation();
 
         $contentType = array_search($extension, $acceptHeaderToSerialiazation);
 
@@ -236,5 +227,24 @@ class GatewayService
         $response->headers->set('content-type', $contentType);
 
         return $response;
+    }
+
+    /**
+     * Returns the array with accept headers.
+     *
+     * @return string[]
+     */
+    private function acceptHeaderToSerialiazation(): array
+    {
+        return [
+            'application/json'    => 'json',
+            'application/ld+json' => 'jsonld',
+            'application/json+ld' => 'jsonld',
+            'application/hal+json'=> 'jsonhal',
+            'application/json+hal'=> 'jsonhal',
+            'application/xml'     => 'xml',
+            'text/csv'            => 'csv',
+            'text/yaml'           => 'yaml',
+        ];
     }
 }
