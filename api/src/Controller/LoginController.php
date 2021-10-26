@@ -88,7 +88,7 @@ class LoginController extends AbstractController
 
     //TODO: ?
     /**
-     * Creates a person for a user
+     * Creates a person for a user.
      *
      * @return array
      */
@@ -99,8 +99,8 @@ class LoginController extends AbstractController
             'familyName'    => $this->getUser()->getLastName(),
             'emails'        => [
                 'name'  => 'email',
-                'email' => $this->getUser()->getUsername()
-            ]
+                'email' => $this->getUser()->getUsername(),
+            ],
         ];
 
         //TODO: use commongroundService to create person?
