@@ -256,10 +256,26 @@ class ValidationService
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
             // This is an array of object
             $valueObject = $objectEntity->getValueByAttribute($attribute);
-            foreach ($value as $object) {
+            foreach ($value as $key => $object) {
                 if (!is_array($object)) {
-                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (arrays).');
-                    break;
+                    // TODO: what if we want to connect an existing object using a string uuid: "uuid"
+                    if (is_string($object)) {
+                        if (Uuid::isValid($object) == false) {
+                            if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
+                                $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
+                            }
+                            $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object.') is not an object or a valid uuid.');
+                        } else {
+                            //TODO: look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
+                            //TODO: always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet?
+                            var_dump($attribute->getName().'['.$key.']'.' We should look for an existing object here, todo');
+                        }
+                        continue;
+                    }
+                    else {
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
+                        break;
+                    }
                 }
                 // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
                 if (array_key_exists('id', $object)) {
@@ -666,6 +682,9 @@ class ValidationService
 
                 // Lets handle the stuf
                 if (!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)) {
+                    //TODO: look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
+                    //TODO: always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet?
+                    
                     // Object ophalen
                     if (!$subObject = $this->em->getRepository('App:ObjectEntity')->find($value)) {
                         $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
@@ -1088,10 +1107,12 @@ class ValidationService
                 $result = json_decode($response->getBody()->getContents(), true);
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
                     $objectEntity->setUri($url.'/'.$result['id']);
+                    $objectEntity->setExternalId($result['id']);
 
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
+                    $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 

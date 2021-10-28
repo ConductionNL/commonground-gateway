@@ -281,19 +281,19 @@ App\Entity\Attribute:
     user_usergroups:
         name: userGroups
         description: In what usergroups does the user resides.
-#        type: object # TODO:
-        type: string
+        type: object
+#        type: string
         multiple: true
         required: true
         entity: '@user'
-#        object: '@usergroup' #TODO:
+        object: '@usergroup'
         persistToGateway: true
         cascade: false
     user_person:
         name: person
         description: The person of this user.
         type: object
-#        required: true #TODO: should be true, but this might cause problems?
+#        required: true #TODO: should be true, but this might cause problems? example: cascade employee->person->user has required user->person?
         entity: '@user'
         object: '@person'
         cascade: true

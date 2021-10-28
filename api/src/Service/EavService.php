@@ -606,14 +606,52 @@ class EavService
             $results[] = $this->renderResult($object, $fields);
         }
 
+        // TODO: this is ugly...
+        // Lets see how many objects we have in extern component, outside the gateway
+        if ($entity->getGateway() && $entity->getEndpoint()) {
+//            var_dump($query);
+            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
+            // TODO: somehow this^ call uses the same limit as present in the request->query. even if $query^ == []
+            // todo: this^ breaks the pagination total in the response, see $totalItems later on...
+//            var_dump(count($totalExternObjects));
+
+            // TODO: what if we ever add sorting?! this will break...
+            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
+            if (count($objects) < $limit) {
+//                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
+                $query['limit'] = ($limit - count($objects));
+                if ($offset > count($total)) {
+                    // Commonground Components dont have a working query for start, only page
+                    $query['page'] = ceil(($offset - count($total) + 1) / $limit);
+                }
+//                var_dump($query);
+                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
+//                var_dump(count($externObjects));
+                foreach ($externObjects as $externObject) {
+                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
+                    if (!is_null($entity->getAvailableProperties())) {
+                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
+                            return in_array($propertyName, $entity->getAvailableProperties());
+                        }, ARRAY_FILTER_USE_KEY);
+                    }
+                    $results[] = $externObject;
+                }
+            }
+        }
+
         // Lets skip the pritty styff when dealing with csv
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             return $results;
         }
 
+        $totalItems = count($total);
+        if (isset($totalExternObjects)) {
+            $totalItems = $totalItems + count($totalExternObjects);
+        }
+
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = count($total);
+        $results['total'] = $totalItems;
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
@@ -673,18 +711,36 @@ class EavService
         }
 
         // Lets start with the external results
-        // TODO: for get (item and collection) calls this seems to only contain the @uri, not the full extern object (result) !!! as if setExternalResult is not saved properly?
-        $response = array_merge($response, $result->getExternalResult());
+        if (!empty($result->getExternalResult())) {
+            $response = array_merge($response, $result->getExternalResult());
+        } elseif ($this->commonGroundService->isResource($result->getExternalResult())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
+        } elseif ($this->commonGroundService->isResource($result->getUri())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
+        }
 
         // Lets move some stuff out of the way
         if (array_key_exists('@context', $response)) {
             $response['@gateway/context'] = $response['@context'];
         }
-        if (array_key_exists('id', $response)) {
+        if ($result->getExternalId()) {
+            $response['@gateway/id'] = $result->getExternalId();
+        }
+        elseif (array_key_exists('id', $response)) {
             $response['@gateway/id'] = $response['id'];
         }
         if (array_key_exists('@type', $response)) {
             $response['@gateway/type'] = $response['@type'];
+        }
+
+        // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
+        if (!is_null($result->getEntity()->getAvailableProperties())) {
+            $response = array_filter($response, function ($propertyName) use($result) {
+                if (str_contains($propertyName, '@gateway/')) {
+                    return true;
+                }
+                return in_array($propertyName, $result->getEntity()->getAvailableProperties());
+            }, ARRAY_FILTER_USE_KEY);
         }
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
