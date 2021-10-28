@@ -98,7 +98,7 @@ jobs:
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true'
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
