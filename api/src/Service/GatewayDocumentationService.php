@@ -73,9 +73,11 @@ class GatewayDocumentationService
     }
 
     /**
-     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
+     * Places a schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
      *
-     * @return bool returns true if succcesfull or false on failure
+     * @param array $oas
+     *
+     * @return array
      */
     public function getPathsFromOas(array $oas): array
     {
@@ -92,25 +94,7 @@ class GatewayDocumentationService
                 continue;
             }
 
-            // er are going to assume that a post gives the complete opbject, so we are going to use the general post
-            if (!array_key_exists('post', $methods)) {
-                var_dump('no post method');
-                continue;
-            }
-            if (!array_key_exists('requestBody', $methods['post'])) {
-                var_dump('no requestBody in method');
-                continue;
-            } // Wierd stuf, but a api might not have a requestBody
-            if (!array_key_exists('content', $methods['post']['requestBody'])) {
-                var_dump('no requestBody in method');
-                continue;
-            }
-            if (!array_key_exists('application/json', $methods['post']['requestBody']['content'])) {
-                var_dump('no json schema present');
-                continue;
-            }
-            if (!array_key_exists('schema', $methods['post']['requestBody']['content']['application/json'])) {
-                var_dump('no json schema present');
+            if (!$this->checkOasMethodsKeys($methods)) {
                 continue;
             }
 
@@ -130,15 +114,56 @@ class GatewayDocumentationService
     }
 
     /**
-     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
+     * Checks if the methods array contains what we expect it to contain. For getPathsFromOas().
      *
-     * @param the level of recurcion of this function
+     * @param array $methods
      *
-     * @return bool returns true if succcesfull or false on failure
+     * @return bool
+     */
+    private function checkOasMethodsKeys(array $methods): bool
+    {
+        // er are going to assume that a post gives the complete opbject, so we are going to use the general post
+        if (!array_key_exists('post', $methods)) {
+            var_dump('no post method');
+
+            return false;
+        }
+        if (!array_key_exists('requestBody', $methods['post'])) {
+            var_dump('no requestBody in method');
+
+            return false;
+        } // Wierd stuf, but a api might not have a requestBody
+        if (!array_key_exists('content', $methods['post']['requestBody'])) {
+            var_dump('no requestBody in method');
+
+            return false;
+        }
+        if (!array_key_exists('application/json', $methods['post']['requestBody']['content'])) {
+            var_dump('no json schema present');
+
+            return false;
+        }
+        if (!array_key_exists('schema', $methods['post']['requestBody']['content']['application/json'])) {
+            var_dump('no json schema present');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Places a schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
+     *
+     * @param array $oas
+     * @param array $schema
+     * @param int   $level  the level of recursion of this function
+     *
+     * @return array
      */
     public function getSchema(array $oas, array $schema, int $level = 1): array
     {
-        var_dump($level);
+//        var_dump($level);
 
         // lets pick up on general schemes
         if (array_key_exists('$ref', $schema)) {
@@ -150,11 +175,38 @@ class GatewayDocumentationService
             return $schema;
         }
 
-        $properties = $schema['properties'];
+        $schema = $this->checkForSubSchemas($oas, $schema, $level);
 
+        // Any of
+        if (array_key_exists('anyOf', $schema)) {
+            foreach ($schema['anyOf'] as $anyOfkey=>$value) {
+                if (array_key_exists('$ref', $value)) {
+                    if ($level > 2) {
+                        unset($schema['anyOf'][$anyOfkey]);
+                        continue;
+                    }
+                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level + 1)];
+                }
+            }
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Checks for sub schemas for the getSchema function.
+     *
+     * @param array $oas
+     * @param array $schema
+     * @param int   $level  the level of recursion of this function
+     *
+     * @return array
+     */
+    private function checkForSubSchemas(array $oas, array $schema, int $level): array
+    {
         /* @todo change this to array filter and clear it up*/
         // We need to check for sub schemes
-        foreach ($properties as $key => $property) {
+        foreach ($schema['properties'] as $key => $property) {
             // Lets see if we have main stuf
             if (array_key_exists('$ref', $property)) {
 
@@ -185,19 +237,6 @@ class GatewayDocumentationService
                         }
                         $schema['properties'][$key]['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['properties'][$key]['anyOf'][$anyOfkey], $level + 1)];
                     }
-                }
-            }
-        }
-
-        // Any of
-        if (array_key_exists('anyOf', $schema)) {
-            foreach ($schema['anyOf'] as $anyOfkey=>$value) {
-                if (array_key_exists('$ref', $value)) {
-                    if ($level > 2) {
-                        unset($schema['anyOf'][$anyOfkey]);
-                        continue;
-                    }
-                    $schema['anyOf'][$anyOfkey] = [$this->getSchema($oas, $schema['anyOf'][$anyOfkey], $level + 1)];
                 }
             }
         }

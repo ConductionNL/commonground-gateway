@@ -184,9 +184,9 @@ class GatewayService
     }
 
     /**
-     * Turns the gateway responce into a downloadable file.
+     * Turns the gateway response into a downloadable file.
      *
-     * @param Response $responce  The responce to turn into a download.
+     * @param Response $response  The response to turn into a download.
      * @param string   $extension The extension of the requested file e.g. csv
      *
      * @return Response The retrieved Gateway object.
@@ -195,20 +195,14 @@ class GatewayService
     {
         $content = $response->getContent();
         switch ($response->headers->Get('content-type')) {
+            case 'application/json+ld':
+            case 'application/ld+json':
             case 'application/json':
                 $content = json_decode($content, true);
                 // Lets deal with an results array
                 if (array_key_exists('results', $content)) {
                     $content = $content['resuts'];
                 }
-                break;
-            case 'application/ld+json':
-            case 'application/json+ld':
-                $content = json_decode($content, true);
-            // Lets deal with an results array
-            if (array_key_exists('results', $content)) {
-                $content = $content['resuts'];
-            }
                 break;
             case 'application/hal+json':
             case 'application/json+hal':
@@ -222,16 +216,7 @@ class GatewayService
         }
 
         // @todo deze array is dubbel met de EavService
-        $acceptHeaderToSerialiazation = [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
-        ];
+        $acceptHeaderToSerialiazation = $this->acceptHeaderToSerialiazation();
 
         $contentType = array_search($extension, $acceptHeaderToSerialiazation);
 
@@ -242,5 +227,24 @@ class GatewayService
         $response->headers->set('content-type', $contentType);
 
         return $response;
+    }
+
+    /**
+     * Returns the array with accept headers.
+     *
+     * @return string[]
+     */
+    private function acceptHeaderToSerialiazation(): array
+    {
+        return [
+            'application/json'    => 'json',
+            'application/ld+json' => 'jsonld',
+            'application/json+ld' => 'jsonld',
+            'application/hal+json'=> 'jsonhal',
+            'application/json+hal'=> 'jsonhal',
+            'application/xml'     => 'xml',
+            'text/csv'            => 'csv',
+            'text/yaml'           => 'yaml',
+        ];
     }
 }

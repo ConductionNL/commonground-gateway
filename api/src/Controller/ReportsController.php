@@ -83,7 +83,7 @@ class ReportsController extends AbstractController
     }
 
     /**
-     * Create a CSV responce.
+     * Create a CSV response.
      *
      * @param array $headers
      * @param array $data    the date that you want loaded into the CSV file

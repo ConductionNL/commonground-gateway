@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
+use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -18,7 +20,7 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
@@ -28,14 +30,16 @@ class EavService
     private ValidationService $validationService;
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
+    private AuthorizationService $authorizationService;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
+        $this->authorizationService = $authorizationService;
     }
 
     /**
@@ -145,82 +149,12 @@ class EavService
     public function handleRequest(Request $request): Response
     {
         // Lets get our base stuff
-        $path = $request->attributes->get('entity');
-        $id = $request->attributes->get('id');
-
-        // Checking and validating the id
-        $contentType = $request->headers->get('accept');
-        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
-        $acceptHeaderToSerialiazation = [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
-        ];
-        if (array_key_exists($contentType, $acceptHeaderToSerialiazation)) {
-            $renderType = $acceptHeaderToSerialiazation[$contentType];
-        } else {
-            $contentType = 'application/json';
-            $renderType = 'json';
-        }
-
-        $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
-        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
-        $extension = false;
-        $responseType = Response::HTTP_OK;
-
-        // Lets pull a render type form the extension if we have any
-        if (strpos($path, '.') && $renderType = explode('.', $path)) {
-            $path = $renderType[0];
-            $renderType = end($renderType);
-            $extension = $renderType;
-        } elseif (strpos($id, '.') && $renderType = explode('.', $id)) {
-            $id = $renderType[0];
-            $renderType = end($renderType);
-            $extension = $renderType;
-        } else {
-            $renderType = 'json';
-        }
-
-        // If we overrule the content type then we must adjust the return header acordingly
-        if ($extension) {
-            $contentType = array_search($extension, $acceptHeaderToSerialiazation);
-        }
-
-        // Let do a backup to defeault to an allowed render type
-        if ($renderType && !in_array($renderType, $renderTypes)) {
-            $result = [
-                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
-                'type'    => 'Bad Request',
-                'path'    => $path,
-                'data'    => ['rendertype' => $renderType],
-            ];
-        }
-
-        // Lets allow for filtering specific fields
-        $fields = $request->query->get('fields');
-
-        if ($fields) {
-            // Lets deal with a comma seperated list
-            if (!is_array($fields)) {
-                $fields = explode(',', $fields);
-            }
-
-            $dot = new Dot();
-            // Lets turn the from dor attat into an propper array
-            foreach ($fields as $field => $value) {
-                $dot->add($value, true);
-            }
-
-            $fields = $dot->all();
-        }
+        $requestBase = $this->getRequestBase($request);
+        $result = $requestBase['result'];
+        $contentType = $this->getRequestContentType($request, $requestBase['extension']);
 
         // Lets handle the entity
-        $entity = $this->getEntity($path);
+        $entity = $this->getEntity($requestBase['path']);
         // What if we canot find an entity?
         if (is_array($entity)) {
             $result = $entity;
@@ -228,9 +162,12 @@ class EavService
         }
 
         // Lets create an object
-        if ($entity && ($id || $request->getMethod() == 'POST')) {
-            $object = $this->getObject($id, $request->getMethod(), $entity);
+        if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
         }
+
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
 
         // Get a body
         if ($request->getContent()) {
@@ -250,19 +187,22 @@ class EavService
             }
         }
 
+        // Lets allow for filtering specific fields
+        $fields = $this->getRequestFields($request);
+
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
-        if ($entity && $id) {
+        if ($entity && $requestBase['id']) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $path,
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
             ]);
         }
         // its an collection endpoind
         elseif ($entity) {
             $endpointResult = $this->handleCollectionEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $path,
-                'entity' => $entity, 'extension' => $extension,
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                'entity' => $entity, 'extension' => $requestBase['extension'],
             ]);
         }
         if (isset($endpointResult)) {
@@ -276,7 +216,7 @@ class EavService
         }
 
         // Let seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $renderType, []);
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
 
         // Let return the shizle
         $response = new Response(
@@ -286,14 +226,100 @@ class EavService
         );
 
         // Let intervene if it is  a known file extension
-        if ($entity && in_array($extension, $supportedExtensions)) {
+        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
+        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
-            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$extension}");
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
             $response->headers->set('Content-Disposition', $disposition);
         }
 
         return $response;
+    }
+
+    /**
+     * Gets the path, id, extension & renderType from the Request.
+     *
+     * @param Request $request
+     *
+     * @return array
+     */
+    private function getRequestBase(Request $request): array
+    {
+        // Lets get our base stuff
+        $path = $request->attributes->get('entity');
+        $id = $request->attributes->get('id');
+        $extension = false;
+
+        // Lets pull a render type form the extension if we have any
+        if (strpos($path, '.') && $renderType = explode('.', $path)) {
+            $path = $renderType[0];
+            $renderType = end($renderType);
+            $extension = $renderType;
+        } elseif (strpos($id, '.') && $renderType = explode('.', $id)) {
+            $id = $renderType[0];
+            $renderType = end($renderType);
+            $extension = $renderType;
+        } else {
+            $renderType = 'json';
+        }
+
+        return [
+            'path'       => $path,
+            'id'         => $id,
+            'extension'  => $extension,
+            'renderType' => $renderType,
+            'result'     => $this->checkAllowedRenderTypes($renderType, $path),
+        ];
+    }
+
+    /**
+     * Let do a backup to default to an allowed render type.
+     *
+     * @param string $renderType
+     * @param string $path
+     *
+     * @return array|null
+     */
+    private function checkAllowedRenderTypes(string $renderType, string $path): ?array
+    {
+        // Let do a backup to defeault to an allowed render type
+        $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
+        if ($renderType && !in_array($renderType, $renderTypes)) {
+            return [
+                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
+                'type'    => 'Bad Request',
+                'path'    => $path,
+                'data'    => ['rendertype' => $renderType],
+            ];
+        }
+
+        return null;
+    }
+
+    private function getRequestContentType(Request $request, string $extension): string
+    {
+        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+        $acceptHeaderToSerialiazation = [
+            'application/json'    => 'json',
+            'application/ld+json' => 'jsonld',
+            'application/json+ld' => 'jsonld',
+            'application/hal+json'=> 'jsonhal',
+            'application/json+hal'=> 'jsonhal',
+            'application/xml'     => 'xml',
+            'text/csv'            => 'csv',
+            'text/yaml'           => 'yaml',
+        ];
+
+        $contentType = $request->headers->get('accept');
+        // If we overrule the content type then we must adjust the return header acordingly
+        if ($extension) {
+            $contentType = array_search($extension, $acceptHeaderToSerialiazation);
+        } elseif (!array_key_exists($contentType, $acceptHeaderToSerialiazation)) {
+            $contentType = 'application/json';
+        }
+
+        return $contentType;
     }
 
     /**
@@ -369,6 +395,35 @@ class EavService
                 return $objectEntity;
             }
         }
+    }
+
+    /**
+     * Gets fields from the request to use for filtering specific fields.
+     *
+     * @param Request $request
+     *
+     * @return array
+     */
+    private function getRequestFields(Request $request): ?array
+    {
+        $fields = $request->query->get('fields');
+
+        if ($fields) {
+            // Lets deal with a comma seperated list
+            if (!is_array($fields)) {
+                $fields = explode(',', $fields);
+            }
+
+            $dot = new Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach ($fields as $field => $value) {
+                $dot->add($value, true);
+            }
+
+            $fields = $dot->all();
+        }
+
+        return $fields;
     }
 
     /**
@@ -590,7 +645,7 @@ class EavService
      *
      * @return array
      */
-    public function returnErrors(ObjectEntity $objectEntity)
+    public function returnErrors(ObjectEntity $objectEntity): array
     {
         return [
             'message' => 'The where errors',
@@ -632,6 +687,30 @@ class EavService
             $response['@gateway/type'] = $response['@type'];
         }
 
+        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
+
+        // Lets make it personal
+        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['id'] = $result->getId();
+
+        return $response;
+    }
+
+    /**
+     * Renders the values of an ObjectEntity for the renderResult function.
+     *
+     * @param ObjectEntity $result
+     * @param $fields
+     * @param ArrayCollection|null $maxDepth
+     *
+     * @return array
+     */
+    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth): array
+    {
+        $response = [];
+
         // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
@@ -653,69 +732,103 @@ class EavService
                 continue;
             }
             if ($attribute->getType() == 'object') {
-                if (is_array($fields)) {
-                    $subFields = $fields[$attribute->getName()];
-                } else {
-                    $subFields = null;
-                }
+                try {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
 
-                if ($value->getValue() == null) {
-                    $response[$attribute->getName()] = null;
-                    continue;
-                }
-                if (!$attribute->getMultiple()) {
-                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-                    if (!$maxDepth->contains($value->getValue())) {
-                        $response[$attribute->getName()] = $this->renderResult($value->getValue(), $subFields, $maxDepth);
+                    $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    if ($response[$attribute->getName()] === ['continue'=>'continue']) {
+                        unset($response[$attribute->getName()]);
                     }
                     continue;
+                } catch (AccessDeniedException $exception) {
+                    continue;
                 }
-                $objects = $value->getValue();
-                $objectsArray = [];
-                foreach ($objects as $object) {
-                    // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-                    if (!$maxDepth->contains($object)) {
-                        $objectsArray[] = $this->renderResult($object, $subFields, $maxDepth);
-                    } else {
-                        // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                        $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
-                    }
-                }
-                $response[$attribute->getName()] = $objectsArray;
-                continue;
             } elseif ($attribute->getType() == 'file') {
-                if ($value->getValue() == null) {
-                    $response[$attribute->getName()] = null;
-                    continue;
-                }
-                if (!$attribute->getMultiple()) {
-                    $response[$attribute->getName()] = $this->renderFileResult($value->getValue());
-                    continue;
-                }
-                $files = $value->getValue();
-                $filesArray = [];
-                foreach ($files as $file) {
-                    $filesArray[] = $this->renderFileResult($file);
-                }
-                $response[$attribute->getName()] = $filesArray;
+                $response[$attribute->getName()] = $this->renderFiles($value);
                 continue;
             }
             $response[$attribute->getName()] = $value->getValue();
-
-            // Lets insert the object that we are extending
         }
-
-        // Lets make it personal
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
-        $response['@type'] = ucfirst($result->getEntity()->getName());
-        $response['id'] = $result->getId();
 
         return $response;
     }
 
     /**
-     * Renders the result for a File that will be used (in renderResult) for the response after a successful api call.
+     * Renders the objects of a value with attribute type 'object' for the renderValues function.
+     *
+     * @param Value $value
+     * @param $fields
+     * @param ArrayCollection $maxDepth
+     *
+     * @return array|null
+     */
+    private function renderObjects(Value $value, $fields, ArrayCollection $maxDepth): ?array
+    {
+        $attribute = $value->getAttribute();
+
+        $subFields = null;
+        if (is_array($fields)) {
+            $subFields = $fields[$attribute->getName()];
+        }
+
+        if ($value->getValue() == null) {
+            return null;
+        }
+
+        // If we have only one Object (because multiple = false)
+        if (!$attribute->getMultiple()) {
+            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+            if (!$maxDepth->contains($value->getValue())) {
+                return $this->renderResult($value->getValue(), $subFields, $maxDepth);
+            }
+
+            return ['continue'=>'continue'];
+        }
+
+        // If we can have multiple Objects (because multiple = true)
+        $objects = $value->getValue();
+        $objectsArray = [];
+        foreach ($objects as $object) {
+            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+            if (!$maxDepth->contains($object)) {
+                $objectsArray[] = $this->renderResult($object, $subFields, $maxDepth);
+                continue;
+            }
+            // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+        }
+
+        return $objectsArray;
+    }
+
+    /**
+     * Renders the files of a value with attribute type 'file' for the renderValues function.
+     *
+     * @param Value $value
+     *
+     * @return array|null
+     */
+    private function renderFiles(Value $value): ?array
+    {
+        $attribute = $value->getAttribute();
+
+        if ($value->getValue() == null) {
+            return null;
+        }
+        if (!$attribute->getMultiple()) {
+            return $this->renderFileResult($value->getValue());
+        }
+        $files = $value->getValue();
+        $filesArray = [];
+        foreach ($files as $file) {
+            $filesArray[] = $this->renderFileResult($file);
+        }
+
+        return $filesArray;
+    }
+
+    /**
+     * Renders the result for a File that will be used (in renderFiles) for the response after a successful api call.
      *
      * @param File $file
      *

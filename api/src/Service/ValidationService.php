@@ -4,7 +4,7 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\File;
-use App\Entity\GatewayResponceLog;
+use App\Entity\GatewayResponseLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -19,6 +19,7 @@ use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ValidationService
 {
@@ -27,17 +28,20 @@ class ValidationService
     private GatewayService $gatewayService;
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
+    private AuthorizationService $authorizationService;
 
     public function __construct(
         EntityManagerInterface $em,
         CommonGroundService $commonGroundService,
         GatewayService $gatewayService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        AuthorizationService $authorizationService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->cache = $cache;
+        $this->authorizationService = $authorizationService;
     }
 
     /**
@@ -83,7 +87,6 @@ class ValidationService
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
         }
-
         // Check post for not allowed properties
         foreach ($post as $key=>$value) {
             if (!$entity->getAttributeByName($key) && $key != 'id') {
@@ -114,6 +117,12 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
+        try {
+            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+        } catch (AccessDeniedException $e) {
+            $objectEntity->addError($attribute->getName(), $e->getMessage());
+        }
+
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
         if (is_null($value)) {
             if ($attribute->getDefaultValue()) {
@@ -985,7 +994,6 @@ class ValidationService
      */
     public function createPromise(ObjectEntity $objectEntity, array $post): PromiseInterface
     {
-
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
@@ -1071,10 +1079,10 @@ class ValidationService
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
-                    $gatewayResponceLog = new GatewayResponceLog();
-                    $gatewayResponceLog->setObjectEntity($objectEntity);
-                    $gatewayResponceLog->setResponce($response);
-                    $this->em->persist($gatewayResponceLog);
+                    $gatewayResponseLog = new GatewayResponseLog();
+                    $gatewayResponseLog->setObjectEntity($objectEntity);
+                    $gatewayResponseLog->setResponse($response);
+                    $this->em->persist($gatewayResponseLog);
                 }
 
                 $result = json_decode($response->getBody()->getContents(), true);
@@ -1108,13 +1116,13 @@ class ValidationService
             function ($error) use ($objectEntity) {
 
                 /* @todo wat dachten we van een logging service? */
-                $gatewayResponceLog = new GatewayResponceLog();
-                $gatewayResponceLog->setGateway($objectEntity->getEntity()->getGateway());
-                //$gatewayResponceLog->setObjectEntity($objectEntity);
+                $gatewayResponseLog = new GatewayResponseLog();
+                $gatewayResponseLog->setGateway($objectEntity->getEntity()->getGateway());
+                //$gatewayResponseLog->setObjectEntity($objectEntity);
                 if ($error->getResponse()) {
-                    $gatewayResponceLog->setResponce($error->getResponse());
+                    $gatewayResponseLog->setResponse($error->getResponse());
                 }
-                $this->em->persist($gatewayResponceLog);
+                $this->em->persist($gatewayResponseLog);
                 $this->em->flush();
 
                 /* @todo lelijke code */
@@ -1131,7 +1139,7 @@ class ValidationService
                     $error_message = $error->getMessage();
                 }
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponceLog->getId().') for a full error report');
+                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponseLog->getId().') for a full error report');
             }
         );
 

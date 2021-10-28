@@ -159,9 +159,9 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity=GatewayResponceLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
      */
-    private $responceLogs;
+    private $responseLogs;
 
     /*
      * recursion stack
@@ -179,7 +179,7 @@ class ObjectEntity
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
-        $this->responceLogs = new ArrayCollection();
+        $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
     }
 
@@ -323,11 +323,16 @@ class ObjectEntity
         $values = $this->getObjectValues();
 
         foreach ($values as $value) {
-            foreach ($value->getObjects() as $subResource) {
+            foreach ($value->getObjects() as $key => $subResource) {
+                if (count($value->getObjects()) > 1) {
+                    $key = '['.$key.']';
+                } else {
+                    $key = '';
+                }
                 if (!$maxDepth->contains($subResource)) {
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName()] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
                     }
                 }
             }
@@ -511,24 +516,24 @@ class ObjectEntity
     }
 
     /**
-     * @return Collection|GatewayResponceLog[]
+     * @return Collection|GatewayResponseLog[]
      */
-    public function getResponceLogs(): Collection
+    public function getResponseLogs(): Collection
     {
-        return $this->responceLogs;
+        return $this->responseLogs;
     }
 
-    public function addResponceLog(GatewayResponceLog $responceLog): self
+    public function addResponseLog(GatewayResponseLog $responseLog): self
     {
-        if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs->add($responceLog);
+        if (!$this->responseLogs->contains($responseLog)) {
+            $this->responseLogs->add($responceLog);
             $responceLog->setObjectEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responceLog): self
     {
         if ($this->responceLogs->removeElement($responceLog)) {
             // set the owning side to null (unless already changed)

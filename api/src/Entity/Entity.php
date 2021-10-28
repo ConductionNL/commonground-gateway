@@ -180,16 +180,16 @@ class Entity
     private ?array $usedProperties;
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponceLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
-    private $responceLogs;
+    private $responseLogs;
 
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
-        $this->responceLogs = new ArrayCollection();
+        $this->responseLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -433,29 +433,29 @@ class Entity
     }
 
     /**
-     * @return Collection|GatewayResponceLog[]
+     * @return Collection|GatewayResponseLog[]
      */
-    public function getResponceLogs(): Collection
+    public function getResponseLogs(): Collection
     {
-        return $this->responceLogs;
+        return $this->responseLogs;
     }
 
-    public function addResponceLog(GatewayResponceLog $responceLog): self
+    public function addResponseLog(GatewayResponseLog $responseLog): self
     {
-        if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs[] = $responceLog;
-            $responceLog->setEntity($this);
+        if (!$this->responseLogs->contains($responseLog)) {
+            $this->responseLogs[] = $responseLog;
+            $responseLog->setEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponceLog(GatewayResponceLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responseLog): self
     {
-        if ($this->responceLogs->removeElement($responceLog)) {
+        if ($this->responseLogs->removeElement($responseLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getEntity() === $this) {
-                $responceLog->setEntity(null);
+            if ($responseLog->getEntity() === $this) {
+                $responseLog->setEntity(null);
             }
         }
 

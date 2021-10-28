@@ -3,15 +3,15 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\GatewayResponceLogRepository;
+use App\Repository\GatewayResponseLogRepository;
 use Doctrine\ORM\Mapping as ORM;
 use GuzzleHttp\Psr7\Response;
 
 /**
  * @ApiResource()
- * @ORM\Entity(repositoryClass=GatewayResponceLogRepository::class)
+ * @ORM\Entity(repositoryClass=GatewayResponseLogRepository::class)
  */
-class GatewayResponceLog
+class GatewayResponseLog
 {
     /**
      * @ORM\Id
@@ -21,18 +21,18 @@ class GatewayResponceLog
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="responceLogs")
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="responseLogs")
      * @ORM\JoinColumn(nullable=false)
      */
     private $gateway;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="responceLogs")
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="responseLogs")
      */
     private $entity;
 
     /**
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responceLogs")
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responseLogs")
      */
     private $objectEntity;
 
@@ -270,7 +270,7 @@ class GatewayResponceLog
         return $this;
     }
 
-    public function setResponce(Response $response): self
+    public function setResponse(Response $response): self
     {
         $this->setStatusCode($response->getStatusCode());
         $this->setReasonPhrase($response->getReasonPhrase());
