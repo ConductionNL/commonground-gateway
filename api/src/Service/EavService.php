@@ -111,29 +111,7 @@ class EavService
             if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
                 if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                    if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-                        if ($externObject = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                            // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-                            $externObject = array_filter($externObject, function ($propertyName) use($entity) {
-                                if ($entity->getAvailableProperties()) {
-                                    return in_array($propertyName, $entity->getAvailableProperties());
-                                }
-                                return $entity->getAttributeByName($propertyName);
-                            }, ARRAY_FILTER_USE_KEY);
-                            $object = new ObjectEntity();
-                            $object->setEntity($entity);
-                            // Set the externalId and uri, so we do not create a promise for a post but a put, preventing creation of a new object for an already existing one.
-                            $object->setExternalId($id);
-                            $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-                            $object = $this->validationService->validateEntity($object, $externObject, true);
-                            if (!$object->getHasErrors()) {
-                                // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
-                                // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set first!)
-                                $this->em->persist($object);
-                                $this->em->flush();
-                            }
-                        }
-                    }
+                    $object = $this->validationService->createOEforExternObject($entity, $id);
                     if (!$object) {
                         return [
                             'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
