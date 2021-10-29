@@ -606,38 +606,38 @@ class EavService
             $results[] = $this->renderResult($object, $fields);
         }
 
-        // TODO: this is ugly...
-        // Lets see how many objects we have in extern component, outside the gateway
-        if ($entity->getGateway() && $entity->getEndpoint()) {
-//            var_dump($query);
-            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-            // TODO: somehow this^ call uses the same limit as present in the request->query. even if $query^ == []
-            // todo: this^ breaks the pagination total in the response, see $totalItems later on...
-//            var_dump(count($totalExternObjects));
-
-            // TODO: what if we ever add sorting?! this will break...
-            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
-            if (count($objects) < $limit) {
-//                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
-                $query['limit'] = ($limit - count($objects));
-                if ($offset > count($total)) {
-                    // Commonground Components dont have a working query for start, only page
-                    $query['page'] = ceil(($offset - count($total) + 1) / $limit);
-                }
-//                var_dump($query);
-                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-//                var_dump(count($externObjects));
-                foreach ($externObjects as $externObject) {
-                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
-                    if (!is_null($entity->getAvailableProperties())) {
-                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
-                            return in_array($propertyName, $entity->getAvailableProperties());
-                        }, ARRAY_FILTER_USE_KEY);
-                    }
-                    $results[] = $externObject;
-                }
-            }
-        }
+//        // TODO: this is ugly...
+//        // Lets see how many objects we have in extern component, outside the gateway
+//        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
+////            var_dump($query);
+//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
+//            // TODO: somehow this^ call uses the same limit as present in the request->query. even if $query^ == []
+//            // todo: this^ breaks the pagination total in the response, see $totalItems later on...
+////            var_dump(count($totalExternObjects));
+//
+//            // TODO: what if we ever add sorting?! this will break...
+//            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
+//            if (count($objects) < $limit) {
+////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
+//                $query['limit'] = ($limit - count($objects));
+//                if ($offset > count($total)) {
+//                    // Commonground Components dont have a working query for start, only page
+//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit);
+//                }
+////                var_dump($query);
+//                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
+////                var_dump(count($externObjects));
+//                foreach ($externObjects as $externObject) {
+//                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
+//                    if (!is_null($entity->getAvailableProperties())) {
+//                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
+//                            return in_array($propertyName, $entity->getAvailableProperties());
+//                        }, ARRAY_FILTER_USE_KEY);
+//                    }
+//                    $results[] = $externObject;
+//                }
+//            }
+//        }
 
         // Lets skip the pritty styff when dealing with csv
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
