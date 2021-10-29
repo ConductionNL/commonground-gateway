@@ -98,23 +98,57 @@ class EavService
      * Looks for a ObjectEntity using an id or creates a new ObjectEntity if no ObjectEntity was found with that id or if no id is given at all.
      *
      * @param string|null $id
-     * @param string      $method
-     * @param Entity      $entity
+     * @param string $method
+     * @param Entity $entity
      *
      * @return ObjectEntity|array|null
+     * @throws Exception
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
         if ($id) {
-            $object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id'=>Uuid::fromString($id)]);
-            if (!$object) {
-                return [
-                    'message' => "No object found with this id: $id",
-                    'type'    => 'Bad Request',
-                    'path'    => $entity->getName(),
-                    'data'    => ['id' => $id],
-                ];
-            } elseif ($entity != $object->getEntity()) {
+            // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
+                    // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+                    if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
+                        if ($externObject = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
+                            // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+                            $externObject = array_filter($externObject, function ($propertyName) use($entity) {
+                                if ($entity->getAvailableProperties()) {
+                                    return in_array($propertyName, $entity->getAvailableProperties());
+                                }
+                                return $entity->getAttributeByName($propertyName);
+                            }, ARRAY_FILTER_USE_KEY);
+                            $object = new ObjectEntity();
+                            $object->setEntity($entity);
+                            // Set the externalId and uri, so we do not create a promise for a post but a put, preventing creation of a new object for an already existing one.
+                            $object->setExternalId($id);
+                            $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+                            $object = $this->validationService->validateEntity($object, $externObject, true);
+                            if (!$object->getHasErrors()) {
+                                // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
+                                // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set first!)
+                                $this->em->persist($object);
+                                $this->em->flush();
+                            }
+                        }
+                    }
+                    if (!$object) {
+                        return [
+                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
+                            'type'    => 'Bad Request',
+                            'path'    => $entity->getName(),
+                            'data'    => ['id' => $id],
+                        ];
+                    }
+                } else {
+                    // Found an object with externalId
+                    $object = $object[0];
+                }
+            }
+
+            if ($entity != $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',

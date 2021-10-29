@@ -96,7 +96,7 @@ class ValidationService
 
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         // $createOEforExternObject = Let's not create any promises if we are creating a new ObjectEntity in the gateway for an object that already...
-        // ...exists outside the gateway and only an uuid and not an object is given for this. In this case we do not want to change any objects outside the gateway.
+        // ...exists outside the gateway and only an uuid and not an object is given for this. Preventing creation of a new object for an already existing one.
         if (!$createOEforExternObject && !$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()) {
             $promise = $this->createPromise($objectEntity, $post);
             $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
@@ -428,6 +428,50 @@ class ValidationService
         }
 
         return $objectEntity;
+    }
+
+    //TODO: use and test this instead of duplicate code, looks a lot like EavService->geObject()! do something with this?
+    /**
+     * @param ObjectEntity $objectEntity
+     * @param Attribute $attribute
+     * @param Value $valueObject
+     * @param string $id
+     *
+     * @return ObjectEntity|null
+     * @throws Exception
+     */
+    private function createOEforExternObject(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, string $id): ?ObjectEntity
+    {
+        // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+        if ($attribute->getObject()->getGateway()->getLocation() && $attribute->getObject()->getEndpoint()) {
+            if ($subObject = $this->commonGroundService->isResource($attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$id)) {
+                // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+                $subObject = array_filter($subObject, function ($propertyName) use($attribute) {
+                    if ($attribute->getObject()->getAvailableProperties()) {
+                        return in_array($propertyName, $attribute->getObject()->getAvailableProperties());
+                    }
+                    return $attribute->getObject()->getAttributeByName($propertyName);
+                }, ARRAY_FILTER_USE_KEY);
+                $newSubObject = new ObjectEntity();
+                $newSubObject->setEntity($attribute->getObject());
+                $newSubObject->addSubresourceOf($valueObject);
+
+                // Set the externalId and uri.
+                $newSubObject->setExternalId($id);
+                $newSubObject->setUri($attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$id);
+                $subObject = $this->validateEntity($newSubObject, $subObject, true);
+
+                // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
+                // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
+                if (!$objectEntity->getHasErrors() && !$subObject->getHasErrors()) {
+                    $this->em->persist($subObject);
+                    $this->em->flush();
+                }
+                return $subObject;
+            }
+        }
+
+        return null;
     }
 
     /**
