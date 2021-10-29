@@ -69,6 +69,13 @@ App\Entity\Entity:
         gateway: '@uc_api'
         endpoint: 'groups'
         extend: false
+        availableProperties:
+            - organization
+            - name
+            - description
+            - code
+#            - scopes
+#            - users
 
     # Organization Object
     organization:
@@ -322,6 +329,14 @@ App\Entity\Attribute:
         description: What is the function of this usergroup? To which parts of the application does it give access?
         type: string
         maxLength: 2550
+        required: true
+        entity: '@usergroup'
+        persistToGateway: true
+    userGroup_code:
+        name: code
+        description: What is the code of this usergroup?
+        type: string
+        maxLength: 255
         required: true
         entity: '@usergroup'
         persistToGateway: true

@@ -610,9 +610,7 @@ class EavService
 //        // Lets see how many objects we have in extern component, outside the gateway
 //        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
 ////            var_dump($query);
-//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-//            // TODO: somehow this^ call uses the same limit as present in the request->query. even if $query^ == []
-//            // todo: this^ breaks the pagination total in the response, see $totalItems later on...
+//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), false)['hydra:totalItems'];
 ////            var_dump(count($totalExternObjects));
 //
 //            // TODO: what if we ever add sorting?! this will break...
@@ -622,9 +620,10 @@ class EavService
 //                $query['limit'] = ($limit - count($objects));
 //                if ($offset > count($total)) {
 //                    // Commonground Components dont have a working query for start, only page
-//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit);
+//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit); //todo: remove +1?
 //                }
 ////                var_dump($query);
+//                // TODO: we somehow need to filter out the extern objects that already have an object in the gateway (maybe we should remove ^ $query['limit' & 'page'] for this as well.
 //                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
 ////                var_dump(count($externObjects));
 //                foreach ($externObjects as $externObject) {
@@ -646,7 +645,7 @@ class EavService
 
         $totalItems = count($total);
         if (isset($totalExternObjects)) {
-            $totalItems = $totalItems + count($totalExternObjects);
+            $totalItems = $totalItems + $totalExternObjects;
         }
 
         // If not lets make it pritty
