@@ -9,10 +9,9 @@
 
 namespace App\Security;
 
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
-use Conduction\CommonGroundBundle\Security\User\CommongroundUser;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use DateTime;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -65,9 +64,10 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
         $publicKey = $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']);
-        try{
+
+        try {
             $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
-        } catch(\Exception $exception) {
+        } catch (\Exception $exception) {
             throw new AuthenticationException('The provided token is not valid');
         }
 
@@ -89,6 +89,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
                 $user['roles'][$key] = "ROLE_$role";
             }
         }
+
         return new AuthenticationUser($user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }
 

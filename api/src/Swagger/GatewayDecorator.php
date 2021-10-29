@@ -1,18 +1,12 @@
 <?php
 
-
 namespace App\Swagger;
 
 use App\Entity\Gateway;
-use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
-use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 final class GatewayDecorator implements NormalizerInterface
@@ -51,7 +45,7 @@ final class GatewayDecorator implements NormalizerInterface
         $results = [];
         foreach ($gateways as $gateway) {
             if ($gateway instanceof Gateway && $gateway->getDocumentation() !== null) {
-                try{
+                try {
                     $results[] = $this->retrieveDocumentation($gateway);
                 } catch (\Throwable $e) {
                     continue;
@@ -85,9 +79,10 @@ final class GatewayDecorator implements NormalizerInterface
 
     public function handleOpenApiTags(array $tags, Gateway $gateway): array
     {
-        foreach ($tags as &$tag){
-            $tag['name'] = 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag['name']);
+        foreach ($tags as &$tag) {
+            $tag['name'] = 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag['name']);
         }
+
         return $tags;
     }
 
@@ -95,11 +90,13 @@ final class GatewayDecorator implements NormalizerInterface
     {
         if (isset($items['$ref'])) {
             $tag = $this->handleTag($items['$ref']);
-            $items['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $items['$ref']);
+            $items['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $items['$ref']);
+
             return $items;
         } elseif (isset($items['items'])) {
             $this->handleArray($items['items'], $gateway);
         }
+
         return $items;
     }
 
@@ -109,44 +106,65 @@ final class GatewayDecorator implements NormalizerInterface
         if (isset($components['schemas'])) {
             foreach ($components['schemas'] as $key => &$schema) {
                 if (isset($schema['allOf'])) {
-                    foreach ($schema['allOf'] as &$item) {
-                        if (isset($item['$ref'])) {
-                            $tag = $this->handleTag($item['$ref']);
-                            $item['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['$ref']);
-                        }
-                        if (isset($item['properties']['coordinates']['$ref'])) {
-                            $tag = $this->handleTag($item['properties']['coordinates']['$ref']);
-                            $item['properties']['coordinates']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['properties']['coordinates']['$ref']);
-                        }
-                        if (isset($item['properties']['coordinates']['items'])) {
-                            $item['properties']['coordinates']['items'] = $this->handleArray($item['properties']['coordinates']['items'], $gateway);
-                        }
-                    }
+                    $this->handleOpenApiComponentAllOf($schema['allOf'], $gateway);
                 }
                 if (isset($schema['properties'])) {
-                    foreach ($schema['properties'] as $propKey => &$property){
-
-                        if (isset($property['$ref'])) {
-                            $tag = $this->handleTag($property['$ref']);
-                            $property['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['$ref']);
-                        }
-
-                        if (isset($property['anyOf'][0]['$ref'])) {
-                            $tag = $this->handleTag($property['anyOf'][0]['$ref']);
-                            $property['anyOf'][0]['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['anyOf'][0]['$ref']);
-                        }
-
-                        if (isset($property['items']['$ref'])) {
-                            $tag = $this->handleTag($property['items']['$ref']);
-                            $property['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $property['items']['$ref']);
-                        }
-                    }
+                    $this->handleOpenApiComponentProperties($schema['properties'], $gateway);
                 }
-                $results['Gateway' . ucfirst($gateway->getName()) . $key] = $schema;
+                $results['Gateway'.ucfirst($gateway->getName()).$key] = $schema;
             }
         }
 
         return $results;
+    }
+
+    /**
+     * Handles allOf for handleOpenApiComponents().
+     *
+     * @param array   $allOf
+     * @param Gateway $gateway
+     */
+    private function handleOpenApiComponentAllOf(array $allOf, Gateway $gateway)
+    {
+        foreach ($allOf as &$item) {
+            if (isset($item['$ref'])) {
+                $tag = $this->handleTag($item['$ref']);
+                $item['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['$ref']);
+            }
+            if (isset($item['properties']['coordinates']['$ref'])) {
+                $tag = $this->handleTag($item['properties']['coordinates']['$ref']);
+                $item['properties']['coordinates']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['properties']['coordinates']['$ref']);
+            }
+            if (isset($item['properties']['coordinates']['items'])) {
+                $item['properties']['coordinates']['items'] = $this->handleArray($item['properties']['coordinates']['items'], $gateway);
+            }
+        }
+    }
+
+    /**
+     * Handles the properties for handleOpenApiComponents().
+     *
+     * @param array   $properties
+     * @param Gateway $gateway
+     */
+    private function handleOpenApiComponentProperties(array $properties, Gateway $gateway)
+    {
+        foreach ($properties as $propKey => &$property) {
+            if (isset($property['$ref'])) {
+                $tag = $this->handleTag($property['$ref']);
+                $property['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $property['$ref']);
+            }
+
+            if (isset($property['anyOf'][0]['$ref'])) {
+                $tag = $this->handleTag($property['anyOf'][0]['$ref']);
+                $property['anyOf'][0]['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $property['anyOf'][0]['$ref']);
+            }
+
+            if (isset($property['items']['$ref'])) {
+                $tag = $this->handleTag($property['items']['$ref']);
+                $property['items']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $property['items']['$ref']);
+            }
+        }
     }
 
     public function handleOpenApiPaths(array $paths, Gateway $gateway): array
@@ -155,67 +173,75 @@ final class GatewayDecorator implements NormalizerInterface
 
         foreach ($paths as $key => $value) {
             foreach ($value as $operationKey => &$operation) {
-
                 if ($operationKey == 'parameters') {
                     continue;
                 }
 
                 if (isset($operation['tags'][0])) {
                     $operation['tags'] = [
-                        'Gateway' . ucfirst($gateway->getName()) . ucfirst($operation['tags'][0])
+                        'Gateway'.ucfirst($gateway->getName()).ucfirst($operation['tags'][0]),
                     ];
                 }
 
                 $operation['parameters'][] = [
-                    'name' => 'Prefer',
+                    'name'        => 'Prefer',
                     'description' => 'Prefer header',
-                    'in' => 'header'
+                    'in'          => 'header',
                 ];
 
                 if (isset($operation['produces'])) {
                     unset($operation['produces']);
                 }
-                foreach ($operation['responses'] as &$response) {
-                    if (isset($response['$ref'])) {
-                        $tag = $this->handleTag($response['$ref']);
-                        $response['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $response['$ref']);
-                    }
-                    if (isset($response['content'])) {
-                        foreach ($response['content'] as &$item) {
-                            if (isset($item['schema']['$ref'])) {
-                                $tag = $this->handleTag($item['schema']['$ref']);
-                                $item['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['$ref']);
-                            }
-                            if (isset($item['schema']['properties']['hydra:member'])) {
-                                $tag = $this->handleTag($item['schema']['properties']['hydra:member']['items']['$ref']);
-                                $item['schema']['properties']['hydra:member']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['hydra:member']['items']['$ref']);
-                            }
-                            if (isset($item['schema']['items']['$ref'])) {
-                                $tag = $this->handleTag($item['schema']['items']['$ref']);
-                                $item['schema']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['items']['$ref']);
-                            }
-                            if (isset($item['schema']['properties']['results']['items']['$ref'])) {
-                                $tag = $this->handleTag($item['schema']['properties']['results']['items']['$ref']);
-                                $item['schema']['properties']['results']['items']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $item['schema']['properties']['results']['items']['$ref']);
-                            }
-                        }
-                    }
-                }
-
-                if (isset($operation['requestBody']['content'])) {
-                    foreach ($operation['requestBody']['content'] as &$content) {
-                        if (isset($content['schema']['$ref'])) {
-                            $tag = $this->handleTag($content['schema']['$ref']);
-                            $content['schema']['$ref'] = str_replace($tag, 'Gateway' . ucfirst($gateway->getName()) . ucfirst($tag), $content['schema']['$ref']);
-                        }
-                    }
-                }
+                $this->handleOpenApiResponses($operation['responses'], $gateway);
+                $this->handleOpenApiRequestBody($operation['requestBody']['content'] ?? null, $gateway);
             }
 
-            $results['/gateways/' . $gateway->getName() . $key] = $value;
+            $results['/gateways/'.$gateway->getName().$key] = $value;
         }
 
         return $results;
+    }
+
+    private function handleOpenApiResponses(array $responses, Gateway $gateway)
+    {
+        foreach ($responses as &$response) {
+            if (isset($response['$ref'])) {
+                $tag = $this->handleTag($response['$ref']);
+                $response['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $response['$ref']);
+            }
+            if (isset($response['content'])) {
+                foreach ($response['content'] as &$item) {
+                    if (isset($item['schema']['$ref'])) {
+                        $tag = $this->handleTag($item['schema']['$ref']);
+                        $item['schema']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['schema']['$ref']);
+                    }
+                    if (isset($item['schema']['properties']['hydra:member'])) {
+                        $tag = $this->handleTag($item['schema']['properties']['hydra:member']['items']['$ref']);
+                        $item['schema']['properties']['hydra:member']['items']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['schema']['properties']['hydra:member']['items']['$ref']);
+                    }
+                    if (isset($item['schema']['items']['$ref'])) {
+                        $tag = $this->handleTag($item['schema']['items']['$ref']);
+                        $item['schema']['items']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['schema']['items']['$ref']);
+                    }
+                    if (isset($item['schema']['properties']['results']['items']['$ref'])) {
+                        $tag = $this->handleTag($item['schema']['properties']['results']['items']['$ref']);
+                        $item['schema']['properties']['results']['items']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $item['schema']['properties']['results']['items']['$ref']);
+                    }
+                }
+            }
+        }
+    }
+
+    private function handleOpenApiRequestBody(?array $requestBodyContent, Gateway $gateway)
+    {
+        if (isset($requestBodyContent)) {
+            foreach ($requestBodyContent as &$content) {
+                if (isset($content['schema']['$ref'])) {
+                    $tag = $this->handleTag($content['schema']['$ref']);
+                    $content['schema']['$ref'] = str_replace($tag, 'Gateway'.ucfirst($gateway->getName()).ucfirst($tag), $content['schema']['$ref']);
+                }
+            }
+        }
     }
 
     public function handleTag($data)

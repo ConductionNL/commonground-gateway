@@ -31,6 +31,17 @@ security:
       certificate:
         existingSecret: ''
         certificate: ''
+  digid:
+    enabled: false
+    certificate: ''
+    privatekey: ''
+    idp:
+      metadata: ''
+      singleSignOnUrl: ''
+      logoutUrl: ''
+      certificate:
+        existingSecret: ''
+        certificate: ''
   jwt:
     id:
     privateKey:

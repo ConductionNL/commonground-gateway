@@ -49,6 +49,8 @@ App\Entity\Entity:
             - username
             - roles
             - userGroups
+            - locale
+            - person
         usedProperties:
             - username
             - password
@@ -56,6 +58,8 @@ App\Entity\Entity:
             - roles
             - userGroups
             - emailValidated
+            - locale
+            - person
 
     # UserGroup (security) object
     usergroup:
@@ -274,18 +278,28 @@ App\Entity\Attribute:
         cascade: false
         entity: '@user'
         object: '@organization'
-    #    user_usergroups:
-    #        name: userGroups
-    #        description: In what usergroups does the user resides.
-    #        type: object
-    #        multiple: true
-    #        required: true
-    #        entity: '@user'
-    #        object: '@usergroup'
-    #        persistToGateway: true
-    #        cascade: false
+    user_usergroups:
+        name: userGroups
+        description: In what usergroups does the user resides.
+#        type: object # TODO:
+        type: string
+        multiple: true
+        required: true
+        entity: '@user'
+#        object: '@usergroup' #TODO:
+        persistToGateway: true
+        cascade: false
+    user_person:
+        name: person
+        description: The person of this user.
+        type: object
+#        required: true #TODO: should be true, but this might cause problems?
+        entity: '@user'
+        object: '@person'
+        cascade: true
+        inversedBy: '@person_user'
 
-    # UserGroup (security) properties
+#     UserGroup (security) properties
     userGroup_organization:
         name: organization
         description: To which organization does this usergroup belong?
@@ -467,6 +481,7 @@ App\Entity\Attribute:
     person_birthplace:
         name: birthplace
         type: string
+        format: countryCode
         entity: '@person'
         maxLength: 255
         persistToGateway: false
@@ -492,6 +507,7 @@ App\Entity\Attribute:
     person_primaryLanguage:
         name: primaryLanguage
         type: string
+#        format: countryCode #TODO: do we want this here? (Lifely just wants a string¿)
         maxLength: 255
         entity: '@person'
         persistToGateway: true
@@ -561,6 +577,7 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@user'
         cascade: true
+        inversedBy: '@user_person'
 
     # Employee  Properties
     employee_person:
@@ -910,78 +927,61 @@ App\Entity\Attribute:
     education_level:
         name: level
         type: string
-        enum: ['NO_EDUCATION', 'A_FEW_YEARS_PO', 'PO', 'VO', 'MBO', 'HBO', 'WO']
+        enum: ['basisonderwijs', 'vmbo, havo-. vwo-onderbouw, mbo-1', 'havo, vwo, mbo (overig)', 'hbo/wo bachelor', 'hbo/wo master, doctor']
         entity: '@education'
-        requiredIf:
-            type: EDUCATION
     education_institution:
         name: institution
         type: string
         maxLength: 255
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
     education_teacherType:
         name: teachertype
         type: string
         enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
         entity: '@education'
-        requiredIf:
-            type: COURSE
-    education_courseType:
-        name: coursetype
-        type: string
-        enum: ['PROFESSIONAL', 'VOLUNTEER', 'BOTH']
-        entity: '@education'
-        requiredIf:
-            type: COURSE
+# TODO: ?
+#        requiredIf:
+#            type: COURSE
     education_group:
         name: group
         type: string
         enum: ['INDIVIDUALLY', 'GROUP']
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO: ?
+#        requiredIf:
+#            type: COURSE
     education_startDate:
         name: startDate
         type: datetime
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
+# TODO: ?
+#        requiredIf:
+#            type: EDUCATION
     education_endDate:
         name: endDate
         type: datetime
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse:
-                - YES
-                - NO_UNTIL_DATE
+# TODO: ?
+#        requiredIf:
+#            type: EDUCATION
     education_hours:
         name: hours
         type: integer
         description: The total amount of hours this education or course takes
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
-            type: COURSE
+# TODO: ?
+#        requiredIf:
+#            type: COURSE
     education_degree:
         name: degree
         type: boolean
         description: Whether tis eduction or course grants a degree or diploma
         entity: '@education'
-        requiredIf:
-            doesCurrentlyFollowCourse: YES
+# TODO: DegreeGranted can only be true if endDate is in the past!
     education_degreeGranted:
         name: degreeGranted
         description: Whether or not a degree or diploma has been granted from this eduction or course to the student
         type: boolean
-        entity: '@education'
-    education_doesCurrentlyFollowCourse:
-        name: doesCurrentlyFollowCourse
-        type: string
-        enum: ['YES', 'NO', 'NO_UNTIL_DATE']
         entity: '@education'
 
     # Civic Integration properties
@@ -1047,14 +1047,15 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@learningNeed'    
-    learningNeed_learningResult:
-        name: learningResult
+    learningNeed_learningResults:
+        name: learningResults
         type: object
-        required: true
+        required: false
         multiple: true
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
+        inversedBy: '@learningResult_learningNeed'
 
     # LearningResult properties
     learningResult_verb:
@@ -1093,7 +1094,7 @@ App\Entity\Attribute:
         name: level
         type: string
         required: true
-        enum: ['INFLUX', 'NLQF_1 ','NLQF_2','NLQF_3 ','NLQF_4 ', 'OTHER']
+        enum: ['INFLUX', 'NLQF_1','NLQF_2','NLQF_3','NLQF_4', 'OTHER']
         entity: '@learningResult'        
     learningResult_levelOther:
         name: levelOther
@@ -1116,6 +1117,12 @@ App\Entity\Attribute:
         type: string
         maxLength: 2500
         entity: '@learningResult'
+    learningResult_learningNeed:
+        name: learningNeed
+        type: object
+        required: false # TODO: this should be true? but that will break cascade for learningNeed_learningResults (@learningNeed)
+        entity: '@learningResult'
+        object: '@learningNeed'
             
     # course properties
     course_name:

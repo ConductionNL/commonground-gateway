@@ -124,7 +124,7 @@
       "ErrorModel",
       "DeleteModel"
     ],
-    "responces": {
+    "responses": {
       "error": {
         "description": "error payload",
         "content": {
@@ -225,7 +225,7 @@
         "operationId": "putpermissiondetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -252,7 +252,7 @@
         "operationId": "deletepermissiondetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -337,7 +337,7 @@
         "operationId": "puteducationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -364,7 +364,7 @@
         "operationId": "deleteeducationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -449,7 +449,7 @@
         "operationId": "puttest_resultsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -476,7 +476,7 @@
         "operationId": "deletetest_resultsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -561,7 +561,7 @@
         "operationId": "putparticipationsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -588,7 +588,7 @@
         "operationId": "deleteparticipationsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -673,7 +673,7 @@
         "operationId": "putlearning_needsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -700,7 +700,7 @@
         "operationId": "deletelearning_needsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -785,7 +785,7 @@
         "operationId": "putusersById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -812,7 +812,7 @@
         "operationId": "deleteusersById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -897,7 +897,7 @@
         "operationId": "putjobdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -924,7 +924,7 @@
         "operationId": "deletejobdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1009,7 +1009,7 @@
         "operationId": "putmotivationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1036,7 +1036,7 @@
         "operationId": "deletemotivationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1121,7 +1121,7 @@
         "operationId": "putcivicintegrationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1148,7 +1148,7 @@
         "operationId": "deletecivicintegrationdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1233,7 +1233,7 @@
         "operationId": "putmemoById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1260,7 +1260,7 @@
         "operationId": "deletememoById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1345,7 +1345,7 @@
         "operationId": "putpersonsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1372,7 +1372,7 @@
         "operationId": "deletepersonsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1457,7 +1457,7 @@
         "operationId": "putcoursedetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1484,7 +1484,7 @@
         "operationId": "deletecoursedetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1569,7 +1569,7 @@
         "operationId": "putdutchntdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1596,7 +1596,7 @@
         "operationId": "deletedutchntdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1681,7 +1681,7 @@
         "operationId": "putavailabilitydetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1708,7 +1708,7 @@
         "operationId": "deleteavailabilitydetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1793,7 +1793,7 @@
         "operationId": "putgeneraldetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1820,7 +1820,7 @@
         "operationId": "deletegeneraldetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1905,7 +1905,7 @@
         "operationId": "putreferrerdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
@@ -1932,7 +1932,7 @@
         "operationId": "deletereferrerdetailsById",
         "responses": {
           "200": {
-            "description": "delete responce",
+            "description": "delete response",
             "content": {
               "application/json": {
                 "schema": {
