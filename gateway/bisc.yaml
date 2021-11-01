@@ -11,12 +11,6 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
         documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
-    mrc_api2:
-        name: mrc
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
     mrc_api:
         name: medewerker catalogus
         auth: apikey
