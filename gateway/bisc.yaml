@@ -942,7 +942,7 @@ App\Entity\Attribute:
     education_level:
         name: level
         type: string
-        enum: ['basisonderwijs', 'vmbo, havo-. vwo-onderbouw, mbo-1', 'havo, vwo, mbo (overig)', 'hbo/wo bachelor', 'hbo/wo master, doctor']
+        enum: ['basisonderwijs', 'vmbo havo of vwo-onderbouw of mbo-1', 'havo vwo of mbo (overig)', 'hbo of wo bachelor', 'hbo of wo master of doctor']
         entity: '@education'
     education_institution:
         name: institution
