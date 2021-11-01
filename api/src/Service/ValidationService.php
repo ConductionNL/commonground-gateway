@@ -432,7 +432,8 @@ class ValidationService
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
             var_dump('url = '.$entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 //            try {
-                $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+                $object = $this->commonGroundService->getResource(['component' => 'cc', 'type' => $entity->getEndpoint(), 'id' => $id]);
+//                $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 //            } catch (Exception $exception) {
 //                return null;
 //            }
