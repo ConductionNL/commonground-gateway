@@ -436,9 +436,10 @@ class ValidationService
 //            } catch (Exception $exception) {
 //                return null;
 //            }
-            if (isset($object)) {
+            var_dump($object);
+//            if (isset($object)) {
 //            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                var_dump('is a resource');
+                var_dump('found a extern resource');
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
@@ -465,8 +466,11 @@ class ValidationService
                     $this->em->flush();
                 }
 
+                var_dump(gettype($object));
+                var_dump($object->getUri());
+                var_dump($object->getExternalId());
                 return $object;
-            }
+//            }
         }
         var_dump('no new OE, returned null');
 
