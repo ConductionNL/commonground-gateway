@@ -431,11 +431,11 @@ class ValidationService
         var_dump('create OE for extern object');
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
             var_dump('url = '.$entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-            try {
+//            try {
                 $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-            } catch (Exception $exception) {
-                return null;
-            }
+//            } catch (Exception $exception) {
+//                return null;
+//            }
             if (isset($object)) {
 //            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
                 var_dump('is a resource');
