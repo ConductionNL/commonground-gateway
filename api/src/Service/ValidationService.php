@@ -428,18 +428,8 @@ class ValidationService
     public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null): ?ObjectEntity
     {
         // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-        var_dump('create OE for extern object');
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-            var_dump('url = '.$entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-//            try {
-                $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-//            } catch (Exception $exception) {
-//                return null;
-//            }
-            var_dump($object);
-//            if (isset($object)) {
-//            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                var_dump('found an extern resource');
+            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id)) {
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
@@ -456,7 +446,7 @@ class ValidationService
 
                 // Set the externalId and uri.
                 $newSubObject->setExternalId($id);
-                $newSubObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+                $newSubObject->setUri($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id);
                 $object = $this->validateEntity($newSubObject, $object, true);
 
                 // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
@@ -472,7 +462,6 @@ class ValidationService
                 return $object;
 //            }
         }
-        var_dump('no new OE, returned null');
 
         return null;
     }
