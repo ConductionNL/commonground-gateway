@@ -318,40 +318,18 @@ class ValidationService
                         return $item->getId() == $object['id'] || $item->getExternalId() == $object['id'];
                     });
                     if (count($subObject) == 0) {
-                        // TODO: cleanup with use of createOEforExternObject function!
                         // In the rare case that we are creating a new Gateway ObjectEntity for an object existing outside the gateway. (maybe even another ObjectEntity for a subresource of an extern object like this)
                         // (this can happen when an uuid is given for an attribute that expects an object and this object is only found outside the gateway)
                         // Than if gateway->location and endpoint are set on the attribute(->getObject) Entity, we should check for objects outside the gateway here.
-                        if ($attribute->getObject()->getGateway()->getLocation() && $attribute->getObject()->getEndpoint()) {
-                            if ($object = $this->commonGroundService->isResource($attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$object['id'])) {
-                                $subObject = new ObjectEntity();
-                                $subObject->setEntity($attribute->getObject());
-                                $subObject->addSubresourceOf($valueObject);
-                                $subObject->setExternalId($object['id']);
-                                if (!$objectEntity->getHasErrors() && !$subObject->getHasErrors()) {
-                                    // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
-                                    // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
-                                    $this->em->persist($subObject);
-                                    $this->em->flush();
-                                }
+                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity);
 
-                                // Filter out unwanted properties before converting extern object to a gateway ObjectEntity (see validateEntity later on...)
-                                $object = array_filter($object, function ($propertyName) use($attribute) {
-                                    if ($attribute->getObject()->getAvailableProperties()) {
-                                        return in_array($propertyName, $attribute->getObject()->getAvailableProperties());
-                                    }
-                                    return $attribute->getObject()->getAttributeByName($propertyName);
-                                }, ARRAY_FILTER_USE_KEY);
-
-                                // Make sure we skip promises and checking for the right scopes when we just create a ObjectEntity for an object that already exists outside the gateway.
-                                // See validateEntity and validateAttribute -> createOEforExternObject.
-                                $createOEforExternObject = true;
-                            }
-                        }
                         if (!$subObject) {
                             $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
                             break;
                         }
+                        
+                        $valueObject->addObject($subObject);
+                        continue;
                     } elseif (count($subObject) > 1) {
                         $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
                         break;
@@ -375,8 +353,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $id = $subObject->getExternalId() ?? $subObject->getId();
-                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $id));
+                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
 //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
