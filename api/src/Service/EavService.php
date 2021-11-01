@@ -98,11 +98,12 @@ class EavService
      * Looks for a ObjectEntity using an id or creates a new ObjectEntity if no ObjectEntity was found with that id or if no id is given at all.
      *
      * @param string|null $id
-     * @param string $method
-     * @param Entity $entity
+     * @param string      $method
+     * @param Entity      $entity
+     *
+     * @throws Exception
      *
      * @return ObjectEntity|array|null
-     * @throws Exception
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
@@ -621,23 +622,23 @@ class EavService
 //        // TODO: this is ugly...
 //        // Lets see how many objects we have in extern component, outside the gateway
 //        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-////            var_dump($query);
+        ////            var_dump($query);
 //            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), false)['hydra:totalItems'];
-////            var_dump(count($totalExternObjects));
+        ////            var_dump(count($totalExternObjects));
 //
 //            // TODO: what if we ever add sorting?! this will break...
 //            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
 //            if (count($objects) < $limit) {
-////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
+        ////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
 //                $query['limit'] = ($limit - count($objects));
 //                if ($offset > count($total)) {
 //                    // Commonground Components dont have a working query for start, only page
 //                    $query['page'] = ceil(($offset - count($total) + 1) / $limit); //todo: remove +1?
 //                }
-////                var_dump($query);
+        ////                var_dump($query);
 //                // TODO: we somehow need to filter out the extern objects that already have an object in the gateway (maybe we should remove ^ $query['limit' & 'page'] for this as well.
 //                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-////                var_dump(count($externObjects));
+        ////                var_dump(count($externObjects));
 //                foreach ($externObjects as $externObject) {
 //                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
 //                    if (!is_null($entity->getAvailableProperties())) {
@@ -736,8 +737,7 @@ class EavService
         }
         if ($result->getExternalId()) {
             $response['@gateway/id'] = $result->getExternalId();
-        }
-        elseif (array_key_exists('id', $response)) {
+        } elseif (array_key_exists('id', $response)) {
             $response['@gateway/id'] = $response['id'];
         }
         if (array_key_exists('@type', $response)) {
@@ -746,10 +746,11 @@ class EavService
 
         // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
         if (!is_null($result->getEntity()->getAvailableProperties())) {
-            $response = array_filter($response, function ($propertyName) use($result) {
+            $response = array_filter($response, function ($propertyName) use ($result) {
                 if (str_contains($propertyName, '@gateway/')) {
                     return true;
                 }
+
                 return in_array($propertyName, $result->getEntity()->getAvailableProperties());
             }, ARRAY_FILTER_USE_KEY);
         }
