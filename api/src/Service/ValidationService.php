@@ -429,7 +429,7 @@ class ValidationService
     {
         // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id)) {
+            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
@@ -446,7 +446,7 @@ class ValidationService
 
                 // Set the externalId and uri.
                 $newSubObject->setExternalId($id);
-                $newSubObject->setUri($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id);
+                $newSubObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
                 $object = $this->validateEntity($newSubObject, $object, true);
 
                 // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
