@@ -1135,7 +1135,7 @@ App\Entity\Attribute:
     learningResult_learningNeed:
         name: learningNeed
         type: object
-        required: false # TODO: this should be true? but that will break cascade for learningNeed_learningResults (@learningNeed)
+        required: true
         entity: '@learningResult'
         object: '@learningNeed'
             
