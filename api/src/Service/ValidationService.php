@@ -49,11 +49,12 @@ class ValidationService
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
-     * @param array $post
-     * @param bool $createOEforExternObject Let's not create any promises if we are creating a new ObjectEntity in the gateway for an object that already exists outside the gateway and only an uuid and not an object is given for this.
+     * @param array        $post
+     * @param bool         $createOEforExternObject Let's not create any promises if we are creating a new ObjectEntity in the gateway for an object that already exists outside the gateway and only an uuid and not an object is given for this.
+     *
+     * @throws Exception
      *
      * @return ObjectEntity
-     * @throws Exception
      */
     public function validateEntity(ObjectEntity $objectEntity, array $post, bool $createOEforExternObject = false): ObjectEntity
     {
@@ -111,12 +112,13 @@ class ValidationService
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
+     * @param Attribute    $attribute
      * @param $value
      * @param bool $createOEforExternObject Let's not check for scopes if we are creating a new ObjectEntity in the gateway for an object that already exists outside the gateway and only an uuid and not an object is given for this. There is no way a user can change this object, it is only added into the gateway with the already existing data outside the gateway!
      *
-     * @return ObjectEntity
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value, bool $createOEforExternObject = false): ObjectEntity
     {
@@ -302,8 +304,7 @@ class ValidationService
                         $valueObject->getObjects()->clear(); // We start with a deafult object //TODO: do we need this here?
                         $valueObject->addObject($subObject);
                         continue;
-                    }
-                    else {
+                    } else {
                         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
                         break;
                     }
@@ -327,7 +328,7 @@ class ValidationService
                             $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
                             break;
                         }
-                        
+
                         $valueObject->addObject($subObject);
                         continue;
                     } elseif (count($subObject) > 1) {
@@ -389,12 +390,13 @@ class ValidationService
     //TODO: use and test this instead of duplicate code
     /**
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param Value $valueObject
-     * @param string $id
+     * @param Attribute    $attribute
+     * @param Value        $valueObject
+     * @param string       $id
+     *
+     * @throws Exception
      *
      * @return ObjectEntity|null
-     * @throws Exception
      */
     public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null): ?ObjectEntity
     {
@@ -402,10 +404,11 @@ class ValidationService
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
             if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-                $object = array_filter($object, function ($propertyName) use($entity) {
+                $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
                         return in_array($propertyName, $entity->getAvailableProperties());
                     }
+
                     return $entity->getAttributeByName($propertyName);
                 }, ARRAY_FILTER_USE_KEY);
                 $newSubObject = new ObjectEntity();
@@ -425,6 +428,7 @@ class ValidationService
                     $this->em->persist($object);
                     $this->em->flush();
                 }
+
                 return $object;
             }
         }
