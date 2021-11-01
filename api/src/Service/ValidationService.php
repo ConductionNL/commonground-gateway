@@ -83,6 +83,33 @@ class ValidationService
             }
             // Check if this field is required
             elseif ($attribute->getRequired()) {
+                // If this field is of type object and if the ObjectEntity this field is part of, is itself...
+                // ...a subresource of another objectEntity, lets check if we are dealing with a cascade loop.
+                if ($attribute->getType() == 'object' && count($objectEntity->getSubresourceOf()) > 0) {
+                    // Lets check if the Entity we expect for this field is also the same Entity as one of the parent ObjectEntities of this ObjectEntity
+                    $parentValues = $objectEntity->getSubresourceOf()->filter(function (Value $valueObject) use ($attribute) {
+                        return $valueObject->getObjectEntity()->getEntity() === $attribute->getObject();
+                    });
+                    // If we find at least 1 we know we are dealing with a loop.
+                    // example: Object LearningNeed has a field Results and Object Result has a required field LearningNeed,
+                    // if the Results of a LearningNeed can be cascaded these cascaded Results require a LearningNeed,
+                    // but because of inversedBy the LearningNeed these Results expect will be set automatically.
+                    if (count($parentValues) > 0) { // == 1? maybe
+                        // So if we found a value in the 'parent values' of the ObjectEntity, with ->getObjectEntity()->getEntity()...
+                        // ...equal to the Entity (->getObject) of this field / attribute. Get the attribute of this Value.
+                        $parentValueAttribute = $parentValues->first()->getAttribute();
+//                        var_dump($attribute->getName());
+//                        var_dump('cascadeLoop');
+//                        var_dump($parentValueAttribute->getName());
+//                        var_dump($parentValueAttribute->getCascade());
+//                        var_dump($parentValueAttribute->getInversedBy()->getName());
+                        // Now lets make sure this attribute is of type object, has cascade on and is inversedBy the attribute of our current field.
+                        if ($parentValueAttribute->getType() == 'object' && $parentValueAttribute->getCascade() && $parentValueAttribute->getInversedBy() == $attribute) {
+                            // If so, skip throwing a 'is required' error, because after this validation this required field will be set because of InversedBy in the Value->addObject() function.
+                            return $objectEntity;
+                        }
+                    }
+                }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } else {
                 // handling the setting to null of exisiting variables
@@ -344,13 +371,14 @@ class ValidationService
                 }
                 // Create a new subObject (ObjectEntity)
                 else {
+                    //TODO: Lets do some cascade checks here?
                     $subObject = new ObjectEntity();
 
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                 }
 
-                $subObject = $this->validateEntity($subObject, $object, $createOEforExternObject ?? false);
+                $subObject = $this->validateEntity($subObject, $object);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
@@ -401,8 +429,11 @@ class ValidationService
     public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null): ?ObjectEntity
     {
         // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+        var_dump('create OE for extern object');
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
+            var_dump('url = '.$entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
             if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
+                var_dump('is a resource');
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
@@ -432,6 +463,7 @@ class ValidationService
                 return $object;
             }
         }
+        var_dump('no new OE, returned null');
 
         return null;
     }
@@ -745,6 +777,8 @@ class ValidationService
         // Do validation for attribute depending on its type
         switch ($attribute->getType()) {
             case 'object':
+                //TODO: all code that uses $attribute->getMultiple() == true here, will never be reached, because of validateAttributeMultiple() in validateAttribute()!
+
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
@@ -847,9 +881,6 @@ class ValidationService
                         $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
                     }
                 }
-
-                // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
-                // $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
 
                 // if not we can push it into our object
                 if (!$objectEntity->getHasErrors()) {

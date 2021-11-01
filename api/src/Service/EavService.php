@@ -110,7 +110,9 @@ class EavService
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
             if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
+                var_dump('Not in gateway with id');
                 if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
+                    var_dump('Not in gateway with externalId');
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
                     $object = $this->validationService->createOEforExternObject($entity, $id);
                     if (!$object) {
@@ -180,7 +182,7 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && $result['type'] == 'Bad Request') {
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
             }
