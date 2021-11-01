@@ -180,7 +180,7 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && $result['type'] == 'Bad Request') {
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
             }
