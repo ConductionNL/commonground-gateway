@@ -432,15 +432,14 @@ class ValidationService
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
             var_dump('url = '.$entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 //            try {
-                $object = $this->commonGroundService->getResource(['component' => 'cc', 'type' => $entity->getEndpoint(), 'id' => $id]);
-//                $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+                $object = $this->commonGroundService->getResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 //            } catch (Exception $exception) {
 //                return null;
 //            }
             var_dump($object);
 //            if (isset($object)) {
 //            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                var_dump('found a extern resource');
+                var_dump('found an extern resource');
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
