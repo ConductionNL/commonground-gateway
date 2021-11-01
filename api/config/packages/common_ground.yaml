@@ -107,6 +107,9 @@ parameters:
     idin_id: "%env(IDIN_ID)%"
     idin_secret: "%env(IDIN_SECRET)%"
     badges: "%env(BADGES)%"
+    
+    app_certificate: "%env(APP_CERT)%"
+    app_ssl_key: "%env(APP_KEY)%"
 
     app_shasign: "%env(APP_SHASIGN)%"
 

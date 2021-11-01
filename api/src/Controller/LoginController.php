@@ -46,6 +46,11 @@ class LoginController extends AbstractController
         // Because inversedBy wil not set the UC->user->person when creating a person with a user in the gateway.
         // We need to do this in order to find the person of this user:
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name'=>'users']);
+
+        if ($entity == null) {
+            return null;
+        }
+
         $objects = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['username'=>$username]);
         if (count($objects) == 1) {
             $user = $eavService->renderResult($objects[0], null);
@@ -68,6 +73,10 @@ class LoginController extends AbstractController
             $result = [
                 'username'   => $this->getUser()->getUsername(),
                 'roles'      => $this->getUser()->getRoles(),
+                'first_name' => $this->getUser()->getFirstName(),
+                'last_name'  => $this->getUser()->getLastName(),
+                'name'       => $this->getUser()->getName(),
+                'email'      => $this->getUser()->getEmail(),
                 // TODO: if we have no person connected to this user create one? with $this->createPersonForUser()
                 'person'     => $this->getUser()->getPerson() ? $this->getObject($this->getUser()->getPerson(), $eavService) ?? $commonGroundService->getResource($this->getUser()->getPerson()) : $this->getUserObjectEntity($this->getUser()->getUsername(), $eavService),
             ];
