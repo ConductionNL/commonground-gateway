@@ -456,9 +456,6 @@ class ValidationService
                     $this->em->flush();
                 }
 
-                var_dump(gettype($object));
-                var_dump($object->getUri());
-                var_dump($object->getExternalId());
                 return $object;
             }
         }
