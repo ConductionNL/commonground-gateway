@@ -11,6 +11,7 @@ on:
       - master
       - staging
       - development
+      - feature-admin
 
 jobs:
   build:
