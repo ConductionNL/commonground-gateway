@@ -460,7 +460,7 @@ class ValidationService
                 var_dump($object->getUri());
                 var_dump($object->getExternalId());
                 return $object;
-//            }
+            }
         }
 
         return null;
