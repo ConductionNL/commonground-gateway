@@ -101,20 +101,35 @@ class EavService
      * @param string      $method
      * @param Entity      $entity
      *
+     * @throws Exception
+     *
      * @return ObjectEntity|array|null
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
         if ($id) {
-            $object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id'=>Uuid::fromString($id)]);
-            if (!$object) {
-                return [
-                    'message' => "No object found with this id: $id",
-                    'type'    => 'Bad Request',
-                    'path'    => $entity->getName(),
-                    'data'    => ['id' => $id],
-                ];
-            } elseif ($entity != $object->getEntity()) {
+            // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
+                var_dump('Not in gateway with id');
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
+                    var_dump('Not in gateway with externalId');
+                    // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+                    $object = $this->validationService->createOEforExternObject($entity, $id);
+                    if (!$object) {
+                        return [
+                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
+                            'type'    => 'Bad Request',
+                            'path'    => $entity->getName(),
+                            'data'    => ['id' => $id],
+                        ];
+                    }
+                } else {
+                    // Found an object with externalId
+                    $object = $object[0];
+                }
+            }
+
+            if ($entity != $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',
@@ -161,13 +176,17 @@ class EavService
             $entity = false;
         }
 
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
+                $result = $object;
+            }
         }
-
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
 
         // Get a body
         if ($request->getContent()) {
@@ -190,24 +209,26 @@ class EavService
         // Lets allow for filtering specific fields
         $fields = $this->getRequestFields($request);
 
-        // Lets setup a switchy kinda thingy to handle the input (in handle functions)
-        // Its a enity endpoint
-        if ($entity && $requestBase['id']) {
-            // Lets handle all different type of endpoints
-            $endpointResult = $this->handleEntityEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-            ]);
-        }
-        // its an collection endpoind
-        elseif ($entity) {
-            $endpointResult = $this->handleCollectionEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                'entity' => $entity, 'extension' => $requestBase['extension'],
-            ]);
-        }
-        if (isset($endpointResult)) {
-            $result = $endpointResult['result'];
-            $responseType = $endpointResult['responseType'];
+        if (isset($object) && $object instanceof ObjectEntity) {
+            // Lets setup a switchy kinda thingy to handle the input (in handle functions)
+            // Its a enity endpoint
+            if ($entity && $requestBase['id']) {
+                // Lets handle all different type of endpoints
+                $endpointResult = $this->handleEntityEndpoint($request, [
+                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                ]);
+            }
+            // its an collection endpoind
+            elseif ($entity) {
+                $endpointResult = $this->handleCollectionEndpoint($request, [
+                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                    'entity' => $entity, 'extension' => $requestBase['extension'],
+                ]);
+            }
+            if (isset($endpointResult)) {
+                $result = $endpointResult['result'];
+                $responseType = $endpointResult['responseType'];
+            }
         }
 
         // If we have an error we want to set the responce type to error
@@ -606,14 +627,51 @@ class EavService
             $results[] = $this->renderResult($object, $fields);
         }
 
+//        // TODO: this is ugly...
+//        // Lets see how many objects we have in extern component, outside the gateway
+//        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
+        ////            var_dump($query);
+//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), false)['hydra:totalItems'];
+        ////            var_dump(count($totalExternObjects));
+//
+//            // TODO: what if we ever add sorting?! this will break...
+//            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
+//            if (count($objects) < $limit) {
+        ////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
+//                $query['limit'] = ($limit - count($objects));
+//                if ($offset > count($total)) {
+//                    // Commonground Components dont have a working query for start, only page
+//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit); //todo: remove +1?
+//                }
+        ////                var_dump($query);
+//                // TODO: we somehow need to filter out the extern objects that already have an object in the gateway (maybe we should remove ^ $query['limit' & 'page'] for this as well.
+//                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
+        ////                var_dump(count($externObjects));
+//                foreach ($externObjects as $externObject) {
+//                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
+//                    if (!is_null($entity->getAvailableProperties())) {
+//                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
+//                            return in_array($propertyName, $entity->getAvailableProperties());
+//                        }, ARRAY_FILTER_USE_KEY);
+//                    }
+//                    $results[] = $externObject;
+//                }
+//            }
+//        }
+
         // Lets skip the pritty styff when dealing with csv
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             return $results;
         }
 
+        $totalItems = count($total);
+        if (isset($totalExternObjects)) {
+            $totalItems = $totalItems + $totalExternObjects;
+        }
+
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = count($total);
+        $results['total'] = $totalItems;
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
@@ -673,18 +731,36 @@ class EavService
         }
 
         // Lets start with the external results
-        // TODO: for get (item and collection) calls this seems to only contain the @uri, not the full extern object (result) !!! as if setExternalResult is not saved properly?
-        $response = array_merge($response, $result->getExternalResult());
+        if (!empty($result->getExternalResult())) {
+            $response = array_merge($response, $result->getExternalResult());
+        } elseif ($this->commonGroundService->isResource($result->getExternalResult())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
+        } elseif ($this->commonGroundService->isResource($result->getUri())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
+        }
 
         // Lets move some stuff out of the way
         if (array_key_exists('@context', $response)) {
             $response['@gateway/context'] = $response['@context'];
         }
-        if (array_key_exists('id', $response)) {
+        if ($result->getExternalId()) {
+            $response['@gateway/id'] = $result->getExternalId();
+        } elseif (array_key_exists('id', $response)) {
             $response['@gateway/id'] = $response['id'];
         }
         if (array_key_exists('@type', $response)) {
             $response['@gateway/type'] = $response['@type'];
+        }
+
+        // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
+        if (!is_null($result->getEntity()->getAvailableProperties())) {
+            $response = array_filter($response, function ($propertyName) use ($result) {
+                if (str_contains($propertyName, '@gateway/')) {
+                    return true;
+                }
+
+                return in_array($propertyName, $result->getEntity()->getAvailableProperties());
+            }, ARRAY_FILTER_USE_KEY);
         }
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
