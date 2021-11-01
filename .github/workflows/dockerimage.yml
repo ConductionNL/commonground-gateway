@@ -49,6 +49,12 @@ jobs:
         run: |
           echo "APP_ENV=stag">> $GITHUB_ENV
           echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"  
+      - name: Setting APP_ENV to admin
+        if: contains( github.ref, 'feature-admin' ) || contains( github.base_ref, 'feature-admin' )
+        run: |
+          echo "APP_ENV=dev">> $GITHUB_ENV
+          echo "APP_BUILD=admin-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
