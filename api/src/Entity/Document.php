@@ -20,13 +20,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post",
- *     		"get",
+ *          "post"={"path"="/admin/documents"},
+ *     		"get"={"path"="/admin/documents"},
  *     },
  *      itemOperations={
- * 		    "get",
- * 	        "put",
- * 	        "delete",
+ * 		    "get"={"path"="/admin/documents/{id}"},
+ * 	        "put"={"path"="/admin/documents/{id}"},
+ * 	        "delete"={"path"="/admin/documents/{id}"},
  *     },
  * )
  * @ORM\Entity(repositoryClass="App\Repository\DocumentRepository")
