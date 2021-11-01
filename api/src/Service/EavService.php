@@ -207,26 +207,24 @@ class EavService
         // Lets allow for filtering specific fields
         $fields = $this->getRequestFields($request);
 
-        if (isset($object) && $object instanceof ObjectEntity) {
-            // Lets setup a switchy kinda thingy to handle the input (in handle functions)
-            // Its a enity endpoint
-            if ($entity && $requestBase['id']) {
-                // Lets handle all different type of endpoints
-                $endpointResult = $this->handleEntityEndpoint($request, [
-                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                ]);
-            }
-            // its an collection endpoind
-            elseif ($entity) {
-                $endpointResult = $this->handleCollectionEndpoint($request, [
-                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                    'entity' => $entity, 'extension' => $requestBase['extension'],
-                ]);
-            }
-            if (isset($endpointResult)) {
-                $result = $endpointResult['result'];
-                $responseType = $endpointResult['responseType'];
-            }
+        // Lets setup a switchy kinda thingy to handle the input (in handle functions)
+        // Its a enity endpoint
+        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+            // Lets handle all different type of endpoints
+            $endpointResult = $this->handleEntityEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+            ]);
+        }
+        // its an collection endpoind
+        elseif ($entity) {
+            $endpointResult = $this->handleCollectionEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                'entity' => $entity, 'extension' => $requestBase['extension'],
+            ]);
+        }
+        if (isset($endpointResult)) {
+            $result = $endpointResult['result'];
+            $responseType = $endpointResult['responseType'];
         }
 
         // If we have an error we want to set the responce type to error
