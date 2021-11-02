@@ -45,6 +45,6 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
-        return $this->gatewayService->createResponse($this->commonGroundService->callService([], $url, $data, [], [], false, 'POST'));
+        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->gatewayService->gatewayToArray($document->getEntity()->getGateway()), $url, $data, [], [], false, 'POST'));
     }
 }

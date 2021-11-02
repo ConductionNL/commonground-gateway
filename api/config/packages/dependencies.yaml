@@ -9,7 +9,7 @@ parameters:
             password: demodam
         ds:
             auth: apikey
-            location: http://digispoof.demodam.nl/
+            location: https://digispoof.demodam.nl/
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
         uc:
             auth: apikey
@@ -30,4 +30,8 @@ parameters:
         dcs:
             auth: apikey
             location: https://conduction.demodam.nl/api/v1/document-creation-service
-            apikey: ''
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        vrc:
+            auth: apikey
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+            location: https://conduction.demodam.nl/api/v1/vrc
