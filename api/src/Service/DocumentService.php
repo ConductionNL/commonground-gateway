@@ -14,12 +14,14 @@ class DocumentService
     private CommonGroundService $commonGroundService;
     private EavService $eavService;
     private GatewayService $gatewayService;
+    private SerializerInterface $serializer;
 
-    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService)
+    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer)
     {
         $this->eavService = $eavService;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -36,7 +38,7 @@ class DocumentService
      */
     private function getData(Document $document, string $dataId): string
     {
-        return json_encode($this->eavService->getObject($dataId, 'GET', $document->getEntity()));
+        return $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getEntity()), 'json');
     }
 
     /**
