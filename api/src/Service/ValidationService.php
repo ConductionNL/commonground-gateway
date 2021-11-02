@@ -371,7 +371,7 @@ class ValidationService
                 }
                 // Create a new subObject (ObjectEntity)
                 else {
-                    //TODO: Lets do some cascade checks here?
+                    //TODO: Lets do some cascade checks here? as in, if cascade = false we should expect an uuid not a array/body
                     $subObject = new ObjectEntity();
 
                     $subObject->setEntity($attribute->getObject());
