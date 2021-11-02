@@ -129,9 +129,16 @@ class ObjectEntity
     private $uri;
 
     /**
+     * @var string An uuid of an application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $application;
+
+    /**
      * @var string An uuid of an organization
      *
-     * @Assert\Uuid
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -237,12 +244,24 @@ class ObjectEntity
         return $this;
     }
 
+    public function getApplication(): ?string
+    {
+        return $this->application;
+    }
+
+    public function setApplication(string $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+
     public function getOrganization(): ?string
     {
         return $this->organization;
     }
 
-    public function setOrganization(string $organization): self
+    public function setOrganization(?string $organization): self
     {
         $this->organization = $organization;
 

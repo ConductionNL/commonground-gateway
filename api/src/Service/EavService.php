@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
@@ -31,8 +32,10 @@ class EavService
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
+    private ConvertToGatewayService $convertToGatewayService;
+    private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -40,6 +43,8 @@ class EavService
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
+        $this->convertToGatewayService = $convertToGatewayService;
+        $this->session = $session;
     }
 
     /**
@@ -109,10 +114,10 @@ class EavService
     {
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
-            if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
-                if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                    $object = $this->validationService->createOEforExternObject($entity, $id);
+                    $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
                             'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
@@ -121,13 +126,10 @@ class EavService
                             'data'    => ['id' => $id],
                         ];
                     }
-                } else {
-                    // Found an object with externalId
-                    $object = $object[0];
                 }
             }
 
-            if ($entity != $object->getEntity()) {
+            if ($entity !== $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',
@@ -136,6 +138,19 @@ class EavService
                         'providedEntityName' => $entity->getName(),
                         'attachedEntityName' => $object->getEntity()->getName(),
                     ],
+                ];
+            }
+
+            // TODO: lets check if the user is allowed to view/edit this resource
+            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
+//                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+            )
+            {
+                return [
+                    'message' => "Unauthorized",
+                    'type'    => 'Unauthorized',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
                 ];
             }
 

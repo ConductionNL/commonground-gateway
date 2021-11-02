@@ -20,6 +20,7 @@ use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ValidationService
@@ -30,19 +31,25 @@ class ValidationService
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
     private AuthorizationService $authorizationService;
+    private SessionInterface $session;
+    private ConvertToGatewayService $convertToGatewayService;
 
     public function __construct(
-        EntityManagerInterface $em,
-        CommonGroundService $commonGroundService,
-        GatewayService $gatewayService,
-        CacheInterface $cache,
-        AuthorizationService $authorizationService
+        EntityManagerInterface  $em,
+        CommonGroundService     $commonGroundService,
+        GatewayService          $gatewayService,
+        CacheInterface          $cache,
+        AuthorizationService    $authorizationService,
+        SessionInterface        $session,
+        ConvertToGatewayService $convertToGatewayService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->cache = $cache;
         $this->authorizationService = $authorizationService;
+        $this->session = $session;
+        $this->convertToGatewayService = $convertToGatewayService;
     }
 
     /**
@@ -316,7 +323,11 @@ class ValidationService
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->find($object)) {
                             if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $object])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                                $subObject = $this->createOEforExternObject($attribute->getObject(), $object, $valueObject, $objectEntity);
+//                                $subObject = $this->createOEforExternObject($attribute->getObject(), $object, $valueObject, $objectEntity); // TODO REMOVE
+                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object, $valueObject, $objectEntity);
+                                // For in the rare case that a body contains the same uuid of an extern object more than once we need to (^persist and) flush this ObjectEntity in the gateway.
+                                // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
+                                $this->em->flush();
                                 if (!$subObject) {
                                     $objectEntity->addError($attribute->getName().'['.$key.']', 'Could not find an object with id '.$object.' of type '.$attribute->getObject()->getName());
                                     break;
@@ -349,7 +360,11 @@ class ValidationService
                         // In the rare case that we are creating a new Gateway ObjectEntity for an object existing outside the gateway. (maybe even another ObjectEntity for a subresource of an extern object like this)
                         // (this can happen when an uuid is given for an attribute that expects an object and this object is only found outside the gateway)
                         // Than if gateway->location and endpoint are set on the attribute(->getObject) Entity, we should check for objects outside the gateway here.
-                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity);
+//                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity); // TODO REMOVE
+                        $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
+                        // For in the rare case that a body contains the same uuid of an extern object more than once we need to (^persist and) flush this ObjectEntity in the gateway.
+                        // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
+                        $this->em->flush();
 
                         if (!$subObject) {
                             $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
@@ -383,6 +398,7 @@ class ValidationService
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
+                $subObject->setOrganization($this->session->get('activeOrganization')); // TODO?
 
 //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
@@ -416,54 +432,6 @@ class ValidationService
     }
 
     /**
-     * @param ObjectEntity $objectEntity
-     * @param Attribute    $attribute
-     * @param Value        $valueObject
-     * @param string       $id
-     *
-     * @throws Exception
-     *
-     * @return ObjectEntity|null
-     */
-    public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null): ?ObjectEntity
-    {
-        // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-                $object = array_filter($object, function ($propertyName) use ($entity) {
-                    if ($entity->getAvailableProperties()) {
-                        return in_array($propertyName, $entity->getAvailableProperties());
-                    }
-
-                    return $entity->getAttributeByName($propertyName);
-                }, ARRAY_FILTER_USE_KEY);
-                $newSubObject = new ObjectEntity();
-                $newSubObject->setEntity($entity);
-                if (!is_null($valueObject)) {
-                    $newSubObject->addSubresourceOf($valueObject);
-                }
-
-                // Set the externalId and uri.
-                $newSubObject->setExternalId($id);
-                $newSubObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-                $object = $this->validateEntity($newSubObject, $object, true);
-
-                // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
-                // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
-                if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$object->getHasErrors()) {
-                    $this->em->persist($object);
-                    $this->em->flush();
-                }
-
-                return $object;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * This function hydrates an object(tree) (new style).
      *
      * The act of hydrating means filling objects with values from a post
@@ -471,6 +439,7 @@ class ValidationService
      * @param ObjectEntity $objectEntity
      *
      * @return ObjectEntity
+     * @throws Exception
      */
     private function hydrate(ObjectEntity $objectEntity, $post): ObjectEntity
     {
@@ -813,7 +782,11 @@ class ValidationService
                     if (!$subObject = $this->em->getRepository('App:ObjectEntity')->find($value)) {
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $value])) {
                             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                            $subObject = $this->createOEforExternObject($attribute->getObject(), $value, $valueObject, $objectEntity);
+//                            $subObject = $this->createOEforExternObject($attribute->getObject(), $value, $valueObject, $objectEntity); // TODO REMOVE
+                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
+                            // For in the rare case that a body contains the same uuid of an extern object more than once we need to (^persist and) flush this ObjectEntity in the gateway.
+                            // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
+                            $this->em->flush();
                             if (!$subObject) {
                                 $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
                                 break;
@@ -1248,11 +1221,13 @@ class ValidationService
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
+                    $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
 
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
+                    $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 
