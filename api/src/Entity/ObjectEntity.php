@@ -100,7 +100,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ObjectEntity
 {
     /**
-     * @var UuidInterface UUID of this person
+     * @var UuidInterface UUID of this ObjectEntity
      *
      * @Groups({"read"})
      * @ORM\Id
@@ -109,6 +109,15 @@ class ObjectEntity
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
+
+    /**
+     * @var string UUID of the external object of this ObjectEntity
+     *
+     * @Assert\Uuid
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $externalId;
 
     /**
      * @var string An uri
@@ -200,6 +209,18 @@ class ObjectEntity
     public function setId(Uuid $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getExternalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function setExternalId(?string $externalId): self
+    {
+        $this->externalId = $externalId;
 
         return $this;
     }
@@ -344,11 +365,16 @@ class ObjectEntity
         $values = $this->getObjectValues();
 
         foreach ($values as $value) {
-            foreach ($value->getObjects() as $subResource) {
+            foreach ($value->getObjects() as $key => $subResource) {
+                if (count($value->getObjects()) > 1) {
+                    $key = '['.$key.']';
+                } else {
+                    $key = '';
+                }
                 if (!$maxDepth->contains($subResource)) {
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName()] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
                     }
                 }
             }

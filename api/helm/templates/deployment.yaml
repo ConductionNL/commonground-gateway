@@ -195,6 +195,18 @@ spec:
                       name: {{ include "commonground-gateway.fullname" . }}
             - name: DIGID_IDP_CERT
               value: '/var/run/idp/digid_idp.crt'
+            {{-  if and .Values.security.digid.certificate .Values.security.digid.privateKey }}
+            - name: DIGID_CERTIFICATE
+              valueFrom:
+                secretKeyRef:
+                  key: digid-certificate
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: DIGID_PRIVATEKEY
+              valueFrom:
+                secretKeyRef:
+                  key: digid-privatekey
+                  name: {{ include "commonground-gateway.fullname" . }}
+            {{- end }}
             {{- end }}
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
@@ -210,6 +222,8 @@ spec:
               value: localhost
             - name: BACKENDS
               value: localhost
+            - name: NGINX_ENV
+              value: {{ .Values.config.env }}
           ports:
             - name: http
               containerPort: 80
