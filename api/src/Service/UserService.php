@@ -3,8 +3,8 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
-use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -56,6 +56,7 @@ class UserService
     public function getPersonForUser(UserInterface $user): array
     {
         if(!($user instanceof AuthenticationUser)){
+            var_dump(get_class($user));
             return [];
         }
         if($user->getPerson() && $person = $this->getObject($user->getPerson(), $this->eavService)){
