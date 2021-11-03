@@ -4,8 +4,6 @@ namespace App\Service;
 
 use App\Entity\Document;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -30,6 +28,7 @@ class DocumentService
     public function handleDocument(Document $document, string $dataId): Response
     {
         $data = $this->getData($document, $dataId);
+
         return $this->sendData($document, $data);
     }
 
@@ -47,6 +46,7 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
+
         return $this->gatewayService->createResponse($this->commonGroundService->callService($this->gatewayService->gatewayToArray($document->getEntity()->getGateway()), $url, $data, [], [], false, 'POST'));
     }
 }

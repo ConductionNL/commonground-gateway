@@ -4,7 +4,6 @@
 
 namespace App\Controller;
 
-use App\Entity\ObjectEntity;
 use App\Service\EavService;
 use App\Service\UserService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -49,7 +48,7 @@ class LoginController extends AbstractController
                 'name'       => $this->getUser()->getName(),
                 'email'      => $this->getUser()->getEmail(),
                 // TODO: if we have no person connected to this user create one? with $this->createPersonForUser()
-                'person'     => $userService->getPersonForUser($this->getUser()),
+                'person'        => $userService->getPersonForUser($this->getUser()),
                 'organization'  => $userService->getOrganizationForUser($this->getUser()),
             ];
             $result = json_encode($result);

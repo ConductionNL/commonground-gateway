@@ -15,7 +15,8 @@ class UserService
     private EavService $eavService;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(CommonGroundService $commonGroundService, EavService $eavService, EntityManagerInterface $entityManager){
+    public function __construct(CommonGroundService $commonGroundService, EavService $eavService, EntityManagerInterface $entityManager)
+    {
         $this->commonGroundService = $commonGroundService;
         $this->eavService = $eavService;
         $this->entityManager = $entityManager;
@@ -55,13 +56,14 @@ class UserService
 
     public function getPersonForUser(UserInterface $user): array
     {
-        if(!($user instanceof AuthenticationUser)){
+        if (!($user instanceof AuthenticationUser)) {
             var_dump(get_class($user));
+
             return [];
         }
-        if($user->getPerson() && $person = $this->getObject($user->getPerson(), $this->eavService)){
+        if ($user->getPerson() && $person = $this->getObject($user->getPerson(), $this->eavService)) {
             return $person;
-        } elseif($user->getPerson()) {
+        } elseif ($user->getPerson()) {
             try {
                 $person = $this->commonGroundService->getResource($user->getPerson());
             } catch (ClientException $exception) {
@@ -70,23 +72,25 @@ class UserService
         } else {
             $person = $this->getUserObjectEntity($user->getUsername(), $this->eavService);
         }
+
         return $person;
     }
 
     public function getOrganizationForUser(UserInterface $user): array
     {
-        if(!($user instanceof AuthenticationUser)){
+        if (!($user instanceof AuthenticationUser)) {
             return [];
         }
-        if(!$user->getOrganization()){
+        if (!$user->getOrganization()) {
             return [];
-        } elseif(!($organization = $this->getObject($user->getOrganization(), $this->eavService))){
-            try{
+        } elseif (!($organization = $this->getObject($user->getOrganization(), $this->eavService))) {
+            try {
                 $organization = $this->commonGroundService->getResource($user->getOrganization());
-            } catch (ClientException $exception){
+            } catch (ClientException $exception) {
                 return [];
             }
         }
+
         return $organization;
     }
 }
