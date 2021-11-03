@@ -4,8 +4,6 @@ namespace App\Service;
 
 use App\Entity\Document;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -43,12 +41,13 @@ class DocumentService
     private function getData(Document $document, string $dataId): string
     {
         $data = json_decode($this->serializer->serialize($this->eavService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json'), true);
-        if(isset($data['id'])){
+        if (isset($data['id'])) {
             unset($data['id']);
         }
-        if(isset($data['@id'])){
+        if (isset($data['@id'])) {
             unset($data['@id']);
         }
+
         return json_encode($data);
     }
 
@@ -58,6 +57,7 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
+
         return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components')['dcs'], $url, $data, [], [], false, 'POST'));
     }
 }

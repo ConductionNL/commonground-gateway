@@ -15,12 +15,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -142,7 +142,7 @@ class EavService
 
 //            // TODO: lets check if the user is allowed to view/edit this resource
 //            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
-////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+            ////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
 //            )
 //            {
 //                return [
@@ -630,7 +630,6 @@ class EavService
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
 //        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
-
 
         $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);

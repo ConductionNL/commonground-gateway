@@ -35,12 +35,12 @@ class ValidationService
     private ConvertToGatewayService $convertToGatewayService;
 
     public function __construct(
-        EntityManagerInterface  $em,
-        CommonGroundService     $commonGroundService,
-        GatewayService          $gatewayService,
-        CacheInterface          $cache,
-        AuthorizationService    $authorizationService,
-        SessionInterface        $session,
+        EntityManagerInterface $em,
+        CommonGroundService $commonGroundService,
+        GatewayService $gatewayService,
+        CacheInterface $cache,
+        AuthorizationService $authorizationService,
+        SessionInterface $session,
         ConvertToGatewayService $convertToGatewayService
     ) {
         $this->em = $em;
@@ -421,8 +421,9 @@ class ValidationService
      *
      * @param ObjectEntity $objectEntity
      *
-     * @return ObjectEntity
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function hydrate(ObjectEntity $objectEntity, $post): ObjectEntity
     {
