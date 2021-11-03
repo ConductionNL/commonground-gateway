@@ -104,10 +104,30 @@ class ConvertToGatewayService
         $newObject->setOrganization($this->session->get('activeOrganization')); // TODO?
 //                $newObject->setApplication(); // TODO
         // TODO: Do not use validationService validateEntity here, find another way to do subresources and 'validation', required fields in the gateway that are not set in extern object should be set to null?!
-        // Loop through entity attributes? if we find a value for this attribute from extern object set it, if not but is required set to null.
 //        $newObject = $this->validationService->validateEntity($newObject, $body, true);
 
-        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
+        // Loop through entity attributes? if we find a value for this attribute from extern object set it, if not but is required set to null.
+        foreach ($entity->getAttributes() as $attribute) {
+            // Only save the attributes that are used.
+            if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
+                continue;
+            }
+
+            // Check if we have a value ( a value is given in the post body for this attribute, can be null )
+            // Else if check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
+            // And else set to null. (even if $attribute is required)
+            $value = key_exists($attribute->getName(), $body) ? $body[$attribute->getName()] : $attribute->getDefaultValue() ?? null;
+            $objectEntity->getValueByAttribute($attribute)->setValue($value);
+        }
+
+        // Check post for not allowed properties
+        foreach ($body as $key=>$value) {
+            if (!$entity->getAttributeByName($key) && $key != 'id') {
+                $objectEntity->addError($key, 'Does not exist on this property');
+            }
+        }
+
+        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush (after this function) this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
             $this->em->persist($newObject);

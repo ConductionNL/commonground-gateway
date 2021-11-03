@@ -399,6 +399,7 @@ class ValidationService
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
                 $subObject->setOrganization($this->session->get('activeOrganization')); // TODO?
+//                $subObject->setApplication(); // TODO
 
 //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
@@ -1222,12 +1223,14 @@ class ValidationService
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
                     $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
+//                    $objectEntity->setApplication(); // TODO
 
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
                     $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
+//                    $objectEntity->setApplication(); // TODO
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
 
