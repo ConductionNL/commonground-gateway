@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
@@ -68,7 +69,7 @@ class ConvertToGatewayService
      * @return ObjectEntity|null
      * @throws Exception
      */
-    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ObjectEntity $objectEntity = null): ?ObjectEntity
+    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
         if (!$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
@@ -145,116 +146,22 @@ class ConvertToGatewayService
                 // Then validate all items in this array
                 if ($attribute->getType() == 'object') {
                     // This is an array of objects
-                    $valueObject = $objectEntity->getValueByAttribute($attribute);
+                    $valueObject = $newObject->getValueByAttribute($attribute);
                     foreach ($value as $key => $object) {
-                        // todo!
+                        // $key could be used for addError with attributeName = $attribute->getName().'['.$key.']'
+                        $this->addObjectToValue($attribute, $object, $valueObject, $objectEntity);
                     }
                 } elseif ($attribute->getType() == 'file') {
                     // TODO? or is null ok?
-                    $value = null;
-                    $valueObject = $newObject->getValueByAttribute($attribute);
+                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    continue;
                 } else {
-//                    foreach ($value as $item) {
-//                        $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
-//                        $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
-//                    }
+                    foreach ($value as &$item) {
+                        $item = $this->checkAttribute($item, $attribute, $newObject, $objectEntity);
+                    }
                 }
             } else {
-                // Check if value is an array
-                if (is_array($value) && $attribute->getType() != 'object' || $attribute->getType() != 'file') {
-//                    'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)'
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
-                    continue;
-                }
-                // Check for enums TODO: is setting it to null the correct solution here?
-                if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
-//                    'Must be one of the following values: ['.implode(', ', $attribute->getEnum()).'] ('.$value.' is not).'
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
-                    continue;
-                }
-
-                // Switch for attribute types
-                switch ($attribute->getType()) {
-                    case 'object':
-                        // First get the valueObject for this attribute
-                        $valueObject = $newObject->getValueByAttribute($attribute);
-
-                        // If this object is given as a uuid (string) it should be valid
-                        if (is_string($value) && Uuid::isValid($value) == false) {
-                            // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
-                            // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
-                                $value = $this->commonGroundService->getUuidFromUrl($value);
-                            } else {
-//                                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
-                                $value = null;
-                                break;
-                            }
-                            $bodyForNewObject = null;
-                        } elseif (is_array($value)) {
-                            // If not string but array use $value['id'] and $value as $body for find with externalId or convertToGatewayObject
-                            $bodyForNewObject = $value;
-                            $value = $value['id']; // TODO: check if id key exists? and if not, what to do?
-                        } else {
-//                            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
-                            $value = null;
-                            break;
-                        }
-
-                        // Look for an existing ObjectEntity with its externalId set to this string, else look in external component with this uuid.
-                        // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
-                        if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
-                            // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                            $subObject = $this->convertToGatewayObject($attribute->getObject(), $bodyForNewObject, $value, $valueObject, $objectEntity);
-                            if (!$subObject) {
-//                                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
-                                $value = null;
-                                break;
-                            }
-                        }
-
-                        // Object toevoegen
-                        $valueObject->getObjects()->clear(); // We start with a default object
-                        $valueObject->addObject($subObject);
-
-                        break;
-                    case 'file':
-                        // TODO? or is null ok?
-                        $value = null;
-                        $valueObject = $newObject->getValueByAttribute($attribute);
-                        break;
-                    case 'date':
-                    case 'datetime':
-                        try {
-                            new DateTime($value);
-                        } catch (Exception $e) {
-//                            'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
-                            $value = null;
-                        }
-                        break;
-                    case 'boolean':
-                        if (!is_bool($value)) {
-                            $value = null;
-                        }
-                        break;
-                    case 'number':
-                        if (!is_integer($value) && !is_float($value) && gettype($value) != 'float' && gettype($value) != 'double') {
-                            $value = null;
-                        }
-                        break;
-                    case 'integer':
-                        if (!is_integer($value)) {
-                            $value = null;
-                        }
-                        break;
-                    case 'string':
-                        if (!is_string($value)) {
-                            $value = null;
-                        }
-                        break;
-                    default:
-                        $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
-                }
+                $value = $this->checkAttribute($value, $attribute, $newObject, $objectEntity);
             }
 
             if ($attribute->getMustBeUnique()) {
@@ -272,7 +179,7 @@ class ConvertToGatewayService
 //        // Check post for not allowed properties
 //        foreach ($body as $key=>$value) {
 //            if (!$entity->getAttributeByName($key) && $key != 'id') {
-//                $objectEntity->addError($key, 'Does not exist on this property');
+//                $newObject->addError($key, 'Does not exist on this property');
 //            }
 //        }
 
@@ -285,5 +192,135 @@ class ConvertToGatewayService
         }
 
         return $newObject;
+    }
+
+    /**
+     * @param $value
+     * @param Attribute $attribute
+     * @param ObjectEntity $newObject
+     * @param ObjectEntity|null $objectEntity
+     *
+     * @return string|null
+     * @throws Exception
+     */
+    private function checkAttribute($value, Attribute $attribute, ObjectEntity $newObject, ?ObjectEntity $objectEntity)
+    {
+        // Check if value is an array
+        if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+//            var_dump('Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
+            return null;
+        }
+        // Check for enums TODO: is setting it to null the correct solution here?
+        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+//            var_dump('Must be one of the following values: ['.implode(', ', $attribute->getEnum()).'] ('.$value.' is not).');
+            return null;
+        }
+
+        // Switch for attribute types
+        switch ($attribute->getType()) {
+            case 'object':
+                // First get the valueObject for this attribute
+                $valueObject = $newObject->getValueByAttribute($attribute);
+
+                $value = $this->addObjectToValue($attribute, $value, $valueObject, $objectEntity);
+                if ($value === null) {
+                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                }
+
+                break;
+            case 'file':
+                // TODO? or is null ok?
+                $newObject->getValueByAttribute($attribute)->setValue(null);
+                break;
+            case 'date':
+            case 'datetime':
+                try {
+                    new DateTime($value);
+                } catch (Exception $e) {
+//                            'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+                    $value = null;
+                }
+                break;
+            case 'boolean':
+                if (!is_bool($value)) {
+                    $value = null;
+                }
+                break;
+            case 'number':
+                if (!is_integer($value) && !is_float($value) && gettype($value) != 'float' && gettype($value) != 'double') {
+                    $value = null;
+                }
+                break;
+            case 'integer':
+                if (!is_integer($value)) {
+                    $value = null;
+                }
+                break;
+            case 'string':
+                if (!is_string($value)) {
+                    $value = null;
+                }
+                break;
+            default:
+                $newObject->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
+        }
+
+        // Check the format of this attribute
+        if ($attribute->getFormat() != null) {
+            // todo! validateAttributeFormat ?
+        }
+        
+        return $value;
+    }
+
+    /**
+     * @param Attribute $attribute
+     * @param $value
+     * @param Value $valueObject
+     * @param ObjectEntity $objectEntity
+     *
+     * @return false|mixed|string|null
+     * @throws Exception
+     */
+    private function addObjectToValue(Attribute $attribute, $value, Value $valueObject, ?ObjectEntity $objectEntity)
+    {
+        // If this object is given as a uuid (string) it should be valid
+        if (is_string($value) && Uuid::isValid($value) == false) {
+            // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
+            // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
+            if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+                $value = $this->commonGroundService->getUuidFromUrl($value);
+            } else {
+//                                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+                return null; // set $value to null
+            }
+            $bodyForNewObject = null;
+        } elseif (is_array($value)) {
+            // If not string but array use $value['id'] and $value as $body for find with externalId or convertToGatewayObject
+            $bodyForNewObject = $value;
+            $value = $value['id']; // TODO: check if id key exists? and if not, what to do?
+        } else {
+//                            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+            return null; // set $value to null
+        }
+
+        // Look for an existing ObjectEntity with its externalId set to this string, else look in external component with this uuid.
+        // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
+        if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
+            // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+            $subObject = $this->convertToGatewayObject($attribute->getObject(), $bodyForNewObject, $value, $valueObject, $objectEntity);
+            if (!$subObject) {
+//                                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
+                return null; // set $value to null
+            }
+        }
+
+        // Object toevoegen
+        if (!$attribute->getMultiple()) {
+            $valueObject->getObjects()->clear(); // We start with a default object
+        }
+        $valueObject->addObject($subObject);
+
+        return $value;
     }
 }
