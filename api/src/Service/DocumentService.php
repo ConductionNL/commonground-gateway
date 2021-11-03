@@ -6,51 +6,47 @@ use App\Entity\Document;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DocumentService
 {
-    private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
-    private SerializerService $serializerService;
+    private EavService $eavService;
+    private GatewayService $gatewayService;
     private SerializerInterface $serializer;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, SerializerService $serializerService, SerializerInterface $serializer)
+    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer)
     {
-        $this->em = $em;
+        $this->eavService = $eavService;
         $this->commonGroundService = $commonGroundService;
-        $this->serializerService = $serializerService;
+        $this->gatewayService = $gatewayService;
         $this->serializer = $serializer;
     }
 
     /**
      * Get the data for a document and send it to the document creation service.
      */
-    public function handleDocument(Document $document)
+    public function handleDocument(Document $document, string $dataId): Response
     {
-        $data = $this->getData($document);
-        $this->sendData($document, $data);
+        $data = $this->getData($document, $dataId);
+        return $this->sendData($document, $data);
     }
 
     /**
      * Get document data.
      */
-    private function getData(Document $document): string
+    private function getData(Document $document, string $dataId): string
     {
-        $data = $document->getData();
-        $dataId = $document->getDataId();
-
-        return $data;
+        return $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getEntity()), 'json');
     }
 
     /**
      * Sends the data to the document creation service.
      */
-    private function sendData(Document $document, string $data)
+    private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
-
-        //TODO send data to document creation service
-//        $this->commonGroundService->createResource($object, ['component' => '???', 'type' => '???']);
+        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->gatewayService->gatewayToArray($document->getEntity()->getGateway()), $url, $data, [], [], false, 'POST'));
     }
 }

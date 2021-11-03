@@ -425,11 +425,11 @@ class ValidationService
      *
      * @return ObjectEntity|null
      */
-    public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null): ?ObjectEntity
+    public function createOEforExternObject(Entity $entity, string $id, Value $valueObject = null, ObjectEntity $objectEntity = null, bool $validate = true)
     {
         // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
         if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id)) {
+            if ($object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
                 // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
                 $object = array_filter($object, function ($propertyName) use ($entity) {
                     if ($entity->getAvailableProperties()) {
@@ -447,11 +447,10 @@ class ValidationService
                 // Set the externalId and uri.
                 $newSubObject->setExternalId($id);
                 $newSubObject->setUri($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id);
-                $object = $this->validateEntity($newSubObject, $object, true);
 
                 // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
                 // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
-                if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$object->getHasErrors()) {
+                if ($object instanceof ObjectEntity && (is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$object->getHasErrors()) {
                     $this->em->persist($object);
                     $this->em->flush();
                 }
