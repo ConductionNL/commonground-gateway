@@ -325,7 +325,6 @@ class ValidationService
                         }
 
                         // object toevoegen
-                        $valueObject->getObjects()->clear(); // We start with a deafult object //TODO: do we need this here?
                         $valueObject->addObject($subObject);
                         continue;
                     } else {
