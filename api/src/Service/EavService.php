@@ -629,7 +629,8 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
-//        $this->convertToGatewayService->convertEntityObjects($entity);
+//        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
+
 
         $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
@@ -644,14 +645,9 @@ class EavService
             return $results;
         }
 
-        $totalItems = count($total);
-        if (isset($totalExternObjects)) {
-            $totalItems = $totalItems + $totalExternObjects;
-        }
-
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = $totalItems;
+        $results['total'] = count($total); // TODO: $total lijkt niet meer dan 25 te zijn?!
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];

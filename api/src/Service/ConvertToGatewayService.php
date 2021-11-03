@@ -54,16 +54,18 @@ class ConvertToGatewayService
                 }
             }
         }
-        var_dump('New gateway objects = '.count($newGatewayObjects));
-
-        $this->em->flush(); // TODO: Do we need this here or not?
+//        var_dump('New gateway objects = '.count($newGatewayObjects));
 
         // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
         $externObjectIds = array_column($totalExternObjects, 'id');
         $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
         });
-        var_dump('Deleted gateway objecst = '.count($onlyInGateway));
+
+        // TODO: delete these $onlyInGateway objectEntities ?
+//        var_dump('Deleted gateway objects = '.count($onlyInGateway));
+
+        $this->em->flush(); // TODO: Do we need this here or not?
     }
 
     /**
@@ -92,6 +94,7 @@ class ConvertToGatewayService
                 $body = $object;
             }
         }
+        $id = $body['id'];
 
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         $body = array_filter($body, function ($propertyName) use ($entity) {
@@ -115,14 +118,6 @@ class ConvertToGatewayService
 //                $newObject->setApplication(); // TODO
 
         $newObject = $this->checkAttributes($newObject, $body, $objectEntity);
-
-        //TODO: Do we want this here?
-//        // Check post for not allowed properties
-//        foreach ($body as $key=>$value) {
-//            if (!$entity->getAttributeByName($key) && $key != 'id') {
-//                $newObject->addError($key, 'Does not exist on this property');
-//            }
-//        }
 
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
