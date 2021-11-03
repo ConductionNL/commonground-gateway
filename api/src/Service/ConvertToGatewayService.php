@@ -6,9 +6,11 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ConvertToGatewayService
@@ -61,7 +63,7 @@ class ConvertToGatewayService
      * @param array|null $body
      * @param string|null $id
      * @param Value|null $subresourceOf
-     * @param ObjectEntity|null $objectEntity
+     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
      *
      * @return ObjectEntity|null
      * @throws Exception
@@ -103,13 +105,11 @@ class ConvertToGatewayService
         $newObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
         $newObject->setOrganization($this->session->get('activeOrganization')); // TODO?
 //                $newObject->setApplication(); // TODO
-        // TODO: Do not use validationService validateEntity here, find another way to do subresources and 'validation', required fields in the gateway that are not set in extern object should be set to null?!
-//        $newObject = $this->validationService->validateEntity($newObject, $body, true);
 
-        // Loop through entity attributes? if we find a value for this attribute from extern object set it, if not but is required set to null.
+        // Loop through entity attributes if we find a value for this attribute from extern object, set it, if not but is for example required, set to null.
         foreach ($entity->getAttributes() as $attribute) {
             // Only save the attributes that are used.
-            if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
+            if (!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties())) {
                 continue;
             }
 
@@ -117,20 +117,171 @@ class ConvertToGatewayService
             // Else if check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             // And else set to null. (even if $attribute is required)
             $value = key_exists($attribute->getName(), $body) ? $body[$attribute->getName()] : $attribute->getDefaultValue() ?? null;
-            $objectEntity->getValueByAttribute($attribute)->setValue($value);
-        }
+            if ($attribute->getMultiple()) {
+                // If multiple, this should be an array
+                if (!is_array($value)) {
+                    // 'Expects array, '.gettype($value).' given. (Multiple is set for this attribute)'
+                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    continue;
+                }
 
-        // Check post for not allowed properties
-        foreach ($body as $key=>$value) {
-            if (!$entity->getAttributeByName($key) && $key != 'id') {
-                $objectEntity->addError($key, 'Does not exist on this property');
+                // Check for array of unique items TODO: is setting it to null the correct solution here?
+                if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
+                    // TODOmaybe:check this in another way so all kinds of arrays work with it.
+                    $containsStringKey = false;
+                    foreach ($value as $arrayItem) {
+                        if (is_array($arrayItem) && count(array_filter(array_keys($arrayItem), 'is_string')) > 0) {
+                            $containsStringKey = true;
+                            break;
+                        }
+                    }
+                    if (!$containsStringKey && count($value) !== count(array_unique($value))) {
+//                        'Must be an array of unique items'
+                        $newObject->getValueByAttribute($attribute)->setValue(null);
+                        continue;
+                    }
+                }
+
+                // Then validate all items in this array
+                if ($attribute->getType() == 'object') {
+                    // This is an array of objects
+                    $valueObject = $objectEntity->getValueByAttribute($attribute);
+                    foreach ($value as $key => $object) {
+                        // todo!
+                    }
+                } elseif ($attribute->getType() == 'file') {
+                    // TODO? or is null ok?
+                    $value = null;
+                    $valueObject = $newObject->getValueByAttribute($attribute);
+                } else {
+//                    foreach ($value as $item) {
+//                        $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
+//                        $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
+//                    }
+                }
+            } else {
+                // Check if value is an array
+                if (is_array($value) && $attribute->getType() != 'object' || $attribute->getType() != 'file') {
+//                    'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)'
+                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    continue;
+                }
+                // Check for enums TODO: is setting it to null the correct solution here?
+                if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+//                    'Must be one of the following values: ['.implode(', ', $attribute->getEnum()).'] ('.$value.' is not).'
+                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    continue;
+                }
+
+                // Switch for attribute types
+                switch ($attribute->getType()) {
+                    case 'object':
+                        // First get the valueObject for this attribute
+                        $valueObject = $newObject->getValueByAttribute($attribute);
+
+                        // If this object is given as a uuid (string) it should be valid
+                        if (is_string($value) && Uuid::isValid($value) == false) {
+                            // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
+                            // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
+                            if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+                                $value = $this->commonGroundService->getUuidFromUrl($value);
+                            } else {
+//                                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+                                $value = null;
+                                break;
+                            }
+                            $bodyForNewObject = null;
+                        } elseif (is_array($value)) {
+                            // If not string but array use $value['id'] and $value as $body for find with externalId or convertToGatewayObject
+                            $bodyForNewObject = $value;
+                            $value = $value['id']; // TODO: check if id key exists? and if not, what to do?
+                        } else {
+//                            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+                            $value = null;
+                            break;
+                        }
+
+                        // Look for an existing ObjectEntity with its externalId set to this string, else look in external component with this uuid.
+                        // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
+                        if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
+                            // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+                            $subObject = $this->convertToGatewayObject($attribute->getObject(), $bodyForNewObject, $value, $valueObject, $objectEntity);
+                            if (!$subObject) {
+//                                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
+                                $value = null;
+                                break;
+                            }
+                        }
+
+                        // Object toevoegen
+                        $valueObject->getObjects()->clear(); // We start with a default object
+                        $valueObject->addObject($subObject);
+
+                        break;
+                    case 'file':
+                        // TODO? or is null ok?
+                        $value = null;
+                        $valueObject = $newObject->getValueByAttribute($attribute);
+                        break;
+                    case 'date':
+                    case 'datetime':
+                        try {
+                            new DateTime($value);
+                        } catch (Exception $e) {
+//                            'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+                            $value = null;
+                        }
+                        break;
+                    case 'boolean':
+                        if (!is_bool($value)) {
+                            $value = null;
+                        }
+                        break;
+                    case 'number':
+                        if (!is_integer($value) && !is_float($value) && gettype($value) != 'float' && gettype($value) != 'double') {
+                            $value = null;
+                        }
+                        break;
+                    case 'integer':
+                        if (!is_integer($value)) {
+                            $value = null;
+                        }
+                        break;
+                    case 'string':
+                        if (!is_string($value)) {
+                            $value = null;
+                        }
+                        break;
+                    default:
+                        $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
+                }
+            }
+
+            if ($attribute->getMustBeUnique()) {
+                // todo! (should we actually throw an error in this case? or also just set value to null?)
+            }
+
+            // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
+            // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
+            if (!$newObject->getHasErrors() && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+                $newObject->getValueByAttribute($attribute)->setValue($value);
             }
         }
 
-        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush (after this function) this ObjectEntity in the gateway.
-        // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
+        //TODO: Do we want this here?
+//        // Check post for not allowed properties
+//        foreach ($body as $key=>$value) {
+//            if (!$entity->getAttributeByName($key) && $key != 'id') {
+//                $objectEntity->addError($key, 'Does not exist on this property');
+//            }
+//        }
+
+        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
+        // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
+        // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
             $this->em->persist($newObject);
+            $this->em->flush(); // Needed here! read comment above!
         }
 
         return $newObject;
