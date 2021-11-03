@@ -42,7 +42,14 @@ class DocumentService
      */
     private function getData(Document $document, string $dataId): string
     {
-        return $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getEntity()), 'json');
+        $data = json_decode($this->serializer->serialize($this->eavService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json'), true);
+        if(isset($data['id'])){
+            unset($data['id']);
+        }
+        if(isset($data['@id'])){
+            unset($data['@id']);
+        }
+        return json_encode($data);
     }
 
     /**
