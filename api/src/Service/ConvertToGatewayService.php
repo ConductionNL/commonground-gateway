@@ -30,8 +30,9 @@ class ConvertToGatewayService
     /**
      * @param Entity $entity
      *
-     * @return void|null
      * @throws Exception
+     *
+     * @return void|null
      */
     public function convertEntityObjects(Entity $entity)
     {
@@ -69,14 +70,15 @@ class ConvertToGatewayService
     }
 
     /**
-     * @param Entity $entity
-     * @param array|null $body
-     * @param string|null $id
-     * @param Value|null $subresourceOf
-     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * @param Entity            $entity
+     * @param array|null        $body
+     * @param string|null       $id
+     * @param Value|null        $subresourceOf
+     * @param ObjectEntity|null $objectEntity  a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     *
+     * @throws Exception
      *
      * @return ObjectEntity|null
-     * @throws Exception
      */
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null): ?ObjectEntity
     {
@@ -87,7 +89,7 @@ class ConvertToGatewayService
 
         // If we have no $body we should use id to look for an extern object, if it exists get it and convert it to ObjectEntity in the gateway
         if (!$body) {
-            if (!$id || !$object = $this->commonGroundService->isResource($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id)) {
+            if (!$id || !$object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
                 // If we have no $body or $id, or if no resource with this $id exists...
                 return null; //Or false or error? //todo?
             } else {
@@ -207,12 +209,13 @@ class ConvertToGatewayService
 
     /**
      * @param $value
-     * @param Attribute $attribute
-     * @param ObjectEntity $newObject
+     * @param Attribute         $attribute
+     * @param ObjectEntity      $newObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @return string|null
      * @throws Exception
+     *
+     * @return string|null
      */
     private function checkAttribute($value, Attribute $attribute, ObjectEntity $newObject, ?ObjectEntity $objectEntity)
     {
@@ -287,11 +290,12 @@ class ConvertToGatewayService
     /**
      * @param Attribute $attribute
      * @param $value
-     * @param Value $valueObject
+     * @param Value             $valueObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @return false|mixed|string|null
      * @throws Exception
+     *
+     * @return false|mixed|string|null
      */
     private function addObjectToValue(Attribute $attribute, $value, Value $valueObject, ?ObjectEntity $objectEntity)
     {
