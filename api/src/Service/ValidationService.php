@@ -446,7 +446,7 @@ class ValidationService
 
                 // Set the externalId and uri.
                 $newSubObject->setExternalId($id);
-                $newSubObject->setUri($entity->getGateway()->getLocation() . '/' . $entity->getEndpoint() . '/' . $id);
+                $newSubObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 
                 // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
                 // Because if we do not do this, multiple ObjectEntities will be created for the same extern object. (externalId needs to be set!)
