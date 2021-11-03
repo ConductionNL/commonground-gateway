@@ -107,6 +107,31 @@ class ConvertToGatewayService
         $newObject->setOrganization($this->session->get('activeOrganization')); // TODO?
 //                $newObject->setApplication(); // TODO
 
+        $newObject = $this->checkAttributes($newObject, $body, $objectEntity);
+
+        //TODO: Do we want this here?
+//        // Check post for not allowed properties
+//        foreach ($body as $key=>$value) {
+//            if (!$entity->getAttributeByName($key) && $key != 'id') {
+//                $newObject->addError($key, 'Does not exist on this property');
+//            }
+//        }
+
+        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
+        // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
+        // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
+        if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
+            $this->em->persist($newObject);
+            $this->em->flush(); // Needed here! read comment above!
+        }
+
+        return $newObject;
+    }
+
+    private function checkAttributes(ObjectEntity $newObject, array $body, ?ObjectEntity $objectEntity): ObjectEntity
+    {
+        $entity = $newObject->getEntity();
+
         // Loop through entity attributes if we find a value for this attribute from extern object, set it, if not but is for example required, set to null.
         foreach ($entity->getAttributes() as $attribute) {
             // Only save the attributes that are used.
@@ -175,22 +200,6 @@ class ConvertToGatewayService
             }
         }
 
-        //TODO: Do we want this here?
-//        // Check post for not allowed properties
-//        foreach ($body as $key=>$value) {
-//            if (!$entity->getAttributeByName($key) && $key != 'id') {
-//                $newObject->addError($key, 'Does not exist on this property');
-//            }
-//        }
-
-        // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
-        // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
-        // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
-        if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
-            $this->em->persist($newObject);
-            $this->em->flush(); // Needed here! read comment above!
-        }
-
         return $newObject;
     }
 
@@ -237,7 +246,7 @@ class ConvertToGatewayService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-//                            'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+//                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
                     $value = null;
                 }
                 break;
@@ -267,9 +276,9 @@ class ConvertToGatewayService
 
         // Check the format of this attribute
         if ($attribute->getFormat() != null) {
-            // todo! validateAttributeFormat ?
+            // todo? validate / check AttributeFormat ?
         }
-        
+
         return $value;
     }
 
@@ -277,7 +286,7 @@ class ConvertToGatewayService
      * @param Attribute $attribute
      * @param $value
      * @param Value $valueObject
-     * @param ObjectEntity $objectEntity
+     * @param ObjectEntity|null $objectEntity
      *
      * @return false|mixed|string|null
      * @throws Exception
@@ -291,7 +300,7 @@ class ConvertToGatewayService
             if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
                 $value = $this->commonGroundService->getUuidFromUrl($value);
             } else {
-//                                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+//                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
                 return null; // set $value to null
             }
             $bodyForNewObject = null;
@@ -300,7 +309,7 @@ class ConvertToGatewayService
             $bodyForNewObject = $value;
             $value = $value['id']; // TODO: check if id key exists? and if not, what to do?
         } else {
-//                            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+//            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
             return null; // set $value to null
         }
 
@@ -310,7 +319,7 @@ class ConvertToGatewayService
             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
             $subObject = $this->convertToGatewayObject($attribute->getObject(), $bodyForNewObject, $value, $valueObject, $objectEntity);
             if (!$subObject) {
-//                                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
+//                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
                 return null; // set $value to null
             }
         }
