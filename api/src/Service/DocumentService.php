@@ -4,6 +4,9 @@ namespace App\Service;
 
 use App\Entity\Document;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\CommonGroundBundle\Service\SerializerService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -13,13 +16,15 @@ class DocumentService
     private EavService $eavService;
     private GatewayService $gatewayService;
     private SerializerInterface $serializer;
+    private ParameterBagInterface $parameterBag;
 
-    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer)
+    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag)
     {
         $this->eavService = $eavService;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->serializer = $serializer;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -46,7 +51,6 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
-
-        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->gatewayService->gatewayToArray($document->getEntity()->getGateway()), $url, $data, [], [], false, 'POST'));
+        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components.dcs'), $url, $data, [], [], false, 'POST'));
     }
 }
