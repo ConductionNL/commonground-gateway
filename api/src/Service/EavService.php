@@ -128,8 +128,7 @@ class EavService
                     }
                 }
             }
-
-            if ($entity !== $object->getEntity()) {
+            if ($object instanceof ObjectEntity && $entity != $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',

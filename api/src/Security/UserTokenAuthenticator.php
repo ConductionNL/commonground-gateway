@@ -71,7 +71,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             throw new AuthenticationException('The provided token is not valid');
         }
 
-        $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], true, false, true, false, false);
+        $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], false, false, true, false, false);
         $session = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
         if (!$user) {
