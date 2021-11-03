@@ -33,8 +33,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function findByEntity($entity, $filters = [], $offset = 0, $limit = 25)
     {
         $query = $this->createQueryBuilder('o')
-            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
-            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
+            ->andWhere('o.entity = :entity')
+            ->setParameters(['entity' => $entity]);
+
+        // TODO: use this and add filter for application?
+//        $query = $this->createQueryBuilder('o')
+//            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
+//            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);

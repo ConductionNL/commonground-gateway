@@ -140,18 +140,18 @@ class EavService
                 ];
             }
 
-            // TODO: lets check if the user is allowed to view/edit this resource
-            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
-//                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-            )
-            {
-                return [
-                    'message' => "Unauthorized",
-                    'type'    => 'Unauthorized',
-                    'path'    => $entity->getName(),
-                    'data'    => [],
-                ];
-            }
+//            // TODO: lets check if the user is allowed to view/edit this resource
+//            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
+////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+//            )
+//            {
+//                return [
+//                    'message' => "Unauthorized",
+//                    'type'    => 'Unauthorized',
+//                    'path'    => $entity->getName(),
+//                    'data'    => [],
+//                ];
+//            }
 
             return $object;
         } elseif ($method == 'POST') {
