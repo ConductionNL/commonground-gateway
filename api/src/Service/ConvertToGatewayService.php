@@ -41,7 +41,7 @@ class ConvertToGatewayService
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint())['hydra:totalItems'];
+        $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint())['hydra:member'];
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
         $newGatewayObjects = new ArrayCollection();
@@ -54,9 +54,16 @@ class ConvertToGatewayService
                 }
             }
         }
-        var_dump(count($newGatewayObjects));
+        var_dump('New gateway objects = '.count($newGatewayObjects));
 
-        $this->em->flush(); // Do we need this here or not?
+        $this->em->flush(); // TODO: Do we need this here or not?
+
+        // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
+        $externObjectIds = array_column($totalExternObjects, 'id');
+        $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
+            return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
+        });
+        var_dump('Deleted gateway objecst = '.count($onlyInGateway));
     }
 
     /**
