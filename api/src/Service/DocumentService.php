@@ -51,6 +51,6 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
-        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components.dcs'), $url, $data, [], [], false, 'POST'));
+        return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components')['dcs'], $url, $data, [], [], false, 'POST'));
     }
 }
