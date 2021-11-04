@@ -20,6 +20,7 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -31,8 +32,10 @@ class EavService
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
+    private ConvertToGatewayService $convertToGatewayService;
+    private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -40,6 +43,8 @@ class EavService
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
+        $this->convertToGatewayService = $convertToGatewayService;
+        $this->session = $session;
     }
 
     /**
@@ -109,10 +114,10 @@ class EavService
     {
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
-            if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
-                if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                    $object = $this->validationService->createOEforExternObject($entity, $id);
+                    $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
                             'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
@@ -121,9 +126,6 @@ class EavService
                             'data'    => ['id' => $id],
                         ];
                     }
-                } else {
-                    // Found an object with externalId
-                    $object = $object[0];
                 }
             }
             if ($object instanceof ObjectEntity && $entity != $object->getEntity()) {
@@ -137,6 +139,19 @@ class EavService
                     ],
                 ];
             }
+
+//            // TODO: lets check if the user is allowed to view/edit this resource
+//            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
+            ////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+//            )
+//            {
+//                return [
+//                    'message' => "Unauthorized",
+//                    'type'    => 'Unauthorized',
+//                    'path'    => $entity->getName(),
+//                    'data'    => [],
+//                ];
+//            }
 
             return $object;
         } elseif ($method == 'POST') {
@@ -614,6 +629,8 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
+//        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
+
         $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
@@ -622,51 +639,14 @@ class EavService
             $results[] = $this->renderResult($object, $fields);
         }
 
-//        // TODO: this is ugly...
-//        // Lets see how many objects we have in extern component, outside the gateway
-//        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-        ////            var_dump($query);
-//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), false)['hydra:totalItems'];
-        ////            var_dump(count($totalExternObjects));
-//
-//            // TODO: what if we ever add sorting?! this will break...
-//            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
-//            if (count($objects) < $limit) {
-        ////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
-//                $query['limit'] = ($limit - count($objects));
-//                if ($offset > count($total)) {
-//                    // Commonground Components dont have a working query for start, only page
-//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit); //todo: remove +1?
-//                }
-        ////                var_dump($query);
-//                // TODO: we somehow need to filter out the extern objects that already have an object in the gateway (maybe we should remove ^ $query['limit' & 'page'] for this as well.
-//                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-        ////                var_dump(count($externObjects));
-//                foreach ($externObjects as $externObject) {
-//                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
-//                    if (!is_null($entity->getAvailableProperties())) {
-//                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
-//                            return in_array($propertyName, $entity->getAvailableProperties());
-//                        }, ARRAY_FILTER_USE_KEY);
-//                    }
-//                    $results[] = $externObject;
-//                }
-//            }
-//        }
-
         // Lets skip the pritty styff when dealing with csv
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             return $results;
         }
 
-        $totalItems = count($total);
-        if (isset($totalExternObjects)) {
-            $totalItems = $totalItems + $totalExternObjects;
-        }
-
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = $totalItems;
+        $results['total'] = count($total); // TODO: $total lijkt niet meer dan 25 te zijn?!
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
