@@ -100,7 +100,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ObjectEntity
 {
     /**
-     * @var UuidInterface UUID of this person
+     * @var UuidInterface UUID of this ObjectEntity
      *
      * @Groups({"read"})
      * @ORM\Id
@@ -111,6 +111,15 @@ class ObjectEntity
     private $id;
 
     /**
+     * @var string UUID of the external object of this ObjectEntity
+     *
+     * @Assert\Uuid
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $externalId;
+
+    /**
      * @var string An uri
      *
      * @Assert\Url
@@ -118,6 +127,22 @@ class ObjectEntity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $uri;
+
+    /**
+     * @var string An uuid of an application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $application;
+
+    /**
+     * @var string An uuid of an organization
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $organization;
 
     /**
      * @Groups({"read", "write"})
@@ -195,6 +220,18 @@ class ObjectEntity
         return $this;
     }
 
+    public function getExternalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function setExternalId(?string $externalId): self
+    {
+        $this->externalId = $externalId;
+
+        return $this;
+    }
+
     public function getUri(): ?string
     {
         return $this->uri;
@@ -203,6 +240,30 @@ class ObjectEntity
     public function setUri(string $uri): self
     {
         $this->uri = $uri;
+
+        return $this;
+    }
+
+    public function getApplication(): ?string
+    {
+        return $this->application;
+    }
+
+    public function setApplication(string $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?string
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(?string $organization): self
+    {
+        $this->organization = $organization;
 
         return $this;
     }

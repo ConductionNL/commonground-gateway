@@ -6,6 +6,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -15,8 +16,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ObjectEntityRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private SessionInterface $session;
+
+    public function __construct(ManagerRegistry $registry, SessionInterface $session)
     {
+        $this->session = $session;
+
         parent::__construct($registry, ObjectEntity::class);
     }
 
@@ -29,7 +34,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQueryBuilder('o')
             ->andWhere('o.entity = :entity')
-            ->setParameter('entity', $entity);
+            ->setParameters(['entity' => $entity]);
+
+        // TODO: use this and add filter for application?
+//        $query = $this->createQueryBuilder('o')
+//            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
+//            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
