@@ -559,11 +559,6 @@ App\Entity\Attribute:
         name: children
         type: integer
         entity: '@person'
-    person_childrenbirthdays:
-        name: childrenbirthdays
-        type: date
-        multiple: true
-        entity: '@person'
     person_address:
         name: addresses
         type: object
