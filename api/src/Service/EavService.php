@@ -631,7 +631,7 @@ class EavService
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
 //        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
 
-        $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
+        $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
         $results = [];
@@ -646,9 +646,9 @@ class EavService
 
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = count($total); // TODO: $total lijkt niet meer dan 25 te zijn?!
+        $results['total'] = $total;
         $results['limit'] = $limit;
-        $results['pages'] = ceil($results['total'] / $limit);
+        $results['pages'] = ceil($total / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
         $results['page'] = floor($offset / $limit) + 1;
         $results['start'] = $offset + 1;
