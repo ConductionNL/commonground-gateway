@@ -46,11 +46,11 @@ class UserController extends AbstractController
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
-        $user = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
+        $userLogin = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
 
-        if (!$user) {
+        if (!$userLogin) {
             $status = 403;
-            $user = [
+            $userLogin = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
                 'path'    => 'users/login',
@@ -58,7 +58,17 @@ class UserController extends AbstractController
             ];
         }
 
-        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
+        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']]);
+        $organizations = [];
+        foreach ($user['userGroups'] as $userGroup) {
+            $organizations[] = $userGroup['organization'];
+        }
+        $this->session->set('organizations', $organizations);
+        // TODO if user has no organization, do we default activeOrganization to an organization of a userGroup this user has;
+        $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
+
+        return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
     }
 
     /**
@@ -68,7 +78,7 @@ class UserController extends AbstractController
     public function requestResetAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
-        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $data['username']])['hydra:member'];
+        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => urlencode($data['username'])])['hydra:member'];
         if (count($users) > 0) {
             $user = $users[0];
         } else {
