@@ -629,8 +629,10 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
-//        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
-
+        if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
+            $this->convertToGatewayService->convertEntityObjects($entity);
+        }
+        unset($query['updateGatewayPool']);
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
