@@ -20,6 +20,7 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -31,8 +32,10 @@ class EavService
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
+    private ConvertToGatewayService $convertToGatewayService;
+    private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -40,6 +43,8 @@ class EavService
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
+        $this->convertToGatewayService = $convertToGatewayService;
+        $this->session = $session;
     }
 
     /**
@@ -101,20 +106,29 @@ class EavService
      * @param string      $method
      * @param Entity      $entity
      *
+     * @throws Exception
+     *
      * @return ObjectEntity|array|null
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
         if ($id) {
-            $object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id'=>Uuid::fromString($id)]);
-            if (!$object) {
-                return [
-                    'message' => "No object found with this id: $id",
-                    'type'    => 'Bad Request',
-                    'path'    => $entity->getName(),
-                    'data'    => ['id' => $id],
-                ];
-            } elseif ($entity != $object->getEntity()) {
+            // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
+                    // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
+                    $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
+                    if (!$object) {
+                        return [
+                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
+                            'type'    => 'Bad Request',
+                            'path'    => $entity->getName(),
+                            'data'    => ['id' => $id],
+                        ];
+                    }
+                }
+            }
+            if ($object instanceof ObjectEntity && $entity != $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',
@@ -125,6 +139,19 @@ class EavService
                     ],
                 ];
             }
+
+//            // TODO: lets check if the user is allowed to view/edit this resource
+//            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
+            ////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+//            )
+//            {
+//                return [
+//                    'message' => "Unauthorized",
+//                    'type'    => 'Unauthorized',
+//                    'path'    => $entity->getName(),
+//                    'data'    => [],
+//                ];
+//            }
 
             return $object;
         } elseif ($method == 'POST') {
@@ -161,13 +188,17 @@ class EavService
             $entity = false;
         }
 
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
+                $result = $object;
+            }
         }
-
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
 
         // Get a body
         if ($request->getContent()) {
@@ -192,7 +223,7 @@ class EavService
 
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
-        if ($entity && $requestBase['id']) {
+        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
@@ -598,6 +629,8 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
+//        $this->convertToGatewayService->convertEntityObjects($entity); // TODO: TEMP FOR TESTING
+
         $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
@@ -613,7 +646,7 @@ class EavService
 
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = count($total);
+        $results['total'] = count($total); // TODO: $total lijkt niet meer dan 25 te zijn?!
         $results['limit'] = $limit;
         $results['pages'] = ceil($results['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
@@ -673,18 +706,36 @@ class EavService
         }
 
         // Lets start with the external results
-        // TODO: for get (item and collection) calls this seems to only contain the @uri, not the full extern object (result) !!! as if setExternalResult is not saved properly?
-        $response = array_merge($response, $result->getExternalResult());
+        if (!empty($result->getExternalResult())) {
+            $response = array_merge($response, $result->getExternalResult());
+        } elseif ($this->commonGroundService->isResource($result->getExternalResult())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
+        } elseif ($this->commonGroundService->isResource($result->getUri())) {
+            $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
+        }
 
         // Lets move some stuff out of the way
         if (array_key_exists('@context', $response)) {
             $response['@gateway/context'] = $response['@context'];
         }
-        if (array_key_exists('id', $response)) {
+        if ($result->getExternalId()) {
+            $response['@gateway/id'] = $result->getExternalId();
+        } elseif (array_key_exists('id', $response)) {
             $response['@gateway/id'] = $response['id'];
         }
         if (array_key_exists('@type', $response)) {
             $response['@gateway/type'] = $response['@type'];
+        }
+
+        // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
+        if (!is_null($result->getEntity()->getAvailableProperties())) {
+            $response = array_filter($response, function ($propertyName) use ($result) {
+                if (str_contains($propertyName, '@gateway/')) {
+                    return true;
+                }
+
+                return in_array($propertyName, $result->getEntity()->getAvailableProperties());
+            }, ARRAY_FILTER_USE_KEY);
         }
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
