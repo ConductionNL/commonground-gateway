@@ -73,7 +73,10 @@ class ConvertToGatewayService
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
         });
 
-        // TODO: delete these $onlyInGateway objectEntities ?
+        // Delete these $onlyInGateway objectEntities ?
+        foreach ($onlyInGateway as $item) {
+            $this->em->remove($item);
+        }
 //        var_dump('Deleted gateway objects = '.count($onlyInGateway));
 
         $this->em->flush(); // TODO: Do we need this here or not?
