@@ -42,7 +42,17 @@ class ConvertToGatewayService
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint())['hydra:member'];
+        $totalExternObjects = [];
+        $page = 1;
+        while (true) {
+            $response = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), ['page'=>$page]);
+            $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
+            if (!isset($response['hydra:view']['hydra:next'])) {
+                break;
+            }
+            $page += 1;
+        }
+//        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
         $newGatewayObjects = new ArrayCollection();
