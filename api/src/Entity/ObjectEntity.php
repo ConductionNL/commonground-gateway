@@ -129,7 +129,7 @@ class ObjectEntity
     private $uri;
 
     /**
-     * @var string An uuid of an application
+     * @var string An uuid or uri of an application
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -137,7 +137,7 @@ class ObjectEntity
     private $application;
 
     /**
-     * @var string An uuid of an organization
+     * @var string An uuid or uri of an organization
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
