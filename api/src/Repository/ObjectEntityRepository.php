@@ -40,8 +40,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQuery($entity, $filters);
 
-        var_dump($query->getDQL());
-
         return $query
             // filters toevoegen
             ->setFirstResult($offset)
