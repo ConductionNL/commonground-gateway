@@ -644,6 +644,7 @@ class EavService
                         $filterCheckStr = $filterCheckStr.', ';
                     }
                 }
+
                 return [
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
