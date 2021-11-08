@@ -5,7 +5,11 @@ namespace App\Repository;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -15,21 +19,62 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ObjectEntityRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private SessionInterface $session;
+
+    public function __construct(ManagerRegistry $registry, SessionInterface $session)
     {
+        $this->session = $session;
+
         parent::__construct($registry, ObjectEntity::class);
     }
 
     /**
+     * @param Entity $entity
+     * @param array  $filters
+     * @param int    $offset
+     * @param int    $limit
+     *
      * @return ObjectEntity[] Returns an array of ObjectEntity objects
      */
+    public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
+    {
+        $query = $this->createQuery($entity, $filters);
 
-    // typecast deze shizle
-    public function findByEntity($entity, $filters = [], $offset = 0, $limit = 25)
+        return $query
+            // filters toevoegen
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param Entity $entity
+     * @param array  $filters
+     *
+     * @throws NoResultException
+     * @throws NonUniqueResultException
+     *
+     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+     */
+    public function countByEntity(Entity $entity, array $filters = []): int
+    {
+        $query = $this->createQuery($entity, $filters);
+        $query->select('count(o.id)');
+
+        return $query->getQuery()->getSingleScalarResult();
+    }
+
+    private function createQuery(Entity $entity, array $filters): QueryBuilder
     {
         $query = $this->createQueryBuilder('o')
             ->andWhere('o.entity = :entity')
-            ->setParameter('entity', $entity);
+            ->setParameters(['entity' => $entity]);
+
+        // TODO: use this and add filter for application?
+//        $query = $this->createQueryBuilder('o')
+//            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
+//            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
@@ -48,7 +93,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 // let not dive to deep
                 if (!strpos($key, '.')) {
                     $query->andWhere('value.stringValue = :'.$key)
-                      ->setParameter($key, $value);
+                        ->setParameter($key, $value);
                 }
                 /*@todo right now we only search on e level deep, lets make that 5 */
                 else {
@@ -70,12 +115,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
         }
 
-        return $query
-            // filters toevoegen
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        return $query;
     }
 
     private function getAllValues(string $atribute, string $value): array
