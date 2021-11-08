@@ -30,9 +30,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      * @param Entity $entity
-     * @param array $filters
-     * @param int $offset
-     * @param int $limit
+     * @param array  $filters
+     * @param int    $offset
+     * @param int    $limit
+     *
      * @return ObjectEntity[] Returns an array of ObjectEntity objects
      */
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
@@ -49,11 +50,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      * @param Entity $entity
-     * @param array $filters
-     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+     * @param array  $filters
      *
      * @throws NoResultException
      * @throws NonUniqueResultException
+     *
+     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
