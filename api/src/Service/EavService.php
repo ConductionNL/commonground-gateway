@@ -760,7 +760,7 @@ class EavService
      *
      * @return array
      */
-    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth): array
+    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null): array
     {
         $response = [];
 
@@ -788,7 +788,27 @@ class EavService
                 try {
                     $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
 
-                    $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    // If this attribute has no inversedBy but the Object we are rendering has parent objects. Check if one of the parent objects has an attribute with inversedBy -> this attribute.
+                    $parentInversedByAttribute = [];
+                    if (!$attribute->getInversedBy() && count($result->getSubresourceOf()) > 0) {
+                        $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $valueObject) use ($attribute) {
+                            $inversedByAttributes = $valueObject->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
+                                return $item->getInversedBy() === $attribute;
+                            });
+                            if (count($inversedByAttributes) > 0) {
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                    // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
+                    // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
+                    if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
+                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    } else {
+                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, null);
+                    }
+
                     if ($response[$attribute->getName()] === ['continue'=>'continue']) {
                         unset($response[$attribute->getName()]);
                     }
@@ -811,13 +831,18 @@ class EavService
      *
      * @param Value $value
      * @param $fields
-     * @param ArrayCollection $maxDepth
+     * @param ArrayCollection|null $maxDepth
      *
      * @return array|null
      */
-    private function renderObjects(Value $value, $fields, ArrayCollection $maxDepth): ?array
+    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth): ?array
     {
         $attribute = $value->getAttribute();
+
+        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
 
         $subFields = null;
         if (is_array($fields)) {
@@ -835,7 +860,7 @@ class EavService
                 return $this->renderResult($value->getValue(), $subFields, $maxDepth);
             }
 
-            return ['continue'=>'continue'];
+            return ['continue'=>'continue']; //TODO We want this
         }
 
         // If we can have multiple Objects (because multiple = true)
