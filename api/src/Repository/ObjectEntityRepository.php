@@ -40,6 +40,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQuery($entity, $filters);
 
+        var_dump($query->getDQL());
+
         return $query
             // filters toevoegen
             ->setFirstResult($offset)
@@ -105,10 +107,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         //var_dump($key[0]);
                         //($key[1]);
                         $query->leftJoin('value.objects', 'subObjects'.$level);
-                        $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
+                        if ($key[1] == 'id') {
+                            $query->andWhere('(subObjects'.$level.'.id = :'.$key[1].' OR subObjects'.$level.'.externalId = :'.$key[1].')')->setParameter($key[1], $value);
+                        } else {
+                            $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
+                        }
                     }
 
-                    $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                    if ($key[1] != 'id') {
+                        $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                    }
                 }
 
                 // lets suport level 1
@@ -125,12 +133,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         $filters = [];
+        $filters[] = $prefix.'id';
 
         foreach ($Entity->getAttributes() as $attribute) {
             if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
-            } elseif ($attribute->getObject() && $level < 5) {
-                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.', $level + 1));
+            } elseif ($attribute->getObject() && $level < 5 && !str_contains($prefix, $attribute->getName().'.')) {
+                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
             continue;
         }
