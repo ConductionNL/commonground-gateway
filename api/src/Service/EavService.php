@@ -788,10 +788,14 @@ class EavService
                 try {
                     $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
 
-                    // If this attribute has no inversedBy but the Object we are rendering has parent objects. Check if one of the parent objects has an attribute with inversedBy -> this attribute.
+                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
+                    // If this attribute has no inversedBy but the Object we are rendering has parent objects.
+                    // Check if one of the parent objects has an attribute with inversedBy -> this attribute.
                     $parentInversedByAttribute = [];
                     if (!$attribute->getInversedBy() && count($result->getSubresourceOf()) > 0) {
+                        // Get all parent (value) objects...
                         $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $valueObject) use ($attribute) {
+                            // ...that have getInversedBy set to $attribute
                             $inversedByAttributes = $valueObject->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
                                 return $item->getInversedBy() === $attribute;
                             });
