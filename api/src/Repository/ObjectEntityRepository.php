@@ -71,7 +71,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
-        // TODO: use this and add filter for application?
+        // TODO: see todo before the last return in this function
 //        $query = $this->createQueryBuilder('o')
 //            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
 //            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
@@ -120,6 +120,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 // lets suport level 1
             }
         }
+
+        //TODO add andwhere for organizations
 
         return $query;
     }

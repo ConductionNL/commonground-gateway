@@ -140,7 +140,7 @@ class EavService
                 ];
             }
 
-//            // TODO: lets check if the user is allowed to view/edit this resource
+//            // TODO: lets check if the user is allowed to view/edit this resource. Move this to somewhere else
 //            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
             ////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
 //            )
