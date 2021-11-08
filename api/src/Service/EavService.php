@@ -802,6 +802,7 @@ class EavService
                             if (count($inversedByAttributes) > 0) {
                                 return true;
                             }
+
                             return false;
                         });
                     }
