@@ -637,11 +637,18 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
         foreach ($query as $param => $value) {
             if (!in_array($param, $filterCheck)) {
+                $filterCheckStr = '';
+                foreach ($filterCheck as $filter) {
+                    $filterCheckStr = $filterCheckStr.$filter;
+                    if ($filter != end($filterCheck)) {
+                        $filterCheckStr = $filterCheckStr.', ';
+                    }
+                }
                 return [
-                    'message' => 'Unsupported query param',
+                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
                     'path'    => $entity->getName().'?'.$param.'='.$value,
-                    'data'    => ['query param'=>$param],
+                    'data'    => ['queryParameter'=>$param],
                 ];
             }
         }
