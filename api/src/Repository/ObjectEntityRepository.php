@@ -128,7 +128,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
     }
 
-    private function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         $filters = [];
         $filters[] = $prefix.'id';

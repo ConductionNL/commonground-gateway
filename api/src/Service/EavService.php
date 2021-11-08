@@ -633,6 +633,18 @@ class EavService
             $this->convertToGatewayService->convertEntityObjects($entity);
         }
         unset($query['updateGatewayPool']);
+
+        $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
+        foreach ($query as $param => $value) {
+            if (!in_array($param, $filterCheck)) {
+                return [
+                    'message' => 'Unsupported query param',
+                    'type'    => 'error',
+                    'path'    => $entity->getName().'?'.$param.'='.$value,
+                    'data'    => ['query param'=>$param],
+                ];
+            }
+        }
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
