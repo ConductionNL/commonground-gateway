@@ -183,7 +183,7 @@ class EavService
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             // Lets check if the user is allowed to view/edit this resource.
-            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
+            if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
                 //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
             ) {
                 $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
