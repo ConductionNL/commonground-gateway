@@ -574,7 +574,7 @@ class EavService
         }
 
         // Check optional conditional logic
-        $object->checkConditionlLogic();
+        $object->checkConditionlLogic(); // Old way of checking condition logic
 
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
