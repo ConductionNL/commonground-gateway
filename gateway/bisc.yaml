@@ -93,6 +93,7 @@ App\Entity\Entity:
             - telephones
             - addresses
             - emails
+            - parentOrganization
         # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
         # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
         usedProperties:
@@ -101,6 +102,7 @@ App\Entity\Entity:
             - telephones
             - addresses
             - emails
+            - parentOrganization
 
     #Email Object
     email:
@@ -360,6 +362,17 @@ App\Entity\Attribute:
         entity: '@organization'
         persistToGateway: true
         searchable: true
+    organization_parentOrganization:
+        name: parentOrganization
+        description: The larger organization that this organization is a subOrganization of.
+        type: object
+        required: true
+        entity: '@organization'
+        object: '@organization'
+        persistToGateway: true
+        searchable: true
+        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951'
+        cascade: false
     organization_address:
         name: addresses
         description: Where is the organization located?

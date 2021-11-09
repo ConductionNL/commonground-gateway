@@ -59,7 +59,7 @@ class ReportsController extends AbstractController
      */
     public function LearningNeedsAction(EntityManagerInterface $em): Response
     {
-        $entity = $this->getDoctrine()->getRepository('App:Entity')->findOneBy(['name'=>'learningNeeds']);
+        $entity = $this->getDoctrine()->getRepository('App:Entity')->findOneBy(['name'=>'LearningNeed']);
         $results = $em->getRepository('App:ObjectEntity')->findByEntity($entity);
 
         $headers = ['ID leervraag',
