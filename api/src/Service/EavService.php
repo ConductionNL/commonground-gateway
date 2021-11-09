@@ -15,12 +15,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -144,10 +144,9 @@ class EavService
             // TODO: lets check if the user is allowed to view/edit this resource. Move this to somewhere else
             if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
             //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-            )
-            {
+            ) {
                 return [
-                    'message' => "Unauthorized",
+                    'message' => 'Unauthorized',
                     'type'    => 'Unauthorized',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $id],

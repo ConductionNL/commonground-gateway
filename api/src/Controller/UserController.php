@@ -81,9 +81,10 @@ class UserController extends AbstractController
     }
 
     /**
-     * @param array $organizations
-     * @param string $organization
+     * @param array               $organizations
+     * @param string              $organization
      * @param CommonGroundService $commonGroundService
+     *
      * @return array
      */
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array

@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use JWadhams\JsonLogic as jsonLogic;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
@@ -22,7 +23,6 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use JWadhams\JsonLogic as jsonLogic;
 
 class ValidationService
 {
@@ -711,13 +711,11 @@ class ValidationService
         return $validator;
     }
 
-
     private function validateLogic(Value $valueObject): ObjectEntity
     {
-
         $objectEntity = $valueObject->getObjectEntity();
         // Let turn the value into an array TO ARRAY functie
-        $value =  $objectEntity->toArray();
+        $value = $objectEntity->toArray();
 
         // Check required
         $rule = $valueObject->getAttribute()->getRequiredIf();
@@ -728,14 +726,14 @@ class ValidationService
         // To do this we need to get the ObjectEntity->values->attribute where name == field and check if that makes this Value required...
         // But what in the $rule / json logic should trigger this process ^
 //        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
-        if($rule && jsonLogic::apply(json_decode($rule, true),$value)) {
-            $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is REQUIRED because of the following JSON Logic: ".$rule);
+        if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: '.$rule);
         }
 
         // Check forbidden
         $rule = $valueObject->getAttribute()->getForbidenIf();
-        if($rule && jsonLogic::apply(json_decode($rule, true),$value)){
-            $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is FORBIDDEN because of the following JSON Logic: ".$rule);
+        if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: '.$rule);
         }
 
         return $objectEntity;
