@@ -20,6 +20,7 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -140,19 +141,6 @@ class EavService
                 ];
             }
 
-//            // TODO: lets check if the user is allowed to view/edit this resource
-//            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
-            ////                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-//            )
-//            {
-//                return [
-//                    'message' => "Unauthorized",
-//                    'type'    => 'Unauthorized',
-//                    'path'    => $entity->getName(),
-//                    'data'    => [],
-//                ];
-//            }
-
             return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
@@ -194,7 +182,18 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+            // Lets check if the user is allowed to view/edit this resource.
+            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
+                //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+            ) {
+                $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
+                $result = [
+                    'message' => 'You are unauthorized to view or edit this resource.',
+                    'type'    => 'Unauthorized',
+                    'path'    => $entity->getName(),
+                    'data'    => ['id' => $requestBase['id']],
+                ];
+            } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
             }
@@ -230,7 +229,7 @@ class EavService
             ]);
         }
         // its an collection endpoind
-        elseif ($entity) {
+        elseif ($entity && $responseType == Response::HTTP_OK) {
             $endpointResult = $this->handleCollectionEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
                 'entity' => $entity, 'extension' => $requestBase['extension'],
@@ -555,6 +554,16 @@ class EavService
      */
     public function handleMutation(ObjectEntity $object, array $body, $fields): array
     {
+        // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
+        if (empty($this->session->get('activeOrganization'))) {
+            return [
+                'message' => 'An active organization is required in the session, please login to create a new session.',
+                'type'    => 'error',
+                'path'    => $object->getEntity()->getName(),
+                'data'    => ['activeOrganization' => null],
+            ];
+        }
+
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
 
@@ -574,7 +583,7 @@ class EavService
         }
 
         // Check optional conditional logic
-        $object->checkConditionlLogic();
+        $object->checkConditionlLogic(); // Old way of checking condition logic
 
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
