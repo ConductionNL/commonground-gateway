@@ -22,7 +22,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use JWadhams\JsonLogic;
+use JWadhams\JsonLogic as jsonLogic;
 
 class ValidationService
 {
@@ -194,6 +194,8 @@ class ValidationService
                 return $objectEntity;
             }
         }
+
+//        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
@@ -719,13 +721,20 @@ class ValidationService
 
         // Check required
         $rule = $valueObject->getAttribute()->getRequiredIf();
-        if($rule && JWadhams\JsonLogic::apply(json_decode($rule, true),$value)){
+//        var_dump($rule);
+
+        //TODO: this works with conditions for this specific $value (equal to, bigger than etc.),
+        // but if we want to make this field required if another Value has a certain condition, how do we do this with json logic?
+        // To do this we need to get the ObjectEntity->values->attribute where name == field and check if that makes this Value required...
+        // But what in the $rule / json logic should trigger this process ^
+//        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
+        if($rule && jsonLogic::apply(json_decode($rule, true),$value)) {
             $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is REQUIRED because of the following JSON Logic: ".$rule);
         }
 
         // Check forbidden
         $rule = $valueObject->getAttribute()->getForbidenIf();
-        if($rule && JWadhams\JsonLogic::apply(json_decode($rule, true),$value)){
+        if($rule && jsonLogic::apply(json_decode($rule, true),$value)){
             $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is FORBIDDEN because of the following JSON Logic: ".$rule);
         }
 
