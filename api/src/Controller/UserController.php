@@ -58,6 +58,7 @@ class UserController extends AbstractController
             ];
         }
 
+        // Set orgs in session for multitenancy
         // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
         $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']]);
         $organizations = [];
@@ -65,7 +66,7 @@ class UserController extends AbstractController
             $organizations[] = $userGroup['organization'];
         }
         $this->session->set('organizations', $organizations);
-        // TODO if user has no organization, do we default activeOrganization to an organization of a userGroup this user has;
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
         $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
