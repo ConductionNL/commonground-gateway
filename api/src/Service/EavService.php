@@ -645,6 +645,7 @@ class EavService
 
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
         foreach ($query as $param => $value) {
+            $param = str_replace(['_'], ['.'], $param);
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
@@ -654,6 +655,9 @@ class EavService
                     }
                 }
 
+                if (is_array($value)) {
+                    $value = end($value);
+                }
                 return [
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
