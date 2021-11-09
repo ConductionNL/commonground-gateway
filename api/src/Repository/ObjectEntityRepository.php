@@ -71,11 +71,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
-        // TODO: use this and add filter for application?
-//        $query = $this->createQueryBuilder('o')
-//            ->andWhere('o.entity = :entity AND o.organization IN (:organizations)')
-//            ->setParameters(['entity' => $entity, 'organizations' => $this->session->get('organizations')]);
-
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
             $query->leftJoin('o.objectValues', 'value');
@@ -119,6 +114,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
                 // lets suport level 1
             }
+        }
+
+        // Multitenancy, only show objects this user is allowed to see.
+        // TODO what if get(orgs) returns null/empty?
+        if (empty($this->session->get('organizations'))) {
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
+        } else {
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
 
         return $query;

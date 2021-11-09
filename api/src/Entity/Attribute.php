@@ -358,6 +358,7 @@ class Attribute
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $defaultValue;
+    // TODO: should be a Value object
 
     /**
      * @var bool Whether or not this property can be left empty
