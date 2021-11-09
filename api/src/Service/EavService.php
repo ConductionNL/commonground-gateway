@@ -141,18 +141,6 @@ class EavService
                 ];
             }
 
-            // TODO: lets check if the user is allowed to view/edit this resource. Move this to somewhere else
-            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: Check all orgs or active org only?
-            //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-            ) {
-                return [
-                    'message' => 'Unauthorized',
-                    'type'    => 'Unauthorized',
-                    'path'    => $entity->getName(),
-                    'data'    => ['id' => $id],
-                ];
-            }
-
             return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
@@ -194,12 +182,19 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && ($object['type'] == 'Bad Request' || $object['type'] == 'Unauthorized')) {
-                if ($object['type'] == 'Bad Request') {
-                    $responseType = Response::HTTP_BAD_REQUEST;
-                } elseif ($object['type'] == 'Unauthorized') {
-                    $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
-                }
+            // Lets check if the user is allowed to view/edit this resource.
+            if (!in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
+                //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+            ) {
+                $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
+                $result = [
+                    'message' => 'You are unauthorized to view or edit this resource.',
+                    'type'    => 'Unauthorized',
+                    'path'    => $entity->getName(),
+                    'data'    => ['id' => $requestBase['id']],
+                ];
+            } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
             }
         }
