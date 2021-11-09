@@ -653,9 +653,9 @@ class ObjectEntity
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         }
                     }
                 } else {
@@ -664,9 +664,9 @@ class ObjectEntity
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     }
                 }
             }
@@ -677,7 +677,7 @@ class ObjectEntity
                 if(!$value->getValue()){continue;}
                 // so lets see if we should have a value
                 if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
-                    $this->addError($value->getAttribute()->getName(), 'Is forbidden becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                    $this->addError($value->getAttribute()->getName(), 'Is forbidden because property '.$conditionProperty.' has the value: '.$conditionValue);
                 }
             }
             */
@@ -689,7 +689,7 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @return array the array holding all the data     *
+     * @return array the array holding all the data
      */
     public function toArray(int $level = 1): array
     {

@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use JWadhams\JsonLogic as jsonLogic;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
@@ -193,6 +194,8 @@ class ValidationService
                 return $objectEntity;
             }
         }
+
+//        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
@@ -380,7 +383,12 @@ class ValidationService
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
-                $subObject->setOrganization($this->session->get('activeOrganization')); // TODO?
+                // Set organization for this object
+                if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+                    $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                } else {
+                    $subObject->setOrganization($this->session->get('activeOrganization'));
+                }
 //                $subObject->setApplication(); // TODO
 
 //                $valueObject->setValue($subObject);
@@ -495,9 +503,10 @@ class ValidationService
         $validator = new Validator();
         $objectEntity = $value->getObjectEntity();
 
-        $validator = $this->validateType($valueObject, $validator);
-        $validator = $this->validateFormat($valueObject, $validator, $value);
-        $validator = $this->validateValidations($valueObject, $validator);
+        $validator = $this->validateType($valueObject, $validator, $value);
+        $validator = $this->validateFormat($valueObject, $validator);
+//        $validator = $this->validateValidations($valueObject, $validator); // TODO: remove? (old version)
+        $objectEntity = $this->validateLogic($valueObject); // New Validation logic...
 
         // Lets roll the actual validation
         try {
@@ -700,6 +709,34 @@ class ValidationService
         }
 
         return $validator;
+    }
+
+    private function validateLogic(Value $valueObject): ObjectEntity
+    {
+        $objectEntity = $valueObject->getObjectEntity();
+        // Let turn the value into an array TO ARRAY functie
+        $value = $objectEntity->toArray();
+
+        // Check required
+        $rule = $valueObject->getAttribute()->getRequiredIf();
+//        var_dump($rule);
+
+        //TODO: this works with conditions for this specific $value (equal to, bigger than etc.),
+        // but if we want to make this field required if another Value has a certain condition, how do we do this with json logic?
+        // To do this we need to get the ObjectEntity->values->attribute where name == field and check if that makes this Value required...
+        // But what in the $rule / json logic should trigger this process ^
+//        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
+        if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: '.$rule);
+        }
+
+        // Check forbidden
+        $rule = $valueObject->getAttribute()->getForbidenIf();
+        if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: '.$rule);
+        }
+
+        return $objectEntity;
     }
 
     /**
@@ -1160,7 +1197,13 @@ class ValidationService
                     $post[$value->getAttribute()->getName()][] = $ubjectUri;
                 }
             } elseif ($value->getObjects()->first()) {
-                $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+                // If this object is from the same gateway as the main/parent object use: /entityName/uuid instead of the entire uri
+                if ($value->getAttribute()->getEntity()->getGateway() && $value->getObjects()->first()->getEntity()->getGateway()
+                    && $value->getAttribute()->getEntity()->getGateway() === $value->getObjects()->first()->getEntity()->getGateway()) {
+                    $post[$value->getAttribute()->getName()] = '/'.$value->getObjects()->first()->getEntity()->getEndpoint().'/'.$value->getObjects()->first()->getExternalId();
+                } else {
+                    $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+                }
             }
 
             // Lets check if we actually want to send this to the gateway
@@ -1200,17 +1243,21 @@ class ValidationService
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
-                    $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
-//                    $objectEntity->setApplication(); // TODO
 
                     $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
-                    $objectEntity->setOrganization($this->session->get('activeOrganization')); // TODO?
-//                    $objectEntity->setApplication(); // TODO
                     $item = $this->cache->getItem('commonground_'.md5($url));
                 }
+
+                // Set organization for this object
+                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                } else {
+                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                }
+//                    $objectEntity->setApplication(); // TODO
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
