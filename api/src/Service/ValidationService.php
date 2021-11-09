@@ -1199,7 +1199,13 @@ class ValidationService
                     $post[$value->getAttribute()->getName()][] = $ubjectUri;
                 }
             } elseif ($value->getObjects()->first()) {
-                $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+                // If this object is from the same gateway as the main/parent object use: /entityName/uuid instead of the entire uri
+                if ($value->getAttribute()->getEntity()->getGateway() && $value->getObjects()->first()->getEntity()->getGateway()
+                    && $value->getAttribute()->getEntity()->getGateway() === $value->getObjects()->first()->getEntity()->getGateway()) {
+                    $post[$value->getAttribute()->getName()] = '/'.$value->getObjects()->first()->getEntity()->getEndpoint().'/'.$value->getObjects()->first()->getExternalId();
+                } else {
+                    $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
+                }
             }
 
             // Lets check if we actually want to send this to the gateway

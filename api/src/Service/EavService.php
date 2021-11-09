@@ -175,9 +175,6 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
-        //TODO: check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization?
-        //TODO: throw error if not^? And so we can not do get calls with activeOrg = null?
-
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $result = $requestBase['result'];
@@ -562,6 +559,16 @@ class EavService
      */
     public function handleMutation(ObjectEntity $object, array $body, $fields): array
     {
+        // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
+        if (empty($this->session->get('activeOrganization'))) {
+            return [
+                'message' => 'An active organization is required in the session, please login to create a new session.',
+                'type'    => 'error',
+                'path'    => $object->getEntity()->getName(),
+                'data'    => ['activeOrganization' => null],
+            ];
+        }
+
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
 

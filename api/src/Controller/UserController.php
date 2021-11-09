@@ -62,14 +62,44 @@ class UserController extends AbstractController
         // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
         $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']]);
         $organizations = [];
+        if ($user['organization']) {
+            $organizations[] = $user['organization'];
+        }
         foreach ($user['userGroups'] as $userGroup) {
-            $organizations[] = $userGroup['organization'];
+            if (!in_array($userGroup['organization'], $organizations)) {
+                $organizations[] = $userGroup['organization'];
+            }
+        }
+        foreach ($organizations as $organization) {
+            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
         }
         $this->session->set('organizations', $organizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
         $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * @param array $organizations
+     * @param string $organization
+     * @param CommonGroundService $commonGroundService
+     * @return array
+     */
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    {
+        if ($organization = $commonGroundService->isResource($organization)) {
+            if (count($organization['subOrganizations']) > 0) {
+                foreach ($organization['subOrganizations'] as $subOrganization) {
+                    if (!in_array($subOrganization['@id'], $organizations)) {
+                        $organizations[] = $subOrganization['@id'];
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                    }
+                }
+            }
+        }
+
+        return $organizations;
     }
 
     /**
