@@ -371,7 +371,7 @@ App\Entity\Attribute:
         object: '@organization'
         persistToGateway: true
         searchable: true
-        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951'
+        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # BISC organization uuid
         cascade: false
     organization_address:
         name: addresses
