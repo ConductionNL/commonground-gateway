@@ -82,7 +82,8 @@ class ValidationService
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+//                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
             }
             // Check if this field is nullable
             elseif ($attribute->getNullable()) {
