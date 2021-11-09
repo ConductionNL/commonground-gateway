@@ -112,7 +112,7 @@ class ConvertToGatewayService
         $id = $body['id'];
 
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-        $body = array_filter($body, function ($propertyName) use ($entity) {
+        $availableBody = array_filter($body, function ($propertyName) use ($entity) {
             if ($entity->getAvailableProperties()) {
                 return in_array($propertyName, $entity->getAvailableProperties());
             }
@@ -129,10 +129,19 @@ class ConvertToGatewayService
         // Set the externalId, uri, organization and application.
         $newObject->setExternalId($id);
         $newObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
-        $newObject->setOrganization($this->session->get('activeOrganization')); // TODO?
+
+        // Set organization for this object
+        // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
+        if (key_exists('organization', $body) && !empty($body['organization'])) {
+            $newObject->setOrganization($body['organization']);
+        } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+            $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+        } else {
+            $newObject->setOrganization($this->session->get('activeOrganization'));
+        }
 //                $newObject->setApplication(); // TODO
 
-        $newObject = $this->checkAttributes($newObject, $body, $objectEntity);
+        $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
 
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.

@@ -175,6 +175,9 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
+        //TODO: check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization?
+        //TODO: throw error if not^? And so we can not do get calls with activeOrg = null?
+
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $result = $requestBase['result'];
