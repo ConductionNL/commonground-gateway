@@ -689,7 +689,7 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @return array the array holding all the data     *
+     * @return array the array holding all the data
      */
     public function toArray(int $level = 1): array
     {

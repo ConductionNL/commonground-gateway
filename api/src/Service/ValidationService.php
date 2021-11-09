@@ -22,6 +22,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use JWadhams\JsonLogic;
 
 class ValidationService
 {
@@ -497,7 +498,7 @@ class ValidationService
 
         $validator = $this->validateType($valueObject, $validator);
         $validator = $this->validateFormat($valueObject, $validator, $value);
-        $validator = $this->validateValidations($valueObject, $validator);
+        $objectEntity = $this->validateLogic($valueObject);
 
         // Lets roll the actual validation
         try {
@@ -700,6 +701,29 @@ class ValidationService
         }
 
         return $validator;
+    }
+
+
+    private function validateLogic(Value $valueObject): ObjectEntity
+    {
+
+        $objectEntity = $valueObject->getObjectEntity();
+        // Let turn the value into an array TO ARRAY functie
+        $value =  $objectEntity->toArray();
+
+        // Check required
+        $rule = $valueObject->getAttribute()->getRequiredIf();
+        if($rule && JWadhams\JsonLogic::apply(json_decode($rule, true),$value)){
+            $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is REQUIRED becouse of the following JSON Logic: ".$rule);
+        }
+
+        // Check forbidden
+        $rule = $valueObject->getAttribute()->getForbidenIf();
+        if($rule && JWadhams\JsonLogic::apply(json_decode($rule, true),$value)){
+            $objectEntity->addError($valueObject->getAttribute()->getName(), "This value is FORBIDDEN becouse of the following JSON Logic: ".$rule);
+        }
+
+        return $objectEntity;
     }
 
     /**
