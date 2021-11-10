@@ -257,7 +257,6 @@ class AuthenticationService
         $person = $this->commonGroundService->isResource($user['person']);
 
         $service = $this->commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0];
-        var_dump('hi');
         $parameters = [
             'fullname' => $person['name'] ?? $user['username'],
             'base64_encoded_email' => base64_encode($user['username']),
