@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Twig\Environment;
 
 class AuthenticationService
 {
@@ -25,14 +26,16 @@ class AuthenticationService
     private Client $client;
     private TokenStorageInterface $tokenStorage;
     private CommonGroundService $commonGroundService;
+    private Environment $twig;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, CommonGroundService $commonGroundService)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, CommonGroundService $commonGroundService, Environment $twig)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->client = new Client();
         $this->tokenStorage = $tokenStorage;
         $this->commonGroundService = $commonGroundService;
+        $this->twig = $twig;
     }
 
     public function generateJwt()
@@ -248,17 +251,28 @@ class AuthenticationService
         return $authentications[0];
     }
 
-    public function sendTokenMail(array $user, string $subject): bool
+    public function sendTokenMail(array $user, string $subject, string $frontend): bool
     {
         $response = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users', 'id' => "{$user['id']}/token"], ['type' => 'SET_PASSWORD']);
+        $person = $this->commonGroundService->isResource($user['person']);
 
         $service = $this->commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0];
+        var_dump('hi');
+        $parameters = [
+            'fullname' => $person['name'] ?? $user['username'],
+            'base64_encoded_email' => base64_encode($user['username']),
+            'base64_encoded_token' => $response['token'],
+            'app_base_url' => rtrim($frontend, '/'),
+            'subject'   => $subject,
+        ];
+
+        $content = $this->twig->render('password-forgot-e-mail.html.twig', $parameters);
 
         $message = $this->commonGroundService->createResource(
             [
                 'reciever' => $user['username'],
                 'sender'   => 'taalhuizen@biscutrecht.nl',
-                'content'  => "{$response['token']}",
+                'content'  => $content,
                 'type'     => 'email',
                 'status'   => 'queued',
                 'service'  => '/services/'.$service['id'],
@@ -269,4 +283,6 @@ class AuthenticationService
 
         return true;
     }
+
+
 }
