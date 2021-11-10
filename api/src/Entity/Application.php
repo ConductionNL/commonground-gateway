@@ -65,7 +65,7 @@ class Application
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
      * @var string A description of this Application.
@@ -73,7 +73,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private string $description;
 
     /**
      * @var array An array of domains of this Application.
@@ -81,7 +81,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
-    private $domains = [];
+    private array $domains = [];
 
     public function getId(): ?UuidInterface
     {
