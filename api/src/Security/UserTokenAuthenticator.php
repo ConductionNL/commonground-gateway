@@ -117,7 +117,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         }
 
         $organizations = [];
-        if ($user['organization']) {
+        if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }
         foreach ($user['userGroups'] as $userGroup) {

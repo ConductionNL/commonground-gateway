@@ -49,20 +49,20 @@ class UserController extends AbstractController
         $userLogin = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
 
         if (!$userLogin) {
-            $status = 403;
             $userLogin = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
                 'path'    => 'users/login',
                 'data'    => ['username'=>$data['username']],
             ];
+            return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 
         // Set orgs in session for multitenancy
         // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
-        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']]);
+        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
         $organizations = [];
-        if ($user['organization']) {
+        if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }
         foreach ($user['userGroups'] as $userGroup) {
