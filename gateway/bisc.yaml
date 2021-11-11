@@ -165,7 +165,6 @@ App\Entity\Entity:
 #            - availability
 #            - availabilityNotes
 #            - children
-#            - childrenbirthdays
 #            - country
 #            - user
 
