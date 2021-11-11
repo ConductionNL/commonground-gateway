@@ -116,7 +116,7 @@ class UserController extends AbstractController
         } else {
             return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
         }
-        $this->authenticationService->sendTokenMail($user, 'Password reset token');
+        $this->authenticationService->sendTokenMail($user, 'Je wachtwoord herstellen', $request->headers->get('Referer', $request->headers->get('referer')));
 
         return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
     }
