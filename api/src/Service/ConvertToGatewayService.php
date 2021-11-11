@@ -130,7 +130,6 @@ class ConvertToGatewayService
         $newObject->setExternalId($id);
         $newObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 
-        // TODO: test if this actually works!
         // If extern object has dateCreated & dateModified, set them for this new ObjectEntity
         if (key_exists('dateCreated', $body)) {
             $newObject->setDateCreated(new DateTime($body['dateCreated']));
