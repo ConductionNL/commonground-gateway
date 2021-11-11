@@ -187,10 +187,10 @@ class EavService
                 //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
             ) {
                 $object = null; // Needed so we return the error and not the object!
-                $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
+                $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
-                    'message' => 'You are unauthorized to view or edit this resource.',
-                    'type'    => 'Unauthorized',
+                    'message' => 'You are forbidden to view or edit this resource.',
+                    'type'    => 'Forbidden',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $requestBase['id']],
                 ];
@@ -480,6 +480,9 @@ class EavService
                 // Transfer the variable to the service
                 $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
                 $responseType = Response::HTTP_OK;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             case 'DELETE':
                 $result = $this->handleDelete($info['object']);
@@ -559,7 +562,7 @@ class EavService
         if (empty($this->session->get('activeOrganization'))) {
             return [
                 'message' => 'An active organization is required in the session, please login to create a new session.',
-                'type'    => 'error',
+                'type'    => 'Forbidden',
                 'path'    => $object->getEntity()->getName(),
                 'data'    => ['activeOrganization' => null],
             ];
