@@ -130,6 +130,15 @@ class ConvertToGatewayService
         $newObject->setExternalId($id);
         $newObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
 
+        // TODO: test if this actually works!
+        // If extern object has dateCreated & dateModified, set them for this new ObjectEntity
+        if (key_exists('dateCreated', $body)) {
+            $newObject->setDateCreated(new DateTime($body['dateCreated']));
+        }
+        if (key_exists('dateModified', $body)) {
+            $newObject->setDateModified(new DateTime($body['dateModified']));
+        }
+
         // Set organization for this object
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
         if (key_exists('organization', $body) && !empty($body['organization'])) {

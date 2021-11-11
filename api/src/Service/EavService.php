@@ -650,6 +650,10 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
+            $param = str_replace(['..'], ['._'], $param);
+            if (substr($param, 0, 1) == '.') {
+                $param = '_'.ltrim($param, $param[0]);
+            }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
