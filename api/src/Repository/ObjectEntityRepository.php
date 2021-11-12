@@ -192,24 +192,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
                     $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d 00:00:00'));
-                } elseif (array_key_exists('till', $value)) {
+                }
+                if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
                     $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d 00:00:00'));
-                } else {
-                    //todo: error?
-//                    var_dump('Not supported subfilter for _dateCreated');
                 }
                 break;
             case '_dateModified':
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
                     $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $date->format('Y-m-d 00:00:00'));
-                } elseif (array_key_exists('till', $value)) {
+                }
+                if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
                     $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $date->format('Y-m-d 00:00:00'));
-                } else {
-                    //todo: error?
-//                    var_dump('Not supported subfilter for _dateCreated');
                 }
                 break;
             default:
