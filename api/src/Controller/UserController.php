@@ -55,6 +55,7 @@ class UserController extends AbstractController
                 'path'    => 'users/login',
                 'data'    => ['username'=>$data['username']],
             ];
+
             return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 

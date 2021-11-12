@@ -10,7 +10,6 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use EasyRdf\Literal\Date;
 use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -160,15 +159,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param $key
      * @param $value
      * @param string $prefix
-     * @return QueryBuilder
+     *
      * @throws Exception
+     *
+     * @return QueryBuilder
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
 //        var_dump('filter :');
 //        var_dump($key);
 //        var_dump($value);
-        switch ($key){
+        switch ($key) {
             case 'id':
                 $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);
                 break;
