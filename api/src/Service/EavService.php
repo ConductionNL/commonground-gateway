@@ -154,8 +154,8 @@ class EavService
         return null;
     }
 
-    public function checkOwner(ObjectEntity $objectEntity): bool {
-
+    public function checkOwner(ObjectEntity $objectEntity): bool
+    {
     }
 
     /**
@@ -190,10 +190,7 @@ class EavService
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             // Lets check if the user is allowed to view/edit this resource.
 
-
-
             if (!$this->objectEntityService->checkOwner($object)) {
-
                 if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
                     //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
                 ) {
@@ -201,9 +198,9 @@ class EavService
                     $responseType = Response::HTTP_FORBIDDEN;
                     $result = [
                         'message' => 'You are forbidden to view or edit this resource.',
-                        'type' => 'Forbidden',
-                        'path' => $entity->getName(),
-                        'data' => ['id' => $requestBase['id']],
+                        'type'    => 'Forbidden',
+                        'path'    => $entity->getName(),
+                        'data'    => ['id' => $requestBase['id']],
                     ];
                 } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                     $responseType = Response::HTTP_BAD_REQUEST;
@@ -579,7 +576,6 @@ class EavService
                 'data'    => ['activeOrganization' => null],
             ];
         }
-
 
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
