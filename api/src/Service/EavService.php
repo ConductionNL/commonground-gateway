@@ -659,6 +659,7 @@ class EavService
                 if (is_array($value)) {
                     $value = end($value);
                 }
+
                 return [
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',

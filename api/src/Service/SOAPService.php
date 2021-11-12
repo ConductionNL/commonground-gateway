@@ -9,32 +9,34 @@ class SOAPService
     public function getNamespaces(array $data): array
     {
         $namespaces = [];
-        foreach($data as $key => $datum) {
-            if(($splitKey = explode(':', $key))[0] == '@xmlns'){
+        foreach ($data as $key => $datum) {
+            if (($splitKey = explode(':', $key))[0] == '@xmlns') {
                 $namespaces[$splitKey[1]] = $datum;
             }
         }
+
         return $namespaces;
     }
 
     public function getMessageType(array $data, array $namespaces): string
     {
-        if(
+        if (
             !($env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces))
-        ){
-            throw new BadRequestException("SOAP namespace is missing.");
+        ) {
+            throw new BadRequestException('SOAP namespace is missing.');
         }
 
-        if(!isset(explode(':', array_keys($data["$env:Body"])[0])[1])){
-            throw new BadRequestException("Could not find message type");
+        if (!isset(explode(':', array_keys($data["$env:Body"])[0])[1])) {
+            throw new BadRequestException('Could not find message type');
         }
+
         return explode(':', array_keys($data["$env:Body"])[0])[1];
     }
 
     public function getLa01Message(string $bsn): string
     {
-        switch($bsn){
-        case "11900017090":
+        switch ($bsn) {
+        case '11900017090':
             return '
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
 <s:Body>
@@ -261,27 +263,26 @@ class SOAPService
         }
     }
 
-    public function processZakLv01Message (array $data, array $namespaces): string
+    public function processZakLv01Message(array $data, array $namespaces): string
     {
-        if(
+        if (
             !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
             !($caseNamespace = array_search('http://www.egem.nl/StUF/sector/zkn/0310', $namespaces))
-        ){
-
-            throw new BadRequestException("STuF and/or case namespaces missing ");
+        ) {
+            throw new BadRequestException('STuF and/or case namespaces missing ');
         }
         $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
         $message = $data["$env:Body"]["$caseNamespace:zakLv01"];
 
-        if(
+        if (
             isset($message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]) &&
-            $message["$caseNamespace:gelijk"]["@$stufNamespace:entiteittype"] == "ZAK" &&
-            $message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["@$stufNamespace:entiteittype"] == "ZAKBTRINI" &&
-            $message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["$caseNamespace:gerelateerde"]["@$stufNamespace:entiteittype"] == "BTR"
-        ){
+            $message["$caseNamespace:gelijk"]["@$stufNamespace:entiteittype"] == 'ZAK' &&
+            $message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["@$stufNamespace:entiteittype"] == 'ZAKBTRINI' &&
+            $message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["$caseNamespace:gerelateerde"]["@$stufNamespace:entiteittype"] == 'BTR'
+        ) {
             return $this->getLa01Message($message["$caseNamespace:gelijk"]["$caseNamespace:heeftAlsInitiator"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]);
         }
-        throw new BadRequestException("Not a valid Lv01 message");
 
+        throw new BadRequestException('Not a valid Lv01 message');
     }
 }
