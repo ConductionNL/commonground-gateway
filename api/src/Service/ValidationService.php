@@ -31,6 +31,9 @@ class ValidationService
     private GatewayService $gatewayService;
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
+    public $postPromiseUris = [];
+    public $putPromiseUris = [];
+    public $createdObjects = [];
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
@@ -136,6 +139,13 @@ class ValidationService
             $promise = $this->createPromise($objectEntity, $post);
             $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
             $objectEntity->addPromise($promise);
+        }
+
+        // We need to do a clean up if there are errors
+        if($objectEntity->getHasErrors()){
+            foreach ($this->createdObjects as $createdObject) {
+                $this->commonGroundService->deleteResource($createdObject->getUri());
+            }
         }
 
         return $objectEntity;
@@ -1173,6 +1183,8 @@ class ValidationService
             Utils::settle($promises)->wait();
         }
 
+        // Lets
+
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach ($objectEntity->getObjectValues() as $value) {
 
@@ -1268,6 +1280,9 @@ class ValidationService
                     }, ARRAY_FILTER_USE_KEY);
                 }
                 $objectEntity->setExternalResult($result);
+
+                // Keep track of created objects
+                $this->createdObjects[] = $objectEntity;
 
                 // Notify notification component
                 $this->notify($objectEntity, $method);
