@@ -99,7 +99,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     continue;
                 }
                 // Lets see if this is an allowed filter
-                if (!in_array($key, $filterCheck)) {
+                if (!in_array($key, $filterCheck) ) {
                     unset($filters[$key]); //todo: why unset if we never use filters after this?
                     continue;
                 }
@@ -237,7 +237,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         $filters = array_merge($filters ?? [], [
             $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization', $prefix.'_application',
-            $prefix.'_dateCreated', $prefix.'_dateModified',
+            $prefix.'_dateCreated', $prefix.'_dateModified'
         ]);
 
         foreach ($Entity->getAttributes() as $attribute) {
