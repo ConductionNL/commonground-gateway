@@ -154,7 +154,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // TODO: organizations or owner
         if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations' ,null);
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
         } else {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
