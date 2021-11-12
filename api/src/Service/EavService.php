@@ -35,8 +35,9 @@ class EavService
     private AuthorizationService $authorizationService;
     private ConvertToGatewayService $convertToGatewayService;
     private SessionInterface $session;
+    private ObjectEntityService $objectEntityService;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -46,6 +47,7 @@ class EavService
         $this->authorizationService = $authorizationService;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->session = $session;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -141,15 +143,19 @@ class EavService
                 ];
             }
 
-            return $object;
+            return $this->objectEntityService->handleOwner($object);
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
 
-            return $object;
+            return $this->objectEntityService->handleOwner($object);
         }
 
         return null;
+    }
+
+    public function checkOwner(ObjectEntity $objectEntity): bool
+    {
     }
 
     /**
@@ -183,20 +189,23 @@ class EavService
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             // Lets check if the user is allowed to view/edit this resource.
-            if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
-                //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-            ) {
-                $object = null; // Needed so we return the error and not the object!
-                $responseType = Response::HTTP_FORBIDDEN;
-                $result = [
-                    'message' => 'You are forbidden to view or edit this resource.',
-                    'type'    => 'Forbidden',
-                    'path'    => $entity->getName(),
-                    'data'    => ['id' => $requestBase['id']],
-                ];
-            } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
-                $responseType = Response::HTTP_BAD_REQUEST;
-                $result = $object;
+
+            if (!$this->objectEntityService->checkOwner($object)) {
+                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
+                    //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+                ) {
+                    $object = null; // Needed so we return the error and not the object!
+                    $responseType = Response::HTTP_FORBIDDEN;
+                    $result = [
+                        'message' => 'You are forbidden to view or edit this resource.',
+                        'type'    => 'Forbidden',
+                        'path'    => $entity->getName(),
+                        'data'    => ['id' => $requestBase['id']],
+                    ];
+                } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                    $responseType = Response::HTTP_BAD_REQUEST;
+                    $result = $object;
+                }
             }
         }
 
@@ -835,7 +844,9 @@ class EavService
             }
             if ($attribute->getType() == 'object') {
                 try {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                    if (!$this->objectEntityService->checkOwner($result)) {
+                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                    }
 
                     // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
                     // If this attribute has no inversedBy but the Object we are rendering has parent objects.
