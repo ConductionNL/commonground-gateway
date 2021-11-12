@@ -8,6 +8,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -28,9 +30,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *          "get"={"path"="/admin/object_entities/{id}"},
- *          "put"={"path"="/admin/object_entities/{id}"},
- *          "delete"={"path"="/admin/object_entities/{id}"},
+ *          "get",
+ *          "put",
+ *          "delete",
  *          "get_eav_object"={
  *              "method"="GET",
  *              "path"="/eav/data/{entity}/{id}",
@@ -59,8 +61,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  *  collectionOperations={
- *      "get"={"path"="/admin/object_entities"},
- *      "post"={"path"="/admin/object_entities"},
+ *      "get",
+ *      "post",
  *      "get_eav_objects"={
  *          "method"="GET",
  *          "path"="/eav/data/{entity}",
@@ -129,6 +131,30 @@ class ObjectEntity
     private $uri;
 
     /**
+     * @var string An uuid or uri of an application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $application;
+
+    /**
+     * @var string An uuid or uri of an organization
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $organization;
+
+    /**
+     * @var string An uuid or uri of an owner
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $owner;
+
+    /**
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
      * @MaxDepth(1)
@@ -185,11 +211,35 @@ class ObjectEntity
      */
     private $subresourceOf;
 
+    /**
+     * @var Datetime The moment this request was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    /**
+     * @var Datetime The moment this request last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateModified;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
+
+        //TODO: better way of defaulting dateCreated & dateModified with orm?
+        // (options CURRENT_TIMESTAMP or 0 does not work)
+        $now = new DateTime();
+        $this->setDateCreated($now);
+        $this->setDateModified($now);
     }
 
     public function getId()
@@ -224,6 +274,42 @@ class ObjectEntity
     public function setUri(string $uri): self
     {
         $this->uri = $uri;
+
+        return $this;
+    }
+
+    public function getApplication(): ?string
+    {
+        return $this->application;
+    }
+
+    public function setApplication(string $application): self
+    {
+        $this->application = $application;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?string
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(?string $organization): self
+    {
+        $this->organization = $organization;
+
+        return $this;
+    }
+
+    public function getOwner(): ?string
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?string $owner): self
+    {
+        $this->owner = $owner;
 
         return $this;
     }
@@ -345,15 +431,10 @@ class ObjectEntity
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $key => $subResource) {
-                if (count($value->getObjects()) > 1) {
-                    $key = '['.$key.']';
-                } else {
-                    $key = '';
-                }
                 if (!$maxDepth->contains($subResource)) {
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName().'['.$key.']'] = $subErrors;
                     }
                 }
             }
@@ -613,9 +694,9 @@ class ObjectEntity
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         }
                     }
                 } else {
@@ -624,9 +705,9 @@ class ObjectEntity
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     }
                 }
             }
@@ -637,7 +718,7 @@ class ObjectEntity
                 if(!$value->getValue()){continue;}
                 // so lets see if we should have a value
                 if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
-                    $this->addError($value->getAttribute()->getName(), 'Is forbidden becouse property '.$conditionProperty.' has the value: '.$conditionValue);
+                    $this->addError($value->getAttribute()->getName(), 'Is forbidden because property '.$conditionProperty.' has the value: '.$conditionValue);
                 }
             }
             */
@@ -649,7 +730,7 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @return array the array holding all the data     *
+     * @return array the array holding all the data
      */
     public function toArray(int $level = 1): array
     {
@@ -693,6 +774,30 @@ class ObjectEntity
     public function removeSubresourceOf(Value $subresourceOf): self
     {
         $this->subresourceOf->removeElement($subresourceOf);
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

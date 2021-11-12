@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -32,12 +33,14 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     private ParameterBagInterface $parameterBag;
     private CommonGroundService $commonGroundService;
     private AuthenticationService $authenticationService;
+    private SessionInterface $session;
 
-    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService)
+    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session)
     {
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->authenticationService = new AuthenticationService($parameterBag);
+        $this->session = $session;
     }
 
     /**
@@ -61,6 +64,29 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         ];
     }
 
+    /**
+     * @param array               $organizations
+     * @param string              $organization
+     * @param CommonGroundService $commonGroundService
+     *
+     * @return array
+     */
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    {
+        if ($organization = $commonGroundService->isResource($organization)) {
+            if (count($organization['subOrganizations']) > 0) {
+                foreach ($organization['subOrganizations'] as $subOrganization) {
+                    if (!in_array($subOrganization['@id'], $organizations)) {
+                        $organizations[] = $subOrganization['@id'];
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                    }
+                }
+            }
+        }
+
+        return $organizations;
+    }
+
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
         $publicKey = $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']);
@@ -71,7 +97,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             throw new AuthenticationException('The provided token is not valid');
         }
 
-        $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], true, false, true, false, false);
+        $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], false, false, true, false, false);
         $session = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
         if (!$user) {
@@ -89,6 +115,22 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
                 $user['roles'][$key] = "ROLE_$role";
             }
         }
+
+        $organizations = [];
+        if (isset($user['organization'])) {
+            $organizations[] = $user['organization'];
+        }
+        foreach ($user['userGroups'] as $userGroup) {
+            if (!in_array($userGroup['organization'], $organizations)) {
+                $organizations[] = $userGroup['organization'];
+            }
+        }
+        foreach ($organizations as $organization) {
+            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService);
+        }
+        $this->session->set('organizations', $organizations);
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
+        $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
 
         return new AuthenticationUser($user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }

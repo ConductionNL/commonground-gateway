@@ -11,12 +11,6 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
         documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
-    mrc_api2:
-        name: mrc
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
     mrc_api:
         name: medewerker catalogus
         auth: apikey
@@ -66,6 +60,7 @@ App\Entity\Entity:
             - emailValidated
             - locale
             - person
+            - currentPassword
 
     # UserGroup (security) object
     usergroup:
@@ -99,6 +94,7 @@ App\Entity\Entity:
             - telephones
             - addresses
             - emails
+            - parentOrganization
         # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
         # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
         usedProperties:
@@ -107,6 +103,7 @@ App\Entity\Entity:
             - telephones
             - addresses
             - emails
+            - parentOrganization
 
     #Email Object
     email:
@@ -169,7 +166,6 @@ App\Entity\Entity:
 #            - availability
 #            - availabilityNotes
 #            - children
-#            - childrenbirthdays
 #            - country
 #            - user
 
@@ -273,6 +269,15 @@ App\Entity\Attribute:
         required: true
         entity: '@user'
         persistToGateway: true
+    #TODO:
+#    user_???:
+#        name: password
+#        description: Keep this peronal
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@user'
+#        persistToGateway: true
     user_locale:
         name: locale
         description: Location setting for the user.
@@ -311,6 +316,14 @@ App\Entity\Attribute:
         object: '@person'
         cascade: true
         inversedBy: '@person_user'
+    user_currentPassword:
+        name: currentPassword
+        description: The current password when changing the password on a PUT
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@user'
+        persistToGateway: true
 
 #     UserGroup (security) properties
     userGroup_organization:
@@ -366,6 +379,17 @@ App\Entity\Attribute:
         entity: '@organization'
         persistToGateway: true
         searchable: true
+    organization_parentOrganization:
+        name: parentOrganization
+        description: The larger organization that this organization is a subOrganization of.
+        type: object
+        required: true
+        entity: '@organization'
+        object: '@organization'
+        persistToGateway: true
+        searchable: true
+        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # BISC organization uuid
+        cascade: false
     organization_address:
         name: addresses
         description: Where is the organization located?
@@ -439,12 +463,14 @@ App\Entity\Attribute:
         name: street
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_houseNumber:
         name: houseNumber
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_houseNumberSuffix:
@@ -457,12 +483,14 @@ App\Entity\Attribute:
         name: postalCode
         type: string
         maxLength: 255
+        required: true
         persistToGateway: true
         entity: '@address'
     address_locality:
         name: locality
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_country:
@@ -564,11 +592,6 @@ App\Entity\Attribute:
     person_children:
         name: children
         type: integer
-        entity: '@person'
-    person_childrenbirthdays:
-        name: childrenbirthdays
-        type: date
-        multiple: true
         entity: '@person'
     person_address:
         name: addresses
@@ -948,7 +971,7 @@ App\Entity\Attribute:
     education_level:
         name: level
         type: string
-        enum: ['basisonderwijs', 'vmbo, havo-. vwo-onderbouw, mbo-1', 'havo, vwo, mbo (overig)', 'hbo/wo bachelor', 'hbo/wo master, doctor']
+        enum: ['basisonderwijs', 'vmbo havo of vwo-onderbouw of mbo-1', 'havo vwo of mbo (overig)', 'hbo of wo bachelor', 'hbo of wo master of doctor']
         entity: '@education'
     education_institution:
         name: institution

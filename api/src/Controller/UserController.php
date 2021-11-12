@@ -46,19 +46,62 @@ class UserController extends AbstractController
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
-        $user = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
+        $userLogin = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
 
-        if (!$user) {
-            $status = 403;
-            $user = [
+        if (!$userLogin) {
+            $userLogin = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
                 'path'    => 'users/login',
                 'data'    => ['username'=>$data['username']],
             ];
+
+            return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 
-        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
+        // Set orgs in session for multitenancy
+        // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
+        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
+        $organizations = [];
+        if (isset($user['organization'])) {
+            $organizations[] = $user['organization'];
+        }
+        foreach ($user['userGroups'] as $userGroup) {
+            if (!in_array($userGroup['organization'], $organizations)) {
+                $organizations[] = $userGroup['organization'];
+            }
+        }
+        foreach ($organizations as $organization) {
+            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
+        }
+        $this->session->set('organizations', $organizations);
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
+        $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
+
+        return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * @param array               $organizations
+     * @param string              $organization
+     * @param CommonGroundService $commonGroundService
+     *
+     * @return array
+     */
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    {
+        if ($organization = $commonGroundService->isResource($organization)) {
+            if (count($organization['subOrganizations']) > 0) {
+                foreach ($organization['subOrganizations'] as $subOrganization) {
+                    if (!in_array($subOrganization['@id'], $organizations)) {
+                        $organizations[] = $subOrganization['@id'];
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                    }
+                }
+            }
+        }
+
+        return $organizations;
     }
 
     /**
@@ -68,13 +111,13 @@ class UserController extends AbstractController
     public function requestResetAction(Request $request, CommonGroundService $commonGroundService)
     {
         $data = json_decode($request->getContent(), true);
-        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => $data['username']])['hydra:member'];
+        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => urlencode($data['username'])])['hydra:member'];
         if (count($users) > 0) {
             $user = $users[0];
         } else {
             return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
         }
-        $this->authenticationService->sendTokenMail($user, 'Password reset token');
+        $this->authenticationService->sendTokenMail($user, 'Je wachtwoord herstellen', $request->headers->get('Referer', $request->headers->get('referer')));
 
         return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
     }

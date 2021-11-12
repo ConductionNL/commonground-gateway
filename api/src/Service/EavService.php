@@ -20,6 +20,8 @@ use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -31,8 +33,10 @@ class EavService
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
+    private ConvertToGatewayService $convertToGatewayService;
+    private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -40,6 +44,8 @@ class EavService
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
+        $this->convertToGatewayService = $convertToGatewayService;
+        $this->session = $session;
     }
 
     /**
@@ -109,12 +115,10 @@ class EavService
     {
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
-            if (!$object = $this->em->getRepository('App:ObjectEntity')->find($id)) {
-                var_dump('Not in gateway with id');
-                if (!$object = $this->em->getRepository('App:ObjectEntity')->findBy(['externalId' => $id])) {
-                    var_dump('Not in gateway with externalId');
+            if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
+                if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                    $object = $this->validationService->createOEforExternObject($entity, $id);
+                    $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
                             'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
@@ -123,13 +127,9 @@ class EavService
                             'data'    => ['id' => $id],
                         ];
                     }
-                } else {
-                    // Found an object with externalId
-                    $object = $object[0];
                 }
             }
-
-            if ($entity != $object->getEntity()) {
+            if ($object instanceof ObjectEntity && $entity != $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',
@@ -182,7 +182,19 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+            // Lets check if the user is allowed to view/edit this resource.
+            if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
+                //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
+            ) {
+                $object = null; // Needed so we return the error and not the object!
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => 'You are forbidden to view or edit this resource.',
+                    'type'    => 'Forbidden',
+                    'path'    => $entity->getName(),
+                    'data'    => ['id' => $requestBase['id']],
+                ];
+            } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
             }
@@ -209,26 +221,24 @@ class EavService
         // Lets allow for filtering specific fields
         $fields = $this->getRequestFields($request);
 
-        if (isset($object) && $object instanceof ObjectEntity) {
-            // Lets setup a switchy kinda thingy to handle the input (in handle functions)
-            // Its a enity endpoint
-            if ($entity && $requestBase['id']) {
-                // Lets handle all different type of endpoints
-                $endpointResult = $this->handleEntityEndpoint($request, [
-                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                ]);
-            }
-            // its an collection endpoind
-            elseif ($entity) {
-                $endpointResult = $this->handleCollectionEndpoint($request, [
-                    'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                    'entity' => $entity, 'extension' => $requestBase['extension'],
-                ]);
-            }
-            if (isset($endpointResult)) {
-                $result = $endpointResult['result'];
-                $responseType = $endpointResult['responseType'];
-            }
+        // Lets setup a switchy kinda thingy to handle the input (in handle functions)
+        // Its a enity endpoint
+        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+            // Lets handle all different type of endpoints
+            $endpointResult = $this->handleEntityEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+            ]);
+        }
+        // its an collection endpoind
+        elseif ($entity && $responseType == Response::HTTP_OK) {
+            $endpointResult = $this->handleCollectionEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                'entity' => $entity, 'extension' => $requestBase['extension'],
+            ]);
+        }
+        if (isset($endpointResult)) {
+            $result = $endpointResult['result'];
+            $responseType = $endpointResult['responseType'];
         }
 
         // If we have an error we want to set the responce type to error
@@ -470,6 +480,9 @@ class EavService
                 // Transfer the variable to the service
                 $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
                 $responseType = Response::HTTP_OK;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             case 'DELETE':
                 $result = $this->handleDelete($info['object']);
@@ -545,6 +558,16 @@ class EavService
      */
     public function handleMutation(ObjectEntity $object, array $body, $fields): array
     {
+        // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
+        if (empty($this->session->get('activeOrganization'))) {
+            return [
+                'message' => 'An active organization is required in the session, please login to create a new session.',
+                'type'    => 'Forbidden',
+                'path'    => $object->getEntity()->getName(),
+                'data'    => ['activeOrganization' => null],
+            ];
+        }
+
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
 
@@ -564,7 +587,7 @@ class EavService
         }
 
         // Check optional conditional logic
-        $object->checkConditionlLogic();
+        $object->checkConditionlLogic(); // Old way of checking condition logic
 
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
@@ -619,7 +642,40 @@ class EavService
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
-        $total = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query); // todo custom sql to count instead of getting items.
+        if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
+            $this->convertToGatewayService->convertEntityObjects($entity);
+        }
+        unset($query['updateGatewayPool']);
+
+        $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
+        foreach ($query as $param => $value) {
+            $param = str_replace(['_'], ['.'], $param);
+            $param = str_replace(['..'], ['._'], $param);
+            if (substr($param, 0, 1) == '.') {
+                $param = '_'.ltrim($param, $param[0]);
+            }
+            if (!in_array($param, $filterCheck)) {
+                $filterCheckStr = '';
+                foreach ($filterCheck as $filter) {
+                    $filterCheckStr = $filterCheckStr.$filter;
+                    if ($filter != end($filterCheck)) {
+                        $filterCheckStr = $filterCheckStr.', ';
+                    }
+                }
+
+                if (is_array($value)) {
+                    $value = end($value);
+                }
+
+                return [
+                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
+                    'type'    => 'error',
+                    'path'    => $entity->getName().'?'.$param.'='.$value,
+                    'data'    => ['queryParameter'=>$param],
+                ];
+            }
+        }
+        $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
         $results = [];
@@ -627,53 +683,16 @@ class EavService
             $results[] = $this->renderResult($object, $fields);
         }
 
-//        // TODO: this is ugly...
-//        // Lets see how many objects we have in extern component, outside the gateway
-//        if ($entity->getGateway()->getLocation() && $entity->getEndpoint()) {
-        ////            var_dump($query);
-//            $totalExternObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), false)['hydra:totalItems'];
-        ////            var_dump(count($totalExternObjects));
-//
-//            // TODO: what if we ever add sorting?! this will break...
-//            // If we have less (gateway) objects than the limit and this entity has an extern component, add objects from extern component
-//            if (count($objects) < $limit) {
-        ////                var_dump($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
-//                $query['limit'] = ($limit - count($objects));
-//                if ($offset > count($total)) {
-//                    // Commonground Components dont have a working query for start, only page
-//                    $query['page'] = ceil(($offset - count($total) + 1) / $limit); //todo: remove +1?
-//                }
-        ////                var_dump($query);
-//                // TODO: we somehow need to filter out the extern objects that already have an object in the gateway (maybe we should remove ^ $query['limit' & 'page'] for this as well.
-//                $externObjects = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), $query, false)['hydra:member'];
-        ////                var_dump(count($externObjects));
-//                foreach ($externObjects as $externObject) {
-//                    // Only render the attributes that are available for this Entity (todo: this does currently not work for subresources)
-//                    if (!is_null($entity->getAvailableProperties())) {
-//                        $externObject = array_filter($externObject, function ($propertyName) use($entity) {
-//                            return in_array($propertyName, $entity->getAvailableProperties());
-//                        }, ARRAY_FILTER_USE_KEY);
-//                    }
-//                    $results[] = $externObject;
-//                }
-//            }
-//        }
-
         // Lets skip the pritty styff when dealing with csv
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             return $results;
         }
 
-        $totalItems = count($total);
-        if (isset($totalExternObjects)) {
-            $totalItems = $totalItems + $totalExternObjects;
-        }
-
         // If not lets make it pritty
         $results = ['results'=>$results];
-        $results['total'] = $totalItems;
+        $results['total'] = $total;
         $results['limit'] = $limit;
-        $results['pages'] = ceil($results['total'] / $limit);
+        $results['pages'] = ceil($total / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
         $results['page'] = floor($offset / $limit) + 1;
         $results['start'] = $offset + 1;
@@ -765,10 +784,14 @@ class EavService
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
 
+        // TODO: response volgorde:  @id -> @type, @context, @dateCreated, @datemodified. Dan @gateway, dan id en daarna alle properties in alfabetische volgorde.
+
         // Lets make it personal
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $response['@dateCreated'] = $result->getDateCreated();
+        $response['@dateModified'] = $result->getDateModified();
         $response['id'] = $result->getId();
 
         return $response;
@@ -783,7 +806,7 @@ class EavService
      *
      * @return array
      */
-    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth): array
+    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null): array
     {
         $response = [];
 
@@ -811,7 +834,32 @@ class EavService
                 try {
                     $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
 
-                    $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
+                    // If this attribute has no inversedBy but the Object we are rendering has parent objects.
+                    // Check if one of the parent objects has an attribute with inversedBy -> this attribute.
+                    $parentInversedByAttribute = [];
+                    if (!$attribute->getInversedBy() && count($result->getSubresourceOf()) > 0) {
+                        // Get all parent (value) objects...
+                        $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $valueObject) use ($attribute) {
+                            // ...that have getInversedBy set to $attribute
+                            $inversedByAttributes = $valueObject->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
+                                return $item->getInversedBy() === $attribute;
+                            });
+                            if (count($inversedByAttributes) > 0) {
+                                return true;
+                            }
+
+                            return false;
+                        });
+                    }
+                    // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
+                    // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
+                    if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
+                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                    } else {
+                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, null);
+                    }
+
                     if ($response[$attribute->getName()] === ['continue'=>'continue']) {
                         unset($response[$attribute->getName()]);
                     }
@@ -834,13 +882,18 @@ class EavService
      *
      * @param Value $value
      * @param $fields
-     * @param ArrayCollection $maxDepth
+     * @param ArrayCollection|null $maxDepth
      *
      * @return array|null
      */
-    private function renderObjects(Value $value, $fields, ArrayCollection $maxDepth): ?array
+    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth): ?array
     {
         $attribute = $value->getAttribute();
+
+        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
 
         $subFields = null;
         if (is_array($fields)) {
@@ -858,7 +911,7 @@ class EavService
                 return $this->renderResult($value->getValue(), $subFields, $maxDepth);
             }
 
-            return ['continue'=>'continue'];
+            return ['continue'=>'continue']; //TODO We want this
         }
 
         // If we can have multiple Objects (because multiple = true)
