@@ -431,10 +431,15 @@ class ObjectEntity
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $key => $subResource) {
+                if (count($value->getObjects()) > 0) {
+                    $key = '['.$key.']';
+                } else {
+                    $key = '';
+                }
                 if (!$maxDepth->contains($subResource)) {
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName().'['.$key.']'] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
                     }
                 }
             }
