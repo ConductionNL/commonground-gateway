@@ -461,6 +461,7 @@ App\Entity\Attribute:
         name: houseNumber
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_houseNumberSuffix:
@@ -488,7 +489,6 @@ App\Entity\Attribute:
         type: string
         format: countryCode
         maxLength: 255
-        required: true
         entity: '@address'
         persistToGateway: true
 
