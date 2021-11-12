@@ -20,15 +20,15 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *     collectionOperations={
- *          "post",
- *     		"get",
- *     },
- *      itemOperations={
- * 		    "get",
- * 	        "put",
- * 	        "delete",
- *     },
+ *  itemOperations={
+ *      "get"={"path"="/admin/applications/{id}"},
+ *      "put"={"path"="/admin/applications/{id}"},
+ *      "delete"={"path"="/admin/applications/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/applications"},
+ *      "post"={"path"="/admin/applications"}
+ *  })
  * )
  * @ORM\Entity(repositoryClass="ApplicationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

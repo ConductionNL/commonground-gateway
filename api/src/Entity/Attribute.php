@@ -27,13 +27,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get",
- *      "put",
- *      "delete"
+ *      "get"={"path"="/admin/attributes/{id}"},
+ *      "put"={"path"="/admin/attributes/{id}"},
+ *      "delete"={"path"="/admin/attributes/{id}"}
  *  },
  *  collectionOperations={
- *      "get",
- *      "post"
+ *      "get"={"path"="/admin/attributes"},
+ *      "post"={"path"="/admin/attributes"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\AttributeRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -358,7 +358,6 @@ class Attribute
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $defaultValue;
-    // TODO: should be a Value object
 
     /**
      * @var bool Whether or not this property can be left empty

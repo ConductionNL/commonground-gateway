@@ -20,13 +20,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post",
- *     		"get",
+ *          "post"={"path"="/admin/documents"},
+ *     		"get"={"path"="/admin/documents"},
  *     },
  *      itemOperations={
- * 		    "get",
- * 	        "put",
- * 	        "delete",
+ * 		    "get"={"path"="/admin/documents/{id}"},
+ * 	        "put"={"path"="/admin/documents/{id}"},
+ * 	        "delete"={"path"="/admin/documents/{id}"},
  *     },
  * )
  * @ORM\Entity(repositoryClass="App\Repository\DocumentRepository")
@@ -76,6 +76,31 @@ class Document
     private string $route;
 
     /**
+     * @var string The data of this Document.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Assert\NotNull
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $data;
+
+    /**
+     * @var string The data id of this Document.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Assert\NotNull
+     * @Assert\Uuid
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $dataId;
+
+    /**
      * @var string An uri to the document creation service.
      *
      * @Assert\Length(
@@ -99,16 +124,6 @@ class Document
      * @ORM\Column(type="string", length=255)
      */
     private string $documentType;
-
-    /**
-     * @var Entity The entity the data relates to
-     *
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class)
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $entity;
 
     public function getId(): ?UuidInterface
     {
@@ -146,6 +161,30 @@ class Document
         return $this;
     }
 
+    public function getData(): ?string
+    {
+        return $this->data;
+    }
+
+    public function setData(string $data): self
+    {
+        $this->data = $data;
+
+        return $this;
+    }
+
+    public function getDataId(): ?string
+    {
+        return $this->dataId;
+    }
+
+    public function setDataId(string $dataId): self
+    {
+        $this->dataId = $dataId;
+
+        return $this;
+    }
+
     public function getDocumentCreationService(): ?string
     {
         return $this->documentCreationService;
@@ -166,18 +205,6 @@ class Document
     public function setDocumentType(string $documentType): self
     {
         $this->documentType = $documentType;
-
-        return $this;
-    }
-
-    public function getEntity(): ?Entity
-    {
-        return $this->entity;
-    }
-
-    public function setEntity(?Entity $entity): self
-    {
-        $this->entity = $entity;
 
         return $this;
     }

@@ -28,9 +28,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *          "get",
- *          "put",
- *          "delete",
+ *          "get"={"path"="/admin/object_entities/{id}"},
+ *          "put"={"path"="/admin/object_entities/{id}"},
+ *          "delete"={"path"="/admin/object_entities/{id}"},
  *          "get_eav_object"={
  *              "method"="GET",
  *              "path"="/eav/data/{entity}/{id}",
@@ -59,8 +59,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  *  collectionOperations={
- *      "get",
- *      "post",
+ *      "get"={"path"="/admin/object_entities"},
+ *      "post"={"path"="/admin/object_entities"},
  *      "get_eav_objects"={
  *          "method"="GET",
  *          "path"="/eav/data/{entity}",
@@ -127,22 +127,6 @@ class ObjectEntity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $uri;
-
-    /**
-     * @var string An uuid or uri of an application
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $application;
-
-    /**
-     * @var string An uuid or uri of an organization
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $organization;
 
     /**
      * @Groups({"read", "write"})
@@ -240,30 +224,6 @@ class ObjectEntity
     public function setUri(string $uri): self
     {
         $this->uri = $uri;
-
-        return $this;
-    }
-
-    public function getApplication(): ?string
-    {
-        return $this->application;
-    }
-
-    public function setApplication(string $application): self
-    {
-        $this->application = $application;
-
-        return $this;
-    }
-
-    public function getOrganization(): ?string
-    {
-        return $this->organization;
-    }
-
-    public function setOrganization(?string $organization): self
-    {
-        $this->organization = $organization;
 
         return $this;
     }
@@ -653,9 +613,9 @@ class ObjectEntity
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$convar);
                         }
                     }
                 } else {
@@ -664,9 +624,9 @@ class ObjectEntity
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                     }
                 }
             }
@@ -677,7 +637,7 @@ class ObjectEntity
                 if(!$value->getValue()){continue;}
                 // so lets see if we should have a value
                 if($this->getEntity()->getAttributeByName($conditionProperty) && $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue() == $conditionValue){
-                    $this->addError($value->getAttribute()->getName(), 'Is forbidden because property '.$conditionProperty.' has the value: '.$conditionValue);
+                    $this->addError($value->getAttribute()->getName(), 'Is forbidden becouse property '.$conditionProperty.' has the value: '.$conditionValue);
                 }
             }
             */
@@ -689,7 +649,7 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @return array the array holding all the data
+     * @return array the array holding all the data     *
      */
     public function toArray(int $level = 1): array
     {
