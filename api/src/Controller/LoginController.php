@@ -41,6 +41,7 @@ class LoginController extends AbstractController
         $userService = new UserService($commonGroundService, $eavService, $this->entityManager);
         if ($this->getUser()) {
             $result = [
+                'id' => $this->getUser()->getUserIdentifier(),
                 'username'   => $this->getUser()->getUsername(),
                 'roles'      => $this->getUser()->getRoles(),
                 'first_name' => $this->getUser()->getFirstName(),
