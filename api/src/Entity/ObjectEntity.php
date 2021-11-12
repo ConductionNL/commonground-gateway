@@ -431,7 +431,7 @@ class ObjectEntity
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $key => $subResource) {
-                if (count($value->getObjects()) > 0) {
+                if ($value->getAttribute()->getMultiple()) {
                     $key = '['.$key.']';
                 } else {
                     $key = '';
