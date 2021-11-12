@@ -268,6 +268,15 @@ App\Entity\Attribute:
         required: true
         entity: '@user'
         persistToGateway: true
+    #TODO:
+#    user_???:
+#        name: password
+#        description: Keep this peronal
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@user'
+#        persistToGateway: true
     user_locale:
         name: locale
         description: Location setting for the user.
