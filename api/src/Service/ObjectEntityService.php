@@ -2,16 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ObjectEntityService
@@ -25,7 +16,6 @@ class ObjectEntityService
 
     public function handleOwner(ObjectEntity $result): ObjectEntity
     {
-
         $user = $this->tokenStorage->getToken()->getUser();
 
         if (!is_string($user)) {
@@ -33,7 +23,6 @@ class ObjectEntityService
         }
 
         return $result;
-
     }
 
     public function checkOwner(ObjectEntity $result): bool
@@ -46,5 +35,4 @@ class ObjectEntityService
 
         return false;
     }
-
 }

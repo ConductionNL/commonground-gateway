@@ -25,7 +25,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private SessionInterface $session;
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface  $tokenStorage)
+    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface $tokenStorage)
     {
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
