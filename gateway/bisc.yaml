@@ -60,6 +60,7 @@ App\Entity\Entity:
             - emailValidated
             - locale
             - person
+            - currentPassword
 
     # UserGroup (security) object
     usergroup:
@@ -307,6 +308,14 @@ App\Entity\Attribute:
         object: '@person'
         cascade: true
         inversedBy: '@person_user'
+    user_currentPassword:
+        name: currentPassword
+        description: The current password when changing the password on a PUT
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@user'
+        persistToGateway: true
 
 #     UserGroup (security) properties
     userGroup_organization:
