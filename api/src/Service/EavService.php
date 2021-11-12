@@ -187,10 +187,10 @@ class EavService
                 //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
             ) {
                 $object = null; // Needed so we return the error and not the object!
-                $responseType = Response::HTTP_UNAUTHORIZED; // TODO / forbidden 403? change postman collection tests!
+                $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
-                    'message' => 'You are unauthorized to view or edit this resource.',
-                    'type'    => 'Unauthorized',
+                    'message' => 'You are forbidden to view or edit this resource.',
+                    'type'    => 'Forbidden',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $requestBase['id']],
                 ];
@@ -480,6 +480,9 @@ class EavService
                 // Transfer the variable to the service
                 $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
                 $responseType = Response::HTTP_OK;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             case 'DELETE':
                 $result = $this->handleDelete($info['object']);
@@ -559,7 +562,7 @@ class EavService
         if (empty($this->session->get('activeOrganization'))) {
             return [
                 'message' => 'An active organization is required in the session, please login to create a new session.',
-                'type'    => 'error',
+                'type'    => 'Forbidden',
                 'path'    => $object->getEntity()->getName(),
                 'data'    => ['activeOrganization' => null],
             ];
@@ -647,6 +650,10 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
+            $param = str_replace(['..'], ['._'], $param);
+            if (substr($param, 0, 1) == '.') {
+                $param = '_'.ltrim($param, $param[0]);
+            }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
@@ -659,6 +666,7 @@ class EavService
                 if (is_array($value)) {
                     $value = end($value);
                 }
+
                 return [
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
@@ -776,10 +784,14 @@ class EavService
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
 
+        // TODO: response volgorde:  @id -> @type, @context, @dateCreated, @datemodified. Dan @gateway, dan id en daarna alle properties in alfabetische volgorde.
+
         // Lets make it personal
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $response['@dateCreated'] = $result->getDateCreated();
+        $response['@dateModified'] = $result->getDateModified();
         $response['id'] = $result->getId();
 
         return $response;
