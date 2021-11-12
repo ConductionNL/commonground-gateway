@@ -42,6 +42,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQuery($entity, $filters);
 
+//        var_dump('Query findByEntity:');
 //        var_dump($query->getDQL());
 
         return $query
@@ -66,6 +67,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
 
+//        var_dump('Query countByEntity:');
 //        var_dump($query->getDQL());
 
         return $query->getQuery()->getSingleScalarResult();
