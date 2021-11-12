@@ -23,13 +23,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about a common ground gateway.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post"={"path"="/admin/gateways"},
- *     		"get"={"path"="/admin/gateways"},
+ *          "post",
+ *     		"get",
  *          "gateway_post"={
- *              "path"="/api/gateways/{name}/{endpoint}",
+ *              "path"="/gateways/{name}/{endpoint}",
  *              "method"="POST",
  *              "read"=false,
  *              "validate"=false,
@@ -44,13 +44,12 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     },
  *      itemOperations={
  * 		    "get"={
- *              "path"="/admin/gateways/{id}",
  *              "validate"=false
  *          },
- * 	        "put"={"path"="/admin/gateways/{id}"},
- * 	        "delete"={"path"="/admin/gateways/{id}"},
+ * 	        "put",
+ * 	        "delete",
  *          "gateway_get"={
- *              "path"="/api/gateways/{name}/{endpoint}",
+ *              "path"="/gateways/{name}/{endpoint}",
  *              "method"="GET",
  *              "read"=false,
  *              "validate"=false,
@@ -63,7 +62,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "gateway_put"={
- *              "path"="/api/gateways/{name}/{endpoint}",
+ *              "path"="/gateways/{name}/{endpoint}",
  *              "method"="PUT",
  *              "read"=false,
  *              "validate"=false,
@@ -76,7 +75,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "gateway_delete"={
- *              "path"="/api/gateways/{name}/{endpoint}",
+ *              "path"="/gateways/{name}/{endpoint}",
  *              "method"="DELETE",
  *              "read"=false,
  *              "validate"=false,
@@ -89,7 +88,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "get_change_logs"={
- *              "path"="/api/gateways/{id}/change_log",
+ *              "path"="/gateways/{id}/change_log",
  *              "method"="get",
  *              "openapi_context" = {
  *                  "summary"="Changelogs",
@@ -97,7 +96,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "get_audit_trail"={
- *              "path"="/api/gateways/{id}/audit_trail",
+ *              "path"="/gateways/{id}/audit_trail",
  *              "method"="get",
  *              "openapi_context" = {
  *                  "summary"="Audittrail",

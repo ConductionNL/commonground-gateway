@@ -12,7 +12,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -31,7 +30,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * 	        "delete",
  *     },
  * )
- * @ORM\Entity(repositoryClass="App\Repository\FileRepository")
+ * @ORM\Entity(repositoryClass="ApplicationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -39,7 +38,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
  */
-class File
+class Application
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
@@ -53,10 +52,10 @@ class File
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
-     * @var string The name of this File
+     * @var string The name of this Application.
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -66,63 +65,23 @@ class File
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $name;
+    private $name;
 
     /**
-     * @var string The extension of this File
+     * @var string A description of this Application.
      *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $extension;
-
-    /**
-     * @var string The mimeType of this File
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $mimeType;
-
-    /**
-     * @var string The size of this File
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $size;
-
-    /**
-     * @var string The base encoded string of this file
-     *
-     * @Gedmo\Versioned
-     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $base64;
+    private $description;
 
     /**
+     * @var array An array of domains of this Application.
+     *
      * @Groups({"read", "write"})
-     * @MaxDepth(1)
-     * @ORM\ManyToOne(targetEntity=Value::class, inversedBy="files")
+     * @ORM\Column(type="array")
      */
-    private Value $value;
+    private $domains = [];
 
     public function getId(): ?UuidInterface
     {
@@ -136,7 +95,7 @@ class File
         return $this;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -148,62 +107,26 @@ class File
         return $this;
     }
 
-    public function getExtension(): string
+    public function getDescription(): ?string
     {
-        return $this->extension;
+        return $this->description;
     }
 
-    public function setExtension(string $extension): self
+    public function setDescription(?string $description): self
     {
-        $this->extension = $extension;
+        $this->description = $description;
 
         return $this;
     }
 
-    public function getMimeType(): string
+    public function getDomains(): ?array
     {
-        return $this->mimeType;
+        return $this->domains;
     }
 
-    public function setMimeType(string $mimeType): self
+    public function setDomains(array $domains): self
     {
-        $this->mimeType = $mimeType;
-
-        return $this;
-    }
-
-    public function getSize(): string
-    {
-        return $this->size;
-    }
-
-    public function setSize(string $size): self
-    {
-        $this->size = $size;
-
-        return $this;
-    }
-
-    public function getBase64(): string
-    {
-        return $this->base64;
-    }
-
-    public function setBase64(string $base64): self
-    {
-        $this->base64 = $base64;
-
-        return $this;
-    }
-
-    public function getValue(): ?Value
-    {
-        return $this->value;
-    }
-
-    public function setValue(?Value $value): self
-    {
-        $this->value = $value;
+        $this->domains = $domains;
 
         return $this;
     }

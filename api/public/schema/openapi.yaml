@@ -9227,7 +9227,7 @@ paths:
 
         Na het aanmaken wordt een notificatie verstuurd.
       requestBody:
-        $ref: '#/components/requestBodies/Applicatie'
+        $ref: '#/components/requestBodies/Application'
       responses:
         201:
           description: Created
@@ -9642,7 +9642,7 @@ paths:
 
         Na het bijwerken wordt een notificatie verstuurd.
       requestBody:
-        $ref: '#/components/requestBodies/Applicatie'
+        $ref: '#/components/requestBodies/Application'
       responses:
         200:
           description: OK
@@ -9791,7 +9791,7 @@ paths:
 
         Na het bijwerken wordt een notificatie verstuurd.
       requestBody:
-        $ref: '#/components/requestBodies/Applicatie'
+        $ref: '#/components/requestBodies/Application'
       responses:
         200:
           description: OK
@@ -40399,12 +40399,12 @@ components:
             - cmc
             - kc
         applicatieId:
-          title: 'Applicatie id'
+          title: 'Application id'
           description: 'Unieke identificatie van de applicatie, binnen de organisatie.'
           type: string
           maxLength: 100
         applicatieWeergave:
-          title: 'Applicatie weergave'
+          title: 'Application weergave'
           description: 'Vriendelijke naam van de applicatie.'
           type: string
           maxLength: 200
@@ -43403,12 +43403,12 @@ components:
             - cmc
             - kc
         applicatieId:
-          title: 'Applicatie id'
+          title: 'Application id'
           description: 'Unieke identificatie van de applicatie, binnen de organisatie.'
           type: string
           maxLength: 100
         applicatieWeergave:
-          title: 'Applicatie weergave'
+          title: 'Application weergave'
           description: 'Vriendelijke naam van de applicatie.'
           type: string
           maxLength: 200
@@ -49661,12 +49661,12 @@ components:
           type: string
           maxLength: 255
         applicatieId:
-          title: 'Applicatie id'
+          title: 'Application id'
           description: 'Unieke identificatie van de applicatie, binnen de organisatie.'
           type: string
           maxLength: 100
         applicatieWeergave:
-          title: 'Applicatie weergave'
+          title: 'Application weergave'
           description: 'Vriendelijke naam van de applicatie.'
           type: string
           maxLength: 200
