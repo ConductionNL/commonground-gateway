@@ -142,7 +142,7 @@ class ValidationService
         }
 
         // We need to do a clean up if there are errors
-        if($objectEntity->getHasErrors()){
+        if ($objectEntity->getHasErrors()) {
             foreach ($this->createdObjects as $createdObject) {
                 $this->commonGroundService->deleteResource($createdObject->getUri());
             }
