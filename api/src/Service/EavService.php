@@ -657,6 +657,9 @@ class EavService
         unset($query['updateGatewayPool']);
 
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
+        // Lets add generic filters
+        $filterCheck[] = 'fields';
+        $filterCheck[] = 'extend';
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
