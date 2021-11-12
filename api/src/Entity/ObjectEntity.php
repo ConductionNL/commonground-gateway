@@ -234,6 +234,12 @@ class ObjectEntity
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
+
+        //TODO: better way of defaulting dateCreated & dateModified with orm?
+        // (options CURRENT_TIMESTAMP or 0 does not work)
+        $now = new DateTime();
+        $this->setDateCreated($now);
+        $this->setDateModified($now);
     }
 
     public function getId()

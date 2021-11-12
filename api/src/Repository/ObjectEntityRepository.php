@@ -4,11 +4,14 @@ namespace App\Repository;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use EasyRdf\Literal\Date;
+use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
@@ -123,6 +126,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         }
                         $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
                     }
+                    // Deal with _ filters for subresources
+                    if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
+                        $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$level);
+                        continue;
+                    }
                     $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
                 }
 
@@ -146,6 +154,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     //todo: typecast?
+
+    /**
+     * @param QueryBuilder $query
+     * @param $key
+     * @param $value
+     * @param string $prefix
+     * @return QueryBuilder
+     * @throws Exception
+     */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
 //        var_dump('filter :');
@@ -172,9 +189,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 break;
             case '_dateCreated':
                 if (array_key_exists('from', $value)) {
-                    $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $value['from']);
+                    $date = new DateTime($value['from']);
+                    $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d 00:00:00'));
                 } elseif (array_key_exists('till', $value)) {
-                    $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $value['till']);
+                    $date = new DateTime($value['till']);
+                    $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d 00:00:00'));
                 } else {
                     //todo: error?
 //                    var_dump('Not supported subfilter for _dateCreated');
@@ -182,9 +201,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 break;
             case '_dateModified':
                 if (array_key_exists('from', $value)) {
-                    $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $value['from']);
+                    $date = new DateTime($value['from']);
+                    $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $date->format('Y-m-d 00:00:00'));
                 } elseif (array_key_exists('till', $value)) {
-                    $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $value['till']);
+                    $date = new DateTime($value['till']);
+                    $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $date->format('Y-m-d 00:00:00'));
                 } else {
                     //todo: error?
 //                    var_dump('Not supported subfilter for _dateCreated');

@@ -783,10 +783,14 @@ class EavService
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
 
+        // TODO: response volgorde:  @id -> @type, @context, @dateCreated, @datemodified. Dan @gateway, dan id en daarna alle properties in alfabetische volgorde.
+
         // Lets make it personal
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
+        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $response['@dateCreated'] = $result->getDateCreated();
+        $response['@dateModified'] = $result->getDateModified();
         $response['id'] = $result->getId();
 
         return $response;
