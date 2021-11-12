@@ -36,4 +36,15 @@ class ObjectEntityService
 
     }
 
+    public function checkOwner(ObjectEntity $result): bool
+    {
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+            return true;
+        }
+
+        return false;
+    }
+
 }

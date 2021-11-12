@@ -321,7 +321,6 @@ App\Entity\Attribute:
         description: The current password when changing the password on a PUT
         type: string
         maxLength: 255
-        required: true
         entity: '@user'
         persistToGateway: true
 

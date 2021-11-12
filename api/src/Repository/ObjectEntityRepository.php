@@ -12,6 +12,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -22,10 +23,12 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 class ObjectEntityRepository extends ServiceEntityRepository
 {
     private SessionInterface $session;
+    private TokenStorageInterface $tokenStorage;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session)
+    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface  $tokenStorage)
     {
         $this->session = $session;
+        $this->tokenStorage = $tokenStorage;
 
         parent::__construct($registry, ObjectEntity::class);
     }
@@ -140,11 +143,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         // Multitenancy, only show objects this user is allowed to see.
-        // TODO what if get(orgs) returns null/empty?
-        if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
+
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (is_string($user)) {
+            $user = null;
         } else {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
+            $user = $user->getUserIdentifier();
+        }
+
+        if (empty($this->session->get('organizations'))) {
+            $query->andWhere('(o.organization IN (:organizations) OR o.owner = :owner)')->setParameters(['organizations' =>  null, 'owner' => $user]);
+        } else {
+            $query->andWhere('(o.organization IN (:organizations) OR o.owner = :owner)')->setParameters(['organizations' => $this->session->get('organizations'), 'owner' => $user]);
         }
 
         // TODO filter for o.application?
