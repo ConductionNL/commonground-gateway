@@ -827,12 +827,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/digid-bundle.git",
-                "reference": "4be556d6b0ef5d917f2c3e2d42ae84108988b405"
+                "reference": "971084ced4290bd4c5895166b69c401a2006ca67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/4be556d6b0ef5d917f2c3e2d42ae84108988b405",
-                "reference": "4be556d6b0ef5d917f2c3e2d42ae84108988b405",
+                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/971084ced4290bd4c5895166b69c401a2006ca67",
+                "reference": "971084ced4290bd4c5895166b69c401a2006ca67",
                 "shasum": ""
             },
             "require": {
@@ -880,7 +880,7 @@
                 "issues": "https://github.com/ConductionNL/digid-bundle/issues",
                 "source": "https://github.com/ConductionNL/digid-bundle"
             },
-            "time": "2021-10-13T08:50:04+00:00"
+            "time": "2021-11-12T14:13:21+00:00"
         },
         {
             "name": "conduction/samlbundle",
@@ -888,12 +888,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/saml-bundle.git",
-                "reference": "e46b3ba4b688d1e8e43ba7794c0a4e136b315a19"
+                "reference": "c28c7b58c80cffec7c7b149c0f5c12b3cd05e7ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/e46b3ba4b688d1e8e43ba7794c0a4e136b315a19",
-                "reference": "e46b3ba4b688d1e8e43ba7794c0a4e136b315a19",
+                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/c28c7b58c80cffec7c7b149c0f5c12b3cd05e7ac",
+                "reference": "c28c7b58c80cffec7c7b149c0f5c12b3cd05e7ac",
                 "shasum": ""
             },
             "require": {
@@ -939,7 +939,7 @@
                 "issues": "https://github.com/ConductionNL/ConductionCommonGroundBundle/issues",
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
-            "time": "2021-10-04T12:54:35+00:00"
+            "time": "2021-11-12T14:13:38+00:00"
         },
         {
             "name": "doctrine/annotations",
