@@ -690,14 +690,20 @@ class EavService
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
-        $results = [];
-        foreach ($objects as $object) {
-            $results[] = $this->renderResult($object, $fields);
+        // Lets see if we need to flatten te responce (for example csv use)
+        $flaten = false;
+        if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
+            $flaten = true;
         }
 
-        // Lets skip the pritty styff when dealing with csv
-        if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
-            return $results;
+        $results = [];
+        foreach ($objects as $object) {
+            $results[] = $this->renderResult($object, $fields, null, $flaten);
+        }
+
+        // If we need a flattend responce we are al done
+        if($flaten){
+           return $results;
         }
 
         // If not lets make it pritty
@@ -753,13 +759,9 @@ class EavService
      *
      * @return array
      */
-    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null): array
+    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false): array
     {
         $response = [];
-
-        if ($result->getUri()) {
-            $response['@uri'] = $result->getUri();
-        }
 
         // Lets start with the external results
         if (!empty($result->getExternalResult())) {
@@ -768,19 +770,6 @@ class EavService
             $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
         } elseif ($this->commonGroundService->isResource($result->getUri())) {
             $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
-        }
-
-        // Lets move some stuff out of the way
-        if (array_key_exists('@context', $response)) {
-            $response['@gateway/context'] = $response['@context'];
-        }
-        if ($result->getExternalId()) {
-            $response['@gateway/id'] = $result->getExternalId();
-        } elseif (array_key_exists('id', $response)) {
-            $response['@gateway/id'] = $response['id'];
-        }
-        if (array_key_exists('@type', $response)) {
-            $response['@gateway/type'] = $response['@type'];
         }
 
         // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
@@ -795,17 +784,43 @@ class EavService
         }
 
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
+        $response['id'] = $result->getId();
 
-        // TODO: response volgorde:  @id -> @type, @context, @dateCreated, @datemodified. Dan @gateway, dan id en daarna alle properties in alfabetische volgorde.
+        // Lets sort the result alphabeticly
+
+        // Lets skip the pritty styff when dealing with a flat object
+        if ($flat) {
+            ksort($response);
+            return $response;
+        }
 
         // Lets make it personal
+        $response = [];
         $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $response['@type'] = ucfirst($result->getEntity()->getName());
         $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $response['@dateCreated'] = $result->getDateCreated();
         $response['@dateModified'] = $result->getDateModified();
-        $response['id'] = $result->getId();
+        $response['@organization'] = $result->getOrganization();
+        $response['@application'] = $result->getApplication();
+        $response['@owner'] = $result->getOwner();
+        if ($result->getUri()) {
+            $response['@uri'] = $result->getUri();
+        }
+        // Lets move some stuff out of the way
+        if (array_key_exists('@context', $response)) {
+            $response['@gateway/context'] = $response['@context'];
+        }
+        if ($result->getExternalId()) {
+            $response['@gateway/id'] = $result->getExternalId();
+        } elseif (array_key_exists('id', $response)) {
+            $response['@gateway/id'] = $response['id'];
+        }
+        if (array_key_exists('@type', $response)) {
+            $response['@gateway/type'] = $response['@type'];
+        }
 
+        ksort($response);
         return $response;
     }
 
