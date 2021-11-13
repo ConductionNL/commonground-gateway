@@ -867,14 +867,17 @@ class EavService
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
-
+            $subfields = false;
 
             // Lets deal with fields filtering
             if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
                 continue;
             }
             elseif(is_array($fields) and array_key_exists($attribute->getName(), $fields)){
-               $subfields = $fields[$attribute->getName()];
+                $subfields = $fields[$attribute->getName()];
+            }
+            if(!$subfields){
+                $subfields = $fields;
             }
 
             // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
