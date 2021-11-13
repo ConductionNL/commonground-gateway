@@ -786,6 +786,7 @@ class EavService
 
         // Lets make sure we don't return stuf thats not in our field list
         // @todo make array filter instead of loop
+        // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
         foreach($response as $key => $value){
             if(is_array($fields) && !array_key_exists($key, $fields)){
                 unset($response[$key]);
@@ -929,8 +930,6 @@ class EavService
             }
             $response[$attribute->getName()] = $value->getValue();
         }
-
-        //var_dump($response);
 
         return $response;
     }
