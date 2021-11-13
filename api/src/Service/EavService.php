@@ -230,7 +230,6 @@ class EavService
         // Lets allow for filtering specific fields
         $fields = $this->getRequestFields($request);
 
-
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
         if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
@@ -703,8 +702,8 @@ class EavService
         }
 
         // If we need a flattend responce we are al done
-        if($flat){
-           return $results;
+        if ($flat) {
+            return $results;
         }
 
         // If not lets make it pritty
@@ -790,8 +789,8 @@ class EavService
         // Lets make sure we don't return stuf thats not in our field list
         // @todo make array filter instead of loop
         // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
-        foreach($response as $key => $value){
-            if(is_array($fields) && !array_key_exists($key, $fields)){
+        foreach ($response as $key => $value) {
+            if (is_array($fields) && !array_key_exists($key, $fields)) {
                 unset($response[$key]);
             }
         }
@@ -805,6 +804,7 @@ class EavService
         // Lets skip the pritty styff when dealing with a flat object
         if ($flat) {
             ksort($response);
+
             return $response;
         }
 
@@ -841,6 +841,7 @@ class EavService
 
         ksort($response);
         $response = $gatewayContext + $response;
+
         return $response;
     }
 
@@ -866,7 +867,6 @@ class EavService
         }
         $maxDepth->add($result);
 
-
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
             $subfields = false;
@@ -874,11 +874,10 @@ class EavService
             // Lets deal with fields filtering
             if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
                 continue;
-            }
-            elseif(is_array($fields) and array_key_exists($attribute->getName(), $fields)){
+            } elseif (is_array($fields) and array_key_exists($attribute->getName(), $fields)) {
                 $subfields = $fields[$attribute->getName()];
             }
-            if(!$subfields){
+            if (!$subfields) {
                 $subfields = $fields;
             }
 
@@ -956,7 +955,6 @@ class EavService
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
         }
-
 
         if ($value->getValue() == null) {
             return null;
