@@ -783,6 +783,9 @@ class EavService
             }, ARRAY_FILTER_USE_KEY);
         }
 
+        // Let overwrite the id with the gateway id
+        $response['id'] = $result->getId();
+
         // Lets make sure we don't return stuf thats not in our field list
         // @todo make array filter instead of loop
         // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
@@ -794,8 +797,6 @@ class EavService
 
         // Let get the internal results
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
-
-        $response['id'] = $result->getId();
 
         // Lets sort the result alphabeticly
 
