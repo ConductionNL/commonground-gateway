@@ -798,7 +798,6 @@ class EavService
         // Let get the internal results
         $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
 
-
         // Lets sort the result alphabeticly
 
         // Lets skip the pritty styff when dealing with a flat object
