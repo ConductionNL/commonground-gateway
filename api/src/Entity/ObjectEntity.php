@@ -201,7 +201,7 @@ class ObjectEntity
      *
      * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
      */
-    private ArrayCollection $recursionStack;
+    private Collection $recursionStack;
 
     /**
      * @MaxDepth(1)
@@ -231,7 +231,7 @@ class ObjectEntity
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {

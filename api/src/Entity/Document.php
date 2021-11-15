@@ -132,7 +132,7 @@ class Document
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {

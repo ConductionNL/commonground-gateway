@@ -130,7 +130,7 @@ class File
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="file", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {

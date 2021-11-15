@@ -188,7 +188,7 @@ class Entity
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {

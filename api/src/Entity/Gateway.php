@@ -380,7 +380,7 @@ class Gateway
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {

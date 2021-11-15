@@ -117,13 +117,13 @@ class Application
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="application")
      */
-    private ArrayCollection $endpoints;
+    private Collection $endpoints;
 
     /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY")
      */
-    private $requestLogs;
+    private Collection $requestLogs;
 
     public function __construct()
     {
