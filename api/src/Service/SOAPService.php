@@ -267,9 +267,9 @@ class SOAPService
 
     public function getZakLa01MessageForIdentifier(string $identifier, bool $documents): string
     {
-        switch($identifier) {
+        switch ($identifier) {
             case '20161006':
-                if(!$documents)
+                if (!$documents) {
                     return
 '<?xml version="1.0"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -498,7 +498,7 @@ class SOAPService
         </zakLa01>
     </s:Body>
 </s:Envelope>';
-                else
+                } else {
                     return
 '<?xml version="1.0"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -611,6 +611,7 @@ class SOAPService
         </zakLa01>
     </s:Body>
 </s:Envelope>';
+                }
                     default:
                         return
 '<?xml version="1.0"?>
@@ -649,8 +650,8 @@ class SOAPService
 
     public function getEdcLa01MessageForIdentifier(string $identifier): string
     {
-        switch($identifier){
-            case "10000004":
+        switch ($identifier) {
+            case '10000004':
                 return
 '<?xml version="1.0"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
@@ -789,8 +790,7 @@ class SOAPService
             $message["$caseNamespace:scope"]["$caseNamespace:object"]["@$stufNamespace:entiteittype"] == 'ZAK' &&
             $message["$caseNamespace:scope"]["$caseNamespace:object"]["$caseNamespace:heeftRelevant"]["@$stufNamespace:entiteittype"] == 'ZAKEDC' &&
             $message["$caseNamespace:scope"]["$caseNamespace:object"]["$caseNamespace:heeftRelevant"]["$caseNamespace:gerelateerde"]["@$stufNamespace:entiteittype"] == 'EDC'
-        )
-        {
+        ) {
             return $this->getZakLa01MessageForIdentifier($message["$caseNamespace:gelijk"]["$caseNamespace:identificatie"], true);
         } elseif (
             isset($message["$caseNamespace:gelijk"]["$caseNamespace:identificatie"]) &&
@@ -820,6 +820,7 @@ class SOAPService
         ) {
             return $this->getEdcLa01MessageForIdentifier($message["$caseNamespace:gelijk"]["$caseNamespace:identificatie"]);
         }
+
         throw new BadRequestException('Not a valid Lv01 message');
     }
 
