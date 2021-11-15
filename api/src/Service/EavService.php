@@ -143,7 +143,11 @@ class EavService
                 ];
             }
 
-            return $this->objectEntityService->handleOwner($object);
+            if ($method == 'POST' || $method == 'PUT') {
+                return $this->objectEntityService->handleOwner($object);
+            }
+
+            return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
@@ -690,13 +694,19 @@ class EavService
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 
-        $results = [];
-        foreach ($objects as $object) {
-            $results[] = $this->renderResult($object, $fields);
+        // Lets see if we need to flatten te responce (for example csv use)
+        $flat = false;
+        if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
+            $flat = true;
         }
 
-        // Lets skip the pritty styff when dealing with csv
-        if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
+        $results = [];
+        foreach ($objects as $object) {
+            $results[] = $this->renderResult($object, $fields, null, $flat);
+        }
+
+        // If we need a flattend responce we are al done
+        if ($flat) {
             return $results;
         }
 
@@ -753,13 +763,9 @@ class EavService
      *
      * @return array
      */
-    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null): array
+    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
     {
         $response = [];
-
-        if ($result->getUri()) {
-            $response['@uri'] = $result->getUri();
-        }
 
         // Lets start with the external results
         if (!empty($result->getExternalResult())) {
@@ -768,19 +774,6 @@ class EavService
             $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
         } elseif ($this->commonGroundService->isResource($result->getUri())) {
             $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
-        }
-
-        // Lets move some stuff out of the way
-        if (array_key_exists('@context', $response)) {
-            $response['@gateway/context'] = $response['@context'];
-        }
-        if ($result->getExternalId()) {
-            $response['@gateway/id'] = $result->getExternalId();
-        } elseif (array_key_exists('id', $response)) {
-            $response['@gateway/id'] = $response['id'];
-        }
-        if (array_key_exists('@type', $response)) {
-            $response['@gateway/type'] = $response['@type'];
         }
 
         // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
@@ -794,17 +787,63 @@ class EavService
             }, ARRAY_FILTER_USE_KEY);
         }
 
-        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth));
+        // Let overwrite the id with the gateway id
+        $response['id'] = $result->getId();
 
-        // TODO: response volgorde:  @id -> @type, @context, @dateCreated, @datemodified. Dan @gateway, dan id en daarna alle properties in alfabetische volgorde.
+        // Lets make sure we don't return stuf thats not in our field list
+        // @todo make array filter instead of loop
+        // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
+        foreach ($response as $key => $value) {
+            if (is_array($fields) && !array_key_exists($key, $fields)) {
+                unset($response[$key]);
+            }
+        }
+
+        // Let get the internal results
+        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
+
+        // Lets sort the result alphabeticly
+
+        // Lets skip the pritty styff when dealing with a flat object
+        if ($flat) {
+            ksort($response);
+
+            return $response;
+        }
 
         // Lets make it personal
-        $response['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
-        $response['@type'] = ucfirst($result->getEntity()->getName());
-        $response['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-        $response['@dateCreated'] = $result->getDateCreated();
-        $response['@dateModified'] = $result->getDateModified();
-        $response['id'] = $result->getId();
+        $gatewayContext = [];
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $gatewayContext['@dateCreated'] = $result->getDateCreated();
+        $gatewayContext['@dateModified'] = $result->getDateModified();
+        $gatewayContext['@organization'] = $result->getOrganization();
+        $gatewayContext['@application'] = $result->getApplication();
+        $gatewayContext['@owner'] = $result->getOwner();
+        if ($result->getUri()) {
+            $gatewayContext['@uri'] = $result->getUri();
+        }
+        // Lets move some stuff out of the way
+        if (array_key_exists('@context', $response)) {
+            $gatewayContext['@gateway/context'] = $response['@context'];
+        }
+        if ($result->getExternalId()) {
+            $gatewayContext['@gateway/id'] = $result->getExternalId();
+        } elseif (array_key_exists('id', $response)) {
+            $gatewayContext['@gateway/id'] = $response['id'];
+        }
+        if (array_key_exists('@type', $response)) {
+            $gatewayContext['@gateway/type'] = $response['@type'];
+        }
+        if (is_array($fields)) {
+            $gatewayContext['@fields'] = $fields;
+        }
+        $gatewayContext['@level'] = $level;
+        $gatewayContext['id'] = $result->getId();
+
+        ksort($response);
+        $response = $gatewayContext + $response;
 
         return $response;
     }
@@ -818,9 +857,12 @@ class EavService
      *
      * @return array
      */
-    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null): array
+    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
     {
         $response = [];
+
+        // Lets keep track of how deep in the three we are
+        $level++;
 
         // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
         if (is_null($maxDepth)) {
@@ -830,18 +872,26 @@ class EavService
 
         foreach ($result->getObjectValues() as $value) {
             $attribute = $value->getAttribute();
+            $subfields = false;
 
             // Lets deal with fields filtering
             if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
                 continue;
+            } elseif (is_array($fields) and array_key_exists($attribute->getName(), $fields)) {
+                $subfields = $fields[$attribute->getName()];
+            }
+            if (!$subfields) {
+                $subfields = $fields;
             }
 
             // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
             // todo @ruben: zie: https://conduction.atlassian.net/browse/BISC-539 (comments) over usedProperties
+
             // Only render the attributes that are used
             if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
                 continue;
             }
+
             if ($attribute->getType() == 'object') {
                 try {
                     if (!$this->objectEntityService->checkOwner($result)) {
@@ -869,9 +919,9 @@ class EavService
                     // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
                     // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
                     if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
-                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, $maxDepth);
+                        $response[$attribute->getName()] = $this->renderObjects($value, $subfields, $maxDepth, $flat, $level);
                     } else {
-                        $response[$attribute->getName()] = $this->renderObjects($value, $fields, null);
+                        $response[$attribute->getName()] = $this->renderObjects($value, $subfields, null, $flat, $level);
                     }
 
                     if ($response[$attribute->getName()] === ['continue'=>'continue']) {
@@ -900,18 +950,13 @@ class EavService
      *
      * @return array|null
      */
-    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth): ?array
+    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 
         // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
-        }
-
-        $subFields = null;
-        if (is_array($fields)) {
-            $subFields = $fields[$attribute->getName()];
         }
 
         if ($value->getValue() == null) {
@@ -922,7 +967,7 @@ class EavService
         if (!$attribute->getMultiple()) {
             // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
             if (!$maxDepth->contains($value->getValue())) {
-                return $this->renderResult($value->getValue(), $subFields, $maxDepth);
+                return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
             }
 
             return ['continue'=>'continue']; //TODO We want this
@@ -934,7 +979,7 @@ class EavService
         foreach ($objects as $object) {
             // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
             if (!$maxDepth->contains($object)) {
-                $objectsArray[] = $this->renderResult($object, $subFields, $maxDepth);
+                $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $level);
                 continue;
             }
             // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
