@@ -16,7 +16,7 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 class SOAPController extends AbstractController
 {
     /**
-     * @Route("/", methods={"POST"})
+     * @Route("/stuf", methods={"POST"})
      *
      * @param Request $request
      *
