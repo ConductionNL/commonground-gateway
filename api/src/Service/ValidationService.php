@@ -31,9 +31,13 @@ class ValidationService
     private GatewayService $gatewayService;
     private CacheInterface $cache;
     public $promises = []; //TODO: use ObjectEntity->promises instead!
+    public $postPromiseUris = [];
+    public $putPromiseUris = [];
+    public $createdObjects = [];
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
+    private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -42,7 +46,8 @@ class ValidationService
         CacheInterface $cache,
         AuthorizationService $authorizationService,
         SessionInterface $session,
-        ConvertToGatewayService $convertToGatewayService
+        ConvertToGatewayService $convertToGatewayService,
+        ObjectEntityService $objectEntityService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -51,6 +56,7 @@ class ValidationService
         $this->authorizationService = $authorizationService;
         $this->session = $session;
         $this->convertToGatewayService = $convertToGatewayService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -138,6 +144,13 @@ class ValidationService
             $objectEntity->addPromise($promise);
         }
 
+        // We need to do a clean up if there are errors
+        if ($objectEntity->getHasErrors()) {
+            foreach ($this->createdObjects as $createdObject) {
+                $this->commonGroundService->deleteResource(null, $createdObject->getUri());
+            }
+        }
+
         return $objectEntity;
     }
 
@@ -155,7 +168,9 @@ class ValidationService
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         try {
-            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+            if (!$this->objectEntityService->checkOwner($objectEntity)) {
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+            }
         } catch (AccessDeniedException $e) {
             $objectEntity->addError($attribute->getName(), $e->getMessage());
         }
@@ -1173,6 +1188,8 @@ class ValidationService
             Utils::settle($promises)->wait();
         }
 
+        // Lets
+
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach ($objectEntity->getObjectValues() as $value) {
 
@@ -1268,6 +1285,9 @@ class ValidationService
                     }, ARRAY_FILTER_USE_KEY);
                 }
                 $objectEntity->setExternalResult($result);
+
+                // Keep track of created objects
+                $this->createdObjects[] = $objectEntity;
 
                 // Notify notification component
                 $this->notify($objectEntity, $method);
