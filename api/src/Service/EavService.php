@@ -143,7 +143,10 @@ class EavService
                 ];
             }
 
-            return $this->objectEntityService->handleOwner($object);
+            if ($method == 'POST' || $method == 'PUT') {
+                return $this->objectEntityService->handleOwner($object);
+            }
+            return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
