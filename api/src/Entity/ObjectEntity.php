@@ -227,6 +227,12 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     */
+    private $requestLogs;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
@@ -238,6 +244,7 @@ class ObjectEntity
         $now = new DateTime();
         $this->setDateCreated($now);
         $this->setDateModified($now);
+        $this->requestLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -801,6 +808,36 @@ class ObjectEntity
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setObjectEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getObjectEntity() === $this) {
+                $requestLog->setObjectEntity(null);
+            }
+        }
 
         return $this;
     }

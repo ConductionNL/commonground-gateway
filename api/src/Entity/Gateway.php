@@ -17,6 +17,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -375,9 +376,16 @@ class Gateway
      */
     private $paths = [];
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY")
+     */
+    private $requestLogs;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -598,6 +606,36 @@ class Gateway
     public function setPaths(?array $paths): self
     {
         $this->paths = $paths;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getGateway() === $this) {
+                $requestLog->setGateway(null);
+            }
+        }
 
         return $this;
     }

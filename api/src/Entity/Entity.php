@@ -184,12 +184,19 @@ class Entity
      */
     private $responseLogs;
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     */
+    private $requestLogs;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
     }
 
     public function getId()
@@ -470,6 +477,36 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getEntity() === $this) {
+                $requestLog->setEntity(null);
+            }
+        }
 
         return $this;
     }

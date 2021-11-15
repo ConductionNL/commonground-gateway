@@ -119,9 +119,16 @@ class Application
      */
     private ArrayCollection $endpoints;
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY")
+     */
+    private $requestLogs;
+
     public function __construct()
     {
         $this->endpoints = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -232,6 +239,36 @@ class Application
             // set the owning side to null (unless already changed)
             if ($endpoint->getApplication() === $this) {
                 $endpoint->setApplication(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getApplication() === $this) {
+                $requestLog->setApplication(null);
             }
         }
 
