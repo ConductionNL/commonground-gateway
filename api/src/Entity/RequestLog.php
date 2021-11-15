@@ -8,6 +8,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -106,7 +108,7 @@ class RequestLog
      * @var array|null The request body of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="json", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
     private ?array $requestBody = [];
 
@@ -114,7 +116,7 @@ class RequestLog
      * @var array The response body of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="json")
+     * @ORM\Column(type="array")
      */
     private array $responseBody = [];
 
@@ -146,7 +148,7 @@ class RequestLog
      * @var array The error data of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="json")
+     * @ORM\Column(type="array")
      */
     private array $data = [];
 
@@ -197,7 +199,7 @@ class RequestLog
      * @var array The headers of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="array", length=255)
      */
     private array $headers = [];
 
@@ -205,13 +207,30 @@ class RequestLog
      * @var array The query parameters of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="array", length=255)
      */
     private array $queryParams = [];
 
     //TODO: https://symfony.com/doc/current/components/http_foundation.html#accessing-request-data
     //cookies
     //files
+
+    /**
+     * @var Datetime The moment this request was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    public function __construct()
+    {
+        //TODO: better way of defaulting dateCreated & dateModified with orm?
+        // (options CURRENT_TIMESTAMP or 0 does not work)
+        $now = new DateTime();
+        $this->setDateCreated($now);
+    }
 
     public function getId(): ?UuidInterface
     {
@@ -461,6 +480,18 @@ class RequestLog
     public function setQueryParams(array $queryParams): self
     {
         $this->queryParams = $queryParams;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
 
         return $this;
     }
