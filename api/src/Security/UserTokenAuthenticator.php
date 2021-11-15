@@ -117,7 +117,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         }
 
         $organizations = [];
-        if ($user['organization']) {
+        if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }
         foreach ($user['userGroups'] as $userGroup) {
@@ -132,7 +132,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
         $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
 
-        return new AuthenticationUser($user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
+        return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }
 
     public function checkCredentials($credentials, UserInterface $user)

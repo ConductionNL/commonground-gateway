@@ -4,12 +4,15 @@ namespace App\Repository;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -20,10 +23,12 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 class ObjectEntityRepository extends ServiceEntityRepository
 {
     private SessionInterface $session;
+    private TokenStorageInterface $tokenStorage;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session)
+    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface $tokenStorage)
     {
         $this->session = $session;
+        $this->tokenStorage = $tokenStorage;
 
         parent::__construct($registry, ObjectEntity::class);
     }
@@ -39,6 +44,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
     {
         $query = $this->createQuery($entity, $filters);
+
+//        var_dump('Query findByEntity:');
+//        var_dump($query->getDQL());
 
         return $query
             // filters toevoegen
@@ -60,7 +68,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function countByEntity(Entity $entity, array $filters = []): int
     {
         $query = $this->createQuery($entity, $filters);
-        $query->select('count(o.id)');
+        $query->select('count(o)');
+
+//        var_dump('Query countByEntity:');
+//        var_dump($query->getDQL());
 
         return $query->getQuery()->getSingleScalarResult();
     }
@@ -79,9 +90,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
             foreach ($filters as $key=>$value) {
                 // Symfony has the tendency to replace . with _ on query parameters
                 $key = str_replace(['_'], ['.'], $key);
+                $key = str_replace(['..'], ['._'], $key);
+                if (substr($key, 0, 1) == '.') {
+                    $key = '_'.ltrim($key, $key[0]);
+                }
+
+                // We want to use custom logic for _ filters, because they will be used directly on the ObjectEntities themselves.
+                if (substr($key, 0, 1) == '_') {
+                    $query = $this->getObjectEntityFilter($query, $key, $value);
+                    unset($filters[$key]); //todo: why unset if we never use filters after this?
+                    continue;
+                }
                 // Lets see if this is an allowed filter
                 if (!in_array($key, $filterCheck)) {
-                    unset($filters[$key]);
+                    unset($filters[$key]); //todo: why unset if we never use filters after this?
                     continue;
                 }
 
@@ -100,16 +122,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         //var_dump($key[0]);
                         //($key[1]);
                         $query->leftJoin('value.objects', 'subObjects'.$level);
-                        if ($key[1] == 'id') {
-                            $query->andWhere('(subObjects'.$level.'.id = :'.$key[1].' OR subObjects'.$level.'.externalId = :'.$key[1].')')->setParameter($key[1], $value);
-                        } else {
-                            $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
-                        }
-                    }
 
-                    if ($key[1] != 'id') {
-                        $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                        // Deal with _ filters for subresources
+                        if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
+                            $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$level);
+                            continue;
+                        }
+                        $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
                     }
+                    // Deal with _ filters for subresources
+                    if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
+                        $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$level);
+                        continue;
+                    }
+                    $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
                 }
 
                 // lets suport level 1
@@ -117,11 +143,88 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         // Multitenancy, only show objects this user is allowed to see.
-        // TODO what if get(orgs) returns null/empty?
+        //TODO: owner check
+//        $user = $this->tokenStorage->getToken()->getUser();
+//
+//        if (is_string($user)) {
+//            $user = null;
+//        } else {
+//            $user = $user->getUserIdentifier();
+//        }
+
+        // TODO: organizations or owner
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
         } else {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
+        }
+        // TODO filter for o.application?
+
+//        var_dump($query->getDQL());
+
+        return $query;
+    }
+
+    //todo: typecast?
+
+    /**
+     * @param QueryBuilder $query
+     * @param $key
+     * @param $value
+     * @param string $prefix
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder
+     */
+    private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    {
+//        var_dump('filter :');
+//        var_dump($key);
+//        var_dump($value);
+        switch ($key) {
+            case 'id':
+                $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);
+                break;
+            case '_id':
+                $query->andWhere($prefix.'.id = :id')->setParameter('id', $value);
+                break;
+            case '_externalId':
+                $query->andWhere($prefix.'.externalId = :externalId')->setParameter('externalId', $value);
+                break;
+            case '_uri':
+                $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
+                break;
+            case '_organization':
+                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
+                break;
+            case '_application':
+                $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
+                break;
+            case '_dateCreated':
+                if (array_key_exists('from', $value)) {
+                    $date = new DateTime($value['from']);
+                    $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
+                }
+                if (array_key_exists('till', $value)) {
+                    $date = new DateTime($value['till']);
+                    $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
+                }
+                break;
+            case '_dateModified':
+                if (array_key_exists('from', $value)) {
+                    $date = new DateTime($value['from']);
+                    $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
+                }
+                if (array_key_exists('till', $value)) {
+                    $date = new DateTime($value['till']);
+                    $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
+                }
+                break;
+            default:
+                //todo: error?
+//                var_dump('Not supported filter for ObjectEntity');
+                break;
         }
 
         return $query;
@@ -133,8 +236,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
-        $filters = [];
-        $filters[] = $prefix.'id';
+        // NOTE:
+        // Filter id looks for ObjectEntity id and externalId
+        // Filter _id looks specifically/only for ObjectEntity id
+        // Filter _externalId looks specifically/only for ObjectEntity externalId
+        if ($level != 1) {
+            // For level 1 we should not allow filter id, because this is just a get Item call (not needed for a get collection)
+            // Maybe we should do the same for _id & _externalId if we allow to use _ filters on subresources?
+            $filters = [$prefix.'id'];
+        }
+
+        $filters = array_merge($filters ?? [], [
+            $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization', $prefix.'_application',
+            $prefix.'_dateCreated', $prefix.'_dateModified',
+        ]);
 
         foreach ($Entity->getAttributes() as $attribute) {
             if ($attribute->getType() == 'string' && $attribute->getSearchable()) {

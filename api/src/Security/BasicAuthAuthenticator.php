@@ -96,6 +96,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         return new AuthenticationUser(
             $credentials['username'],
+            $credentials['username'],
             $credentials['password'],
             $person['givenName'] ?? '',
             $person['familyName'] ?? '',

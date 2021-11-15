@@ -166,7 +166,6 @@ App\Entity\Entity:
 #            - availability
 #            - availabilityNotes
 #            - children
-#            - childrenbirthdays
 #            - country
 #            - user
 
@@ -270,6 +269,15 @@ App\Entity\Attribute:
         required: true
         entity: '@user'
         persistToGateway: true
+    #TODO:
+#    user_???:
+#        name: password
+#        description: Keep this peronal
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@user'
+#        persistToGateway: true
     user_locale:
         name: locale
         description: Location setting for the user.
@@ -313,7 +321,6 @@ App\Entity\Attribute:
         description: The current password when changing the password on a PUT
         type: string
         maxLength: 255
-        required: true
         entity: '@user'
         persistToGateway: true
 
@@ -455,12 +462,14 @@ App\Entity\Attribute:
         name: street
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_houseNumber:
         name: houseNumber
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_houseNumberSuffix:
@@ -473,12 +482,14 @@ App\Entity\Attribute:
         name: postalCode
         type: string
         maxLength: 255
+        required: true
         persistToGateway: true
         entity: '@address'
     address_locality:
         name: locality
         type: string
         maxLength: 255
+        required: true
         entity: '@address'
         persistToGateway: true
     address_country:
