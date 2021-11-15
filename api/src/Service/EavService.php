@@ -146,6 +146,7 @@ class EavService
             if ($method == 'POST' || $method == 'PUT') {
                 return $this->objectEntityService->handleOwner($object);
             }
+
             return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
