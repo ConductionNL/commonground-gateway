@@ -33,6 +33,12 @@ class SOAPController extends AbstractController
             case 'zakLv01':
                 $message = $SOAPService->processZakLv01Message($data, $namespaces);
                 break;
+            case 'edcLv01':
+                $message = $SOAPService->processEdcLv01Message($data, $namespaces);
+                break;
+            case 'edcLk01':
+                $message = $SOAPService->processEdcLk01($data, $namespaces);
+                break;
             default:
                 throw new BadRequestException("The message type $messageType is not supported at this moment");
         }
