@@ -154,7 +154,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // TODO: organizations or owner
         if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations' ,null);
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
         } else {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
@@ -196,7 +196,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
                 break;
             case '_organization':
-                $query->andWhere($prefix.'.organization = :organization')->setParameter('externalId', $value);
+                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
                 break;
             case '_application':
                 $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
