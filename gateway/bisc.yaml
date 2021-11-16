@@ -44,7 +44,6 @@ App\Entity\Entity:
         description: Dit endpoint behandeld alle functionaliteit rondom users of gebruikers.
         gateway: '@uc_api'
         endpoint: 'users'
-        extend: false
         availableProperties:
             - username
             - roles
@@ -69,7 +68,6 @@ App\Entity\Entity:
         description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet.
         gateway: '@uc_api'
         endpoint: 'groups'
-        extend: false
         availableProperties:
             - organization
             - name
@@ -85,7 +83,6 @@ App\Entity\Entity:
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
         gateway: '@contacten_api'
         endpoint: 'organizations'
-        extend: false
         # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
         # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
         availableProperties:
@@ -146,7 +143,6 @@ App\Entity\Entity:
         description: Dit object beschrijft een persoon en alleen eigenschappen die specifiek bij een persoon horen.
         gateway: '@contacten_api'
         endpoint: 'people'
-        extend: false
         availableProperties:
             - givenName
             - additionalName
@@ -176,7 +172,6 @@ App\Entity\Entity:
         description: Dit object beschrijft een medewerker en alleen eigenschappen die specifiek bij een medewerker horen.
         gateway: '@mrc_api'
         endpoint: 'employees'
-        extend: false
         availableProperties: []
 
     #Student Object
@@ -186,7 +181,6 @@ App\Entity\Entity:
         description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
         gateway: '@edu_api'
         endpoint: 'participants'
-        extend: false
         availableProperties:
             - status
 
@@ -266,18 +260,9 @@ App\Entity\Attribute:
         description: Keep this peronal
         type: string
         maxLength: 255
-        required: true
+        required: true #TODO: https://conduction.atlassian.net/browse/BISC-652 about required password...
         entity: '@user'
         persistToGateway: true
-    #TODO:
-#    user_???:
-#        name: password
-#        description: Keep this peronal
-#        type: string
-#        maxLength: 255
-#        required: true
-#        entity: '@user'
-#        persistToGateway: true
     user_locale:
         name: locale
         description: Location setting for the user.
@@ -293,7 +278,6 @@ App\Entity\Attribute:
         type: object
         required: true
         persistToGateway: true
-        cascade: false
         entity: '@user'
         object: '@organization'
     user_usergroups:
@@ -306,7 +290,6 @@ App\Entity\Attribute:
         entity: '@user'
         object: '@usergroup'
         persistToGateway: true
-        cascade: false
     user_person:
         name: person
         description: The person of this user.
@@ -333,7 +316,6 @@ App\Entity\Attribute:
         entity: '@usergroup'
         object: '@organization'
         persistToGateway: true
-        cascade: false
     userGroup_name:
         name: name
         description: What is the name of this usergroup?
@@ -388,7 +370,6 @@ App\Entity\Attribute:
         persistToGateway: true
         searchable: true
         defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # BISC organization uuid
-        cascade: false
     organization_address:
         name: addresses
         description: Where is the organization located?
@@ -532,7 +513,6 @@ App\Entity\Attribute:
         format: countryCode
         entity: '@person'
         maxLength: 255
-        persistToGateway: false
     person_country:
         name: country
         type: string
@@ -564,7 +544,6 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@person'
-        persistToGateway: false
     person_contactPreference:
         name: contactPreference
         type: string
@@ -636,7 +615,6 @@ App\Entity\Attribute:
         type: object
         entity: '@employee'
         object: '@organization'
-        cascade: false
     employee_intake:
         name: intake
         type: object
@@ -650,7 +628,6 @@ App\Entity\Attribute:
         entity: '@employee'
         object: '@education'
         cascade: true
-        persistToGateway: false
 
     # student properties
     student_person:
@@ -666,7 +643,6 @@ App\Entity\Attribute:
         type: object
         entity: '@student'
         object: '@civicIntegration'
-        required: false
         cascade: true
     student_languageHouse:
         name: languageHouse
@@ -674,7 +650,6 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@organization'
         required: true
-        cascade: false
     student_intake:
         name: intake
         type: object
@@ -702,6 +677,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@learningNeed'
         cascade: true
+        inversedBy: '@learningNeed_student'
 
         # Employee Intake properties
     employeeIntake_targetGroupPreferences:
@@ -1089,11 +1065,17 @@ App\Entity\Attribute:
         name: agreements
         type: string
         maxLength: 255
-        entity: '@learningNeed'    
+        entity: '@learningNeed'
+    learningNeed_student:
+        name: student
+        type: object
+        required: true
+        entity: '@learningNeed'
+        object: '@student'
+        inversedBy: '@student_learningNeeds'
     learningNeed_learningResults:
         name: learningResults
         type: object
-        required: false
         multiple: true
         entity: '@learningNeed'
         object: '@learningResult'
@@ -1166,6 +1148,7 @@ App\Entity\Attribute:
         required: true
         entity: '@learningResult'
         object: '@learningNeed'
+        inversedBy: '@learningNeed_learningResults'
             
     # course properties
     course_name:
@@ -1243,14 +1226,12 @@ App\Entity\Attribute:
         type: object
         entity: '@course'
         object: '@organization'
-        cascade: false
     # participation properties
     participation_course:
         name: provider
         type: object
         entity: '@participation'
         object: '@course'
-        cascade: false
     participation_providerOther:
         name: providerOther
         type: string
@@ -1353,14 +1334,12 @@ App\Entity\Attribute:
         required: true
         entity: '@contactMoment'
         object: '@employee'
-        cascade: false
     contactMoment_student:
         name: student
         type: object
         required: true
         entity: '@contactMoment'
         object: '@student'
-        cascade: false
     contactMoment_type:
         name: type
         type: string
