@@ -108,6 +108,16 @@ class Endpoint
      */
     private Collection $requestLogs;
 
+    /**
+     * @var array Everything we do *not* want to log when logging errors on this endpoint, defaults to only the authorization header. See the entity RequestLog for the possible options. For headers an array of headers can be given, if you only want to filter out specific headers.
+     *
+     * @example ["statusCode", "status", "headers" => ["authorization", "accept"]]
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $loggingConfig = ["headers" => ["authorization"]];
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
@@ -211,6 +221,18 @@ class Endpoint
                 $requestLog->setEndpoint(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLoggingConfig(): ?array
+    {
+        return $this->loggingConfig;
+    }
+
+    public function setLoggingConfig(array $loggingConfig): self
+    {
+        $this->loggingConfig = $loggingConfig;
 
         return $this;
     }

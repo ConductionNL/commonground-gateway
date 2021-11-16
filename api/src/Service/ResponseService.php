@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
@@ -332,16 +333,29 @@ class ResponseService
 
     public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
     {
-        //TODO: Config op Endpoint Entity toevoegen om aan te kunnen geven wat je wel en niet wilt loggen
+        // TODO: REMOVE THIS WHEN ENDPOINTS BL IS ADDED
+        $endpoint = $this->em->getRepository('App:RequestLog')->findOneBy(['name'=>'TempRequestLogEndpointWIP']);
+        if (empty($endpoint)) {
+            $endpoint = new Endpoint();
+            $endpoint->setName('TempRequestLogEndpointWIP');
+            $endpoint->setType('gateway-endpoint');
+            $endpoint->setPath('not a real endpoint');
+            $endpoint->setDescription('This is a endpoint added to use the default loggingConfig of endpoints');
+            $this->em->persist($endpoint);
+            $this->em->flush();
+        }
+
+        //TODO: Find a clean and nice way to not set properties on RequestLog if they are present in the $endpoint->getLoggingConfig() array!
         $requestLog = new RequestLog();
+//        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
+        $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
+
         $requestLog->setObjectEntity($object);
         $requestLog->setEntity($entity ?? $object ? $object->getEntity() : null);
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-//        $requestLog->setEndpoint($requestLog->getEntity() ? $requestLog->getEntity()->getEndpoint() : null);
-        $requestLog->setEndpoint(null); // todo this^ make Entity Endpoint an object instead of string
         $requestLog->setApplication(null); // todo
         $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser($this->tokenStorage->getToken()->getUser()->getUserIdentifier());
@@ -352,8 +366,7 @@ class ResponseService
         $requestLog->setResponseBody($result);
 
         $requestLog->setMethod($request->getMethod());
-        //TODO: forbidden header keys filteren. (ook vastleggen in Config op Endpoint Entity)
-        $requestLog->setHeaders($this->filterRequestLogHeaders($request->headers->all()));
+        $requestLog->setHeaders($this->filterRequestLogHeaders($requestLog->getEndpoint(), $request->headers->all()));
         $requestLog->setQueryParams($request->query->all());
 
         $this->em->persist($requestLog);
@@ -376,16 +389,18 @@ class ResponseService
         return null;
     }
 
-    private function filterRequestLogHeaders(array $headers, int $level = 1): array
+    private function filterRequestLogHeaders(Endpoint $endpoint, array $headers, int $level = 1): array
     {
         foreach ($headers as $header => &$headerValue) {
-            if ($level == 1 && $header == 'authorization') {
+            // Filter out headers we do not want to log on this endpoint
+            if ($level == 1 && $endpoint->getLoggingConfig() && array_key_exists('headers', $endpoint->getLoggingConfig()) &&
+                in_array($header, $endpoint->getLoggingConfig()['headers'])) {
                 unset($headers[$header]);
             }
             if (is_string($headerValue) && strlen($headerValue) > 250) {
                 $headers[$header] = substr($headerValue, 0, 250).'...';
             } elseif (is_array($headerValue)) {
-                $headerValue = $this->filterRequestLogHeaders($headerValue, $level + 1);
+                $headerValue = $this->filterRequestLogHeaders($endpoint, $headerValue, $level + 1);
             } elseif (!is_string($headerValue)) {
                 //todo?
                 $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
