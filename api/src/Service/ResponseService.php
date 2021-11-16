@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,14 +25,15 @@ class ResponseService
     private AuthorizationService $authorizationService;
     private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
+    private TokenStorageInterface $tokenStorage;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session)
-    {
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session, TokenStorageInterface $tokenStorage)    {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
+        $this->tokenStorage = $tokenStorage;
     }
 
     /**
@@ -342,7 +344,7 @@ class ResponseService
         $requestLog->setEndpoint(null); // todo this^ make Entity Endpoint an object instead of string
         $requestLog->setApplication(null); // todo
         $requestLog->setOrganization($object ? $object->getOrganization() : $this->session->get('activeOrganization'));
-        $requestLog->setUser($object ? $object->getOwner() : null);
+        $requestLog->setUser($this->tokenStorage->getToken()->getUser()->getUserIdentifier());
 
         $requestLog->setStatusCode($response->getStatusCode());
         $requestLog->setStatus($this->getStatusWithCode($response->getStatusCode()) ?? $result['type']);
