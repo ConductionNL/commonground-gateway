@@ -343,7 +343,7 @@ class ResponseService
 //        $requestLog->setEndpoint($requestLog->getEntity() ? $requestLog->getEntity()->getEndpoint() : null);
         $requestLog->setEndpoint(null); // todo this^ make Entity Endpoint an object instead of string
         $requestLog->setApplication(null); // todo
-        $requestLog->setOrganization($object ? $object->getOrganization() : $this->session->get('activeOrganization'));
+        $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser($this->tokenStorage->getToken()->getUser()->getUserIdentifier());
 
         $requestLog->setStatusCode($response->getStatusCode());
