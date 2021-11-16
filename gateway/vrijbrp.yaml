@@ -1,0 +1,8 @@
+App\Entity\Gateway:
+  gateway_1:
+    name: vrijbrp_dossiers
+    auth: vrijbrp-jwt
+    username: conduction
+    password: 7cU2D!Pu
+    location: https://api.procura.nl/dossiers
+    #documentation: https://raw.githubusercontent.com/ConductionNL/productenendienstencatalogus/master/api/public/schema/openapi.yaml
