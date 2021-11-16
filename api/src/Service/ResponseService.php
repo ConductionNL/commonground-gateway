@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
 use App\Entity\RequestLog;
@@ -10,7 +11,9 @@ use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,13 +23,15 @@ class ResponseService
     private CommonGroundService $commonGroundService;
     private AuthorizationService $authorizationService;
     private ObjectEntityService $objectEntityService;
+    private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
         $this->objectEntityService = $objectEntityService;
+        $this->session = $session;
     }
 
     /**
@@ -315,37 +320,75 @@ class ResponseService
 
     public function checkForErrorResponse(array $result, $responseType = Response::HTTP_BAD_REQUEST): bool
     {
-        if ($responseType != Response::HTTP_OK && array_key_exists('message', $result) && array_key_exists('type', $result)
+        if ($responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT
+            && array_key_exists('message', $result) && array_key_exists('type', $result)
             && array_key_exists('path', $result)) { //We also have key data, but this one is not always required and can be empty as well
             return True;
         }
         return False;
     }
 
-    public function createRequestLog(Request $request, array $result): RequestLog
+    public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
     {
-//        var_dump('new RequestLog');
+        //TODO: Config op Endpoint Entity toevoegen om aan te kunnen geven wat je wel en niet wilt loggen
         $requestLog = new RequestLog();
-        $requestLog->setMessage($result['message']);
-        $requestLog->setType($result['type']);
-        $requestLog->setPath($result['path']);
-        if (array_key_exists('data', $result)) {
-            $requestLog->setData($result['data']);
-        }
+        $requestLog->setObjectEntity($object);
+        $requestLog->setEntity($entity ?? $object ? $object->getEntity() : null);
+        $requestLog->setDocument(null); // todo
+        $requestLog->setFile(null); // todo
+        $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-//        $requestLog->setRequestBody($request->toArray());
+//        $requestLog->setEndpoint($requestLog->getEntity() ? $requestLog->getEntity()->getEndpoint() : null);
+        $requestLog->setEndpoint(null); // todo this^ make Entity Endpoint an object instead of string
+        $requestLog->setApplication(null); // todo
+        $requestLog->setOrganization($object ? $object->getOrganization() : $this->session->get('activeOrganization'));
+        $requestLog->setUser($object ? $object->getOwner() : null);
+
+        $requestLog->setStatusCode($response->getStatusCode());
+        $requestLog->setStatus($this->getStatusWithCode($response->getStatusCode()) ?? $result['type']);
+        $requestLog->setRequestBody($request->toArray());
+        $requestLog->setResponseBody($result);
+
         $requestLog->setMethod($request->getMethod());
-        //TODO: functie om headers te filteren bij 250 of meer tekens verkorten en ... er achter plakt / forbidden header keys filteren
-        //TODO: config op endpoint entity toevoegen om aan te kunnen geven wat je wel en niet wilt loggen uberhaubt
-//        $requestLog->setHeaders($request->headers->all());
-//        $requestLog->setQueryParams($request->query->all());
-
-        $requestLog->setStatusCode('a');
-        $requestLog->setStatus('aaaa');
+        //TODO: forbidden header keys filteren. (ook vastleggen in Config op Endpoint Entity)
+        $requestLog->setHeaders($this->filterRequestLogHeaders($request->headers->all()));
+        $requestLog->setQueryParams($request->query->all());
 
         $this->em->persist($requestLog);
         $this->em->flush();
 
         return $requestLog;
+    }
+
+    private function getStatusWithCode(int $statusCode): ?string
+    {
+        $reflectionClass = new ReflectionClass(Response::class);
+        $constants = $reflectionClass->getConstants();
+
+        foreach ($constants as $status => $value) {
+            if ($value == $statusCode) {
+                return $status;
+            }
+        }
+
+        return null;
+    }
+
+    private function filterRequestLogHeaders(array $headers, int $level = 1): array
+    {
+        foreach ($headers as $header => &$headerValue) {
+            if ($level == 1 && $header == 'authorization') {
+                unset($headers[$header]);
+            }
+            if (is_string($headerValue) && strlen($headerValue) > 250) {
+                $headers[$header] = substr($headerValue, 0, 250).'...';
+            } elseif (is_array($headerValue)) {
+                $headerValue = $this->filterRequestLogHeaders($headerValue, $level + 1);
+            } elseif (!is_string($headerValue)) {
+                //todo?
+                $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
+            }
+        }
+        return $headers;
     }
 }

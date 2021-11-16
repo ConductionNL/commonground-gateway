@@ -121,38 +121,6 @@ class RequestLog
     private array $responseBody = [];
 
     /**
-     * @var string The error message of this RequestLog.
-     *
-     * @Groups({"read"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $message;
-
-    /**
-     * @var string The error type of this RequestLog.
-     *
-     * @Groups({"read"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $type;
-
-    /**
-     * @var string The error path of this RequestLog.
-     *
-     * @Groups({"read"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $path;
-
-    /**
-     * @var array The error data of this RequestLog.
-     *
-     * @Groups({"read"})
-     * @ORM\Column(type="array")
-     */
-    private array $data = [];
-
-    /**
      * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="requestLogs")
@@ -199,7 +167,7 @@ class RequestLog
      * @var array The headers of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="array", length=255)
+     * @ORM\Column(type="array")
      */
     private array $headers = [];
 
@@ -207,7 +175,7 @@ class RequestLog
      * @var array The query parameters of this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="array", length=255)
+     * @ORM\Column(type="array")
      */
     private array $queryParams = [];
 
@@ -336,54 +304,6 @@ class RequestLog
     public function setResponseBody(array $responseBody): self
     {
         $this->responseBody = $responseBody;
-
-        return $this;
-    }
-
-    public function getMessage(): ?string
-    {
-        return $this->message;
-    }
-
-    public function setMessage(string $message): self
-    {
-        $this->message = $message;
-
-        return $this;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    public function getPath(): ?string
-    {
-        return $this->path;
-    }
-
-    public function setPath(string $path): self
-    {
-        $this->path = $path;
-
-        return $this;
-    }
-
-    public function getData(): ?array
-    {
-        return $this->data;
-    }
-
-    public function setData(array $data): self
-    {
-        $this->data = $data;
 
         return $this;
     }

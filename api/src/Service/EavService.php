@@ -150,15 +150,13 @@ class EavService
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
+            $object->setOrganization($this->session->get('activeOrganization'));
+            //todo set application
 
             return $this->objectEntityService->handleOwner($object);
         }
 
         return null;
-    }
-
-    public function checkOwner(ObjectEntity $objectEntity): bool
-    {
     }
 
     /**
@@ -258,17 +256,10 @@ class EavService
             $responseType = Response::HTTP_BAD_REQUEST;
         }
 
-        // Lets see if we have to log an error
-        if ($this->responseService->checkForErrorResponse($result, $responseType)) {
-            $this->responseService->createRequestLog($request, $result);
-        }
-
-        // Let seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
-
         // Let return the shizle
         $response = new Response(
-            $result,
+            // Let seriliaze the shizle
+            $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []),
             $responseType,
             ['content-type' => $contentType]
         );
@@ -280,6 +271,11 @@ class EavService
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
             $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        // Lets see if we have to log an error
+        if ($this->responseService->checkForErrorResponse($result, $responseType)) {
+            $this->responseService->createRequestLog($request, $entity ?? null, $result, $response, $object ?? null);
         }
 
         return $response;

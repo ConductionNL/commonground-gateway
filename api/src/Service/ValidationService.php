@@ -851,6 +851,8 @@ class ValidationService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
+                    $subObject->setOrganization($this->session->get('activeOrganization'));
+                    //todo set application
                     $valueObject->addObject($subObject);
                 }
 
@@ -868,6 +870,7 @@ class ValidationService
                     }
                     $this->em->persist($subObject);
                 } else {
+                    // todo never reached
                     $subObjects = $valueObject->getObjects();
                     if ($subObjects->isEmpty()) {
                         $subObject = new ObjectEntity();
