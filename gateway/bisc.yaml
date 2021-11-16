@@ -266,18 +266,9 @@ App\Entity\Attribute:
         description: Keep this peronal
         type: string
         maxLength: 255
-        required: true
+        required: true #TODO: https://conduction.atlassian.net/browse/BISC-652 about required password...
         entity: '@user'
         persistToGateway: true
-    #TODO:
-#    user_???:
-#        name: password
-#        description: Keep this peronal
-#        type: string
-#        maxLength: 255
-#        required: true
-#        entity: '@user'
-#        persistToGateway: true
     user_locale:
         name: locale
         description: Location setting for the user.
@@ -702,6 +693,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@learningNeed'
         cascade: true
+        inversedBy: '@learningNeed_student'
 
         # Employee Intake properties
     employeeIntake_targetGroupPreferences:
@@ -1089,7 +1081,14 @@ App\Entity\Attribute:
         name: agreements
         type: string
         maxLength: 255
-        entity: '@learningNeed'    
+        entity: '@learningNeed'
+    learningNeed_student:
+        name: student
+        type: object
+        required: true
+        entity: '@learningNeed'
+        object: '@student'
+        inversedBy: '@student_learningNeeds'
     learningNeed_learningResults:
         name: learningResults
         type: object
@@ -1166,6 +1165,7 @@ App\Entity\Attribute:
         required: true
         entity: '@learningResult'
         object: '@learningNeed'
+        inversedBy: '@learningNeed_learningResults'
             
     # course properties
     course_name:
