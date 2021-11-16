@@ -334,7 +334,7 @@ class ResponseService
     public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
     {
         // TODO: REMOVE THIS WHEN ENDPOINTS BL IS ADDED
-        $endpoint = $this->em->getRepository('App:RequestLog')->findOneBy(['name'=>'TempRequestLogEndpointWIP']);
+        $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['name'=>'TempRequestLogEndpointWIP']);
         if (empty($endpoint)) {
             $endpoint = new Endpoint();
             $endpoint->setName('TempRequestLogEndpointWIP');
