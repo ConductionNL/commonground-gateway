@@ -402,10 +402,11 @@ class ValidationService
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
+                    $subObject->setApplication($this->session->get('application'));
                 }
-//                $subObject->setApplication(); // TODO
 
 //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
@@ -852,7 +853,7 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                    //todo set application
+                    $subObject->setApplication($this->session->get('application'));
                     $valueObject->addObject($subObject);
                 }
 
@@ -1275,10 +1276,11 @@ class ValidationService
                 // Set organization for this object
                 if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                    $objectEntity->setApplication($this->session->get('application'));
                 }
-//                    $objectEntity->setApplication(); // TODO
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
@@ -151,7 +152,7 @@ class EavService
             $object = new ObjectEntity();
             $object->setEntity($entity);
             $object->setOrganization($this->session->get('activeOrganization'));
-            //todo set application
+            $object->setApplication($this->session->get('application'));
 
             return $this->objectEntityService->handleOwner($object);
         }
@@ -170,6 +171,26 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
+        // Get the application by searching for an application with a domain that matches the host of this request
+        $host = $request->headers->get('host');
+        $applications = $this->em->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+        if (count($applications) == 1) {
+            $this->session->set('application', $applications[0]);
+        } else {
+            $this->session->set('application', null);
+            //todo: just continue?
+            var_dump('no application found');
+        }
+
+        // TODO: use a sql query instead of array_filter for finding the correct application
+//        $application = $this->em->getRepository('App:Application')->findByDomain($host);
+//        if (!empty($application)) {
+//            $this->session->set('application', $application);
+//        }
+
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $result = $requestBase['result'];
@@ -192,9 +213,8 @@ class EavService
             // Lets check if the user is allowed to view/edit this resource.
 
             if (!$this->objectEntityService->checkOwner($object)) {
-                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
-                    //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-                ) {
+                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
+                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
                     $object = null; // Needed so we return the error and not the object!
                     $responseType = Response::HTTP_FORBIDDEN;
                     $result = [

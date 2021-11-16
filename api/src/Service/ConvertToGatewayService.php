@@ -144,10 +144,11 @@ class ConvertToGatewayService
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+            $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
         } else {
             $newObject->setOrganization($this->session->get('activeOrganization'));
+            $newObject->setApplication($this->session->get('application'));
         }
-//                $newObject->setApplication(); // TODO
 
         $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
 

@@ -132,9 +132,10 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
+     * @MaxDepth(1)
      */
-    private $application;
+    private ?Application $application = null;
 
     /**
      * @var string An uuid or uri of an organization
@@ -283,12 +284,12 @@ class ObjectEntity
         return $this;
     }
 
-    public function getApplication(): ?string
+    public function getApplication(): ?Application
     {
         return $this->application;
     }
 
-    public function setApplication(string $application): self
+    public function setApplication(Application $application): self
     {
         $this->application = $application;
 

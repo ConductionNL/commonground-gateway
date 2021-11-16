@@ -351,12 +351,12 @@ class ResponseService
         $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
 
         $requestLog->setObjectEntity($object);
-        $requestLog->setEntity($entity ?? $object ? $object->getEntity() : null);
+        $requestLog->setEntity($entity ?? ($object ? $object->getEntity() : null));
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-        $requestLog->setApplication(null); // todo
+        $requestLog->setApplication($this->session->get('application'));
         $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser($this->tokenStorage->getToken()->getUser()->getUserIdentifier());
 

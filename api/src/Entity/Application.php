@@ -76,7 +76,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $description;
+    private ?string $description;
 
     /**
      * @var array An array of domains of this Application.
@@ -93,7 +93,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private string $public;
+    private ?string $public;
 
     /**
      * @var string A secret uuid of this Application.
@@ -102,15 +102,16 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private string $secret;
+    private ?string $secret;
 
+    // TODO: make this required?
     /**
      * @var string An uuid or uri of an organization for this Application.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $organization;
+    private ?string $organization;
 
     /**
      * @Groups({"read", "write"})
@@ -125,10 +126,17 @@ class Application
      */
     private Collection $requestLogs;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY")
+     * @MaxDepth(1)
+     */
+    private Collection $objectEntities;
+
     public function __construct()
     {
         $this->endpoints = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+        $this->objectEntities = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -269,6 +277,36 @@ class Application
             // set the owning side to null (unless already changed)
             if ($requestLog->getApplication() === $this) {
                 $requestLog->setApplication(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ObjectEntity[]
+     */
+    public function getObjectEntities(): Collection
+    {
+        return $this->objectEntities;
+    }
+
+    public function addObjectEntity(ObjectEntity $objectEntity): self
+    {
+        if (!$this->objectEntities->contains($objectEntity)) {
+            $this->objectEntities[] = $objectEntity;
+            $objectEntity->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeObjectEntity(ObjectEntity $objectEntity): self
+    {
+        if ($this->objectEntities->removeElement($objectEntity)) {
+            // set the owning side to null (unless already changed)
+            if ($objectEntity->getApplication() === $this) {
+                $objectEntity->setApplication(null);
             }
         }
 
