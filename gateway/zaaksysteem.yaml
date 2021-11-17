@@ -191,7 +191,7 @@ App\Entity\Attribute:
     # Case attributes
 #    case_casetype_id:
 #        name: casetype_id
-#        description: The casetype of this case?
+#        description: The casetype of this case
 #        type: object
 #        required: true
 #        persistToGateway: true
@@ -199,36 +199,48 @@ App\Entity\Attribute:
 #        object: '@casetype'
 #    case_source: # channel_of_contact but for input body only
 #        name: source
-#        description: The source of this case?
+#        description: The source of this case
 #        type: string
 #        required: true
 #        persistToGateway: true
 #        entity: '@case'
     channel_of_contact: # source but for response body only
         name: channel_of_contact
-        description: The channel_of_contact of this case?
+        description: The channel_of_contact of this case
         type: string
         persistToGateway: true
         entity: '@case'
 #    case_open:
 #        name: open
-#        description: The open of this case?
+#        description: The open of this case
 #        type: string
 #        persistToGateway: true
 #        entity: '@case'
 #        # Is probs. an enum?
 #    case_confidentiality:
 #        name: confidentiality
-#        description: The confidentiality of this case?
+#        description: The confidentiality of this case
 #        type: string
 #        persistToGateway: true
 #        entity: '@case'
     status:
         name: status
-        description: The status of this case?
+        description: The status of this case
         type: string
         persistToGateway: true
         entity: '@case'
+#    case_number_master:
+#        name: number_master
+#        description: The number_master of this case
+#        type: int
+#        persistToGateway: true
+#        entity: '@case'
+#    case_number:
+#        name: number
+#        description: The number of this case
+#        type: int
+#        persistToGateway: true
+#        entity: '@case'
 
     #TODO:
     # Case Document attributes
