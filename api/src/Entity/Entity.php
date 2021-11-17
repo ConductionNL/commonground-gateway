@@ -190,6 +190,22 @@ class Entity
      */
     private Collection $requestLogs;
 
+    /**
+     * @var array Config to translate specific calls to a different method or endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $translationConfig = [];
+
+    /**
+     * @var array Config for getting the results out of a get collection on this endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $collectionConfig = ["results"=>"hydra:member"];
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -507,6 +523,30 @@ class Entity
                 $requestLog->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getTranslationConfig(): ?array
+    {
+        return $this->translationConfig;
+    }
+
+    public function setTranslationConfig(?array $translationConfig): self
+    {
+        $this->translationConfig = $translationConfig;
+
+        return $this;
+    }
+
+    public function getCollectionConfig(): ?array
+    {
+        return $this->collectionConfig;
+    }
+
+    public function setCollectionConfig(?array $collectionConfig): self
+    {
+        $this->collectionConfig = $collectionConfig;
 
         return $this;
     }
