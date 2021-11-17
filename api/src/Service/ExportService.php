@@ -24,11 +24,18 @@ class ExportService
             case 'gateways':
                 $export = array_merge($this->exportGateway(), $export);
                 break;
+            case 'entities':
+                $export = array_merge($this->exportEntity(), $export);
+                break;
+            case 'all':
+            default:
+                $export = array_merge($this->exportEntity(), $export);
+                $export = array_merge($this->exportGateway(), $export);
+                break;
         }
 
 
-        $yaml = Yaml::dump($export, 3);
-
+        $yaml = Yaml::dump($export, 4);
 
         $response = new Response($yaml, 200, [
             'Content-type' => 'text/yaml',
@@ -48,6 +55,19 @@ class ExportService
         // Filter empty values
         foreach ($objects as &$object) {
             $array['App\Entity\Gateway'][$object->getId()->toString()] = $object->export();
+        }
+
+        return $array;
+    }
+
+    public function exportEntity()
+    {
+        $array['App\Entity\Entity'] = [];
+        $objects = $this->em->getRepository('App:Entity')->findAll();
+
+        // Filter empty values
+        foreach ($objects as &$object) {
+            $array['App\Entity\Entity'][$object->getId()->toString()] = $object->export();
         }
 
         return $array;

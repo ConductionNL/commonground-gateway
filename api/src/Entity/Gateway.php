@@ -456,7 +456,7 @@ class Gateway
             'headers' => $this->getHeaders()
         ];
 
-        return array_filter($data);
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
     public function getId(): ?UuidInterface
