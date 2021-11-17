@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,7 +15,7 @@ class SOAPService
     private EntityManagerInterface $entityManager;
 
     /**
-     * Translation table for case type descriptions
+     * Translation table for case type descriptions.
      */
     const TRANSLATE_TYPE_TABLE = [
         'death_in_municipality' => 'Overlijden in gemeente',
@@ -33,7 +32,7 @@ class SOAPService
     ];
 
     /**
-     * Translation table for case statuses
+     * Translation table for case statuses.
      */
     const TRANSLATE_STATUS_TABLE = [
         'incomplete'    => ['description' => 'Incompleet',      'endStatus' => false,   'explanation' => 'Zaak is incompleet'],
@@ -96,7 +95,7 @@ class SOAPService
             'POST'
         );
         $body = $result->getBody()->getContents();
-        if($result->getStatusCode() != 200 || !isset(json_decode($body, true)['result']['content'])){
+        if ($result->getStatusCode() != 200 || !isset(json_decode($body, true)['result']['content'])) {
             return [];
         } else {
             return json_decode($body, true)['result']['content'];
@@ -115,7 +114,7 @@ class SOAPService
             'POST'
         );
         $body = $result->getBody()->getContents();
-        if($result->getStatusCode() != 200 || !isset(json_decode($body, true)['result']['content'])){
+        if ($result->getStatusCode() != 200 || !isset(json_decode($body, true)['result']['content'])) {
             return [];
         } else {
             return json_decode($body, true)['result']['content'];
@@ -130,7 +129,7 @@ class SOAPService
             '',
         );
         $body = $result->getBody()->getContents();
-        if($result->getStatusCode() != 200){
+        if ($result->getStatusCode() != 200) {
             return [];
         } else {
             return json_decode($body, true);
@@ -151,7 +150,7 @@ class SOAPService
             'StUF:organisatie'      => 'SIMgroep',
             'StUF:applicatie'       => 'SIMform',
             'StUF:administratie'    => 'Zaken',
-            'StUF:gebruiker'        => 'Systeem'
+            'StUF:gebruiker'        => 'Systeem',
         ];
     }
 
@@ -161,6 +160,7 @@ class SOAPService
         $stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces);
         $caseNamespace = array_search('http://www.egem.nl/StUF/sector/zkn/0310', $namespaces);
         $now = new DateTime('now');
+
         return [
             'StUF:berichtcode'      => 'La01',
             'StUF:zender'           => $this->getSender($data, $namespaces),
@@ -168,30 +168,31 @@ class SOAPService
             'StUF:referentienummer' => Uuid::uuid4()->toString(),
             'StUF:tijdstipBericht'  => $now->format('YmdHisv'),
             'StUF:crossRefnummer'   => '000',
-            'StUF:entiteittype'     => isset($data["$env:Body"]["$caseNamespace:zakLv01"]["$caseNamespace:stuurgegevens"]["$stufNamespace:entiteittype"]) ? $data["$env:Body"]["$caseNamespace:zakLv01"]["$caseNamespace:stuurgegevens"]["$stufNamespace:entiteittype"] : "ZAK",];
+            'StUF:entiteittype'     => isset($data["$env:Body"]["$caseNamespace:zakLv01"]["$caseNamespace:stuurgegevens"]["$stufNamespace:entiteittype"]) ? $data["$env:Body"]["$caseNamespace:zakLv01"]["$caseNamespace:stuurgegevens"]["$stufNamespace:entiteittype"] : 'ZAK', ];
     }
 
     public function getLa01Skeleton(array $data): array
     {
         $namespaces = $this->getNamespaces($data);
+
         return [
-            '@xmlns:s' => "http://schemas.xmlsoap.org/soap/envelope/",
-            's:Body' => [
+            '@xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/',
+            's:Body'   => [
                 'zakLa01' => [
-                    '@xmlns'        => "http://www.egem.nl/StUF/sector/zkn/0310",
-                    '@xmlns:StUF'   => "http://www.egem.nl/StUF/StUF0301",
-                    '@xmlns:xsi'    => "http://www.w3.org/2001/XMLSchema-instance",
-                    '@xmlns:BG'     => "http://www.egem.nl/StUF/sector/bg/0310",
+                    '@xmlns'        => 'http://www.egem.nl/StUF/sector/zkn/0310',
+                    '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
+                    '@xmlns:xsi'    => 'http://www.w3.org/2001/XMLSchema-instance',
+                    '@xmlns:BG'     => 'http://www.egem.nl/StUF/sector/bg/0310',
                     'stuurgegevens' => $this->getSendData($data, $namespaces),
-                    'parameters'    => ['StUF:indicatorVervolgvraag' => 'false',],
-                ]
-            ]
+                    'parameters'    => ['StUF:indicatorVervolgvraag' => 'false'],
+                ],
+            ],
         ];
     }
 
     public function translateType(array $case): ?string
     {
-        if(!isset($case['type']['code'])){
+        if (!isset($case['type']['code'])) {
             return null;
         } else {
             return self::TRANSLATE_TYPE_TABLE[$case['type']['code']] ?? null;
@@ -200,7 +201,7 @@ class SOAPService
 
     public function translateStatus(array $case): array
     {
-        if(!isset($case['status']['code'])){
+        if (!isset($case['status']['code'])) {
             return [];
         } else {
             return self::TRANSLATE_STATUS_TABLE[$case['status']['code']] ?? [];
@@ -214,15 +215,15 @@ class SOAPService
             'gerelateerde'          => [
                 '@StUF:entiteittype'    => 'ZKT',
                 'omschrijving'          => $this->translateType($case) ?? '',
-                'code'                  => $case['type']['code'] ?? ''
-            ]
+                'code'                  => $case['type']['code'] ?? '',
+            ],
         ];
     }
 
     public function getCaseStatus(array $case, array $status): array
     {
-
         $endDate = isset($case['status']['entryDateTime']) ? new DateTime($case['status']['entryDateTime']) : null;
+
         return [
             '@StUF:entiteittype'    => 'ZAKSTT',
             'gerelateerde'          => [
@@ -232,12 +233,13 @@ class SOAPService
                 'omschrijving'          => $status['description'] ?? '',
             ],
             'toelichting'               => $status['explanation'],
-            'datumStatusGezet'          =>  $endDate->format('YmdHisv'),
-            'indicatieLaatsteStatus'    => isset($status['endStatus']) ? ($status['endStatus'] ? 'J': 'N') : 'N',
+            'datumStatusGezet'          => $endDate->format('YmdHisv'),
+            'indicatieLaatsteStatus'    => isset($status['endStatus']) ? ($status['endStatus'] ? 'J' : 'N') : 'N',
         ];
     }
 
-    public function getResult(array $case): array{
+    public function getResult(array $case): array
+    {
         return [
             'omschrijving'  => '',
             'toelichting'   => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
@@ -247,17 +249,17 @@ class SOAPService
     public function addCaseTypeDetails(array $case, array &$result): void
     {
         $details = [
-            'omschrijvingGeneriek'      => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'zaakcategorie'             => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'trefwoord'                 => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'doorlooptijd'              => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'servicenorm'               => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'archiefcode'               => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'omschrijvingGeneriek'      => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'zaakcategorie'             => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'trefwoord'                 => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'doorlooptijd'              => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'servicenorm'               => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'archiefcode'               => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
             'vertrouwelijkAanduiding'   => 'ZAAKVERTROUWELIJK',
             'publicatieIndicatie'       => 'N',
-            'publicatieTekst'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'ingangsdatumObject'        => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-            'einddatumObject'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'publicatieTekst'           => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'ingangsdatumObject'        => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+            'einddatumObject'           => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
         ];
 
         $result['isVan']['gerelateerde'] = array_merge($result['isVan']['gerelateerde'], $details);
@@ -267,16 +269,16 @@ class SOAPService
     {
         $details = [
             'gerelateerde'  => [
-                'ingangsdaumObject' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']
+                'ingangsdaumObject' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
             ],
             'isGezetDoor'   => [
                 '@StUF:entiteittype'    => 'ZAKSTTBTR',
-                'gerelateerde'  => [
+                'gerelateerde'          => [
                     'organisatorischeEenheid'   => [
                         '@StUF:entiteittype'    => 'OEH',
-                        'identificatie' => '1910',
-                        'naam'          => 'CZSDemo',
-                    ]
+                        'identificatie'         => '1910',
+                        'naam'                  => 'CZSDemo',
+                    ],
                 ],
                 'rolOmschrijving'           => 'Overig',
                 'rolomschrijvingGeneriek'   => 'Overig',
@@ -288,28 +290,28 @@ class SOAPService
     public function addCaseDetails(array $case, array &$result): void
     {
         $details = [
-            'opschorting'               => ['indicatie' => 'N', 'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
-            'verlenging'                => ['duur' => '0',      'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
+            'opschorting'               => ['indicatie' => 'N', 'reden' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde']],
+            'verlenging'                => ['duur' => '0',      'reden' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde']],
             'betalingsIndicatie'        => 'N.v.t.',
-            'laatsteBetaalDatum'        => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'laatsteBetaalDatum'        => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
             'archiefnominatie'          => 'N',
-            'datumVernietigingDossier'  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'datumVernietigingDossier'  => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
             'zaakniveau'                => '1',
             'deelzakenIndicatie'        => 'N',
             'StUF:extraElementen'       => [
                 'StUF:extraElement' => ['@naam' => 'kanaalcode', '#' => 'web'],
-            ]
+            ],
         ];
-        if(!isset($result['toelichting']) || !$result['toelichting']){
+        if (!isset($result['toelichting']) || !$result['toelichting']) {
             $result['toelichting'] = ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenwaarde'];
         }
         $result = array_slice($result, 0, array_search('isVan', array_keys($result)), true) + $details + array_slice($result, array_search('isVan', array_keys($result)), null, true);
         $this->addCaseTypeDetails($case, $result);
 
         $details = [
-            'heeftBetrekkingOp'         => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKOBJ'],
-            'heeftAlsBelanghebbende'    => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRBLH'],
-            'heeftAlsGemachtigde'       => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRGMC'],
+            'heeftBetrekkingOp'         => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKOBJ'],
+            'heeftAlsBelanghebbende'    => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRBLH'],
+            'heeftAlsGemachtigde'       => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRGMC'],
             'heeftAlsInitiator'         => [
                 '@StUF:entiteittype'    => 'ZAKBTRINI',
                 'gerelateerde'          => [
@@ -318,60 +320,59 @@ class SOAPService
                         'BG:inp.bsn'                    => '144209007',
                         'BG:authentiek'                 => ['@StUF:metagegeven' => 'true', '#' => 'J'],
                         'BG:geslachtsnaam'              => 'Aardenburg',
-                        'BG:voorvoegselGeslachtsnaam'   => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-                        'BG:voorletters'                => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-                        'BG:voornamen'                  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                        'BG:voorvoegselGeslachtsnaam'   => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+                        'BG:voorletters'                => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+                        'BG:voornamen'                  => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                         'BG:geslachtsaanduiding'        => 'V',
-                        'BG:geboortedatum'              => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                        'BG:geboortedatum'              => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                         'BG:verblijfsadres'             => [
-                            'BG:aoa.identificatie'          => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                            'BG:aoa.identificatie'          => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                             'BG:wpl.woonplaatsNaam'         => 'Ons Dorp',
                             'BG:gor.openbareRuimteNaam'     => '',
                             'BG:gor.straatnaam'             => 'Beukenlaan',
                             'BG:aoa.postcode'               => '5665DV',
                             'BG:aoa.huisnummer'             => '14',
-                            'BG:aoa.huisletter'             => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-                            'BG:aoa.huisnummertoevoeging'   => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-                            'BG:inp.locatiebeschrijving'    => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                            'BG:aoa.huisletter'             => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+                            'BG:aoa.huisnummertoevoeging'   => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
+                            'BG:inp.locatiebeschrijving'    => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                         ],
                     ],
                 ],
-                'code'                  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                'code'                  => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                 'omschrijving'          => 'Initiator',
-                'toelichting'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                'toelichting'           => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                 'heeftAlsAanspreekpunt' => [
                     '@StUF:entiteittype' => 'ZAKBTRINICTP',
-                    'gerelateerde' => [
+                    'gerelateerde'       => [
                         '@StUF:entiteittype'    => 'CTP',
                         'telefoonnummer'        => '0624716603',
                         'emailadres'            => 'r.schram@simgroep.nl',
-                    ]
-                ]
+                    ],
+                ],
             ],
-            'heeftAlsUitvoerende'       => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRUTV'],
-            'heeftAlsVerantwoordelijke' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRVRA'],
+            'heeftAlsUitvoerende'       => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRUTV'],
+            'heeftAlsVerantwoordelijke' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRVRA'],
             'heeftAlsOverigBetrokkene'  => [
                 '@StUF:entiteittype'    => 'ZAKBTROVR',
                 'gerelateerde'          => [
                     'organisatorischeEenheid'   => [
                         '@StUF:entiteittype'    => 'OEH',
-                        'identificatie' => '1910',
-                        'naam'          => 'CZSDemo',
+                        'identificatie'         => '1910',
+                        'naam'                  => 'CZSDemo',
                     ],
                 ],
-                'code'                  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                'code'                  => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                 'omschrijving'          => 'Overig',
-                'toelichting'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                'toelichting'           => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde'],
                 'heeftAlsAanspreekPunt' => [
                     '@StUF:entiteittype'    => 'ZAKBTROVRCTP',
-                    'gerelateerde'          => ['@StUF:entiteittype' => 'CTP']
-                ]
+                    'gerelateerde'          => ['@StUF:entiteittype' => 'CTP'],
+                ],
             ],
-            'heeftAlsHoofdzaak' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKZAKHFD'],
+            'heeftAlsHoofdzaak' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKZAKHFD'],
         ];
         $result = array_slice($result, 0, array_search('heeft', array_keys($result)), true) + $details + array_slice($result, array_search('heeft', array_keys($result)), null, true);
         $this->addStatusDetails($case, $result);
-
     }
 
     public function caseToObject(array $case, bool $details = false): array
@@ -398,9 +399,9 @@ class SOAPService
             'isVan'                     => $this->getCaseType($case),
             'heeft'                     => $this->getCaseStatus($case, $status),
             'heeftRelevant'             => $details ? $this->getDocumentObjects($this->getDocumentsByCaseId($case['dossierId']), $case['dossierId']) : null,
-            'leidtTot' => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBSL'],
+            'leidtTot'                  => ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBSL'],
         ];
-        if($details){
+        if ($details) {
             $this->addCaseDetails($case, $result);
         }
 
@@ -410,8 +411,8 @@ class SOAPService
     public function casesToObjects(array $cases, bool $details = false): array
     {
         $result = ['object' => []];
-        foreach($cases as $case){
-            $result['object'][] = array_filter($this->caseToObject($case, $details), function($value){return $value !== null && $value !== false && $value !== [];});
+        foreach ($cases as $case) {
+            $result['object'][] = array_filter($this->caseToObject($case, $details), function ($value) {return $value !== null && $value !== false && $value !== []; });
         }
 
         return $result;
@@ -423,7 +424,6 @@ class SOAPService
         $cases = $this->getCasesByBSN($this->removeBSNPrefix($bsn));
         $result = $this->getLa01Skeleton($data);
         $objects = $this->casesToObjects($cases);
-
 
         $objects['object'] ? $result['s:Body']['zakLa01']['antwoord'] = $objects : null;
 //        var_dump($result);
@@ -441,6 +441,7 @@ class SOAPService
 //        var_dump($document);
         $filenameArray = explode('.', $document['filename']);
         $creationDate = new DateTime($document['entryDateTime']);
+
         return [
             '@StUF:entiteittype'    => 'ZAKEDC',
             'gerelateerde'          => [
@@ -459,9 +460,10 @@ class SOAPService
     public function getDocumentObjects(array $documents, string $identifier): array
     {
         $results = [];
-        foreach($documents as $document){
+        foreach ($documents as $document) {
             $results[] = $this->getDocumentObject($document, $identifier);
         }
+
         return $results;
     }
 
@@ -469,7 +471,7 @@ class SOAPService
     {
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         $result = $this->getLa01Skeleton($data);
-        if(!$documents) {
+        if (!$documents) {
             $cases = $this->getCasesById($identifier);
             $objects = $this->casesToObjects($cases, true);
             $objects['object'] ? $result['s:Body']['zakLa01']['antwoord'] = $objects : null;
@@ -482,6 +484,7 @@ class SOAPService
             $result['s:Body']['zakLa01']['antwoord']['object']['heeftRelevant'] = $this->getDocumentObjects($documents, $identifier);
             $result['s:Body']['zakLa01']['antwoord']['object']['@StUF:sleutelVerzendend'] = $identifier;
             $result['s:Body']['zakLa01']['antwoord']['object']['@StUF:entiteittype'] = 'ZAK';
+
             return $xmlEncoder->encode($result, 'xml', ['remove_empty_tags' => false]);
         }
     }
@@ -507,6 +510,7 @@ class SOAPService
     public function getEdcLa01Skeleton($document): array
     {
         $now = new DateTime('now');
+
         return [
             '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
             's:Body'    => [
@@ -529,8 +533,8 @@ class SOAPService
                     ],
                     'melding'       => 'melding',
                     'antwoord'      => [],
-                ]
-            ]
+                ],
+            ],
         ];
     }
 
@@ -539,6 +543,7 @@ class SOAPService
         $filenameArray = explode('.', $document['filename']);
         $creationDate = new DateTime($document['entryDateTime']);
         $identifierArray = explode('.', $identifier);
+
         return [
             'object' => [
                 '@StUF:entiteittype'        => 'EDC',
@@ -566,9 +571,9 @@ class SOAPService
                     'gerelateerde'          => [
                         '@StUF:entiteittype'    => 'ZAK',
                         'identificatie'         => $identifierArray[0],
-                    ]
-                ]
-            ]
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -576,11 +581,12 @@ class SOAPService
     {
         $identifierArray = explode('.', $identifier);
         $documents = $this->getDocumentsByCaseId($identifierArray[0]);
-        foreach($documents as $document){
-            if($document['id'] == end($identifierArray)){
+        foreach ($documents as $document) {
+            if ($document['id'] == end($identifierArray)) {
                 return $document;
             }
         }
+
         return [];
     }
 
@@ -595,12 +601,12 @@ class SOAPService
             ['accept' => 'application/octet-stream']
         );
         $body = $result->getBody()->getContents();
-        if($result->getStatusCode() != 200){
+        if ($result->getStatusCode() != 200) {
             return [];
         } else {
             return [
                 'location' => $this->commonGroundService->getComponent('vrijbrp-dossier')['location']."/api/v1/dossiers/{$identifierArray[0]}/documents/{$identifierArray[1]}",
-                'data' => base64_encode($body)
+                'data'     => base64_encode($body),
             ];
         }
     }
@@ -611,9 +617,9 @@ class SOAPService
             '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
             's:Body'    => [
                 's:Fault'   => [
-                    '@xmlns:s'   => 'http://schemas.xmlsoap.org/soap/envelope/',
-                    'faultcode'     => 'soap:Server',
-                    'faultstring'   => 'Proces voor afhandelen bericht geeft fout',
+                    '@xmlns:s'          => 'http://schemas.xmlsoap.org/soap/envelope/',
+                    'faultcode'         => 'soap:Server',
+                    'faultstring'       => 'Proces voor afhandelen bericht geeft fout',
                     'ns1:Fo02Bericht'   => [
                         '@xmlns:xmime'      => 'http://www.w3.org/2005/05/xmlmime',
                         '@xmlns:ns8'        => 'http://www.w3.org/2001/SMIL20/Language',
@@ -630,10 +636,10 @@ class SOAPService
                             'ns1:plek'          => 'server',
                             'ns1:omschrijving'  => 'Proces voor afhandelen bericht geeft fout',
                             'ns1:details'       => 'Bestand kan niet opgehaald worden. Documentnummer kan niet bepaald worden.',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -642,17 +648,20 @@ class SOAPService
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         $document = $this->getDocumentById($identifier);
         $data = $this->getDocumentData($identifier);
-        if($document){
+        if ($document) {
             $result = $this->getEdcLa01Skeleton($document);
             $result['s:Body']['edcLa01']['antwoord'] = $this->getDetailedEdcObject($document, $identifier, $data['data'], $data['location']);
+
             return $xmlEncoder->encode($result, 'xml', ['remove_empty_tags' => false]);
         }
+
         return $xmlEncoder->encode($this->getFo02Message(), 'xml', ['remove_empty_tags' => false]);
     }
 
     public function getBv03Message(): array
     {
         $now = new DateTime('now');
+
         return [
             '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
             's:Body'    => [
@@ -664,10 +673,10 @@ class SOAPService
                         'StUF:ontvanger'        => ['StUF:applicatie'   => 'SIMform'],
                         'StUF:referentienummer' => 'S15163644391',
                         'StUF:tijdstipBericht'  => $now->format('YmdHisv'),
-                        'StUF:crossRefnummer'   => '1572191056'
-                    ]
-                ]
-            ]
+                        'StUF:crossRefnummer'   => '1572191056',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -757,7 +766,7 @@ class SOAPService
             false,
             'POST'
         );
-        if($result->getStatusCode() != 201){
+        if ($result->getStatusCode() != 201) {
             return $xmlEncoder->encode($this->getFo02Message(), 'xml');
         } else {
             return $xmlEncoder->encode($this->getBv03Message(), 'xml');
