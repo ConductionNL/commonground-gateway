@@ -171,33 +171,8 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
-        // Get the application by searching for an application with a domain that matches the host of this request
-        $host = $request->headers->get('host');
-        $applications = $this->em->getRepository('App:Application')->findAll();
-        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
-            return in_array($host, $application->getDomains());
-        }));
-        if (count($applications) == 1) {
-            $this->session->set('application', $applications[0]);
-        } else {
-            if ($host == 'localhost') {
-                $localhostApplication = new Application();
-                $localhostApplication->setName('localhost');
-                $localhostApplication->setDomains(['localhost']);
-                $this->session->set('application', $localhostApplication);
-            } else {
-                $this->session->set('application', null);
-            }
-            //todo: just continue?
-            // TODO: We need an application in the session when creating objectEntities, or we throw an ugly 500, so throw a nice error here?
-            var_dump('no application found');
-        }
-
-        // TODO: use a sql query instead of array_filter for finding the correct application
-//        $application = $this->em->getRepository('App:Application')->findByDomain($host);
-//        if (!empty($application)) {
-//            $this->session->set('application', $application);
-//        }
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
 
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
@@ -209,14 +184,46 @@ class EavService
         // What if we canot find an entity?
         if (is_array($entity)) {
             $result = $entity;
-            $entity = false;
+            $entity = null;
         }
 
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
+        // Get the application by searching for an application with a domain that matches the host of this request
+        $host = $request->headers->get('host');
+        // TODO: use a sql query instead of array_filter for finding the correct application
+//        $application = $this->em->getRepository('App:Application')->findByDomain($host);
+//        if (!empty($application)) {
+//            $this->session->set('application', $application);
+//        }
+        $applications = $this->em->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+        if (count($applications) == 1) {
+            $this->session->set('application', $applications[0]);
+        } else {
+//            var_dump('no application found');
+            if ($host == 'localhost') {
+                $localhostApplication = new Application();
+                $localhostApplication->setName('localhost');
+                $localhostApplication->setDomains(['localhost']);
+                $this->em->persist($localhostApplication);
+                $this->em->flush();
+                $this->session->set('application', $localhostApplication);
+//                var_dump('Created Localhost Application');
+            } else {
+                $this->session->set('application', null);
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => 'No application found with domain '.$host,
+                    'type'    => 'Forbidden',
+                    'path'    => $host,
+                    'data'    => ['host' => $host],
+                ];
+            }
+        }
 
         // Lets create an object
-        if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
+        if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             // Lets check if the user is allowed to view/edit this resource.
 
