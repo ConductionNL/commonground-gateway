@@ -862,8 +862,9 @@ class EavDocumentationService
             $schema = $this->getItemSchemaPropertyConditions($schema, $attribute);
 
             // Handle inversed by
-            if ($attribute->getInversedBy()) {
-                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this object is inversed by the '.$attribute->getInversedBy().' of its subobject)';
+            if ($attribute->getInversedBy() ) {
+                /* this now thros an error */
+                //$schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this object is inversed by the '.$attribute->getInversedBy().' of its subobject)';
             }
 
             /* @todo we nee to add supoort for https://swagger.io/specification/#schema-object
