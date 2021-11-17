@@ -2,14 +2,9 @@
 
 namespace App\Service;
 
-use App\Entity\Attribute;
-use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
-use PhpParser\Node\Expr\Array_;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
-
 
 /*
  * This servers takes an external oas document and turns that into an gateway + eav structure
@@ -23,11 +18,9 @@ class OasParserService
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
-
-
     }
 
-    public function getOAS(string $url): Array
+    public function getOAS(string $url): array
     {
         $oas = [];
 
@@ -41,10 +34,10 @@ class OasParserService
         $file = file_get_contents($url);
 
         switch ($pathinfo['extension']) {
-            case "yaml":
+            case 'yaml':
                 $oas = Yaml::parse($file);
                 break;
-            case "json":
+            case 'json':
                 $oas = json_decode($file, true);
                 break;
             default:
@@ -55,9 +48,10 @@ class OasParserService
         //if(!array_key_exists('components',$oas) || !array_key_exists('components',$oas['components']) ) // @throw error
 
         // Do we have paths?
-        if(!array_key_exists('paths',$oas)) // @throw error
+        if (!array_key_exists('paths', $oas)) { // @throw error
 
         var_dump($oas);
+        }
 
         return $oas;
     }
