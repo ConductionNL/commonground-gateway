@@ -180,7 +180,14 @@ class EavService
         if (count($applications) == 1) {
             $this->session->set('application', $applications[0]);
         } else {
-            $this->session->set('application', null);
+            if ($host == 'localhost') {
+                $localhostApplication = new Application();
+                $localhostApplication->setName('localhost');
+                $localhostApplication->setDomains(['localhost']);
+                $this->session->set('application', $localhostApplication);
+            } else {
+                $this->session->set('application', null);
+            }
             //todo: just continue?
             // TODO: We need an application in the session when creating objectEntities, or we throw an ugly 500, so throw a nice error here?
             var_dump('no application found');
