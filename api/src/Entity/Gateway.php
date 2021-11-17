@@ -173,6 +173,25 @@ class Gateway
     private string $location;
 
     /**
+     * @var string The header used for api key authorizations
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="Authorization"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $authorizationHeader = 'Authorization';
+
+    /**
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
@@ -193,6 +212,28 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $auth;
+
+    /**
+     * @var string The method used for authentication to the Gateway
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"apikey", "jwt", "username-password"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"header", "query"},
+     *             "example"="header"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $authorizationPassthroughMethod = 'header';
 
     /**
      * @var ?string The Locale of the Gateway
@@ -377,6 +418,13 @@ class Gateway
     private $paths = [];
 
     /**
+     * Headers that are required to be added for every request.
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $headers = [];
+
+    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY")
      */
@@ -420,6 +468,30 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getAuthorizationHeader(): ?string
+    {
+        return $this->authorizationHeader;
+    }
+
+    public function setAuthorizationHeader(string $authorizationHeader): self
+    {
+        $this->authorizationHeader = $authorizationHeader;
+
+        return $this;
+    }
+
+    public function getAuthorizationPassthroughMethod(): ?string
+    {
+        return $this->authorizationPassthroughMethod;
+    }
+
+    public function setAuthorizationPassthroughMethod(string $authorizationPassthroughMethod): self
+    {
+        $this->authorizationPassthroughMethod = $authorizationPassthroughMethod;
 
         return $this;
     }
@@ -606,6 +678,19 @@ class Gateway
     public function setPaths(?array $paths): self
     {
         $this->paths = $paths;
+
+        return $this;
+    }
+
+
+    public function getHeaders(): ?array
+    {
+        return $this->headers;
+    }
+
+    public function setHeaders(?array $headers): self
+    {
+        $this->headers = $headers;
 
         return $this;
     }

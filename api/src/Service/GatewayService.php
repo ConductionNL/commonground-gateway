@@ -47,9 +47,12 @@ class GatewayService
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
         $component = $this->gatewayToArray($gateway);
-        $url = $gateway->getLocation().'/'.$endpoint;
+        $url = $gateway->getLocation() . '/' . $endpoint;
 
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, ['accept' => $headers['accept'][0]], false, $method);
+        $newHeaders = $gateway->getHeaders();
+        $newHeaders['accept'] = $headers['accept'][0];
+
+        $result = $this->commonGroundService->callService($component, $url, $content, $query, $newHeaders, false, $method);
 
         if (is_array($result)) {
             $result['error'] = json_decode($result['error'], true);
@@ -73,7 +76,7 @@ class GatewayService
         $token = str_replace('Bearer ', '', $request->headers->get('Authorization'));
 
         if (is_string($user)) {
-            $authorized = $this->authenticationService->validateJWTAndGetPayload($token, $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']));
+            $authorized = $this->authenticationService->validateJWTAndGetPayload($token, $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']));
             $authorized = $this->authenticationService->checkJWTExpiration($token);
             $authorized = $this->authenticationService->retrieveJWTUser($token);
         }
@@ -116,16 +119,18 @@ class GatewayService
     public function gatewayToArray(Gateway $gateway): array
     {
         $result = [
-            'auth'     => $gateway->getAuth(),
-            'location' => $gateway->getLocation(),
-            'apikey'   => $gateway->getApiKey(),
-            'jwt'      => $gateway->getJwt(),
-            'secret'   => $gateway->getSecret(),
-            'id'       => $gateway->getJwtId(),
-            'locale'   => $gateway->getLocale(),
-            'accept'   => $gateway->getAccept(),
-            'username' => $gateway->getUsername(),
-            'password' => $gateway->getPassword(),
+            'auth'                  => $gateway->getAuth(),
+            'authorizationHeader'   => $gateway->getAuthorizationHeader(),
+            'passthroughMethod'     => $gateway->getAuthorizationPassthroughMethod(),
+            'location'              => $gateway->getLocation(),
+            'apikey'                => $gateway->getApiKey(),
+            'jwt'                   => $gateway->getJwt(),
+            'secret'                => $gateway->getSecret(),
+            'id'                    => $gateway->getJwtId(),
+            'locale'                => $gateway->getLocale(),
+            'accept'                => $gateway->getAccept(),
+            'username'              => $gateway->getUsername(),
+            'password'              => $gateway->getPassword(),
         ];
 
         return array_filter($result);
@@ -240,8 +245,8 @@ class GatewayService
             'application/json'    => 'json',
             'application/ld+json' => 'jsonld',
             'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
+            'application/hal+json' => 'jsonhal',
+            'application/json+hal' => 'jsonhal',
             'application/xml'     => 'xml',
             'text/csv'            => 'csv',
             'text/yaml'           => 'yaml',
