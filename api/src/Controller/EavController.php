@@ -21,12 +21,15 @@ class EavController extends AbstractController
 {
     /**
      * @Route("/admin/openapi.{extension}")
+     * @Route("/admin/{application}/openapi.{extension}")
      */
-    public function OasAction(EavDocumentationService $eavDocumentationService, CacheInterface $customThingCache, $extension): Response
+    public function OasAction(EavDocumentationService $eavDocumentationService, CacheInterface $customThingCache, $application = false, $extension): Response
     {
         // Let default an id while we grap it
         /* @todo pull this from session */
-        $application = 666;
+        if (!$application) {
+            $application = 666;
+        }
 
         // Lets scheck the cashe
         $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
@@ -56,6 +59,21 @@ class EavController extends AbstractController
 
         return $response;
     }
+
+    /**
+     * @Route("/admin/openapi")
+     * @Route("/admin/{application}/openapi")
+     */
+    public function ReactlyAction(CacheInterface $customThingCache, $application = false): Response
+    {
+        $specUrl = "/admin/openapi.yaml";
+        if($application){
+            $specUrl = "/admin/".$application."/openapi.yaml";
+        }
+
+        return $this->render('eav/docs.html.twig',['specUrl'=>$specUrl]);
+    }
+
 
     /**
      * @Route("/eav/docs", name="blog_list")
