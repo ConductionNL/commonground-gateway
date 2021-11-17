@@ -96,7 +96,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
  *     "uri": "ipartial",
- *     "entity.type": "iexact"
+ *     "entity.id": "exact"
  * })
  */
 class ObjectEntity

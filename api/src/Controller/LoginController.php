@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Service\EavService;
+use App\Service\ResponseService;
 use App\Service\UserService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,9 +37,9 @@ class LoginController extends AbstractController
      * @Route("/me")
      * @Route("api/users/me", methods={"get"})
      */
-    public function MeAction(Request $request, CommonGroundService $commonGroundService, EavService $eavService)
+    public function MeAction(Request $request, CommonGroundService $commonGroundService, ResponseService $responseService)
     {
-        $userService = new UserService($commonGroundService, $eavService, $this->entityManager);
+        $userService = new UserService($commonGroundService, $this->entityManager, $responseService);
         if ($this->getUser()) {
             $result = [
                 'id'         => $this->getUser()->getUserIdentifier(),
