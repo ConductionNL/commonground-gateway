@@ -36,14 +36,14 @@ class SOAPService
      * Translation table for case statuses
      */
     const TRANSLATE_STATUS_TABLE = [
-        'incomplete'    => ['description' => 'Incompleet',      'endStatus' => false],
-        'created'       => ['description' => 'Opgenomen',       'endStatus' => false],
-        'processing'    => ['description' => 'In behandeling',  'endStatus' => false],
-        'on_hold'       => ['description' => 'In wachtkamer',   'endStatus' => false],
-        'processed'     => ['description' => 'Verwerkt',        'endStatus' => true],
-        'cancelled'     => ['description' => 'Geannuleerd',     'endStatus' => true],
-        'deleted'       => ['description' => 'Verwijderd',      'endStatus' => true],
-        'refused'       => ['description' => 'Geweigerd',       'endStatus' => true],
+        'incomplete'    => ['description' => 'Incompleet',      'endStatus' => false,   'explanation' => 'Zaak is incompleet'],
+        'created'       => ['description' => 'Opgenomen',       'endStatus' => false,   'explanation' => 'Zaak is aangemaakt'],
+        'processing'    => ['description' => 'In behandeling',  'endStatus' => false,   'explanation' => 'Zaak wordt behandeld'],
+        'on_hold'       => ['description' => 'In wachtkamer',   'endStatus' => false,   'explanation' => 'Zaak staat in de wachtkamer'],
+        'processed'     => ['description' => 'Verwerkt',        'endStatus' => true,    'explanation' => 'Zaak is verwerkt'],
+        'cancelled'     => ['description' => 'Geannuleerd',     'endStatus' => true,    'explanation' => 'Zaak is geannuleerd'],
+        'deleted'       => ['description' => 'Verwijderd',      'endStatus' => true,    'explanation' => 'Zaak is verwijderd'],
+        'refused'       => ['description' => 'Geweigerd',       'endStatus' => true,    'explanation' => 'Zaak is geweigerd'],
     ];
 
     public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager)
@@ -231,8 +231,8 @@ class SOAPService
                 'code'                  => $case['status']['code'] ?? '',
                 'omschrijving'          => $status['description'] ?? '',
             ],
-            'toelichting'               => 'Some addendum about the status',
-            'datumStatusGezet'          =>  $endDate->format('Ymd'),
+            'toelichting'               => $status['explanation'],
+            'datumStatusGezet'          =>  $endDate->format('YmdHisv'),
             'indicatieLaatsteStatus'    => isset($status['endStatus']) ? ($status['endStatus'] ? 'J': 'N') : 'N',
         ];
     }
@@ -255,6 +255,7 @@ class SOAPService
             'archiefcode'               => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
             'vertrouwelijkAanduiding'   => 'ZAAKVERTROUWELIJK',
             'publicatieIndicatie'       => 'N',
+            'publicatieTekst'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
             'ingangsdatumObject'        => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
             'einddatumObject'           => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
         ];
@@ -265,6 +266,9 @@ class SOAPService
     public function addStatusDetails(array $case, array &$result): void
     {
         $details = [
+            'gerelateerde'  => [
+                'ingangsdaumObject' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']
+            ],
             'isGezetDoor'   => [
                 '@StUF:entiteittype'    => 'ZAKSTTBTR',
                 'gerelateerde'  => [
@@ -278,21 +282,27 @@ class SOAPService
                 'rolomschrijvingGeneriek'   => 'Overig',
             ],
         ];
-        $result['heeft'] = array_merge($result['heeft'], $details);
+        $result['heeft'] = array_merge_recursive($result['heeft'], $details);
     }
 
     public function addCaseDetails(array $case, array &$result): void
     {
         $details = [
-            'opschorting'           => ['indicatie' => 'N', 'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
-            'verlenging'            => ['duur' => '0',      'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
-            'betalingsIndicatie'    => 'N.v.t.',
-            'laatsteBetaalDatum'    => ['@xsi:nil' => "true", 'StUF:noValue' => 'geenWAarde'],
-            'archiefnominatie'      => 'N',
-            'StUF:extraElementen'   => [
+            'opschorting'               => ['indicatie' => 'N', 'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
+            'verlenging'                => ['duur' => '0',      'reden' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']],
+            'betalingsIndicatie'        => 'N.v.t.',
+            'laatsteBetaalDatum'        => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'archiefnominatie'          => 'N',
+            'datumVernietigingDossier'  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+            'zaakniveau'                => '1',
+            'deelzakenIndicatie'        => 'N',
+            'StUF:extraElementen'       => [
                 'StUF:extraElement' => ['@naam' => 'kanaalcode', '#' => 'web'],
             ]
         ];
+        if(!isset($result['toelichting']) || !$result['toelichting']){
+            $result['toelichting'] = ['@xsi:nil' => 'true', '@StUF:noValue' => 'geenwaarde'];
+        }
         $result = array_slice($result, 0, array_search('isVan', array_keys($result)), true) + $details + array_slice($result, array_search('isVan', array_keys($result)), null, true);
         $this->addCaseTypeDetails($case, $result);
 
@@ -306,7 +316,7 @@ class SOAPService
                     'natuurlijkPersoon' => [
                         '@StUF:entiteittype'            => 'NPS',
                         'BG:inp.bsn'                    => '144209007',
-                        'BG:authentiek'                 => ['@StUF:metagegeven' => 'true', 'J'],
+                        'BG:authentiek'                 => ['@StUF:metagegeven' => 'true', '#' => 'J'],
                         'BG:geslachtsnaam'              => 'Aardenburg',
                         'BG:voorvoegselGeslachtsnaam'   => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
                         'BG:voorletters'                => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
@@ -321,7 +331,8 @@ class SOAPService
                             'BG:aoa.postcode'               => '5665DV',
                             'BG:aoa.huisnummer'             => '14',
                             'BG:aoa.huisletter'             => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
-                            'BG:aoa.huisnummertoevoeging'   => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde']
+                            'BG:aoa.huisnummertoevoeging'   => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
+                            'BG:inp.locatiebeschrijving'    => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
                         ],
                     ],
                 ],
@@ -340,10 +351,13 @@ class SOAPService
             'heeftAlsUitvoerende'       => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRUTV'],
             'heeftAlsVerantwoordelijke' => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde', '@StUF:entiteittype' => 'ZAKBTRVRA'],
             'heeftAlsOverigBetrokkene'  => [
-                '@StUF:entiteittype'    => 'OEH',
+                '@StUF:entiteittype'    => 'ZAKBTROVR',
                 'gerelateerde'          => [
-                    'identificatie' => '1910',
-                    'naam'          => 'CZSDemo',
+                    'organisatorischeEenheid'   => [
+                        '@StUF:entiteittype'    => 'OEH',
+                        'identificatie' => '1910',
+                        'naam'          => 'CZSDemo',
+                    ],
                 ],
                 'code'                  => ['@xsi:nil' => "true", '@StUF:noValue' => 'geenWaarde'],
                 'omschrijving'          => 'Overig',
@@ -365,7 +379,7 @@ class SOAPService
         $startDate = new DateTime($case['startDate']);
         $publicationDate = new DateTime($case['entryDateTime']);
         $status = $this->translateStatus($case);
-        $endDate = isset($case['status']['entryDateTime']) ? new DateTime($case['status']['entryDateTime']) : null;
+        $endDate = isset($case['status']['entryDateTime']) && $case['status']['endStatus'] ? new DateTime($case['status']['entryDateTime']) : null;
 //        var_dump($status);
         /* @TODO There is not yet a field to derive end dates from, as well as a field for the description of a case. */
         $result = [
@@ -464,8 +478,10 @@ class SOAPService
         } else {
             $documents = $this->getDocumentsByCaseId($identifier);
             $this->addParameters($result, $documents);
-            $result['s:Body']['zakLa01']['antwoord']['identificatie'] = $identifier;
-            $result['s:Body']['zakLa01']['antwoord']['heeftRelevant'] = $this->getDocumentObjects($documents, $identifier);
+            $result['s:Body']['zakLa01']['antwoord']['object']['identificatie'] = $identifier;
+            $result['s:Body']['zakLa01']['antwoord']['object']['heeftRelevant'] = $this->getDocumentObjects($documents, $identifier);
+            $result['s:Body']['zakLa01']['antwoord']['object']['@StUF:sleutelVerzendend'] = $identifier;
+            $result['s:Body']['zakLa01']['antwoord']['object']['@StUF:entiteittype'] = 'ZAK';
             return $xmlEncoder->encode($result, 'xml', ['remove_empty_tags' => false]);
         }
     }
