@@ -862,7 +862,7 @@ class EavDocumentationService
             $schema = $this->getItemSchemaPropertyConditions($schema, $attribute);
 
             // Handle inversed by
-            if ($attribute->getInversedBy() ) {
+            if ($attribute->getInversedBy()) {
                 /* this now thros an error */
                 //$schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'(this object is inversed by the '.$attribute->getInversedBy().' of its subobject)';
             }

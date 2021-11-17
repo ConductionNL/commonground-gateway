@@ -6,9 +6,9 @@ namespace App\Command;
 
 use App\Service\OasParserService;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputArgument;
 
 class ParseOasCommand extends Command
 {
@@ -16,7 +16,7 @@ class ParseOasCommand extends Command
     protected static $defaultName = 'parse:oas';
     protected OasParserService $oasParserService;
 
-    public function __construct(OasParserService $oasParserService, string $url ='',  string $gateway ='')
+    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '')
     {
         $this->oasParserService = $oasParserService;
         $this->url = $url;
@@ -36,7 +36,6 @@ class ParseOasCommand extends Command
             ->setHelp('This command imports an external OAS file into the EAC system.')
             ->addArgument('url', $this->url ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'The url location of the OAS documentation that you want to import')
             ->addArgument('gateway', $this->gateway ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'The uuid of the gateway that you want to use');
-
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
