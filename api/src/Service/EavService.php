@@ -182,6 +182,7 @@ class EavService
         } else {
             $this->session->set('application', null);
             //todo: just continue?
+            // TODO: We need an application in the session when creating objectEntities, or we throw an ugly 500, so throw a nice error here?
             var_dump('no application found');
         }
 
