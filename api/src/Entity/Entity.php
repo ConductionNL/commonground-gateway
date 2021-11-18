@@ -191,7 +191,7 @@ class Entity
     private Collection $requestLogs;
 
     /**
-     * @var array Config to translate specific calls to a different method or endpoint.
+     * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)

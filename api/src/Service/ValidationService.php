@@ -1251,6 +1251,49 @@ class ValidationService
         //var_dump($url);
         //var_dump($post);
 
+        // TODO: if translationConfig overwrite promise if needed, still needs to be tested!
+        if ($objectEntity->getEntity()->getTranslationConfig()) {
+            $translationConfig = $objectEntity->getEntity()->getTranslationConfig();
+            // Use switch to look for possible methods & overwrite/merge values if configured for this method
+            switch ($method) {
+                case 'POST':
+                    if (array_key_exists('POST', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['POST'])) {
+                            $method = $translationConfig['POST']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['POST'])) {
+                            $headers = array_merge($headers, $translationConfig['POST']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['POST'])) {
+                            $query = array_merge($query, $translationConfig['POST']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['POST'])) {
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$translationConfig['POST']['endpoint'];
+                        }
+                    }
+                    break;
+                case 'PUT':
+                    if (array_key_exists('PUT', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['PUT'])) {
+                            $method = $translationConfig['PUT']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['PUT'])) {
+                            $headers = array_merge($headers, $translationConfig['PUT']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['PUT'])) {
+                            $query = array_merge($query, $translationConfig['PUT']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['PUT'])) {
+                            $newEndpoint = str_replace("{id}", $objectEntity->getExternalId(), $translationConfig['PUT']['endpoint']);
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$newEndpoint;
+                        }
+                    }
+                    break;
+            }
+        }
+
         $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {

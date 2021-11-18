@@ -39,7 +39,14 @@ App\Entity\Entity:
             envelope: 'instance'
             id: 'instance.id'
             paginationNext: 'result.instance.pager.next'
-
+        #TODO: move translationConfig to endpoint object later
+        translationConfig:
+            PUT:
+                method: 'POST'
+                endpoint: 'case/{id}/update'
+            POST:
+                endpoint: 'case/create'
+        
     # TODO:
 #    # Case Document Object
 #    caseDocument:
