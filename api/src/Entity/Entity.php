@@ -205,7 +205,6 @@ class Entity
      * @ORM\Column(type="array", nullable=true)
      */
     private array $collectionConfig = ["results"=>"hydra:member", "paginationNext"=>"hydra:view.hydra:next"];
-    private array $collectionConfig = ["results" => "hydra:member"];
 
     public function __construct()
     {
