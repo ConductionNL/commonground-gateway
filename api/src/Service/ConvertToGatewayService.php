@@ -19,12 +19,14 @@ class ConvertToGatewayService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $em;
     private SessionInterface $session;
+    private GatewayService $gatewayService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
         $this->session = $session;
+        $this->gatewayService = $gatewayService;
     }
 
     /**
@@ -44,19 +46,47 @@ class ConvertToGatewayService
         // Get all objects for this Entity that exist outside the gateway
         $totalExternObjects = [];
         $page = 1;
-        while (true) {
-            $response = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), ['page'=>$page]);
-            $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
-            if (!isset($response['hydra:view']['hydra:next'])) {
-                break;
-            }
+
+        $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+        $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
+        $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
+        $collectionConfigResults = explode(".", $entity->getCollectionConfig()['results']);
+        foreach ($collectionConfigResults as $item) {
+            $response = $response[$item];
+        }
+        $totalExternObjects = array_merge($totalExternObjects, $response);
+
+        // Deal with pages for conduction commonground components
+        if (isset($response['hydra:view']['hydra:next'])) {
             $page += 1;
+            while (true) {
+                $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+                $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
+                $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
+                foreach ($collectionConfigResults as $item) {
+                    $response = $response[$item];
+                }
+
+//            $response = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), ['page'=>$page]);
+                $totalExternObjects = array_merge($totalExternObjects, $response);
+                if (!isset($response['hydra:view']['hydra:next'])) {
+                    break;
+                }
+                $page += 1;
+            }
         }
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
         $newGatewayObjects = new ArrayCollection();
-        foreach ($totalExternObjects as $externObject) {
+        $collectionConfigEnvelope = [];
+        if (array_key_exists('envelope', $entity->getCollectionConfig())) {
+            $collectionConfigEnvelope = explode(".", $entity->getCollectionConfig()['envelope']);
+        }
+        foreach ($totalExternObjects as &$externObject) {
+            foreach ($collectionConfigEnvelope as $item) {
+                $externObject = $externObject[$item];
+            }
             if (!$this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $externObject['id']])) {
                 // Convert this object to a gateway object
                 $object = $this->convertToGatewayObject($entity, $externObject);
@@ -144,7 +174,11 @@ class ConvertToGatewayService
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-            $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+            if (!is_null($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
+                $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+            } else {
+                $newObject->setApplication($this->session->get('application'));
+            }
         } else {
             $newObject->setOrganization($this->session->get('activeOrganization'));
             $newObject->setApplication($this->session->get('application'));

@@ -205,6 +205,7 @@ class EavService
             if ($host == 'localhost') {
                 $localhostApplication = new Application();
                 $localhostApplication->setName('localhost');
+                $localhostApplication->setDescription('localhost application');
                 $localhostApplication->setDomains(['localhost']);
                 $this->em->persist($localhostApplication);
                 $this->em->flush();
