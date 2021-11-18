@@ -37,6 +37,7 @@ App\Entity\Entity:
         collectionConfig:
             results: 'result.instance.rows'
             envelope: 'instance'
+            id: 'instance.id'
             paginationNext: 'result.instance.pager.next'
 
     # TODO:
@@ -75,6 +76,7 @@ App\Entity\Entity:
         collectionConfig:
             results: 'result.instance.rows'
             envelope: 'instance'
+            id: 'instance.id'
             paginationNext: 'result.instance.pager.next'
             
     # TODO:
@@ -196,27 +198,17 @@ App\Entity\Attribute:
 #        persistToGateway: true
 
     # Case attributes
-#    case_casetype:
-#        name: casetype
-#        description: The casetype of this case
-#        type: object
+    case_casetype:
+        name: casetype
+        description: The casetype of this case
+        type: object
 #        required: true
-#        persistToGateway: true
-#        entity: '@case'
-#        object: '@casetype'
-#    case_source: # channel_of_contact but for input body only
-#        name: source
-#        description: The source of this case
-#        type: string
-#        required: true
-#        persistToGateway: true
-#        entity: '@case'
-    case_channel_of_contact: # source but for response body only
-        name: channel_of_contact
-        description: The channel_of_contact of this case
-        type: string
         persistToGateway: true
         entity: '@case'
+        object: '@casetype'
+        objectConfig:
+            envelope: 'instance'
+            id: 'reference'
 #    case_open:
 #        name: open
 #        description: The open of this case
@@ -230,9 +222,28 @@ App\Entity\Attribute:
 #        type: string
 #        persistToGateway: true
 #        entity: '@case'
+#    case_source: # channel_of_contact but for input body only
+#        name: source
+#        description: The source of this case
+#        type: string
+#        required: true
+#        persistToGateway: true
+#        entity: '@case'
+    case_channel_of_contact: # source but for response body only
+        name: channel_of_contact
+        description: The channel_of_contact of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
     case_subject:
         name: subject
         description: The subject of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_subject_external:
+        name: subject_external
+        description: The subject_external of this case
         type: string
         persistToGateway: true
         entity: '@case'
@@ -253,6 +264,24 @@ App\Entity\Attribute:
         name: number
         description: The number of this case
         type: integer
+        persistToGateway: true
+        entity: '@case'
+    case_date_of_registration:
+        name: date_of_registration
+        description: The date_of_registration of this case
+        type: datetime
+        persistToGateway: true
+        entity: '@case'
+    case_date_target:
+        name: date_target
+        description: The date_target of this case
+        type: datetime
+        persistToGateway: true
+        entity: '@case'
+    case_stalled_until:
+        name: stalled_until
+        description: The stalled_until of this case
+        type: datetime
         persistToGateway: true
         entity: '@case'
 
