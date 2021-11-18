@@ -105,7 +105,7 @@ class Entity
 
     /**
      * wheter or not the properties of the original object are automaticly include.
-     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $extend = false;
