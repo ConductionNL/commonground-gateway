@@ -12,6 +12,7 @@ use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -215,6 +216,7 @@ class ResponseService
                     }
                     continue;
                 } catch (AccessDeniedException $exception) {
+//                    var_dump($exception->getMessage());
                     continue;
                 }
             } elseif ($attribute->getType() == 'file') {
@@ -358,11 +360,11 @@ class ResponseService
 
         $requestLog->setApplication($this->session->get('application'));
         $requestLog->setOrganization($this->session->get('activeOrganization'));
-        $requestLog->setUser($this->tokenStorage->getToken()->getUser()->getUserIdentifier());
+        $requestLog->setUser(!is_string($this->tokenStorage->getToken()->getUser()) ? $this->tokenStorage->getToken()->getUser()->getUserIdentifier() : $this->tokenStorage->getToken()->getUser());
 
         $requestLog->setStatusCode($response->getStatusCode());
         $requestLog->setStatus($this->getStatusWithCode($response->getStatusCode()) ?? $result['type']);
-        $requestLog->setRequestBody($request->toArray());
+        $requestLog->setRequestBody($request->getContent() ? $request->toArray() : null);
         $requestLog->setResponseBody($result);
 
         $requestLog->setMethod($request->getMethod());

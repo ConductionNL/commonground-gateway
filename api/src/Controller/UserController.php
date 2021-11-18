@@ -92,7 +92,7 @@ class UserController extends AbstractController
         }
         // If we still have no organization, get the organization from the application
         if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
-            return $this->session->get('application')->getOrganization;
+            return $this->session->get('application')->getOrganization();
         }
         return null;
     }

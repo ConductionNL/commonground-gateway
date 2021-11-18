@@ -199,12 +199,12 @@ class Entity
     private array $translationConfig = [];
 
     /**
-     * @var array Config for getting the results out of a get collection on this endpoint. "results" for all items, "envelope" for a single item and "paginationNext" for next page if pagination.
+     * @var array Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationNext" for where to find the next page if pagination (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ["results"=>"hydra:member", "paginationNext"=>"hydra:view.hydra:next"];
+    private array $collectionConfig = ["results"=>"hydra:member","id"=>"id", "paginationNext"=>"hydra:view.hydra:next"];
 
     public function __construct()
     {

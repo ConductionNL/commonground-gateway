@@ -510,6 +510,14 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     * @var array Config for getting the object result info from the correct places (id is required!). "envelope" for where to find this item and "id" for where to find the id. (both from the root! So if id is in the envelope example: envelope = instance, id = instance.id)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $objectConfig = ["id"=>"id"];
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1237,6 +1245,18 @@ class Attribute
     public function setInversedBy(?Attribute $inversedBy): self
     {
         $this->inversedBy = $inversedBy;
+
+        return $this;
+    }
+
+    public function getObjectConfig(): ?array
+    {
+        return $this->objectConfig;
+    }
+
+    public function setObjectConfig(?array $objectConfig): self
+    {
+        $this->objectConfig = $objectConfig;
 
         return $this;
     }

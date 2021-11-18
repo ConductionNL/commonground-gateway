@@ -236,9 +236,12 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            // Lets check if the user is allowed to view/edit this resource.
-
-            if (!$this->objectEntityService->checkOwner($object)) {
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
+                $result = $object;
+                $object = null;
+            } // Lets check if the user is allowed to view/edit this resource.
+            elseif (!$this->objectEntityService->checkOwner($object)) {
                 // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
                 if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
                     $object = null; // Needed so we return the error and not the object!
@@ -249,9 +252,6 @@ class EavService
                         'path'    => $entity->getName(),
                         'data'    => ['id' => $requestBase['id']],
                     ];
-                } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
-                    $responseType = Response::HTTP_BAD_REQUEST;
-                    $result = $object;
                 }
             }
         }
