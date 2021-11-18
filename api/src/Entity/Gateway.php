@@ -436,6 +436,29 @@ class Gateway
         $this->requestLogs = new ArrayCollection();
     }
 
+    public function export(): ?array
+    {
+        $data = [
+            'name' => $this->getName(),
+            'location' => $this->getLocation(),
+            'authorizationHeader' => $this->getAuthorizationHeader(),
+            'auth' => $this->getAuth(),
+            'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
+            'locale' => $this->getLocale(),
+            'accept' => $this->getAccept(),
+            'jwt' => $this->getJwt(),
+            'jwtId' => $this->getJwtId(),
+            'secret' => $this->getSecret(),
+            'username' => $this->getUsername(),
+            'password' => $this->getPassword(),
+            'apikey' => $this->getApikey(),
+            'documentation' => $this->getDocumentation(),
+            'headers' => $this->getHeaders()
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
