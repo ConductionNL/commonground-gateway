@@ -69,7 +69,7 @@ class Entity
     private ?Gateway $gateway = null;
 
     /**
-     * @var string The type of this Entity
+     * @var string|null The type of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -78,10 +78,10 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $endpoint = null;
+    private ?string $endpoint = null;
 
     /**
-     * @var string The name of this Entity
+     * @var string|null The name of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -91,10 +91,10 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name = null;
+    private ?string $name = null;
 
     /**
-     * @var string The description of this Entity
+     * @var string|null The description of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -103,7 +103,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $description = null;
+    private ?string $description = null;
 
     /**
      * wheter or not the properties of the original object are automaticly include.

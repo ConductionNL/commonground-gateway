@@ -27,8 +27,12 @@ class ExportService
             case 'entities':
                 $export = array_merge($this->exportEntity(), $export);
                 break;
+            case 'attributes':
+                $export = array_merge($this->exportProperty(), $export);
+                break;
             case 'all':
             default:
+                $export = array_merge($this->exportProperty(), $export);
                 $export = array_merge($this->exportEntity(), $export);
                 $export = array_merge($this->exportGateway(), $export);
                 break;
@@ -52,9 +56,20 @@ class ExportService
         $array['App\Entity\Gateway'] = [];
         $objects = $this->em->getRepository('App:Gateway')->findAll();
 
-        // Filter empty values
         foreach ($objects as &$object) {
             $array['App\Entity\Gateway'][$object->getId()->toString()] = $object->export();
+        }
+
+        return $array;
+    }
+
+    public function exportProperty()
+    {
+        $array['App\Entity\Attribute'] = [];
+        $objects = $this->em->getRepository('App:Attribute')->findAll();
+
+        foreach ($objects as &$object) {
+            $array['App\Entity\Attribute'][$object->getId()->toString()] = $object->export();
         }
 
         return $array;
@@ -65,7 +80,6 @@ class ExportService
         $array['App\Entity\Entity'] = [];
         $objects = $this->em->getRepository('App:Entity')->findAll();
 
-        // Filter empty values
         foreach ($objects as &$object) {
             $array['App\Entity\Entity'][$object->getId()->toString()] = $object->export();
         }
