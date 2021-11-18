@@ -46,35 +46,42 @@ class ConvertToGatewayService
         // Get all objects for this Entity that exist outside the gateway
         $totalExternObjects = [];
         $page = 1;
+        $collectionConfigResults = explode(".", $entity->getCollectionConfig()['results']);
+        if (array_key_exists('paginationNext', $entity->getCollectionConfig())) {
+            $collectionConfigPaginationNext = explode(".", $entity->getCollectionConfig()['paginationNext']);
+        }
 
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
-        $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
-        $collectionConfigResults = explode(".", $entity->getCollectionConfig()['results']);
-        foreach ($collectionConfigResults as $item) {
-            $response = $response[$item];
-        }
-        $totalExternObjects = array_merge($totalExternObjects, $response);
-
-        // Deal with pages for conduction commonground components
-        if (isset($response['hydra:view']['hydra:next'])) {
-            $page += 1;
-            while (true) {
-                $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-                $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
-                $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
-                foreach ($collectionConfigResults as $item) {
-                    $response = $response[$item];
-                }
-
-//            $response = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), ['page'=>$page]);
-                $totalExternObjects = array_merge($totalExternObjects, $response);
-                if (!isset($response['hydra:view']['hydra:next'])) {
-                    break;
-                }
-                $page += 1;
+        while (true) {
+            $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
+            // Now get response from the correct place in the response
+            foreach ($collectionConfigResults as $item) {
+                $response = $response[$item];
             }
+
+            // Add it to total result
+            $totalExternObjects = array_merge($totalExternObjects, $response);
+
+            // Check if we have pagination and schould repeat for the next page
+            if (isset($collectionConfigPaginationNext)) {
+                $paginationNext = $firstResponse;
+                foreach ($collectionConfigPaginationNext as $item) {
+                    if (!isset($paginationNext[$item])) {
+                        $paginationNext = false;
+                    } else {
+                        $paginationNext = $paginationNext[$item];
+                    }
+                }
+            }
+            // Break if we have nog pagination or if there is no next page
+            if (!isset($paginationNext) || !$paginationNext) {
+                break;
+            }
+            // Else go to next page (repeat while)
+            $page += 1;
         }
+//        var_dump('pages: '. $page);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
@@ -186,10 +193,16 @@ class ConvertToGatewayService
 
         $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
 
+//        var_dump($newObject->getExternalId());
+//        if ($newObject->getHasErrors()) {
+//            var_dump($newObject->getErrors());
+//        }
+
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
+//            var_dump('persist and flush');
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
         }

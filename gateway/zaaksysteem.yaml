@@ -37,6 +37,7 @@ App\Entity\Entity:
         collectionConfig:
             results: 'result.instance.rows'
             envelope: 'instance'
+            paginationNext: 'result.instance.pager.next'
 
     # TODO:
 #    # Case Document Object
@@ -74,7 +75,8 @@ App\Entity\Entity:
         collectionConfig:
             results: 'result.instance.rows'
             envelope: 'instance'
-
+            paginationNext: 'result.instance.pager.next'
+            
     # TODO:
 #    # Constants Object
 #    constants:
@@ -171,7 +173,6 @@ App\Entity\Entity:
     # Event Object (/case/{uuid}/process_event)
 
 App\Entity\Attribute:
-
     # TODO:
     # Address attributes
 #    address_something:
@@ -259,7 +260,7 @@ App\Entity\Attribute:
     # Case Document attributes
     # Case Note attributes
     # Case Relation attributes
-    
+
     #TODO:
     # Casetype attributes
     casetype_name: # = casetype_title
@@ -276,7 +277,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: '@casetype'
         persistToGateway: true
-    
+
     #TODO:
     # Constants attributes
     # Dashboard Widget attributes
