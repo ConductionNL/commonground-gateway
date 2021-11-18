@@ -204,7 +204,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ["results"=>"hydra:member"];
+    private array $collectionConfig = ["results" => "hydra:member"];
 
     public function __construct()
     {
@@ -214,6 +214,32 @@ class Entity
         $this->responseLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
     }
+
+    public function export()
+    {
+
+        if ($this->getGateway() !== null) {
+            $gateway = $this->getGateway()->getId()->toString();
+            $gateway = "@" . $gateway;
+        } else {
+            $gateway = null;
+        }
+
+        $data = [
+            'gateway' => $gateway,
+            'endpoint' => $this->getEndpoint(),
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'extend' => $this->getExtend(),
+            'transformations' => $this->getTransformations(),
+            'route' => $this->getRoute(),
+            'availableProperties' => $this->getAvailableProperties(),
+            'usedProperties' => $this->getUsedProperties()
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
+
 
     public function getId()
     {
