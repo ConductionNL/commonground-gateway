@@ -199,11 +199,12 @@ class Entity
     private array $translationConfig = [];
 
     /**
-     * @var array Config for getting the results out of a get collection on this endpoint.
+     * @var array Config for getting the results out of a get collection on this endpoint. "results" for all items, "envelope" for a single item and "paginationNext" for next page if pagination.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
+    private array $collectionConfig = ["results"=>"hydra:member", "paginationNext"=>"hydra:view.hydra:next"];
     private array $collectionConfig = ["results" => "hydra:member"];
 
     public function __construct()

@@ -9,21 +9,22 @@ App\Entity\Gateway:
             Api-Interface-Id: 351
 
 App\Entity\Entity:
-    # Address object
-    address:
-        route: '/api/addresses'
-        name: addresses
-        description: BAG or Address related actions.
-        gateway: '@zaaksysteem'
-        endpoint: 'address'
-
-    # App object
-    app:
-        route: '/api/apps'
-        name: apps
-        description: Endpoint for retrieving configuration for the different external apps.
-        gateway: '@zaaksysteem'
-        endpoint: 'app'
+    # TODO:
+#    # Address object
+#    address:
+#        route: '/api/addresses'
+#        name: addresses
+#        description: BAG or Address related actions.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'address'
+#
+#    # App object
+#    app:
+#        route: '/api/apps'
+#        name: apps
+#        description: Endpoint for retrieving configuration for the different external apps.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'app'
 
     # Case Object
     case:
@@ -69,94 +70,99 @@ App\Entity\Entity:
         description: Every action related to listing and retrieving casetypes.
         gateway: '@zaaksysteem'
         endpoint: 'casetype'
+        #TODO: move collectionConfig to endpoint object later
+        collectionConfig:
+            results: 'result.instance.rows'
+            envelope: 'instance'
 
-    # Constants Object
-    constants:
-        route: '/api/legal_entity_types'
-        name: constants
-        description: Data from internal tables, like possible countries, etc.
-        gateway: '@zaaksysteem'
-        endpoint: 'legal_entity_types'
-
-    # Dashboard Widget Object
-    dashboardWidget:
-        route: '/api/dashboard/widgets'
-        name: dashboardWidgets
-        description: Every action related to creating and maintaining the dashboard Widget.
-        gateway: '@zaaksysteem'
-        endpoint: 'dashboard/widget'
-
-    # Dashboard Favourite Object
-    dashboardFavourite:
-        route: '/api/dashboard/favourites'
-        name: dashboardFavourites
-        description: Every action related to creating and maintaining the dashboard Favourite.
-        gateway: '@zaaksysteem'
-        endpoint: 'dashboard/favourite'
-
-    # Document get_by_number Object
-    documentGetByNumber:
-        route: '/api/document/get_by_number'
-        name: documentGetByNumber
-        description: Every action related to creating and moving documents.
-        gateway: '@zaaksysteem'
-        endpoint: 'document/get_by_number'
-
-    # Document reserve_number Object
-    documentReserveNumber:
-        route: '/api/document/reserve_number'
-        name: documentReserveNumber
-        description: Every action related to creating and moving documents.
-        gateway: '@zaaksysteem'
-        endpoint: 'document/reserve_number'
-
-    # Email Template Object
-    emailTemplate:
-        route: '/api/email_templates'
-        name: emailTemplates
-        description: Endpoint for retreiving email templates.
-        gateway: '@zaaksysteem'
-        endpoint: 'email_template'
-
-    # Geo Object
-    geo:
-        route: '/api/map/ol_settings'
-        name: geo
-        description: Geographic or maps related actions.
-        gateway: '@zaaksysteem'
-        endpoint: 'map/ol_settings'
-
-    # Group Object
-    group:
-        route: '/api/groups'
-        name: groups
-        description: Every action related to groups (departments).
-        gateway: '@zaaksysteem'
-        endpoint: 'group'
-
-    # Municipality_code Object
-    municipality_code:
-        route: '/api/general/municipality_codes'
-        name: municipality_codes
-        description: Endpoint for retreiving municipality codes.
-        gateway: '@zaaksysteem'
-        endpoint: 'general/municipality_code'
-
-    # Role Object
-    role:
-        route: '/api/roles'
-        name: roles
-        description: Every action related to employee roles.
-        gateway: '@zaaksysteem'
-        endpoint: 'role'
-
-    # Subject Object
-    subject:
-        route: '/api/subjects'
-        name: subjects
-        description: Every action related to creating and importing persons or companies.
-        gateway: '@zaaksysteem'
-        endpoint: 'subject'
+    # TODO:
+#    # Constants Object
+#    constants:
+#        route: '/api/legal_entity_types'
+#        name: constants
+#        description: Data from internal tables, like possible countries, etc.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'legal_entity_types'
+#
+#    # Dashboard Widget Object
+#    dashboardWidget:
+#        route: '/api/dashboard/widgets'
+#        name: dashboardWidgets
+#        description: Every action related to creating and maintaining the dashboard Widget.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'dashboard/widget'
+#
+#    # Dashboard Favourite Object
+#    dashboardFavourite:
+#        route: '/api/dashboard/favourites'
+#        name: dashboardFavourites
+#        description: Every action related to creating and maintaining the dashboard Favourite.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'dashboard/favourite'
+#
+#    # Document get_by_number Object
+#    documentGetByNumber:
+#        route: '/api/document/get_by_number'
+#        name: documentGetByNumber
+#        description: Every action related to creating and moving documents.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'document/get_by_number'
+#
+#    # Document reserve_number Object
+#    documentReserveNumber:
+#        route: '/api/document/reserve_number'
+#        name: documentReserveNumber
+#        description: Every action related to creating and moving documents.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'document/reserve_number'
+#
+#    # Email Template Object
+#    emailTemplate:
+#        route: '/api/email_templates'
+#        name: emailTemplates
+#        description: Endpoint for retreiving email templates.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'email_template'
+#
+#    # Geo Object
+#    geo:
+#        route: '/api/map/ol_settings'
+#        name: geo
+#        description: Geographic or maps related actions.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'map/ol_settings'
+#
+#    # Group Object
+#    group:
+#        route: '/api/groups'
+#        name: groups
+#        description: Every action related to groups (departments).
+#        gateway: '@zaaksysteem'
+#        endpoint: 'group'
+#
+#    # Municipality_code Object
+#    municipality_code:
+#        route: '/api/general/municipality_codes'
+#        name: municipality_codes
+#        description: Endpoint for retreiving municipality codes.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'general/municipality_code'
+#
+#    # Role Object
+#    role:
+#        route: '/api/roles'
+#        name: roles
+#        description: Every action related to employee roles.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'role'
+#
+#    # Subject Object
+#    subject:
+#        route: '/api/subjects'
+#        name: subjects
+#        description: Every action related to creating and importing persons or companies.
+#        gateway: '@zaaksysteem'
+#        endpoint: 'subject'
 
     # TODO:
     # Assign Object (/case/{uuid}/assign)
@@ -189,8 +195,8 @@ App\Entity\Attribute:
 #        persistToGateway: true
 
     # Case attributes
-#    case_casetype_id:
-#        name: casetype_id
+#    case_casetype:
+#        name: casetype
 #        description: The casetype of this case
 #        type: object
 #        required: true
@@ -204,7 +210,7 @@ App\Entity\Attribute:
 #        required: true
 #        persistToGateway: true
 #        entity: '@case'
-    channel_of_contact: # source but for response body only
+    case_channel_of_contact: # source but for response body only
         name: channel_of_contact
         description: The channel_of_contact of this case
         type: string
@@ -223,24 +229,31 @@ App\Entity\Attribute:
 #        type: string
 #        persistToGateway: true
 #        entity: '@case'
-    status:
-        name: status
-        description: The status of this case
+    case_subject:
+        name: subject
+        description: The subject of this case
         type: string
         persistToGateway: true
         entity: '@case'
-#    case_number_master:
-#        name: number_master
-#        description: The number_master of this case
-#        type: int
-#        persistToGateway: true
-#        entity: '@case'
-#    case_number:
-#        name: number
-#        description: The number of this case
-#        type: int
-#        persistToGateway: true
-#        entity: '@case'
+    case_status:
+        name: status
+        description: The status of this case
+        type: string
+        enum: ['new', 'open', 'resolved', 'stalled']
+        persistToGateway: true
+        entity: '@case'
+    case_number_master:
+        name: number_master
+        description: The number_master of this case
+        type: integer
+        persistToGateway: true
+        entity: '@case'
+    case_number:
+        name: number
+        description: The number of this case
+        type: integer
+        persistToGateway: true
+        entity: '@case'
 
     #TODO:
     # Case Document attributes
@@ -249,13 +262,20 @@ App\Entity\Attribute:
     
     #TODO:
     # Casetype attributes
-#    casetype_something:
-#        name: something
-#        description: something.
-#        type: string
-#        maxLength: 255
-#        entity: '@case'
-#        persistToGateway: true
+    casetype_name: # = casetype_title
+        name: name
+        description: The name of this casetype.
+        type: string
+        maxLength: 255
+        entity: '@casetype'
+        persistToGateway: true
+    casetype_title: # = casetype_name
+        name: title
+        description: The title of this casetype.
+        type: string
+        maxLength: 255
+        entity: '@casetype'
+        persistToGateway: true
     
     #TODO:
     # Constants attributes
