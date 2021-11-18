@@ -207,6 +207,9 @@ class EavService
                 $localhostApplication->setName('localhost');
                 $localhostApplication->setDescription('localhost application');
                 $localhostApplication->setDomains(['localhost']);
+                $localhostApplication->setPublic('');
+                $localhostApplication->setSecret('');
+                $localhostApplication->setOrganization('localhostOrganization');
                 $this->em->persist($localhostApplication);
                 $this->em->flush();
                 $this->session->set('application', $localhostApplication);
@@ -221,6 +224,10 @@ class EavService
                     'data'    => ['host' => $host],
                 ];
             }
+        }
+
+        if ($host == 'localhost' && !$this->session->get('activeOrganization') && $this->session->get('application')) {
+            $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
         }
 
         // Lets create an object
