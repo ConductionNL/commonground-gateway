@@ -20,8 +20,6 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
-use function PHPSTORM_META\map;
-
 /**
  * An entity that functions a an object template for objects that might be stored in the EAV database.
  *
@@ -66,10 +64,10 @@ class Entity
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway = null;
+    private ?Gateway $gateway;
 
     /**
-     * @var string|null The type of this Entity
+     * @var string The type of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -78,10 +76,10 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $endpoint = null;
+    private $endpoint;
 
     /**
-     * @var string|null The name of this Entity
+     * @var string The name of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -91,10 +89,10 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private ?string $name = null;
+    private $name;
 
     /**
-     * @var string|null The description of this Entity
+     * @var string The description of this Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -103,7 +101,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $description = null;
+    private $description;
 
     /**
      * wheter or not the properties of the original object are automaticly include.
@@ -171,7 +169,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $availableProperties = [];
+    private ?array $availableProperties;
 
     /**
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
@@ -179,7 +177,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $usedProperties = [];
+    private ?array $usedProperties;
 
     /**
      * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
@@ -206,7 +204,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ["results"=>"hydra:member"];
+    private array $collectionConfig = ["results" => "hydra:member"];
 
     public function __construct()
     {
@@ -242,6 +240,7 @@ class Entity
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
+
     public function getId()
     {
         return $this->id;
@@ -264,7 +263,7 @@ class Entity
         return $this->endpoint;
     }
 
-    public function setEndpoint(?string $endpoint): self
+    public function setEndpoint(string $endpoint): self
     {
         $this->endpoint = $endpoint;
 
@@ -276,7 +275,7 @@ class Entity
         return $this->name;
     }
 
-    public function setName(?string $name): self
+    public function setName(string $name): self
     {
         // lets make sure this name is slugable
         $name = trim($name); //removes whitespace at begin and ending
@@ -307,7 +306,7 @@ class Entity
      *
      * @return Attribute|bool Iether the found attribute or false if no attribute could be found
      */
-    public function getAttributeByName(?string $name)
+    public function getAttributeByName(string $name)
     {
         // Check if value with this attribute exists for this ObjectEntity
         $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);

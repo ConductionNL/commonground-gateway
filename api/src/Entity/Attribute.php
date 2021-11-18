@@ -90,7 +90,7 @@ class Attribute
     private $type;
 
     /**
-     * @var string|null The swagger type of the property as used in api calls
+     * @var string The swagger type of the property as used in api calls
      *
      * @example string
      *
@@ -99,7 +99,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $format = null;
+    private $format;
 
     /**
      * @var bool True if this attribute expects an array of the given type.
@@ -135,7 +135,7 @@ class Attribute
     private ?Entity $object = null;
 
     /**
-     * @var *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
+     * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
      *
      * @example 2
      *
@@ -143,7 +143,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $multipleOf = null;
+    private $multipleOf;
 
     /**
      * @var string *Can only be used in combination with type integer* The maximum allowed value
@@ -154,10 +154,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maximum = null;
+    private $maximum;
 
     /**
-     * @var *Can only be used in combination with type integer* Defines if the maximum is exclusive, e.g. a exclusive maximum of 5 would invalidate 5 but validate 4
+     * @var string *Can only be used in combination with type integer* Defines if the maximum is exclusive, e.g. a exclusive maximum of 5 would invalidate 5 but validate 4
      *
      * @example true
      *
@@ -165,10 +165,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $exclusiveMaximum = null;
+    private $exclusiveMaximum;
 
     /**
-     * @var *Can only be used in combination with type integer* The minimum allowed value
+     * @var string *Can only be used in combination with type integer* The minimum allowed value
      *
      * @example 2
      *
@@ -176,10 +176,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minimum = null;
+    private $minimum;
 
     /**
-     * @var *Can only be used in combination with type integer* Defines if the minimum is exclusive, e.g. a exclusive minimum of 5 would invalidate 5 but validate 6
+     * @var string *Can only be used in combination with type integer* Defines if the minimum is exclusive, e.g. a exclusive minimum of 5 would invalidate 5 but validate 6
      *
      * @example true
      *
@@ -188,10 +188,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $exclusiveMinimum = null;
+    private $exclusiveMinimum;
 
     /**
-     * @var The maximum amount of characters in the value
+     * @var string The maximum amount of characters in the value
      *
      * @example 2
      *
@@ -199,10 +199,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxLength = null;
+    private $maxLength;
 
     /**
-     * @var int|null The minimal amount of characters in the value
+     * @var int The minimal amount of characters in the value
      *
      * @example 2
      *
@@ -210,10 +210,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minLength = null;
+    private $minLength;
 
     /**
-     * @var *Can only be used in combination with type array* The maximum array length
+     * @var string *Can only be used in combination with type array* The maximum array length
      *
      * @example 2
      *
@@ -221,10 +221,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxItems = null;
+    private $maxItems;
 
     /**
-     * @var *Can only be used in combination with type array* The minimum array length
+     * @var string *Can only be used in combination with type array* The minimum array length
      *
      * @example 2
      *
@@ -232,10 +232,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minItems = null;
+    private $minItems;
 
     /**
-     * @var bool|null *Can only be used in combination with type array* Define whether or not values in an array should be unique
+     * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
      *
      * @example false
      *
@@ -243,10 +243,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $uniqueItems = null;
+    private $uniqueItems;
 
     /**
-     * @var *Can only be used in combination with type object* The maximum amount of properties an object should contain
+     * @var string *Can only be used in combination with type object* The maximum amount of properties an object should contain
      *
      * @example 2
      *
@@ -254,10 +254,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxProperties = null;
+    private $maxProperties;
 
     /**
-     * @var int|null *Can only be used in combination with type object* The minimum amount of properties an object should contain
+     * @var int *Can only be used in combination with type object* The minimum amount of properties an object should contain
      *
      * @example 2
      *
@@ -265,19 +265,19 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minProperties = null;
+    private $minProperties;
 
     /**
-     * @var Attribute|null If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
+     * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
      *
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=Attribute::class)
      * @MaxDepth(1)
      */
-    private ?Attribute $inversedBy = null;
+    private $inversedBy;
 
     /**
-     * @var bool|null Only whether or not this property is required
+     * @var bool Only whether or not this property is required
      *
      * @example false
      *
@@ -285,7 +285,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $required = null;
+    private $required;
 
     /**
      * @var array conditional requiremends for field
@@ -339,17 +339,17 @@ class Attribute
     private $oneOf = [];
 
     /**
-     * @var string|null An description of the value asked, supports markdown syntax as described by [CommonMark 0.27.](https://spec.commonmark.org/0.27/)
+     * @var string An description of the value asked, supports markdown syntax as described by [CommonMark 0.27.](https://spec.commonmark.org/0.27/)
      *
      * @example My value
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description = null;
+    private $description;
 
     /**
-     * @var string|null An default value for this value that will be used if a user doesn't supply a value
+     * @var string An default value for this value that will be used if a user doesn't supply a value
      *
      * @example My value
      *
@@ -357,10 +357,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $defaultValue = null;
+    private $defaultValue;
 
     /**
-     * @var bool|null Whether or not this property can be left empty
+     * @var bool Whether or not this property can be left empty
      *
      * @example false
      *
@@ -368,10 +368,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $nullable = null;
+    private $nullable;
 
     /**
-     * @var bool|null Whether or not this property must be unique
+     * @var bool Whether or not this property must be unique
      *
      * @example false
      *
@@ -379,10 +379,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $mustBeUnique = null;
+    private $mustBeUnique;
 
     /**
-     * @var bool|null Whether or not this property is read only
+     * @var bool Whether or not this property is read only
      *
      * @example false
      *
@@ -390,10 +390,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $readOnly = null;
+    private $readOnly;
 
     /**
-     * @var bool|null Whether or not this property is write only
+     * @var bool Whether or not this property is write only
      *
      * @example false
      *
@@ -401,10 +401,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $writeOnly = null;
+    private $writeOnly;
 
     /**
-     * @var string|null An example of the value that should be supplied
+     * @var string An example of the value that should be supplied
      *
      * @example My value
      *
@@ -412,10 +412,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $example = null;
+    private $example;
 
     /**
-     * @var bool|null Whether or not this property has been deprecated and wil be removed in the future
+     * @var bool Whether or not this property has been deprecated and wil be removed in the future
      *
      * @example false
      *
@@ -423,53 +423,53 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private ?bool $deprecated = null;
+    private $deprecated;
 
     /**
-     * @var string|null The minimal date for value, either a date, datetime or duration (ISO_8601)
+     * @var string The minimal date for value, either a date, datetime or duration (ISO_8601)
      *
      * @example 2019-09-16T14:26:51+00:00
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $minDate = null;
+    private $minDate;
 
     /**
-     * @var string|null The maximum date for value, either a date, datetime or duration (ISO_8601)
+     * @var string The maximum date for value, either a date, datetime or duration (ISO_8601)
      *
      * @example 2019-09-16T14:26:51+00:00
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $maxDate = null;
+    private $maxDate;
 
     /**
-     * @var string|null *Can only be used in combination with type file* The maximum allowed file size in bytes
+     * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
      *
      * @example 32000
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?string $maxFileSize = null;
+    private $maxFileSize;
 
     //TODO: make this an enum?
     /**
-     * @var string|null *Can only be used in combination with type file* The type of the file
+     * @var string *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $fileType = null;
+    private $fileType;
 
     /**
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
-    private $validations = [];
+    private $validations;
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
@@ -869,12 +869,12 @@ class Attribute
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
 
-    public function setType(?string $type): self
+    public function setType(string $type): self
     {
         $this->type = $type;
 
@@ -963,7 +963,7 @@ class Attribute
         return $this->nullable;
     }
 
-    public function setNullable(?bool $nullable): self
+    public function setNullable(bool $nullable): self
     {
         $this->nullable = $nullable;
 
@@ -975,7 +975,7 @@ class Attribute
         return $this->mustBeUnique;
     }
 
-    public function setMustBeUnique(?bool $mustBeUnique): self
+    public function setMustBeUnique(bool $mustBeUnique): self
     {
         $this->mustBeUnique = $mustBeUnique;
 
