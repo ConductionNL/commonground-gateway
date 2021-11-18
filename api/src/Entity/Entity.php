@@ -105,7 +105,7 @@ class Entity
 
     /**
      * wheter or not the properties of the original object are automaticly include.
-     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $extend = false;
@@ -204,7 +204,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ["results"=>"hydra:member", "paginationNext"=>"hydra:view.hydra:next"];
+    private array $collectionConfig = ["results" => "hydra:member", "paginationNext" => "hydra:view.hydra:next"];
 
     public function __construct()
     {
