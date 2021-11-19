@@ -788,7 +788,7 @@ class SOAPService
 
         return [
             '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
-            's:Body' => [
+            's:Body'    => [
                 'ZKN:genereerDocumentIdentificatie_Du02'    => [
                     '@xmlns:ZKN'        => 'http://www.egem.nl/StUF/sector/zkn/0310',
                     'ZKN:stuurgegevens' => [
