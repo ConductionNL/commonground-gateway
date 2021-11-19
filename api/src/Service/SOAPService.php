@@ -833,13 +833,13 @@ class SOAPService
                         ],
                         'ns1:tijdstipBericht'  => [
                             '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
-                            '#'             => $now->format('YmdHisv'),
+                            '#'             => $now->format('YmdHis'),
                         ],
                         'StUF:crossRefnummer'  => [
                             '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
                             '#'             => '2093235189',
                         ],
-                        'ns:functie'            => [
+                        'ns1:functie'            => [
                             '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
                             '#'             => 'genereerDocumentidentificatie',
                         ],
