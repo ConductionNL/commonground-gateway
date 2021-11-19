@@ -37,7 +37,10 @@ class SOAPController extends AbstractController
                 $message = $SOAPService->processEdcLv01Message($data, $namespaces);
                 break;
             case 'edcLk01':
-                $message = $SOAPService->processEdcLk01($data, $namespaces);
+                $message = $SOAPService->processEdcLk01($data, $namespaces, $request);
+                break;
+            case 'genereerDocumentIdentificatie_Di02':
+                $message = $SOAPService->processDi02($data, $namespaces, $request);
                 break;
             default:
                 throw new BadRequestException("The message type $messageType is not supported at this moment");
