@@ -6,13 +6,16 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class SOAPService
 {
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
+    private CacheInterface $cache;
 
     /**
      * Translation table for case type descriptions.
@@ -45,10 +48,11 @@ class SOAPService
         'refused'       => ['description' => 'Geweigerd',       'endStatus' => true,    'explanation' => 'Zaak is geweigerd'],
     ];
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, CacheInterface $cache)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
+        $this->cache = $cache;
     }
 
     public function getNamespaces(array $data): array
@@ -739,8 +743,9 @@ class SOAPService
         throw new BadRequestException('Not a valid Lv01 message');
     }
 
-    public function processEdcLk01(array $data, array $namespaces): string
+    public function processEdcLk01(array $data, array $namespaces, Request $request): string
     {
+        $item = $this->cache->getItem(md5($request->getClientIp()));
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         if (
             !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
@@ -769,7 +774,108 @@ class SOAPService
         if ($result->getStatusCode() != 201) {
             return $xmlEncoder->encode($this->getFo02Message(), 'xml');
         } else {
+            $item->set("{$message["$caseNamespace:object"]["$caseNamespace:isRelevantVoor"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]}.".json_decode($result->getBody()->getContents(), true)['id']);
+            $item->expiresAfter(new \DateInterval('PT1H'));
+            $this->cache->save($item);
+
             return $xmlEncoder->encode($this->getBv03Message(), 'xml');
         }
+    }
+
+    public function generateDu02(?string $id): array
+    {
+        $now = new DateTime('now');
+
+        return [
+            's:Body' => [
+                'ZKN:genereerDocumentIdentificatie_Du02'    => [
+                    '@xmlns:ZKN'        => 'http://www.egem.nl/StUF/sector/zkn/0310',
+                    'ZKN:stuurgegevens' => [
+                        'StUF:berichtcode'      => [
+                            '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
+                            '#'             => 'Du02',
+                        ],
+                        'StUF:zender'           => [
+                            '@xmlns:StUF'       => 'http://www.egem.nl/StUF/StUF0301',
+                            'ns1:organisatie'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                            'ns1:applicatie'    => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                                '#'             => 'CGS',
+                            ],
+                            'ns1:administratie'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                            'ns1:gebruiker'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                        ],
+                        'StUF:ontvanger'        => [
+                            '@xmlns:StUF'       => 'http://www.egem.nl/StUF/StUF0301',
+                            'ns1:organisatie'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                            'ns1:applicatie'    => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                                '#'             => 'SIMform',
+                            ],
+                            'ns1:administratie'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                            'ns1:gebruiker'   => [
+                                '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            ],
+                        ],
+                        'ns1:referentienummer'  => [
+                            '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            '#'             => '2093235189',
+                        ],
+                        'ns1:tijdstipBericht'  => [
+                            '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            '#'             => $now->format('YmdHisv'),
+                        ],
+                        'StUF:crossRefnummer'  => [
+                            '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
+                            '#'             => '2093235189',
+                        ],
+                        'ns:functie'            => [
+                            '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
+                            '#'             => 'genereerDocumentidentificatie',
+                        ],
+                    ],
+                    'ZKN:document'      => [
+                        '@xmlns:StUF'           => 'http://www.egem.nl/StUF/StUF0301',
+                        '@StUF:functie'         => 'entiteit',
+                        '@StUF:entiteittype'    => 'EDC',
+                        'ZKN:identificatie'     => $id,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public function processDi02(array $data, array $namespaces, Request $request): string
+    {
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
+        if (
+            !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
+            !($caseNamespace = array_search('http://www.egem.nl/StUF/sector/zkn/0310', $namespaces))
+        ) {
+            throw new BadRequestException('STuF and/or case namespaces missing ');
+        }
+        $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
+        $message = $data["$env:Body"]["$caseNamespace:genereerDocumentIdentificatie_Di02"];
+
+        if ($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerDocumentidentificatie') {
+            $item = $this->cache->getItem(md5($request->getClientIp()));
+            if ($item->isHit()) {
+                return $xmlEncoder->encode($this->generateDu02($item->get()), 'xml');
+            } else {
+                return $xmlEncoder->encode($this->generateDu02(null), 'xml');
+            }
+        }
+
+        return $xmlEncoder->encode($this->getFo02Message(), 'xml');
     }
 }
