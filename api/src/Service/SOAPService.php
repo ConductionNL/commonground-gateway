@@ -6,10 +6,10 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class SOAPService
 {
@@ -774,9 +774,10 @@ class SOAPService
         if ($result->getStatusCode() != 201) {
             return $xmlEncoder->encode($this->getFo02Message(), 'xml');
         } else {
-            $item->set("{$message["$caseNamespace:object"]["$caseNamespace:isRelevantVoor"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]}.".json_decode($result->getBody()->getContents(),true)['id']);
-            $item->expiresAfter(new \DateInterval("PT1H"));
+            $item->set("{$message["$caseNamespace:object"]["$caseNamespace:isRelevantVoor"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]}.".json_decode($result->getBody()->getContents(), true)['id']);
+            $item->expiresAfter(new \DateInterval('PT1H'));
             $this->cache->save($item);
+
             return $xmlEncoder->encode($this->getBv03Message(), 'xml');
         }
     }
@@ -784,6 +785,7 @@ class SOAPService
     public function generateDu02(?string $id): array
     {
         $now = new DateTime('now');
+
         return [
             's:Body' => [
                 'ZKN:genereerDocumentIdentificatie_Du02'    => [
@@ -794,7 +796,7 @@ class SOAPService
                             '#'             => 'Du02',
                         ],
                         'StUF:zender'           => [
-                            '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
+                            '@xmlns:StUF'       => 'http://www.egem.nl/StUF/StUF0301',
                             'ns1:organisatie'   => [
                                 '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
                             ],
@@ -810,7 +812,7 @@ class SOAPService
                             ],
                         ],
                         'StUF:ontvanger'        => [
-                            '@xmlns:StUF'   => 'http://www.egem.nl/StUF/StUF0301',
+                            '@xmlns:StUF'       => 'http://www.egem.nl/StUF/StUF0301',
                             'ns1:organisatie'   => [
                                 '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
                             ],
@@ -839,7 +841,7 @@ class SOAPService
                         ],
                         'ns:functie'            => [
                             '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
-                            '#'             => 'genereerDocumentidentificatie'
+                            '#'             => 'genereerDocumentidentificatie',
                         ],
                     ],
                     'ZKN:document'      => [
@@ -865,14 +867,15 @@ class SOAPService
         $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
         $message = $data["$env:Body"]["$caseNamespace:genereerDocumentIdentificatie_Di02"];
 
-        if($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerDocumentidentificatie') {
+        if ($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerDocumentidentificatie') {
             $item = $this->cache->getItem(md5($request->getClientIp()));
-            if($item->isHit()){
+            if ($item->isHit()) {
                 return $xmlEncoder->encode($this->generateDu02($item->get()), 'xml');
             } else {
                 return $xmlEncoder->encode($this->generateDu02(null), 'xml');
             }
         }
+
         return $xmlEncoder->encode($this->getFo02Message(), 'xml');
     }
 }
