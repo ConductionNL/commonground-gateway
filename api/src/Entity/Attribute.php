@@ -41,7 +41,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact"
+ * })
  */
 class Attribute
 {
@@ -516,7 +518,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $objectConfig = ["id"=>"id"];
+    private array $objectConfig = ["id" => "id"];
 
     public function __construct()
     {
