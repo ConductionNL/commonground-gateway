@@ -787,6 +787,7 @@ class SOAPService
         $now = new DateTime('now');
 
         return [
+            '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
             's:Body' => [
                 'ZKN:genereerDocumentIdentificatie_Du02'    => [
                     '@xmlns:ZKN'        => 'http://www.egem.nl/StUF/sector/zkn/0310',
