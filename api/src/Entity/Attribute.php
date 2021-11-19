@@ -469,9 +469,10 @@ class Attribute
     private $fileType;
 
     /**
+     * @Groups({"read", "write"})
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
-    private $validations;
+    private $validations = [];
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
