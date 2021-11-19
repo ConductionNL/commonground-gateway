@@ -475,21 +475,21 @@ class Attribute
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $persistToGateway = false;
 
     /**
      * Whether or not this property is searchable.
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
     private $cascade = false;
