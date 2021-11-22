@@ -151,6 +151,8 @@ class EavService
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
+            $object->setOrganization($this->session->get('activeOrganization'));
+            //todo set application
 
             return $this->objectEntityService->handleOwner($object);
         }
