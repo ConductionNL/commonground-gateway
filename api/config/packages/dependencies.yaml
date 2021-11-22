@@ -35,3 +35,9 @@ parameters:
             auth: apikey
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
             location: https://conduction.demodam.nl/api/v1/vrc
+        vrijbrp-dossier:
+            auth: vrijbrp-jwt
+            username: conduction
+            password: 7cU2D!Pu
+            location: https://api.procura.nl/dossiers
+            accept: application/json
