@@ -1073,6 +1073,13 @@ App\Entity\Attribute:
         entity: '@learningNeed'
         object: '@student'
         inversedBy: '@student_learningNeeds'
+    learningNeed_participations:
+        name: participations
+        type: object
+        multiple: true
+        entity: '@learningNeed'
+        object: '@participation'
+        inversedBy: '@participation_learningNeed'
     learningNeed_learningResults:
         name: learningResults
         type: object
@@ -1228,6 +1235,14 @@ App\Entity\Attribute:
         object: '@organization'
         
     # participation properties
+    participation_learningNeed:
+        name: learningNeed
+        type: object
+        required: true
+        multiple: true
+        entity: '@participation'
+        object: '@learningNeed'
+        inversedBy: '@learningNeed_participations'
     participation_providerOption:
         name: providerOption
         type: string
@@ -1254,7 +1269,7 @@ App\Entity\Attribute:
         maxLength: 2555
         entity: '@participation'
         requiredIf:
-            providerOption: 'OTHER'
+            providerOption: 'PROVIDER'
     participation_startParticipation:
         name: startParticipation
         type: date
@@ -1327,14 +1342,15 @@ App\Entity\Attribute:
         entity: '@participation'
         requiredIf:
             providerOption: 'OTHER'
-    participation_learningResult:
-        name: learningResult
+    participation_learningResults:
+        name: learningResults
         type: object
-        required: true
         multiple: true
         entity: '@participation'
         object: '@learningResult'
         cascade: true
+        requiredIf:
+            providerOption: 'OTHER'
 
     # Contact Moment
     contactMoment_employee:
