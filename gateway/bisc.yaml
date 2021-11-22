@@ -1239,7 +1239,6 @@ App\Entity\Attribute:
         name: learningNeed
         type: object
         required: true
-        multiple: true
         entity: '@participation'
         object: '@learningNeed'
         inversedBy: '@learningNeed_participations'
@@ -1342,10 +1341,9 @@ App\Entity\Attribute:
         entity: '@participation'
         requiredIf:
             providerOption: 'OTHER'
-    participation_learningResults:
-        name: learningResults
+    participation_learningResult:
+        name: learningResult
         type: object
-        multiple: true
         entity: '@participation'
         object: '@learningResult'
         cascade: true
