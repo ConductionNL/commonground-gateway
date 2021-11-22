@@ -216,7 +216,7 @@ App\Entity\Entity:
         name: LearningResult
         description: Het learningResult object beschrijft de leerresultaten van de student.
 
-    # course object
+    # program object
     program:
         name: program
         description: Een opleiding zo als aangeboden door een taalhuis
@@ -1226,98 +1226,107 @@ App\Entity\Attribute:
         type: object
         entity: '@course'
         object: '@organization'
+        
     # participation properties
-    participation_course:
+    participation_providerOption:
+        name: providerOption
+        type: string
+        required: true
+        enum: ['PROVIDER','OTHER']
+        entity: '@participation'
+    participation_provider:
         name: provider
         type: object
         entity: '@participation'
-        object: '@course'
+        object: '@organization'
+        requiredIf:
+            providerOption: 'PROVIDER'
     participation_providerOther:
         name: providerOther
         type: string
         maxLength: 255
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_explanation:
         name: explanation
         type: string
         maxLength: 2555
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_startParticipation:
         name: startParticipation
         type: date
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_endParticipation:
         name: endParticipation
         type: date
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_reasonEndParticipation:
         name: reasonEndParticipation
         type: string
         enum: ['MOVED','WORK','ILLNESS+HEALTH','DECEASED','COMPLETED_SUCCESSFULLY','FAMILY_CIRCUMSTANCES','DOES_NOT_MEET_PARTICIPANT_EXPECTATIONS','OTHER']
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_offerName:
         name: offerName
         type: string
         maxLength: 255
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_offerType:
         name: offerType
         type: string
         enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_formality:
         name: formality
         type: string
         enum: ['FORMAL','INFORMAL']
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
-    participation_groupType:
-        name: participation_groupType
+            providerOption: 'OTHER'
+    participation_groupFormation:
+        name: groupFormation
         type: string
-        enum: ['OTHER']
+        enum: ['INDIVIDUALLY', 'IN_A_GROUP']
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_degree:
         name: degree
         type: boolean
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_start:
         name: start
         type: date
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_end:
         name: end
         type: date
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_agreement:
         name: agreement
         type: string
         maxLength: 2550
         entity: '@participation'
         requiredIf:
-            provider: 'OTHER'
+            providerOption: 'OTHER'
     participation_learningResult:
         name: learningResult
         type: object
