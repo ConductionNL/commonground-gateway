@@ -37,7 +37,7 @@ class ConvertToGatewayService
     public function convertEntityObjects(Entity $entity)
     {
         // Make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
             return null; //Or false or error? //todo?
         }
 
@@ -99,7 +99,7 @@ class ConvertToGatewayService
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
             return null; //Or false or error? //todo?
         }
 
