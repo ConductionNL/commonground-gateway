@@ -293,7 +293,6 @@ App\Entity\Attribute:
         name: userGroups
         description: In what usergroups does the user resides.
         type: object
-#        type: string
         multiple: true
         required: true
         entity: '@user'
@@ -619,7 +618,7 @@ App\Entity\Attribute:
         required: true
         cascade: true
         persistToGateway: true
-    employee_organization:
+    employee_languageHouse:
         name: languageHouse
         type: object
         entity: '@employee'
@@ -647,6 +646,13 @@ App\Entity\Attribute:
         required: true
         cascade: true
         persistToGateway: true
+    student_status:
+        name: status
+        type: string
+        enum: ['Pending', 'Accepted', 'Rejected']
+        entity: '@student'
+#        required: true # todo: this should be true? but will break a lot of postman calls for now
+        defaultValue: 'Accepted' # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
     student_civicIntegration:
         name: civicIntegration
         type: object
@@ -1265,8 +1271,8 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@learningResult'
         cascade: true
-        requiredIf:
-            providerOption: 'OTHER'
+#        requiredIf:
+#            providerOption: 'OTHER'
     participation_testResults:
         name: testResults
         type: object
@@ -1293,16 +1299,16 @@ App\Entity\Attribute:
         name: memo
         type: string
         maxLength: 2555
-        entity: '@participation'
+        entity: '@testResult'
     testResult_examDate:
         name: examDate
         type: date
-        entity: '@participation'
+        entity: '@testResult'
     testResult_usedExam:
         name: usedExam
         type: string
         maxLength: 255
-        entity: '@participation'
+        entity: '@testResult'
 
     # Contact Moment properties
     contactMoment_employee:
