@@ -1168,6 +1168,12 @@ App\Entity\Attribute:
         entity: '@learningResult'
         object: '@participation'
         inversedBy: '@participation_learningResult'
+    learningResult_testResult:
+        name: testResult
+        type: object
+        entity: '@learningResult'
+        object: '@testResult'
+        inversedBy: '@testResult_learningNeedOutCome'
         
     # participation properties
     participation_learningNeed:
@@ -1306,6 +1312,7 @@ App\Entity\Attribute:
         entity: '@testResult'
         object: '@learningResult'
         cascade: true
+        inversedBy: '@learningResult_testResult'
     testResult_memo:
         name: memo
         type: string
