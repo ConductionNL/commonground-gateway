@@ -229,6 +229,12 @@ App\Entity\Entity:
         route: '/api/test_results'
         name: testResult
         description: Een toetsresultaat...
+        
+    # Document object
+    document:
+        route: '/api/documents'
+        name: document
+        description: Een document...
 
     #TODO: The following objects are urrently not used in release 1, 2 & 3 ? :
     # program object
@@ -1157,6 +1163,12 @@ App\Entity\Attribute:
         entity: '@learningResult'
         object: '@learningNeed'
         inversedBy: '@learningNeed_learningResults'
+    learningResult_participation:
+        name: participation
+        type: object
+        entity: '@learningResult'
+        object: '@participation'
+        inversedBy: '@participation_learningResult'
         
     # participation properties
     participation_learningNeed:
@@ -1270,7 +1282,7 @@ App\Entity\Attribute:
         type: object
         entity: '@participation'
         object: '@learningResult'
-        cascade: true
+        inversedBy: '@learningResult_participation'
 #        requiredIf:
 #            providerOption: 'OTHER'
     participation_testResults:
