@@ -1044,7 +1044,6 @@ App\Entity\Attribute:
         requiredIf:
             requirement: CURRENTLY_WORKING_ON_INTEGRATION
 
-
     # LearningNeed properties
     learningNeed_description:
         name: description
@@ -1169,6 +1168,12 @@ App\Entity\Attribute:
         entity: '@learningResult'
         object: '@participation'
         inversedBy: '@participation_learningResult'
+    learningResult_testResult:
+        name: testResult
+        type: object
+        entity: '@learningResult'
+        object: '@testResult'
+        inversedBy: '@testResult_learningNeedOutCome'
         
     # participation properties
     participation_learningNeed:
@@ -1307,6 +1312,7 @@ App\Entity\Attribute:
         entity: '@testResult'
         object: '@learningResult'
         cascade: true
+        inversedBy: '@learningResult_testResult'
     testResult_memo:
         name: memo
         type: string
@@ -1321,6 +1327,23 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@testResult'
+        
+    # Document properties
+    document_participant:
+        name: participant
+        type: object
+        required: true
+        entity: '@document'
+        object: '@student'
+#        inversedBy: '@student_documents' #todo
+    document_file:
+        name: file
+        type: file
+        required: true
+#        multiple: true
+        maxFileSize: 550000
+#        fileType: 'image/jpeg'
+        entity: '@document'
 
     # Contact Moment properties
     contactMoment_employee:
