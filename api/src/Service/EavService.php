@@ -143,10 +143,16 @@ class EavService
                 ];
             }
 
-            return $this->objectEntityService->handleOwner($object);
+            if ($method == 'POST' || $method == 'PUT') {
+                return $this->objectEntityService->handleOwner($object);
+            }
+
+            return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
+            $object->setOrganization($this->session->get('activeOrganization'));
+            //todo set application
 
             return $this->objectEntityService->handleOwner($object);
         }
@@ -975,7 +981,7 @@ class EavService
         foreach ($objects as $object) {
             // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
             if (!$maxDepth->contains($object)) {
-                $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $level);
+                $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
                 continue;
             }
             // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
