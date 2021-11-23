@@ -1,3 +1,5 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+
 App\Entity\Gateway:
     edu_api:
         name: educatie component
@@ -216,6 +218,19 @@ App\Entity\Entity:
         name: LearningResult
         description: Het learningResult object beschrijft de leerresultaten van de student.
 
+    # participation object
+    participation:
+        route: '/api/participations'
+        name: participation
+        description: Een deelname...
+
+    # TestResult object
+    testResult:
+        route: '/api/test_results'
+        name: testResult
+        description: Een toetsresultaat...
+
+    #TODO: The following objects are urrently not used in release 1, 2 & 3 ? :
     # program object
     program:
         name: program
@@ -230,18 +245,12 @@ App\Entity\Entity:
     courseGroup:
         name: courseGroup
         description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
-
-    # participation object
-    participation:
-        route: '/api/participations'
-        name: participation
-        description:
             
     # participation object
     contactMoment:
         route: '/api/contact_moments'
         name: contactMoment
-        description:
+        description: Een dossier (gebeurtenis)...
 
 App\Entity\Attribute:
 
@@ -369,7 +378,7 @@ App\Entity\Attribute:
         object: '@organization'
         persistToGateway: true
         searchable: true
-        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # BISC organization uuid
+        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
         description: Where is the organization located?
@@ -1135,104 +1144,13 @@ App\Entity\Attribute:
         entity: '@learningResult'
         requiredIf:
             level: 'OTHER'
-    learningResult_test:
-        name: test
-        type: string
-        maxLength: 255
-        entity: '@learningResult'
-    learningResult_testDate:
-        name: testDate
-        type: date
-        entity: '@learningResult'
-    learningResult_explanation:
-        name: explanation
-        type: string
-        maxLength: 2500
-        entity: '@learningResult'
     learningResult_learningNeed:
         name: learningNeed
         type: object
-        required: true
+        required: true # todo remove?
         entity: '@learningResult'
         object: '@learningNeed'
         inversedBy: '@learningNeed_learningResults'
-            
-    # course properties
-    course_name:
-        name: name
-        type: string
-        maxLength: 255
-        required: true
-        entity: '@course'
-    course_type:
-        name: type
-        type: string
-        required: true
-        enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
-        entity: '@course'
-    course_formality:
-        name: formality
-        type: string
-        required: true
-        enum: ['FORMAL','INFORMAL']
-        entity: '@course'
-    course_hours:
-        name: hours
-        type: integer
-        required: true
-        entity: '@course'
-    course_degree:
-        name: degree
-        type: boolean
-        required: true
-        entity: '@course'
-    course_start:
-        name: start
-        type: date
-        entity: '@course'
-    course_end:
-        name: end
-        type: date
-        entity: '@course'
-    course_availability:
-        name: availability
-        type: string
-        multiple: true
-        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
-        entity: '@course'        
-    course_description:
-        name: description
-        type: string
-        maxLength: 2550
-        entity: '@course'
-    course_notes:
-        name: notes
-        type: string
-        maxLength: 2550
-        entity: '@course'
-    course_location:
-        name: location
-        type: string
-        maxLength: 255
-        entity: '@course'
-    course_minParticipants:
-        name: minParticipants
-        type: integer
-        entity: '@course'
-    course_maxParticipants:
-        name: maxParticipants
-        type: integer
-        entity: '@course'
-    course_evaluations:
-        name: evaluationsparticipation_offerType
-        type: string
-        maxLength: 255
-        entity: '@course'
-    course_organization:
-        name: organization
-        type: object
-        entity: '@course'
-        object: '@organization'
         
     # participation properties
     participation_learningNeed:
@@ -1349,8 +1267,44 @@ App\Entity\Attribute:
         cascade: true
         requiredIf:
             providerOption: 'OTHER'
+    participation_testResults:
+        name: testResults
+        type: object
+        entity: '@participation'
+        object: '@testResult'
+        inversedBy: '@testResult_participation'
+            
+    # TestResult properties
+    testResult_participation:
+        name: participation
+        type: object
+        required: true
+        entity: '@testResult'
+        object: '@participation'
+        inversedBy: '@participation_testResults'
+    testResult_learningNeedOutCome:
+        name: learningNeedOutCome
+        type: object
+        required: true
+        entity: '@testResult'
+        object: '@learningResult'
+        cascade: true
+    testResult_memo:
+        name: memo
+        type: string
+        maxLength: 2555
+        entity: '@participation'
+    testResult_examDate:
+        name: examDate
+        type: date
+        entity: '@participation'
+    testResult_usedExam:
+        name: usedExam
+        type: string
+        maxLength: 255
+        entity: '@participation'
 
-    # Contact Moment
+    # Contact Moment properties
     contactMoment_employee:
         name: employee
         type: object
@@ -1380,6 +1334,84 @@ App\Entity\Attribute:
         maxLength: 2500
         required: true
         entity: '@contactMoment'
+        
+    #TODO: Currently not used in release 1, 2 & 3 ?
+    # course properties
+    course_name:
+        name: name
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@course'
+    course_type:
+        name: type
+        type: string
+        required: true
+        enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
+        entity: '@course'
+    course_formality:
+        name: formality
+        type: string
+        required: true
+        enum: ['FORMAL','INFORMAL']
+        entity: '@course'
+    course_hours:
+        name: hours
+        type: integer
+        required: true
+        entity: '@course'
+    course_degree:
+        name: degree
+        type: boolean
+        required: true
+        entity: '@course'
+    course_start:
+        name: start
+        type: date
+        entity: '@course'
+    course_end:
+        name: end
+        type: date
+        entity: '@course'
+    course_availability:
+        name: availability
+        type: string
+        multiple: true
+        enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
+        entity: '@course'
+    course_description:
+        name: description
+        type: string
+        maxLength: 2550
+        entity: '@course'
+    course_notes:
+        name: notes
+        type: string
+        maxLength: 2550
+        entity: '@course'
+    course_location:
+        name: location
+        type: string
+        maxLength: 255
+        entity: '@course'
+    course_minParticipants:
+        name: minParticipants
+        type: integer
+        entity: '@course'
+    course_maxParticipants:
+        name: maxParticipants
+        type: integer
+        entity: '@course'
+    course_evaluations:
+        name: evaluationsparticipation_offerType
+        type: string
+        maxLength: 255
+        entity: '@course'
+    course_organization:
+        name: organization
+        type: object
+        entity: '@course'
+        object: '@organization'
 
 # Basic setup for bisc
 
