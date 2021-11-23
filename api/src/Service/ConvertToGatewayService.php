@@ -82,6 +82,7 @@ class ConvertToGatewayService
         if (isset($response['hydra:view']['hydra:next'])) { // localhost / testing add?: && $page < 3
             return $this->getExternObjects($url, $totalExternObjects, $page + 1);
         }
+
         return $totalExternObjects;
     }
 
