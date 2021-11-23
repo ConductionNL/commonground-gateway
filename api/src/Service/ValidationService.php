@@ -86,6 +86,11 @@ class ValidationService
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
             }
+            //TODO: do we want this? ;
+//            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
+//            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
+//                continue;
+//            }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
 //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
@@ -120,7 +125,7 @@ class ValidationService
                         // Now lets make sure this attribute is of type object, has cascade on and is inversedBy the attribute of our current field.
                         if ($parentValueAttribute->getType() == 'object' && $parentValueAttribute->getCascade() && $parentValueAttribute->getInversedBy() == $attribute) {
                             // If so, skip throwing a 'is required' error, because after this validation this required field will be set because of InversedBy in the Value->addObject() function.
-                            return $objectEntity;
+                            continue;
                         }
                     }
                 }
@@ -851,6 +856,8 @@ class ValidationService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
+                    $subObject->setOrganization($this->session->get('activeOrganization'));
+                    //todo set application
                     $valueObject->addObject($subObject);
                 }
 

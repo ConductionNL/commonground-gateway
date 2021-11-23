@@ -1,3 +1,5 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+
 App\Entity\Gateway:
     edu_api:
         name: educatie component
@@ -216,7 +218,20 @@ App\Entity\Entity:
         name: LearningResult
         description: Het learningResult object beschrijft de leerresultaten van de student.
 
-    # course object
+    # participation object
+    participation:
+        route: '/api/participations'
+        name: participation
+        description: Een deelname...
+
+    # TestResult object
+    testResult:
+        route: '/api/test_results'
+        name: testResult
+        description: Een toetsresultaat...
+
+    #TODO: The following objects are urrently not used in release 1, 2 & 3 ? :
+    # program object
     program:
         name: program
         description: Een opleiding zo als aangeboden door een taalhuis
@@ -230,18 +245,12 @@ App\Entity\Entity:
     courseGroup:
         name: courseGroup
         description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
-
-    # participation object
-    participation:
-        route: '/api/participations'
-        name: participation
-        description:
             
     # participation object
     contactMoment:
         route: '/api/contact_moments'
         name: contactMoment
-        description:
+        description: Een dossier (gebeurtenis)...
 
 App\Entity\Attribute:
 
@@ -284,7 +293,6 @@ App\Entity\Attribute:
         name: userGroups
         description: In what usergroups does the user resides.
         type: object
-#        type: string
         multiple: true
         required: true
         entity: '@user'
@@ -369,7 +377,7 @@ App\Entity\Attribute:
         object: '@organization'
         persistToGateway: true
         searchable: true
-        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # BISC organization uuid
+        defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
         description: Where is the organization located?
@@ -610,7 +618,7 @@ App\Entity\Attribute:
         required: true
         cascade: true
         persistToGateway: true
-    employee_organization:
+    employee_languageHouse:
         name: languageHouse
         type: object
         entity: '@employee'
@@ -638,6 +646,13 @@ App\Entity\Attribute:
         required: true
         cascade: true
         persistToGateway: true
+    student_status:
+        name: status
+        type: string
+        enum: ['Pending', 'Accepted', 'Rejected']
+        entity: '@student'
+#        required: true # todo: this should be true? but will break a lot of postman calls for now
+        defaultValue: 'Accepted' # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
     student_civicIntegration:
         name: civicIntegration
         type: object
@@ -1073,6 +1088,13 @@ App\Entity\Attribute:
         entity: '@learningNeed'
         object: '@student'
         inversedBy: '@student_learningNeeds'
+    learningNeed_participations:
+        name: participations
+        type: object
+        multiple: true
+        entity: '@learningNeed'
+        object: '@participation'
+        inversedBy: '@participation_learningNeed'
     learningNeed_learningResults:
         name: learningResults
         type: object
@@ -1128,28 +1150,198 @@ App\Entity\Attribute:
         entity: '@learningResult'
         requiredIf:
             level: 'OTHER'
-    learningResult_test:
-        name: test
-        type: string
-        maxLength: 255
-        entity: '@learningResult'
-    learningResult_testDate:
-        name: testDate
-        type: date
-        entity: '@learningResult'
-    learningResult_explanation:
-        name: explanation
-        type: string
-        maxLength: 2500
-        entity: '@learningResult'
     learningResult_learningNeed:
         name: learningNeed
         type: object
-        required: true
+        required: true # todo remove?
         entity: '@learningResult'
         object: '@learningNeed'
         inversedBy: '@learningNeed_learningResults'
+        
+    # participation properties
+    participation_learningNeed:
+        name: learningNeed
+        type: object
+        required: true
+        entity: '@participation'
+        object: '@learningNeed'
+        inversedBy: '@learningNeed_participations'
+    participation_providerOption:
+        name: providerOption
+        type: string
+        required: true
+        enum: ['PROVIDER','OTHER']
+        entity: '@participation'
+    participation_provider:
+        name: provider
+        type: object
+        entity: '@participation'
+        object: '@organization'
+        requiredIf:
+            providerOption: 'PROVIDER'
+    participation_providerOther:
+        name: providerOther
+        type: string
+        maxLength: 255
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_explanation:
+        name: explanation
+        type: string
+        maxLength: 2555
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'PROVIDER'
+    participation_startParticipation:
+        name: startParticipation
+        type: date
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_endParticipation:
+        name: endParticipation
+        type: date
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_reasonEndParticipation:
+        name: reasonEndParticipation
+        type: string
+        enum: ['MOVED','WORK','ILLNESS+HEALTH','DECEASED','COMPLETED_SUCCESSFULLY','FAMILY_CIRCUMSTANCES','DOES_NOT_MEET_PARTICIPANT_EXPECTATIONS','OTHER']
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_offerName:
+        name: offerName
+        type: string
+        maxLength: 255
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_offerType:
+        name: offerType
+        type: string
+        enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_formality:
+        name: formality
+        type: string
+        enum: ['FORMAL','INFORMAL']
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_groupFormation:
+        name: groupFormation
+        type: string
+        enum: ['INDIVIDUALLY', 'IN_A_GROUP']
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_degree:
+        name: degree
+        type: boolean
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_start:
+        name: start
+        type: date
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_end:
+        name: end
+        type: date
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_agreement:
+        name: agreement
+        type: string
+        maxLength: 2550
+        entity: '@participation'
+        requiredIf:
+            providerOption: 'OTHER'
+    participation_learningResult:
+        name: learningResult
+        type: object
+        entity: '@participation'
+        object: '@learningResult'
+        cascade: true
+#        requiredIf:
+#            providerOption: 'OTHER'
+    participation_testResults:
+        name: testResults
+        type: object
+        entity: '@participation'
+        object: '@testResult'
+        inversedBy: '@testResult_participation'
             
+    # TestResult properties
+    testResult_participation:
+        name: participation
+        type: object
+        required: true
+        entity: '@testResult'
+        object: '@participation'
+        inversedBy: '@participation_testResults'
+    testResult_learningNeedOutCome:
+        name: learningNeedOutCome
+        type: object
+        required: true
+        entity: '@testResult'
+        object: '@learningResult'
+        cascade: true
+    testResult_memo:
+        name: memo
+        type: string
+        maxLength: 2555
+        entity: '@testResult'
+    testResult_examDate:
+        name: examDate
+        type: date
+        entity: '@testResult'
+    testResult_usedExam:
+        name: usedExam
+        type: string
+        maxLength: 255
+        entity: '@testResult'
+
+    # Contact Moment properties
+    contactMoment_employee:
+        name: employee
+        type: object
+        required: true
+        entity: '@contactMoment'
+        object: '@employee'
+    contactMoment_student:
+        name: student
+        type: object
+        required: true
+        entity: '@contactMoment'
+        object: '@student'
+    contactMoment_type:
+        name: type
+        type: string
+        required: true
+        enum: ['REMARK','INFORMATION-FOR-STORYTELLING','INTAKE','FOLLOW-UP_TALK','FINAL_TALK']
+        entity: '@contactMoment'
+    contactMoment_date:
+        name: date
+        type: date
+        required: true
+        entity: '@contactMoment'
+    contactMoment_explanation:
+        name: explanation
+        type: string
+        maxLength: 2500
+        required: true
+        entity: '@contactMoment'
+        
+    #TODO: Currently not used in release 1, 2 & 3 ?
     # course properties
     course_name:
         name: name
@@ -1192,7 +1384,7 @@ App\Entity\Attribute:
         type: string
         multiple: true
         enum: ['MONDAY_MORNING', 'MONDAY_AFTERNOON', 'MONDAY_EVENING', 'TUESDAY_MORNING', 'TUESDAY_AFTERNOON', 'TUESDAY_EVENING', 'WEDNESDAY_MORNING', 'WEDNESDAY_AFTERNOON', 'WEDNESDAY_EVENING', 'THURSDAY_MORNING', 'THURSDAY_AFTERNOON', 'THURSDAY_EVENING', 'FRIDAY_MORNING', 'FRIDAY_AFTERNOON', 'FRIDAY_EVENING', 'SATURDAY_MORNING', 'SATURDAY_AFTERNOON', 'SATURDAY_EVENING', 'SUNDAY_MORNING', 'SUNDAY_AFTERNOON', 'SUNDAY_EVENING']
-        entity: '@course'        
+        entity: '@course'
     course_description:
         name: description
         type: string
@@ -1226,137 +1418,6 @@ App\Entity\Attribute:
         type: object
         entity: '@course'
         object: '@organization'
-    # participation properties
-    participation_course:
-        name: provider
-        type: object
-        entity: '@participation'
-        object: '@course'
-    participation_providerOther:
-        name: providerOther
-        type: string
-        maxLength: 255
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_explanation:
-        name: explanation
-        type: string
-        maxLength: 2555
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_startParticipation:
-        name: startParticipation
-        type: date
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_endParticipation:
-        name: endParticipation
-        type: date
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_reasonEndParticipation:
-        name: reasonEndParticipation
-        type: string
-        enum: ['MOVED','WORK','ILLNESS+HEALTH','DECEASED','COMPLETED_SUCCESSFULLY','FAMILY_CIRCUMSTANCES','DOES_NOT_MEET_PARTICIPANT_EXPECTATIONS','OTHER']
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_offerName:
-        name: offerName
-        type: string
-        maxLength: 255
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_offerType:
-        name: offerType
-        type: string
-        enum: ['LANGUAGE','MATHEMATICS','DIGITAL_SKILLS','OTHER']
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_formality:
-        name: formality
-        type: string
-        enum: ['FORMAL','INFORMAL']
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_groupType:
-        name: participation_groupType
-        type: string
-        enum: ['OTHER']
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_degree:
-        name: degree
-        type: boolean
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_start:
-        name: start
-        type: date
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_end:
-        name: end
-        type: date
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_agreement:
-        name: agreement
-        type: string
-        maxLength: 2550
-        entity: '@participation'
-        requiredIf:
-            provider: 'OTHER'
-    participation_learningResult:
-        name: learningResult
-        type: object
-        required: true
-        multiple: true
-        entity: '@participation'
-        object: '@learningResult'
-        cascade: true
-
-    # Contact Moment
-    contactMoment_employee:
-        name: employee
-        type: object
-        required: true
-        entity: '@contactMoment'
-        object: '@employee'
-    contactMoment_student:
-        name: student
-        type: object
-        required: true
-        entity: '@contactMoment'
-        object: '@student'
-    contactMoment_type:
-        name: type
-        type: string
-        required: true
-        enum: ['REMARK','INFORMATION-FOR-STORYTELLING','INTAKE','FOLLOW-UP_TALK','FINAL_TALK']
-        entity: '@contactMoment'
-    contactMoment_date:
-        name: date
-        type: date
-        required: true
-        entity: '@contactMoment'
-    contactMoment_explanation:
-        name: explanation
-        type: string
-        maxLength: 2500
-        required: true
-        entity: '@contactMoment'
 
 # Basic setup for bisc
 
