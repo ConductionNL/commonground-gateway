@@ -404,7 +404,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject));
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
@@ -1378,9 +1378,12 @@ class ValidationService
      *
      * @return string
      */
-    public function createUri($entityName, $id): string
+    public function createUri(ObjectEntity $objectEntity): string
     {
-        //TODO: change how this uri is generated? use $entityName? or just remove $entityName
+        if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getGateway() && $objectEntity->getExternalId()) {
+            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+        }
+
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             $uri = 'https://';
         } else {
@@ -1388,6 +1391,10 @@ class ValidationService
         }
         $uri .= $_SERVER['HTTP_HOST'];
 
-        return $uri.'/object_entities/'.$id;
+        if ($objectEntity->getEntity()->getRoute()) {
+            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+        }
+
+        return $uri.'/admin/object_entities/'.$objectEntity->getId();
     }
 }
