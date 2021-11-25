@@ -115,6 +115,7 @@ class EavService
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
+        // TODO: make sure $id is actually a uuid!?!?!?!?
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
             if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
@@ -158,10 +159,6 @@ class EavService
         }
 
         return null;
-    }
-
-    public function checkOwner(ObjectEntity $objectEntity): bool
-    {
     }
 
     /**
@@ -214,17 +211,41 @@ class EavService
             }
         }
 
+        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
+        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+            try {
+                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+            } catch (AccessDeniedException $e) {
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => $e->getMessage(),
+                    'type'    => 'Forbidden',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
+            }
+        }
+
         // Get a body
         if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
         }
         // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
-        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
+        elseif (($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') && $responseType == Response::HTTP_OK) {
             // get other input values from form-data and put it in $body ($request->get('name'))
             $body = $this->handleFormDataBody($request, $entity);
 
             $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
-            if (array_key_exists('result', $formDataResult)) {
+            if (is_null($formDataResult)) {
+                $result = [
+                    'message' => 'Please provide a body when doing a POST or PUT call.',
+                    'type'    => 'Bad Request',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
+                $responseType = Response::HTTP_BAD_REQUEST;
+            } elseif (array_key_exists('result', $formDataResult)) {
                 $result = $formDataResult['result'];
                 $responseType = Response::HTTP_BAD_REQUEST;
             } else {
@@ -237,7 +258,7 @@ class EavService
 
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
-        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity && $responseType == Response::HTTP_OK) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
