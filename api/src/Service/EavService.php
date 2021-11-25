@@ -541,6 +541,9 @@ class EavService
                 // Transfer the variable to the service
                 $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
                 $responseType = Response::HTTP_CREATED;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             default:
                 $result = [
