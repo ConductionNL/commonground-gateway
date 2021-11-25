@@ -389,6 +389,7 @@ class ValidationService
                 // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
                 elseif (count($value) == 1 && count($valueObject->getObjects()) == 1) {
                     $subObject = $valueObject->getObjects()->first();
+                    $object['id'] = $subObject->getExternalId();
                 }
                 // Create a new subObject (ObjectEntity)
                 else {
