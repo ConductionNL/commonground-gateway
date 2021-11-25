@@ -87,12 +87,13 @@ class AuthorizationService
         } else {
             $grantedScopes = $this->getScopesForAnonymous();
         }
-        if (in_array($scopes['base_scope'], $grantedScopes) || ( array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes) )) {
+        if (in_array($scopes['base_scope'], $grantedScopes) || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))) {
             return;
         }
         if (!array_key_exists('sub_scope', $scopes)) {
             throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
         }
+
         throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} are required");
     }
 
