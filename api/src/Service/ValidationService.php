@@ -64,7 +64,8 @@ class ValidationService
     /**
      * @param Request $request
      */
-    public function setRequest(Request $request) {
+    public function setRequest(Request $request)
+    {
         $this->request = $request;
     }
 
@@ -879,7 +880,7 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                    //todo set application
+                //todo set application
                 } else {
                     $subObject = $valueObject->getValue();
                 }
