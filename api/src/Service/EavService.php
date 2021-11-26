@@ -173,7 +173,7 @@ class EavService
      *
      * @return Response
      */
-    public function handleRequest(Request $request): Response
+    public function handleRequest(Request $request, ?Entity $entity, ?array $data): Response
     {
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);

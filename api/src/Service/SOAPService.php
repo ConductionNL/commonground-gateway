@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use App\Entity\Soap;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
@@ -878,5 +879,41 @@ class SOAPService
         }
 
         return $xmlEncoder->encode($this->getFo02Message(), 'xml');
+    }
+
+
+    /**
+     * This function handles generic SOAP INCOMMING SOAP calls based on the soap entity
+     *
+     * @param Soap $soap
+     * @param array $data
+     * @param array $namespaces
+     * @param Request $request
+     * @return string
+     */
+    public function handleRequest(Soap $soap, array $data, array $namespaces, Request $request, EavService $eavService): string
+    {
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
+
+        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
+        $requestDate = new \Adbar\Dot($data);
+        $data = new \Adbar\Dot();
+        foreach($soap->getResponceHydration() as $search => $replace){
+            $data[$search] = $requestDate[$replace];
+        }
+        $data = $data->all();
+
+        // Lets make the entity call
+        $data = $eavService->generateResult($request, $soap->getEntity(), $data);
+
+        // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
+        $responce = new \Adbar\Dot($soap->getResponceSkeleton());
+        $data = new \Adbar\Dot($data);
+        foreach($soap->getResponceHydration() as $search => $replace){
+          $responce[$search] = $data[$replace];
+        }
+        $responce = $responce->all();
+
+        return $xmlEncoder->encode($responce, 'xml');
     }
 }

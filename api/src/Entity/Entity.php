@@ -184,12 +184,18 @@ class Entity
      */
     private $responseLogs;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="entity", orphanRemoval=true)
+     */
+    private $soap;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
+        $this->soap = new ArrayCollection();
     }
 
     public function getId()
@@ -470,6 +476,36 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Soap[]
+     */
+    public function getSoap(): Collection
+    {
+        return $this->soap;
+    }
+
+    public function addSoap(Soap $soap): self
+    {
+        if (!$this->soap->contains($soap)) {
+            $this->soap[] = $soap;
+            $soap->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSoap(Soap $soap): self
+    {
+        if ($this->soap->removeElement($soap)) {
+            // set the owning side to null (unless already changed)
+            if ($soap->getEntity() === $this) {
+                $soap->setEntity(null);
+            }
+        }
 
         return $this;
     }

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\SOAPService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,13 +23,14 @@ class SOAPController extends AbstractController
      *
      * @return Response
      */
-    public function soapAction(Request $request, SOAPService $SOAPService): Response
+    public function soapAction(Request $request, SOAPService $SOAPService, EntityManagerInterface $em): Response
     {
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
         $soapAction = $request->headers->get('SOAPAction');
         $data = $xmlEncoder->decode($request->getContent(), 'xml');
         $namespaces = $SOAPService->getNamespaces($data);
         $messageType = $SOAPService->getMessageType($data, $namespaces);
+
         switch ($messageType) {
             case 'zakLv01':
                 $message = $SOAPService->processZakLv01Message($data, $namespaces);
@@ -43,6 +45,9 @@ class SOAPController extends AbstractController
                 $message = $SOAPService->processDi02($data, $namespaces, $request);
                 break;
             default:
+                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])){
+                    $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
+                }
                 throw new BadRequestException("The message type $messageType is not supported at this moment");
         }
 
