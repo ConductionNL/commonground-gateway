@@ -1357,7 +1357,7 @@ class ValidationService
      * @param ObjectEntity $objectEntity
      * @param string       $method
      */
-    private function notify(ObjectEntity $objectEntity, string $method)
+    public function notify(ObjectEntity $objectEntity, string $method)
     {
         // TODO: move this function to a notificationService?
         $topic = $objectEntity->getEntity()->getName();

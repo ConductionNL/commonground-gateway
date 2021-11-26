@@ -494,6 +494,13 @@ class Attribute
     private bool $cascade = false;
 
     /**
+     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $cascadeDelete = false;
+
+    /**
      * Setting this property to true makes it so that this property is not allowed to be changed after creation.
      *
      * @ORM\Column(type="boolean", nullable=true)
@@ -1162,6 +1169,18 @@ class Attribute
     public function setCascade(?bool $cascade): self
     {
         $this->cascade = $cascade;
+
+        return $this;
+    }
+
+    public function getCascadeDelete(): ?bool
+    {
+        return $this->cascadeDelete;
+    }
+
+    public function setCascadeDelete(?bool $cascadeDelete): self
+    {
+        $this->cascadeDelete = $cascadeDelete;
 
         return $this;
     }

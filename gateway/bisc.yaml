@@ -312,6 +312,7 @@ App\Entity\Attribute:
         entity: '@user'
         object: '@person'
         cascade: true
+        cascadeDelete: true
         inversedBy: '@person_user'
     user_currentPassword:
         name: currentPassword
@@ -384,6 +385,7 @@ App\Entity\Attribute:
         object: '@organization'
         persistToGateway: true
         searchable: true
+        immutable: true
         defaultValue: 'a0dc8cdc-c637-46b9-be8d-9103edc1e951' # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
@@ -394,6 +396,7 @@ App\Entity\Attribute:
         object: '@address'
         persistToGateway: true
         cascade: true
+        cascadeDelete: true
     organization_telephone:
         name: telephones
         description: The telephone number of the organization.
@@ -403,6 +406,7 @@ App\Entity\Attribute:
         object: '@telephone'
         persistToGateway: true
         cascade: true
+        cascadeDelete: true
     organization_email:
         name: emails
         description: The email address of the organization.
@@ -413,6 +417,7 @@ App\Entity\Attribute:
         object: '@email'
         persistToGateway: true
         cascade: true
+        cascadeDelete: true
 
     # Email
     email_name:
@@ -593,6 +598,7 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@address'
         cascade: true
+        cascadeDelete: true
     person_telephone:
         name: telephones
         type: object
@@ -600,6 +606,7 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@telephone'
         cascade: true
+        cascadeDelete: true
     person_email:
         name: emails
         type: object
@@ -608,12 +615,14 @@ App\Entity\Attribute:
         entity: '@person'
         object: '@email'
         cascade: true
+        cascadeDelete: true
     person_user:
         name: user
         type: object
         entity: '@person'
         object: '@user'
         cascade: true
+#        cascadeDelete: true # TODO???
         inversedBy: '@user_person'
 
     # Employee  Properties
@@ -624,6 +633,7 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
+        cascadeDelete: true
         persistToGateway: true
     employee_languageHouse:
         name: languageHouse
@@ -636,6 +646,7 @@ App\Entity\Attribute:
         entity: '@employee'
         object: '@employeeIntake'
         cascade: true
+        cascadeDelete: true
     employee_education:
         name: educations
         type: object
@@ -643,6 +654,7 @@ App\Entity\Attribute:
         entity: '@employee'
         object: '@education'
         cascade: true
+        cascadeDelete: true
 
     # student properties
     student_person:
@@ -652,6 +664,7 @@ App\Entity\Attribute:
         object: '@person'
         required: true
         cascade: true
+        cascadeDelete: true
         persistToGateway: true
     student_status:
         name: status
@@ -667,6 +680,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@civicIntegration'
         cascade: true
+        cascadeDelete: true
     student_languageHouse:
         name: languageHouse
         type: object
@@ -679,6 +693,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@studentIntake'
         cascade: true
+        cascadeDelete: true
     student_education:
         name: educations
         type: object
@@ -686,6 +701,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@education'
         cascade: true
+        cascadeDelete: true
     student_participations:
         name: participations
         type: object
@@ -693,6 +709,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@participation'
         cascade: true
+        cascadeDelete: true
     student_learningNeeds:
         name: learningNeeds
         type: object
@@ -700,6 +717,7 @@ App\Entity\Attribute:
         entity: '@student'
         object: '@learningNeed'
         cascade: true
+        cascadeDelete: true
         inversedBy: '@learningNeed_student'
 
         # Employee Intake properties
@@ -1109,6 +1127,7 @@ App\Entity\Attribute:
         entity: '@learningNeed'
         object: '@learningResult'
         cascade: true
+        cascadeDelete: true
         inversedBy: '@learningResult_learningNeed'
 
     # LearningResult properties
@@ -1321,6 +1340,7 @@ App\Entity\Attribute:
         entity: '@testResult'
         object: '@learningResult'
         cascade: true
+        cascadeDelete: true
         inversedBy: '@learningResult_testResult'
     testResult_memo:
         name: memo

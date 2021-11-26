@@ -755,8 +755,38 @@ class EavService
      *
      * @return array
      */
-    public function handleDelete(ObjectEntity $object): array
+    public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($object);
+
+        foreach ($object->getEntity()->getAttributes() as $attribute) {
+            // If this object has subresources and cascade delete is set to true, delete the subresources as well.
+            // TODO: use switch for type? ...also delete type file?
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete()) {
+                if ($attribute->getMultiple()) {
+                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                        if (!$maxDepth->contains($subObject)) {
+                            $this->handleDelete($subObject, $maxDepth);
+                        }
+                    }
+                } else {
+                    $subObject = $object->getValueByAttribute($attribute)->getValue();
+                    if (!$maxDepth->contains($subObject)) {
+                        $this->handleDelete($subObject, $maxDepth);
+                    }
+                }
+            }
+        }
+        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+            // TODO: do isResource check?
+            $this->commonGroundService->deleteResource(null, $object->getUri());
+        }
+        $this->validationService->notify($object, 'DELETE');
+
         $this->em->remove($object);
         $this->em->flush();
 
