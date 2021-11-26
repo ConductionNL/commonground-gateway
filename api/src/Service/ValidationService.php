@@ -803,22 +803,23 @@ class ValidationService
 
                 // Lets check for cascading
                 /* todo make switch */
-                if (!$attribute->getCascade() && !$attribute->getMultiple() && !is_string($value)) {
+                if (!$attribute->getCascade() && !is_string($value)) {
                     $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
                     break;
                 }
-                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-                    foreach ($value as $arraycheck) {
-                        if (!is_string($arraycheck)) {
-                            $objectEntity->addError($attribute->getName(), 'Contians a value that is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
-                            break;
-                        }
-                    }
-                }
+                // TODO: move to a place where $attribute->getMultiple() can actually be true
+//                if (!$attribute->getCascade() && $attribute->getMultiple()) {
+//                    foreach ($value as $arraycheck) {
+//                        if (!is_string($arraycheck)) {
+//                            $objectEntity->addError($attribute->getName(), 'Contians a value that is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+//                            break;
+//                        }
+//                    }
+//                }
 
                 // Lets handle the stuf
                 // If we are not cascading, attribute is not multiple and value is a string, than value should be an id.
-                if (!$attribute->getCascade() && !$attribute->getMultiple() && is_string($value)) {
+                if (is_string($value)) {
                     // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
                     // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
 
@@ -840,18 +841,19 @@ class ValidationService
                     $valueObject->addObject($subObject);
                     break;
                 }
-                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-                    $valueObject->getObjects()->clear();
-                    foreach ($value as $arraycheck) {
-                        if (is_string($value) && !$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
-                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.(string) $value.' of type '.$attribute->getObject()->getName());
-                        } else {
-                            // object toeveogen
-                            $valueObject->addObject($subObject);
-                        }
-                    }
-                    break;
-                }
+                // TODO: move to a place where $attribute->getMultiple() can actually be true
+//                if (!$attribute->getCascade() && $attribute->getMultiple()) {
+//                    $valueObject->getObjects()->clear();
+//                    foreach ($value as $arraycheck) {
+//                        if (is_string($value) && !$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
+//                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.(string) $value.' of type '.$attribute->getObject()->getName());
+//                        } else {
+//                            // object toeveogen
+//                            $valueObject->addObject($subObject);
+//                        }
+//                    }
+//                    break;
+//                }
 
                 if (!$valueObject->getValue()) {
                     $subObject = new ObjectEntity();
@@ -859,38 +861,29 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
                     //todo set application
-                    $valueObject->addObject($subObject);
-                }
-
-                /* @todo check if is have multpile objects but multiple is false and throw error */
-                //var_dump($subObject->getName());
-                // TODO: more validation for type object?
-                if (!$attribute->getMultiple()) {
-                    // Lets see if the object already exists
-                    if (!$valueObject->getValue()) {
-                        $subObject = $this->validateEntity($subObject, $value);
-                        $valueObject->setValue($subObject);
-                    } else {
-                        $subObject = $valueObject->getValue();
-                        $subObject = $this->validateEntity($subObject, $value);
-                    }
-                    $this->em->persist($subObject);
                 } else {
-                    $subObjects = $valueObject->getObjects();
-                    if ($subObjects->isEmpty()) {
-                        $subObject = new ObjectEntity();
-                        $subObject->setEntity($attribute->getObject());
-                        $subObject->addSubresourceOf($valueObject);
-                        $subObject = $this->validateEntity($subObject, $value);
-                        $valueObject->addObject($subObject);
-                    }
-                    // Loop trough the subs
-                    foreach ($valueObject->getObjects() as $subObject) {
-                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-                    }
+                    $subObject = $valueObject->getValue();
                 }
+                $subObject = $this->validateEntity($subObject, $value);
+                $this->em->persist($subObject);
 
-                // if not we can push it into our object
+                // TODO: move to a place where $attribute->getMultiple() can actually be true
+//                if ($attribute->getMultiple()) {
+//                    $subObjects = $valueObject->getObjects();
+//                    if ($subObjects->isEmpty()) {
+//                        $subObject = new ObjectEntity();
+//                        $subObject->setEntity($attribute->getObject());
+//                        $subObject->addSubresourceOf($valueObject);
+//                        $subObject = $this->validateEntity($subObject, $value);
+//                        $valueObject->addObject($subObject);
+//                    }
+//                    // Loop trough the subs
+//                    foreach ($valueObject->getObjects() as $subObject) {
+//                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
+//                    }
+//                }
+
+                // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
                     $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
                 }
