@@ -169,6 +169,9 @@ class ValidationService
             $objectEntity->addPromise($promise);
         }
 
+        // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
+        // TODO: Also, for POST en PUT we only seem to notify if there is a Gateway present on the Entity.
+        // TODO: So, if no errors notify foreach created/changed ObjectEntity! use entity->attributes if attribute type == object (see eavService->handleDelete())
         // We need to do a clean up if there are errors
         if ($objectEntity->getHasErrors()) {
             foreach ($this->createdObjects as $createdObject) {
