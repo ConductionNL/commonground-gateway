@@ -477,21 +477,28 @@ class Attribute
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $persistToGateway = false;
+    private bool $persistToGateway = false;
 
     /**
      * Whether or not this property is searchable.
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $searchable = false;
+    private bool $searchable = false;
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
-    private $cascade = false;
+    private bool $cascade = false;
+
+    /**
+     * Setting this property to true makes it so that this property is not allowed to be changed after creation.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $immutable = false;
 
     /**
      * @var Datetime The moment this request was created
@@ -1155,6 +1162,18 @@ class Attribute
     public function setCascade(?bool $cascade): self
     {
         $this->cascade = $cascade;
+
+        return $this;
+    }
+
+    public function getImmutable(): ?bool
+    {
+        return $this->immutable;
+    }
+
+    public function setImmutable(?bool $immutable): self
+    {
+        $this->immutable = $immutable;
 
         return $this;
     }

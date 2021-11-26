@@ -21,6 +21,7 @@ use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -34,6 +35,7 @@ class ValidationService
     public $postPromiseUris = [];
     public $putPromiseUris = [];
     public $createdObjects = [];
+    private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
@@ -60,7 +62,15 @@ class ValidationService
     }
 
     /**
-     * TODO: docs.
+     * @param Request $request
+     */
+    public function setRequest(Request $request) {
+        $this->request = $request;
+    }
+
+    /**
+     * Validates and creates an ObjectEntity by the configuration of an Entity and it's attributes.
+     * NOTE: Do setRequest() before using this outside the ValidationService!
      *
      * @param ObjectEntity $objectEntity
      * @param array        $post
@@ -78,6 +88,15 @@ class ValidationService
                 if (key_exists($attribute->getName(), $post)) {
                     // throw an error if a value is given for a disabled attribute.
                     $objectEntity->addError($attribute->getName(), 'This attribute is disabled for this entity');
+                }
+                continue;
+            }
+
+            // Do not change immutable attributes!
+            if ($this->request->getMethod() == 'PUT' && $attribute->getImmutable()) {
+                if (key_exists($attribute->getName(), $post)) {
+                    $objectEntity->addError($attribute->getName(), 'This attribute is immutable, it can\'t be changed');
+                    unset($post[$attribute->getName()]);
                 }
                 continue;
             }

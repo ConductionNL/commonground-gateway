@@ -513,7 +513,7 @@ class EavService
                 break;
             case 'PUT':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_OK;
                 if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
                     $responseType = Response::HTTP_FORBIDDEN;
@@ -560,7 +560,7 @@ class EavService
                 break;
             case 'POST':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_CREATED;
                 if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
                     $responseType = Response::HTTP_FORBIDDEN;
@@ -594,7 +594,7 @@ class EavService
      *
      * @return array
      */
-    public function handleMutation(ObjectEntity $object, array $body, $fields): array
+    public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
         if (empty($this->session->get('activeOrganization'))) {
@@ -607,6 +607,7 @@ class EavService
         }
 
         // Validation stap
+        $this->validationService->setRequest($request);
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors

@@ -374,6 +374,7 @@ App\Entity\Attribute:
         entity: '@organization'
         persistToGateway: true
         searchable: true
+        immutable: true
     organization_parentOrganization:
         name: parentOrganization
         description: The larger organization that this organization is a subOrganization of.
