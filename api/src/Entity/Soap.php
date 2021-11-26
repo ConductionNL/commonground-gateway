@@ -206,7 +206,7 @@ class Soap
 
         // Lets use this template to generate a skeleton
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-        $this->responceSkeleton = $xmlEncoder->decode($reponce);
+        $this->responceSkeleton = $xmlEncoder->decode($reponce, 'xml');
 
         return $this;
     }
@@ -222,7 +222,7 @@ class Soap
 
         // Lets use this template to generate a skeleton
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-        $this->requestSkeleton = $xmlEncoder->decode($request);
+        $this->requestSkeleton = $xmlEncoder->decode($request, 'xml');
 
         return $this;
     }

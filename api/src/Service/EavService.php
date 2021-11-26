@@ -173,7 +173,7 @@ class EavService
      *
      * @return Response
      */
-    public function handleRequest(Request $request, ?Entity $entity, ?array $data): Response
+    public function handleRequest(Request $request, $responce = true, ?Entity $entity, ?array $data): Response
     {
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
@@ -181,7 +181,9 @@ class EavService
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
 
         // Lets handle the entity
-        $entity = $this->getEntity($requestBase['path']);
+        if(!$entity){
+            $entity = $this->getEntity($requestBase['path']);
+        }
         // What if we canot find an entity?
         if (is_array($entity)) {
             $result = $entity;
@@ -216,9 +218,13 @@ class EavService
         }
 
         // Get a body
-        if ($request->getContent()) {
+        if ($request->getContent() && !$data) {
             $body = json_decode($request->getContent(), true);
         }
+        elseif($data){
+            $body = $data;
+        }
+
         // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
         elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
             // get other input values from form-data and put it in $body ($request->get('name'))
@@ -263,6 +269,11 @@ class EavService
 
         // Let seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+
+        // Allow raw reponces
+        if(!$responce){
+            return $result;
+        }
 
         // Let return the shizle
         $response = new Response(

@@ -898,13 +898,13 @@ class SOAPService
         // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
         $requestDate = new \Adbar\Dot($data);
         $data = new \Adbar\Dot();
-        foreach($soap->getResponceHydration() as $search => $replace){
+        foreach($soap->getRequestHydration() as $search => $replace){
             $data[$search] = $requestDate[$replace];
         }
         $data = $data->all();
 
         // Lets make the entity call
-        $data = $eavService->generateResult($request, $soap->getEntity(), $data);
+        $data = $eavService->handleRequest($request, true, $soap->getEntity(), $data);
 
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         $responce = new \Adbar\Dot($soap->getResponceSkeleton());
