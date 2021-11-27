@@ -54,7 +54,7 @@ class Soap
     /**
      * An XML descriping the request that we want to recieve
      *
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
     private $request;
 
@@ -73,25 +73,25 @@ class Soap
     private $requestHydration = [];
 
     /**
-     * An XML descriping the responce that we want t0 send
+     * An XML descriping the response that we want t0 send
      *
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $reponce;
+    private $response;
 
     /**
-     * An array build of responce that  we want to send
+     * An array build of response that  we want to send
      *
      * @ORM\Column(type="array")
      */
-    private $responceSkeleton = [];
+    private $responseSkeleton = [];
 
     /**
-     * An array containing an entity to reponce transaltion in dot notation e.g. person.name => contact.firstname
+     * An array containing an entity to response transaltion in dot notation e.g. person.name => contact.firstname
      *
      * @ORM\Column(type="array", nullable=true)
      */
-    private $responceHydration = [];
+    private $responseHydration = [];
 
 
     public function getId(): ?int
@@ -159,14 +159,14 @@ class Soap
         return $this;
     }
 
-    public function getResponceSkeleton(): ?array
+    public function getResponseSkeleton(): ?array
     {
-        return $this->responceSkeleton;
+        return $this->responseSkeleton;
     }
 
-    public function setResponceSkeleton(array $responceSkeleton): self
+    public function setResponseSkeleton(array $responseSkeleton): self
     {
-        $this->responceSkeleton = $responceSkeleton;
+        $this->responseSkeleton = $responseSkeleton;
 
         return $this;
     }
@@ -183,30 +183,30 @@ class Soap
         return $this;
     }
 
-    public function getResponceHydration(): ?array
+    public function getResponseHydration(): ?array
     {
-        return $this->responceHydration;
+        return $this->responseHydration;
     }
 
-    public function setResponceHydration(?array $responceHydration): self
+    public function setResponseHydration(?array $responseHydration): self
     {
-        $this->responceHydration = $responceHydration;
+        $this->responseHydration = $responseHydration;
 
         return $this;
     }
 
-    public function getReponce(): ?string
+    public function getResponse(): ?string
     {
-        return $this->reponce;
+        return $this->response;
     }
 
-    public function setReponce(string $reponce): self
+    public function setResponse(string $response): self
     {
-        $this->reponce = $reponce;
+        $this->response = $response;
 
         // Lets use this template to generate a skeleton
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-        $this->responceSkeleton = $xmlEncoder->decode($reponce, 'xml');
+        $this->responseSkeleton = $xmlEncoder->decode($response, 'xml');
 
         return $this;
     }

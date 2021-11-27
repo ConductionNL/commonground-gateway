@@ -1,0 +1,48 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+
+App\Entity\Gateway:
+    vrijbrp_api:
+        name: VrijBrp 
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/edu
+
+App\Entity\Entity:
+    # Test object
+    test:
+        route: '/api/test'
+        name: SOAP Test
+        description: A test entity for Soap translations
+
+App\Entity\Attribute:    
+    # course properties
+    test_name:
+        name: name
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@test'
+    test_description:
+        name: description
+        type: string
+        required: true
+        entity: '@test'
+
+# Okey so now we need some soap stuff :')
+App\Entity\Soap:
+    # User object
+    soaptest:
+        name: SOAP Test
+        description: A test entity for Soap translations
+        type: test
+        entity: '@test'
+        # request:
+        #requestSkeleton
+        #requestHydration
+        # response:
+        responseSkeleton:
+            - wrapper
+                - realname
+                - realdescription
+            - random
+        #responseHydration

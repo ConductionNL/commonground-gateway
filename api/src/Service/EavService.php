@@ -173,22 +173,66 @@ class EavService
      *
      * @return Response
      */
-    public function handleRequest(Request $request, $responce = true, ?Entity $entity, ?array $data): Response
+    public function handleRequest(Request $request): Response
     {
-        // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
-        $result = $requestBase['result'];
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
+        $entity = $this->getEntity($requestBase['path']);
+        $body = []; // Lets default
 
-        // Lets handle the entity
-        if(!$entity){
-            $entity = $this->getEntity($requestBase['path']);
-        }
         // What if we canot find an entity?
         if (is_array($entity)) {
             $result = $entity;
             $entity = false;
         }
+
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
+        // Get a body
+        if($request->getContent()){
+            //@todo support xml messages
+            $body = json_decode($request->getContent(), true);
+        }
+
+        $result = $this->generateResult($request, $entity, $body);
+
+        // Lets seriliaze the shizle
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+
+        // Let return the shizle
+        $response = new Response(
+            $result,
+            $responseType,
+            ['content-type' => $contentType]
+        );
+
+        // Let intervene if it is  a known file extension
+        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
+        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
+            $date = new \DateTime();
+            $date = $date->format('Ymd_His');
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
+            $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Handles an api request.
+     *
+     * @param Request $request
+     *
+     * @throws Exception
+     *
+     * @return Response
+     */
+    public function generateResult(Request $request, Entity $entity, ?array $body = []): Array
+    {
+        // Lets get our base stuff
+        $requestBase = $this->getRequestBase($request);
+        $result = $requestBase['result'];
 
         // Set default responseType
         $responseType = Response::HTTP_OK;
@@ -215,14 +259,6 @@ class EavService
                     $result = $object;
                 }
             }
-        }
-
-        // Get a body
-        if ($request->getContent() && !$data) {
-            $body = json_decode($request->getContent(), true);
-        }
-        elseif($data){
-            $body = $data;
         }
 
         // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
@@ -267,31 +303,7 @@ class EavService
             $responseType = Response::HTTP_BAD_REQUEST;
         }
 
-        // Let seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
-
-        // Allow raw reponces
-        if(!$responce){
-            return $result;
-        }
-
-        // Let return the shizle
-        $response = new Response(
-            $result,
-            $responseType,
-            ['content-type' => $contentType]
-        );
-
-        // Let intervene if it is  a known file extension
-        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
-        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
-            $date = new \DateTime();
-            $date = $date->format('Ymd_His');
-            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
-            $response->headers->set('Content-Disposition', $disposition);
-        }
-
-        return $response;
+        return $result;
     }
 
     /**

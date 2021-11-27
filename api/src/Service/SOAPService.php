@@ -904,16 +904,16 @@ class SOAPService
         $data = $data->all();
 
         // Lets make the entity call
-        $data = $eavService->handleRequest($request, true, $soap->getEntity(), $data);
+        $data = $eavService->generateResult($request, $soap->getEntity(), $data);
 
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
-        $responce = new \Adbar\Dot($soap->getResponceSkeleton());
+        $response = new \Adbar\Dot($soap->getResponseSkeleton());
         $data = new \Adbar\Dot($data);
-        foreach($soap->getResponceHydration() as $search => $replace){
-          $responce[$search] = $data[$replace];
+        foreach($soap->getResponseHydration() as $search => $replace){
+          $response[$search] = $data[$replace];
         }
-        $responce = $responce->all();
+        $response = $response->all();
 
-        return $xmlEncoder->encode($responce, 'xml');
+        return $xmlEncoder->encode($response, 'xml');
     }
 }
