@@ -195,7 +195,8 @@ class EavService
             $body = json_decode($request->getContent(), true);
         }
 
-        $result = $this->generateResult($request, $entity, $body);
+        $requestBase = $this->getRequestBase($request);
+        $result = $this->generateResult($request, $entity, $requestBase, $body);
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
@@ -228,10 +229,9 @@ class EavService
      *
      * @return Response
      */
-    public function generateResult(Request $request, Entity $entity, ?array $body = []): Array
+    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): Array
     {
         // Lets get our base stuff
-        $requestBase = $this->getRequestBase($request);
         $result = $requestBase['result'];
 
         // Set default responseType
@@ -318,6 +318,7 @@ class EavService
         // Lets get our base stuff
         $path = $request->attributes->get('entity');
         $id = $request->attributes->get('id');
+
         $extension = false;
 
         // Lets pull a render type form the extension if we have any

@@ -31,6 +31,7 @@ class SOAPController extends AbstractController
         $namespaces = $SOAPService->getNamespaces($data);
         $messageType = $SOAPService->getMessageType($data, $namespaces);
 
+
         switch ($messageType) {
             case 'zakLv01':
                 $message = $SOAPService->processZakLv01Message($data, $namespaces);
@@ -48,7 +49,9 @@ class SOAPController extends AbstractController
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                 }
-                throw new BadRequestException("The message type $messageType is not supported at this moment");
+                else{
+                    throw new BadRequestException("The message type $messageType is not supported at this moment");
+                }
         }
 
         return new Response($message, 200, [

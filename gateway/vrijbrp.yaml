@@ -1,4 +1,4 @@
-# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+# With a litle help from https://github.com/theofidry/AliceBundle
 
 App\Entity\Gateway:
     vrijbrp_api:
@@ -38,11 +38,16 @@ App\Entity\Soap:
         entity: '@test'
         # request:
         #requestSkeleton
-        #requestHydration
+        requestHydration:
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description    
         # response:
-        responseSkeleton:
-            - wrapper
-                - realname
-                - realdescription
-            - random
-        #responseHydration
+        #responseSkeleton:
+        #    - "ns2:wrapper"
+        #        - "ns1:realname"
+        #        - "ns1:realdescription"
+        #    - "ns3:random"
+        responseHydration:
+            id: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id"
+            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
+            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"

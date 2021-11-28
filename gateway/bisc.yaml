@@ -1,3 +1,4 @@
+# With a litle help from https://github.com/theofidry/AliceBundle
 # todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
 
 App\Entity\Gateway:

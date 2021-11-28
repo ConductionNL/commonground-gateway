@@ -4,6 +4,7 @@ namespace App\Service;
 
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
+use \App\Service\EavService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
@@ -17,6 +18,7 @@ class SOAPService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private CacheInterface $cache;
+    private EavService $eavService;
 
     /**
      * Translation table for case type descriptions.
@@ -49,11 +51,12 @@ class SOAPService
         'refused'       => ['description' => 'Geweigerd',       'endStatus' => true,    'explanation' => 'Zaak is geweigerd'],
     ];
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, CacheInterface $cache)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, CacheInterface $cache, EavService $eavService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->cache = $cache;
+        $this->eavService = $eavService;
     }
 
     public function getNamespaces(array $data): array
@@ -891,29 +894,65 @@ class SOAPService
      * @param Request $request
      * @return string
      */
-    public function handleRequest(Soap $soap, array $data, array $namespaces, Request $request, EavService $eavService): string
+    public function handleRequest(Soap $soap, array $data, array $namespaces, Request $request): string
     {
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
-
-        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
-        $requestDate = new \Adbar\Dot($data);
-        $data = new \Adbar\Dot();
-        foreach($soap->getRequestHydration() as $search => $replace){
-            $data[$search] = $requestDate[$replace];
-        }
-        $data = $data->all();
 
         // Lets make the entity call
-        $data = $eavService->generateResult($request, $soap->getEntity(), $data);
-
+        $entity = $this->soapToEntity($soap, $data);
+        $requestBase = [
+            "path" => $soap->getEntity()->getRoute(),
+            "id" => null,
+            "extension" => "xml",
+            "renderType" => "xml",
+            "result" => null,
+        ];
+        $object = $this->eavService->generateResult($request, $soap->getEntity(), $requestBase, $entity);
+        
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
-        $response = new \Adbar\Dot($soap->getResponseSkeleton());
-        $data = new \Adbar\Dot($data);
-        foreach($soap->getResponseHydration() as $search => $replace){
-          $response[$search] = $data[$replace];
-        }
-        $response = $response->all();
+        $response = $this->entityToSoap($soap, $object);
 
+        // Create a SOAP Responce
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         return $xmlEncoder->encode($response, 'xml');
+    }
+
+    /**
+     * Turns a soap array into an entity array
+     *
+     * @param Soap $soap
+     * @param array $data
+     * @return array
+     */
+    public function soapToEntity(Soap $soap, array $data): array
+    {
+        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
+        $requestDate = new \Adbar\Dot($data);
+        $entity = new \Adbar\Dot();
+        foreach($soap->getRequestHydration() as $search => $replace){
+            $entity[$replace] = $requestDate[$search];
+        }
+        $entity = $entity->all();
+
+        return $entity;
+    }
+
+    /**
+     * Turns an entity array into an soap array
+     *
+     * @param Soap $soap
+     * @param array $data
+     * @return array
+     */
+    public function entityToSoap(Soap $soap, array $data): array
+    {
+        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
+        $requestDate = new \Adbar\Dot($data);
+        $entity = new \Adbar\Dot();
+        foreach($soap->getResponseHydration() as $search => $replace){
+            $entity[$replace] = (string) $requestDate[$search];
+        }
+        $entity = $entity->all();
+
+        return $entity;
     }
 }
