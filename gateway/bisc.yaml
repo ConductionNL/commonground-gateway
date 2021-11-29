@@ -626,6 +626,14 @@ App\Entity\Attribute:
         inversedBy: '@user_person'
 
     # Employee  Properties
+    employee_role:
+        name: role
+        type: string
+        entity: '@employee'
+        enum: ['Medewerker', 'Coördinator', 'Begeleider', 'Coördinator Begeleider', 'Vrijwilliger']
+#        required: true # TODO: maybe use this instead of defaultValue? 
+        defaultValue: 'Medewerker'
+        searchable: true
     employee_person:
         name: person
         type: object
