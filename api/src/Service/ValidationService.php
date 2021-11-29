@@ -163,10 +163,16 @@ class ValidationService
         }
 
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-        if (!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()) {
-            $promise = $this->createPromise($objectEntity, $post);
-            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
-            $objectEntity->addPromise($promise);
+        if (!$objectEntity->getHasErrors()) {
+            if ($objectEntity->getEntity()->getGateway()) {
+                $promise = $this->createPromise($objectEntity, $post);
+                $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
+                $objectEntity->addPromise($promise);
+            } elseif (!$objectEntity->getUri()) {
+                // Lets make sure we always set the uri
+                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
+                $objectEntity->setUri($this->createUri($objectEntity));
+            }
         }
 
         // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
