@@ -94,6 +94,9 @@ class Soap
     private $responseHydration = [];
 
     /**
+     * A string to define the caseType of StUF Lk01 messages
+     * @Deprecated
+     * 
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $zaaktype;
