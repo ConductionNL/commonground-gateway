@@ -59,6 +59,21 @@ class SOAPService
         $this->eavService = $eavService;
     }
 
+    public function getZaakType(array $data, array $namespaces): string
+    {
+        if (
+            !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
+            !($caseNamespace = array_search('http://www.egem.nl/StUF/sector/zkn/0310', $namespaces)) ||
+            !($bgNamespace = array_search('http://www.egem.nl/StUF/sector/bg/0310', $namespaces))
+
+        ) {
+            throw new BadRequestException('STuF and/or case namespaces missing ');
+        }
+        $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
+
+        return $data["$env:Body"]["$caseNamespace:zakLk01"]["$caseNamespace:object"]["$caseNamespace:isVan"]["$caseNamespace:gerelateerde"]["$caseNamespace:code"];
+    }
+
     public function getNamespaces(array $data): array
     {
         $namespaces = [];

@@ -48,9 +48,19 @@ class SOAPController extends AbstractController
             case 'genereerZaakIdentificatie_Di02':
                 $message = $SOAPService->processDi02($data, $namespaces, 'genereerZaakIdentificatie', $request);
                 break;
+            case 'zakLk01':
+                $caseType = $SOAPService->getZaakType($data, $namespaces);
+                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType])){
+                    $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
+                    break;
+                }
+            else{
+                    throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
+                }
             default:
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
+                    break;
                 }
                 else{
                     throw new BadRequestException("The message type $messageType is not supported at this moment");
