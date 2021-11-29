@@ -770,21 +770,22 @@ class EavService
             if ($attribute->getType() == 'object' && $attribute->getCascadeDelete()) {
                 if ($attribute->getMultiple()) {
                     foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
-                        if (!$maxDepth->contains($subObject)) {
+                        if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
                 } else {
                     $subObject = $object->getValueByAttribute($attribute)->getValue();
-                    if (!$maxDepth->contains($subObject)) {
+                    if ($subObject && !$maxDepth->contains($subObject)) {
                         $this->handleDelete($subObject, $maxDepth);
                     }
                 }
             }
         }
         if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
-            // TODO: do isResource check?
-            $this->commonGroundService->deleteResource(null, $object->getUri());
+            if ($resource = $this->commonGroundService->isResource($object->getUri())) {
+                $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
+            }
         }
         $this->validationService->notify($object, 'DELETE');
 
