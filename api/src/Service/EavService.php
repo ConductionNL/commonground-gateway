@@ -115,6 +115,7 @@ class EavService
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
+        // TODO: make sure $id is actually a uuid!?!?!?!?
         if ($id) {
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
             if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
@@ -160,10 +161,6 @@ class EavService
         return null;
     }
 
-    public function checkOwner(ObjectEntity $objectEntity): bool
-    {
-    }
-
     /**
      * Handles an api request.
      *
@@ -194,12 +191,14 @@ class EavService
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            // Lets check if the user is allowed to view/edit this resource.
-
-            if (!$this->objectEntityService->checkOwner($object)) {
-                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? []) // TODO: do we want to throw an error if there are nog organizations in the session? (because of logging out)
-                    //                || $object->getApplication() != $this->session->get('application') // TODO: Check application
-                ) {
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
+                $result = $object;
+                $object = null;
+            } // Lets check if the user is allowed to view/edit this resource.
+            elseif (!$this->objectEntityService->checkOwner($object)) {
+                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
+                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
                     $object = null; // Needed so we return the error and not the object!
                     $responseType = Response::HTTP_FORBIDDEN;
                     $result = [
@@ -208,10 +207,23 @@ class EavService
                         'path'    => $entity->getName(),
                         'data'    => ['id' => $requestBase['id']],
                     ];
-                } elseif (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
-                    $responseType = Response::HTTP_BAD_REQUEST;
-                    $result = $object;
                 }
+            }
+        }
+
+        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
+        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+            try {
+                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+            } catch (AccessDeniedException $e) {
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => $e->getMessage(),
+                    'type'    => 'Forbidden',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
             }
         }
 
@@ -220,12 +232,20 @@ class EavService
             $body = json_decode($request->getContent(), true);
         }
         // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
-        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
+        elseif (($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') && $responseType == Response::HTTP_OK) {
             // get other input values from form-data and put it in $body ($request->get('name'))
             $body = $this->handleFormDataBody($request, $entity);
 
             $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
-            if (array_key_exists('result', $formDataResult)) {
+            if (is_null($formDataResult)) {
+                $result = [
+                    'message' => 'Please provide a body when doing a POST or PUT call.',
+                    'type'    => 'Bad Request',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
+                $responseType = Response::HTTP_BAD_REQUEST;
+            } elseif (array_key_exists('result', $formDataResult)) {
                 $result = $formDataResult['result'];
                 $responseType = Response::HTTP_BAD_REQUEST;
             } else {
@@ -238,7 +258,7 @@ class EavService
 
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
-        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity && $responseType == Response::HTTP_OK) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
@@ -493,7 +513,7 @@ class EavService
                 break;
             case 'PUT':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_OK;
                 if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
                     $responseType = Response::HTTP_FORBIDDEN;
@@ -540,8 +560,11 @@ class EavService
                 break;
             case 'POST':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_CREATED;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             default:
                 $result = [
@@ -571,7 +594,7 @@ class EavService
      *
      * @return array
      */
-    public function handleMutation(ObjectEntity $object, array $body, $fields): array
+    public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
         if (empty($this->session->get('activeOrganization'))) {
@@ -584,6 +607,7 @@ class EavService
         }
 
         // Validation stap
+        $this->validationService->setRequest($request);
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
@@ -731,8 +755,38 @@ class EavService
      *
      * @return array
      */
-    public function handleDelete(ObjectEntity $object): array
+    public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($object);
+
+        foreach ($object->getEntity()->getAttributes() as $attribute) {
+            // If this object has subresources and cascade delete is set to true, delete the subresources as well.
+            // TODO: use switch for type? ...also delete type file?
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete()) {
+                if ($attribute->getMultiple()) {
+                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                        if (!$maxDepth->contains($subObject)) {
+                            $this->handleDelete($subObject, $maxDepth);
+                        }
+                    }
+                } else {
+                    $subObject = $object->getValueByAttribute($attribute)->getValue();
+                    if (!$maxDepth->contains($subObject)) {
+                        $this->handleDelete($subObject, $maxDepth);
+                    }
+                }
+            }
+        }
+        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+            // TODO: do isResource check?
+            $this->commonGroundService->deleteResource(null, $object->getUri());
+        }
+        $this->validationService->notify($object, 'DELETE');
+
         $this->em->remove($object);
         $this->em->flush();
 
