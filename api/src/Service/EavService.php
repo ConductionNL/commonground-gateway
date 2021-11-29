@@ -767,8 +767,9 @@ class EavService
         foreach ($object->getEntity()->getAttributes() as $attribute) {
             // If this object has subresources and cascade delete is set to true, delete the subresources as well.
             // TODO: use switch for type? ...also delete type file?
-            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete()) {
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
                 if ($attribute->getMultiple()) {
+                    // !is_null check above makes sure we do not try to loop through null
                     foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
                         if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);

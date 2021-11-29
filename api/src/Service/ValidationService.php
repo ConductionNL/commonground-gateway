@@ -1382,6 +1382,13 @@ class ValidationService
                 'action'   => $action,
                 'resource' => $objectEntity->getUri(),
             ];
+            if (!$objectEntity->getUri()) {
+//                var_dump('Couldn\'t notifiy for object, because it has no uri!');
+//                var_dump('Id: '.$objectEntity->getId());
+//                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
+//                var_dump($notification);
+                return;
+            }
             $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
         }
     }
