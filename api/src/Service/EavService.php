@@ -177,16 +177,17 @@ class EavService
         $result = $requestBase['result'];
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
 
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
         // Lets handle the entity
         $entity = $this->getEntity($requestBase['path']);
         // What if we canot find an entity?
         if (is_array($entity)) {
+            $responseType = Response::HTTP_BAD_REQUEST;
             $result = $entity;
-            $entity = false;
+            $entity = null;
         }
-
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
 
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
@@ -212,7 +213,7 @@ class EavService
         }
 
         // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
-        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+        if ($entity && ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object))) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));

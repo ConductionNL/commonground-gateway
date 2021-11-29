@@ -38,7 +38,7 @@ class AuthorizationService
         $this->security = $security;
     }
 
-    public function getRequiredScopes(string $method, ?Attribute $attribute, Entity $entity = null): array
+    public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
         if ($entity) {
             $scopes['base_scope'] = $method.'.'.$entity->getName();
