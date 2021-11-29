@@ -54,6 +54,7 @@ class SOAPController extends AbstractController
                 }
         }
 
+        /* @todo we kunnen niet altijd een 200 terug geven */
         return new Response($message, 200, [
             'Content-Type'                     => 'application/soap+xml',
             'Access-Control-Allow-Origin'      => '*',

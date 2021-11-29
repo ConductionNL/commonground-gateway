@@ -190,7 +190,7 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $auth;
+    private string $auth = 'none';
 
     /**
      * @var ?string The Locale of the Gateway
