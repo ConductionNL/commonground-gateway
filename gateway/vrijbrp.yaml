@@ -20,68 +20,7 @@ App\Entity\Entity:
     test:
         route: '/api/test'
         name: SOAP Test
-        description: A test entity for Soap translations        
-
-    # deaths
-    deaths-in-municipality:
-        route: '/api/deaths-in-municipality'
-        name: Deaths In Municipality
-        description: A test entity for Soap translations
-
-    # deaths
-    deaths-discovered-body:
-        route: '/api/deaths-discovered-body'
-        name: Deaths Discovered Body
-        description: A test entity for Soap translations        
-
-    # Inter-municipal relocations
-    inter-municipal-relocations:
-        route: '/api/test'
-        name: Inter-municipal relocations
-        description: A test entity for Soap translations
-
-    # Intra-municipal relocations
-    intra-municipal-relocations:
-        route: '/api/test'
-        name: Intra-municipal relocations
-        description: A test entity for Soap translations
-
-    # Test object
-    dossiers:
-        route: '/api/dossiers'
-        name: Dossiers
-        description: A test entity for Soap translations
-
-    # Test object
-    relatives:
-        route: '/api/relatives'
-        name: Relatives
-        description: A test entity for Soap translations
-
-    # Test object
-    birth:
-        route: '/api/birth'
-        name: Birth
-        description: A test entity for Soap translations
-
-    # Test object
-    tasks:
-        route: '/api/tasks'
-        name: Tasks
-        description: A test entity for Soap translations
-
-    # Relocations
-    relocations:
-        route: '/api/relocations'
-        name: Relocations
-        description: A test entity for Soap translations
-
-
-     # Commitment
-    commitment:
-        route: '/api/commitment'
-        name: Commitment
-        description: A test entity for Soap translations
+        description: A test entity for Soap translations            
 
 App\Entity\Attribute:    
     # course properties
