@@ -123,8 +123,18 @@ class OasParserService
         }
 
         // Do we have paths?
-        if (!array_key_exists('paths', $oas)) { // @throw erro
-         //var_dump($oas);
+        if (array_key_exists('paths', $oas)) {
+            // Lets grap the paths
+            foreach($oas['paths'] as $path => $info){
+                // Let just grap the post for now
+                if(array_key_exists('post', $info)){
+                    $schema = $info['post']['requestBody']['content']['application/json']['schema']['$ref'];
+                    $schemas[$schema]->setEndpoint($path);
+                }
+            }
+        }
+        else{
+            // @todo throw error
         }
 
         $this->em->flush();
