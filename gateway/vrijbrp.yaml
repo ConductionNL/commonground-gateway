@@ -4,16 +4,13 @@ App\Entity\Gateway:
     vrijbrp_api:
         name: VrijBrp API
         type: json
-        auth: vrijbrp-jwt
-        username: sim
-        password: 46jz!4hbYW
+        auth: none
         location: https://acc-vrijbrp-nijmegen.commonground.nu/dossiers
+
     vrijbrp_soap:
         name: VrijBrp SOAP
         type: soap
-        auth: username-password
-        username: sim
-        password: 46jz!4hbYW
+        auth: none
         location: https://acc-vrijbrp-nijmegen.commonground.nu/personen-zaken-ws/services
 
 App\Entity\Entity:
@@ -21,77 +18,87 @@ App\Entity\Entity:
     test:
         route: '/api/test'
         name: SOAP Test
-        description: A test entity for Soap translations        
+        description: A test entity for Soap translations
 
     # deaths
     deaths-in-municipality:
-        route: '/api/deaths-in-municipality'
+        #route: '/api/deaths-in-municipality'
         name: Deaths In Municipality
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # deaths
     deaths-discovered-body:
-        route: '/api/deaths-discovered-body'
+        #route: '/api/deaths-discovered-body'
         name: Deaths Discovered Body
-        description: A test entity for Soap translations        
+        description: A test entity for Soap translations
+            gateway: '@vrijbrp_api'
 
     # Inter-municipal relocations
     inter-municipal-relocations:
-        route: '/api/test'
+        #route: '/api/inter-municipal-relocations'
         name: Inter-municipal relocations
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Intra-municipal relocations
     intra-municipal-relocations:
-        route: '/api/test'
+        #route: '/api/intra-municipal-relocations'
         name: Intra-municipal relocations
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Test object
     dossiers:
-        route: '/api/dossiers'
+        #route: '/api/dossiers'
         name: Dossiers
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Test object
     relatives:
-        route: '/api/relatives'
+        #route: '/api/relatives'
         name: Relatives
-        description: A test entity for Soap translations
+        description: A test entity for Soap translationsV
+        gateway: '@vrijbrp_api'
 
     # Test object
     birth:
-        route: '/api/birth'
+        #route: '/api/birth'
         name: Birth
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Test object
     tasks:
-        route: '/api/tasks'
+        #route: '/api/tasks'
         name: Tasks
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Relocations
     relocations:
-        route: '/api/relocations'
+        #route: '/api/relocations'
         name: Relocations
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
-     # Commitment
+        # Commitment
     commitment:
-        route: '/api/commitment'
+        #route: '/api/commitment'
         name: Commitment
         description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
 
     # Extract
     extract:
-        route: '/api/extracts'
+        #route: '/api/extracts'
         name: Extract
         description: An entity for SOAP BRP extracts
         gateway: '@vrijbrp_soap'
-        
 
-App\Entity\Attribute:    
+
+App\Entity\Attribute:
     # course properties
     test_name:
         name: name
@@ -394,7 +401,7 @@ App\Entity\Attribute:
         name: witnesses
         type: array
         required: false
-        entity: '@commitment'
+        entity: '@commitment's
 
 # Okey so now we need some soap stuff :')
 App\Entity\Soap:
