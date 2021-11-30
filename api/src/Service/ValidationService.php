@@ -1270,8 +1270,14 @@ class ValidationService
                 $post = json_encode($post);
                 break;
             case 'soap':
-                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
-                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator([], $post, $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml'), false);
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
+                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
+                    $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
+                    $objectEntity->toArray(), $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml', ['xml_encoding' => 'utf-8']), false);
+//                $headers['Content-Type'] = 'application/xml';
+//                $headers['Accept'] = 'application/xml';
+//                $headers['Content-Length'] = (string) strlen($post);
+//                $headers['Cache-Control'] = 'no-cache';
                 break;
             default:
                 // @todo throw error
@@ -1320,8 +1326,7 @@ class ValidationService
                     break;
             }
         }
-
-        $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
+        $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
@@ -1406,13 +1411,17 @@ class ValidationService
 
                 /* @todo lelijke code */
                 if ($error->getResponse()) {
-                    $error = json_decode((string) $error->getResponse()->getBody(), true);
-                    if ($error && array_key_exists('message', $error)) {
+                    $errorBody = json_decode((string) $error->getResponse()->getBody(), true);
+                    if ($errorBody && array_key_exists('message', $errorBody)) {
                         $error_message = $error['message'];
-                    } elseif ($error && array_key_exists('hydra:description', $error)) {
+                    } elseif ($errorBody && array_key_exists('hydra:description', $errorBody)) {
                         $error_message = $error['hydra:description'];
                     } else {
+//                        var_dump($error->getRequest()->getHeaders());
+//                        var_dump($error->getRequest()->getUri());
+//                        var_dump($error->getRequest()->getBody()->getContents());
                         $error_message = (string) $error->getResponse()->getBody();
+//                        var_dump($error_message);
                     }
                 } else {
                     $error_message = $error->getMessage();

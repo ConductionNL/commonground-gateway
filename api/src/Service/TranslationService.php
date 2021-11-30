@@ -53,11 +53,13 @@ class TranslationService
      */
     function generalVariables(): array {
         $faker = \Faker\Factory::create();
+        $now = new DateTime();
 
         $variables = [];
 
         // Faker example implementation
         $variables['faker_uuid'] = $faker->uuid();
+        $variables['date'] = $now->format('Y-m-d');
 
         // Session example implementation
         $variables['session_organization_id'] = $faker->uuid();
@@ -73,6 +75,7 @@ class TranslationService
      * @return array
      */
     function translationVariables(): array {
+
         $variables = [
             'death_in_municipality' => 'Overlijden in gemeente',
             'intra_mun_relocation'  => 'Binnengemeentelijke verhuizing',
