@@ -4,6 +4,7 @@
 
 namespace App\Command;
 
+use App\Service\ExportService;
 use App\Service\OasParserService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -14,13 +15,11 @@ class ExportConfigurationCommand extends Command
 {
     // the name of the command (the part after "bin/console")
     protected static $defaultName = 'export:configuration';
-    protected OasParserService $oasParserService;
+    protected ExportService $exportService;
 
-    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '')
+    public function __construct(ExportService $exportService)
     {
-        $this->oasParserService = $oasParserService;
-        $this->url = $url;
-        $this->gateway = $gateway;
+        $this->exportService = $exportService;
 
         parent::__construct();
     }
@@ -33,9 +32,8 @@ class ExportConfigurationCommand extends Command
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command exports the configuration of the api gateway into either an yaml or json file.')
-            ->addArgument('configuration', $this->url ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'The configuration type to export. all, soap, gateway etc. (defaults to all)')
-            ->addArgument('type', $this->url ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'yaml or json (defaults to yaml)');
+            ->setHelp('This command exports the configuration of the api gateway into either an yaml or json file.');
+        // ->addArgument('type', $this->url ? InputArgument::REQUIRED : InputArgument::OPTIONAL, 'yaml or json (defaults to yaml)')
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -47,7 +45,7 @@ class ExportConfigurationCommand extends Command
 
         // return this if there was no problem running the command
         // (it's equivalent to returning int(0))
-        $this->oasParserService->getOAS($input->getArgument('url'));
+        $this->exportService->handleExports('all', 'file');
 
         return Command::SUCCESS;
 
