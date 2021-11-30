@@ -24,16 +24,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post",
- *     		"get",
+ *          "post"={"path"="/admin/authentications"},
+ *     		"get"={"path"="/admin/authentications"},
  *     },
  *      itemOperations={
  * 		    "get"={
  *              "read"=false,
- *              "validate"=false
+ *              "validate"=false,
+ *              "path"="/admin/authentications/{id}"
  *          },
- * 	        "put",
- * 	        "delete",
+ * 	        "put"={"path"="/admin/authentications/{id}"},
+ * 	        "delete"={"path"="/admin/authentications/{id}"},
  *          "get_change_logs"={
  *              "path"="/authentications/{id}/change_log",
  *              "method"="get",

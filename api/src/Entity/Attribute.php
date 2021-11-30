@@ -27,13 +27,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get",
- *      "put",
- *      "delete"
+ *      "get"={"path"="/admin/attributes/{id}"},
+ *      "put"={"path"="/admin/attributes/{id}"},
+ *      "delete"={"path"="/admin/attributes/{id}"}
  *  },
  *  collectionOperations={
- *      "get",
- *      "post"
+ *      "get"={"path"="/admin/attributes"},
+ *      "post"={"path"="/admin/attributes"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\AttributeRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -41,7 +41,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact"
+ * })
  */
 class Attribute
 {
@@ -83,7 +85,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "int", "bool","float","number", "datetime", "date", "file", "object"})
+     * @Assert\Choice({"string", "integer", "bool","float","number", "datetime", "date", "file", "object", "array"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -365,7 +367,6 @@ class Attribute
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $defaultValue;
-    // TODO: should be a Value object
 
     /**
      * @var bool Whether or not this property can be left empty
@@ -475,27 +476,28 @@ class Attribute
     private $fileType;
 
     /**
+     * @Groups({"read", "write"})
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
-    private $validations;
+    private $validations = [];
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $persistToGateway = false;
 
     /**
      * Whether or not this property is searchable.
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
     private $cascade = false;
@@ -518,9 +520,88 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     * @var array Config for getting the object result info from the correct places (id is required!). "envelope" for where to find this item and "id" for where to find the id. (both from the root! So if id is in the envelope example: envelope = instance, id = instance.id)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $objectConfig = ["id" => "id"];
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
+    }
+
+    public function export()
+    {
+
+        if ($this->getEntity() !== null) {
+            $entity = $this->getEntity()->getId()->toString();
+            $entity = "@" . $entity;
+        } else {
+            $entity = null;
+        }
+
+        if ($this->getObject() !== null) {
+            $object = $this->getObject()->getId()->toString();
+            $object = "@" . $object;
+        } else {
+            $object = null;
+        }
+
+        if ($this->getInversedBy() !== null) {
+            $inversed = $this->getInversedBy()->getId()->toString();
+            $inversed = "@" . $inversed;
+        } else {
+            $inversed = null;
+        }
+
+        $data = [
+            'name' => $this->getName(),
+            'type' => $this->getType(),
+            'format' => $this->getFormat(),
+            'multiple' => $this->getMultiple(),
+            'entity' => $entity,
+            'object' => $object,
+            'multipleOf' => $this->getMultipleOf(),
+            'maximum' => $this->getMaximum(),
+            'exclusiveMaximum' => $this->getExclusiveMaximum(),
+            'minimum' => $this->getMinimum(),
+            'exclusiveMinimum' => $this->getExclusiveMaximum(),
+            'maxLength' => $this->getMaxLength(),
+            'minLength' => $this->getMinLength(),
+            'maxItems' => $this->getMaxItems(),
+            'minItems' => $this->getMinItems(),
+            'uniqueItems' => $this->getUniqueItems(),
+            'maxProperties' => $this->getMaxProperties(),
+            'minProperties' => $this->getMinProperties(),
+            'inversedBy' => $inversed,
+            'required' => $this->getRequired(),
+            'requiredIf' => $this->getRequiredIf(),
+            'forbidenIf' => $this->getForbidenIf(),
+            'enum' => $this->getEnum(),
+            'allOf' => $this->getAllOf(),
+            'anyOf' => $this->getAnyOf(),
+            'oneOf' => $this->getOneOf(),
+            'description' => $this->getDescription(),
+            'defaultValue' => $this->getDefaultValue(),
+            'nullable' => $this->getNullable(),
+            'mustBeUnique' => $this->getMustBeUnique(),
+            'readOnly' => $this->getReadOnly(),
+            'writeOnly' => $this->getWriteOnly(),
+            'example' => $this->getExample(),
+            'deprecated' => $this->getDeprecated(),
+            'minDate' => $this->getMinDate(),
+            'maxDate' => $this->getMaxDate(),
+            'maxFileSize' => $this->getMaxFileSize(),
+            'fileType' => $this->getFileType(),
+            'persistToGateway' => $this->getPersistToGateway(),
+            'searchable' => $this->getSearchable(),
+            'cascade' => $this->getCascade()
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
     public function getId()
@@ -1186,6 +1267,18 @@ class Attribute
     public function setInversedBy(?Attribute $inversedBy): self
     {
         $this->inversedBy = $inversedBy;
+
+        return $this;
+    }
+
+    public function getObjectConfig(): ?array
+    {
+        return $this->objectConfig;
+    }
+
+    public function setObjectConfig(?array $objectConfig): self
+    {
+        $this->objectConfig = $objectConfig;
 
         return $this;
     }

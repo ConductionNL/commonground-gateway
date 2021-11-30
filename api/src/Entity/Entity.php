@@ -27,13 +27,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get",
- *      "put",
- *      "delete"
+ *      "get"={"path"="/admin/entities/{id}"},
+ *      "put"={"path"="/admin/entities/{id}"},
+ *      "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
- *      "get",
- *      "post"
+ *      "get"={"path"="/admin/entities"},
+ *      "post"={"path"="/admin/entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -117,7 +117,7 @@ class Entity
 
     /**
      * wheter or not the properties of the original object are automaticly include.
-     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $extend = false;
@@ -196,6 +196,32 @@ class Entity
      */
     private $responseLogs;
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     */
+    private Collection $requestLogs;
+
+    /**
+     * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $translationConfig = [];
+
+    /**
+     * @var array Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationNext" for where to find the next page if pagination (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $collectionConfig = ["results"=>"hydra:member","id"=>"id", "paginationNext"=>"hydra:view.hydra:next"];
+
+    /**
+     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="entity", orphanRemoval=true)
+     */
+    private $fromSoap;
 
     public function __construct()
     {
@@ -203,8 +229,35 @@ class Entity
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
     }
+
+    public function export()
+    {
+
+        if ($this->getGateway() !== null) {
+            $gateway = $this->getGateway()->getId()->toString();
+            $gateway = "@" . $gateway;
+        } else {
+            $gateway = null;
+        }
+
+        $data = [
+            'gateway' => $gateway,
+            'endpoint' => $this->getEndpoint(),
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'extend' => $this->getExtend(),
+            'transformations' => $this->getTransformations(),
+            'route' => $this->getRoute(),
+            'availableProperties' => $this->getAvailableProperties(),
+            'usedProperties' => $this->getUsedProperties()
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
+
 
     public function getId()
     {
@@ -526,6 +579,90 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getEntity() === $this) {
+                $requestLog->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getTranslationConfig(): ?array
+    {
+        return $this->translationConfig;
+    }
+
+    public function setTranslationConfig(?array $translationConfig): self
+    {
+        $this->translationConfig = $translationConfig;
+
+        return $this;
+    }
+
+    public function getCollectionConfig(): ?array
+    {
+        return $this->collectionConfig;
+    }
+
+    public function setCollectionConfig(?array $collectionConfig): self
+    {
+        $this->collectionConfig = $collectionConfig;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Soap[]
+     */
+    public function getSoap(): Collection
+    {
+        return $this->soap;
+    }
+
+    public function addSoap(Soap $soap): self
+    {
+        if (!$this->soap->contains($soap)) {
+            $this->soap[] = $soap;
+            $soap->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSoap(Soap $soap): self
+    {
+        if ($this->soap->removeElement($soap)) {
+            // set the owning side to null (unless already changed)
+            if ($soap->getEntity() === $this) {
+                $soap->setEntity(null);
+            }
+        }
 
         return $this;
     }
