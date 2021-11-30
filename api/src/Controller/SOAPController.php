@@ -50,7 +50,7 @@ class SOAPController extends AbstractController
                 break;
             case 'zakLk01':
                 $caseType = $SOAPService->getZaakType($data, $namespaces);
-                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType])){
+                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     break;
                 }

@@ -8,27 +8,30 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about a file.
+ * This entity holds the information about an Application.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *     collectionOperations={
- *          "post",
- *     		"get",
- *     },
- *      itemOperations={
- * 		    "get",
- * 	        "put",
- * 	        "delete",
- *     },
+ *  itemOperations={
+ *      "get"={"path"="/admin/applications/{id}"},
+ *      "put"={"path"="/admin/applications/{id}"},
+ *      "delete"={"path"="/admin/applications/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/applications"},
+ *      "post"={"path"="/admin/applications"}
+ *  })
  * )
  * @ORM\Entity(repositoryClass="App\Repository\ApplicationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -83,6 +86,59 @@ class Application
      */
     private array $domains = [];
 
+    /**
+     * @var string A public uuid of this Application.
+     *
+     * @Assert\Uuid
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $public;
+
+    /**
+     * @var string A secret uuid of this Application.
+     *
+     * @Assert\Uuid
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $secret;
+
+    // TODO: make this required?
+    /**
+     * @var string An uuid or uri of an organization for this Application.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $organization;
+
+    /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="application")
+     */
+    private Collection $endpoints;
+
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY")
+     */
+    private Collection $requestLogs;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY")
+     * @MaxDepth(1)
+     */
+    private Collection $objectEntities;
+
+    public function __construct()
+    {
+        $this->endpoints = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
+        $this->objectEntities = new ArrayCollection();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -127,6 +183,132 @@ class Application
     public function setDomains(array $domains): self
     {
         $this->domains = $domains;
+
+        return $this;
+    }
+
+    public function getPublic(): ?string
+    {
+        return $this->public;
+    }
+
+    public function setPublic(?string $public): self
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    public function getSecret(): ?string
+    {
+        return $this->secret;
+    }
+
+    public function setSecret(?string $secret): self
+    {
+        $this->secret = $secret;
+
+        return $this;
+    }
+
+    public function getOrganization(): ?string
+    {
+        return $this->organization;
+    }
+
+    public function setOrganization(string $organization): self
+    {
+        $this->organization = $organization;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+            $endpoint->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        if ($this->endpoints->removeElement($endpoint)) {
+            // set the owning side to null (unless already changed)
+            if ($endpoint->getApplication() === $this) {
+                $endpoint->setApplication(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getApplication() === $this) {
+                $requestLog->setApplication(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ObjectEntity[]
+     */
+    public function getObjectEntities(): Collection
+    {
+        return $this->objectEntities;
+    }
+
+    public function addObjectEntity(ObjectEntity $objectEntity): self
+    {
+        if (!$this->objectEntities->contains($objectEntity)) {
+            $this->objectEntities[] = $objectEntity;
+            $objectEntity->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeObjectEntity(ObjectEntity $objectEntity): self
+    {
+        if ($this->objectEntities->removeElement($objectEntity)) {
+            // set the owning side to null (unless already changed)
+            if ($objectEntity->getApplication() === $this) {
+                $objectEntity->setApplication(null);
+            }
+        }
 
         return $this;
     }

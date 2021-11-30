@@ -235,12 +235,12 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /api
+              path: /
               port: http
             initialDelaySeconds: 30
           readinessProbe:
             httpGet:
-              path: /api
+              path: /
               port: http
             initialDelaySeconds: 30
           resources:

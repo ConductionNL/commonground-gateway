@@ -47,9 +47,17 @@ class Soap
      * The entity form the EAV stack that this SOAP connection wants to use
      *
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="fromSoap")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
      */
-    private $entity;
+    private $toEntity;
+
+    /**
+     * The entity form the EAV stack that this SOAP connection wants to use
+     *
+     * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="toSoap")
+     * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
+     */
+    private $fromEntity;
 
     /**
      * An XML descriping the request that we want to recieve
@@ -95,7 +103,7 @@ class Soap
 
     /**
      * A string to define the caseType of StUF Lk01 messages
-     * 
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $zaaktype;
@@ -142,14 +150,26 @@ class Soap
         return $this;
     }
 
-    public function getEntity(): ?Entity
+    public function getToEntity(): ?Entity
     {
-        return $this->entity;
+        return $this->toEntity;
     }
 
-    public function setEntity(?Entity $entity): self
+    public function setToEntity(?Entity $toEntity): self
     {
-        $this->entity = $entity;
+        $this->toEntity = $toEntity;
+
+        return $this;
+    }
+
+    public function getFromEntity(): ?Entity
+    {
+        return $this->fromEntity;
+    }
+
+    public function setFrom(?Entity $fromEntity): self
+    {
+        $this->fromEntity = $fromEntity;
 
         return $this;
     }

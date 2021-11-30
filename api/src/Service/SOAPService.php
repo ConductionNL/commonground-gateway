@@ -925,16 +925,18 @@ class SOAPService
     {
 
         // Lets make the entity call
-        $entity = $this->soapToEntity($soap, $data);
+        //$entity = $this->soapToEntity($soap, $data);
+
+        $entity = $this->translationService([],$data,$soap->getRequestHydration());
         $requestBase = [
-            "path" => $soap->getEntity()->getRoute(),
+            "path" => $soap->getToEntity()->getRoute(),
             "id" => null,
             "extension" => "xml",
             "renderType" => "xml",
             "result" => null,
         ];
-        $object = $this->eavService->generateResult($request, $soap->getEntity(), $requestBase, $entity);
-        
+        $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
+
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
@@ -947,45 +949,5 @@ class SOAPService
                 ),
 
                 'xml'), true);
-    }
-
-    /**
-     * Turns a soap array into an entity array
-     *
-     * @param Soap $soap
-     * @param array $data
-     * @return array
-     */
-    public function soapToEntity(Soap $soap, array $data): array
-    {
-        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
-        $requestDate = new \Adbar\Dot($data);
-        $entity = new \Adbar\Dot();
-        foreach($soap->getRequestHydration() as $search => $replace){
-            $entity[$replace] = $requestDate[$search];
-        }
-        $entity = $entity->all();
-
-        return $entity;
-    }
-
-    /**
-     * Turns an entity array into an soap array
-     *
-     * @param Soap $soap
-     * @param array $data
-     * @return array
-     */
-    public function entityToSoap(Soap $soap, array $data): array
-    {
-        // Let hydrate our incomming data in to our entity call, with al little help from https://github.com/adbario/php-dot-notatio
-        $requestDate = new \Adbar\Dot($data);
-        $entity = new \Adbar\Dot();
-        foreach($soap->getResponseHydration() as $search => $replace){
-            $entity[$replace] = (string) $requestDate[$search];
-        }
-        $entity = $entity->all();
-
-        return $entity;
     }
 }
