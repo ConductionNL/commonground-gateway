@@ -105,7 +105,7 @@ class ResponseService
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
-        $gatewayContext['@application'] = $result->getApplication();
+        $gatewayContext['@application'] = $result->getApplication()->getId();
         $gatewayContext['@owner'] = $result->getOwner();
         if ($result->getUri()) {
             $gatewayContext['@uri'] = $result->getUri();
