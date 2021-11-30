@@ -80,11 +80,15 @@ class Entity
 
     /**
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Soap::class, fetch="EAGER")
-     * @ORM\JoinColumn(nullable=true)
+     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      */
     private ?soap $toSoap;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
+     */
+    private $fromSoap;
 
     /**
      * @var string The name of this Entity
@@ -192,10 +196,6 @@ class Entity
      */
     private $responseLogs;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="entity", orphanRemoval=true)
-     */
-    private $fromSoap;
 
     public function __construct()
     {
@@ -243,6 +243,36 @@ class Entity
     public function setToSoap(?Soap $toSoap): self
     {
         $this->toSoap = $toSoap;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Soap[]
+     */
+    public function getFromSoap(): Collection
+    {
+        return $this->fromSoap;
+    }
+
+    public function addFromSoap(Soap $fromSoap): self
+    {
+        if (!$this->fromSoap->contains($fromSoap)) {
+            $this->fromSoap[] = $fromSoap;
+            $fromSoap->setToEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFromSoap(Soap $fromSoap): self
+    {
+        if ($this->fromSoap->removeElement($fromSoap)) {
+            // set the owning side to null (unless already changed)
+            if ($fromSoap->getToEntity() === $this) {
+                $fromSoap->setToEntity(null);
+            }
+        }
 
         return $this;
     }
@@ -496,36 +526,6 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Soap[]
-     */
-    public function getSoap(): Collection
-    {
-        return $this->soap;
-    }
-
-    public function addSoap(Soap $soap): self
-    {
-        if (!$this->soap->contains($soap)) {
-            $this->soap[] = $soap;
-            $soap->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSoap(Soap $soap): self
-    {
-        if ($this->soap->removeElement($soap)) {
-            // set the owning side to null (unless already changed)
-            if ($soap->getEntity() === $this) {
-                $soap->setEntity(null);
-            }
-        }
 
         return $this;
     }
