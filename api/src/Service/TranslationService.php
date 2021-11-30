@@ -71,21 +71,23 @@ class TranslationService
     function translationVariables(): array {
         $variables = [];
 
+        //@todo laten we deze vandaag lekker concreet houden
         $variables['marriage'] = 'huwelijk';
 
         return $variables;
     }
 
     /**
-     * This function parses a string for in string translations
+     * This function parses a string for in string translations (optional)  an variable replacment
      *
      * With a litle help from https://stackoverflow.com/questions/18197348/replacing-variables-in-a-string
      *
-     * @param string $subject
-     * @param bool $translate
-     * @param array $variables
-     * @param string $escapeChar
+     * @param string $subject The string to translate
+     * @param bool $translate Whether or not to also translate to string (defaults to true)
+     * @param array $variables Additional variables to replace
+     * @param string $escapeChar The escape charater to use (default to @)
      * @param string|null $errPlaceholder
+     * 
      * @return string|string[]|null
      */
     function parse(
