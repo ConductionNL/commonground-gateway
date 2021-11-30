@@ -83,9 +83,6 @@ App\Entity\Entity:
         name: Commitment
         description: A test entity for Soap translations
 
-
-        
-
 App\Entity\Attribute:    
     # course properties
     test_name:

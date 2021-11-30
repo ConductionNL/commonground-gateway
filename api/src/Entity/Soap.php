@@ -150,14 +150,26 @@ class Soap
         return $this;
     }
 
-    public function getEntity(): ?Entity
+    public function getToEntity(): ?Entity
     {
-        return $this->entity;
+        return $this->toEntity;
     }
 
-    public function setEntity(?Entity $entity): self
+    public function setToEntity(?Entity $toEntity): self
     {
-        $this->entity = $entity;
+        $this->toEntity = $toEntity;
+
+        return $this;
+    }
+
+    public function getFromEntity(): ?Entity
+    {
+        return $this->fromEntity;
+    }
+
+    public function setFrom(?Entity $fromEntity): self
+    {
+        $this->fromEntity = $fromEntity;
 
         return $this;
     }
