@@ -16,9 +16,16 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 class Soap
 {
     /**
+     * @var UuidInterface The UUID identifier of this object
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Groups({"read"})
+     * @Assert\Uuid
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
@@ -99,6 +106,34 @@ class Soap
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $zaaktype;
+
+
+    public function export(): ?array
+    {
+
+        if ($this->getEntity() !== null) {
+            $entity = $this->getEntity()->getId()->toString();
+            $entity = "@" . $entity;
+        } else {
+            $entity = null;
+        }
+
+        $data = [
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'type' => $this->getType(),
+            'entity' => $entity,
+            'request' => $this->getRequest(),
+            'requestSkeleton' => $this->getRequestSkeleton(),
+            'requestHydration' => $this->getRequestHydration(),
+            'response' => $this->getResponse(),
+            'responseSkeleton' => $this->getResponseSkeleton(),
+            'responseHydration' => $this->getResponseHydration(),
+            'zaaktype' => $this->getZaaktype(),
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
 
 
     public function getId(): ?int

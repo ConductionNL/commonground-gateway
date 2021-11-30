@@ -33,11 +33,15 @@ class ExportService
             case 'attributes':
                 $export = array_merge($this->exportProperty(), $export);
                 break;
+            case 'soap':
+                $export = array_merge($this->exportSoap(), $export);
+                break;
             case 'all':
             default:
                 $export = array_merge($this->exportProperty(), $export);
                 $export = array_merge($this->exportEntity(), $export);
                 $export = array_merge($this->exportGateway(), $export);
+                $export = array_merge($this->exportSoap(), $export);
                 break;
         }
 
@@ -69,6 +73,18 @@ class ExportService
 
         foreach ($objects as &$object) {
             $array['App\Entity\Gateway'][$object->getId()->toString()] = $object->export();
+        }
+
+        return $array;
+    }
+
+    public function exportSoap()
+    {
+        $array['App\Entity\Soap'] = [];
+        $objects = $this->em->getRepository('App:Soap')->findAll();
+
+        foreach ($objects as &$object) {
+            $array['App\Entity\Soap'][$object->getId()->toString()] = $object->export();
         }
 
         return $array;
