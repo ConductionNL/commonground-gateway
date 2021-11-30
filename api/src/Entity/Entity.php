@@ -79,6 +79,14 @@ class Entity
     private $endpoint;
 
     /**
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=Soap::class, fetch="EAGER")
+     * @ORM\JoinColumn(nullable=true)
+     * @MaxDepth(1)
+     */
+    private ?soap $toSoap;
+
+    /**
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
@@ -187,7 +195,7 @@ class Entity
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="entity", orphanRemoval=true)
      */
-    private $soap;
+    private $fromSoap;
 
     public function __construct()
     {
@@ -223,6 +231,18 @@ class Entity
     public function setEndpoint(string $endpoint): self
     {
         $this->endpoint = $endpoint;
+
+        return $this;
+    }
+
+    public function getToSoap(): ?Soap
+    {
+        return $this->toSoap;
+    }
+
+    public function setToSoap(?Soap $toSoap): self
+    {
+        $this->toSoap = $toSoap;
 
         return $this;
     }

@@ -56,7 +56,7 @@ class TranslationService
         $variables['faker_uuid'] = $faker->uuid();
 
         // Session example implementation
-        $variables['session_organization'] = $faker->uuid();
+        $variables['session_organization_id'] = $faker->uuid();
 
         return $variables;
     }
@@ -87,7 +87,7 @@ class TranslationService
      * @param array $variables Additional variables to replace
      * @param string $escapeChar The escape charater to use (default to @)
      * @param string|null $errPlaceholder
-     * 
+     *
      * @return string|string[]|null
      */
     function parse(

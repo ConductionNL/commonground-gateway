@@ -46,7 +46,7 @@ class Soap
     /**
      * The entity form the EAV stack that this SOAP connection wants to use
      *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="soap")
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="fromSoap")
      * @ORM\JoinColumn(nullable=false)
      */
     private $entity;
