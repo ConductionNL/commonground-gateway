@@ -234,7 +234,7 @@ class Soap
         return $this->fromEntity;
     }
 
-    public function setFrom(?Entity $fromEntity): self
+    public function setFromEntity(?Entity $fromEntity): self
     {
         $this->fromEntity = $fromEntity;
 

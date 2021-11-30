@@ -927,7 +927,8 @@ class SOAPService
         // Lets make the entity call
         //$entity = $this->soapToEntity($soap, $data);
 
-        $entity = $this->translationService->dotHydrator([],$data,$soap->getRequestHydration());
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
+        $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
         $requestBase = [
             "path" => $soap->getToEntity()->getRoute(),
             "id" => null,
@@ -939,15 +940,7 @@ class SOAPService
 
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         return $this->translationService->parse(
-            $xmlEncoder->encode(
-                $this->translationService->dotHydrator(
-                    [],
-                    $object,
-                    $soap->getResponseHydration()
-                ),
-
-                'xml'), true);
+            $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
     }
 }
