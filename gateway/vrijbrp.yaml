@@ -32,7 +32,7 @@ App\Entity\Entity:
         #route: '/api/deaths-discovered-body'
         name: Deaths Discovered Body
         description: A test entity for Soap translations
-            gateway: '@vrijbrp_api'
+        gateway: '@vrijbrp_api'
 
     # Inter-municipal relocations
     inter-municipal-relocations:
@@ -401,7 +401,7 @@ App\Entity\Attribute:
         name: witnesses
         type: array
         required: false
-        entity: '@commitment's
+        entity: '@commitment'
 
 # Okey so now we need some soap stuff :')
 App\Entity\Soap:
@@ -505,8 +505,8 @@ App\Entity\Soap:
         # request:
         #requestSkeleton
         requestHydration:
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description    
+            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname" 
+            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"     
         # response:
         #responseSkeleton:
         #    - "ns2:wrapper"
@@ -514,6 +514,6 @@ App\Entity\Soap:
         #        - "ns1:realdescription"
         #    - "ns3:random"
         responseHydration:
-            id: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id"
-            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
-            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id": id
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description
