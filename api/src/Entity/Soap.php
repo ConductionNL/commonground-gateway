@@ -8,10 +8,29 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 /**
- * This enity is used to transle incommong and outgoind soap calls
+ * An possible attribute on an Entity.
  *
- * @ApiResource()
- * @ORM\Entity(repositoryClass=SoapRepository::class)
+ * @category Entity
+ *
+ * @ApiResource(
+ *  itemOperations={
+ *      "get"={"path"="/admin/soaps/{id}"},
+ *      "put"={"path"="/admin/soaps/{id}"},
+ *      "delete"={"path"="/admin/soaps/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/soaps"},
+ *      "post"={"path"="/admin/soaps"}
+ *  })
+ * @ORM\Entity(repositoryClass="App\Repository\SoapRepository")
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact"
+ * })
  */
 class Soap
 {
@@ -20,7 +39,6 @@ class Soap
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
-     * @Groups({"read"})
      * @Assert\Uuid
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
