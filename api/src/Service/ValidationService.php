@@ -207,6 +207,7 @@ class ValidationService
             }
         } catch (AccessDeniedException $e) {
             $objectEntity->addError($attribute->getName(), $e->getMessage());
+            return $objectEntity;
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable

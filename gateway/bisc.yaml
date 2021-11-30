@@ -801,7 +801,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@studentIntake'
-    studentIntake_foundVia:
+    studentIntake_foundVia: 
         name: foundVia
         type: string
         enum: ['VOLUNTEER_CENTER', 'LIBRARY_WEBSITE', 'SOCIAL_MEDIA', 'NEWSPAPER', 'VIA_VIA', 'OTHER']
