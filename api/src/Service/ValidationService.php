@@ -412,10 +412,11 @@ class ValidationService
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
+                    $subObject->setApplication($this->session->get('application'));
                 }
-//                $subObject->setApplication(); // TODO
 
 //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
@@ -862,7 +863,7 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                    //todo set application
+                    $subObject->setApplication($this->session->get('application'));
                     $valueObject->addObject($subObject);
                 }
 
@@ -880,6 +881,7 @@ class ValidationService
                     }
                     $this->em->persist($subObject);
                 } else {
+                    // todo never reached
                     $subObjects = $valueObject->getObjects();
                     if ($subObjects->isEmpty()) {
                         $subObject = new ObjectEntity();
@@ -1270,8 +1272,50 @@ class ValidationService
                 break;
         }
 
+        // TODO: if translationConfig overwrite promise if needed, still needs to be tested!
+        if ($objectEntity->getEntity()->getTranslationConfig()) {
+            $translationConfig = $objectEntity->getEntity()->getTranslationConfig();
+            // Use switch to look for possible methods & overwrite/merge values if configured for this method
+            switch ($method) {
+                case 'POST':
+                    if (array_key_exists('POST', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['POST'])) {
+                            $method = $translationConfig['POST']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['POST'])) {
+                            $headers = array_merge($headers, $translationConfig['POST']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['POST'])) {
+                            $query = array_merge($query, $translationConfig['POST']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['POST'])) {
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$translationConfig['POST']['endpoint'];
+                        }
+                    }
+                    break;
+                case 'PUT':
+                    if (array_key_exists('PUT', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['PUT'])) {
+                            $method = $translationConfig['PUT']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['PUT'])) {
+                            $headers = array_merge($headers, $translationConfig['PUT']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['PUT'])) {
+                            $query = array_merge($query, $translationConfig['PUT']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['PUT'])) {
+                            $newEndpoint = str_replace("{id}", $objectEntity->getExternalId(), $translationConfig['PUT']['endpoint']);
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$newEndpoint;
+                        }
+                    }
+                    break;
+            }
+        }
 
-        $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
+        $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
@@ -1296,10 +1340,11 @@ class ValidationService
                 // Set organization for this object
                 if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                    $objectEntity->setApplication($this->session->get('application'));
                 }
-//                    $objectEntity->setApplication(); // TODO
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {

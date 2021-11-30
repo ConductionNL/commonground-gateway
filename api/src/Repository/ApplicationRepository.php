@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Application;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -17,6 +18,26 @@ class ApplicationRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Application::class);
+    }
+
+    /**
+     * @param string $domain
+     *
+     * @return Application|null
+     * @throws NonUniqueResultException
+     */
+    public function findByDomain(string $domain): ?Application
+    {
+        // TODO: something like this
+        $query = $this->createQueryBuilder('a')
+            ->andWhere(':domain IN (a.domains)')
+            ->setParameters(['domain' => $domain]);
+
+//        var_dump($query->getDQL());
+
+        return $query
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     // /**

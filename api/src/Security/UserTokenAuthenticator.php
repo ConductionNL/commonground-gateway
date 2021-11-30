@@ -129,10 +129,25 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService);
         }
         $this->session->set('organizations', $organizations);
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
-        $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
+        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
         return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
+    }
+
+    private function getActiveOrganization(array $user, array $organizations): ?string
+    {
+        if ($user['organization']) {
+            return $user['organization'];
+        }
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has
+        if (count($organizations) > 0) {
+            return $organizations[0];
+        }
+        // If we still have no organization, get the organization from the application
+        if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
+            return $this->session->get('application')->getOrganization();
+        }
+        return null;
     }
 
     public function checkCredentials($credentials, UserInterface $user)

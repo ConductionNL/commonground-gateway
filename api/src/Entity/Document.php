@@ -8,9 +8,12 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -20,13 +23,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post",
- *     		"get",
+ *          "post"={"path"="/admin/documents"},
+ *     		"get"={"path"="/admin/documents"},
  *     },
  *      itemOperations={
- * 		    "get",
- * 	        "put",
- * 	        "delete",
+ * 		    "get"={"path"="/admin/documents/{id}"},
+ * 	        "put"={"path"="/admin/documents/{id}"},
+ * 	        "delete"={"path"="/admin/documents/{id}"},
  *     },
  * )
  * @ORM\Entity(repositoryClass="App\Repository\DocumentRepository")
@@ -76,6 +79,31 @@ class Document
     private string $route;
 
     /**
+     * @var string The data of this Document.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Assert\NotNull
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $data;
+
+    /**
+     * @var string The data id of this Document.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Assert\NotNull
+     * @Assert\Uuid
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $dataId;
+
+    /**
      * @var string An uri to the document creation service.
      *
      * @Assert\Length(
@@ -101,14 +129,15 @@ class Document
     private string $documentType;
 
     /**
-     * @var Entity The entity the data relates to
-     *
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class)
-     * @ORM\JoinColumn(nullable=false)
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY")
      */
-    private $entity;
+    private Collection $requestLogs;
+
+    public function __construct()
+    {
+        $this->requestLogs = new ArrayCollection();
+    }
 
     public function getId(): ?UuidInterface
     {
@@ -146,6 +175,30 @@ class Document
         return $this;
     }
 
+    public function getData(): ?string
+    {
+        return $this->data;
+    }
+
+    public function setData(string $data): self
+    {
+        $this->data = $data;
+
+        return $this;
+    }
+
+    public function getDataId(): ?string
+    {
+        return $this->dataId;
+    }
+
+    public function setDataId(string $dataId): self
+    {
+        $this->dataId = $dataId;
+
+        return $this;
+    }
+
     public function getDocumentCreationService(): ?string
     {
         return $this->documentCreationService;
@@ -170,14 +223,32 @@ class Document
         return $this;
     }
 
-    public function getEntity(): ?Entity
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
     {
-        return $this->entity;
+        return $this->requestLogs;
     }
 
-    public function setEntity(?Entity $entity): self
+    public function addRequestLog(RequestLog $requestLog): self
     {
-        $this->entity = $entity;
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setDocument($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getDocument() === $this) {
+                $requestLog->setDocument(null);
+            }
+        }
 
         return $this;
     }
