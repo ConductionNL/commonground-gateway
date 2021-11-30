@@ -361,6 +361,7 @@ App\Entity\Attribute:
         name: name
         description: What is the name of the organization.
         type: string
+        required: true
         maxLength: 255
         mustBeUnique: true
         entity: '@organization'
