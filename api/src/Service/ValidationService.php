@@ -21,6 +21,7 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -41,6 +42,7 @@ class ValidationService
     private ConvertToGatewayService $convertToGatewayService;
     private ObjectEntityService $objectEntityService;
     private TranslationService $translationService;
+    private ParameterBagInterface $parameterBag;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -51,7 +53,8 @@ class ValidationService
         SessionInterface $session,
         ConvertToGatewayService $convertToGatewayService,
         ObjectEntityService $objectEntityService,
-        TranslationService $translationService
+        TranslationService $translationService,
+        ParameterBagInterface $parameterBag
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -62,6 +65,7 @@ class ValidationService
         $this->convertToGatewayService = $convertToGatewayService;
         $this->objectEntityService = $objectEntityService;
         $this->translationService = $translationService;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -177,12 +181,14 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
-        try {
-            if (!$this->objectEntityService->checkOwner($objectEntity)) {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+        if($this->parameterBag->get('app_auth')){
+            try {
+                if (!$this->objectEntityService->checkOwner($objectEntity)) {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+                }
+            } catch (AccessDeniedException $e) {
+                $objectEntity->addError($attribute->getName(), $e->getMessage());
             }
-        } catch (AccessDeniedException $e) {
-            $objectEntity->addError($attribute->getName(), $e->getMessage());
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable

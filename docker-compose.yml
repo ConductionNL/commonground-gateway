@@ -71,6 +71,7 @@ services:
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - APP_AUTH=${APP_AUTH}
     ports:
       - "82:80"
 

@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
@@ -38,9 +39,9 @@ class EavService
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
     private ResponseService $responseService;
+    private ParameterBagInterface $parameterBag;
 
-    //, AuthorizationService $authorizationService
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -52,6 +53,7 @@ class EavService
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
         $this->responseService = $responseService;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -644,7 +646,7 @@ class EavService
     public function handleMutation(ObjectEntity $object, array $body, $fields): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
-        if (empty($this->session->get('activeOrganization'))) {
+        if ($this->parameterBag->get('app_auth') && empty($this->session->get('activeOrganization'))) {
             return [
                 'message' => 'An active organization is required in the session, please login to create a new session.',
                 'type'    => 'Forbidden',
