@@ -24,6 +24,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ValidationService
 {
@@ -39,7 +40,7 @@ class ValidationService
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
     private ObjectEntityService $objectEntityService;
-    private SOAPService $soapService;
+    private TranslationService $translationService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -50,7 +51,7 @@ class ValidationService
         SessionInterface $session,
         ConvertToGatewayService $convertToGatewayService,
         ObjectEntityService $objectEntityService,
-        SOAPService $soapService
+        TranslationService $translationService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -60,7 +61,7 @@ class ValidationService
         $this->session = $session;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->objectEntityService = $objectEntityService;
-        $this->$soapService = $soapService;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -1261,7 +1262,8 @@ class ValidationService
                 $post = json_encode($post);
                 break;
             case 'soap':
-                $post = $this->soapService->entityToSoap($objectEntity->getEntity()->getToSoap(), $post);
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
+                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator([], $post, $objectEntity->getEntity()->getToSoap()->getResponseHydration()), 'xml'), false);
                 break;
             default:
                 // @todo throw error

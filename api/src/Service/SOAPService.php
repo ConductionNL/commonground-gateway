@@ -19,6 +19,7 @@ class SOAPService
     private EntityManagerInterface $entityManager;
     private CacheInterface $cache;
     private EavService $eavService;
+    private TranslationService $translationService;
 
     /**
      * Translation table for case type descriptions.
@@ -51,12 +52,34 @@ class SOAPService
         'refused'       => ['description' => 'Geweigerd',       'endStatus' => true,    'explanation' => 'Zaak is geweigerd'],
     ];
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, CacheInterface $cache, EavService $eavService)
+    public function __construct(
+        CommonGroundService $commonGroundService,
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache,
+        EavService $eavService,
+        TranslationService $translationService
+    )
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->cache = $cache;
         $this->eavService = $eavService;
+        $this->translationService = $translationService;
+    }
+
+    public function getZaakType(array $data, array $namespaces): string
+    {
+        if (
+            !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
+            !($caseNamespace = array_search('http://www.egem.nl/StUF/sector/zkn/0310', $namespaces)) ||
+            !($bgNamespace = array_search('http://www.egem.nl/StUF/sector/bg/0310', $namespaces))
+
+        ) {
+            throw new BadRequestException('STuF and/or case namespaces missing ');
+        }
+        $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
+
+        return $data["$env:Body"]["$caseNamespace:zakLk01"]["$caseNamespace:object"]["$caseNamespace:isVan"]["$caseNamespace:gerelateerde"]["$caseNamespace:code"];
     }
 
     public function getNamespaces(array $data): array
@@ -786,14 +809,14 @@ class SOAPService
         }
     }
 
-    public function generateDu02(?string $id): array
+    public function generateDu02(?string $id, string $type, string $entityType): array
     {
         $now = new DateTime('now');
 
         return [
             '@xmlns:s'  => 'http://schemas.xmlsoap.org/soap/envelope/',
             's:Body'    => [
-                'ZKN:genereerDocumentIdentificatie_Du02'    => [
+                "ZKN:{$type}_Du02"    => [
                     '@xmlns:ZKN'        => 'http://www.egem.nl/StUF/sector/zkn/0310',
                     'ZKN:stuurgegevens' => [
                         'StUF:berichtcode'      => [
@@ -846,13 +869,13 @@ class SOAPService
                         ],
                         'ns1:functie'            => [
                             '@xmlns:ns1'    => 'http://www.egem.nl/StUF/StUF0301',
-                            '#'             => 'genereerDocumentidentificatie',
+                            '#'             => $type,
                         ],
                     ],
-                    'ZKN:document'      => [
+                    "ZKN:$entityType"      => [
                         '@xmlns:StUF'           => 'http://www.egem.nl/StUF/StUF0301',
                         '@StUF:functie'         => 'entiteit',
-                        '@StUF:entiteittype'    => 'EDC',
+                        '@StUF:entiteittype'    => $entityType == 'zaak' ? 'ZAK' : 'EDC',
                         'ZKN:identificatie'     => $id,
                     ],
                 ],
@@ -860,7 +883,7 @@ class SOAPService
         ];
     }
 
-    public function processDi02(array $data, array $namespaces, Request $request): string
+    public function processDi02(array $data, array $namespaces, string $type, Request $request): string
     {
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         if (
@@ -870,15 +893,19 @@ class SOAPService
             throw new BadRequestException('STuF and/or case namespaces missing ');
         }
         $env = array_search('http://schemas.xmlsoap.org/soap/envelope/', $namespaces);
-        $message = $data["$env:Body"]["$caseNamespace:genereerDocumentIdentificatie_Di02"];
+        $message = $data["$env:Body"]["$caseNamespace:{$type}_Di02"];
 
         if ($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerDocumentidentificatie') {
             $item = $this->cache->getItem(md5($request->getClientIp()));
             if ($item->isHit()) {
-                return $xmlEncoder->encode($this->generateDu02($item->get()), 'xml');
+                return $xmlEncoder->encode($this->generateDu02($item->get(), $type, 'document'), 'xml');
             } else {
-                return $xmlEncoder->encode($this->generateDu02(null), 'xml');
+                return $xmlEncoder->encode($this->generateDu02(null, $type, 'document'), 'xml');
             }
+        }
+
+        if ($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerZaakidentificatie') {
+            return $xmlEncoder->encode($this->generateDu02(Uuid::uuid4()->toString(), $type, 'zaak'), 'xml');
         }
 
         return $xmlEncoder->encode($this->getFo02Message(), 'xml');
@@ -909,11 +936,17 @@ class SOAPService
         $object = $this->eavService->generateResult($request, $soap->getEntity(), $requestBase, $entity);
         
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
-        $response = $this->entityToSoap($soap, $object);
 
-        // Create a SOAP Responce
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
-        return $xmlEncoder->encode($response, 'xml');
+        return $this->translationService->parse(
+            $xmlEncoder->encode(
+                $this->translationService->dotHydrator(
+                    [],
+                    $object,
+                    $soap->getResponseHydration()
+                ),
+
+                'xml'), true);
     }
 
     /**

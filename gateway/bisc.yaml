@@ -230,7 +230,7 @@ App\Entity\Entity:
         route: '/api/test_results'
         name: testResult
         description: Een toetsresultaat...
-        
+
     # Document object
     document:
         route: '/api/documents'
@@ -252,7 +252,7 @@ App\Entity\Entity:
     courseGroup:
         name: courseGroup
         description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
-            
+
     # participation object
     contactMoment:
         route: '/api/contact_moments'
@@ -617,6 +617,14 @@ App\Entity\Attribute:
         inversedBy: '@user_person'
 
     # Employee  Properties
+    employee_role:
+        name: role
+        type: string
+        entity: '@employee'
+        enum: ['Medewerker', 'Coördinator', 'Begeleider', 'Coördinator Begeleider', 'Vrijwilliger']
+#        required: true # TODO: maybe use this instead of defaultValue?
+        defaultValue: 'Medewerker'
+        searchable: true
     employee_person:
         name: person
         type: object
@@ -1133,7 +1141,7 @@ App\Entity\Attribute:
     learningResult_application:
         name: application
         type: string
-        required: true  
+        required: true
         enum: ['FAMILY AND UPBRINGING', 'LABOR_MARKET_AND_WORK','HEALTH_AND_WELLBEING','LIVING_AND_NEIGHBORHOOD','SELF-SUSTAINABILITY', 'OTHER']
         entity: '@learningResult'
     learningResult_applicationOther:
@@ -1148,7 +1156,7 @@ App\Entity\Attribute:
         type: string
         required: true
         enum: ['INFLUX', 'NLQF_1','NLQF_2','NLQF_3','NLQF_4', 'OTHER']
-        entity: '@learningResult'        
+        entity: '@learningResult'
     learningResult_levelOther:
         name: levelOther
         type: string
@@ -1175,7 +1183,7 @@ App\Entity\Attribute:
         entity: '@learningResult'
         object: '@testResult'
         inversedBy: '@testResult_learningNeedOutCome'
-        
+
     # participation properties
     participation_learningNeed:
         name: learningNeed
@@ -1297,7 +1305,7 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@testResult'
         inversedBy: '@testResult_participation'
-            
+
     # TestResult properties
     testResult_participation:
         name: participation
@@ -1328,7 +1336,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: '@testResult'
-        
+
     # Document properties
     document_participant:
         name: participant
@@ -1376,7 +1384,7 @@ App\Entity\Attribute:
         maxLength: 2500
         required: true
         entity: '@contactMoment'
-        
+
     #TODO: Currently not used in release 1, 2 & 3 ?
     # course properties
     course_name:

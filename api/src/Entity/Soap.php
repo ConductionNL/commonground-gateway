@@ -93,6 +93,13 @@ class Soap
      */
     private $responseHydration = [];
 
+    /**
+     * A string to define the caseType of StUF Lk01 messages
+     * 
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $zaaktype;
+
 
     public function getId(): ?int
     {
@@ -223,6 +230,18 @@ class Soap
         // Lets use this template to generate a skeleton
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
         $this->requestSkeleton = $xmlEncoder->decode($request, 'xml');
+
+        return $this;
+    }
+
+    public function getZaaktype(): ?string
+    {
+        return $this->zaaktype;
+    }
+
+    public function setZaaktype(?string $zaaktype): self
+    {
+        $this->zaaktype = $zaaktype;
 
         return $this;
     }
