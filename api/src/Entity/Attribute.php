@@ -87,7 +87,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $type;
+    private $type = 'string';
 
     /**
      * @var string The swagger type of the property as used in api calls
@@ -133,6 +133,13 @@ class Attribute
      * @MaxDepth(1)
      */
     private ?Entity $object = null;
+
+    /**
+     * Used for schema or oas parsing
+     *
+     * @Assert\Length(max = 255)
+     */
+    private  $ref;
 
     /**
      * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
@@ -603,6 +610,18 @@ class Attribute
     {
         $this->type = 'object';
         $this->object = $object;
+
+        return $this;
+    }
+
+    public function getRef(): string
+    {
+        return $this->ref;
+    }
+
+    public function setRef(string $ref): self
+    {
+        $this->ref = $ref;
 
         return $this;
     }

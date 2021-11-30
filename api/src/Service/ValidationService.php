@@ -8,6 +8,7 @@ use App\Entity\File;
 use App\Entity\GatewayResponseLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use App\Service\SOAPService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -38,6 +39,7 @@ class ValidationService
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
     private ObjectEntityService $objectEntityService;
+    private SOAPService $soapService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -47,7 +49,8 @@ class ValidationService
         AuthorizationService $authorizationService,
         SessionInterface $session,
         ConvertToGatewayService $convertToGatewayService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        SOAPService $soapService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -57,6 +60,7 @@ class ValidationService
         $this->session = $session;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->objectEntityService = $objectEntityService;
+        $this->$soapService = $soapService;
     }
 
     /**
@@ -1251,10 +1255,21 @@ class ValidationService
             unset($post['@type']);
         }
 
-        //var_dump($url);
-        //var_dump($post);
+        // Lets use the correct post type
+        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+            case 'json':
+                $post = json_encode($post);
+                break;
+            case 'soap':
+                $post = $this->soapService->entityToSoap($objectEntity->getEntity()->getToSoap(), $post);
+                break;
+            default:
+                // @todo throw error
+                break;
+        }
 
-        $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
+
+        $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {

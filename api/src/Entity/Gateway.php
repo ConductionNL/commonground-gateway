@@ -169,6 +169,27 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $location;
+    /**
+     * @var string The type of this gatewat
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"json", "xml", "soap", "ftp", "sftp"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"json", "xml", "soap", "ftp", "sftp"},
+     *             "example"="apikey"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $type = 'json';
 
     /**
      * @var string The method used for authentication to the Gateway
@@ -182,7 +203,7 @@ class Gateway
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password"},
+     *             "enum"={"apikey", "jwt", "username-password","none"},
      *             "example"="apikey"
      *         }
      *     }
@@ -190,7 +211,7 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $auth;
+    private string $auth = 'none';
 
     /**
      * @var ?string The Locale of the Gateway
@@ -411,6 +432,18 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }
