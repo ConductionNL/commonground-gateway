@@ -289,7 +289,7 @@ class ObjectEntity
         return $this->application;
     }
 
-    public function setApplication(Application $application): self
+    public function setApplication(?Application $application): self
     {
         $this->application = $application;
 

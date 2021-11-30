@@ -25,13 +25,18 @@ class TranslationService
      */
     public function dotHydrator(array $destination, array $source, array $mapping): array
     {
+//        var_dump($destination);
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
+
+        $source = $source->flatten();
         // Lets use the mapping to hydrate the array
-        foreach($mapping as $search => $replace){
+        foreach($mapping as $replace => $search){
             $destination[$replace] = (string) $source[$search];
         }
+
+//        var_dump($destination);
 
         // Let turn the dot array back into an array
         $destination = $destination->all();
