@@ -40,13 +40,60 @@ class TranslationService
         return $destination;
     }
 
+    /**
+     * Creates a list of replacebale variables for use in translations
+     *
+     * With a litle help from https://github.com/FakerPHP/Faker
+     *
+     * @return array
+     */
+    function generalVariables(): array {
+        $faker = Faker\Factory::create();
 
+        $variables = [];
 
+        // Faker example implementation
+        $variables['faker_uuid'] = $faker->uuid();
+
+        // Session example implementation
+        $variables['session_organization'] = $faker->uuid();
+
+        return $variables;
+    }
+
+    /**
+     * Creates a list of replacebale variables for use in translations
+     *
+     * With a litle help from https://github.com/FakerPHP/Faker
+     *
+     * @return array
+     */
+    function translationVariables(): array {
+        $variables = [];
+
+        $variables['marriage'] = 'huwelijk';
+
+        return $variables;
+    }
+
+    /**
+     * This function parses a string for in string translations
+     *
+     * With a litle help from https://stackoverflow.com/questions/18197348/replacing-variables-in-a-string
+     *
+     * @param string $subject
+     * @param bool $translate
+     * @param array $variables
+     * @param string $escapeChar
+     * @param string|null $errPlaceholder
+     * @return string|string[]|null
+     */
     function parse(
-        /* string */ $subject,
-                     array        $variables,
-        /* string */ $escapeChar = '@',
-        /* string */ $errPlaceholder = null
+         string $subject,
+         bool $translate = true,
+         array  $variables = [],
+         string $escapeChar = '@',
+         string $errPlaceholder = null
     ) {
         $esc = preg_quote($escapeChar);
         $expr = "/
@@ -54,6 +101,8 @@ class TranslationService
       | $esc{
       | {(\w+)}
     /x";
+
+        $variables = array_merge($variables, $this->generalVariables());
 
         $callback = function($match) use($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
@@ -72,6 +121,14 @@ class TranslationService
             }
         };
 
-        return preg_replace_callback($expr, $callback, $subject);
+        // Lets do variable replacement (done on an {x} for y replacement)
+        $subject =  preg_replace_callback($expr, $callback, $subject);
+
+        // Lets do trasnlations (done on a x for y replacement)
+        if($translate){
+            $subject = strtr($subject, $this->translationVariables());
+        }
+
+        return $subject;
     }
 }
