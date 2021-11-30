@@ -1280,8 +1280,24 @@ class ValidationService
                     $gatewayResponseLog->setResponse($response);
                     $this->em->persist($gatewayResponseLog);
                 }
+                // Lets use the correct responce type
+                switch ($objectEntity->getEntity()->getGateway()->getType()) {
+                    case 'json':
+                        $result = json_decode($response->getBody()->getContents(), true);
+                        break;
+                    case 'xml':
+                        $xmlEncoder = new XmlEncoder();
+                        $result = $xmlEncoder->decode($response->getBody()->getContents(), 'xml');
+                        break;
+                    case 'soap':
+                        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+                        $result = $xmlEncoder->decode($response->getBody()->getContents(), 'xml');
+                        break;
+                    default:
+                        // @todo throw error
+                        break;
+                }
 
-                $result = json_decode($response->getBody()->getContents(), true);
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
