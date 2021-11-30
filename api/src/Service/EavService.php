@@ -229,7 +229,7 @@ class EavService
      *
      * @return Response
      */
-    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): Array
+    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): array
     {
         // Lets get our base stuff
         $result = $requestBase['result'];

@@ -19,6 +19,7 @@ class SOAPService
     private EntityManagerInterface $entityManager;
     private CacheInterface $cache;
     private EavService $eavService;
+    private TranslationService $translationService;
 
     /**
      * Translation table for case type descriptions.
@@ -51,12 +52,19 @@ class SOAPService
         'refused'       => ['description' => 'Geweigerd',       'endStatus' => true,    'explanation' => 'Zaak is geweigerd'],
     ];
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, CacheInterface $cache, EavService $eavService)
+    public function __construct(
+        CommonGroundService $commonGroundService,
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache,
+        EavService $eavService,
+        TranslationService $translationService
+    )
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->cache = $cache;
         $this->eavService = $eavService;
+        $this->translationService = $translationService;
     }
 
     public function getZaakType(array $data, array $namespaces): string
@@ -892,7 +900,7 @@ class SOAPService
             if ($item->isHit()) {
                 return $xmlEncoder->encode($this->generateDu02($item->get(), $type, 'document'), 'xml');
             } else {
-                return $xmlEncoder->encode($this->generateDu02(null, $type), 'xml');
+                return $xmlEncoder->encode($this->generateDu02(null, $type, 'document'), 'xml');
             }
         }
 
@@ -928,11 +936,17 @@ class SOAPService
         $object = $this->eavService->generateResult($request, $soap->getEntity(), $requestBase, $entity);
         
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
-        $response = $this->entityToSoap($soap, $object);
 
-        // Create a SOAP Responce
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
-        return $xmlEncoder->encode($response, 'xml');
+        return $this->translationService->parse(
+            $xmlEncoder->encode(
+                $this->translationService->dotHydrator(
+                    [],
+                    $object,
+                    $soap->getResponseHydration()
+                ),
+
+                'xml'), true);
     }
 
     /**

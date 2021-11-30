@@ -28,7 +28,6 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-
         // Lets use the mapping to hydrate the array
         foreach($mapping as $search => $replace){
             $destination[$replace] = (string) $source[$search];
@@ -48,7 +47,7 @@ class TranslationService
      * @return array
      */
     function generalVariables(): array {
-        $faker = Faker\Factory::create();
+        $faker = \Faker\Factory::create();
 
         $variables = [];
 
@@ -69,7 +68,28 @@ class TranslationService
      * @return array
      */
     function translationVariables(): array {
-        $variables = [];
+        $variables = [
+            'death_in_municipality' => 'Overlijden in gemeente',
+            'intra_mun_relocation'  => 'Binnengemeentelijke verhuizing',
+            'inter_mun_relocation'  => 'Inter-gemeentelijke verhuizing',
+            'emigration'            => 'Emigratie',
+            'resettlement'          => 'Hervestiging',
+            'birth'                 => 'Geboorte',
+            'confidentiality'       => 'Verstrekkingsbeperking',
+            'commitment'            => 'Huwelijk/Geregistreerd partnerschap',
+            'discovered_body'       => 'Lijkvinding',
+            'acknowledgement'       => 'Erkenning',
+            'marriage'              => 'Huwelijk',
+            'incomplete'            => 'Incompleet',
+            'created'               => 'Opgenomen',
+            'processing'            => 'In behandeling',
+            'on_hold'               => 'In wachtkamer',
+            'processed'             => 'Verwerkt',
+            'cancelled'             => 'Geannuleerd',
+            'deleted'               => 'Verwijderd',
+            'refused'               => 'Geweigerd',
+
+        ];
 
         //@todo laten we deze vandaag lekker concreet houden
         $variables['marriage'] = 'huwelijk';

@@ -43,7 +43,7 @@ class SOAPController extends AbstractController
                 $message = $SOAPService->processEdcLk01($data, $namespaces, $request);
                 break;
             case 'genereerDocumentIdentificatie_Di02':
-                $message = $SOAPService->processDi02($data, $namespaces, 'genereerDocumentidentificatie', $request);
+                $message = $SOAPService->processDi02($data, $namespaces, 'genereerDocumentIdentificatie', $request);
                 break;
             case 'genereerZaakIdentificatie_Di02':
                 $message = $SOAPService->processDi02($data, $namespaces, 'genereerZaakIdentificatie', $request);
