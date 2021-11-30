@@ -1263,7 +1263,7 @@ class ValidationService
                 break;
             case 'soap':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
-                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator([], $post, $objectEntity->getEntity()->getToSoap()->getResponseHydration()), 'xml'), false);
+                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator([], $post, $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml'), false);
                 break;
             default:
                 // @todo throw error
@@ -1291,7 +1291,10 @@ class ValidationService
                         break;
                     case 'soap':
                         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-                        $result = $xmlEncoder->decode($response->getBody()->getContents(), 'xml');
+                        $result = $response->getBody()->getContents();
+                        // $result = $this->translationService->parse($result);
+                        $result = $xmlEncoder->decode($result, 'xml');
+                        $result = $this->translationService->dotHydrator([], $result, $objectEntity->getEntity()->getToSoap()->getResponseHydration());
                         break;
                     default:
                         // @todo throw error
