@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
 use \App\Service\EavService;
@@ -11,6 +12,7 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class SOAPService
@@ -936,6 +938,8 @@ class SOAPService
             "renderType" => "xml",
             "result" => null,
         ];
+
+
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
 
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
