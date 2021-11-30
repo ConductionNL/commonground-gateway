@@ -218,11 +218,6 @@ class Entity
      */
     private array $collectionConfig = ["results"=>"hydra:member","id"=>"id", "paginationNext"=>"hydra:view.hydra:next"];
 
-    /**
-     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="entity", orphanRemoval=true)
-     */
-    private $fromSoap;
-
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
