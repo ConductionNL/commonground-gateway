@@ -2,23 +2,55 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\SoapRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This enity is used to transle incommong and outgoind soap calls
+ * An possible attribute on an Entity.
  *
- * @ApiResource()
- * @ORM\Entity(repositoryClass=SoapRepository::class)
+ * @category Entity
+ *
+ * @ApiResource(
+ *  itemOperations={
+ *      "get"={"path"="/admin/soaps/{id}"},
+ *      "put"={"path"="/admin/soaps/{id}"},
+ *      "delete"={"path"="/admin/soaps/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/soaps"},
+ *      "post"={"path"="/admin/soaps"}
+ *  })
+ * @ORM\Entity(repositoryClass="App\Repository\SoapRepository")
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact"
+ * })
  */
 class Soap
 {
     /**
+     * @var UuidInterface The UUID identifier of this object
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
@@ -109,9 +141,44 @@ class Soap
     private $zaaktype;
 
 
-    public function getId(): ?int
+    public function export(): ?array
+    {
+
+        if ($this->getEntity() !== null) {
+            $entity = $this->getEntity()->getId()->toString();
+            $entity = "@" . $entity;
+        } else {
+            $entity = null;
+        }
+
+        $data = [
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'type' => $this->getType(),
+            'entity' => $entity,
+            'request' => $this->getRequest(),
+            'requestSkeleton' => $this->getRequestSkeleton(),
+            'requestHydration' => $this->getRequestHydration(),
+            'response' => $this->getResponse(),
+            'responseSkeleton' => $this->getResponseSkeleton(),
+            'responseHydration' => $this->getResponseHydration(),
+            'zaaktype' => $this->getZaaktype(),
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
+
+
+    public function getId()
     {
         return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getName(): ?string
@@ -232,8 +299,8 @@ class Soap
         $this->response = $response;
 
         // Lets use this template to generate a skeleton
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-        $this->responseSkeleton = $xmlEncoder->decode($response, 'xml');
+       // $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+        //$this->responseSkeleton = $xmlEncoder->decode($response, 'xml');
 
         return $this;
     }
@@ -248,8 +315,8 @@ class Soap
         $this->request = $request;
 
         // Lets use this template to generate a skeleton
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
-        $this->requestSkeleton = $xmlEncoder->decode($request, 'xml');
+        //$xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+        //$this->requestSkeleton = $xmlEncoder->decode($request, 'xml');
 
         return $this;
     }

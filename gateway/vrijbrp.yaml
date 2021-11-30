@@ -4,25 +4,101 @@ App\Entity\Gateway:
     vrijbrp_api:
         name: VrijBrp API
         type: json
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://acc-vrijbrp-nijmegen.commonground.nu/
-        
+        auth: none
+        location: https://acc-vrijbrp-nijmegen.commonground.nu/dossiers
+
     vrijbrp_soap:
         name: VrijBrp SOAP
         type: soap
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: http://localhost/soap/stuf
+        auth: none
+        location: https://acc-vrijbrp-nijmegen.commonground.nu/personen-zaken-ws/services
 
 App\Entity\Entity:
     # Test object
     test:
         route: '/api/test'
         name: SOAP Test
-        description: A test entity for Soap translations            
+        description: A test entity for Soap translations
 
-App\Entity\Attribute:    
+    # deaths
+    deaths-in-municipality:
+        #route: '/api/deaths-in-municipality'
+        name: Deaths In Municipality
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # deaths
+    deaths-discovered-body:
+        #route: '/api/deaths-discovered-body'
+        name: Deaths Discovered Body
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Inter-municipal relocations
+    inter-municipal-relocations:
+        #route: '/api/inter-municipal-relocations'
+        name: Inter-municipal relocations
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Intra-municipal relocations
+    intra-municipal-relocations:
+        #route: '/api/intra-municipal-relocations'
+        name: Intra-municipal relocations
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Test object
+    dossiers:
+        #route: '/api/dossiers'
+        name: Dossiers
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Test object
+    relatives:
+        #route: '/api/relatives'
+        name: Relatives
+        description: A test entity for Soap translationsV
+        gateway: '@vrijbrp_api'
+
+    # Test object
+    birth:
+        #route: '/api/birth'
+        name: Birth
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Test object
+    tasks:
+        #route: '/api/tasks'
+        name: Tasks
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Relocations
+    relocations:
+        #route: '/api/relocations'
+        name: Relocations
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+        # Commitment
+    commitment:
+        #route: '/api/commitment'
+        name: Commitment
+        description: A test entity for Soap translations
+        gateway: '@vrijbrp_api'
+
+    # Extract
+    extract:
+        #route: '/api/extracts'
+        name: Extract
+        description: An entity for SOAP BRP extracts
+        gateway: '@vrijbrp_soap'
+
+
+App\Entity\Attribute:
     # course properties
     test_name:
         name: name
@@ -36,8 +112,390 @@ App\Entity\Attribute:
         required: true
         entity: '@test'
 
+    # extracts (ofwel uittreksels)
+    extract_id:
+        name: externalId
+        type: string
+        required: true
+        entity: '@extract'
+    extract_bsn:
+        name: bsn
+        type: string
+        required: true
+        entity: '@extract'
+    extract_phone:
+        name: phone
+        type: string
+        required: false
+        entity: '@extract'
+    extract_email:
+        name: email
+        type: string
+        required: false
+        entity: '@extract'
+    extract_type:
+        name: type
+        type: string
+        required: false
+        entity: '@extract'
+
+    # inter-municipal-relocations
+    inter-municipal-relocations_dossier:
+        name: dossier
+        type: array
+        required: false
+        entity: '@inter-municipal-relocations'
+
+    inter-municipal-relocations_declarant:
+        name: declarant
+        type: array
+        required: false
+        entity: '@inter-municipal-relocations'
+
+    inter-municipal-relocations_newAddress:
+        name: newAddress
+        type: array
+        required: false
+        entity: '@inter-municipal-relocations'
+
+    inter-municipal-relocations_previousMunicipality:
+        name: previousMunicipality
+        type: array
+        required: false
+        entity: '@inter-municipal-relocations'
+
+    inter-municipal-relocations_relocators:
+        name: relocators
+        type: array
+        required: false
+        entity: '@inter-municipal-relocations'
+
+    # intra-municipal-relocations
+    intra-municipal-relocations_dossier:
+        name: dossier
+        type: array
+        required: false
+        entity: '@intra-municipal-relocations'
+
+    intra-municipal-relocations_declarant:
+        name: declarant
+        type: array
+        required: false
+        entity: '@intra-municipal-relocations'
+
+    intra-municipal-relocations_newAddress:
+        name: newAddress
+        type: array
+        required: false
+        entity: '@intra-municipal-relocations'
+
+    intra-municipal-relocations_relocators:
+        name: relocators
+        type: array
+        required: false
+        entity: '@intra-municipal-relocations'
+
+    # deaths-in-municipality
+    deaths-in-municipality_dossier:
+        name: dossier
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_declarant:
+        name: declarant
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_deceased:
+        name: deceased
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_deathByNaturalCauses:
+        name: deathByNaturalCauses
+        type: boolean
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_municipality:
+        name: municipality
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_dateOfDeath:
+        name: dateOfDeath
+        type: date
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_timeOfDeath:
+        name: timeOfDeath
+        type: string
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_funeralServices:
+        name: funeralServices
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_correspondence:
+        name: correspondence
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    deaths-in-municipality_extracts:
+        name: extracts
+        type: array
+        required: false
+        entity: '@deaths-in-municipality'
+
+    # deaths-discovered-body
+    deaths-discovered-body_dossier:
+        name: dossier
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_deceased:
+        name: deceased
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_writtenDeclarantType:
+        name: writtenDeclarantType
+        type: string
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_deathByNaturalCauses:
+        name: deathByNaturalCauses
+        type: boolean
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_municipality:
+        name: municipality
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_dateOfDeath:
+        name: dateOfDeath
+        type: date
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_timeOfDeath:
+        name: timeOfDeath
+        type: string
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_explanation:
+        name: explanation
+        type: string
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_funeralServices:
+        name: funeralServices
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_correspondence:
+        name: correspondence
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    deaths-discovered-body_extracts:
+        name: extracts
+        type: array
+        required: false
+        entity: '@deaths-discovered-body'
+
+    # Birth
+    birth_dossier:
+        name: dossier
+        type: array
+        required: false
+        entity: '@birth'
+
+    birth_declarant:
+        name: declarant
+        type: array
+        required: false
+        entity: '@birth'
+
+    birth_mother:
+        name: mother
+        type: array
+        required: false
+        entity: '@birth'
+
+    birth_fatherDuoMother:
+        name: fatherDuoMother
+        type: array
+        required: false
+        entity: '@birth'
+
+    birth_children:
+        name: children
+        type: array
+        required: false
+        entity: '@birth'
+
+    birth_nameSelection:
+        name: nameSelection
+        type: array
+        required: false
+        entity: '@birth'
+
+    # Commitment
+    commitment_commitment:
+        name: dossier
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_partner1:
+        name: partner1
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_partner2:
+        name: partner2
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_planning:
+        name: planning
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_location:
+        name: location
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_officials:
+        name: officials
+        type: array
+        required: false
+        entity: '@commitment'
+
+    commitment_witnesses:
+        name: witnesses
+        type: array
+        required: false
+        entity: '@commitment'
+
 # Okey so now we need some soap stuff :')
 App\Entity\Soap:
+    #Uittreksel BRP
+    soapExtract:
+        name: Extract BRP
+        description: A soap entity for BRP extracts
+        toEntity: '@extract'
+        type: zakLk01
+        zaaktype: B0255
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
+            email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            type: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
+            bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
+            externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht
+                        xmlns="http://www.egem.nl/StUF/StUF0301">
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        responseHydration: {}
+
+    soapExtractGateway:
+        name: Extract BRP gateway
+        description: A SOAP resource to input an extract case into the SOAP API
+        fromEntity: '@extract'
+        type: zakLk01
+        request: |
+            <?xml version="1.0" encoding="UTF-8"?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+              <S:Body>
+                <ns3:AanvraagRequest xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes"
+                                     xmlns:ns3="urn:nl/procura/gba/v1.5/diensten"
+                                     xmlns:ns4="urn:nl/procura/gba/v1.5/diensten/uittreksel"
+                >
+                  <ns3:UittrekselaanvraagRequest>
+                    <ns4:Zaakgegevens>
+                      <ZaakID>1342123421</ZaakID>
+                      <Bron>GBA Webservice</Bron>
+                      <Leverancier>PROCURA</Leverancier>
+                      <DatumAanvraag>2013-08-23</DatumAanvraag>
+                    </ns4:Zaakgegevens>
+                    <ns4:Aanvraaggegevens>
+                      <ns4:BurgerservicenummerAanvrager>000000115</ns4:BurgerservicenummerAanvrager>
+                      <ns4:UittrekselBetrokkenen>
+                        <ns4:UittrekselBetrokkene>
+                          <ns4:Burgerservicenummer>000000176</ns4:Burgerservicenummer>
+                          <ns4:Uittrekselcode>31</ns4:Uittrekselcode>
+                          <ns4:IndicatieGratis>false</ns4:IndicatieGratis>
+                        </ns4:UittrekselBetrokkene>
+                      </ns4:UittrekselBetrokkenen>
+                    </ns4:Aanvraaggegevens>
+                    <ns4:Contactgegevens>
+                      <Emailadres>a@a.a</Emailadres>
+                      <TelefoonnummerPrive>06-prive</TelefoonnummerPrive>
+                      <TelefoonnummerWerk>06-werk</TelefoonnummerWerk>
+                      <TelefoonnummerMobiel>06-mobiel</TelefoonnummerMobiel>
+                    </ns4:Contactgegevens>
+                  </ns3:UittrekselaanvraagRequest>
+                </ns3:AanvraagRequest>
+              </S:Body>
+            </S:Envelope>
+        requestHydration:
+          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:BurgerservicenummerAanvrager": bsn
+          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Burgerservicenummer": bsn
+          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Uittrekselcode": type
+          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.Emailadres": email
+          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.TelefoonnummerMobiel": phone
+
+
     # User object
     soaptest:
         name: SOAP Test
@@ -47,8 +505,8 @@ App\Entity\Soap:
         # request:
         #requestSkeleton
         requestHydration:
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description    
+            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname" 
+            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"     
         # response:
         #responseSkeleton:
         #    - "ns2:wrapper"
@@ -56,6 +514,6 @@ App\Entity\Soap:
         #        - "ns1:realdescription"
         #    - "ns3:random"
         responseHydration:
-            id: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id"
-            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
-            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id": id
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
+            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description

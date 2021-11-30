@@ -474,7 +474,8 @@ class Gateway
             'password' => $this->getPassword(),
             'apikey' => $this->getApikey(),
             'documentation' => $this->getDocumentation(),
-            'headers' => $this->getHeaders()
+            'headers' => $this->getHeaders(),
+            'type' => $this->getType(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);

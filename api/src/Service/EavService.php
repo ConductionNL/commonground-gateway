@@ -192,6 +192,48 @@ class EavService
             $entity = null;
         }
 
+        // Get a body
+        if($request->getContent()){
+            //@todo support xml messages
+            $body = json_decode($request->getContent(), true);
+        }
+
+        $requestBase = $this->getRequestBase($request);
+        $result = $this->generateResult($request, $entity, $requestBase, $body);
+
+        // Lets seriliaze the shizle
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+
+        // Let return the shizle
+        $response = new Response(
+            $result,
+            $responseType,
+            ['content-type' => $contentType]
+        );
+
+        // Let intervene if it is  a known file extension
+        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
+        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
+            $date = new \DateTime();
+            $date = $date->format('Ymd_His');
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
+            $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Handles an api request.
+     *
+     * @param Request $request
+     *
+     * @throws Exception
+     *
+     * @return Response
+     */
+    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): array
+    {
         // Get the application by searching for an application with a domain that matches the host of this request
         $host = $request->headers->get('host');
         // TODO: use a sql query instead of array_filter for finding the correct application
@@ -238,48 +280,6 @@ class EavService
             $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
         }
 
-        // Get a body
-        if($request->getContent()){
-            //@todo support xml messages
-            $body = json_decode($request->getContent(), true);
-        }
-
-        $requestBase = $this->getRequestBase($request);
-        $result = $this->generateResult($request, $entity, $requestBase, $body);
-
-        // Lets seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
-
-        // Let return the shizle
-        $response = new Response(
-            $result,
-            $responseType,
-            ['content-type' => $contentType]
-        );
-
-        // Let intervene if it is  a known file extension
-        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
-        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
-            $date = new \DateTime();
-            $date = $date->format('Ymd_His');
-            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
-            $response->headers->set('Content-Disposition', $disposition);
-        }
-
-        return $response;
-    }
-
-    /**
-     * Handles an api request.
-     *
-     * @param Request $request
-     *
-     * @throws Exception
-     *
-     * @return Response
-     */
-    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): array
-    {
         // Lets get our base stuff
         $result = $requestBase['result'];
 
