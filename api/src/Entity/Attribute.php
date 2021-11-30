@@ -456,16 +456,15 @@ class Attribute
      */
     private $maxFileSize;
 
-    //TODO: make this an enum?
     /**
-     * @var string *Can only be used in combination with type file* The type of the file
+     * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
-    private $fileType;
+    private $fileTypes;
 
     /**
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
@@ -1010,14 +1009,14 @@ class Attribute
         return $this;
     }
 
-    public function getFileType(): ?string
+    public function getFileTypes(): ?array
     {
-        return $this->fileType;
+        return $this->fileTypes;
     }
 
-    public function setFileType(?string $fileType): self
+    public function setFileTypes(?array $fileTypes): self
     {
-        $this->fileType = $fileType;
+        $this->fileTypes = $fileTypes;
 
         return $this;
     }
