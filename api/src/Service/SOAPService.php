@@ -927,7 +927,7 @@ class SOAPService
         // Lets make the entity call
         //$entity = $this->soapToEntity($soap, $data);
 
-        $entity = $this->translationService([],$data,$soap->getRequestHydration());
+        $entity = $this->translationService->dotHydrator([],$data,$soap->getRequestHydration());
         $requestBase = [
             "path" => $soap->getToEntity()->getRoute(),
             "id" => null,
