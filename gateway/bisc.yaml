@@ -1379,7 +1379,7 @@ App\Entity\Attribute:
         required: true
 #        multiple: true
         maxFileSize: 550000
-#        fileType: 'image/jpeg'
+        fileTypes: ['application/pdf', 'text/plain', 'text/xml', 'text/json', 'text/x-comma-separated-values', 'text/comma-separated-values', 'application/vnd.msexcel', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4', 'audio/mp3', 'image/png', 'image/x-png', 'image/jpeg', 'image/pjpeg']
         entity: '@document'
 
     # Contact Moment properties
