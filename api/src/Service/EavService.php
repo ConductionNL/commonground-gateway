@@ -41,7 +41,7 @@ class EavService
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ResponseService $responseService, ParameterBagInterface $parameterBag)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
