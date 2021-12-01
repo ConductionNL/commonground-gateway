@@ -73,7 +73,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $description;
+    private ?string $description;
 
     /**
      * @var array An array of domains of this Application.

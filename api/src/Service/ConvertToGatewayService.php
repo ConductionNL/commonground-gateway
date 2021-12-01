@@ -37,32 +37,24 @@ class ConvertToGatewayService
     public function convertEntityObjects(Entity $entity)
     {
         // Make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
             return null; //Or false or error? //todo?
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $totalExternObjects = [];
-        $page = 1;
-        while (true) {
-            $response = $this->commonGroundService->getResourceList($entity->getGateway()->getLocation().'/'.$entity->getEndpoint(), ['page'=>$page]);
-            $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
-            if (!isset($response['hydra:view']['hydra:next'])) {
-                break;
-            }
-            $page += 1;
-        }
+        $totalExternObjects = $this->getExternObjects($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
-        $newGatewayObjects = new ArrayCollection();
+//        $newGatewayObjects = new ArrayCollection();
         foreach ($totalExternObjects as $externObject) {
             if (!$this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $externObject['id']])) {
                 // Convert this object to a gateway object
-                $object = $this->convertToGatewayObject($entity, $externObject);
-                if ($object) {
-                    $newGatewayObjects->add($object);
-                }
+                $this->convertToGatewayObject($entity, $externObject);
+//                $object = $this->convertToGatewayObject($entity, $externObject);
+//                if ($object) {
+//                    $newGatewayObjects->add($object);
+//                }
             }
         }
 //        var_dump('New gateway objects = '.count($newGatewayObjects));
@@ -75,11 +67,23 @@ class ConvertToGatewayService
 
         // Delete these $onlyInGateway objectEntities ?
         foreach ($onlyInGateway as $item) {
+//            var_dump($item->getId());
             $this->em->remove($item);
         }
 //        var_dump('Deleted gateway objects = '.count($onlyInGateway));
 
-        $this->em->flush(); // TODO: Do we need this here or not?
+        $this->em->flush();
+    }
+
+    private function getExternObjects(string $url, array $totalExternObjects = [], int $page = 1): array
+    {
+        $response = $this->commonGroundService->getResourceList($url, ['page'=>$page], false);
+        $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
+        if (isset($response['hydra:view']['hydra:next'])) { // localhost / testing add?: && $page < 3
+            return $this->getExternObjects($url, $totalExternObjects, $page + 1);
+        }
+
+        return $totalExternObjects;
     }
 
     /**
@@ -96,7 +100,7 @@ class ConvertToGatewayService
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
             return null; //Or false or error? //todo?
         }
 

@@ -143,21 +143,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         // Multitenancy, only show objects this user is allowed to see.
+        //TODO: owner check
+//        $user = $this->tokenStorage->getToken()->getUser();
+//
+//        if (is_string($user)) {
+//            $user = null;
+//        } else {
+//            $user = $user->getUserIdentifier();
+//        }
 
-        $user = $this->tokenStorage->getToken()->getUser();
-
-        if (is_string($user)) {
-            $user = null;
-        } else {
-            $user = $user->getUserIdentifier();
-        }
-
+        // TODO: organizations or owner
         if (empty($this->session->get('organizations'))) {
-            $query->andWhere('(o.organization IN (:organizations) OR o.owner = :owner)')->setParameters(['organizations' =>  null, 'owner' => $user]);
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
         } else {
-            $query->andWhere('(o.organization IN (:organizations) OR o.owner = :owner)')->setParameters(['organizations' => $this->session->get('organizations'), 'owner' => $user]);
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
-
         // TODO filter for o.application?
 
 //        var_dump($query->getDQL());
@@ -196,7 +196,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
                 break;
             case '_organization':
-                $query->andWhere($prefix.'.organization = :organization')->setParameter('externalId', $value);
+                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
                 break;
             case '_application':
                 $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
@@ -204,21 +204,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
             case '_dateCreated':
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
                 }
                 if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
                 }
                 break;
             case '_dateModified':
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
                 }
                 if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
                 }
                 break;
             default:
