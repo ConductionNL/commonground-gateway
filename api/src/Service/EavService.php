@@ -16,6 +16,8 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use function GuzzleHttp\json_decode;
+use function PHPSTORM_META\map;
+
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +26,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
 class EavService
 {
@@ -69,12 +72,12 @@ class EavService
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if (!($entity instanceof Entity)) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/'.$entityName]);
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/' . $entityName]);
         }
 
         if (!($entity instanceof Entity)) {
             return [
-                'message' => 'Could not establish an entity for '.$entityName,
+                'message' => 'Could not establish an entity for ' . $entityName,
                 'type'    => 'Bad Request',
                 'path'    => 'entity',
                 'data'    => ['Entity Name' => $entityName],
@@ -119,7 +122,7 @@ class EavService
             // make sure $id is actually an uuid
             if (Uuid::isValid($id) == false) {
                 return [
-                    'message' => 'The given id ('.$id.') is not a valid uuid.',
+                    'message' => 'The given id (' . $id . ') is not a valid uuid.',
                     'type'    => 'Bad Request',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $id],
@@ -133,7 +136,7 @@ class EavService
                     $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
-                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
+                            'message' => 'Could not find an object with id ' . $id . ' of type ' . $entity->getName(),
                             'type'    => 'Bad Request',
                             'path'    => $entity->getName(),
                             'data'    => ['id' => $id],
@@ -292,7 +295,58 @@ class EavService
         }
 
         // Let seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+        $options = [];
+
+        switch ($contentType) {
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => "+"
+                ];
+        }
+
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
+
+        if ($contentType === 'text/csv') {
+
+            $replacements = [
+                'languageHouse.name' => 'Taalhuis',
+                'person.givenName' => 'Voornaam',
+                'person.additionalName' => 'Tussenvoegsel',
+                'person.familyName' => 'Achternaam',
+                'person.emails.0.email' => "E-mail adres",
+                'person.telephones.0.telephone' => "Telefoonnummer",
+                'intake.date' => 'Aanmaakdatum',
+                'intake.referringOrganization' => 'Verwijzer',
+                'intake.referringOrganizationEmail' => 'Verwijzer Email',
+                'intake.referringOrganizationOther' => 'Verwijzer Telefoon',
+                'intake.foundVia' => 'Via',
+                'intake.foundViaOther' => 'Via (anders)',
+                'roles' => "Rollen",
+                'student.id' => 'ID deelnemer',
+                'description' => 'Beschrijving',
+                'motivation' => 'Leervraag',
+                'student.person.givenName' => 'Voornaam',
+                'student.person.additionalName' => 'Tussenvoegsel',
+                'student.person.familyName' => 'Achternaam',
+                'student.person.emails.0.email' => 'E-mail adres',
+                'student.person.telephones.0.telephone' => 'Telefoonnummer',
+                'student.intake.dutchNTLevel' => 'NT1/NT2',
+                'learning_results.id' => "ID leervraag",
+                'learning_results.verb' => 'Werkwoord',
+                'learning_results.subject' => 'Onderwerp',
+                'learning_results.subjectOther' => 'Onderwerp (anders)',
+                'learning_results.application' => 'Toepassing',
+                'learning_results.applicationOther' => 'Toepasing (anders)',
+                'learning_results.level' => "Niveau",
+                'participations.provider.id' => "ID aanbieder",
+                'participations.provider.name' => 'Aanbieder'
+            ];
+
+            foreach ($replacements as $key => $value) {
+                $result = str_replace($key, $value, $result);
+            }
+        }
 
         // Let return the shizle
         $response = new Response(
@@ -363,7 +417,7 @@ class EavService
         $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
         if ($renderType && !in_array($renderType, $renderTypes)) {
             return [
-                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
+                'message' => 'The rendering of this type is not suported, suported types are ' . implode(',', $renderTypes),
                 'type'    => 'Bad Request',
                 'path'    => $path,
                 'data'    => ['rendertype' => $renderType],
@@ -380,8 +434,8 @@ class EavService
             'application/json'    => 'json',
             'application/ld+json' => 'jsonld',
             'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
+            'application/hal+json' => 'jsonhal',
+            'application/json+hal' => 'jsonhal',
             'application/xml'     => 'xml',
             'text/csv'            => 'csv',
             'text/yaml'           => 'yaml',
@@ -456,7 +510,7 @@ class EavService
                 if ($attribute->getMultiple()) {
                     // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
                     if (!is_array($value)) {
-                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: ' . $attribute->getName() . '[])');
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
@@ -690,7 +744,7 @@ class EavService
         }
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
+        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
             $this->convertToGatewayService->convertEntityObjects($entity);
         }
@@ -704,14 +758,14 @@ class EavService
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
             if (substr($param, 0, 1) == '.') {
-                $param = '_'.ltrim($param, $param[0]);
+                $param = '_' . ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr.$filter;
+                    $filterCheckStr = $filterCheckStr . $filter;
                     if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr.', ';
+                        $filterCheckStr = $filterCheckStr . ', ';
                     }
                 }
 
@@ -720,10 +774,10 @@ class EavService
                 }
 
                 return [
-                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
+                    'message' => 'Unsupported queryParameter (' . $param . '). Supported queryParameters: ' . $filterCheckStr,
                     'type'    => 'error',
-                    'path'    => $entity->getName().'?'.$param.'='.$value,
-                    'data'    => ['queryParameter'=>$param],
+                    'path'    => $entity->getName() . '?' . $param . '=' . $value,
+                    'data'    => ['queryParameter' => $param],
                 ];
             }
         }
@@ -747,7 +801,7 @@ class EavService
         }
 
         // If not lets make it pritty
-        $results = ['results'=>$results];
+        $results = ['results' => $results];
         $results['total'] = $total;
         $results['limit'] = $limit;
         $results['pages'] = ceil($total / $limit);
@@ -881,9 +935,9 @@ class EavService
 
         // Lets make it personal
         $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()) . '/' . $result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -992,7 +1046,7 @@ class EavService
                         $response[$attribute->getName()] = $this->renderObjects($value, $subfields, null, $flat, $level);
                     }
 
-                    if ($response[$attribute->getName()] === ['continue'=>'continue']) {
+                    if ($response[$attribute->getName()] === ['continue' => 'continue']) {
                         unset($response[$attribute->getName()]);
                     }
                     continue;
@@ -1038,7 +1092,7 @@ class EavService
                 return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
             }
 
-            return ['continue'=>'continue']; //TODO We want this
+            return ['continue' => 'continue']; //TODO We want this
         }
 
         // If we can have multiple Objects (because multiple = true)
@@ -1051,7 +1105,7 @@ class EavService
                 continue;
             }
             // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()) . '/' . $object->getId()];
         }
 
         return $objectsArray;
