@@ -929,7 +929,7 @@ class SOAPService
         // Lets make the entity call
         //$entity = $this->soapToEntity($soap, $data);
 
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope']);
         $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
 //        var_dump($entity);
 
