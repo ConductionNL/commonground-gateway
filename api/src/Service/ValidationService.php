@@ -1443,6 +1443,9 @@ class ValidationService
      */
     private function notify(ObjectEntity $objectEntity, string $method)
     {
+        if(!$this->commonGroundService->getComponent('nrc')){
+            return;
+        }
         // TODO: move this function to a notificationService?
         $topic = $objectEntity->getEntity()->getName();
         switch ($method) {
