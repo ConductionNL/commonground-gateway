@@ -33,7 +33,7 @@ class TranslationService
 //var_dump($source);
         // Lets use the mapping to hydrate the array
         foreach($mapping as $replace => $search){
-            $destination[$replace] = $source[$search] ? (string) $source[$search] : (string) $destination[$replace];
+            $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
         }
 
         // Let turn the dot array back into an array

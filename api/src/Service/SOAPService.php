@@ -941,12 +941,87 @@ class SOAPService
             "result" => null,
         ];
 
-
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
-        // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 //        var_dump($object);
+        // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
+    }
+
+    private function parseDate(string $date): string
+    {
+        strlen($date) == 6 ? $date = new \DateTime("20".$date) : new \DateTime($date);
+
+        return $date->format("Y-m-d");
+    }
+
+    /**
+     * Finds specific values and parses them.
+     *
+     * @param array $data
+     * @param array $namespaces
+     * @param string $messageType
+     * @param string $zaaktype
+     * @return array
+     */
+    public function parseSpecificValues(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
+    {
+        $data = new \Adbar\Dot($data);
+        // Emigratie
+        if($messageType == 'zakLk01' && $zaaktype == 'B1425')
+        {
+            $data->set(
+                "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#",
+                $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#")));
+        }
+        if($messageType == 'zakLk01' && $zaaktype == 'B0366')
+        {
+            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#") !== 'hoofdbewoner'){
+                $data->set('liveIn', [
+                    'liveInApplicable'  => true,
+                    'consent'           => "APPLICABLE",
+                    'consenter'         => ['bsn' => "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#"]
+                ]);
+                $data->set(
+                    "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
+                    $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.11.#")
+                );
+            } else {
+                $data->set('liveIn', [
+                    'liveInApplicable'  => false,
+                    'consent'           => "NOT_APPLICABLE",
+                ]);
+            }
+            $data->set(
+            "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
+            $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#")));
+
+        }
+        if($messageType == 'zakLk01' && $zaaktype == 'B0328')
+        {
+            $data->set('requesterBsn',$data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+
+            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#") == 'mijzelf')
+                $data->set('bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            else{
+                $data->set('bsn', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#"));
+                $data->set("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#", $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"));
+            }
+        }
+
+        if($messageType == 'zakLk01' && $zaaktype == 'B0255')
+        {
+            $data->set('requesterBsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+
+            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#") == 'mijzelf')
+                $data->set('bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            else{
+                $data->set('bsn', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"));
+            }
+        }
+
+//        var_dump($data->all());
+        return $data->all();
     }
 }
