@@ -658,6 +658,7 @@ class EavService
         // Validation stap
         $object = $this->validationService->validateEntity($object, $body);
 
+
         // Let see if we have errors
         if ($object->getHasErrors()) {
             return $this->returnErrors($object);

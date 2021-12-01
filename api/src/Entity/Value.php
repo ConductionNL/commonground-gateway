@@ -401,6 +401,8 @@ class Value
                     }
                     // else $value = ObjectEntity::class
                     return $this->addObject($value);
+                case 'array':
+                    return $this->setArrayValue($value);
             }
         } else {
             //TODO: correct error handling
@@ -424,6 +426,8 @@ class Value
                     return $this->getBooleanValue();
                 case 'number':
                     return $this->getNumberValue();
+                case 'array':
+                    return $this->getArrayValue();
                 case 'date':
                 case 'datetime':
                     $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';

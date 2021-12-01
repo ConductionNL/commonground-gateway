@@ -209,7 +209,7 @@ class ValidationService
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
-            if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+            if (is_array($value) && $attribute->getType() != 'array' && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
@@ -968,6 +968,12 @@ class ValidationService
                 $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($value));
 
                 break;
+            case 'array':
+                if(!is_array($value)){
+                    $objectEntity->addError($attribute->getName(), 'Contians a value that is not an array, provide an array as string instead');
+                    break;
+                }
+                break;
             default:
                 $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
         }
@@ -1250,6 +1256,8 @@ class ValidationService
             }
         }
 
+        $post ?  : $post = $objectEntity->toArray();
+
         // We want to clear some stuf upp dh
         if (array_key_exists('id', $post)) {
             unset($post['id']);
@@ -1268,16 +1276,13 @@ class ValidationService
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
             case 'json':
                 $post = json_encode($post);
+                var_dump($post);
                 break;
             case 'soap':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
                 $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
                     $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
                     $objectEntity->toArray(), $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml', ['xml_encoding' => 'utf-8']), false);
-//                $headers['Content-Type'] = 'application/xml';
-//                $headers['Accept'] = 'application/xml';
-//                $headers['Content-Length'] = (string) strlen($post);
-//                $headers['Cache-Control'] = 'no-cache';
                 break;
             default:
                 // @todo throw error
@@ -1417,11 +1422,7 @@ class ValidationService
                     } elseif ($errorBody && array_key_exists('hydra:description', $errorBody)) {
                         $error_message = $error['hydra:description'];
                     } else {
-//                        var_dump($error->getRequest()->getHeaders());
-//                        var_dump($error->getRequest()->getUri());
-//                        var_dump($error->getRequest()->getBody()->getContents());
                         $error_message = (string) $error->getResponse()->getBody();
-//                        var_dump($error_message);
                     }
                 } else {
                     $error_message = $error->getMessage();
