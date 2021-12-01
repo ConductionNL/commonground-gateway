@@ -53,7 +53,7 @@ class ResponseService
     {
         $response = [];
 
-        if($result->getEntity()->getGateway()->getType() == 'xml'){
+        if($result->getEntity()->getGateway()->getType() == 'soap' || $result->getEntity()->getGateway()->getType() == 'xml'){
             return $response;
         }
 
