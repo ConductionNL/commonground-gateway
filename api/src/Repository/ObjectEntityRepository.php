@@ -204,21 +204,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
             case '_dateCreated':
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateCreated >= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
                 }
                 if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateCreated <= :dateCreated')->setParameter('dateCreated', $date->format('Y-m-d H:i:s'));
                 }
                 break;
             case '_dateModified':
                 if (array_key_exists('from', $value)) {
                     $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateModified >= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
                 }
                 if (array_key_exists('till', $value)) {
                     $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
+                    $query->andWhere($prefix.'.dateModified <= :dateModified')->setParameter('dateModified', $date->format('Y-m-d H:i:s'));
                 }
                 break;
             default:
