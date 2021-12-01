@@ -30,15 +30,15 @@ class TranslationService
         $source = new \Adbar\Dot($source);
 
         $source = $source->flatten();
-
+//var_dump($source);
         // Lets use the mapping to hydrate the array
         foreach($mapping as $replace => $search){
-            $destination[$replace] = (string) $source[$search];
+            $destination[$replace] = $source[$search] ? (string) $source[$search] : (string) $destination[$replace];
         }
 
         // Let turn the dot array back into an array
         $destination = $destination->all();
-
+//var_dump($destination);
         return $destination;
     }
 

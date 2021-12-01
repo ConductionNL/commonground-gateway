@@ -944,6 +944,7 @@ class SOAPService
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
+//        var_dump($object);
 
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
