@@ -53,6 +53,10 @@ class ResponseService
     {
         $response = [];
 
+        if($result->getEntity()->getGateway()->getType() == 'xml'){
+            return $response;
+        }
+
         // Lets start with the external results
         if (!empty($result->getExternalResult())) {
             $response = array_merge($response, $result->getExternalResult());
