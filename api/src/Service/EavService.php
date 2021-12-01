@@ -23,6 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
@@ -292,7 +293,57 @@ class EavService
         }
 
         // Let seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+        $options = [];
+
+        switch ($contentType) {
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
+        }
+
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
+
+        if ($contentType === 'text/csv') {
+            $replacements = [
+                'languageHouse.name'                    => 'Taalhuis',
+                'person.givenName'                      => 'Voornaam',
+                'person.additionalName'                 => 'Tussenvoegsel',
+                'person.familyName'                     => 'Achternaam',
+                'person.emails.0.email'                 => 'E-mail adres',
+                'person.telephones.0.telephone'         => 'Telefoonnummer',
+                'intake.date'                           => 'Aanmaakdatum',
+                'intake.referringOrganizationEmail'     => 'Verwijzer Email',
+                'intake.referringOrganizationOther'     => 'Verwijzer Telefoon',
+                'intake.referringOrganization'          => 'Verwijzer',
+                'intake.foundViaOther'                  => 'Via (anders)',
+                'intake.foundVia'                       => 'Via',
+                'roles'                                 => 'Rollen',
+                'student.id'                            => 'ID deelnemer',
+                'description'                           => 'Beschrijving',
+                'motivation'                            => 'Leervraag',
+                'student.person.givenName'              => 'Voornaam',
+                'student.person.additionalName'         => 'Tussenvoegsel',
+                'student.person.familyName'             => 'Achternaam',
+                'student.person.emails.0.email'         => 'E-mail adres',
+                'student.person.telephones.0.telephone' => 'Telefoonnummer',
+                'student.intake.dutchNTLevel'           => 'NT1/NT2',
+                'learning_results.id'                   => 'ID leervraag',
+                'learning_results.verb'                 => 'Werkwoord',
+                'learning_results.subject'              => 'Onderwerp',
+                'learning_results.subjectOther'         => 'Onderwerp (anders)',
+                'learning_results.application'          => 'Toepassing',
+                'learning_results.applicationOther'     => 'Toepasing (anders)',
+                'learning_results.level'                => 'Niveau',
+                'participations.provider.id'            => 'ID aanbieder',
+                'participations.provider.name'          => 'Aanbieder',
+            ];
+
+            foreach ($replacements as $key => $value) {
+                $result = str_replace($key, $value, $result);
+            }
+        }
 
         // Let return the shizle
         $response = new Response(
@@ -377,14 +428,14 @@ class EavService
     {
         // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
         $acceptHeaderToSerialiazation = [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
+            'application/json'     => 'json',
+            'application/ld+json'  => 'jsonld',
+            'application/json+ld'  => 'jsonld',
+            'application/hal+json' => 'jsonhal',
+            'application/json+hal' => 'jsonhal',
+            'application/xml'      => 'xml',
+            'text/csv'             => 'csv',
+            'text/yaml'            => 'yaml',
         ];
 
         $contentType = $request->headers->get('accept');
@@ -690,7 +741,7 @@ class EavService
         }
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
+        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
             $this->convertToGatewayService->convertEntityObjects($entity);
         }
@@ -723,7 +774,7 @@ class EavService
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
                     'path'    => $entity->getName().'?'.$param.'='.$value,
-                    'data'    => ['queryParameter'=>$param],
+                    'data'    => ['queryParameter' => $param],
                 ];
             }
         }
@@ -747,7 +798,7 @@ class EavService
         }
 
         // If not lets make it pritty
-        $results = ['results'=>$results];
+        $results = ['results' => $results];
         $results['total'] = $total;
         $results['limit'] = $limit;
         $results['pages'] = ceil($total / $limit);
@@ -992,7 +1043,7 @@ class EavService
                         $response[$attribute->getName()] = $this->renderObjects($value, $subfields, null, $flat, $level);
                     }
 
-                    if ($response[$attribute->getName()] === ['continue'=>'continue']) {
+                    if ($response[$attribute->getName()] === ['continue' => 'continue']) {
                         unset($response[$attribute->getName()]);
                     }
                     continue;
@@ -1038,7 +1089,7 @@ class EavService
                 return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
             }
 
-            return ['continue'=>'continue']; //TODO We want this
+            return ['continue' => 'continue']; //TODO We want this
         }
 
         // If we can have multiple Objects (because multiple = true)
