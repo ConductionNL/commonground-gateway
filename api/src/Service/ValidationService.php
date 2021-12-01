@@ -1276,7 +1276,7 @@ class ValidationService
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
             case 'json':
                 $post = json_encode($post);
-                var_dump($post);
+//                var_dump($post);
                 break;
             case 'soap':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);

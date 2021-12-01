@@ -943,7 +943,6 @@ class SOAPService
 
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
-var_Dump($object);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 
         return $this->translationService->parse(
