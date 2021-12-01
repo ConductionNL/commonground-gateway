@@ -107,13 +107,13 @@ class ValidationService
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
             }
             //TODO: do we want this? ;
-//            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
-//            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
-//                continue;
-//            }
+            //            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
+            //            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
+            //                continue;
+            //            }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-//                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
             }
             // Check if this field is nullable
@@ -137,11 +137,11 @@ class ValidationService
                         // So if we found a value in the 'parent values' of the ObjectEntity, with ->getObjectEntity()->getEntity()...
                         // ...equal to the Entity (->getObject) of this field / attribute. Get the attribute of this Value.
                         $parentValueAttribute = $parentValues->first()->getAttribute();
-//                        var_dump($attribute->getName());
-//                        var_dump('cascadeLoop');
-//                        var_dump($parentValueAttribute->getName());
-//                        var_dump($parentValueAttribute->getCascade());
-//                        var_dump($parentValueAttribute->getInversedBy()->getName());
+                        //                        var_dump($attribute->getName());
+                        //                        var_dump('cascadeLoop');
+                        //                        var_dump($parentValueAttribute->getName());
+                        //                        var_dump($parentValueAttribute->getCascade());
+                        //                        var_dump($parentValueAttribute->getInversedBy()->getName());
                         // Now lets make sure this attribute is of type object, has cascade on and is inversedBy the attribute of our current field.
                         if ($parentValueAttribute->getType() == 'object' && $parentValueAttribute->getCascade() && $parentValueAttribute->getInversedBy() == $attribute) {
                             // If so, skip throwing a 'is required' error, because after this validation this required field will be set because of InversedBy in the Value->addObject() function.
@@ -156,7 +156,7 @@ class ValidationService
             }
         }
         // Check post for not allowed properties
-        foreach ($post as $key=>$value) {
+        foreach ($post as $key => $value) {
             if (!$entity->getAttributeByName($key) && $key != 'id') {
                 $objectEntity->addError($key, 'Does not exist on this property');
             }
@@ -215,7 +215,7 @@ class ValidationService
             if ($attribute->getDefaultValue()) {
                 $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
             } elseif (!$attribute->getNullable()) {
-                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. (Nullable is not set for this attribute)');
+                $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (Nullable is not set for this attribute)');
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -229,7 +229,7 @@ class ValidationService
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
             if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
+                $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
                 return $objectEntity;
@@ -246,7 +246,7 @@ class ValidationService
             }
         }
 
-//        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
+        //        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
@@ -272,9 +272,9 @@ class ValidationService
     {
         $values = $attribute->getAttributeValues()->filter(function (Value $valueObject) use ($value) {
             switch ($valueObject->getAttribute()->getType()) {
-                //TODO:
-//                case 'object':
-//                    return $valueObject->getObjects() == $value;
+                    //TODO:
+                    //                case 'object':
+                    //                    return $valueObject->getObjects() == $value;
                 case 'string':
                     return $valueObject->getStringValue() == $value;
                 case 'number':
@@ -294,7 +294,7 @@ class ValidationService
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
-            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: '.$value.'.');
+            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: ' . $value . '.');
         }
 
         return $objectEntity;
@@ -315,16 +315,16 @@ class ValidationService
     {
         // If multiple, this is an array, validation for an array:
         if (!is_array($value)) {
-            $objectEntity->addError($attribute->getName(), 'Expects array, '.gettype($value).' given. (Multiple is set for this attribute)');
+            $objectEntity->addError($attribute->getName(), 'Expects array, ' . gettype($value) . ' given. (Multiple is set for this attribute)');
 
             // Lets not continue validation if $value is not an array (because this will cause weird 500s!!!)
             return $objectEntity;
         }
         if ($attribute->getMinItems() && count($value) < $attribute->getMinItems()) {
-            $objectEntity->addError($attribute->getName(), 'The minimum array length of this attribute is '.$attribute->getMinItems().'.');
+            $objectEntity->addError($attribute->getName(), 'The minimum array length of this attribute is ' . $attribute->getMinItems() . '.');
         }
         if ($attribute->getMaxItems() && count($value) > $attribute->getMaxItems()) {
-            $objectEntity->addError($attribute->getName(), 'The maximum array length of this attribute is '.$attribute->getMaxItems().'.');
+            $objectEntity->addError($attribute->getName(), 'The maximum array length of this attribute is ' . $attribute->getMaxItems() . '.');
         }
         if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
             // TODOmaybe:check this in another way so all kinds of arrays work with it.
@@ -352,13 +352,13 @@ class ValidationService
                         if (Uuid::isValid($object) == false) {
                             // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($object == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
+                            if ($object == $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($object)) {
                                 $object = $this->commonGroundService->getUuidFromUrl($object);
                             } else {
                                 if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
                                     $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array, uuid or uri).');
                                 }
-                                $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                                $objectEntity->addError($attribute->getName() . '[' . $key . ']', 'The given value (' . $object . ') is not a valid object, a valid uuid or a valid uri (' . $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/uuid).');
                                 continue;
                             }
                         }
@@ -369,10 +369,10 @@ class ValidationService
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $object])) {
                             if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $object])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-//                                $subObject = $this->createOEforExternObject($attribute->getObject(), $object, $valueObject, $objectEntity); // TODO REMOVE
+                                //                                $subObject = $this->createOEforExternObject($attribute->getObject(), $object, $valueObject, $objectEntity); // TODO REMOVE
                                 $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object, $valueObject, $objectEntity);
                                 if (!$subObject) {
-                                    $objectEntity->addError($attribute->getName().'['.$key.']', 'Could not find an object with id '.$object.' of type '.$attribute->getObject()->getName());
+                                    $objectEntity->addError($attribute->getName() . '[' . $key . ']', 'Could not find an object with id ' . $object . ' of type ' . $attribute->getObject()->getName());
                                     break;
                                 }
                             }
@@ -389,7 +389,7 @@ class ValidationService
                 // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
                 if (array_key_exists('id', $object)) {
                     if (!is_string($object['id']) || Uuid::isValid($object['id']) == false) {
-                        $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object['id'].') is not a valid uuid.');
+                        $objectEntity->addError($attribute->getName() . '[' . $key . ']', 'The given value (' . $object['id'] . ') is not a valid uuid.');
                         continue;
                     }
                     $subObject = $valueObject->getObjects()->filter(function (ObjectEntity $item) use ($object) {
@@ -399,18 +399,18 @@ class ValidationService
                         // In the rare case that we are creating a new Gateway ObjectEntity for an object existing outside the gateway. (maybe even another ObjectEntity for a subresource of an extern object like this)
                         // (this can happen when an uuid is given for an attribute that expects an object and this object is only found outside the gateway)
                         // Than if gateway->location and endpoint are set on the attribute(->getObject) Entity, we should check for objects outside the gateway here.
-//                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity); // TODO REMOVE
+                        //                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity); // TODO REMOVE
                         $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
 
                         if (!$subObject) {
-                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
+                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id ' . $object['id'] . ' of type ' . $attribute->getObject()->getName());
                             break;
                         }
 
                         $valueObject->addObject($subObject);
                         continue;
                     } elseif (count($subObject) > 1) {
-                        $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
+                        $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id ' . $object['id'] . ' of type ' . $attribute->getObject()->getName());
                         break;
                     } else {
                         $subObject = $subObject->first();
@@ -441,9 +441,9 @@ class ValidationService
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
                 }
-//                $subObject->setApplication(); // TODO
+                //                $subObject->setApplication(); // TODO
 
-//                $valueObject->setValue($subObject);
+                //                $valueObject->setValue($subObject);
                 $valueObject->addObject($subObject);
             }
         } elseif ($attribute->getType() == 'file') {
@@ -457,7 +457,7 @@ class ValidationService
                     break;
                 }
                 if (!array_key_exists('base64', $file)) {
-                    $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    $objectEntity->addError($attribute->getName() . '[' . $key . '].base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
 
@@ -505,9 +505,9 @@ class ValidationService
         }
 
         // Check post for not allowed properties
-        foreach ($post as $key=>$value) {
+        foreach ($post as $key => $value) {
             if ($key != 'id' && !$entity->getAttributeByName($key)) {
-                $objectEntity->addError($key, 'Property '.(string) $key.' not exist on this object');
+                $objectEntity->addError($key, 'Property ' . (string) $key . ' not exist on this object');
             }
         }
     }
@@ -526,7 +526,7 @@ class ValidationService
         // Lets loop trough the objects values and check those
         foreach ($objectEntity->getObjectValues() as $value) {
             if ($value->getAttribute()->getMultiple()) {
-                foreach ($value->getValue() as $key=>$tempValue) {
+                foreach ($value->getValue() as $key => $tempValue) {
                     $objectEntity = $this->validateValue($value, $tempValue, $key);
                 }
             } else {
@@ -557,7 +557,7 @@ class ValidationService
 
         $validator = $this->validateType($valueObject, $validator, $value);
         $validator = $this->validateFormat($valueObject, $validator);
-//        $validator = $this->validateValidations($valueObject, $validator); // TODO: remove? (old version)
+        //        $validator = $this->validateValidations($valueObject, $validator); // TODO: remove? (old version)
         $objectEntity = $this->validateLogic($valueObject); // New Validation logic...
 
         // Lets roll the actual validation
@@ -771,21 +771,21 @@ class ValidationService
 
         // Check required
         $rule = $valueObject->getAttribute()->getRequiredIf();
-//        var_dump($rule);
+        //        var_dump($rule);
 
         //TODO: this works with conditions for this specific $value (equal to, bigger than etc.),
         // but if we want to make this field required if another Value has a certain condition, how do we do this with json logic?
         // To do this we need to get the ObjectEntity->values->attribute where name == field and check if that makes this Value required...
         // But what in the $rule / json logic should trigger this process ^
-//        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
+        //        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
         if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
-            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: '.$rule);
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: ' . $rule);
         }
 
         // Check forbidden
         $rule = $valueObject->getAttribute()->getForbidenIf();
         if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
-            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: '.$rule);
+            $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: ' . $rule);
         }
 
         return $objectEntity;
@@ -806,9 +806,9 @@ class ValidationService
     {
         // Validation for enum (if attribute type is not object or boolean)
         if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
-            $enumValues = '['.implode(', ', $attribute->getEnum()).']';
+            $enumValues = '[' . implode(', ', $attribute->getEnum()) . ']';
             $errorMessage = $attribute->getMultiple() ? 'All items in this array must be one of the following values: ' : 'Must be one of the following values: ';
-            $objectEntity->addError($attribute->getName(), $errorMessage.$enumValues.' ('.$value.' is not).');
+            $objectEntity->addError($attribute->getName(), $errorMessage . $enumValues . ' (' . $value . ' is not).');
         }
 
         // Do validation for attribute depending on its type
@@ -823,10 +823,10 @@ class ValidationService
                 if (is_string($value) && Uuid::isValid($value) == false) {
                     // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                     // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                    if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+                    if ($value == $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($value)) {
                         $value = $this->commonGroundService->getUuidFromUrl($value);
                     } else {
-                        $objectEntity->addError($attribute->getName(), 'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                        $objectEntity->addError($attribute->getName(), 'The given value (' . $value . ') is not a valid object, a valid uuid or a valid uri (' . $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/uuid).');
                         break;
                     }
                 }
@@ -834,18 +834,18 @@ class ValidationService
                 // Lets check for cascading
                 /* todo make switch */
                 if (!$attribute->getCascade() && !is_string($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+                    $objectEntity->addError($attribute->getName(), 'Is not an string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
                     break;
                 }
                 // TODO: move to a place where $attribute->getMultiple() can actually be true
-//                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-//                    foreach ($value as $arraycheck) {
-//                        if (!is_string($arraycheck)) {
-//                            $objectEntity->addError($attribute->getName(), 'Contians a value that is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
-//                            break;
-//                        }
-//                    }
-//                }
+                //                if (!$attribute->getCascade() && $attribute->getMultiple()) {
+                //                    foreach ($value as $arraycheck) {
+                //                        if (!is_string($arraycheck)) {
+                //                            $objectEntity->addError($attribute->getName(), 'Contians a value that is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+                //                            break;
+                //                        }
+                //                    }
+                //                }
 
                 // Lets handle the stuf
                 // If we are not cascading, attribute is not multiple and value is a string, than value should be an id.
@@ -857,10 +857,10 @@ class ValidationService
                     if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
                             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-//                            $subObject = $this->createOEforExternObject($attribute->getObject(), $value, $valueObject, $objectEntity); // TODO REMOVE
+                            //                            $subObject = $this->createOEforExternObject($attribute->getObject(), $value, $valueObject, $objectEntity); // TODO REMOVE
                             $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
                             if (!$subObject) {
-                                $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
+                                $objectEntity->addError($attribute->getName(), 'Could not find an object with id ' . $value . ' of type ' . $attribute->getObject()->getName());
                                 break;
                             }
                         }
@@ -872,25 +872,25 @@ class ValidationService
                     break;
                 }
                 // TODO: move to a place where $attribute->getMultiple() can actually be true
-//                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-//                    $valueObject->getObjects()->clear();
-//                    foreach ($value as $arraycheck) {
-//                        if (is_string($value) && !$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
-//                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.(string) $value.' of type '.$attribute->getObject()->getName());
-//                        } else {
-//                            // object toeveogen
-//                            $valueObject->addObject($subObject);
-//                        }
-//                    }
-//                    break;
-//                }
+                //                if (!$attribute->getCascade() && $attribute->getMultiple()) {
+                //                    $valueObject->getObjects()->clear();
+                //                    foreach ($value as $arraycheck) {
+                //                        if (is_string($value) && !$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
+                //                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.(string) $value.' of type '.$attribute->getObject()->getName());
+                //                        } else {
+                //                            // object toeveogen
+                //                            $valueObject->addObject($subObject);
+                //                        }
+                //                    }
+                //                    break;
+                //                }
 
                 if (!$valueObject->getValue()) {
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                //todo set application
+                    //todo set application
                 } else {
                     $subObject = $valueObject->getValue();
                 }
@@ -898,20 +898,20 @@ class ValidationService
                 $this->em->persist($subObject);
 
                 // TODO: move to a place where $attribute->getMultiple() can actually be true
-//                if ($attribute->getMultiple()) {
-//                    $subObjects = $valueObject->getObjects();
-//                    if ($subObjects->isEmpty()) {
-//                        $subObject = new ObjectEntity();
-//                        $subObject->setEntity($attribute->getObject());
-//                        $subObject->addSubresourceOf($valueObject);
-//                        $subObject = $this->validateEntity($subObject, $value);
-//                        $valueObject->addObject($subObject);
-//                    }
-//                    // Loop trough the subs
-//                    foreach ($valueObject->getObjects() as $subObject) {
-//                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-//                    }
-//                }
+                //                if ($attribute->getMultiple()) {
+                //                    $subObjects = $valueObject->getObjects();
+                //                    if ($subObjects->isEmpty()) {
+                //                        $subObject = new ObjectEntity();
+                //                        $subObject->setEntity($attribute->getObject());
+                //                        $subObject->addSubresourceOf($valueObject);
+                //                        $subObject = $this->validateEntity($subObject, $value);
+                //                        $valueObject->addObject($subObject);
+                //                    }
+                //                    // Loop trough the subs
+                //                    foreach ($valueObject->getObjects() as $subObject) {
+                //                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
+                //                    }
+                //                }
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -920,45 +920,45 @@ class ValidationService
                 break;
             case 'string':
                 if (!is_string($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. ('.$value.')');
+                    $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (' . $value . ')');
                 }
                 if ($attribute->getMinLength() && strlen($value) < $attribute->getMinLength()) {
-                    $objectEntity->addError($attribute->getName(), $value.' is to short, minimum length is '.$attribute->getMinLength().'.');
+                    $objectEntity->addError($attribute->getName(), $value . ' is to short, minimum length is ' . $attribute->getMinLength() . '.');
                 }
                 if ($attribute->getMaxLength() && strlen($value) > $attribute->getMaxLength()) {
-                    $objectEntity->addError($attribute->getName(), $value.' is to long, maximum length is '.$attribute->getMaxLength().'.');
+                    $objectEntity->addError($attribute->getName(), $value . ' is to long, maximum length is ' . $attribute->getMaxLength() . '.');
                 }
                 break;
             case 'number':
                 if (!is_integer($value) && !is_float($value) && gettype($value) != 'float' && gettype($value) != 'double') {
-                    $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. ('.$value.')');
+                    $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (' . $value . ')');
                 }
                 break;
             case 'integer':
                 if (!is_integer($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. ('.$value.')');
+                    $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (' . $value . ')');
                 }
                 if ($attribute->getMinimum()) {
                     if ($attribute->getExclusiveMinimum() && $value <= $attribute->getMinimum()) {
-                        $objectEntity->addError($attribute->getName(), 'Must be higher than '.$attribute->getMinimum().' ('.$value.' is not).');
+                        $objectEntity->addError($attribute->getName(), 'Must be higher than ' . $attribute->getMinimum() . ' (' . $value . ' is not).');
                     } elseif ($value < $attribute->getMinimum()) {
-                        $objectEntity->addError($attribute->getName(), 'Must be '.$attribute->getMinimum().' or higher ('.$value.' is not).');
+                        $objectEntity->addError($attribute->getName(), 'Must be ' . $attribute->getMinimum() . ' or higher (' . $value . ' is not).');
                     }
                 }
                 if ($attribute->getMaximum()) {
                     if ($attribute->getExclusiveMaximum() && $value >= $attribute->getMaximum()) {
-                        $objectEntity->addError($attribute->getName(), 'Must be lower than '.$attribute->getMaximum().'  ('.$value.' is not).');
+                        $objectEntity->addError($attribute->getName(), 'Must be lower than ' . $attribute->getMaximum() . '  (' . $value . ' is not).');
                     } elseif ($value > $attribute->getMaximum()) {
-                        $objectEntity->addError($attribute->getName(), 'Must be '.$attribute->getMaximum().' or lower  ('.$value.' is not).');
+                        $objectEntity->addError($attribute->getName(), 'Must be ' . $attribute->getMaximum() . ' or lower  (' . $value . ' is not).');
                     }
                 }
                 if ($attribute->getMultipleOf() && $value % $attribute->getMultipleOf() != 0) {
-                    $objectEntity->addError($attribute->getName(), 'Must be a multiple of '.$attribute->getMultipleOf().', '.$value.' is not a multiple of '.$attribute->getMultipleOf().'.');
+                    $objectEntity->addError($attribute->getName(), 'Must be a multiple of ' . $attribute->getMultipleOf() . ', ' . $value . ' is not a multiple of ' . $attribute->getMultipleOf() . '.');
                 }
                 break;
             case 'boolean':
                 if (!is_bool($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. ('.$value.')');
+                    $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', ' . gettype($value) . ' given. (' . $value . ')');
                 }
                 break;
             case 'date':
@@ -966,12 +966,12 @@ class ValidationService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-                    $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')');
+                    $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ' (ISO 8601 datetime standard), failed to parse string to DateTime. (' . $value . ')');
                 }
                 break;
             case 'file':
                 if (!array_key_exists('base64', $value)) {
-                    $objectEntity->addError($attribute->getName().'.base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
+                    $objectEntity->addError($attribute->getName() . '.base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
                     break;
                 }
 
@@ -980,7 +980,7 @@ class ValidationService
 
                 break;
             default:
-                $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
+                $objectEntity->addError($attribute->getName(), 'Has an an unknown type: [' . $attribute->getType() . ']');
         }
 
         return $objectEntity;
@@ -1000,29 +1000,29 @@ class ValidationService
     public function validateFile(ObjectEntity $objectEntity, Attribute $attribute, array $fileArray): ObjectEntity
     {
         $value = $objectEntity->getValueByAttribute($attribute);
-        $key = $fileArray['key'] ? '['.$fileArray['key'].']' : '';
-        $shortBase64String = strlen($fileArray['base64']) > 75 ? substr($fileArray['base64'], 0, 75).'...' : $fileArray['base64'];
+        $key = $fileArray['key'] ? '[' . $fileArray['key'] . ']' : '';
+        $shortBase64String = strlen($fileArray['base64']) > 75 ? substr($fileArray['base64'], 0, 75) . '...' : $fileArray['base64'];
 
         // Validate base64 string (for raw json body input)
         $explode_base64 = explode(',', $fileArray['base64']);
         if (base64_encode(base64_decode(end($explode_base64), true)) !== end($explode_base64)) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a valid base64 encoded string. ('.$shortBase64String.' is not)');
+            $objectEntity->addError($attribute->getName() . $key . '.base64', 'Expects a valid base64 encoded string. (' . $shortBase64String . ' is not)');
         }
         // Validate max file size
         if ($attribute->getMaxFileSize() && $fileArray['size'] > $attribute->getMaxFileSize()) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'This file is to big ('.$fileArray['size'].' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$shortBase64String.')');
+            $objectEntity->addError($attribute->getName() . $key . '.base64', 'This file is to big (' . $fileArray['size'] . ' bytes), expecting a file with maximum size of ' . $attribute->getMaxFileSize() . ' bytes. (' . $shortBase64String . ')');
         }
         // Validate mime type
         if ($attribute->getFileTypes() && !in_array($fileArray['mimeType'], $attribute->getFileTypes())) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], not '.$fileArray['mimeType'].'. ('.$shortBase64String.')');
+            $objectEntity->addError($attribute->getName() . $key . '.base64', 'Expects a file with on of these mime types: [' . implode(', ', $attribute->getFileTypes()) . '], not ' . $fileArray['mimeType'] . '. (' . $shortBase64String . ')');
         }
         // Validate extension
         if ($attribute->getFileTypes() && empty(array_intersect($this->mimeToExt(null, $fileArray['extension']), $attribute->getFileTypes()))) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], none of these equal extension '.$fileArray['extension'].'. ('.$fileArray['name'].')');
+            $objectEntity->addError($attribute->getName() . $key . '.base64', 'Expects a file with on of these mime types: [' . implode(', ', $attribute->getFileTypes()) . '], none of these equal extension ' . $fileArray['extension'] . '. (' . $fileArray['name'] . ')');
         }
         // Validate if mime type and extension match
         if ($this->mimeToExt($fileArray['mimeType']) != $fileArray['extension']) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.$fileArray['extension'].') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
+            $objectEntity->addError($attribute->getName() . $key . '.base64', 'Extension (' . $fileArray['extension'] . ') does not match the mime type (' . $fileArray['mimeType'] . ' -> ' . $this->mimeToExt($fileArray['mimeType']) . '). (' . $shortBase64String . ')');
         }
 
         if ($fileArray['name']) {
@@ -1031,7 +1031,7 @@ class ValidationService
                 return $item->getName() == $fileArray['name'];
             });
             if (count($fileObject) > 1) {
-                $objectEntity->addError($attribute->getName().$key.'.name', 'More than 1 file found with this name: '.$fileArray['name']);
+                $objectEntity->addError($attribute->getName() . $key . '.name', 'More than 1 file found with this name: ' . $fileArray['name']);
             }
             // (If we found 0 or 1 fileObjects, continue...)
         }
@@ -1065,7 +1065,8 @@ class ValidationService
      * @param null $ext
      * @return array|false|string
      */
-    private function mimeToExt($mime, $ext = null) {
+    private function mimeToExt($mime, $ext = null)
+    {
         $mime_map = [
             'video/3gpp2'                                                               => '3g2',
             'video/3gp'                                                                 => '3gp',
@@ -1345,7 +1346,7 @@ class ValidationService
         $content = base64_encode($file->openFile()->fread($file->getSize()));
         $mimeType = $file->getClientMimeType();
 
-        return 'data:'.$mimeType.';base64,'.$content;
+        return 'data:' . $mimeType . ';base64,' . $content;
     }
 
     /**
@@ -1385,7 +1386,7 @@ class ValidationService
             return $objectEntity;
         }
 
-        $objectEntity->addError($attribute->getName(), 'Has an an unknown format: ['.$attribute->getFormat().']');
+        $objectEntity->addError($attribute->getName(), 'Has an an unknown format: [' . $attribute->getFormat() . ']');
 
         return $objectEntity;
     }
@@ -1411,10 +1412,10 @@ class ValidationService
             $url = $objectEntity->getUri();
         } elseif ($objectEntity->getExternalId()) {
             $method = 'PUT';
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+            $url = $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint() . '/' . $objectEntity->getExternalId();
         } else {
             $method = 'POST';
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
+            $url = $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint();
         }
 
         // do transformation
@@ -1453,7 +1454,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
-                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
+                        $ubjectUri = $objectToUri->getEntity()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
                     }
@@ -1461,9 +1462,11 @@ class ValidationService
                 }
             } elseif ($value->getObjects()->first()) {
                 // If this object is from the same gateway as the main/parent object use: /entityName/uuid instead of the entire uri
-                if ($value->getAttribute()->getEntity()->getGateway() && $value->getObjects()->first()->getEntity()->getGateway()
-                    && $value->getAttribute()->getEntity()->getGateway() === $value->getObjects()->first()->getEntity()->getGateway()) {
-                    $post[$value->getAttribute()->getName()] = '/'.$value->getObjects()->first()->getEntity()->getEndpoint().'/'.$value->getObjects()->first()->getExternalId();
+                if (
+                    $value->getAttribute()->getEntity()->getGateway() && $value->getObjects()->first()->getEntity()->getGateway()
+                    && $value->getAttribute()->getEntity()->getGateway() === $value->getObjects()->first()->getEntity()->getGateway()
+                ) {
+                    $post[$value->getAttribute()->getName()] = '/' . $value->getObjects()->first()->getEntity()->getEndpoint() . '/' . $value->getObjects()->first()->getExternalId();
                 } else {
                     $post[$value->getAttribute()->getName()] = $value->getObjects()->first()->getUri();
                 }
@@ -1504,14 +1507,14 @@ class ValidationService
 
                 $result = json_decode($response->getBody()->getContents(), true);
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
-                    $objectEntity->setUri($url.'/'.$result['id']);
+                    $objectEntity->setUri($url . '/' . $result['id']);
                     $objectEntity->setExternalId($result['id']);
 
-                    $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
+                    $item = $this->cache->getItem('commonground_' . md5($url . '/' . $result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
-                    $item = $this->cache->getItem('commonground_'.md5($url));
+                    $item = $this->cache->getItem('commonground_' . md5($url));
                 }
 
                 // Set organization for this object
@@ -1520,7 +1523,7 @@ class ValidationService
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
                 }
-//                    $objectEntity->setApplication(); // TODO
+                //                    $objectEntity->setApplication(); // TODO
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1569,7 +1572,7 @@ class ValidationService
                     $error_message = $error->getMessage();
                 }
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponseLog->getId().') for a full error report');
+                $objectEntity->addError('gateway endpoint on ' . $objectEntity->getEntity()->getName() . ' said', $error_message . '. (see /gateway_logs/' . $gatewayResponseLog->getId() . ') for a full error report');
             }
         );
 
@@ -1602,12 +1605,13 @@ class ValidationService
                 'topic'    => $topic,
                 'action'   => $action,
                 'resource' => $objectEntity->getUri(),
+                'id'       => $objectEntity->getExternalId(),
             ];
             if (!$objectEntity->getUri()) {
-//                var_dump('Couldn\'t notifiy for object, because it has no uri!');
-//                var_dump('Id: '.$objectEntity->getId());
-//                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
-//                var_dump($notification);
+                //                var_dump('Couldn\'t notifiy for object, because it has no uri!');
+                //                var_dump('Id: '.$objectEntity->getId());
+                //                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
+                //                var_dump($notification);
                 return;
             }
             $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
@@ -1625,7 +1629,7 @@ class ValidationService
     public function createUri(ObjectEntity $objectEntity): string
     {
         if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getGateway() && $objectEntity->getExternalId()) {
-            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+            return $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint() . '/' . $objectEntity->getExternalId();
         }
 
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
@@ -1636,9 +1640,9 @@ class ValidationService
         $uri .= $_SERVER['HTTP_HOST'];
 
         if ($objectEntity->getEntity()->getRoute()) {
-            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+            return $uri . $objectEntity->getEntity()->getRoute() . '/' . $objectEntity->getId();
         }
 
-        return $uri.'/admin/object_entities/'.$objectEntity->getId();
+        return $uri . '/admin/object_entities/' . $objectEntity->getId();
     }
 }
