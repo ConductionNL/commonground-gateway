@@ -6,12 +6,14 @@ on:
       - master
       - staging
       - development
+      - feature-soap
   push:
     branches:
       - master
       - staging
       - development
       - feature-admin
+      - feature-soap
 
 jobs:
   build:
