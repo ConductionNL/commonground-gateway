@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -37,10 +38,14 @@ class AuthorizationService
         $this->security = $security;
     }
 
-    public function getRequiredScopes(string $method, Attribute $attribute): array
+    public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
-        $scopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
-        $scopes['sub_scope'] = $scopes['base_scope'].'.'.$attribute->getName();
+        if ($entity) {
+            $scopes['base_scope'] = $method.'.'.$entity->getName();
+        } else {
+            $scopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
+            $scopes['sub_scope'] = $scopes['base_scope'].'.'.$attribute->getName();
+        }
 
         return $scopes;
     }
@@ -82,8 +87,11 @@ class AuthorizationService
         } else {
             $grantedScopes = $this->getScopesForAnonymous();
         }
-        if (in_array($scopes['base_scope'], $grantedScopes) || in_array($scopes['sub_scope'], $grantedScopes)) {
+        if (in_array($scopes['base_scope'], $grantedScopes) || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))) {
             return;
+        }
+        if (!array_key_exists('sub_scope', $scopes)) {
+            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
         }
 
         throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} are required");

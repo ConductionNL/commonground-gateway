@@ -464,16 +464,15 @@ class Attribute
      */
     private $maxFileSize;
 
-    //TODO: make this an enum?
     /**
-     * @var string *Can only be used in combination with type file* The type of the file
+     * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
-    private $fileType;
+    private $fileTypes;
 
     /**
      * @Groups({"read", "write"})
@@ -486,21 +485,35 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $persistToGateway = false;
+    private bool $persistToGateway = false;
 
     /**
      * Whether or not this property is searchable.
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $searchable = false;
+    private bool $searchable = false;
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
-    private $cascade = false;
+    private bool $cascade = false;
+
+    /**
+     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $cascadeDelete = false;
+
+    /**
+     * Setting this property to true makes it so that this property is not allowed to be changed after creation.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $immutable = false;
 
     /**
      * @var Datetime The moment this request was created
@@ -1096,14 +1109,14 @@ class Attribute
         return $this;
     }
 
-    public function getFileType(): ?string
+    public function getFileTypes(): ?array
     {
-        return $this->fileType;
+        return $this->fileTypes;
     }
 
-    public function setFileType(?string $fileType): self
+    public function setFileTypes(?array $fileTypes): self
     {
-        $this->fileType = $fileType;
+        $this->fileTypes = $fileTypes;
 
         return $this;
     }
@@ -1255,6 +1268,30 @@ class Attribute
     public function setCascade(?bool $cascade): self
     {
         $this->cascade = $cascade;
+
+        return $this;
+    }
+
+    public function getCascadeDelete(): ?bool
+    {
+        return $this->cascadeDelete;
+    }
+
+    public function setCascadeDelete(?bool $cascadeDelete): self
+    {
+        $this->cascadeDelete = $cascadeDelete;
+
+        return $this;
+    }
+
+    public function getImmutable(): ?bool
+    {
+        return $this->immutable;
+    }
+
+    public function setImmutable(?bool $immutable): self
+    {
+        $this->immutable = $immutable;
 
         return $this;
     }
