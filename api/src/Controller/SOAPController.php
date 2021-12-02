@@ -63,7 +63,7 @@ class SOAPController extends AbstractController
                 $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
-                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType,  $this->getDoctrine()->getRepository('App:Gateway')->findOneBy(['type' => 'soap']));
+                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType,  $this->getDoctrine()->getRepository('App:Gateway')->findOneBy(['auth' => 'vrijbrp-jwt']));
                     break;
                 }
                 else{
