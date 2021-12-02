@@ -246,7 +246,7 @@ class SOAPController extends AbstractController
 </wsdl:binding>
 <wsdl:service name="Conductor_x0020_Intake_x0020_Service">
 <wsdl:port name="IntakeService" binding="tns:IntakeService">
-<soap:address location="https://109.109.118.17:443/opentunnel/00000001853051549000/sim/eform" />
+<soap:address location="https://ssl.acc-vrijbrp-nijmegen.commonground.nu/soap/stuf" />
 </wsdl:port>
 <wsdl:port name="IntakeService1" binding="tns:IntakeService1">
 <soap12:address location="https://109.109.118.17:443/opentunnel/00000001853051549000/sim/eform" />
