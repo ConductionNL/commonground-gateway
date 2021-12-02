@@ -921,6 +921,7 @@ App\Entity\Soap:
             newAddress.destinationCurrentResidents: numberOfResidents
             newAddress.numberOfResidents: numberOfResidents
             newAddress.liveIn: liveIn | json
+            newAddress.mainOccupant: mainOccupant | json
             relocators: relocators | json
         response: |
             <?xml version="1.0" encoding="UTF-8"?>

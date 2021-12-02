@@ -41,10 +41,10 @@ class TranslationService
             if(!isset($format) || $format == 'string'){
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
             } elseif($format == 'json') {
-                $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ((string) $destination[$replace]) ?? null;
+                $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;
             } elseif($format == 'xml') {
                 $xmlEncoder = new XmlEncoder();
-                $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ((string) $destination[$replace]) ?? null;
+                $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
             }
             unset($format);
         }

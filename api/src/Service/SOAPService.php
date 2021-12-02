@@ -942,7 +942,6 @@ class SOAPService
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
-
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
     }
@@ -1010,6 +1009,9 @@ class SOAPService
                     'liveInApplicable'  => true,
                     'consent'           => "PENDING",
                     'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
+                ]));
+                $data->set('mainOccupant', json_encode([
+                    'bsn' => $this->getValue($extraElementen, 'inp.bsn'),
                 ]));
             } else {
                 $data->set('liveIn', json_encode([
