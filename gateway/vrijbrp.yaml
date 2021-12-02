@@ -908,7 +908,7 @@ App\Entity\Soap:
         requestHydration:
             dossier.dossierId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
             dossier.description: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:omschrijving"
-            dossier.startDate: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#"
+            dossier.startDate: date
             declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
             declarant.contactInformation.telephoneNumber: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
             declarant.contactInformation.email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
@@ -918,8 +918,8 @@ App\Entity\Soap:
             newAddress.houseNumberAddition: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.6.#"
             newAddress.postalCode: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
             newAddress.residence: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#"
-            newAddress.destinationCurrentResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
-            newAddress.numberOfResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
+            newAddress.destinationCurrentResidents: numberOfResidents
+            newAddress.numberOfResidents: numberOfResidents
             newAddress.liveIn: liveIn | json
             relocators: relocators | json
         response: |

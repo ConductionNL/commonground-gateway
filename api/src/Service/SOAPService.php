@@ -954,17 +954,28 @@ class SOAPService
         return $date->format("Y-m-d");
     }
 
+    private function getValue(array $extraElementen, string $name)
+    {
+        foreach($extraElementen as $extraElement){
+            if($extraElement['@naam'] == $name){
+                return $extraElement['#'];
+            }
+        }
+        return null;
+    }
+
     /**
      * Finds specific values and parses them.
      *
      * @param array $data
      * @param array $namespaces
      * @param string $messageType
-     * @param string $zaaktype
+     * @param string|null $zaaktype
      * @return array
      */
     public function parseSpecificValues(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
     {
+        $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
         $data = new \Adbar\Dot($data);
         // Emigratie
         if($messageType == 'zakLk01' && $zaaktype == 'B1425')
@@ -992,16 +1003,14 @@ class SOAPService
         // Verhuizing
         if($messageType == 'zakLk01' && $zaaktype == 'B0366')
         {
-            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#") !== 'hoofdbewoner'){
+            $wijzeBewoning = $this->getValue($extraElementen, 'wijzeBewoning');
+            $permissionRequired = ['inwonend'];
+            if(in_array($wijzeBewoning, $permissionRequired)){
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
                     'consent'           => "APPLICABLE",
-                    'consenter'         => ['bsn' => "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#"]
+                    'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
                 ]));
-                $data->set(
-                    "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
-                    $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.11.#")
-                );
             } else {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => false,
@@ -1009,18 +1018,17 @@ class SOAPService
                 ]));
             }
             $data->set(
-            "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
-            $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#")));
+            "date",
+            $this->parseDate($this->getValue($extraElementen, 'datumVerhuizing')));
 
             $relocators = [['bsn' => $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"], 'declarationType' => 'REGISTERED']];
-            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.11.#") !== 'nee'){
-                foreach(explode(',', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#")) as $relocator){
+            if($this->getValue($extraElementen,"indMeeverhuizers") !== 'nee'){
+                foreach(explode(',', $this->getValue($extraElementen, 'geselecteerd')) as $relocator){
                     $relocators[] = ['bsn' => $relocator, 'declarationType' => 'REGISTERED'];
                 }
-                $data->set("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#", $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.13.#"));
             }
-
             $data->set('relocators', json_encode($relocators));
+            $data->set('numberOfResidents', $this->getValue($extraElementen, 'aantalPersonenOpNieuweAdres'));
         }
 
         // Geheimhouding
