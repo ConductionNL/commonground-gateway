@@ -931,7 +931,6 @@ class SOAPService
 
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope']);
         $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
-//        var_dump($entity);
 
         $requestBase = [
             "path" => $soap->getToEntity()->getRoute(),
@@ -1049,7 +1048,6 @@ class SOAPService
             }
         }
 
-//        var_dump($data->all());
         return $data->all();
     }
 }

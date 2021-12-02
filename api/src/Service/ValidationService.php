@@ -1276,17 +1276,12 @@ class ValidationService
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
             case 'json':
                 $post = json_encode($post);
-                var_dump($post);
-//                die;
                 break;
             case 'soap':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
                 $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
                     $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
                     $objectEntity->toArray(), $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
-
-                var_dump($post);
-                die;
                 break;
             default:
                 // @todo throw error
