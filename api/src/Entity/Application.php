@@ -104,7 +104,6 @@ class Application
     /**
      * @var string Uri of user object.
      *
-     * @Assert\Url
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
