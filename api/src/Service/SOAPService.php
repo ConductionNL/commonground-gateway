@@ -1097,7 +1097,7 @@ class SOAPService
 
             if(
                 isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
-                is_numeric($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
+                !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
             ) {
                 foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
                     $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
@@ -1120,7 +1120,7 @@ class SOAPService
 
             if (
                 isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
-                is_numeric($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
+                !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
             {
                 foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
                     $relocators .= "<ns10:MeeEmigrant>
@@ -1161,5 +1161,11 @@ class SOAPService
             $result = $this->commonGroundService->callService($component, $url, $post, [], [], false, 'POST');
         }
 
+    }
+
+    private function isAssoc(array $arr)
+    {
+        if (array() === $arr) return false;
+        return array_keys($arr) !== range(0, count($arr) - 1);
     }
 }
