@@ -13,6 +13,7 @@ use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,13 +35,15 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     private CommonGroundService $commonGroundService;
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
+    private EntityManagerInterface $em;
 
-    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session)
+    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session, EntityManagerInterface $em)
     {
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->authenticationService = new AuthenticationService($parameterBag);
         $this->session = $session;
+        $this->em = $em;
     }
 
     /**
@@ -50,7 +53,8 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function supports(Request $request)
     {
-        return $request->headers->has('Authorization') && strpos($request->headers->get('Authorization'), 'Bearer') !== false;
+        // return $request->headers->has('Authorization') && strpos($request->headers->get('Authorization'), 'Bearer') !== false;
+        return $request->headers->has('Authorization');
     }
 
     /**
@@ -59,9 +63,16 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function getCredentials(Request $request)
     {
-        return [
-            'token' => substr($request->headers->get('Authorization'), strlen('Bearer ')),
-        ];
+
+        if (strpos($request->headers->get('Authorization'), 'Bearer') !== false) {
+            return [
+                'token' => substr($request->headers->get('Authorization'), strlen('Bearer ')),
+            ];
+        } else {
+            return [
+                'apiKey' => $request->headers->get('Authorization'),
+            ];
+        }
     }
 
     /**
@@ -89,28 +100,43 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
-        $publicKey = $this->commonGroundService->getResourceList(['component'=>'uc', 'type'=>'public_key']);
+        if (array_key_exists('token', $credentials)) {
+            $publicKey = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']);
 
-        try {
-            $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
-        } catch (\Exception $exception) {
-            throw new AuthenticationException('The provided token is not valid');
+            try {
+                $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
+            } catch (\Exception $exception) {
+                throw new AuthenticationException('The provided token is not valid');
+            }
+
+            $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
+            $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
+
+            if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
+                throw new AuthenticationException('The provided token refers to an invalid session');
+            }
+        } elseif (array_key_exists('apiKey', $credentials)) {
+            $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
+
+            if (!$application || !$application->getUser()) {
+                throw new AuthenticationException('Invalid ApiKey');
+            }
+
+            try {
+                $user = $this->commonGroundService->getResource($application->getUser());
+            } catch (\Exception $exception) {
+                throw new AuthenticationException('Invalid User Uri');
+            }
         }
-
-        $user = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'users', 'id' => $payload['userId']], [], false, false, true, false, false);
-        $session = $this->commonGroundService->getResource(['component'=>'uc', 'type'=>'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
         if (!$user) {
             throw new AuthenticationException('The provided token does not match the user it refers to');
-        }
-        if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
-            throw new AuthenticationException('The provided token refers to an invalid session');
         }
 
         if (!in_array('ROLE_USER', $user['roles'])) {
             $user['roles'][] = 'ROLE_USER';
         }
-        foreach ($user['roles'] as $key=>$role) {
+        foreach ($user['roles'] as $key => $role) {
             if (strpos($role, 'ROLE_') !== 0) {
                 $user['roles'][$key] = "ROLE_$role";
             }
