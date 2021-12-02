@@ -63,7 +63,7 @@ class SOAPController extends AbstractController
                 $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
-                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType, $soapEntity);
+                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType,  $this->getDoctrine()->getRepository('App:Entity')->findOneBy(['name' => 'Documents']));
                     break;
                 }
                 else{
@@ -89,5 +89,25 @@ class SOAPController extends AbstractController
             'Access-Control-Allow-Headers'     => 'Content-Type',
             'Strict-Transport-Security'        => 'max-age=15724800; includeSubDomains',
         ]);
+    }
+
+    /**
+     * @Route("/stuf", methods={"GET"})
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function wsdlAction(){
+        $wsdl = '
+        
+        ';
+
+
+        return new Response(
+            $wsdl,
+            200,
+            ['Content-Type' => 'application/wsdl+xml']
+        );
     }
 }

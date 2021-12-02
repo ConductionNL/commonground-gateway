@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Application;
+use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
 use \App\Service\EavService;
@@ -944,7 +945,6 @@ class SOAPService
         ];
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
-
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
@@ -1094,17 +1094,56 @@ class SOAPService
 
             $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => 'REGISTERED'];
 
-            if(isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
-                foreach($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover){
+            if(
+                isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
+                is_numeric($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
+            ) {
+                foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
                     $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
                 }
+            } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])) {
+                $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
+                $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
+            }
             $data->set('relocators', json_encode($relocators));
         }
 
+        if($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B1425') {
+
+            $relocators = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
+            $relocators .= "<ns10:MeeEmigrant>
+                                        <ns10:Burgerservicenummer>{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")}</ns10:Burgerservicenummer>
+                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>k</ns10:Duur>
+                                    </ns10:MeeEmigrant>";
+
+            if (
+                isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
+                is_numeric($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
+            {
+                foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
+                    $relocators .= "<ns10:MeeEmigrant>
+                                        <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
+                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>k</ns10:Duur>
+                                    </ns10:MeeEmigrant>";
+                }
+            } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])){
+                $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
+                $relocators .= "<ns10:MeeEmigrant>
+                                        <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
+                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>k</ns10:Duur>
+                                    </ns10:MeeEmigrant>";
+            }
+
+            $relocators .= '</ns10:MeeEmigranten>';
+            $data->set('relocators', $relocators);
+        }
         return $data->all();
     }
 
-    public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Soap $soap)
+    public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Entity $entity)
     {
         $data = new \Adbar\Dot($data);
         if($messageType == 'OntvangenIntakeNotificatie'){
@@ -1115,8 +1154,8 @@ class SOAPService
             ];
 
             $post = json_encode($resource);
-            $component = $this->gatewayService->gatewayToArray($soap->getToEntity()->getGateway());
-            $url = "{$soap->getToEntity()->getGateway()->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
+            $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+            $url = "{$entity->getGateway()->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
 
             $result = $this->commonGroundService->callService($component, $url, $post, [], [], false, 'POST');
         }
