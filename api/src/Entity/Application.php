@@ -10,6 +10,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -30,6 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * 	        "delete",
  *     },
  * )
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass="App\Repository\ApplicationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -83,6 +85,47 @@ class Application
      */
     private array $domains = [];
 
+    /**
+     * @var string A public uuid of this Application.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $public = null;
+
+    /**
+     * @var string A secret uuid of this Application.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $secret = null;
+
+    /**
+     * @var string Uri of user object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $user;
+
+    /**
+     *  @ORM\PrePersist
+     *  @ORM\PreUpdate
+     */
+    public function prePersist()
+    {
+        if (!$this->getSecret()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setSecret($secret);
+        }
+
+        if (!$this->getPublic()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setPublic($secret);
+        }
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -91,6 +134,42 @@ class Application
     public function setId(UuidInterface $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getPublic(): ?string
+    {
+        return $this->public;
+    }
+
+    public function setPublic(?string $public): self
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    public function getUser(): ?string
+    {
+        return $this->user;
+    }
+
+    public function setUser(?string $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    public function getSecret(): ?string
+    {
+        return $this->secret;
+    }
+
+    public function setSecret(?string $secret): self
+    {
+        $this->secret = $secret;
 
         return $this;
     }

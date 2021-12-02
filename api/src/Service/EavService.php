@@ -304,44 +304,51 @@ class EavService
         }
 
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
-
         if ($contentType === 'text/csv') {
             $replacements = [
-                'languageHouse.name'                    => 'Taalhuis',
-                'person.givenName'                      => 'Voornaam',
-                'person.additionalName'                 => 'Tussenvoegsel',
-                'person.familyName'                     => 'Achternaam',
-                'person.emails.0.email'                 => 'E-mail adres',
-                'person.telephones.0.telephone'         => 'Telefoonnummer',
-                'intake.date'                           => 'Aanmaakdatum',
-                'intake.referringOrganizationEmail'     => 'Verwijzer Email',
-                'intake.referringOrganizationOther'     => 'Verwijzer Telefoon',
-                'intake.referringOrganization'          => 'Verwijzer',
-                'intake.foundViaOther'                  => 'Via (anders)',
-                'intake.foundVia'                       => 'Via',
-                'roles'                                 => 'Rollen',
-                'student.id'                            => 'ID deelnemer',
-                'description'                           => 'Beschrijving',
-                'motivation'                            => 'Leervraag',
-                'student.person.givenName'              => 'Voornaam',
-                'student.person.additionalName'         => 'Tussenvoegsel',
-                'student.person.familyName'             => 'Achternaam',
-                'student.person.emails.0.email'         => 'E-mail adres',
-                'student.person.telephones.0.telephone' => 'Telefoonnummer',
-                'student.intake.dutchNTLevel'           => 'NT1/NT2',
-                'learning_results.id'                   => 'ID leervraag',
-                'learning_results.verb'                 => 'Werkwoord',
-                'learning_results.subject'              => 'Onderwerp',
-                'learning_results.subjectOther'         => 'Onderwerp (anders)',
-                'learning_results.application'          => 'Toepassing',
-                'learning_results.applicationOther'     => 'Toepasing (anders)',
-                'learning_results.level'                => 'Niveau',
-                'participations.provider.id'            => 'ID aanbieder',
-                'participations.provider.name'          => 'Aanbieder',
+                '/student\.person.givenName/'                        => 'Voornaam',
+                '/student\.person.additionalName/'                   => 'Tussenvoegsel',
+                '/student\.person.familyName/'                       => 'Achternaam',
+                '/student\.person.emails\..\.email/'                 => 'E-mail adres',
+                '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
+                '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
+                '/participations\.provider\.id/'                     => 'ID aanbieder',
+                '/participations\.provider\.name/'                   => 'Aanbieder',
+                '/participations/'                                   => 'Deelnames',
+                '/learningResults\..\.id/'                           => 'ID leervraag',
+                '/learningResults\..\.verb/'                         => 'Werkwoord',
+                '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
+                '/learningResults\..\.subject/'                      => 'Onderwerp',
+                '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
+                '/learningResults\..\.application/'                  => 'Toepassing',
+                '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
+                '/learningResults\..\.level/'                        => 'Niveau',
+                '/learningResults\..\.participation/'                => 'Deelname',
+                '/learningResults\..\.testResult/'                   => 'Test Resultaat',
+                '/agreements/'                                       => 'Overeenkomsten',
+                '/desiredOffer/'                                     => 'Gewenst aanbod',
+                '/advisedOffer/'                                     => 'Geadviseerd aanbod',
+                '/offerDifference/'                                  => 'Aanbod verschil',
+                '/person\.givenName/'                                => 'Voornaam',
+                '/person\.additionalName/'                           => 'Tussenvoegsel',
+                '/person\.familyName/'                               => 'Achternaam',
+                '/person\.emails\..\.email/'                         => 'E-mail adres',
+                '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
+                '/intake\.date/'                                     => 'Aanmaakdatum',
+                '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
+                '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
+                '/intake\.referringOrganization/'                    => 'Verwijzer',
+                '/intake\.foundViaOther/'                            => 'Via (anders)',
+                '/intake\.foundVia/'                                 => 'Via',
+                '/roles/'                                            => 'Rollen',
+                '/student\.id/'                                      => 'ID deelnemer',
+                '/description/'                                      => 'Beschrijving',
+                '/motivation/'                                       => 'Leervraag',
+                '/languageHouse\.name/'                              => 'Naam taalhuis',
             ];
 
             foreach ($replacements as $key => $value) {
-                $result = str_replace($key, $value, $result);
+                $result = preg_replace($key, $value, $result);
             }
         }
 
@@ -983,14 +990,8 @@ class EavService
         // Lets keep track of how deep in the three we are
         $level++;
 
-        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
-        if (is_null($maxDepth)) {
-            $maxDepth = new ArrayCollection();
-        }
-        $maxDepth->add($result);
-
-        foreach ($result->getObjectValues() as $value) {
-            $attribute = $value->getAttribute();
+        $entity = $result->getEntity();
+        foreach ($entity->getAttributes() as $attribute) {
             $subfields = false;
 
             // Lets deal with fields filtering
@@ -1003,14 +1004,12 @@ class EavService
                 $subfields = $fields;
             }
 
-            // @todo ruben: kan iemand me een keer uitleggen wat hier gebeurd?
-            // todo @ruben: zie: https://conduction.atlassian.net/browse/BISC-539 (comments) over usedProperties
-
             // Only render the attributes that are used
-            if (!is_null($result->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $result->getEntity()->getUsedProperties())) {
+            if (!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties())) {
                 continue;
             }
 
+            $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 try {
                     if (!$this->objectEntityService->checkOwner($result)) {
@@ -1023,9 +1022,9 @@ class EavService
                     $parentInversedByAttribute = [];
                     if (!$attribute->getInversedBy() && count($result->getSubresourceOf()) > 0) {
                         // Get all parent (value) objects...
-                        $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $valueObject) use ($attribute) {
+                        $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $value) use ($attribute) {
                             // ...that have getInversedBy set to $attribute
-                            $inversedByAttributes = $valueObject->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
+                            $inversedByAttributes = $value->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
                                 return $item->getInversedBy() === $attribute;
                             });
                             if (count($inversedByAttributes) > 0) {
@@ -1038,9 +1037,15 @@ class EavService
                     // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
                     // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
                     if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
-                        $response[$attribute->getName()] = $this->renderObjects($value, $subfields, $maxDepth, $flat, $level);
+                        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
+                        $maxDepthPerValue = $maxDepth;
+                        if (is_null($maxDepth)) {
+                            $maxDepthPerValue = new ArrayCollection();
+                        }
+                        $maxDepthPerValue->add($result);
+                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $maxDepthPerValue, $flat, $level);
                     } else {
-                        $response[$attribute->getName()] = $this->renderObjects($value, $subfields, null, $flat, $level);
+                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, null, $flat, $level);
                     }
 
                     if ($response[$attribute->getName()] === ['continue' => 'continue']) {
@@ -1051,10 +1056,10 @@ class EavService
                     continue;
                 }
             } elseif ($attribute->getType() == 'file') {
-                $response[$attribute->getName()] = $this->renderFiles($value);
+                $response[$attribute->getName()] = $this->renderFiles($valueObject);
                 continue;
             }
-            $response[$attribute->getName()] = $value->getValue();
+            $response[$attribute->getName()] = $valueObject->getValue();
         }
 
         return $response;
@@ -1072,11 +1077,6 @@ class EavService
     private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
-
-        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
-        if (is_null($maxDepth)) {
-            $maxDepth = new ArrayCollection();
-        }
 
         if ($value->getValue() == null) {
             return null;
