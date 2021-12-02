@@ -63,7 +63,6 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function getCredentials(Request $request)
     {
-
         if (strpos($request->headers->get('Authorization'), 'Bearer') !== false) {
             return [
                 'token' => substr($request->headers->get('Authorization'), strlen('Bearer ')),

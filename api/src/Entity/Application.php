@@ -10,8 +10,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use Ramsey\Uuid\UuidInterface;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -103,7 +103,7 @@ class Application
 
     /**
      * @var string Uri of user object.
-     * 
+     *
      * @Assert\Url
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
@@ -113,7 +113,6 @@ class Application
     /**
      *  @ORM\PrePersist
      *  @ORM\PreUpdate
-     *
      */
     public function prePersist()
     {
@@ -175,7 +174,6 @@ class Application
 
         return $this;
     }
-
 
     public function getName(): ?string
     {
