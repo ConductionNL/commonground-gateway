@@ -273,7 +273,7 @@ App\Entity\Attribute:
         required: true
         entity: '@emigration'
     emigration_coMovers:
-        name: coMovers
+        name: relocators
         type: string
         required: false
         entity: '@emigration'
@@ -648,6 +648,7 @@ App\Entity\Soap:
             address2: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.6.#"
             address3: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.7.#"
             bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
+            relocators: 'relocators'
             externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
@@ -788,13 +789,7 @@ App\Entity\Soap:
                         <ns10:AdresBuitenland2>b</ns10:AdresBuitenland2>
                         <ns10:AdresBuitenland3>c</ns10:AdresBuitenland3>
                       </ns10:AdresBuitenland>
-                      <ns10:MeeEmigranten>
-                        <ns10:MeeEmigrant>
-                            <ns10:Burgerservicenummer>000000176</ns10:Burgerservicenummer>
-                            <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
-                            <ns10:Duur>k</ns10:Duur>
-                        </ns10:MeeEmigrant>
-                    </ns10:MeeEmigranten>
+                      <ns10:MeeEmigranten />
                     </ns10:Aanvraaggegevens>
                     <ns10:Contactgegevens/>
                   </ns5:EmigratieaanvraagRequest>
@@ -804,7 +799,7 @@ App\Entity\Soap:
         requestHydration:
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Zaakgegevens.ZaakID": externalId
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:BurgerservicenummerAanvrager": bsn
-            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:MeeEmigranten.ns10:MeeEmigrant.ns10:Burgerservicenummer": bsn
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:MeeEmigranten": relocators | xml
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:Emigratiedatum": date
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:LandcodeEmigratie": countryCode
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:AdresBuitenland.ns10:AdresBuitenland1": address1
@@ -812,6 +807,7 @@ App\Entity\Soap:
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:AdresBuitenland.ns10:AdresBuitenland3": address3
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.Emailadres": email
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.TelefoonnummerPrive": phone
+
 
     soapSecrecyGateway:
         name: Extract BRP gateway
@@ -923,9 +919,37 @@ App\Entity\Soap:
             newAddress.postalCode: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
             newAddress.residence: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#"
             newAddress.destinationCurrentResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
-            newAddress.liveIn.liveInApplicable: "liveIn.liveInApplicable"
-            newAddress.liveIn.consent: "liveIn.consent"
-            newAddress.liveIn.consenter.bsn: "liveIn.consenter.bsn"
+            newAddress.numberOfResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
+            newAddress.liveIn: liveIn | json
+            relocators: relocators | json
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
 
 
     # User object

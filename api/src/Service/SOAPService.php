@@ -942,7 +942,6 @@ class SOAPService
         ];
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
-//        var_dump($object);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
 
         return $this->translationService->parse(
@@ -974,30 +973,57 @@ class SOAPService
             $data->set(
                 "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#",
                 $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#")));
+
+            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#") == 'Ja'){
+                $relocators = explode(',', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#"));
+            }
+            $relocators[] = $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"];
+            $relocatorsString = '<?xml version="1.0" encoding="UTF-8"?>';
+            foreach($relocators as $relocator){
+                $relocatorsString .= "<ns10:MeeEmigrant>
+                    <ns10:Burgerservicenummer>$relocator</ns10:Burgerservicenummer>
+                    <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
+                        <ns10:Duur>k</ns10:Duur>
+                </ns10:MeeEmigrant>";
+            }
+            $data->set('relocators', $relocatorsString);
         }
+
+        // Verhuizing
         if($messageType == 'zakLk01' && $zaaktype == 'B0366')
         {
             if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#") !== 'hoofdbewoner'){
-                $data->set('liveIn', [
+                $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
                     'consent'           => "APPLICABLE",
                     'consenter'         => ['bsn' => "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#"]
-                ]);
+                ]));
                 $data->set(
                     "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
                     $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.11.#")
                 );
             } else {
-                $data->set('liveIn', [
+                $data->set('liveIn', json_encode([
                     'liveInApplicable'  => false,
                     'consent'           => "NOT_APPLICABLE",
-                ]);
+                ]));
             }
             $data->set(
             "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#",
             $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#")));
 
+            $relocators = [['bsn' => $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"], 'declarationType' => 'REGISTERED']];
+            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.11.#") !== 'nee'){
+                foreach(explode(',', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#")) as $relocator){
+                    $relocators[] = ['bsn' => $relocator, 'declarationType' => 'REGISTERED'];
+                }
+                $data->set("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#", $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.13.#"));
+            }
+
+            $data->set('relocators', json_encode($relocators));
         }
+
+        // Geheimhouding
         if($messageType == 'zakLk01' && $zaaktype == 'B0328')
         {
             $data->set('requesterBsn',$data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
@@ -1010,6 +1036,7 @@ class SOAPService
             }
         }
 
+        // Uittreksel
         if($messageType == 'zakLk01' && $zaaktype == 'B0255')
         {
             $data->set('requesterBsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);

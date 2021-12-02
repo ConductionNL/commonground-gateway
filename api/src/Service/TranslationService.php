@@ -30,15 +30,26 @@ class TranslationService
         $source = new \Adbar\Dot($source);
 
         $source = $source->flatten();
-//var_dump($source);
+
         // Lets use the mapping to hydrate the array
         foreach($mapping as $replace => $search){
-            $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
+            if(strpos($search, '|')){
+                $searches = explode('|', $search);
+                $search = trim($searches[0]);
+                $format = trim($searches[1]);
+            }
+            if(!isset($format) || $format == 'string'){
+                $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
+            } elseif($format == 'json') {
+                $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ((string) $destination[$replace]) ?? null;
+            } elseif($format == 'xml') {
+                $xmlEncoder = new XmlEncoder();
+                $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ((string) $destination[$replace]) ?? null;
+            }
         }
 
         // Let turn the dot array back into an array
         $destination = $destination->all();
-//var_dump($destination);
         return $destination;
     }
 
