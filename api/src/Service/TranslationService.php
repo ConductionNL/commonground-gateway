@@ -46,6 +46,7 @@ class TranslationService
                 $xmlEncoder = new XmlEncoder();
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ((string) $destination[$replace]) ?? null;
             }
+            unset($format);
         }
 
         // Let turn the dot array back into an array

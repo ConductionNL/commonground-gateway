@@ -978,7 +978,7 @@ class SOAPService
                 $relocators = explode(',', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#"));
             }
             $relocators[] = $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"];
-            $relocatorsString = '<?xml version="1.0" encoding="UTF-8"?>';
+            $relocatorsString = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
             foreach($relocators as $relocator){
                 $relocatorsString .= "<ns10:MeeEmigrant>
                     <ns10:Burgerservicenummer>$relocator</ns10:Burgerservicenummer>
@@ -986,6 +986,7 @@ class SOAPService
                         <ns10:Duur>k</ns10:Duur>
                 </ns10:MeeEmigrant>";
             }
+            $relocatorsString .= '</ns10:MeeEmigranten>';
             $data->set('relocators', $relocatorsString);
         }
 
