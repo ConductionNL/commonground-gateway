@@ -1188,7 +1188,6 @@ App\Entity\Attribute:
     learningResult_learningNeed:
         name: learningNeed
         type: object
-        required: true # todo remove?
         entity: '@learningResult'
         object: '@learningNeed'
         inversedBy: '@learningNeed_learningResults'
@@ -1294,6 +1293,10 @@ App\Entity\Attribute:
         entity: '@participation'
         requiredIf:
             providerOption: 'OTHER'
+    participation_hours:
+        name: hours
+        type: integer
+        entity: '@participation'
     participation_degree:
         name: degree
         type: boolean
@@ -1325,6 +1328,7 @@ App\Entity\Attribute:
         entity: '@participation'
         object: '@learningResult'
         inversedBy: '@learningResult_participation'
+        cascade: true
 #        requiredIf:
 #            providerOption: 'OTHER'
     participation_testResults:
