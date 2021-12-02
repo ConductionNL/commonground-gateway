@@ -47,6 +47,7 @@ App\Entity\Entity:
         name: Intra-municipal relocations
         description: A test entity for Soap translations
         gateway: '@vrijbrp_api'
+        endpoint: "/api/v1/relocations/intra"
 
     # Test object
     dossiers:
@@ -97,6 +98,27 @@ App\Entity\Entity:
         description: An entity for SOAP BRP extracts
         gateway: '@vrijbrp_soap'
 
+    # Extract
+    emigration:
+        #route: '/api/extracts'
+        name: Emigration
+        description: An entity for SOAP BRP extracts
+        gateway: '@vrijbrp_soap'
+
+    # Extract
+    secrecy:
+        #route: '/api/extracts'
+        name: Secrecy
+        description: An entity for SOAP BRP extracts
+        gateway: '@vrijbrp_soap'
+
+    # Extract
+    name:
+        #route: '/api/extracts'
+        name: Name
+        description: An entity for SOAP BRP extracts
+        gateway: '@vrijbrp_soap'
+
 
 App\Entity\Attribute:
     # course properties
@@ -123,6 +145,11 @@ App\Entity\Attribute:
         type: string
         required: true
         entity: '@extract'
+    extract_bsn_2:
+        name: requesterBsn
+        type: string
+        required: true
+        entity: '@extract'
     extract_phone:
         name: phone
         type: string
@@ -138,6 +165,118 @@ App\Entity\Attribute:
         type: string
         required: false
         entity: '@extract'
+
+    # extracts (ofwel uittreksels)
+    secrecy_id:
+        name: externalId
+        type: string
+        required: true
+        entity: '@secrecy'
+    secrecy_bsn:
+        name: bsn
+        type: string
+        required: true
+        entity: '@secrecy'
+    secrecy_requesterBsn:
+        name: requesterBsn
+        type: string
+        required: true
+        entity: '@secrecy'
+    secrecy_phone:
+        name: phone
+        type: string
+        required: false
+        entity: '@secrecy'
+    secrecy_email:
+        name: email
+        type: string
+        required: false
+        entity: '@secrecy'
+    secrecy_type:
+        name: type
+        type: string
+        required: false
+        entity: '@secrecy'
+
+    # extracts (ofwel uittreksels)
+    name_id:
+        name: externalId
+        type: string
+        required: true
+        entity: '@name'
+    name_bsn:
+        name: bsn
+        type: string
+        required: true
+        entity: '@name'
+    name_phone:
+        name: phone
+        type: string
+        required: false
+        entity: '@name'
+    name_email:
+        name: email
+        type: string
+        required: false
+        entity: '@name'
+    name_type:
+        name: type
+        type: string
+        required: false
+        entity: '@name'
+
+
+    # extracts (ofwel uittreksels)
+    emigration_id:
+        name: externalId
+        type: string
+        required: true
+        entity: '@emigration'
+    emigration_bsn:
+        name: bsn
+        type: string
+        required: true
+        entity: '@emigration'
+    emigtration_phone:
+        name: phone
+        type: string
+        required: false
+        entity: '@emigration'
+    emigration_email:
+        name: email
+        type: string
+        required: false
+        entity: '@emigration'
+    emigration_date:
+        name: date
+        type: date
+        required: false
+        entity: '@emigration'
+    emigration_country:
+        name: countryCode
+        type: string
+        required: true
+        entity: '@emigration'
+    emigration_address1:
+        name: address1
+        type: string
+        required: true
+        entity: '@emigration'
+    emigration_address2:
+        name: address2
+        type: string
+        required: true
+        entity: '@emigration'
+    emigration_address3:
+        name: address3
+        type: string
+        required: true
+        entity: '@emigration'
+    emigration_coMovers:
+        name: relocators
+        type: string
+        required: false
+        entity: '@emigration'
 
     # inter-municipal-relocations
     inter-municipal-relocations_dossier:
@@ -416,16 +555,151 @@ App\Entity\Soap:
             phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
             email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
             type: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
+            bsn: "bsn"
+            requesterBsn: "requesterBsn"
+            externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <s:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"  xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        responseHydration: {}
+
+    soapSecrecy:
+        name: Extract BRP
+        description: A soap entity for secrecy cases
+        toEntity: '@secrecy'
+        type: zakLk01
+        zaaktype: B0328
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
+            email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            type: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#"
+            bsn: "bsn"
+            requesterBsn: "requesterBsn"
+            externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        responseHydration: {}
+
+
+    #Uittreksel BRP
+    soapEmigration:
+        name: Extract BRP
+        description: A soap entity for BRP extracts
+        toEntity: '@emigration'
+        type: zakLk01
+        zaaktype: B1425
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
+            email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            date: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
+            countryCode: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#"
+            address1: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"
+            address2: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.6.#"
+            address3: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.7.#"
+            bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
+            relocators: 'relocators'
+            externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        responseHydration: {}
+
+    #Uittreksel BRP
+    soapName:
+        name: Extract BRP
+        description: A soap entity for BRP extracts
+        toEntity: '@name'
+        type: zakLk01
+        zaaktype: B0348
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
+            email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            type: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
             bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
             externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope
-                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
                 <SOAP-ENV:Header/>
                 <SOAP-ENV:Body>
-                    <Bv03Bericht
-                        xmlns="http://www.egem.nl/StUF/StUF0301">
+                    <Bv03Bericht>
                         <stuurgegevens>
                             <berichtcode>Bv03</berichtcode>
                             <zender>
@@ -455,18 +729,16 @@ App\Entity\Soap:
         fromEntity: '@extract'
         type: zakLk01
         request: |
-            <?xml version="1.0" encoding="UTF-8"?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+            <?xml version="1.0" encoding="UTF-8"?>
+            <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/" xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes" xmlns:ns3="urn:nl/procura/gba/v1.5/diensten" xmlns:ns4="urn:nl/procura/gba/v1.5/diensten/uittreksel">
               <S:Body>
-                <ns3:AanvraagRequest xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes"
-                                     xmlns:ns3="urn:nl/procura/gba/v1.5/diensten"
-                                     xmlns:ns4="urn:nl/procura/gba/v1.5/diensten/uittreksel"
-                >
+                <ns3:AanvraagRequest>
                   <ns3:UittrekselaanvraagRequest>
                     <ns4:Zaakgegevens>
                       <ZaakID>1342123421</ZaakID>
                       <Bron>GBA Webservice</Bron>
                       <Leverancier>PROCURA</Leverancier>
-                      <DatumAanvraag>2013-08-23</DatumAanvraag>
+                      <DatumAanvraag>{date}</DatumAanvraag>
                     </ns4:Zaakgegevens>
                     <ns4:Aanvraaggegevens>
                       <ns4:BurgerservicenummerAanvrager>000000115</ns4:BurgerservicenummerAanvrager>
@@ -478,22 +750,206 @@ App\Entity\Soap:
                         </ns4:UittrekselBetrokkene>
                       </ns4:UittrekselBetrokkenen>
                     </ns4:Aanvraaggegevens>
-                    <ns4:Contactgegevens>
-                      <Emailadres>a@a.a</Emailadres>
-                      <TelefoonnummerPrive>06-prive</TelefoonnummerPrive>
-                      <TelefoonnummerWerk>06-werk</TelefoonnummerWerk>
-                      <TelefoonnummerMobiel>06-mobiel</TelefoonnummerMobiel>
-                    </ns4:Contactgegevens>
+                    <ns4:Contactgegevens />
                   </ns3:UittrekselaanvraagRequest>
                 </ns3:AanvraagRequest>
               </S:Body>
             </S:Envelope>
         requestHydration:
-          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:BurgerservicenummerAanvrager": bsn
-          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Burgerservicenummer": bsn
-          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Uittrekselcode": type
-          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.Emailadres": email
-          "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.TelefoonnummerMobiel": phone
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Zaakgegevens.ZaakID": externalId
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:BurgerservicenummerAanvrager": requesterBsn
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Burgerservicenummer": bsn
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Aanvraaggegevens.ns4:UittrekselBetrokkenen.ns4:UittrekselBetrokkene.ns4:Uittrekselcode": type
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.Emailadres": email
+            "S:Body.ns3:AanvraagRequest.ns3:UittrekselaanvraagRequest.ns4:Contactgegevens.TelefoonnummerPrive": phone
+
+    soapEmigrationGateway:
+        name: Extract BRP gateway
+        description: A SOAP resource to input an extract case into the SOAP API
+        fromEntity: '@emigration'
+        type: zakLk01
+        request: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/" xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes" xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie" xmlns:ns5="urn:nl/procura/gba/v1.5/diensten">
+              <S:Body>
+                <ns5:AanvraagRequest>
+                  <ns5:EmigratieaanvraagRequest>
+                    <ns10:Zaakgegevens>
+                      <ZaakID>1234</ZaakID>
+                      <Bron>GBA Webservice</Bron>
+                      <Leverancier>PROCURA</Leverancier>
+                      <DatumAanvraag>{date}</DatumAanvraag>
+                    </ns10:Zaakgegevens>
+                    <ns10:Aanvraaggegevens>
+                      <ns10:BurgerservicenummerAanvrager>000000115</ns10:BurgerservicenummerAanvrager>
+                      <ns10:Emigratiedatum>2010-01-01</ns10:Emigratiedatum>
+                      <ns10:LandcodeEmigratie>7039</ns10:LandcodeEmigratie>
+                      <ns10:AdresBuitenland>
+                        <ns10:AdresBuitenland1>a</ns10:AdresBuitenland1>
+                        <ns10:AdresBuitenland2>b</ns10:AdresBuitenland2>
+                        <ns10:AdresBuitenland3>c</ns10:AdresBuitenland3>
+                      </ns10:AdresBuitenland>
+                      <ns10:MeeEmigranten />
+                    </ns10:Aanvraaggegevens>
+                    <ns10:Contactgegevens/>
+                  </ns5:EmigratieaanvraagRequest>
+                </ns5:AanvraagRequest>
+              </S:Body>
+            </S:Envelope>
+        requestHydration:
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Zaakgegevens.ZaakID": externalId
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:BurgerservicenummerAanvrager": bsn
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:MeeEmigranten": relocators | xml
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:Emigratiedatum": date
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:LandcodeEmigratie": countryCode
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:AdresBuitenland.ns10:AdresBuitenland1": address1
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:AdresBuitenland.ns10:AdresBuitenland2": address2
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Aanvraaggegevens.ns10:AdresBuitenland.ns10:AdresBuitenland3": address3
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.Emailadres": email
+            "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.TelefoonnummerPrive": phone
+
+
+    soapSecrecyGateway:
+        name: Extract BRP gateway
+        description: A SOAP resource to input an extract case into the SOAP API
+        fromEntity: '@secrecy'
+        type: zakLk01
+        request: |
+            <?xml version="1.0" encoding="UTF-8"?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/" xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes"
+            xmlns:ns11="urn:nl/procura/gba/v1.5/diensten/geheimhouding"
+            xmlns:ns5="urn:nl/procura/gba/v1.5/diensten">
+            <S:Body>
+            <ns5:AanvraagRequest>
+            <ns5:GeheimhoudingaanvraagRequest>
+            <ns11:Zaakgegevens>
+            <ZaakID>1234</ZaakID>
+            <Bron>GBA Webservice</Bron>
+            <Leverancier>PROCURA</Leverancier>
+            <DatumAanvraag>{date}</DatumAanvraag>
+            </ns11:Zaakgegevens>
+            <ns11:Aanvraaggegevens>
+            <ns11:BurgerservicenummerAanvrager>000000115</ns11:BurgerservicenummerAanvrager>
+            <ns11:GeheimhoudingBetrokkenen>
+            <ns11:GeheimhoudingBetrokkene>
+            <ns11:Burgerservicenummer>000000115</ns11:Burgerservicenummer>
+            <ns11:CodeGeheimhouding>0</ns11:CodeGeheimhouding>
+            </ns11:GeheimhoudingBetrokkene>
+            </ns11:GeheimhoudingBetrokkenen>
+            </ns11:Aanvraaggegevens>
+            <ns11:Contactgegevens>
+            <Emailadres>a@a.a</Emailadres>
+            <TelefoonnummerPrive>2</TelefoonnummerPrive>
+            <TelefoonnummerWerk>5678</TelefoonnummerWerk>
+            <TelefoonnummerMobiel>1234</TelefoonnummerMobiel>
+            </ns11:Contactgegevens>
+            </ns5:GeheimhoudingaanvraagRequest>
+            </ns5:AanvraagRequest>
+            </S:Body>
+            </S:Envelope>
+        requestHydration:
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Zaakgegevens.ZaakID": externalId
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Aanvraaggegevens.ns11:BurgerservicenummerAanvrager": requesterBsn
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Aanvraaggegevens.ns11:GeheimhoudingBetrokkenen.ns11:GeheimhoudingBetrokkene.ns11:Burgerservicenummer": bsn
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Aanvraaggegevens.ns11:GeheimhoudingBetrokkenen.ns11:GeheimhoudingBetrokkene.ns11:CodeGeheimhouding": type
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Contactgegevens.Emailadres": email
+            "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Contactgegevens.TelefoonnummerPrive": phone
+
+
+    soapNameGateway:
+        name: Extract BRP gateway
+        description: A SOAP resource to input an extract case into the SOAP API
+        fromEntity: '@name'
+        type: zakLk01
+        request: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"
+                xmlns="urn:nl/procura/gba/v1.5/diensten/complextypes"
+                xmlns:ns5="urn:nl/procura/gba/v1.5/diensten"
+                xmlns:ns6="urn:nl/procura/gba/v1.5/diensten/naamgebruik">
+            <S:Body>
+            <ns5:AanvraagRequest>
+            <ns5:NaamgebruikaanvraagRequest>
+            <ns6:Zaakgegevens>
+            <ZaakID>1234</ZaakID>
+            <Bron>GBA Webservice</Bron>
+            <Leverancier>PROCURA</Leverancier>
+            <DatumAanvraag>{date}</DatumAanvraag>
+            </ns6:Zaakgegevens>
+            <ns6:Aanvraaggegevens>
+            <ns6:BurgerservicenummerAanvrager>000000115</ns6:BurgerservicenummerAanvrager>
+            <ns6:NaamgebruikBetrokkenen>
+            <ns6:NaamgebruikBetrokkene/>
+            </ns6:NaamgebruikBetrokkenen>
+            </ns6:Aanvraaggegevens>
+            <ns6:Contactgegevens>
+            <Emailadres>a@a.a</Emailadres>
+            <TelefoonnummerPrive>2</TelefoonnummerPrive>
+            <TelefoonnummerWerk>5678</TelefoonnummerWerk>
+            <TelefoonnummerMobiel>1234</TelefoonnummerMobiel>
+            </ns6:Contactgegevens>
+            </ns5:NaamgebruikaanvraagRequest>
+            </ns5:AanvraagRequest>
+            </S:Body>
+            </S:Envelope>
+        requestHydration:
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Zaakgegevens.ZaakID": externalId
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Aanvraaggegevens.ns6:BurgerservicenummerAanvrager": bsn
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Aanvraaggegevens.ns6:NaamgebruikBetrokkenen.ns6:NaamgebruikBetrokkene.ns6:Burgerservicenummer": bsn
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Aanvraaggegevens.ns6:NaamgebruikBetrokkenen.ns6:NaamgebruikBetrokkene.ns6:CodeNaamgebruik": type
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Contactgegevens.Emailadres": email
+            "S:Body.ns5:AanvraagRequest.ns5:NaamgebruikaanvraagRequest.ns6:Contactgegevens.TelefoonnummerPrive": phone
+
+    soapIntraRelocation:
+        name: Intra-municipal relocation
+        description: a soap entity for intra-municipal relocations
+        toEntity: '@intra-municipal-relocations'
+        type: zakLk01
+        zaaktype: B0366
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+            dossier.description: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:omschrijving"
+            dossier.startDate: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.10.#"
+            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
+            declarant.contactInformation.telephoneNumber: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
+            declarant.contactInformation.email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            newAddress.street: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.7.#"
+            newAddress.houseNumber: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#"
+            newAddress.houseLetter: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"
+            newAddress.houseNumberAddition: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.6.#"
+            newAddress.postalCode: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
+            newAddress.residence: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#"
+            newAddress.destinationCurrentResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
+            newAddress.numberOfResidents: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.12.#"
+            newAddress.liveIn: liveIn | json
+            relocators: relocators | json
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
 
 
     # User object
@@ -505,8 +961,8 @@ App\Entity\Soap:
         # request:
         #requestSkeleton
         requestHydration:
-            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname" 
-            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"     
+            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
+            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"
         # response:
         #responseSkeleton:
         #    - "ns2:wrapper"
