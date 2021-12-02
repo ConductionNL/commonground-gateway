@@ -1008,7 +1008,7 @@ class SOAPService
             if(in_array($wijzeBewoning, $permissionRequired)){
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
-                    'consent'           => "APPLICABLE",
+                    'consent'           => "PENDING",
                     'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
                 ]));
             } else {
