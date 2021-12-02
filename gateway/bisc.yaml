@@ -1163,7 +1163,7 @@ App\Entity\Attribute:
         name: application
         type: string
         required: true  
-        enum: ['FAMILY AND UPBRINGING', 'LABOR_MARKET_AND_WORK','HEALTH_AND_WELLBEING','LIVING_AND_NEIGHBORHOOD','SELF-SUSTAINABILITY', 'OTHER']
+        enum: ['FAMILY_AND_UPBRINGING', 'LABOR_MARKET_AND_WORK','HEALTH_AND_WELLBEING','LIVING_AND_NEIGHBORHOOD','SELF_SUSTAINABILITY', 'OTHER']
         entity: '@learningResult'
     learningResult_applicationOther:
         name: applicationOther
