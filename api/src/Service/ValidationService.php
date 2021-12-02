@@ -835,7 +835,7 @@ class ValidationService
                 }
 
                 // Lets handle the stuf
-                // If we are not cascading, attribute nd value is a string, than value should be an id.
+                // If we are not cascading and value is a string, than value should be an id.
                 if (is_string($value)) {
                     // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
                     // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
