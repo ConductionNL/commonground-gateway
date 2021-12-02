@@ -70,12 +70,12 @@ class EavService
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if (!($entity instanceof Entity)) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/' . $entityName]);
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/'.$entityName]);
         }
 
         if (!($entity instanceof Entity)) {
             return [
-                'message' => 'Could not establish an entity for ' . $entityName,
+                'message' => 'Could not establish an entity for '.$entityName,
                 'type'    => 'Bad Request',
                 'path'    => 'entity',
                 'data'    => ['Entity Name' => $entityName],
@@ -120,7 +120,7 @@ class EavService
             // make sure $id is actually an uuid
             if (Uuid::isValid($id) == false) {
                 return [
-                    'message' => 'The given id (' . $id . ') is not a valid uuid.',
+                    'message' => 'The given id ('.$id.') is not a valid uuid.',
                     'type'    => 'Bad Request',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $id],
@@ -134,7 +134,7 @@ class EavService
                     $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
-                            'message' => 'Could not find an object with id ' . $id . ' of type ' . $entity->getName(),
+                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
                             'type'    => 'Bad Request',
                             'path'    => $entity->getName(),
                             'data'    => ['id' => $id],
@@ -306,45 +306,45 @@ class EavService
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
         if ($contentType === 'text/csv') {
             $replacements = [
-                '/student\.person.givenName/'              => 'Voornaam',
-                '/student\.person.additionalName/'         => 'Tussenvoegsel',
-                '/student\.person.familyName/'             => 'Achternaam',
-                '/student\.person.emails\..\.email/'         => 'E-mail adres',
-                '/student.person.telephones\..\.telephone/' => 'Telefoonnummer',
-                '/student\.intake\.dutchNTLevel/'           => 'NT1/NT2',
-                '/participations\.provider\.id/'            => 'ID aanbieder',
-                '/participations\.provider\.name/'          => 'Aanbieder',
-                '/participations/'          => 'Deelnames',
-                '/learningResults\..\.id/'                   => 'ID leervraag',
-                '/learningResults\..\.verb/'                 => 'Werkwoord',
-                '/learningResults\..\.subjectOther/'         => 'Onderwerp (anders)',
-                '/learningResults\..\.subject/'              => 'Onderwerp',
-                '/learningResults\..\.applicationOther/'     => 'Toepasing (anders)',
-                '/learningResults\..\.application/'          => 'Toepassing',
-                '/learningResults\..\.levelOther/'                => 'Niveau (anders)',
-                '/learningResults\..\.level/'                => 'Niveau',
+                '/student\.person.givenName/'                        => 'Voornaam',
+                '/student\.person.additionalName/'                   => 'Tussenvoegsel',
+                '/student\.person.familyName/'                       => 'Achternaam',
+                '/student\.person.emails\..\.email/'                 => 'E-mail adres',
+                '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
+                '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
+                '/participations\.provider\.id/'                     => 'ID aanbieder',
+                '/participations\.provider\.name/'                   => 'Aanbieder',
+                '/participations/'                                   => 'Deelnames',
+                '/learningResults\..\.id/'                           => 'ID leervraag',
+                '/learningResults\..\.verb/'                         => 'Werkwoord',
+                '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
+                '/learningResults\..\.subject/'                      => 'Onderwerp',
+                '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
+                '/learningResults\..\.application/'                  => 'Toepassing',
+                '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
+                '/learningResults\..\.level/'                        => 'Niveau',
                 '/learningResults\..\.participation/'                => 'Deelname',
-                '/learningResults\..\.testResult/'                => 'Test Resultaat',
-                '/agreements/'                      => 'Overeenkomsten',
-                '/desiredOffer/'                      => 'Gewenst aanbod',
-                '/advisedOffer/'                      => 'Geadviseerd aanbod',
-                '/offerDifference/'                      => 'Aanbod verschil',
-                '/person\.givenName/'                      => 'Voornaam',
-                '/person\.additionalName/'                 => 'Tussenvoegsel',
-                '/person\.familyName/'                     => 'Achternaam',
-                '/person\.emails\..\.email/'                 => 'E-mail adres',
-                '/person.telephones\..\.telephone/'         => 'Telefoonnummer',
-                '/intake\.date/'                           => 'Aanmaakdatum',
-                '/intake\.referringOrganizationEmail/'     => 'Verwijzer Email',
-                '/intake\.referringOrganizationOther/'     => 'Verwijzer Telefoon',
-                '/intake\.referringOrganization/'          => 'Verwijzer',
-                '/intake\.foundViaOther/'                  => 'Via (anders)',
-                '/intake\.foundVia/'                       => 'Via',
-                '/roles/'                                 => 'Rollen',
-                '/student\.id/'                            => 'ID deelnemer',
-                '/description/'                           => 'Beschrijving',
-                '/motivation/'                            => 'Leervraag',
-                '/languageHouse\.name/'                   => 'Naam taalhuis',
+                '/learningResults\..\.testResult/'                   => 'Test Resultaat',
+                '/agreements/'                                       => 'Overeenkomsten',
+                '/desiredOffer/'                                     => 'Gewenst aanbod',
+                '/advisedOffer/'                                     => 'Geadviseerd aanbod',
+                '/offerDifference/'                                  => 'Aanbod verschil',
+                '/person\.givenName/'                                => 'Voornaam',
+                '/person\.additionalName/'                           => 'Tussenvoegsel',
+                '/person\.familyName/'                               => 'Achternaam',
+                '/person\.emails\..\.email/'                         => 'E-mail adres',
+                '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
+                '/intake\.date/'                                     => 'Aanmaakdatum',
+                '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
+                '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
+                '/intake\.referringOrganization/'                    => 'Verwijzer',
+                '/intake\.foundViaOther/'                            => 'Via (anders)',
+                '/intake\.foundVia/'                                 => 'Via',
+                '/roles/'                                            => 'Rollen',
+                '/student\.id/'                                      => 'ID deelnemer',
+                '/description/'                                      => 'Beschrijving',
+                '/motivation/'                                       => 'Leervraag',
+                '/languageHouse\.name/'                              => 'Naam taalhuis',
             ];
 
             foreach ($replacements as $key => $value) {
@@ -421,7 +421,7 @@ class EavService
         $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
         if ($renderType && !in_array($renderType, $renderTypes)) {
             return [
-                'message' => 'The rendering of this type is not suported, suported types are ' . implode(',', $renderTypes),
+                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
                 'type'    => 'Bad Request',
                 'path'    => $path,
                 'data'    => ['rendertype' => $renderType],
@@ -514,7 +514,7 @@ class EavService
                 if ($attribute->getMultiple()) {
                     // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
                     if (!is_array($value)) {
-                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: ' . $attribute->getName() . '[])');
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
@@ -762,14 +762,14 @@ class EavService
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
             if (substr($param, 0, 1) == '.') {
-                $param = '_' . ltrim($param, $param[0]);
+                $param = '_'.ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr . $filter;
+                    $filterCheckStr = $filterCheckStr.$filter;
                     if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr . ', ';
+                        $filterCheckStr = $filterCheckStr.', ';
                     }
                 }
 
@@ -778,9 +778,9 @@ class EavService
                 }
 
                 return [
-                    'message' => 'Unsupported queryParameter (' . $param . '). Supported queryParameters: ' . $filterCheckStr,
+                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
-                    'path'    => $entity->getName() . '?' . $param . '=' . $value,
+                    'path'    => $entity->getName().'?'.$param.'='.$value,
                     'data'    => ['queryParameter' => $param],
                 ];
             }
@@ -939,9 +939,9 @@ class EavService
 
         // Lets make it personal
         $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()) . '/' . $result->getId();
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -1109,7 +1109,7 @@ class EavService
                 continue;
             }
             // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()) . '/' . $object->getId()];
+            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
         }
 
         return $objectsArray;
