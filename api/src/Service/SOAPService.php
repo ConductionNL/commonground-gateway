@@ -1080,10 +1080,10 @@ class SOAPService
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
                     'consent'           => "PENDING",
-                    'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
+                    'consenter'         => ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")],
                 ]));
                 $data->set('mainOccupant', json_encode([
-                    'bsn' => '',
+                    'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER"),
                 ]));
             } else {
                 $data->set('liveIn', json_encode([
