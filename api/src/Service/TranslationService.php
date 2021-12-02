@@ -28,7 +28,6 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-
         $source = $source->flatten();
 
         // Lets use the mapping to hydrate the array

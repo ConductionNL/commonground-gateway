@@ -952,7 +952,57 @@ App\Entity\Soap:
                 </SOAP-ENV:Body>
             </SOAP-ENV:Envelope>
 
-
+    soapEfIntraRelocation:
+        name: Intra-municipal relocation
+        description: a soap entity for intra-municipal relocations
+        type: OntvangenIntakeNotificatie
+        zaaktype: B0366
+        toEntity: '@intra-municipal-relocations'
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID"
+            dossier.startDate: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.VERHUISDATUM"
+            declarant.bsn: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.METADATA.INDIENER"
+            declarant.contactInformation.telephoneNumber: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.TELEFOONNUMMER"
+            declarant.contactInformation.email: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.EMAILADRES"
+            newAddress.street: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.STRAATNAAM_NIEUW"
+            newAddress.houseNumber: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISNUMMER_NIEUW"
+            newAddress.houseLetter: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISLETTER_NIEUW"
+            newAddress.houseNumberAddition: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISNUMMERTOEVOEGING_NIEUW"
+            newAddress.postalCode: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.POSTCODE_NIEUW"
+            newAddress.residence: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WOONPLAATS_NIEUW"
+            newAddress.destinationCurrentResidents: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.AANTAL_PERS_NIEUW_ADRES"
+            newAddress.numberOfResidents: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.AANTAL_PERS_NIEUW_ADRES"
+            newAddress.liveIn: liveIn | json
+            newAddress.mainOccupant: mainOccupant | json
+            relocators: relocators | json
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
     # User object
     soaptest:
         name: SOAP Test

@@ -22,6 +22,7 @@ class SOAPService
     private CacheInterface $cache;
     private EavService $eavService;
     private TranslationService $translationService;
+    private GatewayService $gatewayService;
 
     /**
      * Translation table for case type descriptions.
@@ -59,7 +60,8 @@ class SOAPService
         EntityManagerInterface $entityManager,
         CacheInterface $cache,
         EavService $eavService,
-        TranslationService $translationService
+        TranslationService $translationService,
+        GatewayService $gatewayService
     )
     {
         $this->commonGroundService = $commonGroundService;
@@ -67,6 +69,7 @@ class SOAPService
         $this->cache = $cache;
         $this->eavService = $eavService;
         $this->translationService = $translationService;
+        $this->gatewayService = $gatewayService;
     }
 
     public function getZaakType(array $data, array $namespaces): string
@@ -941,6 +944,7 @@ class SOAPService
         ];
 
         $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
+
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
@@ -963,6 +967,15 @@ class SOAPService
         return null;
     }
 
+    private function getIndiener(string $firstnames, string $lastname, string $dateOfBirth): string
+    {
+        $bsn = '';
+
+        $this->commonGroundService->getResourceList(['component' => 'brp', 'resource' => 'ingeschrevenPersonen'], ['geboorte__datum' => $dateOfBirth, 'naam__geslachtsnaam' => $lastname, 'naam__voornamen' => $firstnames]);
+
+        return $bsn;
+    }
+
     /**
      * Finds specific values and parses them.
      *
@@ -972,9 +985,12 @@ class SOAPService
      * @param string|null $zaaktype
      * @return array
      */
-    public function parseSpecificValues(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
+    public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
     {
-        $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
+        $permissionRequired = ['inwonend'];
+        if($messageType == 'zakLk01'){
+            $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
+        }
         $data = new \Adbar\Dot($data);
         // Emigratie
         if($messageType == 'zakLk01' && $zaaktype == 'B1425')
@@ -1003,7 +1019,6 @@ class SOAPService
         if($messageType == 'zakLk01' && $zaaktype == 'B0366')
         {
             $wijzeBewoning = $this->getValue($extraElementen, 'wijzeBewoning');
-            $permissionRequired = ['inwonend'];
             if(in_array($wijzeBewoning, $permissionRequired)){
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
@@ -1058,6 +1073,53 @@ class SOAPService
             }
         }
 
+        if($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B0366')
+        {
+            $wijzeBewoning = $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING");
+            if(in_array($wijzeBewoning, $permissionRequired)){
+                $data->set('liveIn', json_encode([
+                    'liveInApplicable'  => true,
+                    'consent'           => "PENDING",
+                    'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
+                ]));
+                $data->set('mainOccupant', json_encode([
+                    'bsn' => '',
+                ]));
+            } else {
+                $data->set('liveIn', json_encode([
+                    'liveInApplicable'  => false,
+                    'consent'           => "NOT_APPLICABLE",
+                ]));
+            }
+
+            $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => 'REGISTERED'];
+
+            if(isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
+                foreach($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover){
+                    $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
+                }
+            $data->set('relocators', json_encode($relocators));
+        }
+
         return $data->all();
+    }
+
+    public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Soap $soap)
+    {
+        $data = new \Adbar\Dot($data);
+        if($messageType == 'OntvangenIntakeNotificatie'){
+            $resource = [
+                'title'     => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Omschrijving"),
+                'filename'  => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Naam"),
+                'content'   => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Inhoud.#"),
+            ];
+
+            $post = json_encode($resource);
+            $component = $this->gatewayService->gatewayToArray($soap->getToEntity()->getGateway());
+            $url = "{$soap->getToEntity()->getGateway()->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
+
+            $result = $this->commonGroundService->callService($component, $url, $post, [], [], false, 'POST');
+        }
+
     }
 }

@@ -50,7 +50,7 @@ class SOAPController extends AbstractController
                 break;
             case 'zakLk01':
                 $caseType = $SOAPService->getZaakType($data, $namespaces);
-                $data = $SOAPService->parseSpecificValues($data, $namespaces, $messageType, $caseType);
+                $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     break;
@@ -58,6 +58,18 @@ class SOAPController extends AbstractController
             else{
                     throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
+            case 'OntvangenIntakeNotificatie':
+                $caseType = $data['SOAP-ENV:Header']['ns2:Stuurgegevens']['ns2:Zaaktype'];
+                $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
+                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
+                    $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
+                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType, $soapEntity);
+                    break;
+                }
+                else{
+                    throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
+                }
+                break;
             default:
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
