@@ -304,9 +304,17 @@ class EavService
         }
 
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
-
         if ($contentType === 'text/csv') {
             $replacements = [
+                '/student\.person.givenName/'              => 'Voornaam',
+                '/student\.person.additionalName/'         => 'Tussenvoegsel',
+                '/student\.person.familyName/'             => 'Achternaam',
+                '/student\.person.emails\..\.email/'         => 'E-mail adres',
+                '/student.person.telephones\..\.telephone/' => 'Telefoonnummer',
+                '/student\.intake\.dutchNTLevel/'           => 'NT1/NT2',
+                '/participations\.provider\.id/'            => 'ID aanbieder',
+                '/participations\.provider\.name/'          => 'Aanbieder',
+                '/participations/'          => 'Deelnames',
                 '/learningResults\..\.id/'                   => 'ID leervraag',
                 '/learningResults\..\.verb/'                 => 'Werkwoord',
                 '/learningResults\..\.subjectOther/'         => 'Onderwerp (anders)',
@@ -336,15 +344,7 @@ class EavService
                 '/student\.id/'                            => 'ID deelnemer',
                 '/description/'                           => 'Beschrijving',
                 '/motivation/'                            => 'Leervraag',
-                '/student\.person.givenName/'              => 'Voornaam',
-                '/student\.person.additionalName/'         => 'Tussenvoegsel',
-                '/student\.person.familyName/'             => 'Achternaam',
-                '/student\.person.emails\..\.email/'         => 'E-mail adres',
-                '/student.person.telephones\..\.telephone/' => 'Telefoonnummer',
-                '/student\.intake\.dutchNTLevel/'           => 'NT1/NT2',
                 '/languageHouse\.name/'                   => 'Naam taalhuis',
-                '/participations\.provider\.id/'            => 'ID aanbieder',
-                '/participations\.provider\.name/'          => 'Aanbieder',
             ];
 
             foreach ($replacements as $key => $value) {
