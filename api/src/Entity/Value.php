@@ -255,6 +255,8 @@ class Value
             $object->addSubresourceOf($this);
         }
 
+        // TODO: see https://conduction.atlassian.net/browse/CON-2030
+        // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
         //Handle inversed by
         if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
             $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
