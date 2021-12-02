@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Application;
 use App\Entity\Entity;
+use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
 use \App\Service\EavService;
@@ -1143,7 +1144,7 @@ class SOAPService
         return $data->all();
     }
 
-    public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Entity $entity)
+    public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Gateway $gateway)
     {
         $data = new \Adbar\Dot($data);
         if($messageType == 'OntvangenIntakeNotificatie'){
@@ -1154,8 +1155,8 @@ class SOAPService
             ];
 
             $post = json_encode($resource);
-            $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-            $url = "{$entity->getGateway()->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
+            $component = $this->gatewayService->gatewayToArray($gateway);
+            $url = "{$gateway->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
 
             $result = $this->commonGroundService->callService($component, $url, $post, [], [], false, 'POST');
         }
