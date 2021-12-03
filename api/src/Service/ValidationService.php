@@ -212,11 +212,9 @@ class ValidationService
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
-        if (is_null($value)) {
-            if ($attribute->getDefaultValue()) {
-                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
-            } elseif (!$attribute->getNullable()) {
-                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. (Nullable is not set for this attribute)');
+        if (empty($value) || ($attribute->getType() != 'bool') && !$value) {
+            if ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }

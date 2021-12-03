@@ -659,14 +659,14 @@ App\Entity\Attribute:
         entity: "@employee"
         enum:
             [
-                "Medewerker",
-                "Coördinator",
-                "Begeleider",
-                "Coördinator Begeleider",
-                "Vrijwilliger",
+                "EMPLOYEE",
+                "COORDINATOR",
+                "MENTOR",
+                "COORDINATOR_MENTOR",
+                "VOLUNTEER",
             ]
         #        required: true # TODO: maybe use this instead of defaultValue?
-        defaultValue: "Medewerker"
+        defaultValue: "EMPLOYEE"
         searchable: true
     employee_person:
         name: person
@@ -1387,14 +1387,12 @@ App\Entity\Attribute:
         name: startParticipation
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
+        defaultValue: "NOW"
+        nullable: false
     participation_endParticipation:
         name: endParticipation
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_reasonEndParticipation:
         name: reasonEndParticipation
         type: string
@@ -1454,14 +1452,10 @@ App\Entity\Attribute:
         name: start
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_end:
         name: end
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_agreement:
         name: agreement
         type: string

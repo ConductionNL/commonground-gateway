@@ -1085,11 +1085,13 @@ class EavService
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
             // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if (!$maxDepth->contains($value->getValue())) {
-                return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
+            if ($maxDepth) {
+                if (!$maxDepth->contains($value->getValue())) {
+                    return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
+                }
+                return ['continue' => 'continue']; //TODO NOTE: We want this here
             }
-
-            return ['continue' => 'continue']; //TODO We want this
+            return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
         }
 
         // If we can have multiple Objects (because multiple = true)
@@ -1097,12 +1099,16 @@ class EavService
         $objectsArray = [];
         foreach ($objects as $object) {
             // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if (!$maxDepth->contains($object)) {
-                $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
+            if ($maxDepth) {
+                if (!$maxDepth->contains($object)) {
+                    $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
+                    continue;
+                }
+                // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
+                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
                 continue;
             }
-            // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-            $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
         }
 
         return $objectsArray;
