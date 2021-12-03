@@ -6,7 +6,13 @@ App\Entity\Gateway:
         type: json
         auth: none
         location: https://acc-vrijbrp-nijmegen.commonground.nu/dossiers
-
+        accept: application/json
+    vrijbrp_hcbrp:
+        name: VrijBrp Haal Centraal
+        type: json
+        auth: username-password
+        accept: application/hal+json
+        locale: null
     vrijbrp_soap:
         name: VrijBrp SOAP
         type: soap
