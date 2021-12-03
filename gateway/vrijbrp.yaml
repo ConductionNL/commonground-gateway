@@ -11,6 +11,9 @@ App\Entity\Gateway:
         name: VrijBrp Haal Centraal
         type: json
         auth: username-password
+        username: verhuizen
+        password: demodam
+        location: http://vrij-brp.demodam.nl/haal-centraal-brp-bevragen/api/v1.3
         accept: application/hal+json
         locale: null
     vrijbrp_soap:
