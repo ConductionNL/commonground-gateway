@@ -117,7 +117,7 @@ class ValidationService
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
             }
             // Check if this field is nullable
-            elseif ($attribute->getNullable()) {
+            elseif ($attribute->getNullable() === true) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
             // Check if this field is required
@@ -150,7 +150,9 @@ class ValidationService
                     }
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
-            } else {
+            } elseif ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+            } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -212,7 +214,7 @@ class ValidationService
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
-        if (empty($value) || ($attribute->getType() != 'bool') && !$value) {
+        if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } else {
