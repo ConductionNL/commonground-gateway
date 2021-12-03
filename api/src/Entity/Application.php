@@ -106,7 +106,7 @@ class Application
      *
      * @Assert\Url
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", name="user_value" nullable=true)
      */
     private ?string $user;
 
