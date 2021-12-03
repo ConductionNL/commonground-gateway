@@ -104,11 +104,10 @@ class Application
     /**
      * @var string Uri of user object.
      *
-     * @Assert\Url
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", name="user_value" nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $user;
+    private ?string $resource;
 
     /**
      *  @ORM\PrePersist
@@ -151,14 +150,14 @@ class Application
         return $this;
     }
 
-    public function getUser(): ?string
+    public function getResource(): ?string
     {
-        return $this->user;
+        return $this->resource;
     }
 
-    public function setUser(?string $user): self
+    public function setResource(?string $resource): self
     {
-        $this->user = $user;
+        $this->resource = $resource;
 
         return $this;
     }

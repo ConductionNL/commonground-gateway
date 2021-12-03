@@ -117,12 +117,12 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         } elseif (array_key_exists('apiKey', $credentials)) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
 
-            if (!$application || !$application->getUser()) {
+            if (!$application || !$application->getResource()) {
                 throw new AuthenticationException('Invalid ApiKey');
             }
 
             try {
-                $user = $this->commonGroundService->getResource($application->getUser());
+                $user = $this->commonGroundService->getResource($application->getResource());
             } catch (\Exception $exception) {
                 throw new AuthenticationException('Invalid User Uri');
             }
