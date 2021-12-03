@@ -15,10 +15,16 @@ App\Entity\Gateway:
 
 App\Entity\Entity:
     # Test object
-    test:
-        route: '/api/test'
-        name: SOAP Test
-        description: A test entity for Soap translations
+#    test:
+#        route: '/api/test'
+#        name: SOAP Test
+#        description: A test entity for Soap translations
+
+    ingeschrevenpersoon:
+        name: ingeschreven persoon
+        description: a person
+        gateway: '@vrijbrp_hcbrp'
+        endpoint: 'ingeschrevenpersonen'
 
     # deaths
     deaths-in-municipality:
@@ -127,17 +133,17 @@ App\Entity\Entity:
 
 App\Entity\Attribute:
     # course properties
-    test_name:
-        name: name
-        type: string
-        maxLength: 255
-        required: true
-        entity: '@test'
-    test_description:
-        name: description
-        type: string
-        required: true
-        entity: '@test'
+#    test_name:
+#        name: name
+#        type: string
+#        maxLength: 255
+#        required: true
+#        entity: '@test'
+#    test_description:
+#        name: description
+#        type: string
+#        required: true
+#        entity: '@test'
 
     # extracts (ofwel uittreksels)
     extract_id:
@@ -547,8 +553,238 @@ App\Entity\Attribute:
         required: false
         entity: '@commitment'
 
+    ingeschrevenpersoon_bsn:
+        name: burgerservicenummer
+        type: string
+        required: true
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geslachtsnaam:
+        name: geslachtsnaam
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_voorvoegselGeslachtsnaam:
+        name: voorvoegselGeslachtsnaam
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_voorletters:
+        name: voorletters
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_voornamen:
+        name: voornamen
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_aanduidingNaamgebruik:
+        name: aanduidingNaamgebruik
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geslachtsnaamPartner:
+        name: geslachtsnaamPartner
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_voorvoegselGeslachtsnaamPartner:
+        name: voorvoegselGeslachtsnaamPartner
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_aanhefAanschrijving:
+        name: aanhefAanschrijving
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_voornamenAanschrijving:
+        name: voornamenAanschrijving
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geslachtsnaamAanschrijving:
+        name: geslachtsnaamAanschrijving
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_adellijkeTitelPredikaat:
+        name: adellijkeTitelPredikaat
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geslachtsaanduiding:
+        name: geboortedatum
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geboortedatum:
+        name: geboortedatum
+        type: date
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geboorteplaats:
+        name: geboorteplaats
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_geboorteland:
+        name: geboorteland
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_overlijdensdatum:
+        name: overlijden
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_verblijfsadres:
+        name: verblijfsadres
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_correspondentieadres:
+        name: correspondentieadres
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_heeftAlsEchtgenootPartner:
+        name: heeftAlsEchtgenootPartner
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_heeftAlsKinderen:
+        name: heeftAlsKinderen
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
+    ingeschrevenpersoon_heeftAlsOuders:
+        name: heeftAlsOuders
+        type: string
+        required: false
+        entity: '@ingeschrevenpersoon'
+
 # Okey so now we need some soap stuff :')
 App\Entity\Soap:
+    soapIngeschrevenPersoon:
+        name: IngeschrevenPersoon
+        description: A soap entity for lv01 messages
+        toEntity: '@ingeschrevenpersoon'
+        type: npsLv01-prs-GezinssituatieOpAdresAanvrager
+        requestHydration:
+            burgerservicenummer: "SOAP-ENV:Body.BG:npsLv01-prs-GezinssituatieOpAdresAanvrager.BG:gelijk.BG:inp&#2Ebsn"
+        response: |
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                               xmlns="http://www.egem.nl/StUF/sector/bg/0310"
+                               xmlns:StUF="http://www.egem.nl/StUF/StUF0301"
+                               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <SOAP-ENV:Body>
+                <npsLa01-prs-GezinssituatieOpAdresAanvrager>
+                  <stuurgegevens>
+                    <StUF:berichtcode>La01</StUF:berichtcode>
+                    <StUF:zender>
+                      <StUF:organisatie>0637</StUF:organisatie>
+                      <StUF:applicatie>DDS</StUF:applicatie>
+                    </StUF:zender>
+                    <StUF:ontvanger>
+                      <StUF:organisatie>0637</StUF:organisatie>
+                      <StUF:applicatie>PFS</StUF:applicatie>
+                      <StUF:gebruiker>SIM</StUF:gebruiker>
+                    </StUF:ontvanger>
+                    <StUF:referentienummer>f3ddb521-b7d6-4320-b8bc-5ab78b2ad433</StUF:referentienummer>
+                    <StUF:tijdstipBericht>20211203124204643</StUF:tijdstipBericht>
+                    <StUF:crossRefnummer>7830365490</StUF:crossRefnummer>
+                    <StUF:entiteittype>NPS</StUF:entiteittype>
+                  </stuurgegevens>
+                  <parameters>
+                    <StUF:indicatorVervolgvraag>false</StUF:indicatorVervolgvraag>
+                  </parameters>
+                  <antwoord>
+                    <object StUF:entiteittype="NPS">
+                      <inp.bsn></inp.bsn>
+                      <geslachtsnaam></geslachtsnaam>
+                      <voorvoegselGeslachtsnaam></voorvoegselGeslachtsnaam>
+                      <voorletters></voorletters>
+                      <voornamen></voornamen>
+                      <aanduidingNaamgebruik></aanduidingNaamgebruik>
+                      <geslachtsnaamPartner></geslachtsnaamPartner>
+                      <voorvoegselGeslachtsnaamPartner></voorvoegselGeslachtsnaamPartner>
+                      <aanhefAanschrijving></aanhefAanschrijving>
+                      <voornamenAanschrijving></voornamenAanschrijving>
+                      <geslachtsnaamAanschrijving>m</geslachtsnaamAanschrijving>
+                      <adellijkeTitelPredikaat xsi:nil="true"
+                                               StUF:noValue="geenWaarde"></adellijkeTitelPredikaat>
+                      <geslachtsaanduiding></geslachtsaanduiding>
+                      <geboortedatum></geboortedatum>
+                      <inp.geboorteplaats></inp.geboorteplaats>
+                      <inp.geboorteLand></inp.geboorteLand>
+                      <overlijdensdatum></overlijdensdatum>
+                      <verblijfsadres>
+                      </verblijfsadres>
+                      <sub.correspondentieAdres>
+                      </sub.correspondentieAdres>
+                      <sub.telefoonnummer xsi:nil="true"
+                                          StUF:noValue="geenWaarde"></sub.telefoonnummer>
+                      <sub.faxnummer xsi:nil="true"
+                                     StUF:noValue="geenWaarde"></sub.faxnummer>
+                      <sub.emailadres xsi:nil="true"
+                                      StUF:noValue="geenWaarde"></sub.emailadres>
+                      <acd.code xsi:nil="true"
+                                StUF:noValue="geenWaarde"></acd.code>
+                      <acd.code xsi:nil="true"
+                                StUF:noValue="geenWaarde"></acd.code>
+                      <acd.code xsi:nil="true"
+                                StUF:noValue="geenWaarde"></acd.code>
+                      <inp.heeftAlsEchtgenootPartner StUF:entiteittype="NPSNPSHUW">
+                      </inp.heeftAlsEchtgenootPartner>
+                      <inp.heeftAlsKinderen StUF:entiteittype="NPSNPSKND">
+                      </inp.heeftAlsKinderen>
+                      <inp.heeftAlsOuders StUF:entiteittype="NPSNPSOUD"></inp.heeftAlsOuders>
+                    </object>
+                  </antwoord>
+                </npsLa01-prs-GezinssituatieOpAdresAanvrager>
+              </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+        responseHydration:
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2Ebsn": burgerservicenummer
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.geslachtsnaam": geslachtsnaam
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.voorvoegselGeslachtsnaam": voorvoegselGeslachtsnaam
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.voorletters": voorletters
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.voornamen": voornamen
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.aanduidingNaamgebruik": aanduidingNaamgebruik
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.geslachtsnaamPartner": geslachtsnaamPartner
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.voorvoegselGeslachtsnaamPartner": voorvoegselGeslachtsnaamPartner
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.geslachtsaanduiding": geslachtsaanduiding
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.geboortedatum": geboortedatum
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2Egeboorteplaats": geboorteplaats
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EgeboorteLand": geboorteland
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.verblijfsadres": verblijfsadres | xml
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.sub&#2EcorrespondentieAdres": correspondentiesadres | xml
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsEchtgenootPartner.#": heeftAlsEchtgenootPartner | xml
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsKinderen.#": heeftAlsKinderen | xml
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsOuders.#": heeftAlsOuders | xml
+
     #Uittreksel BRP
     soapExtract:
         name: Extract BRP
@@ -635,7 +871,6 @@ App\Entity\Soap:
                 </SOAP-ENV:Body>
             </SOAP-ENV:Envelope>
         responseHydration: {}
-
 
     #Uittreksel BRP
     soapEmigration:
@@ -813,7 +1048,6 @@ App\Entity\Soap:
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.Emailadres": email
             "S:Body.ns5:AanvraagRequest.ns5:EmigratieaanvraagRequest.ns10:Contactgegevens.TelefoonnummerPrive": phone
 
-
     soapSecrecyGateway:
         name: Extract BRP gateway
         description: A SOAP resource to input an extract case into the SOAP API
@@ -858,7 +1092,6 @@ App\Entity\Soap:
             "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Aanvraaggegevens.ns11:GeheimhoudingBetrokkenen.ns11:GeheimhoudingBetrokkene.ns11:CodeGeheimhouding": type
             "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Contactgegevens.Emailadres": email
             "S:Body.ns5:AanvraagRequest.ns5:GeheimhoudingaanvraagRequest.ns11:Contactgegevens.TelefoonnummerPrive": phone
-
 
     soapNameGateway:
         name: Extract BRP gateway
@@ -982,11 +1215,54 @@ App\Entity\Soap:
             relocators: relocators | json
         response: |
             <?xml version="1.0" encoding="utf-8"?>
-            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-                <soap:Body>
-                <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
-                </soap:Body>
-            </soap:Envelope>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <SOAP-ENV:Body>
+                  <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+
+    #Uittreksel BRP
+    soapEfExtract:
+        name: Extract BRP
+        description: A soap entity for BRP extracts
+        toEntity: '@extract'
+        type: OntvangenIntakeNotificatie
+        zaaktype: B0255
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.TELEFOONNUMMER"
+            email: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.EMAILADRES"
+            type: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.UITTREKSELS.UITTREKSEL.CODE"
+            bsn: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.UITTREKSELS.UITTREKSEL.BSN"
+            requesterBsn:  "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"
+            externalId: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID"
+        response: |
+            <?xml version="1.0" encoding="utf-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <SOAP-ENV:Body>
+                  <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+
+    soapEfSecrecy:
+        name: Extract BRP
+        description: A soap entity for secrecy cases
+        toEntity: '@secrecy'
+        type: OntvangenIntakeNotificatie
+        zaaktype: B0328
+        requestHydration:
+            phone: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.TELEFOONNUMMER"
+            email: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.EMAILADRES"
+            type: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.CODE_GEHEIMHOUDING"
+            bsn: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_GEHEIMHOUDING"
+            requesterBsn: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.METADATA.INDIENER"
+            externalId: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID"
+        response: |
+            <?xml version="1.0" encoding="utf-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <SOAP-ENV:Body>
+                  <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
 
     #Uittreksel BRP
     soapEfEmigration:
@@ -1008,30 +1284,31 @@ App\Entity\Soap:
             externalId: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID"
         response: |
             <?xml version="1.0" encoding="utf-8"?>
-            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-                <soap:Body>
-                <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
-                </soap:Body>
-            </soap:Envelope>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <SOAP-ENV:Body>
+                  <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
         responseHydration: {}
-# User object
-    soaptest:
-        name: SOAP Test
-        description: A test entity for Soap translations
-        type: test
-        toEntity: '@test'
-        # request:
-        #requestSkeleton
-        requestHydration:
-            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
-            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"
-        # response:
-        #responseSkeleton:
-        #    - "ns2:wrapper"
-        #        - "ns1:realname"
-        #        - "ns1:realdescription"
-        #    - "ns3:random"
-        responseHydration:
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id": id
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
-            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description
+
+## User object
+#    soaptest:
+#        name: SOAP Test
+#        description: A test entity for Soap translations
+#        type: test
+#        toEntity: '@test'
+#        # request:
+#        #requestSkeleton
+#        requestHydration:
+#            name: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname"
+#            description: "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription"
+#        # response:
+#        #responseSkeleton:
+#        #    - "ns2:wrapper"
+#        #        - "ns1:realname"
+#        #        - "ns1:realdescription"
+#        #    - "ns3:random"
+#        responseHydration:
+#            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id": id
+#            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname": name
+#            "SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription": description

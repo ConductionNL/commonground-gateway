@@ -945,7 +945,10 @@ class SOAPService
             "result" => null,
         ];
 
-        $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
+        if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
+            $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
+        else
+            $object = $this->getLa01Hydration($entity, $soap);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
@@ -1167,5 +1170,162 @@ class SOAPService
     {
         if (array() === $arr) return false;
         return array_keys($arr) !== range(0, count($arr) - 1);
+    }
+
+    private function translateName(string $haalcentraal): string
+    {
+        $translateTable = [
+            'eigen'  => 'E',
+            'partner'  => 'P',
+            'parnter_eigen'  => 'V',
+            'eigen_partner'  => 'N',
+        ];
+        return $translateTable[$haalcentraal] ?? $haalcentraal;
+    }
+
+    private function translateGender(string $haalcentraal): string
+    {
+        $translateTable = [
+            'vrouw' => 'V',
+            'man'   => 'M'
+        ];
+        return $translateTable[$haalcentraal] ?? 'O';
+    }
+
+    private function getLa01Hydration(array $entity, Soap $soap): array
+    {
+        $url = "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}/{$entity['burgerservicenummer']}";
+        $component = $this->gatewayService->gatewayToArray($soap->getToEntity()->getGateway());
+
+
+        $response = $this->commonGroundService->callService($component, $url, '', ['expand' => 'partners,ouders,kinderen']);
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        $entity['geslachtsnaam'] = isset($data['naam']['geslachtsnaam']) ? $data['naam']['geslachtsnaam'] : null;
+        $entity['voorvoegselGeslachtsnaam'] = isset($data['naam']['voorvoegsel']) ? $data['naam']['voorvoegsel'] : null;
+        $entity['voorletters'] = isset($data['naam']['voorletters']) ? $data['naam']['voorletters'] : null;
+        $entity['voornamen'] = isset($data['naam']['voornamen']) ? $data['naam']['voornamen'] : null;
+        $entity['aanduidingNaamgebruik'] = isset($data['naam']['aanduidingNaamgebruik']) ? $this->translateName($data['naam']['aanduidingNaamgebruik']) : null;
+
+
+
+        //@TODO: Geslachtsnaam partner -> bij verwerken partner
+
+        $entity['geslachtsaanduiding'] = isset($data['geslachtsaanduiding']) ? $this->translateGender( $data['geslachtsaanduiding']) : null;
+        if(isset($data['overlijden']['datum']['datum']))
+            $overlijdensdatum = new \DateTime($data['geboorte']['datum']['datum']);
+        $entity['overlijdensdatum'] = isset($overlijdensdatum) ? $overlijdensdatum->format('Ymd') : null;
+
+        if(isset($data['geboorte']['datum']['datum'])){
+            $geboortedatum = new \DateTime($data['geboorte']['datum']['datum']);
+        }
+        $entity['geboortedatum'] = isset($geboortedatum) ? $geboortedatum->format('Ymd') : null;
+        $entity['geboorteplaats'] = isset($data['geboorte']['plaats']['code']) ? $data['geboorte']['plaats']['code'] : (isset($data['geboorte']['plaats']['omschrijving']) ? $data['geboorte']['plaats']['omschrijving'] : null);
+        $entity['geboorteland'] = isset($data['geboorte']['land']['code']) ? $data['geboorte']['land']['code'] : (isset($data['geboorte']['land']['omschrijving']) ? $data['geboorte']['land']['omschrijving'] : null);
+
+        $entity['verblijfsadres'] =
+            "<verblijfsadres xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+                <aoa.identificatie>".(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null)."</aoa.identificatie>
+                <wpl.identificatie  xsi:nil=\"true\"
+                                StUF:noValue=\"geenWaarde\"></wpl.identificatie>
+                <wpl.woonplaatsNaam>". (isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null) ."</wpl.woonplaatsNaam>
+                <gor.openbareRuimteNaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.openbareRuimteNaam>
+                <gor.straatnaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.straatnaam>
+                <aoa.postcode>".(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null) ."</aoa.postcode>
+                <aoa.huisnummer>".(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null)."</aoa.huisnummer>
+                <aoa.huisletter>".(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null)."</aoa.huisletter>
+                <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
+                <inp.locatiebeschrijving xsi:nil=\"true\"
+                                         StUF:noValue=\"nietOndersteund\"></inp.locatiebeschrijving>
+          </verblijfsadres>";
+
+        $entity['correspondentiesadres'] =
+            "<sub.correspondentieAdres xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
+                <aoa.identificatie>".(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null)."</aoa.identificatie>
+                <wpl.identificatie  xsi:nil=\"true\"
+                                StUF:noValue=\"geenWaarde\"></wpl.identificatie>
+                <wpl.woonplaatsNaam>". (isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null) ."</wpl.woonplaatsNaam>
+                <gor.openbareRuimteNaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.openbareRuimteNaam>
+                <gor.straatnaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.straatnaam>
+                <aoa.postcode>".(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null) ."</aoa.postcode>
+                <aoa.huisnummer>".(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null)."</aoa.huisnummer>
+                <aoa.huisletter>".(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null)."</aoa.huisletter>
+                <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
+          </sub.correspondentieAdres>";
+
+        if(isset($data['_embedded']['partners'])){
+            $partner = $data['_embedded']['partners'][0];
+//        var_dump($partner);
+
+            if(isset($partner['geboorte']['datum']['datum'])){
+                $geboortedatumPartner = new \DateTime($data['geboorte']['datum']['datum']);
+            }
+
+            $entity['geslachtsnaamPartner'] = isset($partner['naam']['geslachtsnaam']) ? $partner['naam']['geslachtsnaam'] : null;
+            $entity['voorvoegselGeslachtsnaamPartner'] = isset($partner['naam']['voorvoegsel']) ? $partner['naam']['voorvoegsel'] : null;
+
+            $entity['heeftAlsEchtgenootPartner'] =
+            "<inp.heeftAlsEchtgenootPartner xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">
+                <gerelateerde StUF:entiteittype=\"NPS\">
+                      <inp.bsn>".(isset($partner['burgerservicenummer']) ? $partner['burgerservicenummer'] : null)."</inp.bsn>
+                      <geslachtsnaam>".(isset($partner['naam']['geslachtsnaam']) ? $partner['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
+                      <voorvoegselGeslachtsnaam>".(isset($partner['naam']['voorvoegsel']) ? $partner['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
+                      <voorletters>".(isset($partner['naam']['voorletters']) ? $partner['naam']['voorletters'] : null)."</voorletters>
+                      <voornamen>".(isset($partner['naam']['voornamen']) ? $partner['naam']['voornamen'] : null)."</voornamen>
+                      <geslachtsaanduiding>". (isset($data['geslachtsaanduiding']) ? $this->translateGender( $data['geslachtsaanduiding']) : null) ."</geslachtsaanduiding>
+                      <geboortedatum>".(isset($geboortedatumPartner) ? $geboortedatumPartner->format('Ymd') : null)."</geboortedatum>
+                </gerelateerde>
+            </inp.heeftAlsEchtgenootPartner>";
+            unset($geboortedatumPartner);
+        } else {
+            $entity['geslachtsnaamPartner'] = null;
+            $entity['voorvoegselGeslachtsnaamPartner'] = null;
+            $entity['heeftAlsEchtgenootPartner'] = '<inp.heeftAlsEchtgenootPartner xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\" StUF:entiteittype=\"NPSNPSHUW\"></inp.heeftAlsEchtgenootPartner>';
+        }
+
+        $parents = '<inp.heeftAlsOuders xmlns:StUF="http://www.egem.nl/StUF/StUF0301">';
+        if(isset($data['_embedded']['ouders'])){
+            foreach($data['_embedded']['ouders'] as $parent){
+                if(isset($parent['geboorte']['datum']['datum'])){
+                    $geboortedatumParent = new \DateTime($parent['geboorte']['datum']['datum']);
+                }
+                $parents .=
+                    "<gerelateerde StUF:entiteittype=\"NPS\">
+                          <inp.bsn>".(isset($parent['burgerservicenummer']) ? $parent['burgerservicenummer'] : null)."</inp.bsn>
+                          <geslachtsnaam>".(isset($parent['naam']['geslachtsnaam']) ? $parent['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
+                          <voorvoegselGeslachtsnaam>".(isset($parent['naam']['voorvoegsel']) ? $parent['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
+                          <voorletters>".(isset($parent['naam']['voorletters']) ? $parent['naam']['voorletters'] : null)."</voorletters>
+                          <voornamen>".(isset($parent['naam']['voornamen']) ? $parent['naam']['voornamen'] : null)."</voornamen>
+                          <geslachtsaanduiding>". (isset($parent['geslachtsaanduiding']) ? $this->translateGender( $parent['geslachtsaanduiding']) : null) ."</geslachtsaanduiding>
+                          <geboortedatum>".(isset($geboortedatumParent) ? $geboortedatumParent->format('Ymd') : null)."</geboortedatum>
+                      </gerelateerde>";
+                unset($geboortedatumParent);
+            }
+        }
+        $parents .= '</inp.heeftAlsOuders>';
+        $children = '<inp.heeftAlsKinderen xmlns:StUF="http://www.egem.nl/StUF/StUF0301">';
+        if(isset($data['_embedded']['kinderen'])){
+            foreach($data['_embedded']['kinderen'] as $child){
+                if(isset($child['geboorte']['datum']['datum'])){
+                    $geboortedatumChild = new \DateTime($child['geboorte']['datum']['datum']);
+                }
+                $children .=
+                    "<gerelateerde StUF:entiteittype=\"NPS\">
+                          <inp.bsn>".(isset($child['burgerservicenummer']) ? $child['burgerservicenummer'] : null)."</inp.bsn>
+                          <geslachtsnaam>".(isset($child['naam']['geslachtsnaam']) ? $child['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
+                          <voorvoegselGeslachtsnaam>".(isset($child['naam']['voorvoegsel']) ? $child['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
+                          <voorletters>".(isset($child['naam']['voorletters']) ? $child['naam']['voorletters'] : null)."</voorletters>
+                          <voornamen>".(isset($child['naam']['voornamen']) ? $child['naam']['voornamen'] : null)."</voornamen>
+                          <geslachtsaanduiding>". (isset($child['geslachtsaanduiding']) ? $this->translateGender($child['geslachtsaanduiding']) : null) ."</geslachtsaanduiding>
+                          <geboortedatum>".(isset($geboortedatumChild) ? $geboortedatumChild->format('Ymd') : null)."</geboortedatum>
+                      </gerelateerde>";
+                unset($geboortedatumParent);
+            }
+        }
+        $children .= '</inp.heeftAlsKinderen>';
+        $entity['heeftAlsKinderen'] = $children;
+        $entity['heeftAlsOuders'] = $parents;
+
+        return $entity;
     }
 }

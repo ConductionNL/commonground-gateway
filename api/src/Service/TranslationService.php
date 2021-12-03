@@ -15,6 +15,25 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class TranslationService
 {
+
+    private function encodeArrayKeys($array, string $toReplace, string $replacement): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+
+            $newKey = str_replace($toReplace, $replacement, $key);
+
+            if (\is_array($value)) {
+                $result[$newKey] = $this->encodeArrayKeys($value, $toReplace, $replacement);
+                continue;
+            }
+            $result[$newKey] = $value;
+        }
+
+        return $result;
+    }
+
+
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation
      *
@@ -25,6 +44,9 @@ class TranslationService
      */
     public function dotHydrator(array $destination, array $source, array $mapping): array
     {
+        $destination = $this->encodeArrayKeys($destination, '.', '&#2E');
+        $source = $this->encodeArrayKeys($source, '.', '&#2E');
+
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
@@ -50,6 +72,7 @@ class TranslationService
 
         // Let turn the dot array back into an array
         $destination = $destination->all();
+        $destination = $this->encodeArrayKeys($destination, '&#2E', '.');
         return $destination;
     }
 
@@ -105,6 +128,7 @@ class TranslationService
             'cancelled'             => 'Geannuleerd',
             'deleted'               => 'Verwijderd',
             'refused'               => 'Geweigerd',
+            '+-+'                   => '.'
 
         ];
 
