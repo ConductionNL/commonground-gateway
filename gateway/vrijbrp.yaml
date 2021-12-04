@@ -765,11 +765,12 @@ App\Entity\Soap:
                                 StUF:noValue="geenWaarde"></acd.code>
                       <acd.code xsi:nil="true"
                                 StUF:noValue="geenWaarde"></acd.code>
-                      <inp.heeftAlsEchtgenootPartner StUF:entiteittype="NPSNPSHUW">
-                      </inp.heeftAlsEchtgenootPartner>
-                      <inp.heeftAlsKinderen StUF:entiteittype="NPSNPSKND">
-                      </inp.heeftAlsKinderen>
-                      <inp.heeftAlsOuders StUF:entiteittype="NPSNPSOUD"></inp.heeftAlsOuders>
+                      <conductionPartners>
+                      </conductionPartners>
+                      <conductionKinderen>
+                      </conductionKinderen>
+                      <conductionOuders>
+                      </conductionOuders>
                     </object>
                   </antwoord>
                 </npsLa01-prs-GezinssituatieOpAdresAanvrager>
@@ -790,9 +791,9 @@ App\Entity\Soap:
             "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EgeboorteLand": geboorteland
             "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.verblijfsadres": verblijfsadres | xml
             "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.sub&#2EcorrespondentieAdres": correspondentiesadres | xml
-            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsEchtgenootPartner.#": heeftAlsEchtgenootPartner | xml
-            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsKinderen.#": heeftAlsKinderen | xml
-            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.inp&#2EheeftAlsOuders.#": heeftAlsOuders | xml
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.conductionPartners": heeftAlsEchtgenootPartner
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.conductionKinderen": heeftAlsKinderen
+            "SOAP-ENV:Body.npsLa01-prs-GezinssituatieOpAdresAanvrager.antwoord.object.conductionOuders": heeftAlsOuders
 
     #Uittreksel BRP
     soapExtract:
@@ -940,7 +941,7 @@ App\Entity\Soap:
             phone: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.1.#"
             email: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
             type: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#"
-            bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"
+            bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
             externalId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
         response: |
             <?xml version="1.0" encoding="UTF-8"?>

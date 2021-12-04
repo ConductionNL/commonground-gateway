@@ -128,8 +128,14 @@ class TranslationService
             'cancelled'             => 'Geannuleerd',
             'deleted'               => 'Verwijderd',
             'refused'               => 'Geweigerd',
-            '+-+'                   => '.'
-
+            '<![CDATA['             => '',
+            ']]>'                   => '',
+            '<conductionPartners>'  => '',
+            '</conductionPartners>' => '',
+            '<conductionKinderen>'  => '',
+            '</conductionKinderen>' => '',
+            '<conductionOuders>'    => '',
+            '</conductionOuders>'   => '',
         ];
 
         //@todo laten we deze vandaag lekker concreet houden

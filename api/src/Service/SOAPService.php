@@ -935,7 +935,7 @@ class SOAPService
         // Lets make the entity call
         //$entity = $this->soapToEntity($soap, $data);
 
-        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope', 'xml_encoding' => 'utf-8']);
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope', 'xml_encoding' => 'utf-8', 'encoder_ignored_node_types' => [\XML_CDATA_SECTION_NODE]]);
         $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
 
         $requestBase = [
@@ -1337,14 +1337,14 @@ class SOAPService
                 <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
           </sub.correspondentieAdres>";
 
-        $entity['heeftAlsEchtgenootPartner'] = "<inp.heeftAlsEchtgenootPartner xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getPartners($data, [], $component), $entity['geslachtsnaamPartner'], $entity['voorvoegselGeslachtsnaamPartner'])}</inp.heeftAlsEchtgenootPartner>";
-        $entity['heeftAlsKinderen'] = "<inp.heeftAlsKinderen xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getKinderen($data, [], $component))}</inp.heeftAlsKinderen>";
-        $entity['heeftAlsOuders'] = "<inp.heeftAlsOuders xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getOuders($data, [], $component))}</inp.heeftAlsOuders>";
+        $entity['heeftAlsEchtgenootPartner'] = $this->getRelativesOnAddress($component, $soap, $data, $this->getPartners($data, [], $component), 'partners', $entity['geslachtsnaamPartner'], $entity['voorvoegselGeslachtsnaamPartner']);
+        $entity['heeftAlsKinderen'] = $this->getRelativesOnAddress($component, $soap, $data, $this->getKinderen($data, [], $component), 'children');
+        $entity['heeftAlsOuders'] = $this->getRelativesOnAddress($component, $soap, $data, $this->getOuders($data, [], $component), 'parents');
 
         return $entity;
     }
 
-    private function getRelativesOnAddress(array $component, Soap $soap, array $person, array $relatives, ?string &$lastname = null, ?string &$lastnamePrefix = null): string
+    private function getRelativesOnAddress(array $component, Soap $soap, array $person, array $relatives, string $type, ?string &$lastname = null, ?string &$lastnamePrefix = null): string
     {
 
         $return = '';
@@ -1371,7 +1371,7 @@ class SOAPService
             if(isset($relative['geboorte']['datum']['datum'])){
                 $geboortedatum = new \DateTime($relative['geboorte']['datum']['datum']);
             }
-            $return .= "<gerelateerde StUF:entiteittype=\"NPS\">
+            $person = "<gerelateerde StUF:entiteittype=\"NPS\">
                       <inp.bsn>".(isset($relative['burgerservicenummer']) ? $relative['burgerservicenummer'] : null)."</inp.bsn>
                       <geslachtsnaam>".(isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
                       <voorvoegselGeslachtsnaam>".(isset($relative['naam']['voorvoegsel']) ? $relative['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
@@ -1380,7 +1380,18 @@ class SOAPService
                       <geslachtsaanduiding>". (isset($relative['geslachtsaanduiding']) ? $this->translateGender($relative['geslachtsaanduiding']) : null) ."</geslachtsaanduiding>
                       <geboortedatum>".(isset($geboortedatum) ? $geboortedatum->format('Ymd') : null)."</geboortedatum>
                   </gerelateerde>";
+            if($type == 'parents'){
+                $return .= "<inp.heeftAlsOuders StUF:entiteittype=\"NPSNPSOUD\">$person</inp.heeftAlsOuders>";
+            } elseif($type == 'children') {
+                $return .= "<inp.heeftAlsKinderen StUF:entiteittype=\"NPSNPSKND\">$person</inp.heeftAlsKinderen>";
+            } elseif($type == 'partners'){
+                $return .= "<inp.heeftAlsEchtgenootPartner StUF:entiteittype=\"NPSNPSHUW\">$person</inp.heeftAlsEchtgenootPartner>";
+            }
+            unset($geboortedatum);
         }
+
+
+
         return $return;
     }
 }
