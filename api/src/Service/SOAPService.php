@@ -1195,7 +1195,7 @@ class SOAPService
         return $translateTable[$haalcentraal] ?? 'O';
     }
 
-    public function getKinderen(array $person, array $result): array
+    public function getKinderen(array $person, array $result, array $component): array
     {
         if(isset($person['_embedded']['kinderen'])){
             foreach($person['_embedded']['kinderen'] as $kind){
@@ -1205,11 +1205,18 @@ class SOAPService
             foreach($person['kinderen'] as $kind){
                 isset($kind['bsn']) ? $result[] = $kind['bsn'] : null;
             }
+        } elseif(isset($person['_links']['kinderen'])) {
+            foreach($person['_links']['kinderen'] as $kind) {
+                $kindData = $this->commonGroundService->callService($component, $kind['href'], '');
+                if(!is_array($kindData)){
+                    $result[] = json_decode($kindData->getBody()->getContents(), true)['burgerservicenummer'];
+                }
+            }
         }
         return $result;
     }
 
-    public function getOuders(array $person, array $result): array
+    public function getOuders(array $person, array $result, array $component): array
     {
         if(isset($person['_embedded']['ouders'])) {
             foreach ($person['_embedded']['ouders'] as $ouder) {
@@ -1219,11 +1226,18 @@ class SOAPService
             foreach($person['ouders'] as $ouder){
                 isset($ouder['bsn']) ? $result[] = $ouder['bsn'] : null;
             }
+        } elseif(isset($person['_links']['ouders'])) {
+            foreach($person['_links']['ouders'] as $kind) {
+                $ouderData = $this->commonGroundService->callService($component, $kind['href'], '');
+                if(!is_array($ouderData)){
+                    $result[] = json_decode($ouderData->getBody()->getContents(), true)['burgerservicenummer'];
+                }
+            }
         }
         return $result;
     }
 
-    public function getPartners(array $person, array $result): array
+    public function getPartners(array $person, array $result, array $component): array
     {
         if(isset($person['_embedded']['partners'])){
             foreach($person['_embedded']['partners'] as $partner){
@@ -1232,6 +1246,13 @@ class SOAPService
         } elseif(isset($person['partners'])) {
             foreach($person['partners'] as $partner){
                 isset($partner['bsn']) ? $result[] = $partner['bsn'] : null;
+            }
+        } elseif(isset($person['_links']['partners'])) {
+            foreach($person['_links']['partners'] as $kind) {
+                $partnerData = $this->commonGroundService->callService($component, $kind['href'], '');
+                if(!is_array($partnerData)){
+                    $result[] = json_decode($partnerData->getBody()->getContents(), true)['burgerservicenummer'];
+                }
             }
         }
         return $result;
@@ -1248,6 +1269,7 @@ class SOAPService
         isset($person['verblijfplaats']['huisnummertoevoeging']) ? $query['verblijfplaats__huisnummertoevoeging'] = $person['verblijfplaats']['huisnummertoevoeging'] : null;
         isset($person['verblijfplaats']['huisletter']) ? $query['verblijfplaats__huisletter'] = $person['verblijfplaats']['huisletter'] : null;
 //        }
+
 
         return $query;
     }
@@ -1315,9 +1337,9 @@ class SOAPService
                 <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
           </sub.correspondentieAdres>";
 
-        $entity['heeftAlsEchtgenootPartner'] = "<inp.heeftAlsEchtgenootPartner xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getPartners($data, []), $entity['geslachtsnaamPartner'], $entity['voorvoegselGeslachtsnaamPartner'])}</inp.heeftAlsEchtgenootPartner>";
-        $entity['heeftAlsKinderen'] = "<inp.heeftAlsKinderen xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getKinderen($data, []))}</inp.heeftAlsKinderen>";
-        $entity['heeftAlsOuders'] = "<inp.heeftAlsOuders xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getOuders($data, []))}</inp.heeftAlsOuders>";
+        $entity['heeftAlsEchtgenootPartner'] = "<inp.heeftAlsEchtgenootPartner xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getPartners($data, [], $component), $entity['geslachtsnaamPartner'], $entity['voorvoegselGeslachtsnaamPartner'])}</inp.heeftAlsEchtgenootPartner>";
+        $entity['heeftAlsKinderen'] = "<inp.heeftAlsKinderen xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getKinderen($data, [], $component))}</inp.heeftAlsKinderen>";
+        $entity['heeftAlsOuders'] = "<inp.heeftAlsOuders xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\">{$this->getRelativesOnAddress($component, $soap, $data, $this->getOuders($data, [], $component))}</inp.heeftAlsOuders>";
 
         return $entity;
     }
