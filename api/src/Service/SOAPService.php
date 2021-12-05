@@ -1368,7 +1368,15 @@ class SOAPService
                     isset($relative['geheimhoudingPersoonsgegevens']) &&
                     $relative['geheimhoudingPersoonsgegevens']
                 ) ||
-                !in_array($relative['burgerservicenummer'], $relativeBsns)
+                !in_array($relative['burgerservicenummer'], $relativeBsns) ||
+                !(
+                    isset($relative['verblijfplaats']['postcode']) &&
+                    isset($relative['verblijfplaats']['huisnummer']) &&
+                    isset($person['verblijfplaats']['postcode']) &&
+                    isset($person['verblijfplaats']['huisnummer']) &&
+                    $relative['verblijfplaats']['postcode'] == $person['verblijfplaats']['postcode'] &&
+                    $relative['verblijfplaats']['huisnummer'] == $person['verblijfplaats']['huisnummer']
+                )
             ){
                 continue;
             }
@@ -1377,7 +1385,7 @@ class SOAPService
             if(isset($relative['geboorte']['datum']['datum'])){
                 $geboortedatum = new \DateTime($relative['geboorte']['datum']['datum']);
             }
-            $person = "<gerelateerde StUF:entiteittype=\"NPS\">
+            $relativeString = "<gerelateerde StUF:entiteittype=\"NPS\">
                       <inp.bsn>".(isset($relative['burgerservicenummer']) ? $relative['burgerservicenummer'] : null)."</inp.bsn>
                       <geslachtsnaam>".(isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
                       <voorvoegselGeslachtsnaam>".(isset($relative['naam']['voorvoegsel']) ? $relative['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
@@ -1387,11 +1395,11 @@ class SOAPService
                       <geboortedatum>".(isset($geboortedatum) ? $geboortedatum->format('Ymd') : null)."</geboortedatum>
                   </gerelateerde>";
             if($type == 'parents'){
-                $return .= "<inp.heeftAlsOuders StUF:entiteittype=\"NPSNPSOUD\">$person</inp.heeftAlsOuders>";
+                $return .= "<inp.heeftAlsOuders StUF:entiteittype=\"NPSNPSOUD\">$relativeString</inp.heeftAlsOuders>";
             } elseif($type == 'children') {
-                $return .= "<inp.heeftAlsKinderen StUF:entiteittype=\"NPSNPSKND\">$person</inp.heeftAlsKinderen>";
+                $return .= "<inp.heeftAlsKinderen StUF:entiteittype=\"NPSNPSKND\">$relativeString</inp.heeftAlsKinderen>";
             } elseif($type == 'partners'){
-                $return .= "<inp.heeftAlsEchtgenootPartner StUF:entiteittype=\"NPSNPSHUW\">$person</inp.heeftAlsEchtgenootPartner>";
+                $return .= "<inp.heeftAlsEchtgenootPartner StUF:entiteittype=\"NPSNPSHUW\">$relativeString</inp.heeftAlsEchtgenootPartner>";
             }
             unset($geboortedatum);
         }
