@@ -11,6 +11,7 @@ use \App\Service\EavService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -1352,12 +1353,21 @@ class SOAPService
             return $return;
         }
 
-        $relatives = $this->commonGroundService->callService(
-            $component,
-            "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
-            '',
-            $this->getRelativesQuery($person, $relativeBsns)
-        );
+        try{
+            $relatives = $this->commonGroundService->callService(
+                $component,
+                "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
+                '',
+                $this->getRelativesQuery($person, $relativeBsns)
+            );
+        } catch (ServerException $exception) {
+            $relatives = $this->commonGroundService->callService(
+                $component,
+                "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
+                '',
+                ['burgerservicenummer' => implode(',', $relativeBsns), ]
+            );
+        }
         $relatives = json_decode($relatives->getBody()->getContents(), true);
         if(isset($relatives['_embedded']['ingeschrevenpersonen'])){
             $relatives = $relatives['_embedded']['ingeschrevenpersonen'];
