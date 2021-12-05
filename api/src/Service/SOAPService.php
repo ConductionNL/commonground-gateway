@@ -1344,11 +1344,11 @@ class SOAPService
         return $entity;
     }
 
-    private function getRelativesOnAddress(array $component, Soap $soap, array $person, array $relatives, string $type, ?string &$lastname = null, ?string &$lastnamePrefix = null): string
+    private function getRelativesOnAddress(array $component, Soap $soap, array $person, array $relativeBsns, string $type, ?string &$lastname = null, ?string &$lastnamePrefix = null): string
     {
 
         $return = '';
-        if(!$relatives){
+        if(!$relativeBsns){
             return $return;
         }
 
@@ -1356,14 +1356,18 @@ class SOAPService
             $component,
             "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
             '',
-            $this->getRelativesQuery($person, $relatives)
+            $this->getRelativesQuery($person, $relativeBsns)
         );
         $relatives = json_decode($relatives->getBody()->getContents(), true);
         if(isset($relatives['_embedded']['ingeschrevenpersonen'])){
             $relatives = $relatives['_embedded']['ingeschrevenpersonen'];
         }
         foreach($relatives as $relative){
-            if(isset($relative['geheimhoudingPersoonsgegevens']) && $relative['geheimhoudingPersoonsgegevens']){
+            if(
+                isset($relative['geheimhoudingPersoonsgegevens']) &&
+                $relative['geheimhoudingPersoonsgegevens'] &&
+                !in_array($relative['burgerservicenummer'], $relativeBsns)
+            ){
                 continue;
             }
             $lastname = isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null;
