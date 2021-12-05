@@ -1364,9 +1364,17 @@ class SOAPService
         }
         foreach($relatives as $relative){
             if(
-                isset($relative['geheimhoudingPersoonsgegevens']) &&
-                $relative['geheimhoudingPersoonsgegevens'] &&
-                !in_array($relative['burgerservicenummer'], $relativeBsns)
+                (
+                    isset($relative['geheimhoudingPersoonsgegevens']) &&
+                    $relative['geheimhoudingPersoonsgegevens']
+                ) ||
+                !in_array($relative['burgerservicenummer'], $relativeBsns) ||
+                !(
+                    isset($relative['verblijfplaats']['postcode']) &&
+                    isset($relative['verblijfplaats']['huisnummer']) &&
+                    $relative['verblijfplaats']['postcode'] == $person['verblijfplaats']['postcode'] &&
+                    $relative['verblijfplaats']['huisnummer'] == $person['verblijfplaats']['huisnummer']
+                )
             ){
                 continue;
             }
