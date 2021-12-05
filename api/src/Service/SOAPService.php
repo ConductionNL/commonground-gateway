@@ -1372,6 +1372,8 @@ class SOAPService
                 !(
                     isset($relative['verblijfplaats']['postcode']) &&
                     isset($relative['verblijfplaats']['huisnummer']) &&
+                    isset($person['verblijfplaats']['postcode']) &&
+                    isset($person['verblijfplaats']['huisnummer']) &&
                     $relative['verblijfplaats']['postcode'] == $person['verblijfplaats']['postcode'] &&
                     $relative['verblijfplaats']['huisnummer'] == $person['verblijfplaats']['huisnummer']
                 )
