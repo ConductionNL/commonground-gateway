@@ -3,7 +3,7 @@ App\Entity\Application:
     application:
         name: main application
         secret: 5fbffbf5-412a-41bc-82bf-3b41d71246ea
-        user: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
+        resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
 App\Entity\Gateway:
     edu_api:
         name: educatie component
@@ -163,13 +163,26 @@ App\Entity\Entity:
             - telephones
             - emails
             - contactPreference
-            # These: are only stored in the gateway, not external. Example, this could be removed
-    #            - contactPreferenceOther
-    #            - availability
-    #            - availabilityNotes
-    #            - children
-    #            - country
-    #            - user
+        usedProperties:
+            - givenName
+            - additionalName
+            - familyName
+            - birthday
+            - primaryLanguage
+            - birthplace
+            - gender
+            - speakingLanguages
+            - maritalStatus
+            - addresses
+            - telephones
+            - emails
+            - contactPreference
+            # These: are only stored in the gateway, not external. UsedProperties is used to hide user of a person
+            - contactPreferenceOther
+            - availability
+            - availabilityNotes
+            - children
+            - country
 
     # Employee Object
     employee:
@@ -278,7 +291,6 @@ App\Entity\Attribute:
         description: Keep this peronal
         type: string
         maxLength: 255
-        required: true #TODO: https://conduction.atlassian.net/browse/BISC-652 about required password...
         entity: "@user"
         persistToGateway: true
     user_locale:
@@ -311,7 +323,7 @@ App\Entity\Attribute:
         name: person
         description: The person of this user.
         type: object
-        #        required: true #TODO: should be true, but this might cause problems? example: cascade employee->person->user has required user->person?
+        required: true
         entity: "@user"
         object: "@person"
         cascade: true
@@ -643,14 +655,13 @@ App\Entity\Attribute:
         object: "@email"
         cascade: true
         cascadeDelete: true
-    person_user:
+    person_user: # Only here so we delete the user of an employee, created with taalhuizen-logic repo
         name: user
         type: object
         entity: "@person"
         object: "@user"
-        cascade: true
-        #        cascadeDelete: true # TODO???
-        inversedBy: "@user_person"
+        cascadeDelete: true
+        inversedBy: "@user_person" # TODO: maybe can be removed
 
     # Employee  Properties
     employee_role:
@@ -659,14 +670,14 @@ App\Entity\Attribute:
         entity: "@employee"
         enum:
             [
-                "Medewerker",
-                "Coördinator",
-                "Begeleider",
-                "Coördinator Begeleider",
-                "Vrijwilliger",
+                "EMPLOYEE",
+                "COORDINATOR",
+                "MENTOR",
+                "COORDINATOR_MENTOR",
+                "VOLUNTEER",
             ]
         #        required: true # TODO: maybe use this instead of defaultValue?
-        defaultValue: "Medewerker"
+        defaultValue: "EMPLOYEE"
         searchable: true
     employee_person:
         name: person
@@ -677,8 +688,8 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
         persistToGateway: true
-    employee_languageHouse:
-        name: languageHouse
+    employee_organization:
+        name: organization
         type: object
         entity: "@employee"
         object: "@organization"
@@ -1387,14 +1398,12 @@ App\Entity\Attribute:
         name: startParticipation
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
+        defaultValue: "NOW"
+        nullable: false
     participation_endParticipation:
         name: endParticipation
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_reasonEndParticipation:
         name: reasonEndParticipation
         type: string
@@ -1454,14 +1463,10 @@ App\Entity\Attribute:
         name: start
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_end:
         name: end
         type: date
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_agreement:
         name: agreement
         type: string
