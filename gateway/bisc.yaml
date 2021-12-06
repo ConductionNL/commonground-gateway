@@ -1419,8 +1419,6 @@ App\Entity\Attribute:
                 "OTHER",
             ]
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_offerName:
         name: offerName
         type: string
