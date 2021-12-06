@@ -328,6 +328,7 @@ App\Entity\Attribute:
         object: "@person"
         cascade: true
         cascadeDelete: true
+        persistToGateway: true
         inversedBy: "@person_user"
     user_currentPassword:
         name: currentPassword
