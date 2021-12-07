@@ -952,7 +952,6 @@ class SOAPService
         else
             $object = $this->getLa01Hydration($entity, $soap);
 
-//        var_dump($object);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
@@ -960,7 +959,7 @@ class SOAPService
 
     private function parseDate(string $date): string
     {
-        strlen($date) == 6 ? $date = new \DateTime("20".$date) : new \DateTime($date);
+        $date = strlen($date) == 6 ? new \DateTime("20".$date) : new \DateTime($date);
 
         return $date->format("Y-m-d");
     }
@@ -975,6 +974,22 @@ class SOAPService
         return null;
     }
 
+    private function flattenExtraElements(array $extraElementen): array
+    {
+        $result = [];
+        foreach ($extraElementen as $extraElement){
+            $value = $extraElement['#'];
+            $key = $extraElement['@naam'];
+            if(strpos($key, 'datum') !== false || strpos($key, 'Datum') !== false){
+                $value = $this->parseDate($value);
+            }
+
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
     private function getIndiener(string $firstnames, string $lastname, string $dateOfBirth): string
     {
         $bsn = '';
@@ -982,6 +997,63 @@ class SOAPService
         $this->commonGroundService->getResourceList(['component' => 'brp', 'resource' => 'ingeschrevenPersonen'], ['geboorte__datum' => $dateOfBirth, 'naam__geslachtsnaam' => $lastname, 'naam__voornamen' => $firstnames]);
 
         return $bsn;
+    }
+
+    private function translateValueType(string $valueType)
+    {
+        switch($valueType){
+            case 'voornamen':
+                return 'firstname';
+            case 'voorvoegselGeslachtsnaam':
+                return 'prefix';
+            case 'geslachtsnaam':
+                return 'lastname';
+            case 'geboortedatum':
+                return 'birthdate';
+            case 'naam':
+                return 'name';
+            default:
+                return $valueType;
+        }
+    }
+
+    private function getPersonDetail($key, $value, $array, array $oneOf): array
+    {
+        $valueTypes = $oneOf;
+        foreach($valueTypes as $valueType) {
+            if(strpos($key, $valueType) !== false && is_numeric(substr($key, strlen($valueType)))){
+                if($valueType == 'geboortedatum'){
+                    $date = new \DateTime($value);
+                    $value = $date > new DateTime() ? (int) $date->modify('-100 years')->format('Ymd') : (int) $date->format('Ymd');
+                }
+                $array[substr($key, strlen($valueType))-1][$this->translateValueType($valueType)] = $value;
+                break;
+            }
+        }
+        return $array;
+    }
+
+    private function getWitnesses(array $data): array
+    {
+        $result = ['chosen' => []];
+
+        foreach($data as $key=>$datum){
+            $result['chosen'] = $this->getPersonDetail($key, $datum, $result['chosen'], ['voornamen', 'voorvoegselGeslachtsnaam', 'geslachtsnaam', 'geboortedatum', 'bsn']);
+        }
+        $result['numberOfMunicipalWitnesses'] = isset($data['verzorgdgem']) ? $data['verzorgdgem'] : 0;
+
+        return $result;
+    }
+
+    private function getOfficials(array $data): array
+    {
+        $result = ['preferences' => []];
+
+        foreach($data as $key=>$datum){
+            $result['preferences'] = $this->getPersonDetail($key, $datum, $result['preferences'], ['naam']);
+        }
+
+        return $result;
     }
 
     /**
@@ -1000,6 +1072,21 @@ class SOAPService
             $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
         }
         $data = new \Adbar\Dot($data);
+
+        // Huwelijk
+        if($messageType == 'zakLk01' && $zaaktype == 'B0337')
+        {
+            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+            $data->merge($this->flattenExtraElements($extraElementen));
+            $time = new \DateTime($data->get('verbintenisTijd'));
+            $dateTime = new \DateTime($data->get('verbintenisDatum').'T'.$time->format('H:i:s'));
+            $data->set('commitmentDateTime', $dateTime->format('Y-m-d\TH:i:s\Z'));
+            $data->set('witnesses', json_encode($this->getWitnesses($data->flatten())));
+            $data->set('officials', json_encode($this->getOfficials($data->flatten())));
+        }
+
+
+
         // Emigratie
         if($messageType == 'zakLk01' && $zaaktype == 'B1425')
         {

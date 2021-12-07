@@ -23,11 +23,15 @@ class TranslationService
 
             $newKey = str_replace($toReplace, $replacement, $key);
 
-            if (\is_array($value)) {
+            if (\is_array($value) && $value) {
                 $result[$newKey] = $this->encodeArrayKeys($value, $toReplace, $replacement);
                 continue;
             }
             $result[$newKey] = $value;
+
+            if($value !== false && !$value){
+                unset($result[$newKey]);
+            }
         }
 
         return $result;
@@ -68,6 +72,10 @@ class TranslationService
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
             }
             unset($format);
+
+            if(!$destination[$replace]){
+                unset($destination[$replace]);
+            }
         }
 
         // Let turn the dot array back into an array
