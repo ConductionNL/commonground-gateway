@@ -89,6 +89,7 @@ App\Entity\Entity:
         name: Birth
         description: A test entity for Soap translations
         gateway: '@vrijbrp_api'
+        endpoint: "/api/v1/births"
 
     # Test object
     tasks:
@@ -1220,6 +1221,52 @@ App\Entity\Soap:
             location.name: naam
             partner2.nameAfterCommitment.nameUseType: geselecteerdNaamgebruik
             partner1.nameAfterCommitment.nameUseType: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+
+    soapBirth:
+        name: Birth
+        description: a soap entity for commitments
+        type: zakLk01
+        zaaktype: B0237
+        toEntity: '@birth'
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+            dossier.description: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:omschrijving"
+            dossier.startDate: date
+            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
+            fatherDuoMother.bsn: parent2Bsn
+            mother.bsn: inp&#2Ebsn
+            children: children | json
+            nameSelection.lastname: geslachtsnaam
+            nameSelection.prefix: voorvoegselGeslachtsnaam
+            nameSelection.titlePredicate: adellijkeTitelPredikaat
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope

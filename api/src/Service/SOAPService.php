@@ -947,6 +947,7 @@ class SOAPService
             "result" => null,
         ];
 
+
         if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
             $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
         else
@@ -1012,6 +1013,8 @@ class SOAPService
                 return 'birthdate';
             case 'naam':
                 return 'name';
+            case 'geslachtsaanduiding':
+                return 'gender';
             default:
                 return $valueType;
         }
@@ -1056,6 +1059,29 @@ class SOAPService
         return $result;
     }
 
+
+    private function getPersonDetails(array $data, array $valueTypes, array $result): array
+    {
+        foreach($data as $key=>$datum){
+            $result = $this->getPersonDetail($key, $datum, $result, $valueTypes);
+        }
+
+        return $result;
+    }
+
+    private function filterChildren(array $children): array
+    {
+        foreach($children as &$child){
+            $time = new \DateTime($child['geboortetijd']);
+            $date = new \DateTime($child['birthdate']);
+            $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:sO'));
+            $child['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
+
+            unset($child['geboortetijd'], $child['birthdate']);
+        }
+        return $children;
+    }
+
     /**
      * Finds specific values and parses them.
      *
@@ -1083,6 +1109,20 @@ class SOAPService
             $data->set('commitmentDateTime', $dateTime->format('Y-m-d\TH:i:s\Z'));
             $data->set('witnesses', json_encode($this->getWitnesses($data->flatten())));
             $data->set('officials', json_encode($this->getOfficials($data->flatten())));
+        }
+
+        // Birth
+        if($messageType == 'zakLk01' && $zaaktype == 'B0237')
+        {
+            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+            $data->merge($this->flattenExtraElements($extraElementen));
+            $data->set('children', json_encode($this->filterChildren($this->getPersonDetails($data->flatten(), ['voornamen', 'geboortedatum', 'geboortetijd', 'geslachtsaanduiding'], []))));
+
+            if($data->has('inp.bsn')){
+                $data->set('parent2Bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            } else {
+                $data->set('inp.bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            }
         }
 
 
