@@ -85,6 +85,11 @@ class ValidationService
     {
         $entity = $objectEntity->getEntity();
         foreach ($entity->getAttributes() as $attribute) {
+            // Skip if readOnly
+            if ($attribute->getReadOnly()) {
+                continue;
+            }
+
             // Only save the attributes that are used.
             if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
                 if (key_exists($attribute->getName(), $post)) {
