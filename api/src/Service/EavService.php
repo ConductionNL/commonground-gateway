@@ -1004,8 +1004,9 @@ class EavService
                 $subfields = $fields;
             }
 
-            // Only render the attributes that are used
-            if (!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties())) {
+            // Only render the attributes that are used && don't render attributes that are writeOnly
+            if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
+                || $attribute->getWriteOnly()) {
                 continue;
             }
 

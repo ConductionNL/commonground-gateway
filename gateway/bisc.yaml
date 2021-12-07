@@ -293,6 +293,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: "@user"
         persistToGateway: true
+        writeOnly: true
     user_locale:
         name: locale
         description: Location setting for the user.
@@ -328,6 +329,7 @@ App\Entity\Attribute:
         object: "@person"
         cascade: true
         cascadeDelete: true
+        persistToGateway: true
         inversedBy: "@person_user"
     user_currentPassword:
         name: currentPassword
@@ -336,6 +338,7 @@ App\Entity\Attribute:
         maxLength: 255
         entity: "@user"
         persistToGateway: true
+        writeOnly: true
 
     #     UserGroup (security) properties
     userGroup_organization:
@@ -1419,8 +1422,6 @@ App\Entity\Attribute:
                 "OTHER",
             ]
         entity: "@participation"
-        requiredIf:
-            providerOption: "OTHER"
     participation_offerName:
         name: offerName
         type: string
