@@ -1090,8 +1090,10 @@ class EavService
                 if (!$maxDepth->contains($value->getValue())) {
                     return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
                 }
+
                 return ['continue' => 'continue']; //TODO NOTE: We want this here
             }
+
             return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
         }
 
