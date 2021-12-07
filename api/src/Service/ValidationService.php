@@ -10,6 +10,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -217,6 +218,8 @@ class ValidationService
         if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
+            } elseif ($attribute->getMultiple() && $value === []) {
+                $objectEntity->getValueByAttribute($attribute)->setValue([]);
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -346,6 +349,7 @@ class ValidationService
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different, so be carefull!!!
             // This is an array of objects
             $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
             foreach ($value as $key => $object) {
                 if (!is_array($object)) {
                     // If we want to connect an existing object using a string uuid: "uuid"
@@ -379,7 +383,7 @@ class ValidationService
                         }
 
                         // object toevoegen
-                        $valueObject->addObject($subObject);
+                        $saveSubObjects->add($subObject);
                         continue;
                     } else {
                         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
@@ -406,7 +410,8 @@ class ValidationService
                             continue;
                         }
 
-                        $valueObject->addObject($subObject);
+                        // object toevoegen
+                        $saveSubObjects->add($subObject);
                         continue;
                     } elseif (count($subObject) > 1) {
                         $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
@@ -446,8 +451,16 @@ class ValidationService
                 }
                 //                $subObject->setApplication(); // TODO
 
-                //                $valueObject->setValue($subObject);
-                $valueObject->addObject($subObject);
+                // object toevoegen
+                $saveSubObjects->add($subObject);
+            }
+            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
+            if ($this->request->getMethod() == 'PUT') {
+                $valueObject->getObjects()->clear();
+            }
+            // Actually add the objects to the valueObject
+            foreach ($saveSubObjects as $saveSubObject) {
+                $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different, so be carefull!!!
