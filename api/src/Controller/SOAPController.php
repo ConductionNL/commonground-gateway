@@ -60,10 +60,14 @@ class SOAPController extends AbstractController
                 }
             case 'OntvangenIntakeNotificatie':
                 $caseType = $data['SOAP-ENV:Header']['ns2:Stuurgegevens']['ns2:Zaaktype'];
+                //@TODO: Abstraheren!
+                if($caseType == 'B0366' && $data['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['GEMEENTECODE'] !== '0268'){
+                    $caseType = 'B0367';
+                }
                 $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
                 if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
-                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType,  $this->getDoctrine()->getRepository('App:Gateway')->findOneBy(['auth' => 'vrijbrp-jwt']));
+                    $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType, $this->getDoctrine()->getRepository('App:Gateway')->findOneBy(['auth' => 'vrijbrp-jwt']));
                     break;
                 }
                 else{
