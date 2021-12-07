@@ -1024,7 +1024,7 @@ class SOAPService
         }
 
         // Verhuizing
-        if($messageType == 'zakLk01' && $zaaktype == 'B0366')
+        if($messageType == 'zakLk01' && ($zaaktype == 'B0366' || $zaaktype == 'B0367'))
         {
             $wijzeBewoning = $this->getValue($extraElementen, 'wijzeBewoning');
             if(in_array($wijzeBewoning, $permissionRequired)){
@@ -1081,7 +1081,7 @@ class SOAPService
             }
         }
 
-        if($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B0366')
+        if($messageType == 'OntvangenIntakeNotificatie' && ($zaaktype == 'B0366' || $zaaktype == 'B0367'))
         {
             $wijzeBewoning = $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING");
             if(in_array($wijzeBewoning, $permissionRequired)){

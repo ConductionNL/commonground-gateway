@@ -55,6 +55,7 @@ App\Entity\Entity:
         name: Inter-municipal relocations
         description: A test entity for Soap translations
         gateway: '@vrijbrp_api'
+        endpoint: "/api/v1/relocations/inter"
 
     # Intra-municipal relocations
     intra-municipal-relocations:
@@ -1223,6 +1224,38 @@ App\Entity\Soap:
             newAddress.liveIn: liveIn | json
             newAddress.mainOccupant: mainOccupant | json
             relocators: relocators | json
+        response: |
+            <?xml version="1.0" encoding="utf-8"?>
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <SOAP-ENV:Body>
+                  <OntvangenIntakeAntwoord xmlns="urn:Centric/Publieksdiensten/Conductor/1.0"/>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+
+    soapEfInterRelocation:
+        name: Intra-municipal relocation
+        description: a soap entity for intra-municipal relocations
+        type: OntvangenIntakeNotificatie
+        zaaktype: B0367
+        toEntity: '@inter-municipal-relocations'
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID"
+            dossier.startDate: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.VERHUISDATUM"
+            declarant.bsn: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.METADATA.INDIENER"
+            declarant.contactInformation.telephoneNumber: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.TELEFOONNUMMER"
+            declarant.contactInformation.email: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.EMAILADRES"
+            newAddress.street: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.STRAATNAAM_NIEUW"
+            newAddress.houseNumber: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISNUMMER_NIEUW"
+            newAddress.houseLetter: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISLETTER_NIEUW"
+            newAddress.houseNumberAddition: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.HUISNUMMERTOEVOEGING_NIEUW"
+            newAddress.postalCode: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.POSTCODE_NIEUW"
+            newAddress.residence: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WOONPLAATS_NIEUW"
+            newAddress.destinationCurrentResidents: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.AANTAL_PERS_NIEUW_ADRES"
+            newAddress.numberOfResidents: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.AANTAL_PERS_NIEUW_ADRES"
+            newAddress.liveIn: liveIn | json
+            newAddress.mainOccupant: mainOccupant | json
+            relocators: relocators | json
+            previousMunicipality.code: "SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.GEMEENTECODE"
         response: |
             <?xml version="1.0" encoding="utf-8"?>
             <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
