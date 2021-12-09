@@ -188,9 +188,6 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
-
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
@@ -199,8 +196,8 @@ class EavService
 
         // What if we canot find an entity?
         if (is_array($entity)) {
-            $responseType = Response::HTTP_BAD_REQUEST;
-            $entityErrorResult = $entity;
+            $resultConfig['responseType'] = Response::HTTP_BAD_REQUEST;
+            $result = $entity;
             $entity = null;
         }
 
@@ -210,19 +207,73 @@ class EavService
             $body = json_decode($request->getContent(), true);
         }
 
-        $requestBase = $this->getRequestBase($request);
-        $result = $this->generateResult($request, $entity, $requestBase, $body);
-        if (isset($entityErrorResult)) {
-            $result = $entityErrorResult;
+        if (!isset($result)) {
+            $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
         }
 
         // Lets seriliaze the shizle
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
+        $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], []);
+
+        switch ($contentType) {
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
+        }
+
+        if ($contentType === 'text/csv') {
+            $replacements = [
+                '/student\.person.givenName/'                        => 'Voornaam',
+                '/student\.person.additionalName/'                   => 'Tussenvoegsel',
+                '/student\.person.familyName/'                       => 'Achternaam',
+                '/student\.person.emails\..\.email/'                 => 'E-mail adres',
+                '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
+                '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
+                '/participations\.provider\.id/'                     => 'ID aanbieder',
+                '/participations\.provider\.name/'                   => 'Aanbieder',
+                '/participations/'                                   => 'Deelnames',
+                '/learningResults\..\.id/'                           => 'ID leervraag',
+                '/learningResults\..\.verb/'                         => 'Werkwoord',
+                '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
+                '/learningResults\..\.subject/'                      => 'Onderwerp',
+                '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
+                '/learningResults\..\.application/'                  => 'Toepassing',
+                '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
+                '/learningResults\..\.level/'                        => 'Niveau',
+                '/learningResults\..\.participation/'                => 'Deelname',
+                '/learningResults\..\.testResult/'                   => 'Test Resultaat',
+                '/agreements/'                                       => 'Overeenkomsten',
+                '/desiredOffer/'                                     => 'Gewenst aanbod',
+                '/advisedOffer/'                                     => 'Geadviseerd aanbod',
+                '/offerDifference/'                                  => 'Aanbod verschil',
+                '/person\.givenName/'                                => 'Voornaam',
+                '/person\.additionalName/'                           => 'Tussenvoegsel',
+                '/person\.familyName/'                               => 'Achternaam',
+                '/person\.emails\..\.email/'                         => 'E-mail adres',
+                '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
+                '/intake\.date/'                                     => 'Aanmaakdatum',
+                '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
+                '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
+                '/intake\.referringOrganization/'                    => 'Verwijzer',
+                '/intake\.foundViaOther/'                            => 'Via (anders)',
+                '/intake\.foundVia/'                                 => 'Via',
+                '/roles/'                                            => 'Rollen',
+                '/student\.id/'                                      => 'ID deelnemer',
+                '/description/'                                      => 'Beschrijving',
+                '/motivation/'                                       => 'Leervraag',
+                '/languageHouse\.name/'                              => 'Naam taalhuis',
+            ];
+
+            foreach ($replacements as $key => $value) {
+                $result = preg_replace($key, $value, $result);
+            }
+        }
 
         // Let return the shizle
         $response = new Response(
             $result,
-            $responseType,
+            $resultConfig['responseType'],
             ['content-type' => $contentType]
         );
 
@@ -249,6 +300,12 @@ class EavService
      */
     public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): array
     {
+        // Lets get our base stuff
+        $result = $requestBase['result'];
+
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
         // Get the application by searching for an application with a domain that matches the host of this request
         $host = $request->headers->get('host');
         // TODO: use a sql query instead of array_filter for finding the correct application
@@ -295,12 +352,6 @@ class EavService
             $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
         }
 
-        // Lets get our base stuff
-        $result = $requestBase['result'];
-
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
-
         // Lets create an object
         if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
@@ -324,19 +375,20 @@ class EavService
             }
         }
 
-        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
-        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
-            // get other input values from form-data and put it in $body ($request->get('name'))
-            $body = $this->handleFormDataBody($request, $entity);
-
-            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
-            if (array_key_exists('result', $formDataResult)) {
-                $result = $formDataResult['result'];
-                $responseType = Response::HTTP_BAD_REQUEST;
-            } else {
-                $object = $formDataResult;
-            }
-        }
+        //TODO: fix this shizzle this is elseif to do after we have no normal body, see // Get a body if($request->getContent() in handleRequest
+//        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
+//        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
+//            // get other input values from form-data and put it in $body ($request->get('name'))
+//            $body = $this->handleFormDataBody($request, $entity);
+//
+//            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
+//            if (array_key_exists('result', $formDataResult)) {
+//                $result = $formDataResult['result'];
+//                $responseType = Response::HTTP_BAD_REQUEST;
+//            } else {
+//                $object = $formDataResult;
+//            }
+//        }
 
         // Lets allow for filtering specific fields
         $fields = $this->getRequestFields($request);
@@ -365,6 +417,13 @@ class EavService
         if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
             $responseType = Response::HTTP_BAD_REQUEST;
         }
+
+        return [
+            'result' => $result,
+            'responseType' => $responseType
+        ];
+
+        // TODO: after this is from dev branch, shouldnt be here?
 
         // Let seriliaze the shizle
         $options = [];
@@ -656,7 +715,7 @@ class EavService
                 break;
             case 'PUT':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_OK;
                 if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
                     $responseType = Response::HTTP_FORBIDDEN;
@@ -703,7 +762,7 @@ class EavService
                 break;
             case 'POST':
                 // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields']);
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
                 $responseType = Response::HTTP_CREATED;
                 break;
             default:
@@ -734,7 +793,7 @@ class EavService
      *
      * @return array
      */
-    public function handleMutation(ObjectEntity $object, array $body, $fields): array
+    public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
         if ($this->parameterBag->get('app_auth') && empty($this->session->get('activeOrganization'))) {
@@ -747,6 +806,7 @@ class EavService
         }
 
         // Validation stap
+        $this->validationService->setRequest($request);
         $object = $this->validationService->validateEntity($object, $body);
 
 
