@@ -248,30 +248,6 @@ class Application
         return $this;
     }
 
-    public function getPublic(): ?string
-    {
-        return $this->public;
-    }
-
-    public function setPublic(?string $public): self
-    {
-        $this->public = $public;
-
-        return $this;
-    }
-
-    public function getSecret(): ?string
-    {
-        return $this->secret;
-    }
-
-    public function setSecret(?string $secret): self
-    {
-        $this->secret = $secret;
-
-        return $this;
-    }
-
     public function getOrganization(): ?string
     {
         return $this->organization;
