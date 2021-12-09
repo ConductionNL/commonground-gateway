@@ -206,20 +206,18 @@ class ConvertToGatewayService
             $newObject->setDateModified(new DateTime($body['dateModified']));
         }
 
-        // Set organization for this object
+        // Set organization & application for this object
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
+        $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
         if (key_exists('organization', $body) && !empty($body['organization'])) {
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
             if (!is_null($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
                 $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-            } else {
-                $newObject->setApplication($this->session->get('application'));
             }
         } else {
             $newObject->setOrganization($this->session->get('activeOrganization'));
-            $newObject->setApplication($this->session->get('application'));
         }
 
         $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
