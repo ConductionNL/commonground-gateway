@@ -495,6 +495,13 @@ class Attribute
     private $searchable = false;
 
     /**
+     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $cascadeDelete = false;
+
+    /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
@@ -1278,6 +1285,18 @@ class Attribute
     public function setObjectConfig(?array $objectConfig): self
     {
         $this->objectConfig = $objectConfig;
+
+        return $this;
+    }
+
+    public function getCascadeDelete(): ?bool
+    {
+        return $this->cascadeDelete;
+    }
+
+    public function setCascadeDelete(?bool $cascadeDelete): self
+    {
+        $this->cascadeDelete = $cascadeDelete;
 
         return $this;
     }
