@@ -291,7 +291,6 @@ class EavService
         if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
             $responseType = Response::HTTP_BAD_REQUEST;
         }
-
         // Let seriliaze the shizle
         $options = [];
 
