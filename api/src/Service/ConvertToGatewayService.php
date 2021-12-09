@@ -44,44 +44,13 @@ class ConvertToGatewayService
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $totalExternObjects = [];
-        $page = 1;
         $collectionConfigResults = explode(".", $entity->getCollectionConfig()['results']);
         if (array_key_exists('paginationNext', $entity->getCollectionConfig())) {
             $collectionConfigPaginationNext = explode(".", $entity->getCollectionConfig()['paginationNext']);
         }
-
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
-        while (true) {
-            $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $entity->getGateway()->getHeaders(), false, 'GET')->getBody()->getContents(), true);
-            // Now get response from the correct place in the response
-            foreach ($collectionConfigResults as $item) {
-                $response = $response[$item];
-            }
-
-            // Add it to total result
-            $totalExternObjects = array_merge($totalExternObjects, $response);
-
-            // Check if we have pagination and schould repeat for the next page
-            if (isset($collectionConfigPaginationNext)) {
-                $paginationNext = $firstResponse;
-                foreach ($collectionConfigPaginationNext as $item) {
-                    if (!isset($paginationNext[$item])) {
-                        $paginationNext = false;
-                    } else {
-                        $paginationNext = $paginationNext[$item];
-                    }
-                }
-            }
-            // Break if we have nog pagination or if there is no next page
-            if (!isset($paginationNext) || !$paginationNext) {
-                break;
-            }
-            // Else go to next page (repeat while)
-            $page += 1;
-        }
-//        var_dump('pages: '. $page);
+        $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
@@ -128,13 +97,43 @@ class ConvertToGatewayService
         $this->em->flush();
     }
 
-    private function getExternObjects(string $url, array $totalExternObjects = [], int $page = 1): array
+    /**
+     * Get all objects for this Entity that exist outside the gateway
+     *
+     * @param array $config array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
+     * @param array $component
+     * @param string $url
+     * @param array $totalExternObjects
+     * @param int $page
+     * @return array
+     */
+    private function getExternObjects(array $config, array $component, string $url, array $totalExternObjects = [], int $page = 1): array
     {
-        $response = $this->commonGroundService->getResourceList($url, ['page'=>$page], false);
-        $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
-        if (isset($response['hydra:view']['hydra:next'])) { // localhost / testing add?: && $page < 3
-            return $this->getExternObjects($url, $totalExternObjects, $page + 1);
+        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $config['headers'], false, 'GET')->getBody()->getContents(), true);
+        // Now get response from the correct place in the response
+        foreach ($config['collectionConfigResults'] as $item) {
+            $response = $response[$item];
         }
+
+        // Add it to total result
+        $totalExternObjects = array_merge($totalExternObjects, $response);
+
+        // Check if we have pagination and should repeat for the next page
+        if (isset($config['collectionConfigPaginationNext'])) {
+            $paginationNext = $firstResponse;
+            foreach ($config['collectionConfigPaginationNext'] as $item) {
+                if (!isset($paginationNext[$item])) {
+                    $paginationNext = false;
+                } else {
+                    $paginationNext = $paginationNext[$item];
+                }
+            }
+        }
+        // Repeat if we have pagination and if there is a next page
+        if (isset($paginationNext) && $paginationNext) {
+            return $this->getExternObjects($config, $component, $url, $totalExternObjects, $page + 1);
+        }
+//        var_dump('pages: '. $page);
 
         return $totalExternObjects;
     }
@@ -207,20 +206,18 @@ class ConvertToGatewayService
             $newObject->setDateModified(new DateTime($body['dateModified']));
         }
 
-        // Set organization for this object
+        // Set organization & application for this object
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
+        $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
         if (key_exists('organization', $body) && !empty($body['organization'])) {
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
             if (!is_null($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
                 $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-            } else {
-                $newObject->setApplication($this->session->get('application'));
             }
         } else {
             $newObject->setOrganization($this->session->get('activeOrganization'));
-            $newObject->setApplication($this->session->get('application'));
         }
 
         $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
@@ -237,9 +234,47 @@ class ConvertToGatewayService
 //            var_dump('persist and flush');
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
+            $this->notify($newObject, 'Create');
         }
 
         return $newObject;
+    }
+
+    // TODO: duplicate with notify function in validationService, move this to a notificationService
+    /**
+     * @param ObjectEntity $objectEntity
+     * @param string       $method
+     */
+    private function notify(ObjectEntity $objectEntity, string $method)
+    {
+        $topic = $objectEntity->getEntity()->getName();
+        switch ($method) {
+            case 'POST':
+                $action = 'Create';
+                break;
+            case 'PUT':
+                $action = 'Update';
+                break;
+            case 'DELETE':
+                $action = 'Delete';
+                break;
+        }
+        if (isset($action)) {
+            $notification = [
+                'topic'    => $topic,
+                'action'   => $action,
+                'resource' => $objectEntity->getUri(),
+                'id'       => $objectEntity->getExternalId(),
+            ];
+            if (!$objectEntity->getUri()) {
+                //                var_dump('Couldn\'t notifiy for object, because it has no uri!');
+                //                var_dump('Id: '.$objectEntity->getId());
+                //                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
+                //                var_dump($notification);
+                return;
+            }
+            $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
+        }
     }
 
     private function checkAttributes(ObjectEntity $newObject, array $body, ?ObjectEntity $objectEntity): ObjectEntity

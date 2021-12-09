@@ -948,7 +948,7 @@ class SOAPService
         ];
 
         if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
-            $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
+            $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity)['result'];
         else
             $object = $this->getLa01Hydration($entity, $soap);
 

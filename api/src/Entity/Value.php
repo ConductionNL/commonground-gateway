@@ -255,6 +255,8 @@ class Value
             $object->addSubresourceOf($this);
         }
 
+        // TODO: see https://conduction.atlassian.net/browse/CON-2030
+        // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
         //Handle inversed by
         if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
             $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
@@ -374,9 +376,10 @@ class Value
                     // else $value = DateTime (string)
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
-                    if ($value == null) {
+                    if ($value === null) {
                         return $this;
                     }
+                    $this->files->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $file) {
@@ -388,9 +391,10 @@ class Value
                     // else $value = File::class
                     return $this->addFile($value);
                 case 'object':
-                    if ($value == null) {
+                    if ($value === null) {
                         return $this;
                     }
+                    $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $object) {

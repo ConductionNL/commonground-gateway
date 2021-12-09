@@ -85,7 +85,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "integer", "bool","float","number", "datetime", "date", "file", "object", "array"})
+     * @Assert\Choice({"string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -464,16 +464,15 @@ class Attribute
      */
     private $maxFileSize;
 
-    //TODO: make this an enum?
     /**
-     * @var string *Can only be used in combination with type file* The type of the file
+     * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
-    private $fileType;
+    private $fileTypes;
 
     /**
      * @Groups({"read", "write"})
@@ -494,6 +493,13 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $searchable = false;
+
+    /**
+     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $cascadeDelete = false;
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
@@ -527,6 +533,13 @@ class Attribute
      * @ORM\Column(type="array", nullable=true)
      */
     private array $objectConfig = ["id" => "id"];
+
+    /**
+     * Setting this property to true makes it so that this property is not allowed to be changed after creation.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $immutable = false;
 
     public function __construct()
     {
@@ -595,7 +608,7 @@ class Attribute
             'minDate' => $this->getMinDate(),
             'maxDate' => $this->getMaxDate(),
             'maxFileSize' => $this->getMaxFileSize(),
-            'fileType' => $this->getFileType(),
+            'fileTypes' => $this->getFileTypes(),
             'persistToGateway' => $this->getPersistToGateway(),
             'searchable' => $this->getSearchable(),
             'cascade' => $this->getCascade()
@@ -1096,14 +1109,14 @@ class Attribute
         return $this;
     }
 
-    public function getFileType(): ?string
+    public function getFileTypes(): ?array
     {
-        return $this->fileType;
+        return $this->fileTypes;
     }
 
-    public function setFileType(?string $fileType): self
+    public function setFileTypes(?array $fileTypes): self
     {
-        $this->fileType = $fileType;
+        $this->fileTypes = $fileTypes;
 
         return $this;
     }
@@ -1279,6 +1292,30 @@ class Attribute
     public function setObjectConfig(?array $objectConfig): self
     {
         $this->objectConfig = $objectConfig;
+
+        return $this;
+    }
+
+    public function getCascadeDelete(): ?bool
+    {
+        return $this->cascadeDelete;
+    }
+
+    public function setCascadeDelete(?bool $cascadeDelete): self
+    {
+        $this->cascadeDelete = $cascadeDelete;
+
+        return $this;
+    }
+
+    public function getImmutable(): ?bool
+    {
+        return $this->immutable;
+    }
+
+    public function setImmutable(?bool $immutable): self
+    {
+        $this->immutable = $immutable;
 
         return $this;
     }
