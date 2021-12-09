@@ -35,7 +35,7 @@ class EavService
     private ValidationService $validationService;
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
-//    private AuthorizationService $authorizationService;
+    //    private AuthorizationService $authorizationService;
     private ConvertToGatewayService $convertToGatewayService;
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
@@ -49,7 +49,7 @@ class EavService
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
-//        $this->authorizationService = $authorizationService;
+        //        $this->authorizationService = $authorizationService;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
@@ -76,12 +76,12 @@ class EavService
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if (!($entity instanceof Entity)) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/'.$entityName]);
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/' . $entityName]);
         }
 
         if (!($entity instanceof Entity)) {
             return [
-                'message' => 'Could not establish an entity for '.$entityName,
+                'message' => 'Could not establish an entity for ' . $entityName,
                 'type'    => 'Bad Request',
                 'path'    => 'entity',
                 'data'    => ['Entity Name' => $entityName],
@@ -126,7 +126,7 @@ class EavService
             // make sure $id is actually an uuid
             if (Uuid::isValid($id) == false) {
                 return [
-                    'message' => 'The given id ('.$id.') is not a valid uuid.',
+                    'message' => 'The given id (' . $id . ') is not a valid uuid.',
                     'type'    => 'Bad Request',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $id],
@@ -140,7 +140,7 @@ class EavService
                     $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
-                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
+                            'message' => 'Could not find an object with id ' . $id . ' of type ' . $entity->getName(),
                             'type'    => 'Bad Request',
                             'path'    => $entity->getName(),
                             'data'    => ['id' => $id],
@@ -322,10 +322,10 @@ class EavService
         // Get the application by searching for an application with a domain that matches the host of this request
         $host = $request->headers->get('host');
         // TODO: use a sql query instead of array_filter for finding the correct application
-//        $application = $this->em->getRepository('App:Application')->findByDomain($host);
-//        if (!empty($application)) {
-//            $this->session->set('application', $application);
-//        }
+        //        $application = $this->em->getRepository('App:Application')->findByDomain($host);
+        //        if (!empty($application)) {
+        //            $this->session->set('application', $application);
+        //        }
         $applications = $this->em->getRepository('App:Application')->findAll();
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
@@ -333,7 +333,7 @@ class EavService
         if (count($applications) == 1) {
             $this->session->set('application', $applications[0]);
         } else {
-//            var_dump('no application found');
+            //            var_dump('no application found');
             if ($host == 'localhost') {
                 $localhostApplication = new Application();
                 $localhostApplication->setName('localhost');
@@ -345,12 +345,12 @@ class EavService
                 $this->em->persist($localhostApplication);
                 $this->em->flush();
                 $this->session->set('application', $localhostApplication);
-//                var_dump('Created Localhost Application');
+                //                var_dump('Created Localhost Application');
             } else {
                 $this->session->set('application', null);
                 $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
-                    'message' => 'No application found with domain '.$host,
+                    'message' => 'No application found with domain ' . $host,
                     'type'    => 'Forbidden',
                     'path'    => $host,
                     'data'    => ['host' => $host],
@@ -473,7 +473,7 @@ class EavService
         $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
         if ($renderType && !in_array($renderType, $renderTypes)) {
             return [
-                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
+                'message' => 'The rendering of this type is not suported, suported types are ' . implode(',', $renderTypes),
                 'type'    => 'Bad Request',
                 'path'    => $path,
                 'data'    => ['rendertype' => $renderType],
@@ -566,7 +566,7 @@ class EavService
                 if ($attribute->getMultiple()) {
                     // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
                     if (!is_array($value)) {
-                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: ' . $attribute->getName() . '[])');
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
@@ -812,14 +812,14 @@ class EavService
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
             if (substr($param, 0, 1) == '.') {
-                $param = '_'.ltrim($param, $param[0]);
+                $param = '_' . ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr.$filter;
+                    $filterCheckStr = $filterCheckStr . $filter;
                     if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr.', ';
+                        $filterCheckStr = $filterCheckStr . ', ';
                     }
                 }
 
@@ -828,9 +828,9 @@ class EavService
                 }
 
                 return [
-                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
+                    'message' => 'Unsupported queryParameter (' . $param . '). Supported queryParameters: ' . $filterCheckStr,
                     'type'    => 'error',
-                    'path'    => $entity->getName().'?'.$param.'='.$value,
+                    'path'    => $entity->getName() . '?' . $param . '=' . $value,
                     'data'    => ['queryParameter' => $param],
                 ];
             }

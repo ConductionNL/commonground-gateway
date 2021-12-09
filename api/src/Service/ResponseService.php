@@ -29,7 +29,8 @@ class ResponseService
     private SessionInterface $session;
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session, TokenStorageInterface $tokenStorage)    {
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
@@ -52,12 +53,12 @@ class ResponseService
     public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
     {
         $response = [];
-
-        if(
-            $result->getEntity()->getGateway()->getType() == 'soap' ||
-            $result->getEntity()->getGateway()->getType() == 'xml' ||
-            $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt'
-        ){
+        if (
+            $result->getEntity()->getGateway() !== null &&
+            ($result->getEntity()->getGateway()->getType() == 'soap' ||
+                $result->getEntity()->getGateway()->getType() == 'xml' ||
+                $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt')
+        ) {
             return $response;
         }
 
@@ -103,9 +104,9 @@ class ResponseService
 
         // Lets make it personal
         $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()) . '/' . $result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -171,7 +172,8 @@ class ResponseService
 
             // Only render the attributes that are used && don't render attributes that are writeOnly
             if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
-                || $attribute->getWriteOnly()) {
+                || $attribute->getWriteOnly()
+            ) {
                 continue;
             }
 
@@ -275,7 +277,7 @@ class ResponseService
                     continue;
                 }
                 // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
+                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()) . '/' . $object->getId()];
                 continue;
             }
             $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
@@ -330,9 +332,11 @@ class ResponseService
 
     public function checkForErrorResponse(array $result, $responseType = Response::HTTP_BAD_REQUEST): bool
     {
-        if ($responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT
+        if (
+            $responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT
             && array_key_exists('message', $result) && array_key_exists('type', $result)
-            && array_key_exists('path', $result)) { //We also have key data, but this one is not always required and can be empty as well
+            && array_key_exists('path', $result)
+        ) { //We also have key data, but this one is not always required and can be empty as well
             return True;
         }
         return False;
@@ -341,7 +345,7 @@ class ResponseService
     public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
     {
         // TODO: REMOVE THIS WHEN ENDPOINTS BL IS ADDED
-        $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['name'=>'TempRequestLogEndpointWIP']);
+        $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['name' => 'TempRequestLogEndpointWIP']);
         if (empty($endpoint)) {
             $endpoint = new Endpoint();
             $endpoint->setName('TempRequestLogEndpointWIP');
@@ -354,7 +358,7 @@ class ResponseService
 
         //TODO: Find a clean and nice way to not set properties on RequestLog if they are present in the $endpoint->getLoggingConfig() array!
         $requestLog = new RequestLog();
-//        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
+        //        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
         $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
 
         $requestLog->setObjectEntity($object);
@@ -400,17 +404,19 @@ class ResponseService
     {
         foreach ($headers as $header => &$headerValue) {
             // Filter out headers we do not want to log on this endpoint
-            if ($level == 1 && $endpoint->getLoggingConfig() && array_key_exists('headers', $endpoint->getLoggingConfig()) &&
-                in_array($header, $endpoint->getLoggingConfig()['headers'])) {
+            if (
+                $level == 1 && $endpoint->getLoggingConfig() && array_key_exists('headers', $endpoint->getLoggingConfig()) &&
+                in_array($header, $endpoint->getLoggingConfig()['headers'])
+            ) {
                 unset($headers[$header]);
             }
             if (is_string($headerValue) && strlen($headerValue) > 250) {
-                $headers[$header] = substr($headerValue, 0, 250).'...';
+                $headers[$header] = substr($headerValue, 0, 250) . '...';
             } elseif (is_array($headerValue)) {
                 $headerValue = $this->filterRequestLogHeaders($endpoint, $headerValue, $level + 1);
             } elseif (!is_string($headerValue)) {
                 //todo?
-                $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
+                $headers[$header] = 'Couldn\'t log this headers value because it is of type ' . gettype($headerValue);
             }
         }
         return $headers;
