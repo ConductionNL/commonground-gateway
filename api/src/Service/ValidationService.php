@@ -10,6 +10,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -84,6 +85,11 @@ class ValidationService
     {
         $entity = $objectEntity->getEntity();
         foreach ($entity->getAttributes() as $attribute) {
+            // Skip if readOnly
+            if ($attribute->getReadOnly()) {
+                continue;
+            }
+
             // Only save the attributes that are used.
             if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
                 if (key_exists($attribute->getName(), $post)) {
@@ -117,7 +123,7 @@ class ValidationService
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
             }
             // Check if this field is nullable
-            elseif ($attribute->getNullable()) {
+            elseif ($attribute->getNullable() === true) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
             // Check if this field is required
@@ -150,7 +156,9 @@ class ValidationService
                     }
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
-            } else {
+            } elseif ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+            } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -212,11 +220,11 @@ class ValidationService
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
-        if (is_null($value)) {
-            if ($attribute->getDefaultValue()) {
-                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
-            } elseif (!$attribute->getNullable()) {
-                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. (Nullable is not set for this attribute)');
+        if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+            if ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
+            } elseif ($attribute->getMultiple() && $value === []) {
+                $objectEntity->getValueByAttribute($attribute)->setValue([]);
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -346,6 +354,7 @@ class ValidationService
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different, so be carefull!!!
             // This is an array of objects
             $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
             foreach ($value as $key => $object) {
                 if (!is_array($object)) {
                     // If we want to connect an existing object using a string uuid: "uuid"
@@ -379,7 +388,7 @@ class ValidationService
                         }
 
                         // object toevoegen
-                        $valueObject->addObject($subObject);
+                        $saveSubObjects->add($subObject);
                         continue;
                     } else {
                         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
@@ -406,7 +415,8 @@ class ValidationService
                             continue;
                         }
 
-                        $valueObject->addObject($subObject);
+                        // object toevoegen
+                        $saveSubObjects->add($subObject);
                         continue;
                     } elseif (count($subObject) > 1) {
                         $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
@@ -446,8 +456,16 @@ class ValidationService
                 }
                 //                $subObject->setApplication(); // TODO
 
-                //                $valueObject->setValue($subObject);
-                $valueObject->addObject($subObject);
+                // object toevoegen
+                $saveSubObjects->add($subObject);
+            }
+            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
+            if ($this->request->getMethod() == 'PUT') {
+                $valueObject->getObjects()->clear();
+            }
+            // Actually add the objects to the valueObject
+            foreach ($saveSubObjects as $saveSubObject) {
+                $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different, so be carefull!!!

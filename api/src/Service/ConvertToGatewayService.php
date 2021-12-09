@@ -161,9 +161,47 @@ class ConvertToGatewayService
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
+            $this->notify($newObject, 'Create');
         }
 
         return $newObject;
+    }
+
+    // TODO: duplicate with notify function in validationService, move this to a notificationService
+    /**
+     * @param ObjectEntity $objectEntity
+     * @param string       $method
+     */
+    private function notify(ObjectEntity $objectEntity, string $method)
+    {
+        $topic = $objectEntity->getEntity()->getName();
+        switch ($method) {
+            case 'POST':
+                $action = 'Create';
+                break;
+            case 'PUT':
+                $action = 'Update';
+                break;
+            case 'DELETE':
+                $action = 'Delete';
+                break;
+        }
+        if (isset($action)) {
+            $notification = [
+                'topic'    => $topic,
+                'action'   => $action,
+                'resource' => $objectEntity->getUri(),
+                'id'       => $objectEntity->getExternalId(),
+            ];
+            if (!$objectEntity->getUri()) {
+                //                var_dump('Couldn\'t notifiy for object, because it has no uri!');
+                //                var_dump('Id: '.$objectEntity->getId());
+                //                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
+                //                var_dump($notification);
+                return;
+            }
+            $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
+        }
     }
 
     private function checkAttributes(ObjectEntity $newObject, array $body, ?ObjectEntity $objectEntity): ObjectEntity

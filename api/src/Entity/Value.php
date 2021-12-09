@@ -376,9 +376,10 @@ class Value
                     // else $value = DateTime (string)
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
-                    if ($value == null) {
+                    if ($value === null) {
                         return $this;
                     }
+                    $this->files->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $file) {
@@ -390,9 +391,10 @@ class Value
                     // else $value = File::class
                     return $this->addFile($value);
                 case 'object':
-                    if ($value == null) {
+                    if ($value === null) {
                         return $this;
                     }
+                    $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $object) {
