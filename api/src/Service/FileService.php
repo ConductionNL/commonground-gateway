@@ -67,7 +67,9 @@ class FileService
             ['content-type' => $file->getMimeType()]
         );
 
-        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$file->getName()}.{$file->getExtension()}");
+        $name = str_replace(".{$file->getExtension()}", "", $file->getName());
+
+        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$name}.{$file->getExtension()}");
         $response->headers->set('Content-Disposition', $disposition);
 
         return $response;
