@@ -1628,9 +1628,9 @@ class ValidationService
                 if ($error->getResponse()) {
                     $errorBody = json_decode((string) $error->getResponse()->getBody(), true);
                     if ($errorBody && array_key_exists('message', $errorBody)) {
-                        $error_message = $error['message'];
+                        $error_message = $errorBody['message'];
                     } elseif ($errorBody && array_key_exists('hydra:description', $errorBody)) {
-                        $error_message = $error['hydra:description'];
+                        $error_message = $errorBody['hydra:description'];
                     } else {
                         $error_message = (string) $error->getResponse()->getBody();
                     }
