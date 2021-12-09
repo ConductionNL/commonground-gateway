@@ -123,6 +123,16 @@ class EavService
     public function getObject(?string $id, string $method, Entity $entity)
     {
         if ($id) {
+            // make sure $id is actually an uuid
+            if (Uuid::isValid($id) == false) {
+                return [
+                    'message' => 'The given id ('.$id.') is not a valid uuid.',
+                    'type'    => 'Bad Request',
+                    'path'    => $entity->getName(),
+                    'data'    => ['id' => $id],
+                ];
+            }
+
             // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
             if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
                 if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
@@ -189,7 +199,8 @@ class EavService
 
         // What if we canot find an entity?
         if (is_array($entity)) {
-            $result = $entity;
+            $responseType = Response::HTTP_BAD_REQUEST;
+            $entityErrorResult = $entity;
             $entity = null;
         }
 
@@ -201,6 +212,9 @@ class EavService
 
         $requestBase = $this->getRequestBase($request);
         $result = $this->generateResult($request, $entity, $requestBase, $body);
+        if (isset($entityErrorResult)) {
+            $result = $entityErrorResult;
+        }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], []);
@@ -881,8 +895,40 @@ class EavService
      *
      * @return array
      */
-    public function handleDelete(ObjectEntity $object): array
+    public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
+        if (is_null($maxDepth)) {
+            $maxDepth = new ArrayCollection();
+        }
+        $maxDepth->add($object);
+
+        foreach ($object->getEntity()->getAttributes() as $attribute) {
+            // If this object has subresources and cascade delete is set to true, delete the subresources as well.
+            // TODO: use switch for type? ...also delete type file?
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
+                if ($attribute->getMultiple()) {
+                    // !is_null check above makes sure we do not try to loop through null
+                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                        if ($subObject && !$maxDepth->contains($subObject)) {
+                            $this->handleDelete($subObject, $maxDepth);
+                        }
+                    }
+                } else {
+                    $subObject = $object->getValueByAttribute($attribute)->getValue();
+                    if ($subObject && !$maxDepth->contains($subObject)) {
+                        $this->handleDelete($subObject, $maxDepth);
+                    }
+                }
+            }
+        }
+        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+            if ($resource = $this->commonGroundService->isResource($object->getUri())) {
+                $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
+            }
+        }
+        $this->validationService->notify($object, 'DELETE');
+
         $this->em->remove($object);
         $this->em->flush();
 
