@@ -24,6 +24,7 @@ use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -38,6 +39,7 @@ class ValidationService
     public $postPromiseUris = [];
     public $putPromiseUris = [];
     public $createdObjects = [];
+    private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
@@ -70,6 +72,14 @@ class ValidationService
     }
 
     /**
+     * @param Request $request
+     */
+    public function setRequest(Request $request)
+    {
+        $this->request = $request;
+    }
+
+    /**
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
@@ -93,6 +103,15 @@ class ValidationService
                 if (key_exists($attribute->getName(), $post)) {
                     // throw an error if a value is given for a disabled attribute.
                     $objectEntity->addError($attribute->getName(), 'This attribute is disabled for this entity');
+                }
+                continue;
+            }
+
+            // Do not change immutable attributes!
+            if ($this->request->getMethod() == 'PUT' && $attribute->getImmutable()) {
+                if (key_exists($attribute->getName(), $post)) {
+                    $objectEntity->addError($attribute->getName(), 'This attribute is immutable, it can\'t be changed');
+                    unset($post[$attribute->getName()]);
                 }
                 continue;
             }
@@ -160,12 +179,21 @@ class ValidationService
         }
 
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-        if (!$objectEntity->getHasErrors() && $objectEntity->getEntity()->getGateway()) {
-            $promise = $this->createPromise($objectEntity, $post);
-            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
-            $objectEntity->addPromise($promise);
+        if (!$objectEntity->getHasErrors()) {
+            if ($objectEntity->getEntity()->getGateway()) {
+                $promise = $this->createPromise($objectEntity, $post);
+                $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
+                $objectEntity->addPromise($promise);
+            } elseif (!$objectEntity->getUri()) {
+                // Lets make sure we always set the uri
+                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
+                $objectEntity->setUri($this->createUri($objectEntity));
+            }
         }
 
+        // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
+        // TODO: Also, for POST en PUT we only seem to notify if there is a Gateway present on the Entity.
+        // TODO: So, if no errors notify foreach created/changed ObjectEntity! use entity->attributes if attribute type == object (see eavService->handleDelete())
         // We need to do a clean up if there are errors
         if ($objectEntity->getHasErrors()) {
             foreach ($this->createdObjects as $createdObject) {
@@ -189,14 +217,14 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
-        if($this->parameterBag->get('app_auth')){
-            try {
-                if (!$this->objectEntityService->checkOwner($objectEntity)) {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-                }
-            } catch (AccessDeniedException $e) {
-                $objectEntity->addError($attribute->getName(), $e->getMessage());
+        try {
+            if (!$this->objectEntityService->checkOwner($objectEntity)) {
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
             }
+        } catch (AccessDeniedException $e) {
+            $objectEntity->addError($attribute->getName(), $e->getMessage());
+
+            return $objectEntity;
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
@@ -217,7 +245,7 @@ class ValidationService
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
-            if (is_array($value) && $attribute->getType() != 'array' && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+            if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
@@ -1000,8 +1028,16 @@ class ValidationService
             $objectEntity->addError($attribute->getName().$key.'.base64', 'This file is to big ('.$fileArray['size'].' bytes), expecting a file with maximum size of '.$attribute->getMaxFileSize().' bytes. ('.$shortBase64String.')');
         }
         // Validate mime type
-        if ($attribute->getFileType() && $fileArray['mimeType'] != $attribute->getFileType()) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file of type '.$attribute->getFileType().', not '.$fileArray['mimeType'].'. ('.$shortBase64String.')');
+        if ($attribute->getFileTypes() && !in_array($fileArray['mimeType'], $attribute->getFileTypes())) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], not '.$fileArray['mimeType'].'. ('.$shortBase64String.')');
+        }
+        // Validate extension
+        if ($attribute->getFileTypes() && empty(array_intersect($this->mimeToExt(null, $fileArray['extension']), $attribute->getFileTypes()))) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], none of these equal extension '.$fileArray['extension'].'. ('.$fileArray['name'].')');
+        }
+        // Validate if mime type and extension match
+        if ($this->mimeToExt($fileArray['mimeType']) != $fileArray['extension']) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.$fileArray['extension'].') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
         }
 
         if ($fileArray['name']) {
@@ -1012,7 +1048,7 @@ class ValidationService
             if (count($fileObject) > 1) {
                 $objectEntity->addError($attribute->getName().$key.'.name', 'More than 1 file found with this name: '.$fileArray['name']);
             }
-            // (If we found 0 or 1, continue...)
+            // (If we found 0 or 1 fileObjects, continue...)
         }
 
         // If no errors we can update or create a File
@@ -1265,13 +1301,11 @@ class ValidationService
         $mime_type = finfo_buffer($f, $imgdata, FILEINFO_MIME_TYPE);
         finfo_close($f);
 
-        // Get extension from mime_type
-        $explode_mime_type = explode('/', $mime_type);
-
         // Create file data
         return [
             'name'      => array_key_exists('filename', $file) ? $file['filename'] : null,
-            'extension' => end($explode_mime_type),
+            // Get extension from filename, and else from the mime_type
+            'extension' => array_key_exists('filename', $file) ? pathinfo($file['filename'], PATHINFO_EXTENSION) : $this->mimeToExt($mime_type),
             'mimeType'  => $mime_type,
             'size'      => $this->getBase64Size($file['base64']),
             'base64'    => $file['base64'],
@@ -1310,7 +1344,7 @@ class ValidationService
     {
         return [
             'name'      => $file->getClientOriginalName() ?? null,
-            'extension' => $file->getClientOriginalExtension() ?? null,
+            'extension' => $file->getClientOriginalExtension() ?? $file->getClientMimeType() ? $this->mimeToExt($file->getClientMimeType()) : null,
             'mimeType'  => $file->getClientMimeType() ?? null,
             'size'      => $file->getSize() ?? null,
             'base64'    => $this->uploadToBase64($file),
@@ -1690,9 +1724,12 @@ class ValidationService
      *
      * @return string
      */
-    public function createUri($entityName, $id): string
+    public function createUri(ObjectEntity $objectEntity): string
     {
-        //TODO: change how this uri is generated? use $entityName? or just remove $entityName
+        if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getGateway() && $objectEntity->getExternalId()) {
+            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+        }
+
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
             $uri = 'https://';
         } else {
@@ -1700,6 +1737,10 @@ class ValidationService
         }
         $uri .= $_SERVER['HTTP_HOST'];
 
-        return $uri.'/object_entities/'.$id;
+        if ($objectEntity->getEntity()->getRoute()) {
+            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+        }
+
+        return $uri.'/admin/object_entities/'.$objectEntity->getId();
     }
 }
