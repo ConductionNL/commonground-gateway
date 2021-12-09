@@ -436,6 +436,7 @@ class ValidationService
                 // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
                 elseif ($this->request->getMethod() == 'PUT' && count($value) == 1 && count($valueObject->getObjects()) == 1) {
                     $subObject = $valueObject->getObjects()->first();
+                    $object['id'] = $subObject->getExternalId();
                 }
                 // Create a new subObject (ObjectEntity)
                 else {
@@ -454,7 +455,7 @@ class ValidationService
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
-                $subObject->setUri($this->createUri($subObject->getEntity()->getName(), $subObject->getId()));
+                $subObject->setUri($this->createUri($subObject));
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
@@ -890,37 +891,11 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     $subObject->setOrganization($this->session->get('activeOrganization'));
                     $subObject->setApplication($this->session->get('application'));
-                    $valueObject->addObject($subObject);
-                }
-
-                /* @todo check if is have multpile objects but multiple is false and throw error */
-                //var_dump($subObject->getName());
-                // TODO: more validation for type object?
-                if (!$attribute->getMultiple()) {
-                    // Lets see if the object already exists
-                    if (!$valueObject->getValue()) {
-                        $subObject = $this->validateEntity($subObject, $value);
-                        $valueObject->setValue($subObject);
-                    } else {
-                        $subObject = $valueObject->getValue();
-                        $subObject = $this->validateEntity($subObject, $value);
-                    }
-                    $this->em->persist($subObject);
                 } else {
-                    // todo never reached
-                    $subObjects = $valueObject->getObjects();
-                    if ($subObjects->isEmpty()) {
-                        $subObject = new ObjectEntity();
-                        $subObject->setEntity($attribute->getObject());
-                        $subObject->addSubresourceOf($valueObject);
-                        $subObject = $this->validateEntity($subObject, $value);
-                        $valueObject->addObject($subObject);
-                    }
-                    // Loop trough the subs
-                    foreach ($valueObject->getObjects() as $subObject) {
-                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-                    }
+                    $subObject = $valueObject->getValue();
                 }
+                $subObject = $this->validateEntity($subObject, $value);
+                $this->em->persist($subObject);
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -987,12 +962,6 @@ class ValidationService
                 // Validate (and create/update) this file
                 $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($value));
 
-                break;
-            case 'array':
-                if(!is_array($value)){
-                    $objectEntity->addError($attribute->getName(), 'Contians a value that is not an array, provide an array as string instead');
-                    break;
-                }
                 break;
             default:
                 $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
