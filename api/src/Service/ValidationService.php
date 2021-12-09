@@ -1422,7 +1422,6 @@ class ValidationService
         }
 
         // Lets
-
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach ($objectEntity->getObjectValues() as $value) {
 
@@ -1493,6 +1492,7 @@ class ValidationService
                     $objectEntity->toArray(),
                     $objectEntity->getEntity()->getToSoap()->getRequestHydration()
                 ), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
+                $headers['Content-Type'] = 'application/xml;charset=UTF-8';
                 break;
             default:
                 // @todo throw error

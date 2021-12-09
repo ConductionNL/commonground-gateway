@@ -29,7 +29,7 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
-            if($value !== false && !$value){
+            if($value === []){
                 unset($result[$newKey]);
             }
         }
@@ -56,6 +56,7 @@ class TranslationService
         $source = new \Adbar\Dot($source);
         $source = $source->flatten();
 
+
         // Lets use the mapping to hydrate the array
         foreach($mapping as $replace => $search){
             if(strpos($search, '|')){
@@ -70,10 +71,12 @@ class TranslationService
             } elseif($format == 'xml') {
                 $xmlEncoder = new XmlEncoder();
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
+            } elseif($format == 'bool') {
+                $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
             }
             unset($format);
 
-            if(!$destination[$replace]){
+            if($destination[$replace] === [] || $destination[$replace] === ""){
                 unset($destination[$replace]);
             }
         }

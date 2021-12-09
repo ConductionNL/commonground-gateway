@@ -947,7 +947,6 @@ class SOAPService
             "result" => null,
         ];
 
-
         if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
             $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity)['result'];
         else
@@ -998,6 +997,20 @@ class SOAPService
         $this->commonGroundService->getResourceList(['component' => 'brp', 'resource' => 'ingeschrevenPersonen'], ['geboorte__datum' => $dateOfBirth, 'naam__geslachtsnaam' => $lastname, 'naam__voornamen' => $firstnames]);
 
         return $bsn;
+    }
+
+    private function translateDeclarationType(string $declarationType): string
+    {
+        $declarationTypes = [
+            'REGISTERED' => 'I',
+            'AUTHORITY_HOLDER' => 'G',
+            'ADULT_CHILD_LIVING_WITH_PARENTS' => 'K',
+            'ADULT_AUTHORIZED_REPRESENTATIVE' => 'M',
+            'PARTNER'   => 'P',
+            'PARENT_LIVING_WITH_ADULT_CHILD' => 'O',
+        ];
+
+        return $declarationTypes[$declarationType];
     }
 
     private function translateValueType(string $valueType)
@@ -1082,6 +1095,15 @@ class SOAPService
         return $children;
     }
 
+    private function filterExtracts(array $extracts): array
+    {
+        foreach($extracts as &$extract){
+            $extract['amount'] = (int) $extract['amount'];
+        }
+
+        return $extracts;
+    }
+
     /**
      * Finds specific values and parses them.
      *
@@ -1091,13 +1113,42 @@ class SOAPService
      * @param string|null $zaaktype
      * @return array
      */
-    public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
+    public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string &$zaaktype = null): array
     {
         $permissionRequired = ['inwonend'];
         if($messageType == 'zakLk01'){
             $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
         }
         $data = new \Adbar\Dot($data);
+
+        if($messageType == 'zakLk01' && $zaaktype == 'B0360')
+        {
+            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+            $data->merge($this->flattenExtraElements($extraElementen));
+            if($data->has('aangevertype')){
+                $zaaktype = 'B0361';
+            }
+
+            $date = new \DateTime($data->get('geboortedatum'));
+            $date = $date > new DateTime() ? (int) $date->modify('-100 years')->format('Ymd') : (int) $date->format('Ymd');
+
+            $data->set('geboortedatum', (int) $date);
+
+            $time = new DateTime($data->get('tijdoverlijden'));
+
+            $data->set('tijdoverlijden', $time->format('H:i'));
+            if($data->get('natdood') == 'True')
+                $data->set('natdood', true);
+            else
+                $data->set('natdood', false);
+
+            if($data->get('buitenbenelux') == 'true')
+                $data->set('buitenbenelux', true);
+            else
+                $data->set('buitenbenelux', false);
+
+            $data->set('extracts', json_encode($this->filterExtracts($this->getPersonDetails($data->flatten(), ['code', 'amount'], []))));
+        }
 
         // Huwelijk
         if($messageType == 'zakLk01' && $zaaktype == 'B0337')
@@ -1140,10 +1191,11 @@ class SOAPService
             $relocators[] = $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"];
             $relocatorsString = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
             foreach($relocators as $relocator){
+
                 $relocatorsString .= "<ns10:MeeEmigrant>
                     <ns10:Burgerservicenummer>$relocator</ns10:Burgerservicenummer>
                     <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
-                        <ns10:Duur>k</ns10:Duur>
+                        <ns10:Duur>l</ns10:Duur>
                 </ns10:MeeEmigrant>";
             }
             $relocatorsString .= '</ns10:MeeEmigranten>';
@@ -1245,11 +1297,18 @@ class SOAPService
 
         if($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B1425') {
 
+            $relatives = $this->commonGroundService->getResource(['component' => 'vrijbrp-dossier', 'type' => 'api/v1/relatives', 'id' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]);
+
+
+            $declarationTypes = [];
+            foreach($relatives['relatives'] as $relative){
+                $declarationTypes[$relative['person']['bsn']] = $this->translateDeclarationType($relative['declarationType']);
+            }
             $relocators = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
             $relocators .= "<ns10:MeeEmigrant>
                                         <ns10:Burgerservicenummer>{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")}</ns10:Burgerservicenummer>
-                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
-                                            <ns10:Duur>k</ns10:Duur>
+                                        <ns10:OmschrijvingAangifte>{$declarationTypes[$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]}</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>l</ns10:Duur>
                                     </ns10:MeeEmigrant>";
 
             if (
@@ -1259,16 +1318,16 @@ class SOAPService
                 foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
                     $relocators .= "<ns10:MeeEmigrant>
                                         <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
-                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
-                                            <ns10:Duur>k</ns10:Duur>
+                                        <ns10:OmschrijvingAangifte>{$declarationTypes[$coMover['BSN']]}</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>l</ns10:Duur>
                                     </ns10:MeeEmigrant>";
                 }
             } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])){
                 $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
                 $relocators .= "<ns10:MeeEmigrant>
                                         <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
-                                        <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
-                                            <ns10:Duur>k</ns10:Duur>
+                                        <ns10:OmschrijvingAangifte>{$declarationTypes[$coMover['BSN']]}</ns10:OmschrijvingAangifte>
+                                            <ns10:Duur>l</ns10:Duur>
                                     </ns10:MeeEmigrant>";
             }
 
