@@ -947,7 +947,6 @@ class SOAPService
             "result" => null,
         ];
 
-
         if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
             $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity);
         else
@@ -1096,6 +1095,15 @@ class SOAPService
         return $children;
     }
 
+    private function filterExtracts(array $extracts): array
+    {
+        foreach($extracts as &$extract){
+            $extract['amount'] = (int) $extract['amount'];
+        }
+
+        return $extracts;
+    }
+
     /**
      * Finds specific values and parses them.
      *
@@ -1105,13 +1113,42 @@ class SOAPService
      * @param string|null $zaaktype
      * @return array
      */
-    public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null): array
+    public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string &$zaaktype = null): array
     {
         $permissionRequired = ['inwonend'];
         if($messageType == 'zakLk01'){
             $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
         }
         $data = new \Adbar\Dot($data);
+
+        if($messageType == 'zakLk01' && $zaaktype == 'B0360')
+        {
+            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+            $data->merge($this->flattenExtraElements($extraElementen));
+            if($data->has('aangevertype')){
+                $zaaktype = 'B0361';
+            }
+
+            $date = new \DateTime($data->get('geboortedatum'));
+            $date = $date > new DateTime() ? (int) $date->modify('-100 years')->format('Ymd') : (int) $date->format('Ymd');
+
+            $data->set('geboortedatum', (int) $date);
+
+            $time = new DateTime($data->get('tijdoverlijden'));
+
+            $data->set('tijdoverlijden', $time->format('H:i'));
+            if($data->get('natdood') == 'True')
+                $data->set('natdood', true);
+            else
+                $data->set('natdood', false);
+
+            if($data->get('buitenbenelux') == 'true')
+                $data->set('buitenbenelux', true);
+            else
+                $data->set('buitenbenelux', false);
+
+            $data->set('extracts', json_encode($this->filterExtracts($this->getPersonDetails($data->flatten(), ['code', 'amount'], []))));
+        }
 
         // Huwelijk
         if($messageType == 'zakLk01' && $zaaktype == 'B0337')

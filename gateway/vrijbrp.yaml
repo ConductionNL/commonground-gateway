@@ -41,6 +41,7 @@ App\Entity\Entity:
         name: Deaths In Municipality
         description: A test entity for Soap translations
         gateway: '@vrijbrp_api'
+        endpoint: "/api/v1/deaths/in-municipality"
 
     # deaths
     deaths-discovered-body:
@@ -48,6 +49,7 @@ App\Entity\Entity:
         name: Deaths Discovered Body
         description: A test entity for Soap translations
         gateway: '@vrijbrp_api'
+        endpoint: "/api/v1/deaths/discovered-body"
 
     # Inter-municipal relocations
     inter-municipal-relocations:
@@ -449,14 +451,14 @@ App\Entity\Attribute:
         required: false
         entity: '@deaths-discovered-body'
 
-    deaths-discovered-body_dateOfDeath:
-        name: dateOfDeath
+    deaths-discovered-body_dateOfFinding:
+        name: dateOfFinding
         type: date
         required: false
         entity: '@deaths-discovered-body'
 
-    deaths-discovered-body_timeOfDeath:
-        name: timeOfDeath
+    deaths-discovered-body_timeOfFinding:
+        name: timeOfFinding
         type: string
         required: false
         entity: '@deaths-discovered-body'
@@ -1297,6 +1299,141 @@ App\Entity\Soap:
                 </SOAP-ENV:Body>
             </SOAP-ENV:Envelope>
 
+    soapDeath:
+        name: Death in municipality
+        description: a soap entity for commitments
+        type: zakLk01
+        zaaktype: B0360
+        toEntity: '@deaths-in-municipality'
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+            dossier.description: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:omschrijving"
+            dossier.startDate: date
+            deceased.bsn: inp&#2Ebsn
+            deceased.firstname: voornamen
+            deceased.prefix: voorvoegselGeslachtsnaam
+            deceased.lastname: geslachtsnaam
+            deceased.birthdate: geboortedatum
+            deathByNaturalCauses: natdood | bool
+            municipality.code: gemeentecode
+            dateOfDeath: datumoverlijden
+            timeOfDeath: tijdoverlijden
+            funeralServices.serviceType: type
+            funeralServices.date: datum
+            funeralServices.outsideBenelux: buitenbenelux | bool
+            funeralServices.countryOfDestination.code: lnd&#2Elandcode
+            funeralServices.placeOfDestination: plaatsbest
+            funeralServices.via: viabest
+            funeralServices.transportation: voertuigbest
+            correspondence.communicationType: communicatietype
+            correspondence.organization: handelsnaam #could also be kvknummer. Awaiting comment
+            correspondence.name: naam
+            correspondence.email: sub&#2Eemailadres
+            correspondence.street: gor&#2EopenbareRuimteNaam
+            correspondence.houseNumber: aoa&#2Ehuisnummer
+            correspondence.houseNumberLetter: aoa&#2Ehuisletter
+            correspondence.houseNumberAddition: aoa&#2Ehuisnummertoevoeging
+            correspondence.postalCode: aoa&#2Epostcode
+            correspondence.residence: wpl&#2Ewoonplaatsnaam
+            extracts: extracts | json
+            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
+
+    soapDeathFoundBody:
+        name: Found body
+        description: a soap entity for commitments
+        type: zakLk01
+        zaaktype: B0361
+        toEntity: '@deaths-discovered-body'
+        requestHydration:
+            dossier.dossierId: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:identificatie"
+            dossier.description: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:omschrijving"
+            dossier.startDate: date
+            deceased.bsn: inp&#2Ebsn
+            deceased.firstname: voornamen
+            deceased.prefix: voorvoegselGeslachtsnaam
+            deceased.lastname: geslachtsnaam
+            deceased.birthdate: geboortedatum
+            deathByNaturalCauses: natdood | bool
+            municipality.code: gemeentecode
+            dateOfFinding: datumoverlijden
+            timeOfFinding: tijdoverlijden
+            funeralServices.serviceType: type
+            funeralServices.date: datum
+            funeralServices.outsideBenelux: buitenbenelux | bool
+            funeralServices.countryOfDestination.code: lnd&#2Elandcode
+            funeralServices.placeOfDestination: plaatsbest
+            funeralServices.via: viabest
+            funeralServices.transportation: voertuigbest
+            correspondence.communicationType: communicatietype
+            correspondence.organization: handelsnaam #could also be kvknummer. Awaiting comment
+            correspondence.name: naam
+            correspondence.email: sub&#2Eemailadres
+            correspondence.street: gor&#2EopenbareRuimteNaam
+            correspondence.houseNumber: aoa&#2Ehuisnummer
+            correspondence.houseNumberLetter: aoa&#2Ehuisletter
+            correspondence.houseNumberAddition: aoa&#2Ehuisnummertoevoeging
+            correspondence.postalCode: aoa&#2Epostcode
+            correspondence.residence: wpl&#2Ewoonplaatsnaam
+            extracts: extracts | json
+            writtenDeclarantType: aangevertype
+            explanation: omschrijving
+            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
+        response: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SOAP-ENV:Envelope
+                xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns="http://www.egem.nl/StUF/StUF0301">
+                <SOAP-ENV:Header/>
+                <SOAP-ENV:Body>
+                    <Bv03Bericht>
+                        <stuurgegevens>
+                            <berichtcode>Bv03</berichtcode>
+                            <zender>
+                                <organisatie>KING</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie>CGS</administratie>
+                                <gebruiker/>
+                            </zender>
+                            <ontvanger>
+                                <organisatie>SIMgroep</organisatie>
+                                <applicatie>SIMform</applicatie>
+                                <administratie/>
+                                <gebruiker/>
+                            </ontvanger>
+                            <referentienummer>152880650223</referentienummer>
+                            <tijdstipBericht>2018061214282223</tijdstipBericht>
+                            <crossRefnummer>6444339340</crossRefnummer>
+                        </stuurgegevens>
+                    </Bv03Bericht>
+                </SOAP-ENV:Body>
+            </SOAP-ENV:Envelope>
 
     soapEfIntraRelocation:
         name: Intra-municipal relocation
