@@ -1282,6 +1282,7 @@ class ValidationService
                 $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
                     $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
                     $objectEntity->toArray(), $objectEntity->getEntity()->getToSoap()->getRequestHydration()), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
+                $headers['Content-Type'] = 'application/xml;charset=UTF-8';
                 break;
             default:
                 // @todo throw error
