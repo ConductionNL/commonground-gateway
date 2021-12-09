@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -33,6 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/applications"}
  *  })
  * )
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass="App\Repository\ApplicationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -89,20 +91,43 @@ class Application
     /**
      * @var string A public uuid of this Application.
      *
-     * @Assert\Uuid
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $public;
+    private ?string $public = null;
 
     /**
      * @var string A secret uuid of this Application.
      *
-     * @Assert\Uuid
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $secret;
+    private ?string $secret = null;
+
+    /**
+     * @var string Uri of user object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $resource;
+
+    /**
+     *  @ORM\PrePersist
+     *  @ORM\PreUpdate
+     */
+    public function prePersist()
+    {
+        if (!$this->getSecret()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setSecret($secret);
+        }
+
+        if (!$this->getPublic()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setPublic($secret);
+        }
+    }
 
     // TODO: make this required?
     /**
@@ -147,6 +172,42 @@ class Application
     public function setId(UuidInterface $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getPublic(): ?string
+    {
+        return $this->public;
+    }
+
+    public function setPublic(?string $public): self
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    public function getResource(): ?string
+    {
+        return $this->resource;
+    }
+
+    public function setResource(?string $resource): self
+    {
+        $this->resource = $resource;
+
+        return $this;
+    }
+
+    public function getSecret(): ?string
+    {
+        return $this->secret;
+    }
+
+    public function setSecret(?string $secret): self
+    {
+        $this->secret = $secret;
 
         return $this;
     }

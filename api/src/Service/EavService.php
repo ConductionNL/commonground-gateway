@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class EavService
@@ -351,7 +352,83 @@ class EavService
             $responseType = Response::HTTP_BAD_REQUEST;
         }
 
-        return $result;
+        // Let seriliaze the shizle
+        $options = [];
+
+        switch ($contentType) {
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
+        }
+
+        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
+        if ($contentType === 'text/csv') {
+            $replacements = [
+                '/student\.person.givenName/'                        => 'Voornaam',
+                '/student\.person.additionalName/'                   => 'Tussenvoegsel',
+                '/student\.person.familyName/'                       => 'Achternaam',
+                '/student\.person.emails\..\.email/'                 => 'E-mail adres',
+                '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
+                '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
+                '/participations\.provider\.id/'                     => 'ID aanbieder',
+                '/participations\.provider\.name/'                   => 'Aanbieder',
+                '/participations/'                                   => 'Deelnames',
+                '/learningResults\..\.id/'                           => 'ID leervraag',
+                '/learningResults\..\.verb/'                         => 'Werkwoord',
+                '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
+                '/learningResults\..\.subject/'                      => 'Onderwerp',
+                '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
+                '/learningResults\..\.application/'                  => 'Toepassing',
+                '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
+                '/learningResults\..\.level/'                        => 'Niveau',
+                '/learningResults\..\.participation/'                => 'Deelname',
+                '/learningResults\..\.testResult/'                   => 'Test Resultaat',
+                '/agreements/'                                       => 'Overeenkomsten',
+                '/desiredOffer/'                                     => 'Gewenst aanbod',
+                '/advisedOffer/'                                     => 'Geadviseerd aanbod',
+                '/offerDifference/'                                  => 'Aanbod verschil',
+                '/person\.givenName/'                                => 'Voornaam',
+                '/person\.additionalName/'                           => 'Tussenvoegsel',
+                '/person\.familyName/'                               => 'Achternaam',
+                '/person\.emails\..\.email/'                         => 'E-mail adres',
+                '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
+                '/intake\.date/'                                     => 'Aanmaakdatum',
+                '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
+                '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
+                '/intake\.referringOrganization/'                    => 'Verwijzer',
+                '/intake\.foundViaOther/'                            => 'Via (anders)',
+                '/intake\.foundVia/'                                 => 'Via',
+                '/roles/'                                            => 'Rollen',
+                '/student\.id/'                                      => 'ID deelnemer',
+                '/description/'                                      => 'Beschrijving',
+                '/motivation/'                                       => 'Leervraag',
+                '/languageHouse\.name/'                              => 'Naam taalhuis',
+            ];
+
+            foreach ($replacements as $key => $value) {
+                $result = preg_replace($key, $value, $result);
+            }
+        }
+
+        // Let return the shizle
+        $response = new Response(
+            $result,
+            $responseType,
+            ['content-type' => $contentType]
+        );
+
+        // Let intervene if it is  a known file extension
+        $supportedExtensions = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
+        if ($entity && in_array($requestBase['extension'], $supportedExtensions)) {
+            $date = new \DateTime();
+            $date = $date->format('Ymd_His');
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
+            $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        return $response;
     }
 
     /**
@@ -419,14 +496,14 @@ class EavService
     {
         // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
         $acceptHeaderToSerialiazation = [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
-            'application/hal+json'=> 'jsonhal',
-            'application/json+hal'=> 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
+            'application/json'     => 'json',
+            'application/ld+json'  => 'jsonld',
+            'application/json+ld'  => 'jsonld',
+            'application/hal+json' => 'jsonhal',
+            'application/json+hal' => 'jsonhal',
+            'application/xml'      => 'xml',
+            'text/csv'             => 'csv',
+            'text/yaml'            => 'yaml',
         ];
 
         $contentType = $request->headers->get('accept');
@@ -729,7 +806,7 @@ class EavService
         }
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name'=>$entityName]);
+        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
             $this->convertToGatewayService->convertEntityObjects($entity);
         }
@@ -762,7 +839,7 @@ class EavService
                     'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
                     'path'    => $entity->getName().'?'.$param.'='.$value,
-                    'data'    => ['queryParameter'=>$param],
+                    'data'    => ['queryParameter' => $param],
                 ];
             }
         }
@@ -786,7 +863,7 @@ class EavService
         }
 
         // If not lets make it pritty
-        $results = ['results'=>$results];
+        $results = ['results' => $results];
         $results['total'] = $total;
         $results['limit'] = $limit;
         $results['pages'] = ceil($total / $limit);
