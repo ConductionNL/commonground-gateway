@@ -330,7 +330,6 @@ App\Entity\Attribute:
         name: person
         description: The person of this user.
         type: object
-        required: true
         entity: "@user"
         object: "@person"
         cascade: true
@@ -1543,7 +1542,7 @@ App\Entity\Attribute:
         required: true
         #        multiple: true
         maxFileSize: 550000
-        fileTypes: # see function mimeToExt() in ValidationService 
+        fileTypes: # see function mimeToExt() in ValidationService
             [
                 "application/pdf",
                 "text/plain",
