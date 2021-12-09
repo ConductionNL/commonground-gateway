@@ -534,6 +534,13 @@ class Attribute
      */
     private array $objectConfig = ["id" => "id"];
 
+    /**
+     * Setting this property to true makes it so that this property is not allowed to be changed after creation.
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $immutable = false;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1297,6 +1304,18 @@ class Attribute
     public function setCascadeDelete(?bool $cascadeDelete): self
     {
         $this->cascadeDelete = $cascadeDelete;
+
+        return $this;
+    }
+
+    public function getImmutable(): ?bool
+    {
+        return $this->immutable;
+    }
+
+    public function setImmutable(?bool $immutable): self
+    {
+        $this->immutable = $immutable;
 
         return $this;
     }
