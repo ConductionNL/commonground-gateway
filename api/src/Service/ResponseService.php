@@ -12,13 +12,12 @@ use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\HttpFoundation\Response;
 
 class ResponseService
 {
@@ -44,10 +43,10 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-     *
      * @param ArrayCollection|null $maxDepth
-     * @param bool $flat
-     * @param int $level
+     * @param bool                 $flat
+     * @param int                  $level
+     *
      * @return array
      */
     public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
@@ -114,9 +113,9 @@ class ResponseService
 
         // Lets make it personal
         $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()) . '/' . $result->getId();
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -155,8 +154,9 @@ class ResponseService
      * @param ObjectEntity $result
      * @param $fields
      * @param ArrayCollection|null $maxDepth
-     * @param bool $flat
-     * @param int $level
+     * @param bool                 $flat
+     * @param int                  $level
+     *
      * @return array
      */
     private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
@@ -256,8 +256,8 @@ class ResponseService
      * @param Value $value
      * @param $fields
      * @param ArrayCollection|null $maxDepth
-     * @param bool $flat
-     * @param int $level
+     * @param bool                 $flat
+     * @param int                  $level
      *
      * @return array|null
      */
@@ -294,7 +294,7 @@ class ResponseService
                     continue;
                 }
                 // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()) . '/' . $object->getId()];
+                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
                 continue;
             }
             $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
@@ -355,9 +355,10 @@ class ResponseService
             && array_key_exists('message', $result) && array_key_exists('type', $result)
             && array_key_exists('path', $result)
         ) { //We also have key data, but this one is not always required and can be empty as well
-            return True;
+            return true;
         }
-        return False;
+
+        return false;
     }
 
     public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
@@ -429,14 +430,15 @@ class ResponseService
                 unset($headers[$header]);
             }
             if (is_string($headerValue) && strlen($headerValue) > 250) {
-                $headers[$header] = substr($headerValue, 0, 250) . '...';
+                $headers[$header] = substr($headerValue, 0, 250).'...';
             } elseif (is_array($headerValue)) {
                 $headerValue = $this->filterRequestLogHeaders($endpoint, $headerValue, $level + 1);
             } elseif (!is_string($headerValue)) {
                 //todo?
-                $headers[$header] = 'Couldn\'t log this headers value because it is of type ' . gettype($headerValue);
+                $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
             }
         }
+
         return $headers;
     }
 }

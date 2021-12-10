@@ -4,7 +4,6 @@
 
 namespace App\Controller;
 
-use App\Service\EavService;
 use App\Service\ResponseService;
 use App\Service\UserService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;

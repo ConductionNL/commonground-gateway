@@ -4,13 +4,13 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
-use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
-use Ramsey\Uuid\Uuid;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -55,28 +55,28 @@ class Soap
     private $id;
 
     /**
-     * The internal name of this soap call
+     * The internal name of this soap call.
      *
      * @ORM\Column(type="string", length=255)
      */
     private $name;
 
     /**
-     * A short description of this soap call
+     * A short description of this soap call.
      *
      * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
     /**
-     * The message type of this soap translation
+     * The message type of this soap translation.
      *
      * @ORM\Column(type="string", length=255)
      */
     private $type;
 
     /**
-     * The entity form the EAV stack that this SOAP connection wants to use
+     * The entity form the EAV stack that this SOAP connection wants to use.
      *
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="fromSoap")
      * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
@@ -84,7 +84,7 @@ class Soap
     private $toEntity;
 
     /**
-     * The entity form the EAV stack that this SOAP connection wants to use
+     * The entity form the EAV stack that this SOAP connection wants to use.
      *
      * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="toSoap")
      * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
@@ -92,82 +92,79 @@ class Soap
     private $fromEntity;
 
     /**
-     * An XML descriping the request that we want to recieve
+     * An XML descriping the request that we want to recieve.
      *
      * @ORM\Column(type="text", nullable=true)
      */
     private $request;
 
     /**
-     * An array build of request that we want to recieve
+     * An array build of request that we want to recieve.
      *
      * @ORM\Column(type="array")
      */
     private $requestSkeleton = [];
 
     /**
-     * An array containing an request to entity translation in dot notation e.g. contact.firstname => person.name
+     * An array containing an request to entity translation in dot notation e.g. contact.firstname => person.name.
      *
      * @ORM\Column(type="array", nullable=true)
      */
     private $requestHydration = [];
 
     /**
-     * An XML descriping the response that we want t0 send
+     * An XML descriping the response that we want t0 send.
      *
      * @ORM\Column(type="text", nullable=true)
      */
     private $response;
 
     /**
-     * An array build of response that  we want to send
+     * An array build of response that  we want to send.
      *
      * @ORM\Column(type="array")
      */
     private $responseSkeleton = [];
 
     /**
-     * An array containing an entity to response transaltion in dot notation e.g. person.name => contact.firstname
+     * An array containing an entity to response transaltion in dot notation e.g. person.name => contact.firstname.
      *
      * @ORM\Column(type="array", nullable=true)
      */
     private $responseHydration = [];
 
     /**
-     * A string to define the caseType of StUF Lk01 messages
+     * A string to define the caseType of StUF Lk01 messages.
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $zaaktype;
 
-
     public function export(): ?array
     {
-
         if ($this->getEntity() !== null) {
             $entity = $this->getEntity()->getId()->toString();
-            $entity = "@" . $entity;
+            $entity = '@'.$entity;
         } else {
             $entity = null;
         }
 
         $data = [
-            'name' => $this->getName(),
-            'description' => $this->getDescription(),
-            'type' => $this->getType(),
-            'entity' => $entity,
-            'request' => $this->getRequest(),
-            'requestSkeleton' => $this->getRequestSkeleton(),
-            'requestHydration' => $this->getRequestHydration(),
-            'response' => $this->getResponse(),
-            'responseSkeleton' => $this->getResponseSkeleton(),
+            'name'              => $this->getName(),
+            'description'       => $this->getDescription(),
+            'type'              => $this->getType(),
+            'entity'            => $entity,
+            'request'           => $this->getRequest(),
+            'requestSkeleton'   => $this->getRequestSkeleton(),
+            'requestHydration'  => $this->getRequestHydration(),
+            'response'          => $this->getResponse(),
+            'responseSkeleton'  => $this->getResponseSkeleton(),
             'responseHydration' => $this->getResponseHydration(),
-            'zaaktype' => $this->getZaaktype(),
+            'zaaktype'          => $this->getZaaktype(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
-
 
     public function getId()
     {
@@ -299,7 +296,7 @@ class Soap
         $this->response = $response;
 
         // Lets use this template to generate a skeleton
-       // $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+        // $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
         //$this->responseSkeleton = $xmlEncoder->decode($response, 'xml');
 
         return $this;

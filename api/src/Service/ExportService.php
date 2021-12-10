@@ -4,9 +4,9 @@ namespace App\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Yaml\Yaml;
 
 class ExportService
 {
@@ -19,8 +19,7 @@ class ExportService
         $this->fileSystem = $filesystem;
     }
 
-
-    public function handleExports($type, $method = "download")
+    public function handleExports($type, $method = 'download')
     {
         $export = [];
         switch ($type) {
@@ -45,7 +44,6 @@ class ExportService
                 break;
         }
 
-
         $yaml = Yaml::dump($export, 4);
 
         switch ($method) {
@@ -54,13 +52,14 @@ class ExportService
                     'Content-type' => 'text/yaml',
                 ]);
 
-                $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "export.yaml");
+                $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'export.yaml');
                 $response->headers->set('Content-Disposition', $disposition);
 
                 return $response;
                 break;
             case 'file':
                 $this->fileSystem->dumpFile('gateway/export.yaml', $yaml);
+
                 return true;
                 break;
         }

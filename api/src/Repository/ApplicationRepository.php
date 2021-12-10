@@ -23,8 +23,9 @@ class ApplicationRepository extends ServiceEntityRepository
     /**
      * @param string $domain
      *
-     * @return Application|null
      * @throws NonUniqueResultException
+     *
+     * @return Application|null
      */
     public function findByDomain(string $domain): ?Application
     {

@@ -44,12 +44,12 @@ class ConvertToGatewayService
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $collectionConfigResults = explode(".", $entity->getCollectionConfig()['results']);
+        $collectionConfigResults = explode('.', $entity->getCollectionConfig()['results']);
         if (array_key_exists('paginationNext', $entity->getCollectionConfig())) {
-            $collectionConfigPaginationNext = explode(".", $entity->getCollectionConfig()['paginationNext']);
+            $collectionConfigPaginationNext = explode('.', $entity->getCollectionConfig()['paginationNext']);
         }
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-        $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint();
+        $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
         $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
@@ -57,9 +57,9 @@ class ConvertToGatewayService
         $newGatewayObjects = new ArrayCollection();
         $collectionConfigEnvelope = [];
         if (array_key_exists('envelope', $entity->getCollectionConfig())) {
-            $collectionConfigEnvelope = explode(".", $entity->getCollectionConfig()['envelope']);
+            $collectionConfigEnvelope = explode('.', $entity->getCollectionConfig()['envelope']);
         }
-        $collectionConfigId = explode(".", $entity->getCollectionConfig()['id']);
+        $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
         foreach ($totalExternObjects as &$externObject) {
             $id = $externObject;
             // Make sure to get this item from the correct place in $externObject
@@ -98,18 +98,19 @@ class ConvertToGatewayService
     }
 
     /**
-     * Get all objects for this Entity that exist outside the gateway
+     * Get all objects for this Entity that exist outside the gateway.
      *
-     * @param array $config array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
-     * @param array $component
+     * @param array  $config             array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
+     * @param array  $component
      * @param string $url
-     * @param array $totalExternObjects
-     * @param int $page
+     * @param array  $totalExternObjects
+     * @param int    $page
+     *
      * @return array
      */
     private function getExternObjects(array $config, array $component, string $url, array $totalExternObjects = [], int $page = 1): array
     {
-        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, "", ['page'=>$page], $config['headers'], false, 'GET')->getBody()->getContents(), true);
+        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, '', ['page'=>$page], $config['headers'], false, 'GET')->getBody()->getContents(), true);
         // Now get response from the correct place in the response
         foreach ($config['collectionConfigResults'] as $item) {
             $response = $response[$item];
@@ -163,8 +164,8 @@ class ConvertToGatewayService
                 return null; //Or false or error? //todo?
             } else {
                 $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-                $url = $entity->getGateway()->getLocation() . '/' . $entity->getEndpoint().'/'.$id;
-                $response = $this->commonGroundService->callService($component, $url, "", [], $entity->getGateway()->getHeaders(), false, 'GET');
+                $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
+                $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
                 // if no resource with this $id exists... (callservice returns array on error)
                 if (is_array($response)) {
                     return null; //Or false or error? //todo?
@@ -173,7 +174,7 @@ class ConvertToGatewayService
             }
         } elseif (!$id) {
             $id = $body;
-            $collectionConfigId = explode(".", $entity->getCollectionConfig()['id']);
+            $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
             foreach ($collectionConfigId as $item) {
                 $id = $id[$item];
             }
@@ -459,12 +460,12 @@ class ConvertToGatewayService
             // If not string but array use $value['id'] and $value as $body for find with externalId or convertToGatewayObject
             $bodyForNewObject = $value;
             if (array_key_exists('envelope', $attribute->getObjectConfig())) {
-                $objectConfigEnvelope = explode(".", $attribute->getObjectConfig()['envelope']);
+                $objectConfigEnvelope = explode('.', $attribute->getObjectConfig()['envelope']);
                 foreach ($objectConfigEnvelope as $item) {
                     $bodyForNewObject = $bodyForNewObject[$item];
                 }
             }
-            $objectConfigId = explode(".", $attribute->getObjectConfig()['id']);
+            $objectConfigId = explode('.', $attribute->getObjectConfig()['id']);
             foreach ($objectConfigId as $item) {
                 $value = $value[$item];
             }

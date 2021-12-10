@@ -137,11 +137,11 @@ class Attribute
     private ?Entity $object = null;
 
     /**
-     * Used for schema or oas parsing
+     * Used for schema or oas parsing.
      *
      * @Assert\Length(max = 255)
      */
-    private  $ref;
+    private $ref;
 
     /**
      * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
@@ -476,12 +476,14 @@ class Attribute
 
     /**
      * @Groups({"read", "write"})
+     *
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
     private $validations = [];
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -489,6 +491,7 @@ class Attribute
 
     /**
      * Whether or not this property is searchable.
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -503,6 +506,7 @@ class Attribute
 
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
@@ -532,7 +536,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $objectConfig = ["id" => "id"];
+    private array $objectConfig = ['id' => 'id'];
 
     /**
      * Setting this property to true makes it so that this property is not allowed to be changed after creation.
@@ -548,70 +552,69 @@ class Attribute
 
     public function export()
     {
-
         if ($this->getEntity() !== null) {
             $entity = $this->getEntity()->getId()->toString();
-            $entity = "@" . $entity;
+            $entity = '@'.$entity;
         } else {
             $entity = null;
         }
 
         if ($this->getObject() !== null) {
             $object = $this->getObject()->getId()->toString();
-            $object = "@" . $object;
+            $object = '@'.$object;
         } else {
             $object = null;
         }
 
         if ($this->getInversedBy() !== null) {
             $inversed = $this->getInversedBy()->getId()->toString();
-            $inversed = "@" . $inversed;
+            $inversed = '@'.$inversed;
         } else {
             $inversed = null;
         }
 
         $data = [
-            'name' => $this->getName(),
-            'type' => $this->getType(),
-            'format' => $this->getFormat(),
-            'multiple' => $this->getMultiple(),
-            'entity' => $entity,
-            'object' => $object,
-            'multipleOf' => $this->getMultipleOf(),
-            'maximum' => $this->getMaximum(),
+            'name'             => $this->getName(),
+            'type'             => $this->getType(),
+            'format'           => $this->getFormat(),
+            'multiple'         => $this->getMultiple(),
+            'entity'           => $entity,
+            'object'           => $object,
+            'multipleOf'       => $this->getMultipleOf(),
+            'maximum'          => $this->getMaximum(),
             'exclusiveMaximum' => $this->getExclusiveMaximum(),
-            'minimum' => $this->getMinimum(),
+            'minimum'          => $this->getMinimum(),
             'exclusiveMinimum' => $this->getExclusiveMaximum(),
-            'maxLength' => $this->getMaxLength(),
-            'minLength' => $this->getMinLength(),
-            'maxItems' => $this->getMaxItems(),
-            'minItems' => $this->getMinItems(),
-            'uniqueItems' => $this->getUniqueItems(),
-            'maxProperties' => $this->getMaxProperties(),
-            'minProperties' => $this->getMinProperties(),
-            'inversedBy' => $inversed,
-            'required' => $this->getRequired(),
-            'requiredIf' => $this->getRequiredIf(),
-            'forbidenIf' => $this->getForbidenIf(),
-            'enum' => $this->getEnum(),
-            'allOf' => $this->getAllOf(),
-            'anyOf' => $this->getAnyOf(),
-            'oneOf' => $this->getOneOf(),
-            'description' => $this->getDescription(),
-            'defaultValue' => $this->getDefaultValue(),
-            'nullable' => $this->getNullable(),
-            'mustBeUnique' => $this->getMustBeUnique(),
-            'readOnly' => $this->getReadOnly(),
-            'writeOnly' => $this->getWriteOnly(),
-            'example' => $this->getExample(),
-            'deprecated' => $this->getDeprecated(),
-            'minDate' => $this->getMinDate(),
-            'maxDate' => $this->getMaxDate(),
-            'maxFileSize' => $this->getMaxFileSize(),
-            'fileTypes' => $this->getFileTypes(),
+            'maxLength'        => $this->getMaxLength(),
+            'minLength'        => $this->getMinLength(),
+            'maxItems'         => $this->getMaxItems(),
+            'minItems'         => $this->getMinItems(),
+            'uniqueItems'      => $this->getUniqueItems(),
+            'maxProperties'    => $this->getMaxProperties(),
+            'minProperties'    => $this->getMinProperties(),
+            'inversedBy'       => $inversed,
+            'required'         => $this->getRequired(),
+            'requiredIf'       => $this->getRequiredIf(),
+            'forbidenIf'       => $this->getForbidenIf(),
+            'enum'             => $this->getEnum(),
+            'allOf'            => $this->getAllOf(),
+            'anyOf'            => $this->getAnyOf(),
+            'oneOf'            => $this->getOneOf(),
+            'description'      => $this->getDescription(),
+            'defaultValue'     => $this->getDefaultValue(),
+            'nullable'         => $this->getNullable(),
+            'mustBeUnique'     => $this->getMustBeUnique(),
+            'readOnly'         => $this->getReadOnly(),
+            'writeOnly'        => $this->getWriteOnly(),
+            'example'          => $this->getExample(),
+            'deprecated'       => $this->getDeprecated(),
+            'minDate'          => $this->getMinDate(),
+            'maxDate'          => $this->getMaxDate(),
+            'maxFileSize'      => $this->getMaxFileSize(),
+            'fileTypes'        => $this->getFileTypes(),
             'persistToGateway' => $this->getPersistToGateway(),
-            'searchable' => $this->getSearchable(),
-            'cascade' => $this->getCascade()
+            'searchable'       => $this->getSearchable(),
+            'cascade'          => $this->getCascade(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
