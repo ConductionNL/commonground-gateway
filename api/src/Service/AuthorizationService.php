@@ -106,6 +106,7 @@ class AuthorizationService
         }
         if (array_key_exists('sub_scopes', $scopes)) {
             $subScopes = '['.implode(', ', $scopes['sub_scopes']).']';
+
             throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or one of {$subScopes} is required");
         } elseif (array_key_exists('sub_scope', $scopes)) {
             throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} is required");
