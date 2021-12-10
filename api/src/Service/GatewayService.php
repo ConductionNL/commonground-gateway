@@ -48,7 +48,7 @@ class GatewayService
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
         $component = $this->gatewayToArray($gateway);
-        $url = $gateway->getLocation() . '/' . $endpoint;
+        $url = $gateway->getLocation().'/'.$endpoint;
 
         $result = $this->commonGroundService->callService($component, $url, $content, $query, ['accept' => $headers['accept'][0]], false, $method);
 
@@ -256,14 +256,14 @@ class GatewayService
     private function acceptHeaderToSerialiazation(): array
     {
         return [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
+            'application/json'     => 'json',
+            'application/ld+json'  => 'jsonld',
+            'application/json+ld'  => 'jsonld',
             'application/hal+json' => 'jsonhal',
             'application/json+hal' => 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
+            'application/xml'      => 'xml',
+            'text/csv'             => 'csv',
+            'text/yaml'            => 'yaml',
         ];
     }
 }
