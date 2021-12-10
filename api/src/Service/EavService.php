@@ -291,7 +291,6 @@ class EavService
         if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
             $responseType = Response::HTTP_BAD_REQUEST;
         }
-
         // Let seriliaze the shizle
         $options = [];
 
@@ -1006,7 +1005,8 @@ class EavService
 
             // Only render the attributes that are used && don't render attributes that are writeOnly
             if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
-                || $attribute->getWriteOnly()) {
+                || $attribute->getWriteOnly()
+            ) {
                 continue;
             }
 
@@ -1153,6 +1153,7 @@ class EavService
     private function renderFileResult(File $file): array
     {
         return [
+            'id'        => $file->getId()->toString(),
             'name'      => $file->getName(),
             'extension' => $file->getExtension(),
             'mimeType'  => $file->getMimeType(),
