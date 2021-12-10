@@ -190,6 +190,18 @@ class EavService
         // Set default responseType
         $responseType = Response::HTTP_OK;
 
+        // TODO: replace this after branches merge, this should be in generateResult function then!
+        if (empty($this->session->get('activeOrganization'))) {
+            $host = $request->headers->get('host');
+            if (in_array($host, ['localhost', 'backend-bisc-dev.commonground.nu', 'staging.taalhuizen-bisc.commonground.nu', 'acceptatietaalhuizen-bisc.commonground.nu'])) {
+                $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
+                if (count($groups) == 1) {
+                    $this->session->set('activeOrganization', $groups[0]['organization']);
+                    $this->session->set('organizations', [$groups[0]['organization']]);
+                }
+            }
+        }
+
         // Lets handle the entity
         $entity = $this->getEntity($requestBase['path']);
         // What if we canot find an entity?
