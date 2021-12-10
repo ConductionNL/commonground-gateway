@@ -200,8 +200,6 @@ App\Entity\Entity:
         description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
         gateway: "@edu_api"
         endpoint: "participants"
-        availableProperties:
-            - status
 
     # Medewerker Intake object
     employeeIntake:
@@ -728,14 +726,6 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
         persistToGateway: true
-    student_status:
-        name: status
-        type: string
-        enum: ["Pending", "Accepted", "Rejected"]
-        entity: "@student"
-        #        required: true # todo: this should be true? but will break a lot of postman calls for now
-        defaultValue: "Accepted" # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
-        searchable: true
     student_civicIntegration:
         name: civicIntegration
         type: object
@@ -832,8 +822,8 @@ App\Entity\Attribute:
     studentIntake_status:
         name: status
         type: string
-        enum: ["REFERRED", "ACTIVE", "COMPLETED"]
-        defaultValue: "REFERRED"
+        enum: ["PENDING", "ACCEPTED", "REJECTED"]
+        defaultValue: "PENDING"
         entity: "@studentIntake"
         searchable: true
     studentIntake_referringOrganization:
