@@ -54,8 +54,8 @@ class SOAPController extends AbstractController
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     break;
                 } else {
-                throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
-            }
+                    throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
+                }
             case 'OntvangenIntakeNotificatie':
                 $caseType = $data['SOAP-ENV:Header']['ns2:Stuurgegevens']['ns2:Zaaktype'];
                 //@TODO: Abstraheren!
