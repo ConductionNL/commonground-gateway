@@ -7,6 +7,13 @@ x-cache:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
 
 services:
+#  gateway-frontend:
+#    &gateway-frontend
+#    image: ghcr.io/conductionnl/commonground-gateway-frontend:latest
+#    depends_on:
+#      - php
+#    ports:
+#      - "83:80"
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
@@ -64,6 +71,7 @@ services:
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - APP_AUTH=${APP_AUTH}
     ports:
       - "82:80"
 

@@ -18,22 +18,22 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about a file.
+ * This entity holds the information about an Endpoint.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *     collectionOperations={
- *          "post"={"path"="/admin/files"},
- *     		"get"={"path"="/admin/files"},
- *     },
- *      itemOperations={
- * 		    "get"={"path"="/admin/files/{id}"},
- * 	        "put"={"path"="/admin/files/{id}"},
- * 	        "delete"={"path"="/admin/files/{id}"},
- *     },
+ *  itemOperations={
+ *      "get"={"path"="/admin/endpoints/{id}"},
+ *      "put"={"path"="/admin/endpoints/{id}"},
+ *      "delete"={"path"="/admin/endpoints/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/endpoints"},
+ *      "post"={"path"="/admin/endpoints"}
+ *  })
  * )
- * @ORM\Entity(repositoryClass="App\Repository\FileRepository")
+ * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -41,7 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
  */
-class File
+class Endpoint
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
@@ -55,10 +55,10 @@ class File
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
-     * @var string The name of this File
+     * @var string The name of this Endpoint.
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -71,66 +71,52 @@ class File
     private string $name;
 
     /**
-     * @var string The extension of this File
+     * @var string A description of this Endpoint.
      *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $extension;
-
-    /**
-     * @var string The mimeType of this File
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $mimeType;
-
-    /**
-     * @var string The size of this File
-     *
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Assert\NotNull
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private string $size;
-
-    /**
-     * @var string The base encoded string of this file
-     *
-     * @Gedmo\Versioned
-     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $base64;
+    private string $description;
+
+    /**
+     * @var string The type of this Endpoint.
+     *
+     * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string")
+     */
+    private string $type;
+
+    /**
+     * @var string The path of this Endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string")
+     */
+    private string $path;
 
     /**
      * @Groups({"read", "write"})
      * @MaxDepth(1)
-     * @ORM\ManyToOne(targetEntity=Value::class, inversedBy="files")
+     * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="endpoints")
      */
-    private Value $value;
+    private ?Application $application;
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="file", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY")
      */
     private Collection $requestLogs;
+
+    /**
+     * @var array Everything we do *not* want to log when logging errors on this endpoint, defaults to only the authorization header. See the entity RequestLog for the possible options. For headers an array of headers can be given, if you only want to filter out specific headers.
+     *
+     * @example ["statusCode", "status", "headers" => ["authorization", "accept"]]
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $loggingConfig = ['headers' => ['authorization']];
 
     public function __construct()
     {
@@ -149,74 +135,62 @@ class File
         return $this;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(?string $name): self
     {
         $this->name = $name;
 
         return $this;
     }
 
-    public function getExtension(): string
+    public function getDescription(): ?string
     {
-        return $this->extension;
+        return $this->description;
     }
 
-    public function setExtension(string $extension): self
+    public function setDescription(?string $description): self
     {
-        $this->extension = $extension;
+        $this->description = $description;
 
         return $this;
     }
 
-    public function getMimeType(): string
+    public function getType(): ?string
     {
-        return $this->mimeType;
+        return $this->type;
     }
 
-    public function setMimeType(string $mimeType): self
+    public function setType(string $type): self
     {
-        $this->mimeType = $mimeType;
+        $this->type = $type;
 
         return $this;
     }
 
-    public function getSize(): string
+    public function getPath(): ?string
     {
-        return $this->size;
+        return $this->path;
     }
 
-    public function setSize(string $size): self
+    public function setPath(string $path): self
     {
-        $this->size = $size;
+        $this->path = $path;
 
         return $this;
     }
 
-    public function getBase64(): string
+    public function getApplication(): ?Application
     {
-        return $this->base64;
+        return $this->application;
     }
 
-    public function setBase64(string $base64): self
+    public function setApplication(?Application $application): self
     {
-        $this->base64 = $base64;
-
-        return $this;
-    }
-
-    public function getValue(): ?Value
-    {
-        return $this->value;
-    }
-
-    public function setValue(?Value $value): self
-    {
-        $this->value = $value;
+        $this->application = $application;
 
         return $this;
     }
@@ -233,7 +207,7 @@ class File
     {
         if (!$this->requestLogs->contains($requestLog)) {
             $this->requestLogs[] = $requestLog;
-            $requestLog->setFile($this);
+            $requestLog->setEndpoint($this);
         }
 
         return $this;
@@ -243,10 +217,22 @@ class File
     {
         if ($this->requestLogs->removeElement($requestLog)) {
             // set the owning side to null (unless already changed)
-            if ($requestLog->getFile() === $this) {
-                $requestLog->setFile(null);
+            if ($requestLog->getEndpoint() === $this) {
+                $requestLog->setEndpoint(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLoggingConfig(): ?array
+    {
+        return $this->loggingConfig;
+    }
+
+    public function setLoggingConfig(array $loggingConfig): self
+    {
+        $this->loggingConfig = $loggingConfig;
 
         return $this;
     }

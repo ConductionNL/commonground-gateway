@@ -18,6 +18,7 @@ config:
   cache: true
 
 security:
+  authEnabled: true
   certificate:
     existingSecret: ''
     privateKey: ''

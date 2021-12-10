@@ -12,27 +12,27 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class UserService
 {
     private CommonGroundService $commonGroundService;
-    private EavService $eavService;
     private EntityManagerInterface $entityManager;
+    private ResponseService $responseService;
 
-    public function __construct(CommonGroundService $commonGroundService, EavService $eavService, EntityManagerInterface $entityManager)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, ResponseService $responseService)
     {
         $this->commonGroundService = $commonGroundService;
-        $this->eavService = $eavService;
         $this->entityManager = $entityManager;
+        $this->responseService = $responseService;
     }
 
-    public function getObject(string $uri, EavService $eavService): array
+    public function getObject(string $uri): array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if ($object instanceof ObjectEntity) {
-            return $eavService->renderResult($object, null);
+            return $this->responseService->renderResult($object, null);
         }
 
         return [];
     }
 
-    private function getUserObjectEntity(string $username, EavService $eavService): array
+    private function getUserObjectEntity(string $username): array
     {
         // Because inversedBy wil not set the UC->user->person when creating a person with a user in the gateway.
         // We need to do this in order to find the person of this user:
@@ -44,7 +44,7 @@ class UserService
 
         $objects = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['username' => $username]);
         if (count($objects) == 1) {
-            $user = $eavService->renderResult($objects[0], null);
+            $user = $this->responseService->renderResult($objects[0], null);
             // This: will be false if a user has no rights to do get on a person object
             if (isset($user['person'])) {
                 return $user['person'];
@@ -61,16 +61,16 @@ class UserService
 
             return [];
         }
-        if ($user->getPerson() && $person = $this->getObject($user->getPerson(), $this->eavService)) {
+        if ($user->getPerson() && $person = $this->getObject($user->getPerson())) {
             return $person;
         } elseif ($user->getPerson()) {
             try {
                 $person = $this->commonGroundService->getResource($user->getPerson());
             } catch (ClientException $exception) {
-                $person = $this->getUserObjectEntity($user->getUsername(), $this->eavService);
+                $person = $this->getUserObjectEntity($user->getUsername());
             }
         } else {
-            $person = $this->getUserObjectEntity($user->getUsername(), $this->eavService);
+            $person = $this->getUserObjectEntity($user->getUsername());
         }
 
         return $person;
@@ -83,7 +83,7 @@ class UserService
         }
         if (!$user->getOrganization()) {
             return [];
-        } elseif (!($organization = $this->getObject($user->getOrganization(), $this->eavService))) {
+        } elseif (!($organization = $this->getObject($user->getOrganization()))) {
             try {
                 $organization = $this->commonGroundService->getResource($user->getOrganization());
             } catch (ClientException $exception) {

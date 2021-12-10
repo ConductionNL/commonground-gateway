@@ -1,0 +1,246 @@
+App\Entity\Soap:
+    2c3b368e-c66b-444e-91a7-cee788caecdc:
+        name: 'SOAP Test'
+        description: 'A test entity for Soap translations'
+        type: test
+        entity: '@856393a7-735e-452e-926b-154eba92c508'
+        requestHydration:
+            'SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname': name
+            'SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription': description
+        responseHydration:
+            id: 'SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:id'
+            name: 'SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realname'
+            description: 'SOAP-ENV:Body.ns2:test.ns2:wrapper.ns1:realdescription'
+App\Entity\Gateway:
+    6a55d68e-ee78-475c-ac14-03cd4ae39d73:
+        name: zaaksysteem
+        location: 'https://demo.pre.zaaksysteem.app/api/v1'
+        authorizationHeader: API-Key
+        auth: apikey
+        authorizationPassthroughMethod: header
+        apikey: 304d707a-ef1c-4859-a2f4-d5849ee02558
+        headers:
+            Api-Interface-Id: 351
+        type: json
+    6b4c4483-084f-46be-9f7e-6dbc3a453626:
+        name: 'VrijBrp API'
+        location: 'https://acc-vrijbrp-nijmegen.commonground.nu/'
+        authorizationHeader: Authorization
+        auth: apikey
+        authorizationPassthroughMethod: header
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        type: json
+    b902b225-d7a1-4032-87c7-7a88298f95c1:
+        name: 'VrijBrp SOAP'
+        location: 'http://localhost/soap/stuf'
+        authorizationHeader: Authorization
+        auth: apikey
+        authorizationPassthroughMethod: header
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        type: soap
+App\Entity\Entity:
+    98ab9606-58ac-4355-90a9-79c4be37e546:
+        gateway: '@6a55d68e-ee78-475c-ac14-03cd4ae39d73'
+        endpoint: casetype
+        name: casetypes
+        description: 'Every action related to listing and retrieving casetypes.'
+        extend: false
+        route: /api/casetypes
+    b282c718-d447-43f2-ae4b-388d87b4ab14:
+        gateway: '@6a55d68e-ee78-475c-ac14-03cd4ae39d73'
+        endpoint: case
+        name: cases
+        description: 'Every action related to creating and maintaining cases.'
+        extend: false
+        route: /api/cases
+    098a6e7d-c29e-4da9-ad73-e91f7e860dad:
+        name: intra-municipal_relocations
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/test
+    29ad54f8-2b76-46ff-ad61-b49122a6b1aa:
+        name: relocations
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/relocations
+    32efd566-9c38-45dd-a1be-4c06e8b33f55:
+        name: deaths_in_municipality
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/deaths-in-municipality
+    34ed5f74-89b9-448b-b012-60c9e3c24653:
+        name: birth
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/birth
+    43d764a9-b3cb-4354-a22c-8dc2c2f82f59:
+        name: commitment
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/commitment
+    5806419f-7748-421f-ad6f-a3d2d0699540:
+        name: inter-municipal_relocations
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/test
+    5c4abdbe-ada6-4cac-a1d8-99602eadfe24:
+        name: dossiers
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/dossiers
+    856393a7-735e-452e-926b-154eba92c508:
+        name: soap_test
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/test
+    97603b46-281d-4354-ad2a-1e5a174f1bba:
+        name: deaths_discovered_body
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/deaths-discovered-body
+    e77c8028-d2ff-4fb0-baa2-1f44f7d4ae86:
+        name: tasks
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/tasks
+    ee83987a-00d2-4e80-8518-148177afa948:
+        name: relatives
+        description: 'A test entity for Soap translations'
+        extend: false
+        route: /api/relatives
+App\Entity\Attribute:
+    0ede605f-e1f2-4f48-b97c-4247164f9006:
+        name: status
+        type: string
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        enum:
+            - new
+            - open
+            - resolved
+            - stalled
+        description: 'The status of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    11e06512-3f7a-4c12-ade6-875e8593da2f:
+        name: description
+        type: string
+        multiple: false
+        entity: '@856393a7-735e-452e-926b-154eba92c508'
+        required: true
+        persistToGateway: false
+        searchable: false
+        cascade: false
+    1373dd70-3754-4ce0-8434-84c729a9d76b:
+        name: title
+        type: string
+        multiple: false
+        entity: '@98ab9606-58ac-4355-90a9-79c4be37e546'
+        maxLength: 255
+        description: 'The title of this casetype.'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    3baa0147-a697-4338-aa01-b969953cf70e:
+        name: number
+        type: integer
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The number of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    c3308aa7-2ff3-4f80-926a-84e8d9a710f3:
+        name: stalled_until
+        type: datetime
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The stalled_until of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    c6d87996-bc9d-47c2-9540-619db4c634aa:
+        name: number_master
+        type: integer
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The number_master of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    ce45b9dc-07e8-412a-ba6d-23004a22daf1:
+        name: subject
+        type: string
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The subject of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    d24052de-3f5d-4570-a8eb-8100c3fb2210:
+        name: name
+        type: string
+        multiple: false
+        entity: '@856393a7-735e-452e-926b-154eba92c508'
+        maxLength: 255
+        required: true
+        persistToGateway: false
+        searchable: false
+        cascade: false
+    d41a46be-6b09-4f60-bf0f-9261f2ca89f7:
+        name: name
+        type: string
+        multiple: false
+        entity: '@98ab9606-58ac-4355-90a9-79c4be37e546'
+        maxLength: 255
+        description: 'The name of this casetype.'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    d903b4ed-c42b-42dc-a07e-0e1884d55f8f:
+        name: casetype
+        type: object
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        object: '@98ab9606-58ac-4355-90a9-79c4be37e546'
+        description: 'The casetype of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    e6daf6f6-2cfc-4eed-a1d9-8910f52effe0:
+        name: date_of_registration
+        type: datetime
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The date_of_registration of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    e92a6deb-bbd3-4c60-b146-0016ccf03298:
+        name: date_target
+        type: datetime
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The date_target of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    ed72ecd7-6dfe-4e2c-bec0-e87abc7264f5:
+        name: channel_of_contact
+        type: string
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The channel_of_contact of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
+    fe0b1dda-8ea4-46da-9c78-ff72fb0c1383:
+        name: subject_external
+        type: string
+        multiple: false
+        entity: '@b282c718-d447-43f2-ae4b-388d87b4ab14'
+        description: 'The subject_external of this case'
+        persistToGateway: true
+        searchable: false
+        cascade: false
