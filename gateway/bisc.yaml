@@ -4,6 +4,8 @@ App\Entity\Application:
         name: main application
         secret: 5fbffbf5-412a-41bc-82bf-3b41d71246ea
         resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
+        domains:
+            - backend-bisc-dev.commonground.nu
 App\Entity\Gateway:
     edu_api:
         name: educatie component
