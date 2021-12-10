@@ -17,19 +17,20 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about a common ground gateway.
  *
  * @ApiResource(
- *     normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post",
- *     		"get",
+ *          "post"={"path"="/admin/gateways"},
+ *     		"get"={"path"="/admin/gateways"},
  *          "gateway_post"={
- *              "path"="/gateways/{name}/{endpoint}",
+ *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="POST",
  *              "read"=false,
  *              "validate"=false,
@@ -44,12 +45,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     },
  *      itemOperations={
  * 		    "get"={
+ *              "path"="/admin/gateways/{id}",
  *              "validate"=false
  *          },
- * 	        "put",
- * 	        "delete",
+ * 	        "put"={"path"="/admin/gateways/{id}"},
+ * 	        "delete"={"path"="/admin/gateways/{id}"},
  *          "gateway_get"={
- *              "path"="/gateways/{name}/{endpoint}",
+ *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="GET",
  *              "read"=false,
  *              "validate"=false,
@@ -62,7 +64,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "gateway_put"={
- *              "path"="/gateways/{name}/{endpoint}",
+ *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="PUT",
  *              "read"=false,
  *              "validate"=false,
@@ -75,7 +77,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "gateway_delete"={
- *              "path"="/gateways/{name}/{endpoint}",
+ *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="DELETE",
  *              "read"=false,
  *              "validate"=false,
@@ -88,7 +90,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "get_change_logs"={
- *              "path"="/gateways/{id}/change_log",
+ *              "path"="/api/gateways/{id}/change_log",
  *              "method"="get",
  *              "openapi_context" = {
  *                  "summary"="Changelogs",
@@ -96,7 +98,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              }
  *          },
  *          "get_audit_trail"={
- *              "path"="/gateways/{id}/audit_trail",
+ *              "path"="/api/gateways/{id}/audit_trail",
  *              "method"="get",
  *              "openapi_context" = {
  *                  "summary"="Audittrail",
@@ -169,6 +171,46 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $location;
+    /**
+     * @var string The type of this gatewat
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"json", "xml", "soap", "ftp", "sftp"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"json", "xml", "soap", "ftp", "sftp"},
+     *             "example"="apikey"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $type = 'json';
+
+    /**
+     * @var string The header used for api key authorizations
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="Authorization"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $authorizationHeader = 'Authorization';
 
     /**
      * @var string The method used for authentication to the Gateway
@@ -182,7 +224,7 @@ class Gateway
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password"},
+     *             "enum"={"apikey", "jwt", "username-password","none"},
      *             "example"="apikey"
      *         }
      *     }
@@ -190,7 +232,29 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $auth;
+    private string $auth = 'none';
+
+    /**
+     * @var string The method used for authentication to the Gateway
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"header", "query"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"header", "query"},
+     *             "example"="header"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $authorizationPassthroughMethod = 'header';
 
     /**
      * @var ?string The Locale of the Gateway
@@ -374,9 +438,48 @@ class Gateway
      */
     private $paths = [];
 
+    /**
+     * Headers that are required to be added for every request.
+     *
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $headers = [];
+
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY")
+     */
+    private Collection $requestLogs;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
+    }
+
+    public function export(): ?array
+    {
+        $data = [
+            'name'                           => $this->getName(),
+            'location'                       => $this->getLocation(),
+            'authorizationHeader'            => $this->getAuthorizationHeader(),
+            'auth'                           => $this->getAuth(),
+            'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
+            'locale'                         => $this->getLocale(),
+            'accept'                         => $this->getAccept(),
+            'jwt'                            => $this->getJwt(),
+            'jwtId'                          => $this->getJwtId(),
+            'secret'                         => $this->getSecret(),
+            'username'                       => $this->getUsername(),
+            'password'                       => $this->getPassword(),
+            'apikey'                         => $this->getApikey(),
+            'documentation'                  => $this->getDocumentation(),
+            'headers'                        => $this->getHeaders(),
+            'type'                           => $this->getType(),
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
     public function getId(): ?UuidInterface
@@ -411,6 +514,42 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getAuthorizationHeader(): ?string
+    {
+        return $this->authorizationHeader;
+    }
+
+    public function setAuthorizationHeader(string $authorizationHeader): self
+    {
+        $this->authorizationHeader = $authorizationHeader;
+
+        return $this;
+    }
+
+    public function getAuthorizationPassthroughMethod(): ?string
+    {
+        return $this->authorizationPassthroughMethod;
+    }
+
+    public function setAuthorizationPassthroughMethod(string $authorizationPassthroughMethod): self
+    {
+        $this->authorizationPassthroughMethod = $authorizationPassthroughMethod;
+
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }
@@ -597,6 +736,48 @@ class Gateway
     public function setPaths(?array $paths): self
     {
         $this->paths = $paths;
+
+        return $this;
+    }
+
+    public function getHeaders(): ?array
+    {
+        return $this->headers;
+    }
+
+    public function setHeaders(?array $headers): self
+    {
+        $this->headers = $headers;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getGateway() === $this) {
+                $requestLog->setGateway(null);
+            }
+        }
 
         return $this;
     }

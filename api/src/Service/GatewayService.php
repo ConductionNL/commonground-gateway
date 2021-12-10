@@ -50,7 +50,10 @@ class GatewayService
         $component = $this->gatewayToArray($gateway);
         $url = $gateway->getLocation().'/'.$endpoint;
 
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, ['accept' => $headers['accept'][0]], false, $method);
+        $newHeaders = $gateway->getHeaders();
+        $newHeaders['accept'] = $headers['accept'][0];
+
+        $result = $this->commonGroundService->callService($component, $url, $content, $query, $newHeaders, false, $method);
 
         if (is_array($result)) {
             $result['error'] = json_decode($result['error'], true);
@@ -135,16 +138,18 @@ class GatewayService
     public function gatewayToArray(Gateway $gateway): array
     {
         $result = [
-            'auth'     => $gateway->getAuth(),
-            'location' => $gateway->getLocation(),
-            'apikey'   => $gateway->getApiKey(),
-            'jwt'      => $gateway->getJwt(),
-            'secret'   => $gateway->getSecret(),
-            'id'       => $gateway->getJwtId(),
-            'locale'   => $gateway->getLocale(),
-            'accept'   => $gateway->getAccept(),
-            'username' => $gateway->getUsername(),
-            'password' => $gateway->getPassword(),
+            'auth'                  => $gateway->getAuth(),
+            'authorizationHeader'   => $gateway->getAuthorizationHeader(),
+            'passthroughMethod'     => $gateway->getAuthorizationPassthroughMethod(),
+            'location'              => $gateway->getLocation(),
+            'apikey'                => $gateway->getApiKey(),
+            'jwt'                   => $gateway->getJwt(),
+            'secret'                => $gateway->getSecret(),
+            'id'                    => $gateway->getJwtId(),
+            'locale'                => $gateway->getLocale(),
+            'accept'                => $gateway->getAccept(),
+            'username'              => $gateway->getUsername(),
+            'password'              => $gateway->getPassword(),
         ];
 
         return array_filter($result);
