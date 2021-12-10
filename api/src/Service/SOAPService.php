@@ -1123,6 +1123,7 @@ class SOAPService
 
         if($messageType == 'zakLk01' && $zaaktype == 'B0360')
         {
+            $data->set('declarantBsn', $this->getValue($extraElementen, 'inp.bsn'));
             $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
             $data->merge($this->flattenExtraElements($extraElementen));
             if($data->has('aangevertype')){
@@ -1137,6 +1138,11 @@ class SOAPService
             $time = new DateTime($data->get('tijdoverlijden'));
 
             $data->set('tijdoverlijden', $time->format('H:i'));
+
+            $time = new DateTime($data->get('tijd'));
+
+            $data->set('tijd', $time->format('H:i'));
+
             if($data->get('natdood') == 'True')
                 $data->set('natdood', true);
             else

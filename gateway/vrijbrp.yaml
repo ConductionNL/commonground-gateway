@@ -1336,7 +1336,7 @@ App\Entity\Soap:
             correspondence.postalCode: aoa&#2Epostcode
             correspondence.residence: wpl&#2Ewoonplaatsnaam
             extracts: extracts | json
-            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
+            declarant.bsn: declarantBsn
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope
@@ -1383,8 +1383,8 @@ App\Entity\Soap:
             deceased.birthdate: geboortedatum
             deathByNaturalCauses: natdood | bool
             municipality.code: gemeentecode
-            dateOfFinding: datumoverlijden
-            timeOfFinding: tijdoverlijden
+            dateOfFinding: datum
+            timeOfFinding: tijd
             funeralServices.serviceType: type
             funeralServices.date: datum
             funeralServices.outsideBenelux: buitenbenelux | bool
@@ -1405,7 +1405,7 @@ App\Entity\Soap:
             extracts: extracts | json
             writtenDeclarantType: aangevertype
             explanation: omschrijving
-            declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
+#            declarant.bsn: declarantBsn
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope
