@@ -12,13 +12,15 @@ class DocumentService
 {
     private CommonGroundService $commonGroundService;
     private EavService $eavService;
+    private ResponseService $responseService;
     private GatewayService $gatewayService;
     private SerializerInterface $serializer;
     private ParameterBagInterface $parameterBag;
 
-    public function __construct(EavService $eavService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag)
+    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag)
     {
         $this->eavService = $eavService;
+        $this->responseService = $responseService;
         $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
         $this->serializer = $serializer;
@@ -40,7 +42,7 @@ class DocumentService
      */
     private function getData(Document $document, string $dataId): string
     {
-        $data = json_decode($this->serializer->serialize($this->eavService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json'), true);
+        $data = json_decode($this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json'), true);
         if (isset($data['id'])) {
             unset($data['id']);
         }

@@ -142,7 +142,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
         }
 
-        // Multitenancy, only show objects this user is allowed to see.
         //TODO: owner check
 //        $user = $this->tokenStorage->getToken()->getUser();
 //
@@ -153,12 +152,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //        }
 
         // TODO: organizations or owner
+        // Multitenancy, only show objects this user is allowed to see.
+        // Only show objects this user owns or object that have an organization this user is part of
         if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', null);
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
         } else {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
-        // TODO filter for o.application?
 
 //        var_dump($query->getDQL());
 
