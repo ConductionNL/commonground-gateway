@@ -85,7 +85,7 @@ class Attribute
      *
      * @Assert\NotBlank
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object"})
+     * @Assert\Choice({"string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object", "array"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */

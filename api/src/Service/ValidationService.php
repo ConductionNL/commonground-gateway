@@ -245,7 +245,7 @@ class ValidationService
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
-            if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+            if (is_array($value) && $attribute->getType() != 'array' && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
                 $objectEntity->addError($attribute->getName(), 'Expects ' . $attribute->getType() . ', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
@@ -962,6 +962,12 @@ class ValidationService
                 // Validate (and create/update) this file
                 $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($value));
 
+                break;
+            case 'array':
+                if(!is_array($value)){
+                    $objectEntity->addError($attribute->getName(), 'Contians a value that is not an array, provide an array as string instead');
+                    break;
+                }
                 break;
             default:
                 $objectEntity->addError($attribute->getName(), 'Has an an unknown type: [' . $attribute->getType() . ']');
