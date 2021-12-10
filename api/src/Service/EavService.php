@@ -16,15 +16,14 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -76,12 +75,12 @@ class EavService
         }
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if (!($entity instanceof Entity)) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/' . $entityName]);
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['route' => '/api/'.$entityName]);
         }
 
         if (!($entity instanceof Entity)) {
             return [
-                'message' => 'Could not establish an entity for ' . $entityName,
+                'message' => 'Could not establish an entity for '.$entityName,
                 'type'    => 'Bad Request',
                 'path'    => 'entity',
                 'data'    => ['Entity Name' => $entityName],
@@ -126,7 +125,7 @@ class EavService
             // make sure $id is actually an uuid
             if (Uuid::isValid($id) == false) {
                 return [
-                    'message' => 'The given id (' . $id . ') is not a valid uuid.',
+                    'message' => 'The given id ('.$id.') is not a valid uuid.',
                     'type'    => 'Bad Request',
                     'path'    => $entity->getName(),
                     'data'    => ['id' => $id],
@@ -140,7 +139,7 @@ class EavService
                     $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
-                            'message' => 'Could not find an object with id ' . $id . ' of type ' . $entity->getName(),
+                            'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
                             'type'    => 'Bad Request',
                             'path'    => $entity->getName(),
                             'data'    => ['id' => $id],
@@ -202,7 +201,7 @@ class EavService
         }
 
         // Get a body
-        if ($request->getContent()){
+        if ($request->getContent()) {
             //@todo support xml messages
             $body = json_decode($request->getContent(), true);
         }
@@ -311,7 +310,7 @@ class EavService
      *
      * @return Response
      */
-    public function generateResult(Request $request, Entity $entity, array $requestBase,  ?array $body = []): array
+    public function generateResult(Request $request, Entity $entity, array $requestBase, ?array $body = []): array
     {
         // Lets get our base stuff
         $result = $requestBase['result'];
@@ -345,12 +344,12 @@ class EavService
                 $this->em->persist($localhostApplication);
                 $this->em->flush();
                 $this->session->set('application', $localhostApplication);
-                //                var_dump('Created Localhost Application');
+            //                var_dump('Created Localhost Application');
             } else {
                 $this->session->set('application', null);
                 $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
-                    'message' => 'No application found with domain ' . $host,
+                    'message' => 'No application found with domain '.$host,
                     'type'    => 'Forbidden',
                     'path'    => $host,
                     'data'    => ['host' => $host],
@@ -417,8 +416,8 @@ class EavService
         }
 
         return [
-            'result' => $result,
-            'responseType' => $responseType
+            'result'       => $result,
+            'responseType' => $responseType,
         ];
     }
 
@@ -473,7 +472,7 @@ class EavService
         $renderTypes = ['json', 'jsonld', 'jsonhal', 'xml', 'csv', 'yaml'];
         if ($renderType && !in_array($renderType, $renderTypes)) {
             return [
-                'message' => 'The rendering of this type is not suported, suported types are ' . implode(',', $renderTypes),
+                'message' => 'The rendering of this type is not suported, suported types are '.implode(',', $renderTypes),
                 'type'    => 'Bad Request',
                 'path'    => $path,
                 'data'    => ['rendertype' => $renderType],
@@ -566,7 +565,7 @@ class EavService
                 if ($attribute->getMultiple()) {
                     // When using form-data with multiple=true for files the form-data key should have [] after the name (to make it an array, example key: files[], and support multiple file uploads with one key+multiple files in a single value)
                     if (!is_array($value)) {
-                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: ' . $attribute->getName() . '[])');
+                        $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files. (Use array in form-data with the following key: '.$attribute->getName().'[])');
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
@@ -730,7 +729,6 @@ class EavService
         $this->validationService->setRequest($request);
         $object = $this->validationService->validateEntity($object, $body);
 
-
         // Let see if we have errors
         if ($object->getHasErrors()) {
             return $this->returnErrors($object);
@@ -815,14 +813,14 @@ class EavService
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
             if (substr($param, 0, 1) == '.') {
-                $param = '_' . ltrim($param, $param[0]);
+                $param = '_'.ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = '';
                 foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr . $filter;
+                    $filterCheckStr = $filterCheckStr.$filter;
                     if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr . ', ';
+                        $filterCheckStr = $filterCheckStr.', ';
                     }
                 }
 
@@ -831,9 +829,9 @@ class EavService
                 }
 
                 return [
-                    'message' => 'Unsupported queryParameter (' . $param . '). Supported queryParameters: ' . $filterCheckStr,
+                    'message' => 'Unsupported queryParameter ('.$param.'). Supported queryParameters: '.$filterCheckStr,
                     'type'    => 'error',
-                    'path'    => $entity->getName() . '?' . $param . '=' . $value,
+                    'path'    => $entity->getName().'?'.$param.'='.$value,
                     'data'    => ['queryParameter' => $param],
                 ];
             }

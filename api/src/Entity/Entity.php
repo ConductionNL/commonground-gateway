@@ -117,6 +117,7 @@ class Entity
 
     /**
      * wheter or not the properties of the original object are automaticly include.
+     *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -216,7 +217,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ["results"=>"hydra:member","id"=>"id", "paginationNext"=>"hydra:view.hydra:next"];
+    private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
 
     public function __construct()
     {
@@ -230,29 +231,27 @@ class Entity
 
     public function export()
     {
-
         if ($this->getGateway() !== null) {
             $gateway = $this->getGateway()->getId()->toString();
-            $gateway = "@" . $gateway;
+            $gateway = '@'.$gateway;
         } else {
             $gateway = null;
         }
 
         $data = [
-            'gateway' => $gateway,
-            'endpoint' => $this->getEndpoint(),
-            'name' => $this->getName(),
-            'description' => $this->getDescription(),
-            'extend' => $this->getExtend(),
-            'transformations' => $this->getTransformations(),
-            'route' => $this->getRoute(),
+            'gateway'             => $gateway,
+            'endpoint'            => $this->getEndpoint(),
+            'name'                => $this->getName(),
+            'description'         => $this->getDescription(),
+            'extend'              => $this->getExtend(),
+            'transformations'     => $this->getTransformations(),
+            'route'               => $this->getRoute(),
             'availableProperties' => $this->getAvailableProperties(),
-            'usedProperties' => $this->getUsedProperties()
+            'usedProperties'      => $this->getUsedProperties(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
-
 
     public function getId()
     {

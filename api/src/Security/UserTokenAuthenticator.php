@@ -172,6 +172,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
             return $this->session->get('application')->getOrganization();
         }
+
         return null;
     }
 

@@ -31,7 +31,6 @@ class SOAPController extends AbstractController
         $namespaces = $SOAPService->getNamespaces($data);
         $messageType = $SOAPService->getMessageType($data, $namespaces);
 
-
         switch ($messageType) {
             case 'zakLv01':
                 $message = $SOAPService->processZakLv01Message($data, $namespaces);
@@ -51,35 +50,32 @@ class SOAPController extends AbstractController
             case 'zakLk01':
                 $caseType = $SOAPService->getZaakType($data, $namespaces);
                 $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
-                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
+                if ($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])) {
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     break;
-                }
-            else{
-                    throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
-                }
+                } else {
+                throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
+            }
             case 'OntvangenIntakeNotificatie':
                 $caseType = $data['SOAP-ENV:Header']['ns2:Stuurgegevens']['ns2:Zaaktype'];
                 //@TODO: Abstraheren!
-                if($caseType == 'B0366' && $data['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['GEMEENTECODE'] !== '0268'){
+                if ($caseType == 'B0366' && $data['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['GEMEENTECODE'] !== '0268') {
                     $caseType = 'B0367';
                 }
                 $data = $SOAPService->preRunSpecificCode($data, $namespaces, $messageType, $caseType);
-                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])){
+                if ($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType, 'zaaktype' => $caseType, 'fromEntity' => null])) {
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     $SOAPService->postRunSpecificCode($data, $namespaces, $messageType, $caseType, $this->getDoctrine()->getRepository('App:Gateway')->findOneBy(['auth' => 'vrijbrp-jwt']));
                     break;
-                }
-                else{
+                } else {
                     throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
                 break;
             default:
-                if($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])){
+                if ($soapEntity = $this->getDoctrine()->getRepository('App:Soap')->findOneBy(['type'=>$messageType])) {
                     $message = $SOAPService->handleRequest($soapEntity, $data, $namespaces, $request);
                     break;
-                }
-                else{
+                } else {
                     throw new BadRequestException("The message type $messageType is not supported at this moment");
                 }
         }
@@ -102,7 +98,8 @@ class SOAPController extends AbstractController
      *
      * @return Response
      */
-    public function wsdlAction(){
+    public function wsdlAction()
+    {
         $wsdl =
             '<?xml version="1.0" encoding="utf-8"?>
 <wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://www.w3.org/2005/05/xmlmime" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.centric.nl/Publieksdiensten/Conductor/1.0" xmlns:s0="urn:Centric/Publieksdiensten/Conductor/1.0" xmlns:s1="http://schemas.microsoft.com/BizTalk/2003/Any" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://www.centric.nl/Publieksdiensten/Conductor/1.0" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
@@ -258,7 +255,6 @@ class SOAPController extends AbstractController
 </wsdl:service>
 </wsdl:definitions>
         ';
-
 
         return new Response(
             $wsdl,

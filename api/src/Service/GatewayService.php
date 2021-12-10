@@ -48,7 +48,7 @@ class GatewayService
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
         $component = $this->gatewayToArray($gateway);
-        $url = $gateway->getLocation() . '/' . $endpoint;
+        $url = $gateway->getLocation().'/'.$endpoint;
 
         $newHeaders = $gateway->getHeaders();
         $newHeaders['accept'] = $headers['accept'][0];

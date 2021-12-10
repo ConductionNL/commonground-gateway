@@ -5,7 +5,6 @@
 namespace App\Command;
 
 use App\Service\ExportService;
-use App\Service\OasParserService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

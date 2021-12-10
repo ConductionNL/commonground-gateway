@@ -116,7 +116,7 @@ class Endpoint
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $loggingConfig = ["headers" => ["authorization"]];
+    private array $loggingConfig = ['headers' => ['authorization']];
 
     public function __construct()
     {

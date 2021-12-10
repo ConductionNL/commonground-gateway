@@ -2,21 +2,17 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Entity\Entity;
 use App\Entity\Gateway;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
-use \App\Service\EavService;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class SOAPService
@@ -66,8 +62,7 @@ class SOAPService
         EavService $eavService,
         TranslationService $translationService,
         GatewayService $gatewayService
-    )
-    {
+    ) {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->cache = $cache;
@@ -920,14 +915,14 @@ class SOAPService
         return $xmlEncoder->encode($this->getFo02Message(), 'xml');
     }
 
-
     /**
-     * This function handles generic SOAP INCOMMING SOAP calls based on the soap entity
+     * This function handles generic SOAP INCOMMING SOAP calls based on the soap entity.
      *
-     * @param Soap $soap
-     * @param array $data
-     * @param array $namespaces
+     * @param Soap    $soap
+     * @param array   $data
+     * @param array   $namespaces
      * @param Request $request
+     *
      * @return string
      */
     public function handleRequest(Soap $soap, array $data, array $namespaces, Request $request): string
@@ -937,50 +932,54 @@ class SOAPService
         //$entity = $this->soapToEntity($soap, $data);
 
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope', 'xml_encoding' => 'utf-8', 'encoder_ignored_node_types' => [\XML_CDATA_SECTION_NODE]]);
-        $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
+        $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [], $data, $soap->getRequestHydration());
 
         $requestBase = [
-            "path" => $soap->getToEntity()->getRoute(),
-            "id" => null,
-            "extension" => "xml",
-            "renderType" => "xml",
-            "result" => null,
+            'path'       => $soap->getToEntity()->getRoute(),
+            'id'         => null,
+            'extension'  => 'xml',
+            'renderType' => 'xml',
+            'result'     => null,
         ];
 
-        if($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager')
+        if ($soap->getType() !== 'npsLv01-prs-GezinssituatieOpAdresAanvrager') {
             $object = $this->eavService->generateResult($request, $soap->getToEntity(), $requestBase, $entity)['result'];
-        else
+        } else {
             $object = $this->getLa01Hydration($entity, $soap);
+        }
 
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
-            $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
+            $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'),
+            true
+        );
     }
 
     private function parseDate(string $date): string
     {
-        $date = strlen($date) == 6 ? new \DateTime("20".$date) : new \DateTime($date);
+        $date = strlen($date) == 6 ? new \DateTime('20'.$date) : new \DateTime($date);
 
-        return $date->format("Y-m-d");
+        return $date->format('Y-m-d');
     }
 
     private function getValue(array $extraElementen, string $name)
     {
-        foreach($extraElementen as $extraElement){
-            if($extraElement['@naam'] == $name){
+        foreach ($extraElementen as $extraElement) {
+            if ($extraElement['@naam'] == $name) {
                 return $extraElement['#'];
             }
         }
+
         return null;
     }
 
     private function flattenExtraElements(array $extraElementen): array
     {
         $result = [];
-        foreach ($extraElementen as $extraElement){
+        foreach ($extraElementen as $extraElement) {
             $value = $extraElement['#'];
             $key = $extraElement['@naam'];
-            if(strpos($key, 'datum') !== false || strpos($key, 'Datum') !== false){
+            if (strpos($key, 'datum') !== false || strpos($key, 'Datum') !== false) {
                 $value = $this->parseDate($value);
             }
 
@@ -1002,12 +1001,12 @@ class SOAPService
     private function translateDeclarationType(string $declarationType): string
     {
         $declarationTypes = [
-            'REGISTERED' => 'I',
-            'AUTHORITY_HOLDER' => 'G',
+            'REGISTERED'                      => 'I',
+            'AUTHORITY_HOLDER'                => 'G',
             'ADULT_CHILD_LIVING_WITH_PARENTS' => 'K',
             'ADULT_AUTHORIZED_REPRESENTATIVE' => 'M',
-            'PARTNER'   => 'P',
-            'PARENT_LIVING_WITH_ADULT_CHILD' => 'O',
+            'PARTNER'                         => 'P',
+            'PARENT_LIVING_WITH_ADULT_CHILD'  => 'O',
         ];
 
         return $declarationTypes[$declarationType];
@@ -1015,7 +1014,7 @@ class SOAPService
 
     private function translateValueType(string $valueType)
     {
-        switch($valueType){
+        switch ($valueType) {
             case 'voornamen':
                 return 'firstname';
             case 'voorvoegselGeslachtsnaam':
@@ -1036,16 +1035,17 @@ class SOAPService
     private function getPersonDetail($key, $value, $array, array $oneOf): array
     {
         $valueTypes = $oneOf;
-        foreach($valueTypes as $valueType) {
-            if(strpos($key, $valueType) !== false && is_numeric(substr($key, strlen($valueType)))){
-                if($valueType == 'geboortedatum'){
+        foreach ($valueTypes as $valueType) {
+            if (strpos($key, $valueType) !== false && is_numeric(substr($key, strlen($valueType)))) {
+                if ($valueType == 'geboortedatum') {
                     $date = new \DateTime($value);
                     $value = $date > new DateTime() ? (int) $date->modify('-100 years')->format('Ymd') : (int) $date->format('Ymd');
                 }
-                $array[substr($key, strlen($valueType))-1][$this->translateValueType($valueType)] = $value;
+                $array[substr($key, strlen($valueType)) - 1][$this->translateValueType($valueType)] = $value;
                 break;
             }
         }
+
         return $array;
     }
 
@@ -1053,7 +1053,7 @@ class SOAPService
     {
         $result = ['chosen' => []];
 
-        foreach($data as $key=>$datum){
+        foreach ($data as $key=>$datum) {
             $result['chosen'] = $this->getPersonDetail($key, $datum, $result['chosen'], ['voornamen', 'voorvoegselGeslachtsnaam', 'geslachtsnaam', 'geboortedatum', 'bsn']);
         }
         $result['numberOfMunicipalWitnesses'] = isset($data['verzorgdgem']) ? $data['verzorgdgem'] : 0;
@@ -1065,17 +1065,16 @@ class SOAPService
     {
         $result = ['preferences' => []];
 
-        foreach($data as $key=>$datum){
+        foreach ($data as $key=>$datum) {
             $result['preferences'] = $this->getPersonDetail($key, $datum, $result['preferences'], ['naam']);
         }
 
         return $result;
     }
 
-
     private function getPersonDetails(array $data, array $valueTypes, array $result): array
     {
-        foreach($data as $key=>$datum){
+        foreach ($data as $key=>$datum) {
             $result = $this->getPersonDetail($key, $datum, $result, $valueTypes);
         }
 
@@ -1084,7 +1083,7 @@ class SOAPService
 
     private function filterChildren(array $children): array
     {
-        foreach($children as &$child){
+        foreach ($children as &$child) {
             $time = new \DateTime($child['geboortetijd']);
             $date = new \DateTime($child['birthdate']);
             $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:sO'));
@@ -1092,12 +1091,13 @@ class SOAPService
 
             unset($child['geboortetijd'], $child['birthdate']);
         }
+
         return $children;
     }
 
     private function filterExtracts(array $extracts): array
     {
-        foreach($extracts as &$extract){
+        foreach ($extracts as &$extract) {
             $extract['amount'] = (int) $extract['amount'];
         }
 
@@ -1107,25 +1107,25 @@ class SOAPService
     /**
      * Finds specific values and parses them.
      *
-     * @param array $data
-     * @param array $namespaces
-     * @param string $messageType
+     * @param array       $data
+     * @param array       $namespaces
+     * @param string      $messageType
      * @param string|null $zaaktype
+     *
      * @return array
      */
     public function preRunSpecificCode(array $data, array $namespaces, string $messageType, ?string &$zaaktype = null): array
     {
         $permissionRequired = ['inwonend'];
-        if($messageType == 'zakLk01'){
+        if ($messageType == 'zakLk01') {
             $extraElementen = $data['SOAP-ENV:Body']['ns2:zakLk01']['ns2:object']['ns1:extraElementen']['ns1:extraElement'];
         }
         $data = new \Adbar\Dot($data);
 
-        if($messageType == 'zakLk01' && $zaaktype == 'B0360')
-        {
-            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+        if ($messageType == 'zakLk01' && $zaaktype == 'B0360') {
+            $data->set('date', $this->parseDate($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum')));
             $data->merge($this->flattenExtraElements($extraElementen));
-            if($data->has('aangevertype')){
+            if ($data->has('aangevertype')) {
                 $zaaktype = 'B0361';
             }
 
@@ -1137,23 +1137,24 @@ class SOAPService
             $time = new DateTime($data->get('tijdoverlijden'));
 
             $data->set('tijdoverlijden', $time->format('H:i'));
-            if($data->get('natdood') == 'True')
+            if ($data->get('natdood') == 'True') {
                 $data->set('natdood', true);
-            else
+            } else {
                 $data->set('natdood', false);
+            }
 
-            if($data->get('buitenbenelux') == 'true')
+            if ($data->get('buitenbenelux') == 'true') {
                 $data->set('buitenbenelux', true);
-            else
+            } else {
                 $data->set('buitenbenelux', false);
+            }
 
             $data->set('extracts', json_encode($this->filterExtracts($this->getPersonDetails($data->flatten(), ['code', 'amount'], []))));
         }
 
         // Huwelijk
-        if($messageType == 'zakLk01' && $zaaktype == 'B0337')
-        {
-            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+        if ($messageType == 'zakLk01' && $zaaktype == 'B0337') {
+            $data->set('date', $this->parseDate($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum')));
             $data->merge($this->flattenExtraElements($extraElementen));
             $time = new \DateTime($data->get('verbintenisTijd'));
             $dateTime = new \DateTime($data->get('verbintenisDatum').'T'.$time->format('H:i:s'));
@@ -1163,35 +1164,31 @@ class SOAPService
         }
 
         // Birth
-        if($messageType == 'zakLk01' && $zaaktype == 'B0237')
-        {
-            $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
+        if ($messageType == 'zakLk01' && $zaaktype == 'B0237') {
+            $data->set('date', $this->parseDate($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum')));
             $data->merge($this->flattenExtraElements($extraElementen));
             $data->set('children', json_encode($this->filterChildren($this->getPersonDetails($data->flatten(), ['voornamen', 'geboortedatum', 'geboortetijd', 'geslachtsaanduiding'], []))));
 
-            if($data->has('inp.bsn')){
-                $data->set('parent2Bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            if ($data->has('inp.bsn')) {
+                $data->set('parent2Bsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
             } else {
-                $data->set('inp.bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+                $data->set('inp.bsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
             }
         }
 
-
-
         // Emigratie
-        if($messageType == 'zakLk01' && $zaaktype == 'B1425')
-        {
+        if ($messageType == 'zakLk01' && $zaaktype == 'B1425') {
             $data->set(
-                "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#",
-                $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#")));
+                'SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#',
+                $this->parseDate($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#'))
+            );
 
-            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#") == 'Ja'){
-                $relocators = explode(',', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#"));
+            if ($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.8.#') == 'Ja') {
+                $relocators = explode(',', $data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.9.#'));
             }
-            $relocators[] = $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"];
+            $relocators[] = $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn'];
             $relocatorsString = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
-            foreach($relocators as $relocator){
-
+            foreach ($relocators as $relocator) {
                 $relocatorsString .= "<ns10:MeeEmigrant>
                     <ns10:Burgerservicenummer>$relocator</ns10:Burgerservicenummer>
                     <ns10:OmschrijvingAangifte>G</ns10:OmschrijvingAangifte>
@@ -1203,13 +1200,12 @@ class SOAPService
         }
 
         // Verhuizing
-        if($messageType == 'zakLk01' && ($zaaktype == 'B0366' || $zaaktype == 'B0367'))
-        {
+        if ($messageType == 'zakLk01' && ($zaaktype == 'B0366' || $zaaktype == 'B0367')) {
             $wijzeBewoning = $this->getValue($extraElementen, 'wijzeBewoning');
-            if(in_array($wijzeBewoning, $permissionRequired)){
+            if (in_array($wijzeBewoning, $permissionRequired)) {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
-                    'consent'           => "PENDING",
+                    'consent'           => 'PENDING',
                     'consenter'         => ['bsn' => $this->getValue($extraElementen, 'inp.bsn')],
                 ]));
                 $data->set('mainOccupant', json_encode([
@@ -1218,16 +1214,17 @@ class SOAPService
             } else {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => false,
-                    'consent'           => "NOT_APPLICABLE",
+                    'consent'           => 'NOT_APPLICABLE',
                 ]));
             }
             $data->set(
-            "date",
-            $this->parseDate($this->getValue($extraElementen, 'datumVerhuizing')));
+                'date',
+                $this->parseDate($this->getValue($extraElementen, 'datumVerhuizing'))
+            );
 
-            $relocators = [['bsn' => $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"], 'declarationType' => 'REGISTERED']];
-            if($this->getValue($extraElementen,"indMeeverhuizers") !== 'nee'){
-                foreach(explode(',', $this->getValue($extraElementen, 'geselecteerd')) as $relocator){
+            $relocators = [['bsn' => $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn'], 'declarationType' => 'REGISTERED']];
+            if ($this->getValue($extraElementen, 'indMeeverhuizers') !== 'nee') {
+                foreach (explode(',', $this->getValue($extraElementen, 'geselecteerd')) as $relocator) {
                     $relocators[] = ['bsn' => $relocator, 'declarationType' => 'REGISTERED'];
                 }
             }
@@ -1236,94 +1233,88 @@ class SOAPService
         }
 
         // Geheimhouding
-        if($messageType == 'zakLk01' && $zaaktype == 'B0328')
-        {
-            $data->set('requesterBsn',$data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+        if ($messageType == 'zakLk01' && $zaaktype == 'B0328') {
+            $data->set('requesterBsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
 
-            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#") == 'mijzelf')
-                $data->set('bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
-            else{
-                $data->set('bsn', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#"));
-                $data->set("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#", $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"));
+            if ($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.3.#') == 'mijzelf') {
+                $data->set('bsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
+            } else {
+                $data->set('bsn', $data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#'));
+                $data->set('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#', $data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#'));
             }
         }
 
         // Uittreksel
-        if($messageType == 'zakLk01' && $zaaktype == 'B0255')
-        {
-            $data->set('requesterBsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+        if ($messageType == 'zakLk01' && $zaaktype == 'B0255') {
+            $data->set('requesterBsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
 
-            if($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#") == 'mijzelf')
-                $data->set('bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
-            else{
-                $data->set('bsn', $data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#"));
+            if ($data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.4.#') == 'mijzelf') {
+                $data->set('bsn', $data->flatten()['SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn']);
+            } else {
+                $data->set('bsn', $data->get('SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.5.#'));
             }
         }
 
-        if($messageType == 'OntvangenIntakeNotificatie' && ($zaaktype == 'B0366' || $zaaktype == 'B0367'))
-        {
-            $wijzeBewoning = $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING");
-            if(in_array($wijzeBewoning, $permissionRequired)){
+        if ($messageType == 'OntvangenIntakeNotificatie' && ($zaaktype == 'B0366' || $zaaktype == 'B0367')) {
+            $wijzeBewoning = $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING');
+            if (in_array($wijzeBewoning, $permissionRequired)) {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => true,
-                    'consent'           => "PENDING",
-                    'consenter'         => ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")],
+                    'consent'           => 'PENDING',
+                    'consenter'         => ['bsn' => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER')],
                 ]));
                 $data->set('mainOccupant', json_encode([
-                    'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER"),
+                    'bsn' => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER'),
                 ]));
             } else {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => false,
-                    'consent'           => "NOT_APPLICABLE",
+                    'consent'           => 'NOT_APPLICABLE',
                 ]));
             }
 
-            $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => 'REGISTERED'];
+            $relocators[] = ['bsn' => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN'), 'declarationType' => 'REGISTERED'];
 
-            if(
-                isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
-                !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
+            if (
+                isset($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID']) &&
+                !$this->isAssoc($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'])
             ) {
-                foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
+                foreach ($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'] as $coMover) {
                     $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
                 }
-            } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])) {
-                $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
+            } elseif (isset($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'])) {
+                $coMover = $data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'];
                 $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
             }
             $data->set('relocators', json_encode($relocators));
         }
 
-        if($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B1425') {
-
-            $relatives = $this->commonGroundService->getResource(['component' => 'vrijbrp-dossier', 'type' => 'api/v1/relatives', 'id' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]);
-
+        if ($messageType == 'OntvangenIntakeNotificatie' && $zaaktype == 'B1425') {
+            $relatives = $this->commonGroundService->getResource(['component' => 'vrijbrp-dossier', 'type' => 'api/v1/relatives', 'id' => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN')]);
 
             $declarationTypes = [];
-            foreach($relatives['relatives'] as $relative){
+            foreach ($relatives['relatives'] as $relative) {
                 $declarationTypes[$relative['person']['bsn']] = $this->translateDeclarationType($relative['declarationType']);
             }
             $relocators = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
             $relocators .= "<ns10:MeeEmigrant>
-                                        <ns10:Burgerservicenummer>{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")}</ns10:Burgerservicenummer>
-                                        <ns10:OmschrijvingAangifte>{$declarationTypes[$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]}</ns10:OmschrijvingAangifte>
+                                        <ns10:Burgerservicenummer>{$data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN')}</ns10:Burgerservicenummer>
+                                        <ns10:OmschrijvingAangifte>{$declarationTypes[$data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN')]}</ns10:OmschrijvingAangifte>
                                             <ns10:Duur>l</ns10:Duur>
                                     </ns10:MeeEmigrant>";
 
             if (
-                isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
-                !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]))
-            {
-                foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
+                isset($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID']) &&
+                !$this->isAssoc($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'])) {
+                foreach ($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'] as $coMover) {
                     $relocators .= "<ns10:MeeEmigrant>
                                         <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
                                         <ns10:OmschrijvingAangifte>{$declarationTypes[$coMover['BSN']]}</ns10:OmschrijvingAangifte>
                                             <ns10:Duur>l</ns10:Duur>
                                     </ns10:MeeEmigrant>";
                 }
-            } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])){
-                $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
+            } elseif (isset($data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'])) {
+                $coMover = $data->all()['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']['MEEVERHUIZEND_GEZINSLID'];
                 $relocators .= "<ns10:MeeEmigrant>
                                         <ns10:Burgerservicenummer>{$coMover['BSN']}</ns10:Burgerservicenummer>
                                         <ns10:OmschrijvingAangifte>{$declarationTypes[$coMover['BSN']]}</ns10:OmschrijvingAangifte>
@@ -1334,42 +1325,46 @@ class SOAPService
             $relocators .= '</ns10:MeeEmigranten>';
             $data->set('relocators', $relocators);
         }
+
         return $data->all();
     }
 
     public function postRunSpecificCode(array $data, array $namespaces, string $messageType, ?string $zaaktype = null, ?Gateway $gateway)
     {
         $data = new \Adbar\Dot($data);
-        if($messageType == 'OntvangenIntakeNotificatie'){
+        if ($messageType == 'OntvangenIntakeNotificatie') {
             $resource = [
-                'title'     => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Omschrijving"),
-                'filename'  => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Naam"),
-                'content'   => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Inhoud.#"),
+                'title'     => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Omschrijving'),
+                'filename'  => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Naam'),
+                'content'   => $data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.ns2:Bijlagen.ns2:Bijlage.ns2:Inhoud.#'),
             ];
 
             $post = json_encode($resource);
             $component = $this->gatewayService->gatewayToArray($gateway);
-            $url = "{$gateway->getLocation()}/api/v1/dossiers/{$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID")}/documents";
+            $url = "{$gateway->getLocation()}/api/v1/dossiers/{$data->get('SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.FORMULIERID')}/documents";
 
             $result = $this->commonGroundService->callService($component, $url, $post, [], [], false, 'POST');
         }
-
     }
 
     private function isAssoc(array $arr)
     {
-        if (array() === $arr) return false;
+        if ([] === $arr) {
+            return false;
+        }
+
         return array_keys($arr) !== range(0, count($arr) - 1);
     }
 
     private function translateName(string $haalcentraal): string
     {
         $translateTable = [
-            'eigen'  => 'E',
-            'partner'  => 'P',
+            'eigen'          => 'E',
+            'partner'        => 'P',
             'partner_eigen'  => 'V',
             'eigen_partner'  => 'N',
         ];
+
         return isset($translateTable[$haalcentraal]) ? $translateTable[$haalcentraal] : $haalcentraal;
     }
 
@@ -1377,77 +1372,81 @@ class SOAPService
     {
         $translateTable = [
             'vrouw' => 'V',
-            'man'   => 'M'
+            'man'   => 'M',
         ];
+
         return $translateTable[$haalcentraal] ?? 'O';
     }
 
     public function getKinderen(array $person, array $result, array $component): array
     {
-        if(isset($person['_embedded']['kinderen'])){
-            foreach($person['_embedded']['kinderen'] as $kind){
+        if (isset($person['_embedded']['kinderen'])) {
+            foreach ($person['_embedded']['kinderen'] as $kind) {
                 isset($kind['burgerservicenummer']) ? $result[] = $kind['burgerservicenummer'] : null;
             }
-        } elseif(isset($person['kinderen'])) {
-            foreach($person['kinderen'] as $kind){
+        } elseif (isset($person['kinderen'])) {
+            foreach ($person['kinderen'] as $kind) {
                 isset($kind['bsn']) ? $result[] = $kind['bsn'] : null;
             }
-        } elseif(isset($person['_links']['kinderen'])) {
-            foreach($person['_links']['kinderen'] as $kind) {
+        } elseif (isset($person['_links']['kinderen'])) {
+            foreach ($person['_links']['kinderen'] as $kind) {
                 $kindData = $this->commonGroundService->callService($component, $kind['href'], '');
-                if(!is_array($kindData)){
+                if (!is_array($kindData)) {
                     $result[] = json_decode($kindData->getBody()->getContents(), true)['burgerservicenummer'];
                 }
             }
         }
+
         return $result;
     }
 
     public function getOuders(array $person, array $result, array $component): array
     {
-        if(isset($person['_embedded']['ouders'])) {
+        if (isset($person['_embedded']['ouders'])) {
             foreach ($person['_embedded']['ouders'] as $ouder) {
                 isset($ouder['burgerservicenummer']) ? $result[] = $ouder['burgerservicenummer'] : null;
             }
-        } elseif(isset($person['ouders'])) {
-            foreach($person['ouders'] as $ouder){
+        } elseif (isset($person['ouders'])) {
+            foreach ($person['ouders'] as $ouder) {
                 isset($ouder['bsn']) ? $result[] = $ouder['bsn'] : null;
             }
-        } elseif(isset($person['_links']['ouders'])) {
-            foreach($person['_links']['ouders'] as $kind) {
+        } elseif (isset($person['_links']['ouders'])) {
+            foreach ($person['_links']['ouders'] as $kind) {
                 $ouderData = $this->commonGroundService->callService($component, $kind['href'], '');
-                if(!is_array($ouderData)){
+                if (!is_array($ouderData)) {
                     $result[] = json_decode($ouderData->getBody()->getContents(), true)['burgerservicenummer'];
                 }
             }
         }
+
         return $result;
     }
 
     public function getPartners(array $person, array $result, array $component): array
     {
-        if(isset($person['_embedded']['partners'])){
-            foreach($person['_embedded']['partners'] as $partner){
+        if (isset($person['_embedded']['partners'])) {
+            foreach ($person['_embedded']['partners'] as $partner) {
                 isset($partner['burgerservicenummer']) ? $result[] = $partner['burgerservicenummer'] : null;
             }
-        } elseif(isset($person['partners'])) {
-            foreach($person['partners'] as $partner){
+        } elseif (isset($person['partners'])) {
+            foreach ($person['partners'] as $partner) {
                 isset($partner['bsn']) ? $result[] = $partner['bsn'] : null;
             }
-        } elseif(isset($person['_links']['partners'])) {
-            foreach($person['_links']['partners'] as $kind) {
+        } elseif (isset($person['_links']['partners'])) {
+            foreach ($person['_links']['partners'] as $kind) {
                 $partnerData = $this->commonGroundService->callService($component, $kind['href'], '');
-                if(!is_array($partnerData)){
+                if (!is_array($partnerData)) {
                     $result[] = json_decode($partnerData->getBody()->getContents(), true)['burgerservicenummer'];
                 }
             }
         }
+
         return $result;
     }
 
     private function getRelativesQuery(array $person, array $relatives): array
     {
-        $query = ['burgerservicenummer' => implode(',', $relatives), ];
+        $query = ['burgerservicenummer' => implode(',', $relatives)];
 //        if(isset($person['verblijfplaats']['nummeraanduidingIdentificatie'])){
 //            $query['verblijfplaats__nummeraanduidingIdentificatie'] = $person['verblijfplaats']['nummeraanduidingIdentificatie'];
 //        } else {
@@ -1456,7 +1455,6 @@ class SOAPService
         isset($person['verblijfplaats']['huisnummertoevoeging']) ? $query['verblijfplaats__huisnummertoevoeging'] = $person['verblijfplaats']['huisnummertoevoeging'] : null;
         isset($person['verblijfplaats']['huisletter']) ? $query['verblijfplaats__huisletter'] = $person['verblijfplaats']['huisletter'] : null;
 //        }
-
 
         return $query;
     }
@@ -1467,7 +1465,7 @@ class SOAPService
         $component = $this->gatewayService->gatewayToArray($soap->getToEntity()->getGateway());
 
         $response = $this->commonGroundService->callService($component, $url, '', ['expand' => 'partners,ouders,kinderen']);
-        if(is_array($response)){
+        if (is_array($response)) {
             $response = $this->commonGroundService->callService($component, $url, '');
         }
         $data = json_decode($response->getBody()->getContents(), true);
@@ -1478,16 +1476,15 @@ class SOAPService
         $entity['voornamen'] = isset($data['naam']['voornamen']) ? $data['naam']['voornamen'] : null;
         $entity['aanduidingNaamgebruik'] = isset($data['naam']['aanduidingNaamgebruik']) ? $this->translateName($data['naam']['aanduidingNaamgebruik']) : null;
 
-
-
         //@TODO: Geslachtsnaam partner -> bij verwerken partner
 
-        $entity['geslachtsaanduiding'] = isset($data['geslachtsaanduiding']) ? $this->translateGender( $data['geslachtsaanduiding']) : null;
-        if(isset($data['overlijden']['datum']['datum']))
+        $entity['geslachtsaanduiding'] = isset($data['geslachtsaanduiding']) ? $this->translateGender($data['geslachtsaanduiding']) : null;
+        if (isset($data['overlijden']['datum']['datum'])) {
             $overlijdensdatum = new \DateTime($data['geboorte']['datum']['datum']);
+        }
         $entity['overlijdensdatum'] = isset($overlijdensdatum) ? $overlijdensdatum->format('Ymd') : null;
 
-        if(isset($data['geboorte']['datum']['datum'])){
+        if (isset($data['geboorte']['datum']['datum'])) {
             $geboortedatum = new \DateTime($data['geboorte']['datum']['datum']);
         }
         $entity['geboortedatum'] = isset($geboortedatum) ? $geboortedatum->format('Ymd') : null;
@@ -1495,34 +1492,34 @@ class SOAPService
         $entity['geboorteland'] = isset($data['geboorte']['land']['code']) ? $data['geboorte']['land']['code'] : (isset($data['geboorte']['land']['omschrijving']) ? $data['geboorte']['land']['omschrijving'] : null);
 
         $entity['verblijfsadres'] =
-            "<verblijfsadres xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
-                <aoa.identificatie>".(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null)."</aoa.identificatie>
-                <wpl.identificatie  xsi:nil=\"true\"
-                                StUF:noValue=\"geenWaarde\"></wpl.identificatie>
-                <wpl.woonplaatsNaam>". (isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null) ."</wpl.woonplaatsNaam>
-                <gor.openbareRuimteNaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.openbareRuimteNaam>
-                <gor.straatnaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.straatnaam>
-                <aoa.postcode>".(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null) ."</aoa.postcode>
-                <aoa.huisnummer>".(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null)."</aoa.huisnummer>
-                <aoa.huisletter>".(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null)."</aoa.huisletter>
-                <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
-                <inp.locatiebeschrijving xsi:nil=\"true\"
-                                         StUF:noValue=\"nietOndersteund\"></inp.locatiebeschrijving>
-          </verblijfsadres>";
+            '<verblijfsadres xmlns:StUF="http://www.egem.nl/StUF/StUF0301" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <aoa.identificatie>'.(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null).'</aoa.identificatie>
+                <wpl.identificatie  xsi:nil="true"
+                                StUF:noValue="geenWaarde"></wpl.identificatie>
+                <wpl.woonplaatsNaam>'.(isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null).'</wpl.woonplaatsNaam>
+                <gor.openbareRuimteNaam>'.(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null).'</gor.openbareRuimteNaam>
+                <gor.straatnaam>'.(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null).'</gor.straatnaam>
+                <aoa.postcode>'.(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null).'</aoa.postcode>
+                <aoa.huisnummer>'.(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null).'</aoa.huisnummer>
+                <aoa.huisletter>'.(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null).'</aoa.huisletter>
+                <aoa.huisnummertoevoeging>'.(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null).'</aoa.huisnummertoevoeging>
+                <inp.locatiebeschrijving xsi:nil="true"
+                                         StUF:noValue="nietOndersteund"></inp.locatiebeschrijving>
+          </verblijfsadres>';
 
         $entity['correspondentiesadres'] =
-            "<sub.correspondentieAdres xmlns:StUF=\"http://www.egem.nl/StUF/StUF0301\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">
-                <aoa.identificatie>".(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null)."</aoa.identificatie>
-                <wpl.identificatie  xsi:nil=\"true\"
-                                StUF:noValue=\"geenWaarde\"></wpl.identificatie>
-                <wpl.woonplaatsNaam>". (isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null) ."</wpl.woonplaatsNaam>
-                <gor.openbareRuimteNaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.openbareRuimteNaam>
-                <gor.straatnaam>".(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null) ."</gor.straatnaam>
-                <aoa.postcode>".(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null) ."</aoa.postcode>
-                <aoa.huisnummer>".(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null)."</aoa.huisnummer>
-                <aoa.huisletter>".(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null)."</aoa.huisletter>
-                <aoa.huisnummertoevoeging>".(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null)."</aoa.huisnummertoevoeging>
-          </sub.correspondentieAdres>";
+            '<sub.correspondentieAdres xmlns:StUF="http://www.egem.nl/StUF/StUF0301" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <aoa.identificatie>'.(isset($data['verblijfplaats']['adresseerbaarObjectIdentificatie']) ? $data['verblijfplaats']['adresseerbaarObjectIdentificatie'] : null).'</aoa.identificatie>
+                <wpl.identificatie  xsi:nil="true"
+                                StUF:noValue="geenWaarde"></wpl.identificatie>
+                <wpl.woonplaatsNaam>'.(isset($data['verblijfplaats']['woonplaats']) ? $data['verblijfplaats']['woonplaats'] : null).'</wpl.woonplaatsNaam>
+                <gor.openbareRuimteNaam>'.(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null).'</gor.openbareRuimteNaam>
+                <gor.straatnaam>'.(isset($data['verblijfplaats']['straat']) ? $data['verblijfplaats']['straat'] : null).'</gor.straatnaam>
+                <aoa.postcode>'.(isset($data['verblijfplaats']['postcode']) ? $data['verblijfplaats']['postcode'] : null).'</aoa.postcode>
+                <aoa.huisnummer>'.(isset($data['verblijfplaats']['huisnummer']) ? $data['verblijfplaats']['huisnummer'] : null).'</aoa.huisnummer>
+                <aoa.huisletter>'.(isset($data['verblijfplaats']['huisletter']) ? $data['verblijfplaats']['huisletter'] : null).'</aoa.huisletter>
+                <aoa.huisnummertoevoeging>'.(isset($data['verblijfplaats']['huisnummertoevoeging']) ? $data['verblijfplaats']['huisnummertoevoeging'] : null).'</aoa.huisnummertoevoeging>
+          </sub.correspondentieAdres>';
 
         $entity['heeftAlsEchtgenootPartner'] = $this->getRelativesOnAddress($component, $soap, $data, $this->getPartners($data, [], $component), 'partners', $entity['geslachtsnaamPartner'], $entity['voorvoegselGeslachtsnaamPartner']);
         $entity['heeftAlsKinderen'] = $this->getRelativesOnAddress($component, $soap, $data, $this->getKinderen($data, [], $component), 'children');
@@ -1533,13 +1530,12 @@ class SOAPService
 
     private function getRelativesOnAddress(array $component, Soap $soap, array $person, array $relativeBsns, string $type, ?string &$lastname = null, ?string &$lastnamePrefix = null): string
     {
-
         $return = '';
-        if(!$relativeBsns){
+        if (!$relativeBsns) {
             return $return;
         }
 
-        try{
+        try {
             $relatives = $this->commonGroundService->callService(
                 $component,
                 "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
@@ -1551,15 +1547,15 @@ class SOAPService
                 $component,
                 "{$soap->getToEntity()->getGateway()->getLocation()}/{$soap->getToEntity()->getEndpoint()}",
                 '',
-                ['burgerservicenummer' => implode(',', $relativeBsns), ]
+                ['burgerservicenummer' => implode(',', $relativeBsns)]
             );
         }
         $relatives = json_decode($relatives->getBody()->getContents(), true);
-        if(isset($relatives['_embedded']['ingeschrevenpersonen'])){
+        if (isset($relatives['_embedded']['ingeschrevenpersonen'])) {
             $relatives = $relatives['_embedded']['ingeschrevenpersonen'];
         }
-        foreach($relatives as $relative){
-            if(
+        foreach ($relatives as $relative) {
+            if (
                 (
                     isset($relative['geheimhoudingPersoonsgegevens']) &&
                     $relative['geheimhoudingPersoonsgegevens']
@@ -1573,34 +1569,32 @@ class SOAPService
                     $relative['verblijfplaats']['postcode'] == $person['verblijfplaats']['postcode'] &&
                     $relative['verblijfplaats']['huisnummer'] == $person['verblijfplaats']['huisnummer']
                 )
-            ){
+            ) {
                 continue;
             }
             $lastname = isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null;
             $lastnamePrefix = isset($relative['naam']['voorvoegsel']) ? $relative['naam']['voorvoegsel'] : null;
-            if(isset($relative['geboorte']['datum']['datum'])){
+            if (isset($relative['geboorte']['datum']['datum'])) {
                 $geboortedatum = new \DateTime($relative['geboorte']['datum']['datum']);
             }
-            $relativeString = "<gerelateerde StUF:entiteittype=\"NPS\">
-                      <inp.bsn>".(isset($relative['burgerservicenummer']) ? $relative['burgerservicenummer'] : null)."</inp.bsn>
-                      <geslachtsnaam>".(isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null)."</geslachtsnaam>
-                      <voorvoegselGeslachtsnaam>".(isset($relative['naam']['voorvoegsel']) ? $relative['naam']['voorvoegsel'] : null)."</voorvoegselGeslachtsnaam>
-                      <voorletters>".(isset($relative['naam']['voorletters']) ? $relative['naam']['voorletters'] : null)."</voorletters>
-                      <voornamen>".(isset($relative['naam']['voornamen']) ? $relative['naam']['voornamen'] : null)."</voornamen>
-                      <geslachtsaanduiding>". (isset($relative['geslachtsaanduiding']) ? $this->translateGender($relative['geslachtsaanduiding']) : null) ."</geslachtsaanduiding>
-                      <geboortedatum>".(isset($geboortedatum) ? $geboortedatum->format('Ymd') : null)."</geboortedatum>
-                  </gerelateerde>";
-            if($type == 'parents'){
+            $relativeString = '<gerelateerde StUF:entiteittype="NPS">
+                      <inp.bsn>'.(isset($relative['burgerservicenummer']) ? $relative['burgerservicenummer'] : null).'</inp.bsn>
+                      <geslachtsnaam>'.(isset($relative['naam']['geslachtsnaam']) ? $relative['naam']['geslachtsnaam'] : null).'</geslachtsnaam>
+                      <voorvoegselGeslachtsnaam>'.(isset($relative['naam']['voorvoegsel']) ? $relative['naam']['voorvoegsel'] : null).'</voorvoegselGeslachtsnaam>
+                      <voorletters>'.(isset($relative['naam']['voorletters']) ? $relative['naam']['voorletters'] : null).'</voorletters>
+                      <voornamen>'.(isset($relative['naam']['voornamen']) ? $relative['naam']['voornamen'] : null).'</voornamen>
+                      <geslachtsaanduiding>'.(isset($relative['geslachtsaanduiding']) ? $this->translateGender($relative['geslachtsaanduiding']) : null).'</geslachtsaanduiding>
+                      <geboortedatum>'.(isset($geboortedatum) ? $geboortedatum->format('Ymd') : null).'</geboortedatum>
+                  </gerelateerde>';
+            if ($type == 'parents') {
                 $return .= "<inp.heeftAlsOuders StUF:entiteittype=\"NPSNPSOUD\">$relativeString</inp.heeftAlsOuders>";
-            } elseif($type == 'children') {
+            } elseif ($type == 'children') {
                 $return .= "<inp.heeftAlsKinderen StUF:entiteittype=\"NPSNPSKND\">$relativeString</inp.heeftAlsKinderen>";
-            } elseif($type == 'partners'){
+            } elseif ($type == 'partners') {
                 $return .= "<inp.heeftAlsEchtgenootPartner StUF:entiteittype=\"NPSNPSHUW\">$relativeString</inp.heeftAlsEchtgenootPartner>";
             }
             unset($geboortedatum);
         }
-
-
 
         return $return;
     }
