@@ -34,7 +34,7 @@ digid:
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
     x509cert: '%env(DIGID_IDP_CERTIFICATE)%'
   sp:
-    entityId: '%env(trimtrailingslash:APP_URL)%/digid'
+    entityId: '%env(trimtrailingslash:APP_URL)%/saml'
     assertionConsumerService:
       url: '%env(trimtrailingslash:APP_URL)%/digid/SLO/artifact'
       binding: 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-%env(DIGID_ARTIFACT_METHOD)%'
