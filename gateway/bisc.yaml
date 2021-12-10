@@ -202,6 +202,7 @@ App\Entity\Entity:
         description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
         gateway: "@edu_api"
         endpoint: "participants"
+        availableProperties: []
 
     # Medewerker Intake object
     employeeIntake:
