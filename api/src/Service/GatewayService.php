@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use App\Entity\Gateway;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -99,12 +100,30 @@ class GatewayService
         $response->setContent($result->getBody()->getContents());
         $response->headers->replace($result->getHeaders());
         $headers = $result->getHeaders();
-
-        $response->headers->add(['access-control-allow-origin' => '*']);
+        $response = $this->handleCorsHeader($response);
         $response->headers->remove('Server');
         $response->headers->remove('X-Content-Type-Options');
         $response->headers->remove('Set-Cookie');
         $response->setStatusCode($result->getStatusCode());
+
+        return $response;
+    }
+
+    public function handleCorsHeader(Response $response): Response
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $host = $request->headers->get('host');
+
+        $applications = $this->entityManager->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+
+        if (count($applications) > 0) {
+            $response->headers->add(['access-control-allow-origin' => $request->headers->get('Origin')]);
+        } else {
+            $response->headers->remove('access-control-allow-origin');
+        }
 
         return $response;
     }
@@ -242,14 +261,14 @@ class GatewayService
     private function acceptHeaderToSerialiazation(): array
     {
         return [
-            'application/json'    => 'json',
-            'application/ld+json' => 'jsonld',
-            'application/json+ld' => 'jsonld',
+            'application/json'     => 'json',
+            'application/ld+json'  => 'jsonld',
+            'application/json+ld'  => 'jsonld',
             'application/hal+json' => 'jsonhal',
             'application/json+hal' => 'jsonhal',
-            'application/xml'     => 'xml',
-            'text/csv'            => 'csv',
-            'text/yaml'           => 'yaml',
+            'application/xml'      => 'xml',
+            'text/csv'             => 'csv',
+            'text/yaml'            => 'yaml',
         ];
     }
 }
