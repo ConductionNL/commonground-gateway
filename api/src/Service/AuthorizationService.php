@@ -42,6 +42,18 @@ class AuthorizationService
     {
         if ($entity) {
             $scopes['base_scope'] = $method.'.'.$entity->getName();
+            if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
+                $scopes['sub_scopes'] = [];
+                $scopes['sub_scopes'][] = $scopes['base_scope'].'.id';
+                if ($entity->getAvailableProperties()) {
+                    $attributes = $entity->getAttributes()->filter(function (Attribute $attribute) use ($entity) {
+                        return in_array($attribute->getName(), $entity->getAvailableProperties());
+                    });
+                }
+                foreach ($attributes ?? $entity->getAttributes() as $attribute) {
+                    $scopes['sub_scopes'][] = $scopes['base_scope'].'.'.$attribute->getName();
+                }
+            }
         } else {
             $scopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
             $scopes['sub_scope'] = $scopes['base_scope'].'.'.$attribute->getName();
@@ -55,7 +67,7 @@ class AuthorizationService
         $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'])['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
-            foreach ($groups[1]['scopes'] as $scope) {
+            foreach ($groups[0]['scopes'] as $scope) {
                 $scopes[] = $scope['code'];
             }
         }
@@ -87,14 +99,19 @@ class AuthorizationService
         } else {
             $grantedScopes = $this->getScopesForAnonymous();
         }
-        if (in_array($scopes['base_scope'], $grantedScopes) || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))) {
+        if (in_array($scopes['base_scope'], $grantedScopes)
+            || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
+            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))) {
             return;
         }
-        if (!array_key_exists('sub_scope', $scopes)) {
-            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
+        if (array_key_exists('sub_scopes', $scopes)) {
+            $subScopes = '['.implode(', ', $scopes['sub_scopes']).']';
+            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or one of {$subScopes} is required");
+        } elseif (array_key_exists('sub_scope', $scopes)) {
+            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} is required");
         }
 
-        throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} are required");
+        throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
     }
 
     public function serializeAccessDeniedException(string $contentType, SerializerService $serializerService, AccessDeniedException $exception): Response

@@ -734,7 +734,7 @@ App\Entity\Attribute:
         enum: ["Pending", "Accepted", "Rejected"]
         entity: "@student"
         #        required: true # todo: this should be true? but will break a lot of postman calls for now
-        defaultValue: "Accepted" # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
+        defaultValue: "Pending" # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
         searchable: true
     student_civicIntegration:
         name: civicIntegration
