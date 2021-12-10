@@ -88,6 +88,16 @@ class ResponseService
             if (is_array($fields) && !array_key_exists($key, $fields)) {
                 unset($response[$key]);
             }
+
+            // Make sure we filter out properties we are not allowed to see
+            $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
+            if (!empty($attribute)) {
+                try {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                } catch (AccessDeniedException $exception) {
+                    unset($response[$key]);
+                }
+            }
         }
 
         // Let get the internal results
@@ -158,6 +168,12 @@ class ResponseService
 
         $entity = $result->getEntity();
         foreach ($entity->getAttributes() as $attribute) {
+            try {
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+            } catch (AccessDeniedException $exception) {
+                continue;
+            }
+
             $subfields = false;
 
             // Lets deal with fields filtering
@@ -180,6 +196,7 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 try {
+                    // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
                     if (!$this->objectEntityService->checkOwner($result)) {
                         $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
                     }
@@ -322,6 +339,7 @@ class ResponseService
     private function renderFileResult(File $file): array
     {
         return [
+            'id'        => $file->getId()->toString(),
             'name'      => $file->getName(),
             'extension' => $file->getExtension(),
             'mimeType'  => $file->getMimeType(),
