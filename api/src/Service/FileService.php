@@ -7,9 +7,9 @@ use App\Entity\File;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class FileService
 {
@@ -67,7 +67,7 @@ class FileService
             ['content-type' => $file->getMimeType()]
         );
 
-        $name = str_replace(".{$file->getExtension()}", "", $file->getName());
+        $name = str_replace(".{$file->getExtension()}", '', $file->getName());
 
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$name}.{$file->getExtension()}");
         $response->headers->set('Content-Disposition', $disposition);
