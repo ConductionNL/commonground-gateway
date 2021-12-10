@@ -253,7 +253,19 @@ App\Entity\Entity:
         name: document
         description: Een document...
 
-    #TODO: The following objects are urrently not used in release 1, 2 & 3 ? :
+    # ContactMoment object
+    contactMoment:
+        route: "/api/contact_moments"
+        name: contactMoment
+        description: Een dossier (gebeurtenis)...
+
+    # PostalCode object
+    postalCode:
+        route: "/api/postal_codes"
+        name: postalCode
+        description: Een combinatie van een 1000 code van een postcode, en een taalhuis
+
+    #TODO: The following objects are currently not used in release 1, 2 & 3 ? :
     # program object
     program:
         name: program
@@ -268,12 +280,6 @@ App\Entity\Entity:
     courseGroup:
         name: courseGroup
         description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
-
-    # participation object
-    contactMoment:
-        route: "/api/contact_moments"
-        name: contactMoment
-        description: Een dossier (gebeurtenis)...
 
 App\Entity\Attribute:
     # User attributes
@@ -722,14 +728,6 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
         persistToGateway: true
-    student_status:
-        name: status
-        type: string
-        enum: ["Pending", "Accepted", "Rejected"]
-        entity: "@student"
-        #        required: true # todo: this should be true? but will break a lot of postman calls for now
-        defaultValue: "Accepted" # todo: or use a defaultValue somehow? geaccepteerd, because this will be the default in most cases?
-        searchable: true
     student_civicIntegration:
         name: civicIntegration
         type: object
@@ -826,8 +824,8 @@ App\Entity\Attribute:
     studentIntake_status:
         name: status
         type: string
-        enum: ["REFERRED", "ACTIVE", "COMPLETED"]
-        defaultValue: "REFERRED"
+        enum: ["PENDING", "ACCEPTED", "REJECTED"]
+        defaultValue: "PENDING"
         entity: "@studentIntake"
         searchable: true
     studentIntake_referringOrganization:
@@ -1530,14 +1528,14 @@ App\Entity\Attribute:
         required: true
         entity: "@document"
         object: "@student"
-    #        inversedBy: '@student_documents' #todo
+    #        inversedBy: '@student_documents' #todo ?
     document_file:
         name: file
         type: file
         required: true
         #        multiple: true
         maxFileSize: 550000
-        fileTypes:
+        fileTypes: # see function mimeToExt() in ValidationService 
             [
                 "application/pdf",
                 "text/plain",
@@ -1556,7 +1554,7 @@ App\Entity\Attribute:
             ]
         entity: "@document"
 
-    # Contact Moment properties
+    # ContactMoment properties
     contactMoment_employee:
         name: employee
         type: object
@@ -1594,7 +1592,22 @@ App\Entity\Attribute:
         required: true
         entity: "@contactMoment"
 
+    # PostalCode properties
+    postalCode_code:
+        name: code
+        type: integer
+        required: true
+        entity: "@postalCode"
+        searchable: true
+    postalCode_languageHouse:
+        name: languageHouse
+        type: object
+        required: true
+        entity: "@postalCode"
+        object: "@organization"
+
     #TODO: Currently not used in release 1, 2 & 3 ?
+    #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
     # course properties
     course_name:
         name: name

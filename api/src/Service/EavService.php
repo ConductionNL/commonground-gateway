@@ -190,6 +190,18 @@ class EavService
         // Set default responseType
         $responseType = Response::HTTP_OK;
 
+        // TODO: replace this after branches merge, this should be in generateResult function then!
+        if (empty($this->session->get('activeOrganization'))) {
+            $host = $request->headers->get('host');
+            if (in_array($host, ['localhost', 'backend-bisc-dev.commonground.nu', 'staging.taalhuizen-bisc.commonground.nu', 'acceptatietaalhuizen-bisc.commonground.nu'])) {
+                $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
+                if (count($groups) == 1) {
+                    $this->session->set('activeOrganization', $groups[0]['organization']);
+                    $this->session->set('organizations', [$groups[0]['organization']]);
+                }
+            }
+        }
+
         // Lets handle the entity
         $entity = $this->getEntity($requestBase['path']);
         // What if we canot find an entity?
@@ -291,7 +303,6 @@ class EavService
         if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
             $responseType = Response::HTTP_BAD_REQUEST;
         }
-
         // Let seriliaze the shizle
         $options = [];
 
@@ -905,10 +916,6 @@ class EavService
         // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
         if (!is_null($result->getEntity()->getAvailableProperties())) {
             $response = array_filter($response, function ($propertyName) use ($result) {
-                if (str_contains($propertyName, '@gateway/')) {
-                    return true;
-                }
-
                 return in_array($propertyName, $result->getEntity()->getAvailableProperties());
             }, ARRAY_FILTER_USE_KEY);
         }
@@ -922,6 +929,16 @@ class EavService
         foreach ($response as $key => $value) {
             if (is_array($fields) && !array_key_exists($key, $fields)) {
                 unset($response[$key]);
+            }
+
+            // Make sure we filter out properties we are not allowed to see
+            $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
+            if (!empty($attribute)) {
+                try {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                } catch (AccessDeniedException $exception) {
+                    unset($response[$key]);
+                }
             }
         }
 
@@ -992,6 +1009,12 @@ class EavService
 
         $entity = $result->getEntity();
         foreach ($entity->getAttributes() as $attribute) {
+            try {
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+            } catch (AccessDeniedException $exception) {
+                continue;
+            }
+
             $subfields = false;
 
             // Lets deal with fields filtering
@@ -1006,13 +1029,15 @@ class EavService
 
             // Only render the attributes that are used && don't render attributes that are writeOnly
             if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
-                || $attribute->getWriteOnly()) {
+                || $attribute->getWriteOnly()
+            ) {
                 continue;
             }
 
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 try {
+                    // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
                     if (!$this->objectEntityService->checkOwner($result)) {
                         $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
                     }
@@ -1153,6 +1178,7 @@ class EavService
     private function renderFileResult(File $file): array
     {
         return [
+            'id'        => $file->getId()->toString(),
             'name'      => $file->getName(),
             'extension' => $file->getExtension(),
             'mimeType'  => $file->getMimeType(),

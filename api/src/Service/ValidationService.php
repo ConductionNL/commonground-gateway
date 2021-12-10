@@ -210,7 +210,7 @@ class ValidationService
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         try {
-            if (!$this->objectEntityService->checkOwner($objectEntity)) {
+            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
             }
         } catch (AccessDeniedException $e) {
