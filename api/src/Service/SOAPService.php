@@ -1148,7 +1148,7 @@ class SOAPService
             else
                 $data->set('natdood', false);
 
-            if($data->get('buitenbenelux') == 'true')
+            if($data->get('buitenbenelux') == 'True')
                 $data->set('buitenbenelux', true);
             else
                 $data->set('buitenbenelux', false);
