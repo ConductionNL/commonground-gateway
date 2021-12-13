@@ -346,7 +346,7 @@ class EavService
                 $this->em->flush();
                 $this->session->set('application', $localhostApplication);
                 //                var_dump('Created Localhost Application');
-            } else {
+            } elseif ($this->parameterBag->get('app_auth')) {
                 $this->session->set('application', null);
                 $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
