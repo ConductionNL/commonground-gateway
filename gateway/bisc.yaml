@@ -855,6 +855,13 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@studentIntake"
+    studentIntake_referringPerson:
+        name: referringPerson
+        type: object
+        entity: "@studentIntake"
+        object: "@person"
+        cascade: true
+#        cascadeDelete: true # TODO?
     studentIntake_foundVia:
         name: foundVia
         type: string
