@@ -189,7 +189,7 @@ class Gateway
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(nullable=true, type="string", length=255)
      */
     private string $type = 'json';
 
