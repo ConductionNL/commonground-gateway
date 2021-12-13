@@ -1562,12 +1562,6 @@ App\Entity\Attribute:
         entity: "@document"
 
     # ContactMoment properties
-    contactMoment_employee:
-        name: employee
-        type: object
-        required: true
-        entity: "@contactMoment"
-        object: "@employee"
     contactMoment_student:
         name: student
         type: object
