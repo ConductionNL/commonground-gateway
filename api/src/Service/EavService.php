@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -296,6 +297,11 @@ class EavService
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
             $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        // Lets see if we have to log an error
+        if ($this->responseService->checkForErrorResponse($result, $resultConfig['responseType'])) {
+            $this->responseService->createRequestLog($request, $entity ?? null, $result, $response, $object ?? null);
         }
 
         return $response;
@@ -876,6 +882,17 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
+//        try {
+//            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
+//                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+//            }
+//        } catch (AccessDeniedException $e) {
+//            $objectEntity->addError($attribute->getName(), $e->getMessage());
+//
+//            return $objectEntity;
+//        }
+
         // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
