@@ -298,6 +298,11 @@ class EavService
             $response->headers->set('Content-Disposition', $disposition);
         }
 
+        // Lets see if we have to log an error
+        if ($this->responseService->checkForErrorResponse($result, $resultConfig['responseType'])) {
+            $this->responseService->createRequestLog($request, $entity ?? null, $result, $response, $object ?? null);
+        }
+
         return $response;
     }
 
