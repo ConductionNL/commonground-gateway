@@ -855,6 +855,13 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@studentIntake"
+    studentIntake_referringPerson:
+        name: referringPerson
+        type: object
+        entity: "@studentIntake"
+        object: "@person"
+        cascade: true
+#        cascadeDelete: true # TODO?
     studentIntake_foundVia:
         name: foundVia
         type: string
@@ -1555,12 +1562,6 @@ App\Entity\Attribute:
         entity: "@document"
 
     # ContactMoment properties
-    contactMoment_employee:
-        name: employee
-        type: object
-        required: true
-        entity: "@contactMoment"
-        object: "@employee"
     contactMoment_student:
         name: student
         type: object
