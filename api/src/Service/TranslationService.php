@@ -8,7 +8,6 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class TranslationService
 {
-
     private SessionInterface $sessionInterface;
 
     public function __construct(SessionInterface $sessionInterface)
@@ -188,10 +187,10 @@ class TranslationService
 
         $callback = function ($match) use ($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
-                case $escapeChar . $escapeChar:
+                case $escapeChar.$escapeChar:
                     return $escapeChar;
 
-                case $escapeChar . '{':
+                case $escapeChar.'{':
                     return '{';
 
                 default:
