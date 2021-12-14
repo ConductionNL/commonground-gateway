@@ -827,12 +827,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/digid-bundle.git",
-                "reference": "7a1a435a61b79be4eefd7a5763912182432bfbf8"
+                "reference": "19c921d51e10bf70b32190cccf7c375aa619ddf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/7a1a435a61b79be4eefd7a5763912182432bfbf8",
-                "reference": "7a1a435a61b79be4eefd7a5763912182432bfbf8",
+                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/19c921d51e10bf70b32190cccf7c375aa619ddf9",
+                "reference": "19c921d51e10bf70b32190cccf7c375aa619ddf9",
                 "shasum": ""
             },
             "require": {
@@ -880,7 +880,7 @@
                 "issues": "https://github.com/ConductionNL/digid-bundle/issues",
                 "source": "https://github.com/ConductionNL/digid-bundle"
             },
-            "time": "2021-12-13T15:20:44+00:00"
+            "time": "2021-12-14T13:16:02+00:00"
         },
         {
             "name": "conduction/samlbundle",
@@ -10493,5 +10493,5 @@
         "ext-iconv": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
