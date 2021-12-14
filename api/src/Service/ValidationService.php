@@ -463,6 +463,9 @@ class ValidationService
                     $subObject->setOrganization($this->session->get('activeOrganization'));
                     $subObject->setApplication($this->session->get('application'));
                 }
+                if ($subObject->getEntity()->getFunction() === 'organization') {
+                    $subObject->setOrganization($subObject->getUri());
+                }
 
                 // object toevoegen
                 $saveSubObjects->add($subObject);
@@ -888,7 +891,12 @@ class ValidationService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
-                    $subObject->setOrganization($this->session->get('activeOrganization'));
+                    if ($attribute->getObject()->getFunction() === 'organization') {
+                        $this->em->persist($subObject);
+                        $subObject->setOrganization($this->createUri($subObject));
+                    } else {
+                        $subObject->setOrganization($this->session->get('activeOrganization'));
+                    }
                     $subObject->setApplication($this->session->get('application'));
                 } else {
                     $subObject = $valueObject->getValue();

@@ -86,6 +86,7 @@ App\Entity\Entity:
 
     # Organization Object
     organization:
+        function: "organization"
         route: "/api/organizations"
         name: organizations
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
@@ -861,7 +862,7 @@ App\Entity\Attribute:
         entity: "@studentIntake"
         object: "@person"
         cascade: true
-#        cascadeDelete: true # TODO?
+        cascadeDelete: true
     studentIntake_foundVia:
         name: foundVia
         type: string
@@ -1562,6 +1563,11 @@ App\Entity\Attribute:
         entity: "@document"
 
     # ContactMoment properties
+    contactMoment_employee:
+        name: employee
+        type: object
+        entity: "@contactMoment"
+        object: "@employee"
     contactMoment_student:
         name: student
         type: object

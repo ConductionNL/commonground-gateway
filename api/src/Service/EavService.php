@@ -168,6 +168,7 @@ class EavService
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
+            // if entity->function == 'organization', organization for this ObjectEntity will be changed later in handleMutation
             $object->setOrganization($this->session->get('activeOrganization'));
             $object->setApplication($this->session->get('application'));
 
@@ -761,6 +762,10 @@ class EavService
         }
 
         // Saving the data
+        $this->em->persist($object);
+        if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization') {
+            $object->setOrganization($object->getUri());
+        }
         $this->em->persist($object);
         $this->em->flush();
 
