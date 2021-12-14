@@ -425,7 +425,7 @@ class EavService
         return [
             'result'       => $result,
             'responseType' => $responseType,
-            'object'       => $object ?? null
+            'object'       => $object ?? null,
         ];
     }
 
