@@ -35,21 +35,21 @@ class EavService
     private ValidationService $validationService;
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
-    //    private AuthorizationService $authorizationService;
+    private AuthorizationService $authorizationService;
     private ConvertToGatewayService $convertToGatewayService;
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
-        //        $this->authorizationService = $authorizationService;
+        $this->authorizationService = $authorizationService;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
@@ -392,6 +392,22 @@ class EavService
                         'data'    => ['id' => $requestBase['id']],
                     ];
                 }
+            }
+        }
+
+        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
+        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+            try {
+                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+            } catch (AccessDeniedException $e) {
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => $e->getMessage(),
+                    'type'    => 'Forbidden',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
             }
         }
 
