@@ -6,7 +6,7 @@ metadata:
   labels:
   {{- include "commonground-gateway.labels" . | nindent 4 }}
 data:
-  auth-enabled: {{ .Values.security.authEnabled | quote | default "true" }}
+  auth-enabled: {{ .Values.security.authEnabled | default "true" | quote }}
   app-version: {{ .Values.config.version | quote }}
   app-cors-allow-origin: {{ .Values.config.corsAllowOrigin | quote }}
   cache: {{ .Values.config.cache | quote }}

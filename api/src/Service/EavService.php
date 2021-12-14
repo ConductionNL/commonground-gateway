@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -196,7 +197,7 @@ class EavService
         // What if we canot find an entity?
         if (is_array($entity)) {
             $resultConfig['responseType'] = Response::HTTP_BAD_REQUEST;
-            $result = $entity;
+            $resultConfig['result'] = $entity;
             $entity = null;
         }
 
@@ -219,7 +220,7 @@ class EavService
 //            }
 //        }
 
-        if (!isset($result)) {
+        if (!isset($resultConfig['result'])) {
             $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
         }
 
@@ -231,6 +232,7 @@ class EavService
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
         }
+
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
 
@@ -296,6 +298,11 @@ class EavService
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
             $response->headers->set('Content-Disposition', $disposition);
+        }
+
+        // Lets see if we have to log an error
+        if ($this->responseService->checkForErrorResponse($resultConfig['result'], $resultConfig['responseType'])) {
+            $this->responseService->createRequestLog($request, $entity ?? null, $resultConfig['result'], $response, $resultConfig['object'] ?? null);
         }
 
         return $response;
@@ -365,7 +372,7 @@ class EavService
         }
 
         // Lets create an object
-        if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
+        if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
             $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
@@ -392,14 +399,14 @@ class EavService
 
         // Lets setup a switchy kinda thingy to handle the input (in handle functions)
         // Its a enity endpoint
-        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+        if ($requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
             // Lets handle all different type of endpoints
             $endpointResult = $this->handleEntityEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
             ]);
         }
         // its an collection endpoind
-        elseif ($entity && $responseType == Response::HTTP_OK) {
+        elseif ($responseType == Response::HTTP_OK) {
             $endpointResult = $this->handleCollectionEndpoint($request, [
                 'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
                 'entity' => $entity, 'extension' => $requestBase['extension'],
@@ -418,6 +425,7 @@ class EavService
         return [
             'result'       => $result,
             'responseType' => $responseType,
+            'object'       => $object ?? null,
         ];
     }
 
@@ -876,6 +884,17 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
+//        try {
+//            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
+//                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+//            }
+//        } catch (AccessDeniedException $e) {
+//            $objectEntity->addError($attribute->getName(), $e->getMessage());
+//
+//            return $objectEntity;
+//        }
+
         // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();

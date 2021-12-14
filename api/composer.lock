@@ -888,12 +888,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/saml-bundle.git",
-                "reference": "f9dfffae64abece21e67c302eedeb21d5e5f2cfa"
+                "reference": "8d8eb8a4fa362b9b678fc288ead2880a43154714"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/f9dfffae64abece21e67c302eedeb21d5e5f2cfa",
-                "reference": "f9dfffae64abece21e67c302eedeb21d5e5f2cfa",
+                "url": "https://api.github.com/repos/ConductionNL/saml-bundle/zipball/8d8eb8a4fa362b9b678fc288ead2880a43154714",
+                "reference": "8d8eb8a4fa362b9b678fc288ead2880a43154714",
                 "shasum": ""
             },
             "require": {
@@ -939,7 +939,7 @@
                 "issues": "https://github.com/ConductionNL/ConductionCommonGroundBundle/issues",
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
-            "time": "2021-12-10T14:06:02+00:00"
+            "time": "2021-12-13T18:14:43+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -10493,5 +10493,5 @@
         "ext-iconv": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
