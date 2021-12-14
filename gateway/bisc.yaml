@@ -862,7 +862,7 @@ App\Entity\Attribute:
         entity: "@studentIntake"
         object: "@person"
         cascade: true
-#        cascadeDelete: true # TODO?
+        cascadeDelete: true
     studentIntake_foundVia:
         name: foundVia
         type: string
