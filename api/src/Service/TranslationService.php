@@ -3,10 +3,19 @@
 namespace App\Service;
 
 use DateTime;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class TranslationService
 {
+
+    private SessionInterface $sessionInterface;
+
+    public function __construct(SessionInterface $sessionInterface)
+    {
+        $this->sessionInterface = $sessionInterface;
+    }
+
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array
     {
         $result = [];
@@ -98,6 +107,8 @@ class TranslationService
         // Session example implementation
         $variables['session_organization_id'] = $faker->uuid();
 
+        $variables['bsn'] = $this->sessionInterface->get('bsn');
+
         return $variables;
     }
 
@@ -177,10 +188,10 @@ class TranslationService
 
         $callback = function ($match) use ($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
-                case $escapeChar.$escapeChar:
+                case $escapeChar . $escapeChar:
                     return $escapeChar;
 
-                case $escapeChar.'{':
+                case $escapeChar . '{':
                     return '{';
 
                 default:
