@@ -386,6 +386,10 @@ class ResponseService
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
+        //TODO: this is a weird fix, find out why it is needed;
+        if ($this->session->get('application')) {
+            $this->em->persist($this->session->get('application'));
+        }
         $requestLog->setApplication($this->session->get('application'));
         $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser(!is_string($this->tokenStorage->getToken()->getUser()) ? $this->tokenStorage->getToken()->getUser()->getUserIdentifier() : $this->tokenStorage->getToken()->getUser());
