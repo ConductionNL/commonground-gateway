@@ -86,6 +86,7 @@ App\Entity\Entity:
 
     # Organization Object
     organization:
+        function: "organization"
         route: "/api/organizations"
         name: organizations
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.

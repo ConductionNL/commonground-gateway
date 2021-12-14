@@ -116,6 +116,17 @@ class Entity
     private $description;
 
     /**
+     * @var string The function of this Entity. This is used for making specific entity types/functions work differently
+     *
+     * @example organization
+     *
+     * @Assert\Choice({"organization", "user", "userGroup"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string")
+     */
+    private $function = 'string';
+
+    /**
      * wheter or not the properties of the original object are automaticly include.
      *
      * @Groups({"read","write"})
@@ -337,6 +348,18 @@ class Entity
         $name = strtolower($name);
 
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getFunction(): ?string
+    {
+        return $this->function;
+    }
+
+    public function setFunction(?string $function): self
+    {
+        $this->function = $function;
 
         return $this;
     }
