@@ -380,6 +380,9 @@ class ResponseService
         //        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
         $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
 
+        if ($request->getMethod() == 'POST' && $object) {
+            $this->em->persist($object);
+        }
         $requestLog->setObjectEntity($object);
         $requestLog->setEntity($entity ?? ($object ? $object->getEntity() : null));
         $requestLog->setDocument(null); // todo
