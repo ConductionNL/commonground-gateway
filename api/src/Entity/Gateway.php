@@ -447,6 +447,14 @@ class Gateway
     private $headers = [];
 
     /**
+     * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $translationConfig = [];
+
+    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY")
      */
@@ -476,6 +484,7 @@ class Gateway
             'apikey'                         => $this->getApikey(),
             'documentation'                  => $this->getDocumentation(),
             'headers'                        => $this->getHeaders(),
+            'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
         ];
 
@@ -490,6 +499,18 @@ class Gateway
     public function setId(UuidInterface $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getTranslationConfig(): ?array
+    {
+        return $this->translationConfig;
+    }
+
+    public function setTranslationConfig(?array $translationConfig): self
+    {
+        $this->translationConfig = $translationConfig;
 
         return $this;
     }

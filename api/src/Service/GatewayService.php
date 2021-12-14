@@ -21,14 +21,16 @@ class GatewayService
     private TokenStorageInterface $tokenStorage;
     private AuthenticationService $authenticationService;
     private RequestStack $requestStack;
+    private TranslationService $translationService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, RequestStack $requestStack)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, RequestStack $requestStack, TranslationService $translationService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->tokenStorage = $tokenStorage;
         $this->authenticationService = $authenticationService;
         $this->requestStack = $requestStack;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -52,6 +54,18 @@ class GatewayService
 
         $newHeaders = $gateway->getHeaders();
         $newHeaders['accept'] = $headers['accept'][0];
+
+        //update query params
+        if (array_key_exists('query', $gateway->getTranslationConfig())) {
+            $query = array_merge($query, $gateway->getTranslationConfig()['query']);
+        }
+
+        //translate query params
+        foreach ($query as $key => &$value) {
+            if (!is_array($value)) {
+                $value = $this->translationService->parse($value);
+            }
+        }
 
         $result = $this->commonGroundService->callService($component, $url, $content, $query, $newHeaders, false, $method);
 
