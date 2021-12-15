@@ -779,7 +779,7 @@ class EavService
 
         // Saving the data
         $this->em->persist($object);
-        if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization') {
+        if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
             $object->setOrganization($object->getUri());
         }
         $this->em->persist($object);
