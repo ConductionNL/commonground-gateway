@@ -183,10 +183,14 @@ class ValidationService
                 $promise = $this->createPromise($objectEntity, $post);
                 $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
                 $objectEntity->addPromise($promise);
-            } elseif (!$objectEntity->getUri()) {
-                // Lets make sure we always set the uri
-                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
-                $objectEntity->setUri($this->createUri($objectEntity));
+            } else {
+                // Notify notification component
+                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
+                if (!$objectEntity->getUri()) {
+                    // Lets make sure we always set the uri
+                    $this->em->persist($objectEntity); // So the object has an id to set with createUri...
+                    $objectEntity->setUri($this->createUri($objectEntity));
+                }
             }
         }
 
