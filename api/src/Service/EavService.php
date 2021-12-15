@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
@@ -18,6 +19,7 @@ use Exception;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -37,8 +39,10 @@ class EavService
     private ConvertToGatewayService $convertToGatewayService;
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
+    private ResponseService $responseService;
+    private ParameterBagInterface $parameterBag;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -49,6 +53,8 @@ class EavService
         $this->convertToGatewayService = $convertToGatewayService;
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
+        $this->responseService = $responseService;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -162,8 +168,9 @@ class EavService
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
             $object->setEntity($entity);
+            // if entity->function == 'organization', organization for this ObjectEntity will be changed later in handleMutation
             $object->setOrganization($this->session->get('activeOrganization'));
-            //todo set application
+            $object->setApplication($this->session->get('application'));
 
             return $this->objectEntityService->handleOwner($object);
         }
@@ -184,128 +191,41 @@ class EavService
     {
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
-        $result = $requestBase['result'];
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
-
-        // Set default responseType
-        $responseType = Response::HTTP_OK;
-
-        // TODO: replace this after branches merge, this should be in generateResult function then!
-        if (empty($this->session->get('activeOrganization'))) {
-            $host = $request->headers->get('host');
-            if (in_array($host, ['localhost', 'backend-bisc-dev.commonground.nu', 'staging.taalhuizen-bisc.commonground.nu', 'acceptatietaalhuizen-bisc.commonground.nu'])) {
-                $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
-                if (count($groups) == 1) {
-                    $this->session->set('activeOrganization', $groups[0]['organization']);
-                    $this->session->set('organizations', [$groups[0]['organization']]);
-                }
-            }
-        }
-
-        // Lets handle the entity
         $entity = $this->getEntity($requestBase['path']);
+        $body = []; // Lets default
+
         // What if we canot find an entity?
         if (is_array($entity)) {
-            $responseType = Response::HTTP_BAD_REQUEST;
-            $result = $entity;
+            $resultConfig['responseType'] = Response::HTTP_BAD_REQUEST;
+            $resultConfig['result'] = $entity;
             $entity = null;
-        }
-
-        // Lets create an object
-        if ($entity && ($requestBase['id'] || $request->getMethod() == 'POST')) {
-            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
-            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
-                $responseType = Response::HTTP_BAD_REQUEST;
-                $result = $object;
-                $object = null;
-            } // Lets check if the user is allowed to view/edit this resource.
-            elseif (!$this->objectEntityService->checkOwner($object)) {
-                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
-                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
-                    $object = null; // Needed so we return the error and not the object!
-                    $responseType = Response::HTTP_FORBIDDEN;
-                    $result = [
-                        'message' => 'You are forbidden to view or edit this resource.',
-                        'type'    => 'Forbidden',
-                        'path'    => $entity->getName(),
-                        'data'    => ['id' => $requestBase['id']],
-                    ];
-                }
-            }
-        }
-
-        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
-        if ($entity && ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object))) {
-            try {
-                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
-            } catch (AccessDeniedException $e) {
-                $responseType = Response::HTTP_FORBIDDEN;
-                $result = [
-                    'message' => $e->getMessage(),
-                    'type'    => 'Forbidden',
-                    'path'    => $entity->getName(),
-                    'data'    => [],
-                ];
-            }
         }
 
         // Get a body
         if ($request->getContent()) {
+            //@todo support xml messages
             $body = json_decode($request->getContent(), true);
         }
-        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
-        elseif (($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') && $responseType == Response::HTTP_OK) {
-            // get other input values from form-data and put it in $body ($request->get('name'))
-            $body = $this->handleFormDataBody($request, $entity);
+//        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
+//        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
+//            // get other input values from form-data and put it in $body ($request->get('name'))
+//            $body = $this->handleFormDataBody($request, $entity);
+//
+//            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
+//            if (array_key_exists('result', $formDataResult)) {
+//                $result = $formDataResult['result'];
+//                $responseType = Response::HTTP_BAD_REQUEST;
+//            } else {
+//                $object = $formDataResult;
+//            }
+//        }
 
-            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
-            if (is_null($formDataResult)) {
-                $result = [
-                    'message' => 'Please provide a body when doing a POST or PUT call.',
-                    'type'    => 'Bad Request',
-                    'path'    => $entity->getName(),
-                    'data'    => [],
-                ];
-                $responseType = Response::HTTP_BAD_REQUEST;
-            } elseif (array_key_exists('result', $formDataResult)) {
-                $result = $formDataResult['result'];
-                $responseType = Response::HTTP_BAD_REQUEST;
-            } else {
-                $object = $formDataResult;
-            }
+        if (!isset($resultConfig['result'])) {
+            $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
         }
 
-        // Lets allow for filtering specific fields
-        $fields = $this->getRequestFields($request);
-
-        // Lets setup a switchy kinda thingy to handle the input (in handle functions)
-        // Its a enity endpoint
-        if ($entity && $requestBase['id'] && isset($object) && $object instanceof ObjectEntity && $responseType == Response::HTTP_OK) {
-            // Lets handle all different type of endpoints
-            $endpointResult = $this->handleEntityEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-            ]);
-        }
-        // its an collection endpoind
-        elseif ($entity && $responseType == Response::HTTP_OK) {
-            $endpointResult = $this->handleCollectionEndpoint($request, [
-                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
-                'entity' => $entity, 'extension' => $requestBase['extension'],
-            ]);
-        }
-        if (isset($endpointResult)) {
-            $result = $endpointResult['result'];
-            $responseType = $endpointResult['responseType'];
-        }
-
-        // If we have an error we want to set the responce type to error
-        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
-            $responseType = Response::HTTP_BAD_REQUEST;
-        }
-        // Let seriliaze the shizle
         $options = [];
-
         switch ($contentType) {
             case 'text/csv':
                 $options = [
@@ -314,7 +234,9 @@ class EavService
                 ];
         }
 
-        $result = $this->serializerService->serialize(new ArrayCollection($result), $requestBase['renderType'], $options);
+        // Lets seriliaze the shizle
+        $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
+
         if ($contentType === 'text/csv') {
             $replacements = [
                 '/student\.person.givenName/'                        => 'Voornaam',
@@ -366,7 +288,7 @@ class EavService
         // Let return the shizle
         $response = new Response(
             $result,
-            $responseType,
+            $resultConfig['responseType'],
             ['content-type' => $contentType]
         );
 
@@ -379,7 +301,149 @@ class EavService
             $response->headers->set('Content-Disposition', $disposition);
         }
 
+        // Lets see if we have to log an error
+        if ($this->responseService->checkForErrorResponse($resultConfig['result'], $resultConfig['responseType'])) {
+            $this->responseService->createRequestLog($request, $entity ?? null, $resultConfig['result'], $response, $resultConfig['object'] ?? null);
+        }
+
         return $response;
+    }
+
+    /**
+     * Handles an api request.
+     *
+     * @param Request $request
+     *
+     * @throws Exception
+     *
+     * @return Response
+     */
+    public function generateResult(Request $request, Entity $entity, array $requestBase, ?array $body = []): array
+    {
+        // Lets get our base stuff
+        $result = $requestBase['result'];
+
+        // Set default responseType
+        $responseType = Response::HTTP_OK;
+
+        // Get the application by searching for an application with a domain that matches the host of this request
+        $host = $request->headers->get('host');
+        // TODO: use a sql query instead of array_filter for finding the correct application
+        //        $application = $this->em->getRepository('App:Application')->findByDomain($host);
+        //        if (!empty($application)) {
+        //            $this->session->set('application', $application);
+        //        }
+        $applications = $this->em->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+        if (count($applications) == 1) {
+            $this->session->set('application', $applications[0]);
+        } else {
+            //            var_dump('no application found');
+            if ($host == 'localhost') {
+                $localhostApplication = new Application();
+                $localhostApplication->setName('localhost');
+                $localhostApplication->setDescription('localhost application');
+                $localhostApplication->setDomains(['localhost']);
+                $localhostApplication->setPublic('');
+                $localhostApplication->setSecret('');
+                $localhostApplication->setOrganization('localhostOrganization');
+                $this->em->persist($localhostApplication);
+                $this->em->flush();
+                $this->session->set('application', $localhostApplication);
+            //                var_dump('Created Localhost Application');
+            } else {
+                $this->session->set('application', null);
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => 'No application found with domain '.$host,
+                    'type'    => 'Forbidden',
+                    'path'    => $host,
+                    'data'    => ['host' => $host],
+                ];
+            }
+        }
+
+        if (!$this->session->get('activeOrganization') && $this->session->get('application')) {
+            $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
+        }
+        if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
+            $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
+        }
+
+        // Lets create an object
+        if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                $responseType = Response::HTTP_BAD_REQUEST;
+                $result = $object;
+                $object = null;
+            } // Lets check if the user is allowed to view/edit this resource.
+            elseif (!$this->objectEntityService->checkOwner($object)) {
+                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
+                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
+                    $object = null; // Needed so we return the error and not the object!
+                    $responseType = Response::HTTP_FORBIDDEN;
+                    $result = [
+                        'message' => 'You are forbidden to view or edit this resource.',
+                        'type'    => 'Forbidden',
+                        'path'    => $entity->getName(),
+                        'data'    => ['id' => $requestBase['id']],
+                    ];
+                }
+            }
+        }
+
+        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
+        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+            try {
+                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+            } catch (AccessDeniedException $e) {
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => $e->getMessage(),
+                    'type'    => 'Forbidden',
+                    'path'    => $entity->getName(),
+                    'data'    => [],
+                ];
+            }
+        }
+
+        // Lets allow for filtering specific fields
+        $fields = $this->getRequestFields($request);
+
+        // Lets setup a switchy kinda thingy to handle the input (in handle functions)
+        // Its a enity endpoint
+        if ($requestBase['id'] && isset($object) && $object instanceof ObjectEntity) {
+            // Lets handle all different type of endpoints
+            $endpointResult = $this->handleEntityEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+            ]);
+        }
+        // its an collection endpoind
+        elseif ($responseType == Response::HTTP_OK) {
+            $endpointResult = $this->handleCollectionEndpoint($request, [
+                'object' => $object ?? null, 'body' => $body ?? null, 'fields' => $fields, 'path' => $requestBase['path'],
+                'entity' => $entity, 'extension' => $requestBase['extension'],
+            ]);
+        }
+        if (isset($endpointResult)) {
+            $result = $endpointResult['result'];
+            $responseType = $endpointResult['responseType'];
+        }
+
+        // If we have an error we want to set the responce type to error
+        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'error') {
+            $responseType = Response::HTTP_BAD_REQUEST;
+        }
+
+        return [
+            'result'       => $result,
+            'responseType' => $responseType,
+            'object'       => $object ?? null,
+        ];
     }
 
     /**
@@ -394,6 +458,7 @@ class EavService
         // Lets get our base stuff
         $path = $request->attributes->get('entity');
         $id = $request->attributes->get('id');
+
         $extension = false;
 
         // Lets pull a render type form the extension if we have any
@@ -676,7 +741,7 @@ class EavService
     public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
-        if (empty($this->session->get('activeOrganization'))) {
+        if ($this->parameterBag->get('app_auth') && empty($this->session->get('activeOrganization'))) {
             return [
                 'message' => 'An active organization is required in the session, please login to create a new session.',
                 'type'    => 'Forbidden',
@@ -714,9 +779,13 @@ class EavService
 
         // Saving the data
         $this->em->persist($object);
+        if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
+            $object->setOrganization($object->getUri());
+        }
+        $this->em->persist($object);
         $this->em->flush();
 
-        return $this->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields);
     }
 
     /**
@@ -729,7 +798,7 @@ class EavService
      */
     public function handleGet(ObjectEntity $object, $fields): array
     {
-        return $this->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields);
     }
 
     /**
@@ -807,7 +876,7 @@ class EavService
 
         $results = [];
         foreach ($objects as $object) {
-            $results[] = $this->renderResult($object, $fields, null, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
         }
 
         // If we need a flattend responce we are al done
@@ -836,6 +905,17 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
+        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
+//        try {
+//            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
+//                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+//            }
+//        } catch (AccessDeniedException $e) {
+//            $objectEntity->addError($attribute->getName(), $e->getMessage());
+//
+//            return $objectEntity;
+//        }
+
         // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
@@ -888,302 +968,6 @@ class EavService
             'type'    => 'error',
             'path'    => $objectEntity->getEntity()->getName(),
             'data'    => $objectEntity->getAllErrors(),
-        ];
-    }
-
-    /**
-     * Renders the result for a ObjectEntity that will be used for the response after a successful api call.
-     *
-     * @param ObjectEntity         $result
-     * @param ArrayCollection|null $maxDepth
-     * @param $fields
-     *
-     * @return array
-     */
-    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    {
-        $response = [];
-
-        // Lets start with the external results
-        if (!empty($result->getExternalResult())) {
-            $response = array_merge($response, $result->getExternalResult());
-        } elseif ($this->commonGroundService->isResource($result->getExternalResult())) {
-            $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
-        } elseif ($this->commonGroundService->isResource($result->getUri())) {
-            $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
-        }
-
-        // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
-        if (!is_null($result->getEntity()->getAvailableProperties())) {
-            $response = array_filter($response, function ($propertyName) use ($result) {
-                return in_array($propertyName, $result->getEntity()->getAvailableProperties());
-            }, ARRAY_FILTER_USE_KEY);
-        }
-
-        // Let overwrite the id with the gateway id
-        $response['id'] = $result->getId();
-
-        // Lets make sure we don't return stuf thats not in our field list
-        // @todo make array filter instead of loop
-        // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
-        foreach ($response as $key => $value) {
-            if (is_array($fields) && !array_key_exists($key, $fields)) {
-                unset($response[$key]);
-            }
-
-            // Make sure we filter out properties we are not allowed to see
-            $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if (!empty($attribute)) {
-                try {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
-                } catch (AccessDeniedException $exception) {
-                    unset($response[$key]);
-                }
-            }
-        }
-
-        // Let get the internal results
-        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
-
-        // Lets sort the result alphabeticly
-
-        // Lets skip the pritty styff when dealing with a flat object
-        if ($flat) {
-            ksort($response);
-
-            return $response;
-        }
-
-        // Lets make it personal
-        $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
-        $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-        $gatewayContext['@dateCreated'] = $result->getDateCreated();
-        $gatewayContext['@dateModified'] = $result->getDateModified();
-        $gatewayContext['@organization'] = $result->getOrganization();
-        $gatewayContext['@application'] = $result->getApplication();
-        $gatewayContext['@owner'] = $result->getOwner();
-        if ($result->getUri()) {
-            $gatewayContext['@uri'] = $result->getUri();
-        }
-        // Lets move some stuff out of the way
-        if (array_key_exists('@context', $response)) {
-            $gatewayContext['@gateway/context'] = $response['@context'];
-        }
-        if ($result->getExternalId()) {
-            $gatewayContext['@gateway/id'] = $result->getExternalId();
-        } elseif (array_key_exists('id', $response)) {
-            $gatewayContext['@gateway/id'] = $response['id'];
-        }
-        if (array_key_exists('@type', $response)) {
-            $gatewayContext['@gateway/type'] = $response['@type'];
-        }
-        if (is_array($fields)) {
-            $gatewayContext['@fields'] = $fields;
-        }
-        $gatewayContext['@level'] = $level;
-        $gatewayContext['id'] = $result->getId();
-
-        ksort($response);
-        $response = $gatewayContext + $response;
-
-        return $response;
-    }
-
-    /**
-     * Renders the values of an ObjectEntity for the renderResult function.
-     *
-     * @param ObjectEntity $result
-     * @param $fields
-     * @param ArrayCollection|null $maxDepth
-     *
-     * @return array
-     */
-    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    {
-        $response = [];
-
-        // Lets keep track of how deep in the three we are
-        $level++;
-
-        $entity = $result->getEntity();
-        foreach ($entity->getAttributes() as $attribute) {
-            try {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
-            } catch (AccessDeniedException $exception) {
-                continue;
-            }
-
-            $subfields = false;
-
-            // Lets deal with fields filtering
-            if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
-                continue;
-            } elseif (is_array($fields) and array_key_exists($attribute->getName(), $fields)) {
-                $subfields = $fields[$attribute->getName()];
-            }
-            if (!$subfields) {
-                $subfields = $fields;
-            }
-
-            // Only render the attributes that are used && don't render attributes that are writeOnly
-            if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
-                || $attribute->getWriteOnly()
-            ) {
-                continue;
-            }
-
-            $valueObject = $result->getValueByAttribute($attribute);
-            if ($attribute->getType() == 'object') {
-                try {
-                    // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                    if (!$this->objectEntityService->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
-                    }
-
-                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
-                    // If this attribute has no inversedBy but the Object we are rendering has parent objects.
-                    // Check if one of the parent objects has an attribute with inversedBy -> this attribute.
-                    $parentInversedByAttribute = [];
-                    if (!$attribute->getInversedBy() && count($result->getSubresourceOf()) > 0) {
-                        // Get all parent (value) objects...
-                        $parentInversedByAttribute = $result->getSubresourceOf()->filter(function (Value $value) use ($attribute) {
-                            // ...that have getInversedBy set to $attribute
-                            $inversedByAttributes = $value->getObjectEntity()->getEntity()->getAttributes()->filter(function (Attribute $item) use ($attribute) {
-                                return $item->getInversedBy() === $attribute;
-                            });
-                            if (count($inversedByAttributes) > 0) {
-                                return true;
-                            }
-
-                            return false;
-                        });
-                    }
-                    // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
-                    // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
-                    if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
-                        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
-                        $maxDepthPerValue = $maxDepth;
-                        if (is_null($maxDepth)) {
-                            $maxDepthPerValue = new ArrayCollection();
-                        }
-                        $maxDepthPerValue->add($result);
-                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $maxDepthPerValue, $flat, $level);
-                    } else {
-                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, null, $flat, $level);
-                    }
-
-                    if ($response[$attribute->getName()] === ['continue' => 'continue']) {
-                        unset($response[$attribute->getName()]);
-                    }
-                    continue;
-                } catch (AccessDeniedException $exception) {
-                    continue;
-                }
-            } elseif ($attribute->getType() == 'file') {
-                $response[$attribute->getName()] = $this->renderFiles($valueObject);
-                continue;
-            }
-            $response[$attribute->getName()] = $valueObject->getValue();
-        }
-
-        return $response;
-    }
-
-    /**
-     * Renders the objects of a value with attribute type 'object' for the renderValues function.
-     *
-     * @param Value $value
-     * @param $fields
-     * @param ArrayCollection|null $maxDepth
-     *
-     * @return array|null
-     */
-    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
-    {
-        $attribute = $value->getAttribute();
-
-        if ($value->getValue() == null) {
-            return null;
-        }
-
-        // If we have only one Object (because multiple = false)
-        if (!$attribute->getMultiple()) {
-            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if ($maxDepth) {
-                if (!$maxDepth->contains($value->getValue())) {
-                    return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
-                }
-
-                return ['continue' => 'continue']; //TODO NOTE: We want this here
-            }
-
-            return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
-        }
-
-        // If we can have multiple Objects (because multiple = true)
-        $objects = $value->getValue();
-        $objectsArray = [];
-        foreach ($objects as $object) {
-            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if ($maxDepth) {
-                if (!$maxDepth->contains($object)) {
-                    $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
-                    continue;
-                }
-                // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
-                continue;
-            }
-            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
-        }
-
-        return $objectsArray;
-    }
-
-    /**
-     * Renders the files of a value with attribute type 'file' for the renderValues function.
-     *
-     * @param Value $value
-     *
-     * @return array|null
-     */
-    private function renderFiles(Value $value): ?array
-    {
-        $attribute = $value->getAttribute();
-
-        if ($value->getValue() == null) {
-            return null;
-        }
-        if (!$attribute->getMultiple()) {
-            return $this->renderFileResult($value->getValue());
-        }
-        $files = $value->getValue();
-        $filesArray = [];
-        foreach ($files as $file) {
-            $filesArray[] = $this->renderFileResult($file);
-        }
-
-        return $filesArray;
-    }
-
-    /**
-     * Renders the result for a File that will be used (in renderFiles) for the response after a successful api call.
-     *
-     * @param File $file
-     *
-     * @return array
-     */
-    private function renderFileResult(File $file): array
-    {
-        return [
-            'id'        => $file->getId()->toString(),
-            'name'      => $file->getName(),
-            'extension' => $file->getExtension(),
-            'mimeType'  => $file->getMimeType(),
-            'size'      => $file->getSize(),
-            'base64'    => $file->getBase64(),
         ];
     }
 }

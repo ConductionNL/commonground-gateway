@@ -2,98 +2,181 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\GatewayResponseLogRepository;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use GuzzleHttp\Psr7\Response;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource()
- * @ORM\Entity(repositoryClass=GatewayResponseLogRepository::class)
+ * This entity holds the information about a ResponseLog.
+ *
+ * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/response_logs/{id}"},
+ *      "put"={"path"="/admin/response_logs/{id}"},
+ *      "delete"={"path"="/admin/response_logs/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/response_logs"},
+ *      "post"={"path"="/admin/response_logs"}
+ *  })
+ * )
+ * @ORM\Entity(repositoryClass="App\Repository\GatewayResponseLogRepository")
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact",
+ *     "gateway.id": "exact",
+ *     "objectEntity.id": "exact",
+ * })
  */
 class GatewayResponseLog
 {
     /**
+     * @var UuidInterface The UUID identifier of this resource
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
+     * @Groups({"read"})
+     * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="responseLogs")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $gateway;
+    private ?Gateway $gateway;
 
     /**
+     * @Groups({"read"})
+     * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="responseLogs")
      */
-    private $entity;
+    private ?Entity $entity;
 
     /**
+     * @Groups({"read"})
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responseLogs")
      */
-    private $objectEntity;
+    private ?ObjectEntity $objectEntity;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="integer")
      */
-    private $statusCode;
+    private ?int $statusCode;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="string", length=255)
      */
-    private $reasonPhrase;
+    private ?string $reasonPhrase;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="string", length=25, nullable=true)
      */
-    private $protocol;
+    private ?string $protocol;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="string", length=5)
      */
-    private $protocolVersion;
+    private ?string $protocolVersion;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="array")
      */
-    private $headers = [];
+    private array $headers = [];
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="blob", nullable=true)
      */
     private $content;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $succesfull;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $information;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $redirect;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $clientError;
 
     /**
+     * @Groups({"read"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $serverError;
 
-    public function getId(): ?int
+    /**
+     * @var Datetime The moment this request was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    public function __construct()
+    {
+        //TODO: better way of defaulting dateCreated & dateModified with orm?
+        // (options CURRENT_TIMESTAMP or 0 does not work)
+        $now = new DateTime();
+        $this->setDateCreated($now);
+    }
+
+    public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function setId(UuidInterface $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getGateway(): ?Gateway
@@ -283,6 +366,18 @@ class GatewayResponseLog
 //        $this->setRedirect($response->isRedirect());
 //        $this->setClientError($response->isClientError());
 //        $this->setServerError($response->isServerError());
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
         return $this;
     }
 }

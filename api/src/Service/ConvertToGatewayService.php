@@ -19,12 +19,14 @@ class ConvertToGatewayService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $em;
     private SessionInterface $session;
+    private GatewayService $gatewayService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
         $this->session = $session;
+        $this->gatewayService = $gatewayService;
     }
 
     /**
@@ -42,24 +44,44 @@ class ConvertToGatewayService
         }
 
         // Get all objects for this Entity that exist outside the gateway
-        $totalExternObjects = $this->getExternObjects($entity->getGateway()->getLocation().'/'.$entity->getEndpoint());
+        $collectionConfigResults = explode('.', $entity->getCollectionConfig()['results']);
+        if (array_key_exists('paginationNext', $entity->getCollectionConfig())) {
+            $collectionConfigPaginationNext = explode('.', $entity->getCollectionConfig()['paginationNext']);
+        }
+        $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+        $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
+        $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
-//        $newGatewayObjects = new ArrayCollection();
-        foreach ($totalExternObjects as $externObject) {
-            if (!$this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $externObject['id']])) {
+        $newGatewayObjects = new ArrayCollection();
+        $collectionConfigEnvelope = [];
+        if (array_key_exists('envelope', $entity->getCollectionConfig())) {
+            $collectionConfigEnvelope = explode('.', $entity->getCollectionConfig()['envelope']);
+        }
+        $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
+        foreach ($totalExternObjects as &$externObject) {
+            $id = $externObject;
+            // Make sure to get this item from the correct place in $externObject
+            foreach ($collectionConfigEnvelope as $item) {
+                $externObject = $externObject[$item];
+            }
+            // Make sure to get id of this item from the correct place in $externObject
+            foreach ($collectionConfigId as $item) {
+                $id = $id[$item];
+            }
+            if (!$this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                 // Convert this object to a gateway object
-                $this->convertToGatewayObject($entity, $externObject);
-//                $object = $this->convertToGatewayObject($entity, $externObject);
-//                if ($object) {
-//                    $newGatewayObjects->add($object);
-//                }
+                $object = $this->convertToGatewayObject($entity, $externObject, $id);
+                if ($object) {
+                    $newGatewayObjects->add($object);
+                }
             }
         }
 //        var_dump('New gateway objects = '.count($newGatewayObjects));
 
         // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
+        //TODO make sure to get all id's from the correct place with $entity->getCollectionConfig()['id'] !!!
         $externObjectIds = array_column($totalExternObjects, 'id');
         $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
@@ -75,13 +97,44 @@ class ConvertToGatewayService
         $this->em->flush();
     }
 
-    private function getExternObjects(string $url, array $totalExternObjects = [], int $page = 1): array
+    /**
+     * Get all objects for this Entity that exist outside the gateway.
+     *
+     * @param array  $config             array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
+     * @param array  $component
+     * @param string $url
+     * @param array  $totalExternObjects
+     * @param int    $page
+     *
+     * @return array
+     */
+    private function getExternObjects(array $config, array $component, string $url, array $totalExternObjects = [], int $page = 1): array
     {
-        $response = $this->commonGroundService->getResourceList($url, ['page'=>$page], false);
-        $totalExternObjects = array_merge($totalExternObjects, $response['hydra:member']);
-        if (isset($response['hydra:view']['hydra:next'])) { // localhost / testing add?: && $page < 3
-            return $this->getExternObjects($url, $totalExternObjects, $page + 1);
+        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, '', ['page'=>$page], $config['headers'], false, 'GET')->getBody()->getContents(), true);
+        // Now get response from the correct place in the response
+        foreach ($config['collectionConfigResults'] as $item) {
+            $response = $response[$item];
         }
+
+        // Add it to total result
+        $totalExternObjects = array_merge($totalExternObjects, $response);
+
+        // Check if we have pagination and should repeat for the next page
+        if (isset($config['collectionConfigPaginationNext'])) {
+            $paginationNext = $firstResponse;
+            foreach ($config['collectionConfigPaginationNext'] as $item) {
+                if (!isset($paginationNext[$item])) {
+                    $paginationNext = false;
+                } else {
+                    $paginationNext = $paginationNext[$item];
+                }
+            }
+        }
+        // Repeat if we have pagination and if there is a next page
+        if (isset($paginationNext) && $paginationNext) {
+            return $this->getExternObjects($config, $component, $url, $totalExternObjects, $page + 1);
+        }
+//        var_dump('pages: '. $page);
 
         return $totalExternObjects;
     }
@@ -106,14 +159,26 @@ class ConvertToGatewayService
 
         // If we have no $body we should use id to look for an extern object, if it exists get it and convert it to ObjectEntity in the gateway
         if (!$body) {
-            if (!$id || !$object = $this->commonGroundService->isResource($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id)) {
-                // If we have no $body or $id, or if no resource with this $id exists...
+            if (!$id) {
+                // If we have no $body or $id
                 return null; //Or false or error? //todo?
             } else {
-                $body = $object;
+                $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+                $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
+                $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
+                // if no resource with this $id exists... (callservice returns array on error)
+                if (is_array($response)) {
+                    return null; //Or false or error? //todo?
+                }
+                $body = json_decode($response->getBody()->getContents(), true);
+            }
+        } elseif (!$id) {
+            $id = $body;
+            $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
+            foreach ($collectionConfigId as $item) {
+                $id = $id[$item];
             }
         }
-        $id = $body['id'];
 
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         $availableBody = array_filter($body, function ($propertyName) use ($entity) {
@@ -142,23 +207,34 @@ class ConvertToGatewayService
             $newObject->setDateModified(new DateTime($body['dateModified']));
         }
 
-        // Set organization for this object
+        // Set organization & application for this object
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
-        if (key_exists('organization', $body) && !empty($body['organization'])) {
+        $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
+        if ($entity->getFunction() === 'organization') {
+            $newObject->setOrganization($newObject->getUri());
+        } elseif (key_exists('organization', $body) && !empty($body['organization'])) {
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+            if (!is_null($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
+                $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+            }
         } else {
             $newObject->setOrganization($this->session->get('activeOrganization'));
         }
-//                $newObject->setApplication(); // TODO
 
         $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
+
+//        var_dump($newObject->getExternalId());
+//        if ($newObject->getHasErrors()) {
+//            var_dump($newObject->getErrors());
+//        }
 
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
+//            var_dump('persist and flush');
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
             $this->notify($newObject, 'Create');
@@ -385,7 +461,17 @@ class ConvertToGatewayService
         } elseif (is_array($value)) {
             // If not string but array use $value['id'] and $value as $body for find with externalId or convertToGatewayObject
             $bodyForNewObject = $value;
-            $value = $value['id']; // TODO: check if id key exists? and if not, what to do?
+            if (array_key_exists('envelope', $attribute->getObjectConfig())) {
+                $objectConfigEnvelope = explode('.', $attribute->getObjectConfig()['envelope']);
+                foreach ($objectConfigEnvelope as $item) {
+                    $bodyForNewObject = $bodyForNewObject[$item];
+                }
+            }
+            $objectConfigId = explode('.', $attribute->getObjectConfig()['id']);
+            foreach ($objectConfigId as $item) {
+                $value = $value[$item];
+            }
+            // TODO: what if we have no existing id key?
         } else {
 //            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
             return null; // set $value to null
@@ -397,7 +483,7 @@ class ConvertToGatewayService
             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
             $subObject = $this->convertToGatewayObject($attribute->getObject(), $bodyForNewObject, $value, $valueObject, $objectEntity);
             if (!$subObject) {
-//                'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName()
+//                var_dump('Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
                 return null; // set $value to null
             }
         }

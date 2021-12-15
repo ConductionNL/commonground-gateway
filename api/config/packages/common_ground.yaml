@@ -1,77 +1,258 @@
 parameters:
-    # Adds a fallback API KEYS if the env var is not set.
-    # This allows you to run cache:warmup even if your
-    # environment variables are not available yet. 
-    # You should not need to change this value.
+  # Adds a fallback API KEYS if the env var is not set.
+  # This allows you to run cache:warmup even if your
+  # environment variables are not available yet.
+  # You should not need to change this value.
 
-    # Security Details
-    env(APP_COMMONGROUND_ID): "d4bb1810-8358-4372-98db-6c7bd2fb370c"
-    env(APP_COMMONGROUND_KEY): "d4bb1810-8358-4372-98db-6c7bd2fb370c"
-    env(APP_COMMONGROUND_SECRET): ""
+  # Security Details
+  env(APP_COMMONGROUND_ID): "d4bb1810-8358-4372-98db-6c7bd2fb370c"
+  env(APP_COMMONGROUND_KEY): "d4bb1810-8358-4372-98db-6c7bd2fb370c"
+  env(APP_COMMONGROUND_SECRET): ""
 
-    common_ground.app.id: "%env(APP_COMMONGROUND_ID)%"
-    app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
-    app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
+  common_ground.app.id: "%env(APP_COMMONGROUND_ID)%"
+  app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
+  app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
 
-    env(REDIS_HOST): redis
-    env(REDIS_PORT): 6379
+  env(REDIS_HOST): redis
+  env(REDIS_PORT): 6379
 
+  # Application Parameters
+  env(APP_ENV): "prod"
+  env(APP_DEBUG):
+  env(APP_CACHE):
+  env(APP_AUTH): true
+  env(AUDITTRAIL_ENABLED): ""
+  env(NOTIFICATION_ENABLED):
+  env(APP_VERSION): "1.0.0"
+  env(APP_NAME): "Proto Component"
+  env(APP_ID): ""
+  env(APP_DESCRIPTION): "A commonground component"
+  env(APP_DOMAIN): "zaakonline.nl"
+  env(APP_LOGO): "zaakonline.nl"
+  env(APP_HOME): "zaakonline.nl"
+  env(APP_SUBDOMAIN):
+  env(APP_SUBPATH): ""
+  env(APP_SUBPATH_ROUTING):
+  env(APP_CONTAINER): ""
+  env(APP_DEMO): "pc.zaakonline.nl"
+  env(APP_WEB):
+  env(APP_INTERNAL): "false"
+  env(APP_BUILD_ALL_FIXTURES):
+  env(APP_URL): "http://localhost"
+  env(FACEBOOK_ID): ""
+  env(FACEBOOK_SECRET): ""
+  env(GMAIL_ID): ""
+  env(GMAIL_SECRET): ""
+  env(IDIN_ID): ""
+  env(IDIN_SECRET): ""
+  env(APP_TYPE): "component"
+  env(APP_NAME_TECHNICAL): ""
+  env(APP_BUILD): "prod"
+  env(APP_CHART): ""
+  env(APP_SESSION_DURATION): "900"
+  env(SAML_X509_CERT): "placeholder"
+  env(SAML_PRIVATE_KEY): "placeholder"
+  env(LICENCE_NAME): "EUPL"
+  env(OWNER_NAME): "Conduction"
+  env(OWNER_URL): "https://www.conduction.nl"
+  env(ARTIFACTHUB_ID): ""
+  env(ARTIFACTHUB_USER): ""
+  env(HELM_REPOSITORY): ""
+  env(APP_MAJOR_VERSION): "v1"
+  env(APP_DIGISPOOF_LOCATION): "https://zuid-drecht.nl/digispoof"
+  env(APP_EHERKENNING_LOCATION): "https://zuid-drecht.nl/eherkenning"
+  env(BADGES): ""
+  env(DIGID_ARTIFACT_URL): ""
+
+  env(APP_MODE): "digispoof"
+
+  env(APP_SHASIGN): ""
+
+  app_env: "%env(APP_ENV)%"
+  app_container: "%env(APP_CONTAINER)%"
+  app_debug: "%env(APP_DEBUG)%"
+  app_cache: "%env(APP_CACHE)%"
+  app_auth: "%env(bool:APP_AUTH)%"
+  app_audittrail: "%env(AUDITTRAIL_ENABLED)%"
+  app_notification: "%env(NOTIFICATION_ENABLED)%"
+  app_version: "%env(APP_VERSION)%"
+  app_major_version: "%env(APP_MAJOR_VERSION)%"
+  app_name: "%env(APP_NAME)%"
+  app_id: "%env(APP_ID)%"
+  app_name_technical: "%env(APP_NAME_TECHNICAL)%"
+  app_description: "%env(APP_DESCRIPTION)%"
+  app_domain: "%env(APP_DOMAIN)%"
+  app_logo: "%env(APP_LOGO)%"
+  app_home: "%env(APP_HOME)%"
+  app_subdomain: "%env(APP_SUBDOMAIN)%"
+  app_subpath: "%env(APP_SUBPATH)%"
+  app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
+  app_url: "%env(trimtrailingslash:APP_URL)%"
+  app_demo: "%env(APP_DEMO)%"
+  app_web: "%env(APP_WEB)%"
+  app_internal: "%env(APP_INTERNAL)%"
+  app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
+  app_chart: "%env(APP_CHART)%"
+  app_session_duration: "%env(APP_SESSION_DURATION)%"
+  app_type: "%env(APP_TYPE)%"
+  licence_name: "%env(LICENCE_NAME)%"
+  owner_name: "%env(OWNER_NAME)%"
+  owner_url: "%env(OWNER_URL)%"
+  artifacthub_id: "%env(ARTIFACTHUB_ID)%"
+  artifacthub_user: "%env(ARTIFACTHUB_USER)%"
+  helm_repository: "%env(HELM_REPOSITORY)%"
+  facebook_id: "%env(FACEBOOK_ID)%"
+  facebook_secret: "%env(FACEBOOK_SECRET)%"
+  gmail_id: "%env(GMAIL_ID)%"
+  gmail_secret: "%env(GMAIL_SECRET)%"
+  idin_id: "%env(IDIN_ID)%"
+  idin_secret: "%env(IDIN_SECRET)%"
+  badges: "%env(BADGES)%"
+  digid_artifact_url: "%env(DIGID_ARTIFACT_URL)%"
+
+  app_certificate: "%env(APP_CERT)%"
+  app_ssl_key: "%env(APP_KEY)%"
+
+  app_shasign: "%env(APP_SHASIGN)%"
+
+  mode: "%env(APP_MODE)%"
+
+  # Busnes Engine
+  env(APP_COMMONGROUND_BE_LOCATION): "https://ac.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_BE_USERNAME): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_BE_PASSWORD): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Autorisatiecomponent
+  env(APP_COMMONGROUND_AC_LOCATION): "https://ac.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_AC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_AC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Notificatierouteringcomponent
+  env(APP_COMMONGROUND_NRC_LOCATION): "https://nrc.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_NRC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_NRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Zaakregistratiecomponent
+  env(APP_COMMONGROUND_ZRC_LOCATION): "https://zrc.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_ZRC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_ZRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Zaaktypecatalogus
+  env(APP_COMMONGROUND_ZTC_LOCATION): "https://ztc.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_ZTC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_ZTC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Documentregistratiecomponent
+  env(APP_COMMONGROUND_DRC_LOCATION): "https://drc.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_DRC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_DRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # Klantinteractiescomponent
+  env(APP_COMMONGROUND_KIC_LOCATION): "https://kic.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_KIC_ID): "%env(APP_COMMONGROUND_ID)%"
+  env(APP_COMMONGROUND_KIC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
+
+  # BasisAdressenGemeenten
+  env(APP_COMMONGROUND_BAG_LOCATION): "https://bag.basisregistraties.overheid.nl/api/v1/"
+  env(APP_COMMONGROUND_BAG_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  # KamerVanKoophandel
+  env(APP_COMMONGROUND_KVK_LOCATION): "https://kvk.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_KVK_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  common_ground.kvk.location: "%env(APP_COMMONGROUND_KVK_LOCATION)%"
+  common_ground.kvk.apikey: "%env(APP_COMMONGROUND_KVK_APIKEY)%"
+  # DienstWegverkeer
+  env(APP_COMMONGROUND_RDW_LOCATION): "https://rdw.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_RDW_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  # DocumentManagmentService
+  env(APP_COMMONGROUND_DMS_LOCATION): "https://dms.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_DMS_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  #n nlx-in
+  env(APP_COMMONGROUND_NLX_IN_LOCATION): "https://nlx-in.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_NLX_IN_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  # nlx-out
+  env(APP_COMMONGROUND_NLX_OUT_LOCATION): "https://nlx-out.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_NLX_OUT_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  # ProcesTypeCatalogus
+  env(APP_COMMONGROUND_PTC_LOCATION): "https://ptc.%env(APP_ENV)%"
+  env(APP_COMMONGROUND_PTC_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+  # StufService
+  env(APP_COMMONGROUND_STUF_LOCATION): "https://stuf.%env(APP_DOMAIN)%"
+  env(APP_COMMONGROUND_STUF_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
+
+  components:
+    be:
+      location: "placeholder"
+      auth: "placeholder"
+      username: "placeholder"
+      password: "placeholder"
+      accept: "application/ld+json"
+
+  # Organisatie details
+  env(GOOGLE_TAG_MANAGER_ID): ""
+  env(HUBSPOT_EMBED_CODE): ""
+
+  env(CONTAINER_REGISTRY_BASE): ""
+  env(CONTAINER_PROJECT_NAME): ""
+
+  google_tag_manager_id: "%env(GOOGLE_TAG_MANAGER_ID)%"
+  hubspot_embed_code: "%env(HUBSPOT_EMBED_CODE)%"
+
+  container_registry_base: "%env(CONTAINER_REGISTRY_BASE)%"
+  container_project_name: "%env(CONTAINER_PROJECT_NAME)%"
+
+  # Dit is hieronder nu anders geregeld (ofwel aanpassen)
+  env(APP_APPLICATION_KEY): ""
+
+  env(TRUSTED_HOSTS): ""
+  env(TRUSTED_PROXIES): ""
+
+  # Dit is hieronder nu anders geregeld (ofwel aanpassen)
+  app_application_key: "%env(APP_APPLICATION_KEY)%"
+
+  trusted_hosts: "%env(TRUSTED_HOSTS)%"
+  trusted_proxies: "%env(TRUSTED_PROXIES)%"
+
+  common_ground.oas.type: service
+  common_ground.oas.host: irc.zaakonline.nl
+  common_ground.oas.servers:
+    - description: Demo Omgeving
+      url: "http://proto.demo.common-ground.dev"
+  common_ground.oas.externalDocs:
+    - description: OAS Documentatie
+      url: "http://proto.demo.common-ground.dev"
+  common_ground.oas.developers:
+    - name: Conduction
+      url: https://github.com/ConductionNL
+      email: info@conduction.nl
+    - name: Gemeente "s-Hertogenbosch
+      url: https://github.com/gemeenteshertogenbosch
+      email: info@s-hertogenbosch.nl/
+    - name: Gemeente Utrecht
+      url: https://github.com/GemeenteUtrecht
+      email: info@utrecht.nl
+  common_ground.oas.builds:
+    - name: travis
+      logo: https://travis-ci.org/api-platform/core.svg?branch=master
+      url: https://travis-ci.org/api-platform/core
+    - name: appveyor
+      logo: https://ci.appveyor.com/api/projects/status/grwuyprts3wdqx5l?svg=true
+      url: https://ci.appveyor.com/project/dunglas/dunglasapibundle
+    - name: codecov
+      logo: https://codecov.io/gh/api-platform/core/branch/master/graph/badge.svg
+      url: https://codecov.io/gh/api-platform/core
+    - name: SensioLabsInsight
+      logo: https://insight.sensiolabs.com/projects/92d78899-946c-4282-89a3-ac92344f9a93/mini.png
+      url: https://insight.sensiolabs.com/projects/92d78899-946c-4282-89a3-ac92344f9a93
+    - name: Scrutinizer Code Quality
+      logo: https://scrutinizer-ci.com/g/api-platform/core/badges/quality-score.png?b=master
+      url: https://scrutinizer-ci.com/g/api-platform/core/?branch=master
+
+twig:
+  globals:
     # Application Parameters
-    env(APP_ENV): "prod"
-    env(APP_DEBUG):
-    env(APP_CACHE):
-    env(APP_AUTH): true
-    env(AUDITTRAIL_ENABLED): ""
-    env(NOTIFICATION_ENABLED):
-    env(APP_VERSION): "1.0.0"
-    env(APP_NAME): "Proto Component"
-    env(APP_ID): ""
-    env(APP_DESCRIPTION): "A commonground component"
-    env(APP_DOMAIN): "zaakonline.nl"
-    env(APP_LOGO): "zaakonline.nl"
-    env(APP_HOME): "zaakonline.nl"
-    env(APP_SUBDOMAIN):
-    env(APP_SUBPATH): ""
-    env(APP_SUBPATH_ROUTING):
-    env(APP_CONTAINER): ""
-    env(APP_DEMO): "pc.zaakonline.nl"
-    env(APP_WEB):
-    env(APP_INTERNAL): "false"
-    env(APP_BUILD_ALL_FIXTURES):
-    env(APP_URL): "http://localhost"
-    env(FACEBOOK_ID): ""
-    env(FACEBOOK_SECRET): ""
-    env(GMAIL_ID): ""
-    env(GMAIL_SECRET): ""
-    env(IDIN_ID): ""
-    env(IDIN_SECRET): ""
-    env(APP_TYPE): "component"
-    env(APP_NAME_TECHNICAL): ""
-    env(APP_BUILD): "prod"
-    env(APP_CHART): ""
-    env(APP_SESSION_DURATION): "900"
-    env(SAML_X509_CERT): "placeholder"
-    env(SAML_PRIVATE_KEY): "placeholder"
-    env(LICENCE_NAME): "EUPL"
-    env(OWNER_NAME): "Conduction"
-    env(OWNER_URL): "https://www.conduction.nl"
-    env(ARTIFACTHUB_ID): ""
-    env(ARTIFACTHUB_USER): ""
-    env(HELM_REPOSITORY): ""
-    env(APP_MAJOR_VERSION): "v1"
-    env(APP_DIGISPOOF_LOCATION): "https://zuid-drecht.nl/digispoof"
-    env(APP_EHERKENNING_LOCATION): "https://zuid-drecht.nl/eherkenning"
-    env(BADGES): ""
-
-    env(APP_MODE): "digispoof"
-
-    env(APP_SHASIGN): ""
-
     app_env: "%env(APP_ENV)%"
-    app_container: "%env(APP_CONTAINER)%"
     app_debug: "%env(APP_DEBUG)%"
     app_cache: "%env(APP_CACHE)%"
-    app_auth: "%env(bool:APP_AUTH)%"
     app_audittrail: "%env(AUDITTRAIL_ENABLED)%"
     app_notification: "%env(NOTIFICATION_ENABLED)%"
     app_version: "%env(APP_VERSION)%"
@@ -86,14 +267,14 @@ parameters:
     app_subdomain: "%env(APP_SUBDOMAIN)%"
     app_subpath: "%env(APP_SUBPATH)%"
     app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
-    app_url: "%env(trimtrailingslash:APP_URL)%"
     app_demo: "%env(APP_DEMO)%"
     app_web: "%env(APP_WEB)%"
     app_internal: "%env(APP_INTERNAL)%"
     app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
+    app_url: "%env(APP_URL)%"
+    app_build: "%env(APP_BUILD)%"
     app_chart: "%env(APP_CHART)%"
     app_session_duration: "%env(APP_SESSION_DURATION)%"
-    app_type: "%env(APP_TYPE)%"
     licence_name: "%env(LICENCE_NAME)%"
     owner_name: "%env(OWNER_NAME)%"
     owner_url: "%env(OWNER_URL)%"
@@ -106,93 +287,15 @@ parameters:
     gmail_secret: "%env(GMAIL_SECRET)%"
     idin_id: "%env(IDIN_ID)%"
     idin_secret: "%env(IDIN_SECRET)%"
+    app_type: "%env(APP_TYPE)%"
     badges: "%env(BADGES)%"
-    
-    app_certificate: "%env(APP_CERT)%"
-    app_ssl_key: "%env(APP_KEY)%"
+    app_mode: "%env(APP_MODE)%"
 
-    app_shasign: "%env(APP_SHASIGN)%"
+    # Security Details
+    app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
+    app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
 
-    mode: "%env(APP_MODE)%"
-
-    # Busnes Engine
-    env(APP_COMMONGROUND_BE_LOCATION): "https://ac.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_BE_USERNAME): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_BE_PASSWORD): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Autorisatiecomponent
-    env(APP_COMMONGROUND_AC_LOCATION): "https://ac.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_AC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_AC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Notificatierouteringcomponent
-    env(APP_COMMONGROUND_NRC_LOCATION): "https://nrc.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_NRC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_NRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Zaakregistratiecomponent
-    env(APP_COMMONGROUND_ZRC_LOCATION): "https://zrc.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_ZRC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_ZRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Zaaktypecatalogus
-    env(APP_COMMONGROUND_ZTC_LOCATION): "https://ztc.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_ZTC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_ZTC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Documentregistratiecomponent
-    env(APP_COMMONGROUND_DRC_LOCATION): "https://drc.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_DRC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_DRC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # Klantinteractiescomponent
-    env(APP_COMMONGROUND_KIC_LOCATION): "https://kic.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_KIC_ID): "%env(APP_COMMONGROUND_ID)%"
-    env(APP_COMMONGROUND_KIC_SECRET): "%env(APP_COMMONGROUND_SECRET)%"
-
-    # BasisAdressenGemeenten
-    env(APP_COMMONGROUND_BAG_LOCATION): "https://bag.basisregistraties.overheid.nl/api/v1/"
-    env(APP_COMMONGROUND_BAG_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    # KamerVanKoophandel
-    env(APP_COMMONGROUND_KVK_LOCATION): "https://kvk.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_KVK_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    common_ground.kvk.location: "%env(APP_COMMONGROUND_KVK_LOCATION)%"
-    common_ground.kvk.apikey: "%env(APP_COMMONGROUND_KVK_APIKEY)%"
-    # DienstWegverkeer
-    env(APP_COMMONGROUND_RDW_LOCATION): "https://rdw.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_RDW_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    # DocumentManagmentService
-    env(APP_COMMONGROUND_DMS_LOCATION): "https://dms.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_DMS_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    #n nlx-in
-    env(APP_COMMONGROUND_NLX_IN_LOCATION): "https://nlx-in.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_NLX_IN_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    # nlx-out
-    env(APP_COMMONGROUND_NLX_OUT_LOCATION): "https://nlx-out.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_NLX_OUT_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    # ProcesTypeCatalogus
-    env(APP_COMMONGROUND_PTC_LOCATION): "https://ptc.%env(APP_ENV)%"
-    env(APP_COMMONGROUND_PTC_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-    # StufService
-    env(APP_COMMONGROUND_STUF_LOCATION): "https://stuf.%env(APP_DOMAIN)%"
-    env(APP_COMMONGROUND_STUF_APIKEY): "%env(APP_COMMONGROUND_KEY)%"
-
-    components:
-        be:
-            location: "placeholder"
-            auth: "placeholder"
-            username: "placeholder"
-            password: "placeholder"
-            accept: "application/ld+json"
-
-
-    # Organisatie details
-    env(GOOGLE_TAG_MANAGER_ID): ""
-    env(HUBSPOT_EMBED_CODE): ""
-
-    env(CONTAINER_REGISTRY_BASE): ""
-    env(CONTAINER_PROJECT_NAME): ""
-
+    # Organisations Parameters
     google_tag_manager_id: "%env(GOOGLE_TAG_MANAGER_ID)%"
     hubspot_embed_code: "%env(HUBSPOT_EMBED_CODE)%"
 
@@ -200,109 +303,7 @@ parameters:
     container_project_name: "%env(CONTAINER_PROJECT_NAME)%"
 
     # Dit is hieronder nu anders geregeld (ofwel aanpassen)
-    env(APP_APPLICATION_KEY): ""
-
-    env(TRUSTED_HOSTS): ""
-    env(TRUSTED_PROXIES): ""
-
-    # Dit is hieronder nu anders geregeld (ofwel aanpassen)
     app_application_key: "%env(APP_APPLICATION_KEY)%"
 
     trusted_hosts: "%env(TRUSTED_HOSTS)%"
     trusted_proxies: "%env(TRUSTED_PROXIES)%"
-
-    common_ground.oas.type: service
-    common_ground.oas.host: irc.zaakonline.nl
-    common_ground.oas.servers:
-        - description: Demo Omgeving
-          url: "http://proto.demo.common-ground.dev"
-    common_ground.oas.externalDocs:
-        - description: OAS Documentatie
-          url: "http://proto.demo.common-ground.dev"
-    common_ground.oas.developers:
-        - name: Conduction
-          url: https://github.com/ConductionNL
-          email: info@conduction.nl
-        - name: Gemeente "s-Hertogenbosch
-          url: https://github.com/gemeenteshertogenbosch
-          email: info@s-hertogenbosch.nl/
-        - name: Gemeente Utrecht
-          url: https://github.com/GemeenteUtrecht
-          email: info@utrecht.nl
-    common_ground.oas.builds:
-        - name: travis
-          logo: https://travis-ci.org/api-platform/core.svg?branch=master
-          url: https://travis-ci.org/api-platform/core
-        - name: appveyor
-          logo: https://ci.appveyor.com/api/projects/status/grwuyprts3wdqx5l?svg=true
-          url: https://ci.appveyor.com/project/dunglas/dunglasapibundle
-        - name: codecov
-          logo: https://codecov.io/gh/api-platform/core/branch/master/graph/badge.svg
-          url: https://codecov.io/gh/api-platform/core
-        - name: SensioLabsInsight
-          logo: https://insight.sensiolabs.com/projects/92d78899-946c-4282-89a3-ac92344f9a93/mini.png
-          url: https://insight.sensiolabs.com/projects/92d78899-946c-4282-89a3-ac92344f9a93
-        - name: Scrutinizer Code Quality
-          logo: https://scrutinizer-ci.com/g/api-platform/core/badges/quality-score.png?b=master
-          url: https://scrutinizer-ci.com/g/api-platform/core/?branch=master
-
-twig:
-    globals:
-        # Application Parameters
-        app_env: "%env(APP_ENV)%"
-        app_debug: "%env(APP_DEBUG)%"
-        app_cache: "%env(APP_CACHE)%"
-        app_audittrail: "%env(AUDITTRAIL_ENABLED)%"
-        app_notification: "%env(NOTIFICATION_ENABLED)%"
-        app_version: "%env(APP_VERSION)%"
-        app_major_version: "%env(APP_MAJOR_VERSION)%"
-        app_name: "%env(APP_NAME)%"
-        app_id: "%env(APP_ID)%"
-        app_name_technical: "%env(APP_NAME_TECHNICAL)%"
-        app_description: "%env(APP_DESCRIPTION)%"
-        app_domain: "%env(APP_DOMAIN)%"
-        app_logo: "%env(APP_LOGO)%"
-        app_home: "%env(APP_HOME)%"
-        app_subdomain: "%env(APP_SUBDOMAIN)%"
-        app_subpath: "%env(APP_SUBPATH)%"
-        app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
-        app_demo: "%env(APP_DEMO)%"
-        app_web: "%env(APP_WEB)%"
-        app_internal: "%env(APP_INTERNAL)%"
-        app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
-        app_url: "%env(APP_URL)%"
-        app_build: "%env(APP_BUILD)%"
-        app_chart: "%env(APP_CHART)%"
-        app_session_duration: "%env(APP_SESSION_DURATION)%"
-        licence_name: "%env(LICENCE_NAME)%"
-        owner_name: "%env(OWNER_NAME)%"
-        owner_url: "%env(OWNER_URL)%"
-        artifacthub_id: "%env(ARTIFACTHUB_ID)%"
-        artifacthub_user: "%env(ARTIFACTHUB_USER)%"
-        helm_repository: "%env(HELM_REPOSITORY)%"
-        facebook_id: "%env(FACEBOOK_ID)%"
-        facebook_secret: "%env(FACEBOOK_SECRET)%"
-        gmail_id: "%env(GMAIL_ID)%"
-        gmail_secret: "%env(GMAIL_SECRET)%"
-        idin_id: "%env(IDIN_ID)%"
-        idin_secret: "%env(IDIN_SECRET)%"
-        app_type: "%env(APP_TYPE)%"
-        badges: "%env(BADGES)%"
-        app_mode: "%env(APP_MODE)%"
-
-        # Security Details
-        app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
-        app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
-
-        # Organisations Parameters
-        google_tag_manager_id: "%env(GOOGLE_TAG_MANAGER_ID)%"
-        hubspot_embed_code: "%env(HUBSPOT_EMBED_CODE)%"
-
-        container_registry_base: "%env(CONTAINER_REGISTRY_BASE)%"
-        container_project_name: "%env(CONTAINER_PROJECT_NAME)%"
-
-        # Dit is hieronder nu anders geregeld (ofwel aanpassen)
-        app_application_key: "%env(APP_APPLICATION_KEY)%"
-
-        trusted_hosts: "%env(TRUSTED_HOSTS)%"
-        trusted_proxies: "%env(TRUSTED_PROXIES)%"

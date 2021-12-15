@@ -11,6 +11,34 @@ parameters:
             auth: apikey
             location: https://digispoof.demodam.nl/
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        dcs:
+            auth: apikey
+            location: https://conduction.demodam.nl/api/v1/document-creation-service
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        vrc:
+            auth: apikey
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+            location: https://conduction.demodam.nl/api/v1/vrc
+
+#       Demodam dependencies
+#        uc:
+#            auth: apikey
+#            location: https://conduction.demodam.nl/api/v1/uc
+#            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+#        cc:
+#            auth: apikey
+#            location: https://conduction.demodam.nl/api/v1/cc
+#            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+#        bs:
+#            auth: apikey
+#            location: https://conduction.demodam.nl/api/v1/bs
+#            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+#        nrc:
+#            auth: apikey
+#            location: https://conduction.demodam.nl/api/v1/nrc
+#            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+
+#        Taalhuizen dependencies:
         uc:
             auth: apikey
             location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
@@ -39,11 +67,3 @@ parameters:
             auth: apikey
             location: https://taalhuizen-bisc.commonground.nu/api/v1/nrc
             apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        dcs:
-            auth: apikey
-            location: https://conduction.demodam.nl/api/v1/document-creation-service
-            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-        vrc:
-            auth: apikey
-            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-            location: https://conduction.demodam.nl/api/v1/vrc
