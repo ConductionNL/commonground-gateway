@@ -91,6 +91,7 @@ class ValidationService
     public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
+
         foreach ($entity->getAttributes() as $attribute) {
             // Skip if readOnly
             if ($attribute->getReadOnly()) {
@@ -172,7 +173,7 @@ class ValidationService
         }
         // Check post for not allowed properties
         foreach ($post as $key => $value) {
-            if (!$entity->getAttributeByName($key) && $key != 'id') {
+            if (!$entity->getAttributeByName($key) && $key != 'id' && $key != '@organization') {
                 $objectEntity->addError($key, 'Does not exist on this property');
             }
         }
@@ -184,14 +185,18 @@ class ValidationService
                 $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
                 $objectEntity->addPromise($promise);
             } else {
-                // Notify notification component
-                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
                 if (!$objectEntity->getUri()) {
                     // Lets make sure we always set the uri
                     $this->em->persist($objectEntity); // So the object has an id to set with createUri...
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
+                // Notify notification component
+                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
             }
+        }
+
+        if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
+            $objectEntity->setOrganization($post['@organization']);
         }
 
         // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
@@ -469,6 +474,7 @@ class ValidationService
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
                     $subObject->setOrganization($subObject->getUri());
+                    var_dump('TEST2');
                 }
 
                 // object toevoegen
@@ -1496,6 +1502,11 @@ class ValidationService
         if (array_key_exists('@type', $post)) {
             unset($post['@type']);
         }
+        $setOrganization = null;
+        if (array_key_exists('@organization', $post)) {
+            $setOrganization = $post['@organization'];
+            unset($post['@organization']);
+        }
 
         // Lets use the correct post type
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
@@ -1560,7 +1571,7 @@ class ValidationService
         }
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($objectEntity, $url, $method) {
+            function ($response) use ($objectEntity, $url, $method, $setOrganization) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                     $gatewayResponseLog = new GatewayResponseLog();
                     $gatewayResponseLog->setObjectEntity($objectEntity);
@@ -1606,6 +1617,9 @@ class ValidationService
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
                     $objectEntity->setApplication($this->session->get('application'));
+                }
+                if (isset($setOrganization)) {
+                    $objectEntity->setOrganization($setOrganization);
                 }
 
                 // Only show/use the available properties for the external response/result
