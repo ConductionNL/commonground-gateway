@@ -30,63 +30,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *          "get"={"path"="/admin/object_entities/{id}"},
- *          "put"={"path"="/admin/object_entities/{id}"},
- *          "delete"={"path"="/admin/object_entities/{id}"},
- *          "get_eav_object"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity id",
- *               "description"="Returns the object"
- *              }
- *          },
- *          "put_eav_object"={
- *              "method"="PUT",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Put object",
- *                  "description"="Returns the updated object"
- *              }
- *          },
- *          "delete_eav_object"={
- *              "method"="DELETE",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="delete object",
- *                  "description"="Returns the updated object"
- *              },
- *              "read"  = false,
- *              "controller" = "App\Controller\EavController::deleteAction"
- *          },
- *     },
+ *      "get"={"path"="/admin/object_entities/{id}"},
+ *      "put"={"path"="/admin/object_entities/{id}"},
+ *      "delete"={"path"="/admin/object_entities/{id}"}
+ *  },
  *  collectionOperations={
  *      "get"={"path"="/admin/object_entities"},
- *      "post"={"path"="/admin/object_entities"},
- *      "get_eav_objects"={
- *          "method"="GET",
- *          "path"="/eav/data/{entity}",
- *          "swagger_context" = {
- *              "summary"="Get object with objectEntity uri",
- *              "description"="Returns the object"
- *          }
- *      },
- *      "post_eav_objects"={
- *          "method"="POST",
- *          "path"="/eav/data/{entity}",
- *          "swagger_context" = {
- *              "summary"="Post object",
- *              "description"="Returns the created object"
- *          }
- *      },
- *          "get_eav_object"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity id",
- *               "description"="Returns the object"
- *              }
- *          },
+ *      "post"={"path"="/admin/object_entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

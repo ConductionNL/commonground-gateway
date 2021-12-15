@@ -141,7 +141,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             }
         }
 
-        $organizations = [];
+        $organizations = ['localhostOrganization'];
         if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }

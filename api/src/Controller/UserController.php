@@ -62,7 +62,7 @@ class UserController extends AbstractController
         // Set orgs in session for multitenancy
         // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
         $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
-        $organizations = [];
+        $organizations = ['localhostOrganization'];
         if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }

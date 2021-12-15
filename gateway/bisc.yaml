@@ -6,6 +6,7 @@ App\Entity\Application:
         resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
         domains:
             - backend-bisc-dev.commonground.nu
+        organization: https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951
 App\Entity\Gateway:
     edu_api:
         name: educatie component
@@ -86,6 +87,7 @@ App\Entity\Entity:
 
     # Organization Object
     organization:
+        function: "organization"
         route: "/api/organizations"
         name: organizations
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
@@ -861,7 +863,7 @@ App\Entity\Attribute:
         entity: "@studentIntake"
         object: "@person"
         cascade: true
-#        cascadeDelete: true # TODO?
+        cascadeDelete: true
     studentIntake_foundVia:
         name: foundVia
         type: string
@@ -1562,6 +1564,11 @@ App\Entity\Attribute:
         entity: "@document"
 
     # ContactMoment properties
+    contactMoment_employee:
+        name: employee
+        type: object
+        entity: "@contactMoment"
+        object: "@employee"
     contactMoment_student:
         name: student
         type: object
