@@ -1610,4 +1610,15 @@ class SOAPService
 
         return $return;
     }
+
+    public function getMunicipalityCode(Request $request): string
+    {
+        if(strpos(strtolower($request->getRequestUri()), 'zoetermeer') !== false) {
+            return '0637';
+        } elseif(strpos(strtolower($request->getRequestUri()), 'nijmegen') !== false) {
+            return '0268';
+        } else {
+            return '0268';
+        }
+    }
 }
