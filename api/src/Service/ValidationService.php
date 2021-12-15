@@ -10,6 +10,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -20,10 +21,12 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Exceptions\ValidationException;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ValidationService
 {
@@ -40,6 +43,8 @@ class ValidationService
     private SessionInterface $session;
     private ConvertToGatewayService $convertToGatewayService;
     private ObjectEntityService $objectEntityService;
+    private TranslationService $translationService;
+    private ParameterBagInterface $parameterBag;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -49,7 +54,9 @@ class ValidationService
         AuthorizationService $authorizationService,
         SessionInterface $session,
         ConvertToGatewayService $convertToGatewayService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        TranslationService $translationService,
+        ParameterBagInterface $parameterBag
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -59,6 +66,8 @@ class ValidationService
         $this->session = $session;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->objectEntityService = $objectEntityService;
+        $this->translationService = $translationService;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -70,8 +79,7 @@ class ValidationService
     }
 
     /**
-     * Validates and creates an ObjectEntity by the configuration of an Entity and it's attributes.
-     * NOTE: Do setRequest() before using this outside the ValidationService!
+     * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
      * @param array        $post
@@ -83,7 +91,13 @@ class ValidationService
     public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
+
         foreach ($entity->getAttributes() as $attribute) {
+            // Skip if readOnly
+            if ($attribute->getReadOnly()) {
+                continue;
+            }
+
             // Only save the attributes that are used.
             if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
                 if (key_exists($attribute->getName(), $post)) {
@@ -117,7 +131,7 @@ class ValidationService
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
             }
             // Check if this field is nullable
-            elseif ($attribute->getNullable()) {
+            elseif ($attribute->getNullable() === true) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
             // Check if this field is required
@@ -150,14 +164,16 @@ class ValidationService
                     }
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
-            } else {
+            } elseif ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+            } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
         }
         // Check post for not allowed properties
         foreach ($post as $key => $value) {
-            if (!$entity->getAttributeByName($key) && $key != 'id') {
+            if (!$entity->getAttributeByName($key) && $key != 'id' && $key != '@organization') {
                 $objectEntity->addError($key, 'Does not exist on this property');
             }
         }
@@ -168,11 +184,19 @@ class ValidationService
                 $promise = $this->createPromise($objectEntity, $post);
                 $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
                 $objectEntity->addPromise($promise);
-            } elseif (!$objectEntity->getUri()) {
-                // Lets make sure we always set the uri
-                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
-                $objectEntity->setUri($this->createUri($objectEntity));
+            } else {
+                if (!$objectEntity->getUri()) {
+                    // Lets make sure we always set the uri
+                    $this->em->persist($objectEntity); // So the object has an id to set with createUri...
+                    $objectEntity->setUri($this->createUri($objectEntity));
+                }
+                // Notify notification component
+                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
             }
+        }
+
+        if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
+            $objectEntity->setOrganization($post['@organization']);
         }
 
         // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
@@ -202,7 +226,7 @@ class ValidationService
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         try {
-            if (!$this->objectEntityService->checkOwner($objectEntity)) {
+            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
             }
         } catch (AccessDeniedException $e) {
@@ -212,11 +236,11 @@ class ValidationService
         }
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
-        if (is_null($value)) {
-            if ($attribute->getDefaultValue()) {
-                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
-            } elseif (!$attribute->getNullable()) {
-                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', '.gettype($value).' given. (Nullable is not set for this attribute)');
+        if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+            if ($attribute->getNullable() === false) {
+                $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
+            } elseif ($attribute->getMultiple() && $value === []) {
+                $objectEntity->getValueByAttribute($attribute)->setValue([]);
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -229,7 +253,7 @@ class ValidationService
             $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
-            if (is_array($value) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+            if (is_array($value) && $attribute->getType() != 'array' && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', array given. (Multiple is not set for this attribute)');
 
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
@@ -343,9 +367,10 @@ class ValidationService
 
         // Then validate all items in this array
         if ($attribute->getType() == 'object') {
-            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different!!!
+            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different, so be carefull!!!
             // This is an array of objects
             $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
             foreach ($value as $key => $object) {
                 if (!is_array($object)) {
                     // If we want to connect an existing object using a string uuid: "uuid"
@@ -364,31 +389,30 @@ class ValidationService
                             }
                         }
                         // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
-                        // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
+                        // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet. (see convertToGatewayObject)
 
                         // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $object])) {
                             if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $object])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                                //                                $subObject = $this->createOEforExternObject($attribute->getObject(), $object, $valueObject, $objectEntity); // TODO REMOVE
                                 $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object, $valueObject, $objectEntity);
                                 if (!$subObject) {
                                     $objectEntity->addError($attribute->getName().'['.$key.']', 'Could not find an object with id '.$object.' of type '.$attribute->getObject()->getName());
-                                    break;
+                                    continue;
                                 }
                             }
                         }
 
                         // object toevoegen
-                        $valueObject->addObject($subObject);
+                        $saveSubObjects->add($subObject);
                         continue;
                     } else {
                         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array or uuid).');
-                        break;
+                        continue;
                     }
                 }
                 // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
-                if (array_key_exists('id', $object)) {
+                if ($this->request->getMethod() == 'PUT' && array_key_exists('id', $object)) {
                     if (!is_string($object['id']) || Uuid::isValid($object['id']) == false) {
                         $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object['id'].') is not a valid uuid.');
                         continue;
@@ -400,33 +424,37 @@ class ValidationService
                         // In the rare case that we are creating a new Gateway ObjectEntity for an object existing outside the gateway. (maybe even another ObjectEntity for a subresource of an extern object like this)
                         // (this can happen when an uuid is given for an attribute that expects an object and this object is only found outside the gateway)
                         // Than if gateway->location and endpoint are set on the attribute(->getObject) Entity, we should check for objects outside the gateway here.
-                        //                        $subObject = $this->createOEforExternObject($attribute->getObject(), $object['id'], $valueObject, $objectEntity); // TODO REMOVE
                         $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
 
                         if (!$subObject) {
                             $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
-                            break;
+                            continue;
                         }
 
-                        $valueObject->addObject($subObject);
+                        // object toevoegen
+                        $saveSubObjects->add($subObject);
                         continue;
                     } elseif (count($subObject) > 1) {
                         $objectEntity->addError($attribute->getName(), 'Found more than 1 object with id '.$object['id'].' of type '.$attribute->getObject()->getName());
-                        break;
+                        continue;
                     } else {
                         $subObject = $subObject->first();
                     }
                 }
                 // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
-                elseif (count($value) == 1 && count($valueObject->getObjects()) == 1) {
+                elseif ($this->request->getMethod() == 'PUT' && count($value) == 1 && count($valueObject->getObjects()) == 1) {
                     $subObject = $valueObject->getObjects()->first();
                     $object['id'] = $subObject->getExternalId();
                 }
                 // Create a new subObject (ObjectEntity)
                 else {
-                    //TODO: Lets do some cascade checks here? as in, if cascade = false we should expect an uuid not a array/body
-                    $subObject = new ObjectEntity();
+                    //Lets do a cascade check here. As in, if cascade = false we should expect an uuid not an array/body
+                    if (!$attribute->getCascade() && !is_string($value)) {
+                        $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+                        continue;
+                    }
 
+                    $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                 }
@@ -439,27 +467,40 @@ class ValidationService
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
+                    $subObject->setApplication($this->session->get('application'));
                 }
-                //                $subObject->setApplication(); // TODO
+                if ($subObject->getEntity()->getFunction() === 'organization') {
+                    $subObject->setOrganization($subObject->getUri());
+                    var_dump('TEST2');
+                }
 
-                //                $valueObject->setValue($subObject);
-                $valueObject->addObject($subObject);
+                // object toevoegen
+                $saveSubObjects->add($subObject);
+            }
+            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
+            if ($this->request->getMethod() == 'PUT') {
+                $valueObject->getObjects()->clear();
+            }
+            // Actually add the objects to the valueObject
+            foreach ($saveSubObjects as $saveSubObject) {
+                $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
-            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different!!!
+            // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different, so be carefull!!!
             // This is an array of files
             $valueObject = $objectEntity->getValueByAttribute($attribute);
             foreach ($value as $key => $file) {
                 // Validations
                 if (!is_array($file)) {
                     $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of files (arrays).');
-                    break;
+                    continue;
                 }
                 if (!array_key_exists('base64', $file)) {
                     $objectEntity->addError($attribute->getName().'['.$key.'].base64', 'Expects an array with at least key base64 with a valid base64 encoded string value. (could also contain key filename)');
-                    break;
+                    continue;
                 }
 
                 // Validate (and create/update) this file
@@ -774,11 +815,6 @@ class ValidationService
         $rule = $valueObject->getAttribute()->getRequiredIf();
         //        var_dump($rule);
 
-        //TODO: this works with conditions for this specific $value (equal to, bigger than etc.),
-        // but if we want to make this field required if another Value has a certain condition, how do we do this with json logic?
-        // To do this we need to get the ObjectEntity->values->attribute where name == field and check if that makes this Value required...
-        // But what in the $rule / json logic should trigger this process ^
-        //        var_dump(jsonLogic::apply( [ "==" => [1, 1] ] )); //Example, if 1 == 1, results in: true
         if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
             $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: '.$rule);
         }
@@ -813,10 +849,9 @@ class ValidationService
         }
 
         // Do validation for attribute depending on its type
+        // todo: NOTE: Attribute->getMultiple = true for type object & file is handled somewhere else, see: validateAttributeMultiple()
         switch ($attribute->getType()) {
             case 'object':
-                //TODO: all code that uses $attribute->getMultiple() == true here, will never be reached, because of validateAttributeMultiple() in validateAttribute()!
-
                 // lets see if we already have a sub object
                 $valueObject = $objectEntity->getValueByAttribute($attribute);
 
@@ -833,23 +868,13 @@ class ValidationService
                 }
 
                 // Lets check for cascading
-                /* todo make switch */
                 if (!$attribute->getCascade() && !is_string($value)) {
                     $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
                     break;
                 }
-                // TODO: move to a place where $attribute->getMultiple() can actually be true
-                //                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-                //                    foreach ($value as $arraycheck) {
-                //                        if (!is_string($arraycheck)) {
-                //                            $objectEntity->addError($attribute->getName(), 'Contians a value that is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
-                //                            break;
-                //                        }
-                //                    }
-                //                }
 
                 // Lets handle the stuf
-                // If we are not cascading, attribute is not multiple and value is a string, than value should be an id.
+                // If we are not cascading and value is a string, than value should be an id.
                 if (is_string($value)) {
                     // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
                     // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet.
@@ -858,7 +883,6 @@ class ValidationService
                     if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
                         if (!$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
                             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                            //                            $subObject = $this->createOEforExternObject($attribute->getObject(), $value, $valueObject, $objectEntity); // TODO REMOVE
                             $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
                             if (!$subObject) {
                                 $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
@@ -872,47 +896,23 @@ class ValidationService
                     $valueObject->addObject($subObject);
                     break;
                 }
-                // TODO: move to a place where $attribute->getMultiple() can actually be true
-                //                if (!$attribute->getCascade() && $attribute->getMultiple()) {
-                //                    $valueObject->getObjects()->clear();
-                //                    foreach ($value as $arraycheck) {
-                //                        if (is_string($value) && !$subObject = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
-                //                            $objectEntity->addError($attribute->getName(), 'Could not find an object with id '.(string) $value.' of type '.$attribute->getObject()->getName());
-                //                        } else {
-                //                            // object toeveogen
-                //                            $valueObject->addObject($subObject);
-                //                        }
-                //                    }
-                //                    break;
-                //                }
 
                 if (!$valueObject->getValue()) {
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
-                    $subObject->setOrganization($this->session->get('activeOrganization'));
-                //todo set application
+                    if ($attribute->getObject()->getFunction() === 'organization') {
+                        $this->em->persist($subObject);
+                        $subObject->setOrganization($this->createUri($subObject));
+                    } else {
+                        $subObject->setOrganization($this->session->get('activeOrganization'));
+                    }
+                    $subObject->setApplication($this->session->get('application'));
                 } else {
                     $subObject = $valueObject->getValue();
                 }
                 $subObject = $this->validateEntity($subObject, $value);
                 $this->em->persist($subObject);
-
-                // TODO: move to a place where $attribute->getMultiple() can actually be true
-                //                if ($attribute->getMultiple()) {
-                //                    $subObjects = $valueObject->getObjects();
-                //                    if ($subObjects->isEmpty()) {
-                //                        $subObject = new ObjectEntity();
-                //                        $subObject->setEntity($attribute->getObject());
-                //                        $subObject->addSubresourceOf($valueObject);
-                //                        $subObject = $this->validateEntity($subObject, $value);
-                //                        $valueObject->addObject($subObject);
-                //                    }
-                //                    // Loop trough the subs
-                //                    foreach ($valueObject->getObjects() as $subObject) {
-                //                        $subObject = $this->validateEntity($subObject, $value); // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-                //                    }
-                //                }
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
@@ -979,6 +979,12 @@ class ValidationService
                 // Validate (and create/update) this file
                 $objectEntity = $this->validateFile($objectEntity, $attribute, $this->base64ToFileArray($value));
 
+                break;
+            case 'array':
+                if (!is_array($value)) {
+                    $objectEntity->addError($attribute->getName(), 'Contians a value that is not an array, provide an array as string instead');
+                    break;
+                }
                 break;
             default:
                 $objectEntity->addError($attribute->getName(), 'Has an an unknown type: ['.$attribute->getType().']');
@@ -1439,7 +1445,6 @@ class ValidationService
         }
 
         // Lets
-
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
         foreach ($objectEntity->getObjectValues() as $value) {
 
@@ -1482,6 +1487,8 @@ class ValidationService
             }
         }
 
+        $post ?: $post = $objectEntity->toArray();
+
         // We want to clear some stuf upp dh
         if (array_key_exists('id', $post)) {
             unset($post['id']);
@@ -1495,21 +1502,103 @@ class ValidationService
         if (array_key_exists('@type', $post)) {
             unset($post['@type']);
         }
+        $setOrganization = null;
+        if (array_key_exists('@organization', $post)) {
+            $setOrganization = $post['@organization'];
+            unset($post['@organization']);
+        }
 
-        //var_dump($url);
-        //var_dump($post);
+        // Lets use the correct post type
+        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+            case 'json':
+                $post = json_encode($post);
+                break;
+            case 'soap':
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
+                $post = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
+                    $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
+                    $objectEntity->toArray(),
+                    $objectEntity->getEntity()->getToSoap()->getRequestHydration()
+                ), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
+                $headers['Content-Type'] = 'application/xml;charset=UTF-8';
+                break;
+            default:
+                // @todo throw error
+                break;
+        }
 
-        $promise = $this->commonGroundService->callService($component, $url, json_encode($post), $query, $headers, true, $method)->then(
+        // TODO: if translationConfig overwrite promise if needed, still needs to be tested!
+        if ($objectEntity->getEntity()->getTranslationConfig()) {
+            $translationConfig = $objectEntity->getEntity()->getTranslationConfig();
+            // Use switch to look for possible methods & overwrite/merge values if configured for this method
+            switch ($method) {
+                case 'POST':
+                    if (array_key_exists('POST', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['POST'])) {
+                            $method = $translationConfig['POST']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['POST'])) {
+                            $headers = array_merge($headers, $translationConfig['POST']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['POST'])) {
+                            $query = array_merge($query, $translationConfig['POST']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['POST'])) {
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$translationConfig['POST']['endpoint'];
+                        }
+                    }
+                    break;
+                case 'PUT':
+                    if (array_key_exists('PUT', $translationConfig)) {
+                        // TODO make these if statements a function:
+                        if (array_key_exists('method', $translationConfig['PUT'])) {
+                            $method = $translationConfig['PUT']['method'];
+                        }
+                        if (array_key_exists('headers', $translationConfig['PUT'])) {
+                            $headers = array_merge($headers, $translationConfig['PUT']['headers']);
+                        }
+                        if (array_key_exists('query', $translationConfig['PUT'])) {
+                            $query = array_merge($query, $translationConfig['PUT']['query']);
+                        }
+                        if (array_key_exists('endpoint', $translationConfig['PUT'])) {
+                            $newEndpoint = str_replace('{id}', $objectEntity->getExternalId(), $translationConfig['PUT']['endpoint']);
+                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$newEndpoint;
+                        }
+                    }
+                    break;
+            }
+        }
+        $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($objectEntity, $url, $method) {
+            function ($response) use ($objectEntity, $url, $method, $setOrganization) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                     $gatewayResponseLog = new GatewayResponseLog();
                     $gatewayResponseLog->setObjectEntity($objectEntity);
                     $gatewayResponseLog->setResponse($response);
                     $this->em->persist($gatewayResponseLog);
                 }
+                // Lets use the correct responce type
+                switch ($objectEntity->getEntity()->getGateway()->getType()) {
+                    case 'json':
+                        $result = json_decode($response->getBody()->getContents(), true);
+                        break;
+                    case 'xml':
+                        $xmlEncoder = new XmlEncoder();
+                        $result = $xmlEncoder->decode($response->getBody()->getContents(), 'xml');
+                        break;
+                    case 'soap':
+                        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+                        $result = $response->getBody()->getContents();
+                        // $result = $this->translationService->parse($result);
+                        $result = $xmlEncoder->decode($result, 'xml');
+                        $result = $this->translationService->dotHydrator([], $result, $objectEntity->getEntity()->getToSoap()->getResponseHydration());
+                        break;
+                    default:
+                        // @todo throw error
+                        break;
+                }
 
-                $result = json_decode($response->getBody()->getContents(), true);
                 if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
@@ -1524,10 +1613,14 @@ class ValidationService
                 // Set organization for this object
                 if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                     $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                    $objectEntity->setApplication($this->session->get('application'));
                 }
-                //                    $objectEntity->setApplication(); // TODO
+                if (isset($setOrganization)) {
+                    $objectEntity->setOrganization($setOrganization);
+                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1564,11 +1657,11 @@ class ValidationService
 
                 /* @todo lelijke code */
                 if ($error->getResponse()) {
-                    $error = json_decode((string) $error->getResponse()->getBody(), true);
-                    if ($error && array_key_exists('message', $error)) {
-                        $error_message = $error['message'];
-                    } elseif ($error && array_key_exists('hydra:description', $error)) {
-                        $error_message = $error['hydra:description'];
+                    $errorBody = json_decode((string) $error->getResponse()->getBody(), true);
+                    if ($errorBody && array_key_exists('message', $errorBody)) {
+                        $error_message = $errorBody['message'];
+                    } elseif ($errorBody && array_key_exists('hydra:description', $errorBody)) {
+                        $error_message = $errorBody['hydra:description'];
                     } else {
                         $error_message = (string) $error->getResponse()->getBody();
                     }
@@ -1591,6 +1684,9 @@ class ValidationService
      */
     public function notify(ObjectEntity $objectEntity, string $method)
     {
+        if (!$this->commonGroundService->getComponent('nrc')) {
+            return;
+        }
         // TODO: move this function to a notificationService?
         $topic = $objectEntity->getEntity()->getName();
         switch ($method) {
