@@ -1268,6 +1268,7 @@ class SOAPService
 
         if($messageType == 'OntvangenIntakeNotificatie' && ($zaaktype == 'B0366' || $zaaktype == 'B0367'))
         {
+
             $wijzeBewoning = $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING");
             if(in_array($wijzeBewoning, $permissionRequired)){
                 $data->set('liveIn', json_encode([
@@ -1285,18 +1286,26 @@ class SOAPService
                 ]));
             }
 
-            $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => 'REGISTERED'];
+            $relatives = $this->commonGroundService->getResource(['component' => 'vrijbrp-dossier', 'type' => 'api/v1/relatives', 'id' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]);
+
+
+            $declarationTypes = [];
+            foreach($relatives['relatives'] as $relative){
+                $declarationTypes[$relative['person']['bsn']] = $this->translateDeclarationType($relative['declarationType']);
+            }
+
+            $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => $declarationTypes[$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]];
 
             if(
                 isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"]) &&
                 !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
             ) {
                 foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
-                    $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
+                    $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']];
                 }
             } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])) {
                 $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
-                $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => 'REGISTERED'];
+                $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']];
             }
             $data->set('relocators', json_encode($relocators));
         }
@@ -1613,9 +1622,9 @@ class SOAPService
 
     public function getMunicipalityCode(Request $request): string
     {
-        if(strpos(strtolower($request->getRequestUri()), 'zoetermeer') !== false) {
+        if(strpos(strtolower($request->getBaseUrl()), 'zoetermeer') !== false) {
             return '0637';
-        } elseif(strpos(strtolower($request->getRequestUri()), 'nijmegen') !== false) {
+        } elseif(strpos(strtolower($request->getBaseUrl()), 'nijmegen') !== false) {
             return '0268';
         } else {
             return '0268';
