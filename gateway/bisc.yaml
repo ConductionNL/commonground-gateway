@@ -457,7 +457,7 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
     organization_members:
-        name: emails
+        name: members
         description: The members of this organization (if it is a team).
         type: object
         multiple: true
