@@ -248,10 +248,10 @@ class EavService
                 ];
         }
 
-        // Lets allow _mapping tot take place
-        if ($mapping === $request->query->get('_mapping')) {
-            $resultConfig['result'] = $this->translationService->dotHydrator([], $resultConfig['result'], $mapping);
-        }
+//        // Lets allow _mapping tot take place
+//        if ($mapping === $request->query->get('_mapping')) {
+//            $resultConfig['result'] = $this->translationService->dotHydrator([], $resultConfig['result'], $mapping);
+//        }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
