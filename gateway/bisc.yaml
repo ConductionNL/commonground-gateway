@@ -1792,7 +1792,7 @@ App\Entity\Attribute:
         entity: "@shareStudent"
         object: "@student"
     shareStudent_email:
-        name: student
+        name: email
         type: string
         format: email
         required: true
