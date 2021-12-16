@@ -4,6 +4,9 @@ App\Entity\Application:
         name: main application
         secret: 5fbffbf5-412a-41bc-82bf-3b41d71246ea
         resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
+        domains:
+            - backend-bisc-dev.commonground.nu
+        organization: https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951
 App\Entity\Gateway:
     edu_api:
         name: educatie component
@@ -84,6 +87,7 @@ App\Entity\Entity:
 
     # Organization Object
     organization:
+        function: "organization"
         route: "/api/organizations"
         name: organizations
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
@@ -200,6 +204,7 @@ App\Entity\Entity:
         description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
         gateway: "@edu_api"
         endpoint: "participants"
+        availableProperties: []
 
     # Medewerker Intake object
     employeeIntake:
@@ -262,6 +267,17 @@ App\Entity\Entity:
         route: "/api/postal_codes"
         name: postalCode
         description: Een combinatie van een 1000 code van een postcode, en een taalhuis
+        
+    # shareStudent object
+    shareStudent:
+        route: "/api/share_students"
+        name: shareStudent
+        description: Het delen van een student met een specifiek email adres
+        
+    # ReferringPerson object
+    referringPerson:
+        name: referringPerson
+        description: Een persoon object voor de persoon die een publieke student intake aanmaakt.
 
     #TODO: The following objects are currently not used in release 1, 2 & 3 ? :
     # program object
@@ -328,7 +344,6 @@ App\Entity\Attribute:
         name: person
         description: The person of this user.
         type: object
-        required: true
         entity: "@user"
         object: "@person"
         cascade: true
@@ -394,7 +409,7 @@ App\Entity\Attribute:
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
         type: string
         required: true
-        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder"]
+        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder", "team"]
         entity: "@organization"
         persistToGateway: true
         searchable: true
@@ -441,6 +456,34 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
         cascadeDelete: true
+    organization_members:
+        name: emails
+        description: The members of this organization (if it is a team).
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@employee"
+        inversedBy: "@employee_teams"
+    organization_languageHouse_postalCodes:
+        name: langougeHouse_postalCodes
+        description: The postalcodes that are asigned to this languagehouse.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_languageHouse"
+    organization_team_postalCodes:
+        name: team_postalCodes
+        description: The postalcodes that are asigned to this team.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_team"
 
     # Email
     email_name:
@@ -700,6 +743,20 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+    employee_mentees:
+        name: mentees
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@student"
+        inversedBy: "@student_mentor"
+    employee_teams:
+        name: teams
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@organization"
+        inversedBy: "@organization_members"
     employee_intake:
         name: intake
         type: object
@@ -739,6 +796,17 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
+    student_team:
+        name: team
+        type: object
+        entity: "@student"
+        object: "@organization"
+    student_mentor:
+        name: mentor
+        type: object
+        entity: "@student"
+        object: "@employee"
+        inversedBy: "@employee_mentees"
     student_intake:
         name: intake
         type: object
@@ -853,6 +921,13 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@studentIntake"
+    studentIntake_referringPerson:
+        name: referringPerson
+        type: object
+        entity: "@studentIntake"
+        object: "@referringPerson"
+        cascade: true
+        cascadeDelete: true
     studentIntake_foundVia:
         name: foundVia
         type: string
@@ -1088,6 +1163,52 @@ App\Entity\Attribute:
         type: boolean
         entity: "@studentIntake"
         required: true
+        
+    # ReferringPerson Properties
+    referringPerson_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        required: true
+        persistToGateway: true
+    referringPerson_address:
+        name: addresses
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_telephone:
+        name: telephones
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_email:
+        name: emails
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@email"
+        cascade: true
+        cascadeDelete: true
 
     # Education properties
     education_name:
@@ -1533,7 +1654,7 @@ App\Entity\Attribute:
         required: true
         #        multiple: true
         maxFileSize: 550000
-        fileTypes: # see function mimeToExt() in ValidationService 
+        fileTypes: # see function mimeToExt() in ValidationService
             [
                 "application/pdf",
                 "text/plain",
@@ -1556,7 +1677,6 @@ App\Entity\Attribute:
     contactMoment_employee:
         name: employee
         type: object
-        required: true
         entity: "@contactMoment"
         object: "@employee"
     contactMoment_student:
@@ -1597,12 +1717,20 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         searchable: true
+        mustBeUnique: true
     postalCode_languageHouse:
         name: languageHouse
         type: object
         required: true
         entity: "@postalCode"
         object: "@organization"
+        inversedBy: "@organization_languageHouse_postalCodes"
+    postalCode_team:
+        name: team
+        type: object
+        entity: "@postalCode"
+        object: "@organization"
+        inversedBy: "@organization_team_postalCodes"
 
     #TODO: Currently not used in release 1, 2 & 3 ?
     #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
@@ -1705,5 +1833,23 @@ App\Entity\Attribute:
         type: object
         entity: "@course"
         object: "@organization"
+        
+    #share student
+    shareStudent_student:
+        name: student
+        type: object
+        required: true
+        description: The student that you want to share
+        entity: "@shareStudent"
+        object: "@student"
+    shareStudent_email:
+        name: email
+        type: string
+        format: email
+        required: true
+        description: The eMail addres thats should recieve the student pdf
+        entity: "@shareStudent"
+                
+        
 # Basic setup for bisc
 

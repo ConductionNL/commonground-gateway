@@ -30,63 +30,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *          "get",
- *          "put",
- *          "delete",
- *          "get_eav_object"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity id",
- *               "description"="Returns the object"
- *              }
- *          },
- *          "put_eav_object"={
- *              "method"="PUT",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Put object",
- *                  "description"="Returns the updated object"
- *              }
- *          },
- *          "delete_eav_object"={
- *              "method"="DELETE",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="delete object",
- *                  "description"="Returns the updated object"
- *              },
- *              "read"  = false,
- *              "controller" = "App\Controller\EavController::deleteAction"
- *          },
- *     },
+ *      "get"={"path"="/admin/object_entities/{id}"},
+ *      "put"={"path"="/admin/object_entities/{id}"},
+ *      "delete"={"path"="/admin/object_entities/{id}"}
+ *  },
  *  collectionOperations={
- *      "get",
- *      "post",
- *      "get_eav_objects"={
- *          "method"="GET",
- *          "path"="/eav/data/{entity}",
- *          "swagger_context" = {
- *              "summary"="Get object with objectEntity uri",
- *              "description"="Returns the object"
- *          }
- *      },
- *      "post_eav_objects"={
- *          "method"="POST",
- *          "path"="/eav/data/{entity}",
- *          "swagger_context" = {
- *              "summary"="Post object",
- *              "description"="Returns the created object"
- *          }
- *      },
- *          "get_eav_object"={
- *              "method"="GET",
- *              "path"="/eav/data/{entity}/{id}",
- *              "swagger_context" = {
- *                  "summary"="Get object with objectEntity id",
- *               "description"="Returns the object"
- *              }
- *          },
+ *      "get"={"path"="/admin/object_entities"},
+ *      "post"={"path"="/admin/object_entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -96,7 +46,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
  *     "uri": "ipartial",
- *     "entity.type": "iexact"
+ *     "entity.id": "exact"
  * })
  */
 class ObjectEntity
@@ -131,12 +81,11 @@ class ObjectEntity
     private $uri;
 
     /**
-     * @var string An uuid or uri of an application
-     *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
+     * @MaxDepth(1)
      */
-    private $application;
+    private ?Application $application = null;
 
     /**
      * @var string An uuid or uri of an organization
@@ -203,7 +152,7 @@ class ObjectEntity
      *
      * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
      */
-    private ArrayCollection $recursionStack;
+    private Collection $recursionStack;
 
     /**
      * @MaxDepth(1)
@@ -229,11 +178,18 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     */
+    private Collection $requestLogs;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
+        $this->requestLogs = new ArrayCollection();
 
         //TODO: better way of defaulting dateCreated & dateModified with orm?
         // (options CURRENT_TIMESTAMP or 0 does not work)
@@ -278,12 +234,12 @@ class ObjectEntity
         return $this;
     }
 
-    public function getApplication(): ?string
+    public function getApplication(): ?Application
     {
         return $this->application;
     }
 
-    public function setApplication(string $application): self
+    public function setApplication(?Application $application): self
     {
         $this->application = $application;
 
@@ -735,7 +691,7 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @return array the array holding all the data
+     * @return array the array holding all the data     *
      */
     public function toArray(int $level = 1): array
     {
@@ -803,6 +759,36 @@ class ObjectEntity
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RequestLog[]
+     */
+    public function getRequestLogs(): Collection
+    {
+        return $this->requestLogs;
+    }
+
+    public function addRequestLog(RequestLog $requestLog): self
+    {
+        if (!$this->requestLogs->contains($requestLog)) {
+            $this->requestLogs[] = $requestLog;
+            $requestLog->setObjectEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRequestLog(RequestLog $requestLog): self
+    {
+        if ($this->requestLogs->removeElement($requestLog)) {
+            // set the owning side to null (unless already changed)
+            if ($requestLog->getObjectEntity() === $this) {
+                $requestLog->setObjectEntity(null);
+            }
+        }
 
         return $this;
     }

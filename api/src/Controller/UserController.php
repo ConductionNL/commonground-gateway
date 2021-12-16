@@ -74,11 +74,29 @@ class UserController extends AbstractController
         foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
         }
+        $organizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
-        $this->session->set('activeOrganization', $user['organization'] ?? count($organizations) > 0 ? $organizations[0] : null);
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
+        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
+    }
+
+    private function getActiveOrganization(array $user, array $organizations): ?string
+    {
+        if ($user['organization']) {
+            return $user['organization'];
+        }
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has
+        if (count($organizations) > 0) {
+            return $organizations[0];
+        }
+        // If we still have no organization, get the organization from the application
+        if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
+            return $this->session->get('application')->getOrganization();
+        }
+
+        return null;
     }
 
     /**
