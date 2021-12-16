@@ -450,6 +450,14 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
         cascadeDelete: true
+    organization_members:
+        name: emails
+        description: The members of this organization (if it is a team).
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@employee"
+        inversedBy: "@employee_teams"
     organization_languageHouse_postalCodes:
         name: langougeHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
@@ -729,6 +737,20 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+    employee_mentees:
+        name: mentees
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@student"
+        inversedBy: "@student_mentor"
+    employee_teams:
+        name: teams
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@organization"
+        inversedBy: "@organization_members"
     employee_intake:
         name: intake
         type: object
@@ -768,6 +790,17 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
+    student_team:
+        name: team
+        type: object
+        entity: "@student"
+        object: "@organization"
+    student_mentor:
+        name: mentor
+        type: object
+        entity: "@student"
+        object: "@employee"
+        inversedBy: "@employee_mentees"
     student_intake:
         name: intake
         type: object
@@ -1632,6 +1665,7 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         searchable: true
+        mustBeUnique: true
     postalCode_languageHouse:
         name: languageHouse
         type: object
