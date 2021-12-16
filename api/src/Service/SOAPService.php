@@ -14,6 +14,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +28,7 @@ class SOAPService
     private EavService $eavService;
     private TranslationService $translationService;
     private GatewayService $gatewayService;
+    private ParameterBagInterface $parameterBag;
 
     /**
      * Translation table for case type descriptions.
@@ -65,7 +67,8 @@ class SOAPService
         CacheInterface $cache,
         EavService $eavService,
         TranslationService $translationService,
-        GatewayService $gatewayService
+        GatewayService $gatewayService,
+        ParameterBagInterface $parameterBag
     )
     {
         $this->commonGroundService = $commonGroundService;
@@ -74,6 +77,7 @@ class SOAPService
         $this->eavService = $eavService;
         $this->translationService = $translationService;
         $this->gatewayService = $gatewayService;
+        $this->parameterBag = $parameterBag;
     }
 
     public function getZaakType(array $data, array $namespaces): string
@@ -1622,9 +1626,9 @@ class SOAPService
 
     public function getMunicipalityCode(Request $request): string
     {
-        if(strpos(strtolower($request->getBaseUrl()), 'zoetermeer') !== false) {
+        if(strpos($this->parameterBag->get('app_url'), 'zoetermeer') !== false) {
             return '0637';
-        } elseif(strpos(strtolower($request->getBaseUrl()), 'nijmegen') !== false) {
+        } elseif(strpos($this->parameterBag->get('app_url'), 'nijmegen') !== false) {
             return '0268';
         } else {
             return '0268';

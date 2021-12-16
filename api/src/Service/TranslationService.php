@@ -64,7 +64,7 @@ class TranslationService
                 $search = trim($searches[0]);
                 $format = trim($searches[1]);
             }
-            if(!isset($format) || $format == 'string'){
+            if(!isset($format) || $format == 'string' || $format == 'required'){
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
             } elseif($format == 'json') {
                 $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;
@@ -74,11 +74,11 @@ class TranslationService
             } elseif($format == 'bool') {
                 $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
             }
-            unset($format);
 
-            if($destination[$replace] === [] || $destination[$replace] === ""){
+            if(($destination[$replace] === [] || $destination[$replace] === "") && (!isset($format) || $format !== 'required')){
                 unset($destination[$replace]);
             }
+            unset($format);
         }
 
         // Let turn the dot array back into an array
