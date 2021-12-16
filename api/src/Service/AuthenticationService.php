@@ -258,11 +258,11 @@ class AuthenticationService
 
         $service = $this->commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0];
         $parameters = [
-            'fullname'             => $person['name'] ?? $user['username'],
-            'base64_encoded_email' => base64_encode($user['username']),
-            'base64_encoded_token' => $response['token'],
-            'app_base_url'         => rtrim($frontend, '/'),
-            'subject'              => $subject,
+            'fullname'              => $person['name'] ?? $user['username'],
+            'base64_encoded_email'  => base64_encode($user['username']),
+            'base64_encoded_token'  => base64_encode($response['token']),
+            'app_base_url'          => rtrim($frontend, '/'),
+            'subject'               => $subject,
         ];
 
         $content = $this->twig->render('password-forgot-e-mail.html.twig', $parameters);
@@ -274,7 +274,7 @@ class AuthenticationService
                 'content'  => $content,
                 'type'     => 'email',
                 'status'   => 'queued',
-                'service'  => '/services/'.$service['id'],
+                'service'  => '/services/' . $service['id'],
                 'subject'  => $subject,
             ],
             ['component' => 'bs', 'type' => 'messages']
