@@ -1,0 +1,44 @@
+security:
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+        authenticationProvider:
+            id: Conduction\SamlBundle\Security\User\AuthenticationProvider
+    firewalls:
+        main:
+            anonymous: ~
+            logout:
+                path: app_user_logout
+                target: app_user_redirect
+            stateless: false
+            provider: authenticationProvider
+            guard:
+                authenticators:
+                    - Conduction\DigidBundle\Security\CommongroundDigidAuthenticator
+                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
+                    - App\Security\DigispoofAuthenticator
+                    - App\Security\OauthAuthenticator
+                    - App\Security\BasicAuthAuthenticator
+                    - App\Security\UserTokenAuthenticator
+                entry_point: App\Security\UserTokenAuthenticator
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#firewalls-authentication
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # Documentation
+        - { path: ^/docs, roles: ROLE_group.admin }
+
+        # Admin
+        - { path: ^/admin, roles: ROLE_group.admin }
+
+        # User posts
+        - {
+              path: ^/api/users,
+              methods: ["POST"],
+              roles: IS_AUTHENTICATED_ANONYMOUSLY,
+          }
+        - { path: ^/api/users/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }

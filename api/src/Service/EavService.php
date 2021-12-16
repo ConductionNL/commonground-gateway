@@ -365,10 +365,10 @@ class EavService
             }
         }
 
-        if ($host == 'localhost' && !$this->session->get('activeOrganization') && $this->session->get('application')) {
+        if (!$this->session->get('activeOrganization') && $this->session->get('application')) {
             $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
         }
-        if ($host == 'localhost' && !$this->session->get('organizations') && $this->session->get('activeOrganization')) {
+        if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
             $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
         }
 
