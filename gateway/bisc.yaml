@@ -450,7 +450,7 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
         cascadeDelete: true
-    organization_langougeHouse_postalCodes:
+    organization_languageHouse_postalCodes:
         name: langougeHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
         type: object
@@ -1639,8 +1639,8 @@ App\Entity\Attribute:
         entity: "@postalCode"
         object: "@organization"
         inversedBy: "@organization_languageHouse_postalCodes"
-    postalCode_languageTeam:
-        name: languageHouse
+    postalCode_team:
+        name: team
         type: object
         entity: "@postalCode"
         object: "@organization"
