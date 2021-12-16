@@ -1,5 +1,5 @@
 api_platform:
-    enable_docs: false
+    enable_docs: true
     enable_swagger: false
     enable_swagger_ui: false
     enable_re_doc: false
