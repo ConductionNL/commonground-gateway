@@ -267,6 +267,11 @@ App\Entity\Entity:
         route: "/api/postal_codes"
         name: postalCode
         description: Een combinatie van een 1000 code van een postcode, en een taalhuis
+        
+    # ReferringPerson object
+    referringPerson:
+        name: referringPerson
+        description: Een persoon object voor de persoon die een publieke student intake aanmaakt.
 
     #TODO: The following objects are currently not used in release 1, 2 & 3 ? :
     # program object
@@ -861,7 +866,7 @@ App\Entity\Attribute:
         name: referringPerson
         type: object
         entity: "@studentIntake"
-        object: "@person"
+        object: "@referringPerson"
         cascade: true
         cascadeDelete: true
     studentIntake_foundVia:
@@ -1099,6 +1104,52 @@ App\Entity\Attribute:
         type: boolean
         entity: "@studentIntake"
         required: true
+        
+    # ReferringPerson Properties
+    referringPerson_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        required: true
+        persistToGateway: true
+    referringPerson_address:
+        name: addresses
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_telephone:
+        name: telephones
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_email:
+        name: emails
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@email"
+        cascade: true
+        cascadeDelete: true
 
     # Education properties
     education_name:
