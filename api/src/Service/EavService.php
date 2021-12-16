@@ -41,9 +41,22 @@ class EavService
     private ObjectEntityService $objectEntityService;
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
+    private TranslationService $translationService;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService, SerializerService $serializerService, SerializerInterface $serializer, AuthorizationService $authorizationService, ConvertToGatewayService $convertToGatewayService, SessionInterface $session, ObjectEntityService $objectEntityService, ResponseService $responseService, ParameterBagInterface $parameterBag)
-    {
+    public function __construct(
+        EntityManagerInterface $em,
+        CommonGroundService $commonGroundService,
+        ValidationService $validationService,
+        SerializerService $serializerService,
+        SerializerInterface $serializer,
+        AuthorizationService $authorizationService,
+        ConvertToGatewayService $convertToGatewayService,
+        SessionInterface $session,
+        ObjectEntityService $objectEntityService,
+        ResponseService $responseService,
+        ParameterBagInterface $parameterBag,
+        TranslationService $translationService
+    ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
@@ -55,6 +68,7 @@ class EavService
         $this->objectEntityService = $objectEntityService;
         $this->responseService = $responseService;
         $this->parameterBag = $parameterBag;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -232,6 +246,11 @@ class EavService
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
+        }
+
+        // Lets allow _mapping tot take place
+        if ($mapping === $request->query->get('_mapping')) {
+            $resultConfig['result'] = $this->translationService->dotHydrator([], $resultConfig['result'], $mapping);
         }
 
         // Lets seriliaze the shizle
