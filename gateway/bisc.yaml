@@ -284,6 +284,11 @@ App\Entity\Entity:
         name: courseGroup
         description: Een groep van deelnemers aan een curus of opleiding (bijvoorbeeld een klas)
 
+    # courseGroup object
+    shareStudent:
+        name: shareStudent
+        description: Het delen van een student met een specifiek email adres
+
 App\Entity\Attribute:
     # User attributes
     user_username:
@@ -398,7 +403,7 @@ App\Entity\Attribute:
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
         type: string
         required: true
-        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder"]
+        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder", "team"]
         entity: "@organization"
         persistToGateway: true
         searchable: true
@@ -445,6 +450,26 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
         cascadeDelete: true
+    organization_langougeHouse_postalCodes:
+        name: langougeHouse_postalCodes
+        description: The postalcodes that are asigned to this languagehouse.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_languageHouse"
+    organization_team_postalCodes:
+        name: team_postalCodes
+        description: The postalcodes that are asigned to this team.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_team"
 
     # Email
     email_name:
@@ -1613,6 +1638,13 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         object: "@organization"
+        inversedBy: "@organization_languageHouse_postalCodes"
+    postalCode_languageTeam:
+        name: languageHouse
+        type: object
+        entity: "@postalCode"
+        object: "@organization"
+        inversedBy: "@organization_team_postalCodes"
 
     #TODO: Currently not used in release 1, 2 & 3 ?
     #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
@@ -1715,5 +1747,23 @@ App\Entity\Attribute:
         type: object
         entity: "@course"
         object: "@organization"
+        
+    #share student
+    shareStudent_student:
+        name: student
+        type: object
+        required: true
+        description: The student that you want to share
+        entity: "@shareStudent"
+        object: "@student"
+    shareStudent_email:
+        name: student
+        type: string
+        format: email
+        required: true
+        description: The eMail addres thats should recieve the student pdf
+        entity: "@shareStudent"
+                
+        
 # Basic setup for bisc
 
