@@ -248,14 +248,33 @@ class EavService
                 ];
         }
 
-//        // Lets allow _mapping tot take place
-//        if ($mapping === $request->query->get('_mapping')) {
-//            $resultConfig['result'] = $this->translationService->dotHydrator([], $resultConfig['result'], $mapping);
-//        }
+        // Lets allow _mapping tot take place
+        /* @todo remove the old fields support */
+        if ($mapping = $request->query->get('_mapping')) {
+            foreach ($resultConfig['result'] as $key =>  $result) {
+                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+            }
+        }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
 
+        // Afther that we transale the shizle out of it
+
+        /*@todo this is an ugly catch to make sure it only applies to bisc */
+        /*@todo this should DEFINTLY be configuration */
+        if ($contentType === 'text/csv') {
+            $translationVariables = [
+                'OTHER'     => 'Anders',
+                'YES_OTHER' => '"Ja, Anders"',
+            ];
+        } else {
+            $translationVariables = [];
+        }
+
+        $result = $this->translationService->parse($result, true, $translationVariables);
+
+        /*
         if ($contentType === 'text/csv') {
             $replacements = [
                 '/student\.person.givenName/'                        => 'Voornaam',
@@ -303,6 +322,7 @@ class EavService
                 $result = preg_replace($key, $value, $result);
             }
         }
+        */
 
         // Let return the shizle
         $response = new Response(
@@ -857,6 +877,7 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
+
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);

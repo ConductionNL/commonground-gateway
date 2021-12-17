@@ -274,7 +274,7 @@ class AuthenticationService
                 'content'  => $content,
                 'type'     => 'email',
                 'status'   => 'queued',
-                'service'  => '/services/' . $service['id'],
+                'service'  => '/services/'.$service['id'],
                 'subject'  => $subject,
             ],
             ['component' => 'bs', 'type' => 'messages']
