@@ -250,8 +250,8 @@ class EavService
 
         // Lets allow _mapping tot take place
         /* @todo remove the old fields support */
-        if($mapping = $request->query->get('_mapping')){
-            foreach($resultConfig['result'] as $key =>  $result){
+        if ($mapping = $request->query->get('_mapping')) {
+            foreach ($resultConfig['result'] as $key =>  $result) {
                 $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
             }
         }
@@ -265,11 +265,10 @@ class EavService
         /*@todo this should DEFINTLY be configuration */
         if ($contentType === 'text/csv') {
             $translationVariables = [
-                'OTHER' => 'Anders',
+                'OTHER'     => 'Anders',
                 'YES_OTHER' => '"Ja, Anders"',
             ];
-        }
-        else{
+        } else {
             $translationVariables = [];
         }
 
@@ -878,7 +877,6 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
-
 
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
