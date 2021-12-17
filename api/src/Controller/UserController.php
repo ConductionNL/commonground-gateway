@@ -108,7 +108,7 @@ class UserController extends AbstractController
      */
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
     {
-        if ($organization = $commonGroundService->isResource($organization)) {
+        if ($organization = $this->isResource($organization, $commonGroundService)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
@@ -120,6 +120,15 @@ class UserController extends AbstractController
         }
 
         return $organizations;
+    }
+
+    public function isResource($url, CommonGroundService $commonGroundService)
+    {
+        try {
+            return $commonGroundService->getResource($url, [], false);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
