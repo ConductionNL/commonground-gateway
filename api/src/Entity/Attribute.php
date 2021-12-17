@@ -327,6 +327,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property should confirm to]
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $allOf = [];
@@ -334,7 +335,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to]
      *
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $anyOf = [];
@@ -342,7 +343,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to]
      *
-     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $oneOf = [];
@@ -500,6 +501,7 @@ class Attribute
     /**
      * Whether or not the object of this property will be deleted if the parent object is deleted.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $cascadeDelete = false;
@@ -541,6 +543,7 @@ class Attribute
     /**
      * Setting this property to true makes it so that this property is not allowed to be changed after creation.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $immutable = false;

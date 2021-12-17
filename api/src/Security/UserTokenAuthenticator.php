@@ -83,7 +83,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
      */
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
     {
-        if ($organization = $commonGroundService->isResource($organization)) {
+        if ($organization = $this->isResource($organization, $commonGroundService)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
@@ -95,6 +95,15 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         }
 
         return $organizations;
+    }
+
+    public function isResource($url, CommonGroundService $commonGroundService)
+    {
+        try {
+            return $commonGroundService->getResource($url, [], false);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
@@ -141,7 +150,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             }
         }
 
-        $organizations = ['localhostOrganization'];
+        $organizations = [];
         if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }
@@ -153,7 +162,9 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService);
         }
+        $organizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
         return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);

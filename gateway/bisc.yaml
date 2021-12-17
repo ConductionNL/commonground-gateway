@@ -267,6 +267,17 @@ App\Entity\Entity:
         route: "/api/postal_codes"
         name: postalCode
         description: Een combinatie van een 1000 code van een postcode, en een taalhuis
+        
+    # shareStudent object
+    shareStudent:
+        route: "/api/share_students"
+        name: shareStudent
+        description: Het delen van een student met een specifiek email adres
+        
+    # ReferringPerson object
+    referringPerson:
+        name: referringPerson
+        description: Een persoon object voor de persoon die een publieke student intake aanmaakt.
 
     #TODO: The following objects are currently not used in release 1, 2 & 3 ? :
     # program object
@@ -398,7 +409,7 @@ App\Entity\Attribute:
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
         type: string
         required: true
-        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder"]
+        enum: ["taalhuis", "bisc", "verwijzer", "aanbieder", "team"]
         entity: "@organization"
         persistToGateway: true
         searchable: true
@@ -445,6 +456,34 @@ App\Entity\Attribute:
         persistToGateway: true
         cascade: true
         cascadeDelete: true
+    organization_members:
+        name: members
+        description: The members of this organization (if it is a team).
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@employee"
+        inversedBy: "@employee_teams"
+    organization_languageHouse_postalCodes:
+        name: langougeHouse_postalCodes
+        description: The postalcodes that are asigned to this languagehouse.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_languageHouse"
+    organization_team_postalCodes:
+        name: team_postalCodes
+        description: The postalcodes that are asigned to this team.
+        type: object
+        multiple: true
+        mustBeUnique: true
+        entity: "@organization"
+        object: "@postalCode"
+        cascade: true
+        inversedBy: "@postalCode_team"
 
     # Email
     email_name:
@@ -704,6 +743,20 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+    employee_mentees:
+        name: mentees
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@student"
+        inversedBy: "@student_mentor"
+    employee_teams:
+        name: teams
+        type: object
+        multiple: true
+        entity: "@employee"
+        object: "@organization"
+        inversedBy: "@organization_members"
     employee_intake:
         name: intake
         type: object
@@ -743,6 +796,17 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
+    student_team:
+        name: team
+        type: object
+        entity: "@student"
+        object: "@organization"
+    student_mentor:
+        name: mentor
+        type: object
+        entity: "@student"
+        object: "@employee"
+        inversedBy: "@employee_mentees"
     student_intake:
         name: intake
         type: object
@@ -861,7 +925,7 @@ App\Entity\Attribute:
         name: referringPerson
         type: object
         entity: "@studentIntake"
-        object: "@person"
+        object: "@referringPerson"
         cascade: true
         cascadeDelete: true
     studentIntake_foundVia:
@@ -996,19 +1060,30 @@ App\Entity\Attribute:
         #select multiple
         enum:
             [
-                "KLIKTIK",
-                "USING_WHATSAPP",
-                "USING_SKYPE",
-                "DEVICE_FUNCTIONALITIES",
-                "DIGITAL_GOVERNMENT",
-                "RESERVE_BOOKS_IN_LIBRARY",
-                "ADS_ON_MARKTPLAATS",
-                "READ_FOR_CHILDREN",
-                "UNDERSTAND_PRESCRIPTIONS",
-                "WRITE_APPLICATION_LETTER",
-                "WRITE_POSTCARD_FOR_FAMILY",
-                "DO_ADMINISTRATION",
-                "CALCULATIONS_FOR_RECIPES",
+                "DIGITAL_SKILLS_USING_ICT_SYSTEMS",
+                "DIGITAL_SKILLS_SECURE_USAGE",
+                "DIGITAL_SKILLS_SEARCHING",
+                "DIGITAL_SKILLS_PROCESSING_INFORMATION",
+                "DIGITAL_SKILLS_COMMUNICATION",
+                "READING_INFORMATIVE_TEXTS",
+                "READING_INSTRUCTIVE_TEXTS",
+                "READING_ARGUMENTATIVE_TEXTS",
+                "READING_TELLING_STORIES",
+                "WRITING_CORRESPONDENCE",
+                "WRITING_FORMS_AND_NOTES",
+                "WRITING_REPORTS_AND_SUMMARIES",
+                "WRITING_FREE_WRITING",
+                "ORAL_SKILLS_CONVERSATIONS",
+                "ORAL_SKILLS_PARTICIPATE_IN_DISCUSSION",
+                "ORAL_SKILLS_MONOLOGUE",
+                "ORAL_SKILLS_UNDERSTAND_INSTRUCTIONS",
+                "ORAL_SKILLS_UNDERSTAND_MESSAGES",
+                "ORAL_SKILLS_UNDERSTAND_SPEECH",
+                "ORAL_SKILLS_UNDERSTAND_TV_PROGRAMS",
+                "MATHEMATICS_NUMBERS",
+                "MATHEMATICS_RELATIONS",
+                "MATHEMATICS_GEOMETRY",
+                "MATHEMATICS_CONNECTIONS",
                 "OTHER",
             ]
         multiple: true
@@ -1099,6 +1174,52 @@ App\Entity\Attribute:
         type: boolean
         entity: "@studentIntake"
         required: true
+        
+    # ReferringPerson Properties
+    referringPerson_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        persistToGateway: true
+    referringPerson_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: "@referringPerson"
+        required: true
+        persistToGateway: true
+    referringPerson_address:
+        name: addresses
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_telephone:
+        name: telephones
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    referringPerson_email:
+        name: emails
+        type: object
+        multiple: true
+        entity: "@referringPerson"
+        object: "@email"
+        cascade: true
+        cascadeDelete: true
 
     # Education properties
     education_name:
@@ -1607,12 +1728,20 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         searchable: true
+        mustBeUnique: true
     postalCode_languageHouse:
         name: languageHouse
         type: object
         required: true
         entity: "@postalCode"
         object: "@organization"
+        inversedBy: "@organization_languageHouse_postalCodes"
+    postalCode_team:
+        name: team
+        type: object
+        entity: "@postalCode"
+        object: "@organization"
+        inversedBy: "@organization_team_postalCodes"
 
     #TODO: Currently not used in release 1, 2 & 3 ?
     #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
@@ -1715,5 +1844,23 @@ App\Entity\Attribute:
         type: object
         entity: "@course"
         object: "@organization"
+        
+    #share student
+    shareStudent_student:
+        name: student
+        type: object
+        required: true
+        description: The student that you want to share
+        entity: "@shareStudent"
+        object: "@student"
+    shareStudent_email:
+        name: email
+        type: string
+        format: email
+        required: true
+        description: The eMail addres thats should recieve the student pdf
+        entity: "@shareStudent"
+                
+        
 # Basic setup for bisc
 

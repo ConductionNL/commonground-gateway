@@ -62,7 +62,7 @@ class UserController extends AbstractController
         // Set orgs in session for multitenancy
         // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
         $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
-        $organizations = ['localhostOrganization'];
+        $organizations = [];
         if (isset($user['organization'])) {
             $organizations[] = $user['organization'];
         }
@@ -74,8 +74,9 @@ class UserController extends AbstractController
         foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
         }
+        $organizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has;
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
@@ -107,7 +108,7 @@ class UserController extends AbstractController
      */
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
     {
-        if ($organization = $commonGroundService->isResource($organization)) {
+        if ($organization = $this->isResource($organization, $commonGroundService)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
@@ -119,6 +120,15 @@ class UserController extends AbstractController
         }
 
         return $organizations;
+    }
+
+    public function isResource($url, CommonGroundService $commonGroundService)
+    {
+        try {
+            return $commonGroundService->getResource($url, [], false);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
