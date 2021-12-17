@@ -44,6 +44,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "endpoint.id": "exact",
  *     "gateway.id": "exact",
  *     "application.id": "exact",
+ *     "objectEntity.id": "exact",
  * })
  */
 class RequestLog
