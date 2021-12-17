@@ -9,7 +9,6 @@ use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
-use App\Service\TranslationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -57,8 +56,7 @@ class EavService
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
         TranslationService $translationService
-    )
-    {
+    ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
@@ -250,10 +248,10 @@ class EavService
                 ];
         }
 
-        // Lets allow _mapping tot take place
-        if($mapping === $request->query->get('_mapping')){
-            $resultConfig['result'] = $this->translationService->dotHydrator([],$resultConfig['result'], $mapping);
-        }
+//        // Lets allow _mapping tot take place
+//        if ($mapping === $request->query->get('_mapping')) {
+//            $resultConfig['result'] = $this->translationService->dotHydrator([], $resultConfig['result'], $mapping);
+//        }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
