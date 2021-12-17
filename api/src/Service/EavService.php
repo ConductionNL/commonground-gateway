@@ -259,6 +259,23 @@ class EavService
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
 
+        // Afther that we transale the shizle out of it
+
+        /*@todo this is an ugly catch to make sure it only applies to bisc */
+        /*@todo this should DEFINTLY be configuration */
+        if ($contentType === 'text/csv') {
+            $translationVariables = [
+                'OTHER' => 'Anders',
+                'YES_OTHER' => '"Ja, Anders"',
+            ];
+        }
+        else{
+            $translationVariables = [];
+        }
+
+        $result = $this->translationService->parse($result, true, $translationVariables);
+
+        /*
         if ($contentType === 'text/csv') {
             $replacements = [
                 '/student\.person.givenName/'                        => 'Voornaam',
@@ -306,6 +323,7 @@ class EavService
                 $result = preg_replace($key, $value, $result);
             }
         }
+        */
 
         // Let return the shizle
         $response = new Response(
