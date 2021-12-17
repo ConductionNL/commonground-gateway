@@ -40,7 +40,7 @@ class TranslationService
      *
      * @param array $destination the array that the values are inserted into
      * @param array $source      the array that the values are taken from
-     * @param array $mapping     the array that the values are taken from
+     * @param array $mapping     the array that determines how the mapping takes place
      *
      * @return array
      */
