@@ -268,11 +268,13 @@ class EavService
                 'OTHER'     => 'Anders',
                 'YES_OTHER' => '"Ja, Anders"',
             ];
-        } else {
+            
+            $result = $this->translationService->parse($result, true, $translationVariables);
+        }
+        else{
             $translationVariables = [];
         }
 
-        $result = $this->translationService->parse($result, true, $translationVariables);
 
         /*
         if ($contentType === 'text/csv') {
