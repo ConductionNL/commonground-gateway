@@ -132,8 +132,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
                 // let not dive to deep
                 if (!strpos($key, '.')) {
-                    $query->andWhere('value.stringValue = :'.$key)
-                        ->setParameter($key, $value);
                 }
 
                 /*@todo right now we only search on e level deep, lets make that 5 */
@@ -204,11 +202,22 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     private function buildFilter(QueryBuilder $query, $filters, $level = 0): QueryBuilder
     {
-        var_dump($filters);
-
-        
-
+        //var_dump($filters);
         $query->leftJoin('o.objectValues', 'value');
+        foreach($filters as $key => $filter){
+            if(!is_array($filter) && substr($key, 0, 1) != '_'){
+                $query->andWhere('value.stringValue = :'.$key)->setParameter($key, $filter);
+            }
+            elseif (!is_array($filter) && substr($key, 0, 1) == '_'){
+                // do magic
+            }
+            elseif(is_array($filter)){
+
+            }
+            else{
+                // how dit we end up here?
+            }
+        }
 
         return $query;
     }
