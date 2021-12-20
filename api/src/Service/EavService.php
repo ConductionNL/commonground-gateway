@@ -249,14 +249,15 @@ class EavService
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
-        }
 
-        // Lets allow _mapping tot take place
-        /* @todo remove the old fields support */
-        if ($mapping = $request->query->get('_mapping')) {
-            foreach ($resultConfig['result'] as $key =>  $result) {
-                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-            }
+                // Lets allow _mapping tot take place
+                /* @todo remove the old fields support */
+                /* @todo make this universal */
+                if ($mapping = $request->query->get('_mapping')) {
+                    foreach ($resultConfig['result'] as $key =>  $result) {
+                        $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                    }
+                }
         }
 
         // Lets seriliaze the shizle
@@ -271,7 +272,7 @@ class EavService
                 'OTHER'     => 'Anders',
                 'YES_OTHER' => '"Ja, Anders"',
             ];
-            
+
             $result = $this->translationService->parse($result, true, $translationVariables);
         }
         else{
