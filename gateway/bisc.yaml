@@ -1870,6 +1870,8 @@ App\Entity\Document:
     # User object
     studentDownload:
         name: studentDownload
+        data: "data"
+        data_id: "data_id"
         route: "studentDownload"
         object: "@student"
         documentCreationService: "placeholder"
@@ -1877,6 +1879,8 @@ App\Entity\Document:
         
     postalcodeDownload:
         name: postalcodeDownload
+        data: "data"
+        data_id: "data_id"
         route: "postalcodeDownload"
         documentCreationService: "placeholder"
         documentType: postalcode
