@@ -969,7 +969,7 @@ class EavService
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
-            if ($attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
                 return true;
             }
             return false;
@@ -978,6 +978,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
+//                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
             }
             return [
                 'message' => 'You are not allowed to delete this object because of attributes that can not be orphaned.',
