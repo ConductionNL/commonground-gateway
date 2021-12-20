@@ -45,9 +45,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQuery($entity, $filters);
 
-//        var_dump('Query findByEntity:');
-//        var_dump($query->getDQL());
-
         return $query
             // filters toevoegen
             ->setFirstResult($offset)
@@ -70,9 +67,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
 
-//        var_dump('Query countByEntity:');
-//        var_dump($query->getDQL());
-
         return $query->getQuery()->getSingleScalarResult();
     }
 
@@ -83,36 +77,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->setParameters(['entity' => $entity]);
 
         if (!empty($filters)) {
-
-            // Lets get the valid filters
             $filterCheck = $this->getFilterParameters($entity);
-
-
-            // Make a dot array
-            $dot = new \Adbar\Dot();
-
-
-            foreach ($filters as $key=>$value) {
-                $oldkey = $key;
-                unset($filters[$oldkey]);
-                $key = str_replace(['_'], ['.'], $key);
-                $key = str_replace(['..'], ['._'], $key);
-
-                if (substr($key, 0, 1) == '.') {
-                    $key = '_'.ltrim($key, $key[0]);
-                }
-                if (!in_array($key, $filterCheck)) {
-                    continue;
-                }
-                // stick it into the dot array
-                $dot->set($key, $value);
-            }
-
-            // Then we need to turn our dot shizle into a propper array
-            $dotFilters = new \Adbar\Dot();
-            $query = $this->buildFilter($query, $dot->all());
-
-
+            $query->leftJoin('o.objectValues', 'value');
             $level = 0;
 
             foreach ($filters as $key=>$value) {
@@ -129,11 +95,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     unset($filters[$key]); //todo: why unset if we never use filters after this?
                     continue;
                 }
+                // Lets see if this is an allowed filter
+                if (!in_array($key, $filterCheck)) {
+                    unset($filters[$key]); //todo: why unset if we never use filters after this?
+                    continue;
+                }
 
                 // let not dive to deep
                 if (!strpos($key, '.')) {
+                    $query->andWhere('value.stringValue = :'.$key)
+                        ->setParameter($key, $value);
                 }
-
                 /*@todo right now we only search on e level deep, lets make that 5 */
                 else {
                     $key = explode('.', $key);
@@ -141,8 +113,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     //if(count($key) == 2){
                     if ($level == 0) {
                         $level++;
-                        //var_dump($key[0]);
-                        //($key[1]);
                         $query->leftJoin('value.objects', 'subObjects'.$level);
 
                         // Deal with _ filters for subresources
@@ -153,8 +123,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
                     }
                     // Deal with _ filters for subresources
-                    if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
-                        $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$level);
+                    $tempKey = end($key);
+                    if ($tempKey && (substr($tempKey, 0, 1) == '_' || $tempKey == 'id')) {
+                        /* @todo ik kom hier niet meer uit */
+                        //$query = $this->getObjectEntityFilter($query, $tempKey, $value, 'subObjects'.$level);
                         continue;
                     }
                     $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
@@ -184,7 +156,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query->andWhere('o.organization IN (:organizations)')
         //    ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations);
-       //     ->setParameter('parentOrganizations', $parentOrganizations);
+        //     ->setParameter('parentOrganizations', $parentOrganizations);
         /*
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
@@ -192,36 +164,35 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
         */
+        // SHOW SQL:
 
-//        var_dump($query->getDQL());
+        //echo $query->getQuery()->getSQL();
+        // Show Parameters:
+        //echo $query->getQuery()->getParameters();
 
         return $query;
     }
 
     //todo: typecast?
 
-    private function buildFilter(QueryBuilder $query, $filters, $level = 0): QueryBuilder
+    private function buildFilter(QueryBuilder $query, $filters, $prefix = 'o', $level = 0): QueryBuilder
     {
-        //var_dump($filters);
-        $query->leftJoin('o.objectValues', 'value');
-        foreach($filters as $key => $filter){
-            if(!is_array($filter) && substr($key, 0, 1) != '_'){
-                $query->andWhere('value.stringValue = :'.$key)->setParameter($key, $filter);
-            }
-            elseif (!is_array($filter) && substr($key, 0, 1) == '_'){
+        $query->leftJoin($prefix.'.objectValues', $level.'.objectValues');
+        foreach ($filters as $key => $filter) {
+            if (!is_array($filter) && substr($key, 0, 1) != '_') {
+                $query->andWhere($level.'.objectValues'.'.stringValue = :'.$key)->setParameter($key, $filter);
+            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
                 // do magic
-            }
-            elseif(is_array($filter)){
-
-            }
-            else{
+                $query = $this->getObjectEntityFilter($query, $key, $filter, $prefix);
+            } elseif (is_array($filter)) {
+                $query = $this->buildFilter($query, $filters, $level++);
+            } else {
                 // how dit we end up here?
             }
         }
 
         return $query;
     }
-
 
     /**
      * @param QueryBuilder $query
@@ -235,10 +206,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
-        //var_dump('filter :');
-        //var_dump($key);
-        //var_dump($value);
-
         switch ($key) {
             case 'id':
                 $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);

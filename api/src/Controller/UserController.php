@@ -108,15 +108,17 @@ class UserController extends AbstractController
     }
 
     /**
-     * Get all the child organisations for an organisation
+     * Get all the child organisations for an organisation.
      *
      * @param array               $organizations
      * @param string              $organization
      * @param CommonGroundService $commonGroundService
-     * @param FunctionService $functionService
-     * @return array
+     * @param FunctionService     $functionService
+     *
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return array
      */
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
@@ -134,17 +136,18 @@ class UserController extends AbstractController
         return $organizations;
     }
 
-
     /**
-     * Get al the parent organizations for an organisation
+     * Get al the parent organizations for an organisation.
      *
-     * @param array $organizations
-     * @param string $organization
+     * @param array               $organizations
+     * @param string              $organization
      * @param CommonGroundService $commonGroundService
-     * @param FunctionService $functionService
-     * @return array
+     * @param FunctionService     $functionService
+     *
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return array
      */
     private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {

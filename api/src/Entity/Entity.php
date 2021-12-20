@@ -135,7 +135,7 @@ class Entity
     private $extend = false;
 
     /**
-     * Whether objects created from this entity should be available to child organisations
+     * Whether objects created from this entity should be available to child organisations.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
@@ -237,7 +237,6 @@ class Entity
      * @ORM\Column(type="array", nullable=true)
      */
     private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
-
 
     public function __construct()
     {
