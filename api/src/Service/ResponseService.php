@@ -64,7 +64,7 @@ class ResponseService
         // Lets start with the external results
         if (!empty($result->getExternalResult())) {
             $response = array_merge($response, $result->getExternalResult());
-        } elseif ($this->commonGroundService->isResource($result->getExternalResult())) {
+        } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
             $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
         } elseif ($this->commonGroundService->isResource($result->getUri())) {
             $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));

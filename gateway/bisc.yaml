@@ -44,7 +44,7 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
         documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
-
+        
 App\Entity\Entity:
     # User object
     user:
@@ -93,6 +93,7 @@ App\Entity\Entity:
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
         gateway: "@contacten_api"
         endpoint: "organizations"
+        inherited: true
         # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
         # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
         availableProperties:
@@ -796,6 +797,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
+        immutable: true
     student_team:
         name: team
         type: object
@@ -1862,5 +1864,25 @@ App\Entity\Attribute:
         entity: "@shareStudent"
                 
         
-# Basic setup for bisc
+# Basic setup for student download
+
+App\Entity\Document:
+    # User object
+    studentDownload:
+        name: studentDownload
+        data: "data"
+        data_id: "data_id"
+        route: "studentDownload"
+        object: "@student"
+        documentCreationService: "placeholder"
+        documentType: student
+        
+    postalcodeDownload:
+        name: postalcodeDownload
+        data: "data"
+        data_id: "data_id"
+        route: "postalcodeDownload"
+        documentCreationService: "placeholder"
+        documentType: postalcode
+        
 

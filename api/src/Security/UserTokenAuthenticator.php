@@ -9,6 +9,7 @@
 
 namespace App\Security;
 
+use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
@@ -36,14 +37,16 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private EntityManagerInterface $em;
+    private FunctionService $functionService;
 
-    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session, EntityManagerInterface $em)
+    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session, EntityManagerInterface $em, FunctionService $functionService)
     {
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->authenticationService = new AuthenticationService($parameterBag);
         $this->session = $session;
         $this->em = $em;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -75,20 +78,26 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     }
 
     /**
+     * Get all the child organisations for an organisation.
+     *
      * @param array               $organizations
      * @param string              $organization
      * @param CommonGroundService $commonGroundService
+     * @param FunctionService     $functionService
+     *
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
      *
      * @return array
      */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        if ($organization = $this->isResource($organization, $commonGroundService)) {
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
                         $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
                     }
                 }
             }
@@ -97,13 +106,31 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         return $organizations;
     }
 
-    public function isResource($url, CommonGroundService $commonGroundService)
+    /**
+     * Get al the parent organizations for an organisation.
+     *
+     * @param array               $organizations
+     * @param string              $organization
+     * @param CommonGroundService $commonGroundService
+     * @param FunctionService     $functionService
+     *
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return array
+     */
+    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        try {
-            return $commonGroundService->getResource($url, [], false);
-        } catch (\Throwable $e) {
-            return false;
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
+            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
+                && !in_array($organization['parentOrganization']['@id'], $organizations)
+                && array_key_exists('parentOrganization', $organization)) {
+                $organizations[] = $organization['parentOrganization']['@id'];
+                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
+            }
         }
+
+        return $organizations;
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
@@ -159,11 +186,17 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
                 $organizations[] = $userGroup['organization'];
             }
         }
+        // Add all the sub organisations
+        // Add all the parent organisations
+        $parentOrganizations = [];
         foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService);
+            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
+            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
         }
         $organizations[] = 'localhostOrganization';
+        $parentOrganizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
+        $this->session->set('parentOrganizations', $parentOrganizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
