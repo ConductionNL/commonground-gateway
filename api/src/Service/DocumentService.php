@@ -16,8 +16,9 @@ class DocumentService
     private GatewayService $gatewayService;
     private SerializerInterface $serializer;
     private ParameterBagInterface $parameterBag;
+    private TranslationService $translationService;
 
-    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag)
+    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag, TranslationService $translationService)
     {
         $this->eavService = $eavService;
         $this->responseService = $responseService;
@@ -25,6 +26,7 @@ class DocumentService
         $this->gatewayService = $gatewayService;
         $this->serializer = $serializer;
         $this->parameterBag = $parameterBag;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -58,7 +60,7 @@ class DocumentService
             "English" => "Engels",
         ];
 
-        $data = $this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json');
+        $data = $this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getObject()), ['properties']), 'json');
 
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
