@@ -1751,10 +1751,9 @@ class ValidationService
     }
 
     /**
-     * @param string $value
-     * @return bool
+     * @return array
      */
-    public function validateDutchPC4(string $value): bool
+    public function getDutchPC4List(): array
     {
         $file = fopen(dirname(__FILE__) . '/csv/dutch_pc4.csv', 'r');
 
@@ -1772,6 +1771,17 @@ class ValidationService
             $i++;
         }
 
+        return $dutch_pc4_list;
+    }
+
+    /**
+     * @param string $value
+     * @return bool
+     */
+    public function validateDutchPC4(string $value): bool
+    {
+        $dutch_pc4_list = $this->getDutchPC4List();
+
         foreach ($dutch_pc4_list as $dutch_pc4) {
             if ($dutch_pc4 == $value) {
                 return true;
@@ -1779,5 +1789,19 @@ class ValidationService
         }
 
         return false;
+    }
+
+    /**
+     */
+    public function dutchPC4ToJson(): string
+    {
+        $dutch_pc4_list = $this->getDutchPC4List();
+
+        $data = array(
+            'postalCode' => $dutch_pc4_list
+        );
+        $json = json_encode($data);
+
+        return $json;
     }
 }
