@@ -93,6 +93,7 @@ App\Entity\Entity:
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
         gateway: "@contacten_api"
         endpoint: "organizations"
+        inherited: true
         # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
         # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
         availableProperties:
