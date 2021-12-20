@@ -474,7 +474,6 @@ class ValidationService
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
                     $subObject->setOrganization($subObject->getUri());
-                    var_dump('TEST2');
                 }
 
                 // object toevoegen
