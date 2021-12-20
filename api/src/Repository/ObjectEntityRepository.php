@@ -133,7 +133,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     // Deal with _ filters for subresources
                     $tempKey = end($key);
                     if ($tempKey && (substr($tempKey, 0, 1) == '_' || $tempKey == 'id')) {
-                        $query = $this->getObjectEntityFilter($query, $tempKey, $value, 'subObjects'.$level);
+                        /* @tdo ik kom hier niet meer uit */
+                        //$query = $this->getObjectEntityFilter($query, $tempKey, $value, 'subObjects'.$level);
                         continue;
                     }
                     $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
@@ -171,8 +172,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
         */
+// SHOW SQL:
 
-        var_dump($query->getDQL());
+        //echo $query->getQuery()->getSQL();
+// Show Parameters:
+        //echo $query->getQuery()->getParameters();
 
         return $query;
     }
