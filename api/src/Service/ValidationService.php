@@ -1383,16 +1383,20 @@ class ValidationService
         $format = str_replace(['telephone'], ['phone'], $format);
 
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
-        $allowedValidations = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json'];
+        $allowedValidations = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json', 'dutch_pc4'];
 
         // new route
         if (in_array($format, $allowedValidations)) {
-            try {
-                Validator::$format()->check($value);
-            } catch (ValidationException $exception) {
-                $objectEntity->addError($attribute->getName(), $exception->getMessage());
+            if ($format == 'dutch_pc4') {
+                //validate dutch_pc4
+                $this->validateDutchPC4($value);
+            } else {
+                try {
+                    Validator::$format()->check($value);
+                } catch (ValidationException $exception) {
+                    $objectEntity->addError($attribute->getName(), $exception->getMessage());
+                }
             }
-
             return $objectEntity;
         }
 
@@ -1744,5 +1748,36 @@ class ValidationService
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
+    }
+
+    /**
+     * @param string $value
+     * @return bool
+     */
+    public function validateDutchPC4(string $value): bool
+    {
+        $file = fopen(dirname(__FILE__) . '/csv/dutch_pc4.csv', 'r');
+
+        $i = 0;
+        $dutch_pc4_list = [];
+        while (!feof($file)) {
+            $line = fgetcsv($file);
+            if ($i === 0) {
+                $i++;
+                continue;
+            }
+            if (isset($line[1])) {
+                $dutch_pc4_list[] = $line[1];
+            }
+            $i++;
+        }
+
+        foreach ($dutch_pc4_list as $dutch_pc4) {
+            if ($dutch_pc4 == $value) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
