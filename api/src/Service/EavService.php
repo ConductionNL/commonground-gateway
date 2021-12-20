@@ -274,11 +274,9 @@ class EavService
             ];
 
             $result = $this->translationService->parse($result, true, $translationVariables);
-        }
-        else{
+        } else {
             $translationVariables = [];
         }
-
 
         /*
         if ($contentType === 'text/csv') {
