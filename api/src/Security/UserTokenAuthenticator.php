@@ -97,6 +97,26 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         return $organizations;
     }
 
+    /**
+     * Get al the parent organizations for an organisation
+     *
+     * @param array $organizations
+     * @param string $organization
+     * @param CommonGroundService $commonGroundService
+     * @return array
+     */
+    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    {
+        if ($organization = $this->isResource($organization, $commonGroundService)) {
+            if (!in_array($organization['parentOrganization']['@id'], $organizations) && array_key_exists('parentOrganization', $organization)) {
+                $organizations[] = $organization['parentOrganization']['@id'];
+                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService);
+            }
+        }
+
+        return $organizations;
+    }
+
     public function isResource($url, CommonGroundService $commonGroundService)
     {
         try {
@@ -159,11 +179,17 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
                 $organizations[] = $userGroup['organization'];
             }
         }
+        // Add all the sub organisations
+        // Add all the parent organisations
+        $parentOrganizations = [];
         foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService);
+            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService);
         }
         $organizations[] = 'localhostOrganization';
+        $parentOrganizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
+        $this->session->set('parentOrganizations', $parentOrganizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
