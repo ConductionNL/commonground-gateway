@@ -72,12 +72,12 @@ class UserController extends AbstractController
             }
         }
         // Add all the sub organisations
+        // Add all the parent organisations
         $parentOrganizations = [];
         foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
             $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService);
         }
-        // Add all the parent organisations
 
         $organizations[] = 'localhostOrganization';
         $parentOrganizations[] = 'localhostOrganization';

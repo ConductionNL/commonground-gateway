@@ -411,7 +411,10 @@ class EavService
             $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
         }
         if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
-            $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
+            $this->session->set('organizations', [$this->session->get('activeOrganization')]);
+        }
+        if (!$this->session->get('parentOrganizations')) {
+            $this->session->set('parentOrganizations', []);
         }
 
         // Lets create an object
