@@ -1804,7 +1804,6 @@ class ValidationService
 
         $json = json_encode($data);
 
-
         $response = new \Symfony\Component\HttpFoundation\Response(
             $json,
             200,

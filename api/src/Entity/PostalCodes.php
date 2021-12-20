@@ -24,13 +24,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
- *          "post"={"path"="/eav/postalCodes"},
  *     		"get"={"path"="/eav/postalCodes"},
- *     },
- *      itemOperations={
- * 		    "get"={"path"="/eav/postalCodes/{id}"},
- * 	        "put"={"path"="/eav/postalCodes/{id}"},
- * 	        "delete"={"path"="/eav/postalCodes/{id}"},
  *     },
  * )
  * @ORM\Entity(repositoryClass="App\Repository\FileRepository")
