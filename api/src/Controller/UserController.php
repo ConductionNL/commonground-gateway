@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Service\AuthenticationService;
+use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -42,7 +43,7 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService)
+    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService, FunctionService $functionService)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
@@ -71,11 +72,18 @@ class UserController extends AbstractController
                 $organizations[] = $userGroup['organization'];
             }
         }
+        // Add all the sub organisations
+        // Add all the parent organisations
+        $parentOrganizations = [];
         foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
+            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService, $functionService);
+            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService, $functionService);
         }
+
         $organizations[] = 'localhostOrganization';
+        $parentOrganizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
+        $this->session->set('parentOrganizations', $parentOrganizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
@@ -100,20 +108,26 @@ class UserController extends AbstractController
     }
 
     /**
+     * Get all the child organisations for an organisation.
+     *
      * @param array               $organizations
      * @param string              $organization
      * @param CommonGroundService $commonGroundService
+     * @param FunctionService     $functionService
+     *
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
      *
      * @return array
      */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        if ($organization = $this->isResource($organization, $commonGroundService)) {
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
                         $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
                     }
                 }
             }
@@ -122,13 +136,31 @@ class UserController extends AbstractController
         return $organizations;
     }
 
-    public function isResource($url, CommonGroundService $commonGroundService)
+    /**
+     * Get al the parent organizations for an organisation.
+     *
+     * @param array               $organizations
+     * @param string              $organization
+     * @param CommonGroundService $commonGroundService
+     * @param FunctionService     $functionService
+     *
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return array
+     */
+    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        try {
-            return $commonGroundService->getResource($url, [], false);
-        } catch (\Throwable $e) {
-            return false;
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
+            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
+                && !in_array($organization['parentOrganization']['@id'], $organizations)
+                && array_key_exists('parentOrganization', $organization)) {
+                $organizations[] = $organization['parentOrganization']['@id'];
+                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
+            }
         }
+
+        return $organizations;
     }
 
     /**
