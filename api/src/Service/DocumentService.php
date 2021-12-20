@@ -60,11 +60,10 @@ class DocumentService
             "English" => "Engels",
         ];
 
-        $data = $this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getObject()), ['properties']), 'json');
+        $data = json_decode($this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json'), true);
 
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
-
 
         if (isset($data['id'])) {
             unset($data['id']);
@@ -82,6 +81,9 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
+
+//        var_dump($data);
+//        die;
 
         return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components')['dcs'], $url, $data, [], [], false, 'POST'));
     }

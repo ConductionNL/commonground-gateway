@@ -1874,7 +1874,7 @@ App\Entity\Document:
         data_id: "data_id"
         route: "studentDownload"
         object: "@student"
-        documentCreationService: "placeholder"
+        documentCreationService: "https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service/templates/123d8c1b-9d2b-4e16-9307-c02e32421ed8/render/pdf"
         documentType: student
         
     postalcodeDownload:
