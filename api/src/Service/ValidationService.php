@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\Response;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
@@ -1793,15 +1794,25 @@ class ValidationService
 
     /**
      */
-    public function dutchPC4ToJson(): string
+    public function dutchPC4ToJson(): \Symfony\Component\HttpFoundation\Response
     {
         $dutch_pc4_list = $this->getDutchPC4List();
 
         $data = array(
-            'postalCode' => $dutch_pc4_list
+            'postalCodes' => $dutch_pc4_list
         );
+
         $json = json_encode($data);
 
-        return $json;
+
+        $response = new \Symfony\Component\HttpFoundation\Response(
+            $json,
+            200,
+            ['content-type' => 'application/json']
+        );
+
+        return  $response;
     }
+
+
 }
