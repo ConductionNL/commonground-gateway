@@ -47,9 +47,13 @@ class DocumentService
         // opgeven van vertalingen
         $translationVariables = [
             "Unknown" => "Onbekend",
+            "UNKNOWN" => "Onbekend",
             "Beginner" => "Beginner",
+            "BEGINNER" => "Beginner",
             "Advanced" => "Gevorderd",
+            "ADVANCED" => "Gevorderd",
             "Reasonable" => "Redelijk",
+            "REASONABLE" => "Redelijk",
             "CAN_NOT_WRITE" => "Kan niet schrijven",
             "WRITE_NAW_DETAILS" => "Kan NAW gegevens schrijven",
             "WRITE_SIMPLE_LETTERS" => "Kan (eenvoudige) brieven schrijven",
@@ -60,7 +64,7 @@ class DocumentService
             "English" => "Engels",
         ];
 
-        $data = json_decode($this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json'), true);
+        $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json');
 
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
