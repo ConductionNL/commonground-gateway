@@ -66,6 +66,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
+
         return $query->getQuery()->getSingleScalarResult();
     }
 
@@ -163,10 +164,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
         */
-// SHOW SQL:
+        // SHOW SQL:
 
         //echo $query->getQuery()->getSQL();
-// Show Parameters:
+        // Show Parameters:
         //echo $query->getQuery()->getParameters();
 
         return $query;
@@ -174,30 +175,24 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     //todo: typecast?
 
-
     private function buildFilter(QueryBuilder $query, $filters, $prefix = 'o', $level = 0): QueryBuilder
     {
         $query->leftJoin($prefix.'.objectValues', $level.'.objectValues');
-        foreach($filters as $key => $filter){
-            if(!is_array($filter) && substr($key, 0, 1) != '_'){
+        foreach ($filters as $key => $filter) {
+            if (!is_array($filter) && substr($key, 0, 1) != '_') {
                 $query->andWhere($level.'.objectValues'.'.stringValue = :'.$key)->setParameter($key, $filter);
-            }
-            elseif (!is_array($filter) && substr($key, 0, 1) == '_'){
+            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
                 // do magic
-                $query = $this->getObjectEntityFilter($query,$key,$filter,$prefix);
-            }
-            elseif(is_array($filter)){
-                $query = $this->buildFilter($query,$filters,$level++);
-            }
-            else{
+                $query = $this->getObjectEntityFilter($query, $key, $filter, $prefix);
+            } elseif (is_array($filter)) {
+                $query = $this->buildFilter($query, $filters, $level++);
+            } else {
                 // how dit we end up here?
             }
         }
 
         return $query;
     }
-
-
 
     /**
      * @param QueryBuilder $query
