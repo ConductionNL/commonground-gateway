@@ -1398,6 +1398,7 @@ class ValidationService
                     $objectEntity->addError($attribute->getName(), $exception->getMessage());
                 }
             }
+
             return $objectEntity;
         }
 
@@ -1756,7 +1757,7 @@ class ValidationService
      */
     public function getDutchPC4List(): array
     {
-        $file = fopen(dirname(__FILE__) . '/csv/dutch_pc4.csv', 'r');
+        $file = fopen(dirname(__FILE__).'/csv/dutch_pc4.csv', 'r');
 
         $i = 0;
         $dutch_pc4_list = [];
@@ -1777,6 +1778,7 @@ class ValidationService
 
     /**
      * @param string $value
+     *
      * @return bool
      */
     public function validateDutchPC4(string $value): bool
@@ -1792,15 +1794,13 @@ class ValidationService
         return false;
     }
 
-    /**
-     */
     public function dutchPC4ToJson(): \Symfony\Component\HttpFoundation\Response
     {
         $dutch_pc4_list = $this->getDutchPC4List();
 
-        $data = array(
-            'postalCodes' => $dutch_pc4_list
-        );
+        $data = [
+            'postalCodes' => $dutch_pc4_list,
+        ];
 
         $json = json_encode($data);
 
@@ -1812,6 +1812,4 @@ class ValidationService
 
         return  $response;
     }
-
-
 }
