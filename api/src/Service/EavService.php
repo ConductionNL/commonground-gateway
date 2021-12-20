@@ -798,11 +798,14 @@ class EavService
 
         // Validation stap
         $this->validationService->setRequest($request);
+        $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
         if ($object->getHasErrors()) {
-            return $this->returnErrors($object);
+            $errorsResponse = $this->returnErrors($object);
+            $this->handleDeleteOnError();
+            return $errorsResponse;
         }
 
         // TODO: use (ObjectEntity) $object->promises instead
@@ -820,7 +823,9 @@ class EavService
 
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
-            return $this->returnErrors($object);
+            $errorsResponse = $this->returnErrors($object);
+            $this->handleDeleteOnError();
+            return $errorsResponse;
         }
 
         // Saving the data
@@ -999,6 +1004,36 @@ class EavService
         $this->em->flush();
 
         return [];
+    }
+
+    /**
+     * We need to do a clean up if there are errors, almost same as handleDelete, but without the cascade checks and notifications
+     *
+     * @return void
+     */
+    public function handleDeleteOnError()
+    {
+        foreach (array_reverse($this->validationService->createdObjects) as $createdObject) {
+            var_dump($createdObject->getUri());
+            if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+                try {
+                    $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
+                    var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
+                    $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
+                } catch (\Throwable $e) {
+                    $resource = null;
+                }
+            }
+            var_dump('Delete: '.$createdObject->getEntity()->getName());
+            var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
+            foreach ($createdObject->getObjectValues() as &$value) {
+                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
+                $this->em->remove($value);
+                $this->em->flush();
+            }
+            $this->em->remove($createdObject);
+            $this->em->flush();
+        }
     }
 
     /**
