@@ -826,7 +826,7 @@ class EavService
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
-            $object = $this->functionService->createOrganization($object, $object->getUri());
+            $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         }
         $this->em->persist($object);
         $this->em->flush();

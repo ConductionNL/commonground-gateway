@@ -477,6 +477,7 @@ class ValidationService
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
                     $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri());
+                    $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                 }
 
                 // object toevoegen
@@ -905,7 +906,7 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->em->persist($subObject);
-                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject));
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
@@ -1619,6 +1620,9 @@ class ValidationService
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
                     $objectEntity->setApplication($this->session->get('application'));
+                }
+                if ($objectEntity->getEntity()->getFunction() === 'organization') {
+                    $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
                 }
                 if (isset($setOrganization)) {
                     $objectEntity->setOrganization($setOrganization);

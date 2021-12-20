@@ -25,10 +25,13 @@ class FunctionService
      *
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function createOrganization(ObjectEntity $objectEntity, string $uri)
+    public function createOrganization(ObjectEntity $objectEntity, string $uri, string $organizationType)
     {
-        $objectEntity->setOrganization($uri);
-        $this->cache->invalidateTags(['organization']);
+        //TODO: $organizationType is a quick fix for taalhuizen, we need to find a better solution!
+        if ($organizationType == 'taalhuis') {
+            $objectEntity->setOrganization($uri);
+            $this->cache->invalidateTags(['organization']);
+        }
 
         return $objectEntity;
     }

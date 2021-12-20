@@ -213,7 +213,7 @@ class ConvertToGatewayService
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
         $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
         if ($entity->getFunction() === 'organization') {
-            $newObject = $this->functionService->createOrganization($newObject, $newObject->getUri());
+            $newObject = $this->functionService->createOrganization($newObject, $newObject->getUri(), $body['type']);
         } elseif (key_exists('organization', $body) && !empty($body['organization'])) {
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
