@@ -40,7 +40,7 @@ class TranslationService
      *
      * @param array $destination the array that the values are inserted into
      * @param array $source      the array that the values are taken from
-     * @param array $mapping     the array that the values are taken from
+     * @param array $mapping     the array that determines how the mapping takes place
      *
      * @return array
      */
@@ -118,9 +118,9 @@ class TranslationService
      *
      * @return array
      */
-    public function translationVariables(): array
+    public function translationVariables(array $variables = []): array
     {
-        $variables = [
+        $variables = array_merge($variables, [
             'death_in_municipality' => 'Overlijden in gemeente',
             'intra_mun_relocation'  => 'Binnengemeentelijke verhuizing',
             'inter_mun_relocation'  => 'Inter-gemeentelijke verhuizing',
@@ -148,7 +148,7 @@ class TranslationService
             '</conductionKinderen>' => '',
             '<conductionOuders>'    => '',
             '</conductionOuders>'   => '',
-        ];
+        ]);
 
         //@todo laten we deze vandaag lekker concreet houden
         $variables['marriage'] = 'huwelijk';
@@ -172,7 +172,7 @@ class TranslationService
     public function parse(
         string $subject,
         bool $translate = true,
-        array $variables = [],
+        array $translationVariables = [],
         string $escapeChar = '@',
         string $errPlaceholder = null
     ) {
@@ -183,7 +183,7 @@ class TranslationService
       | {(\w+)}
     /x";
 
-        $variables = array_merge($variables, $this->generalVariables());
+        $variables = array_merge($translationVariables, $this->generalVariables());
 
         $callback = function ($match) use ($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
@@ -205,9 +205,9 @@ class TranslationService
         // Lets do variable replacement (done on an {x} for y replacement)
         $subject = preg_replace_callback($expr, $callback, $subject);
 
-        // Lets do trasnlations (done on a x for y replacement)
+        // Lets do translation  (done on a x for y replacement)
         if ($translate) {
-            $subject = strtr($subject, $this->translationVariables());
+            $subject = strtr($subject, $this->translationVariables($translationVariables));
         }
 
         return $subject;

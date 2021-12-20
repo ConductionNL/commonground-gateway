@@ -246,9 +246,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $filters = [$prefix.'id'];
         }
 
+        // defaults
         $filters = array_merge($filters ?? [], [
             $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization', $prefix.'_application',
-            $prefix.'_dateCreated', $prefix.'_dateModified',
+            $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
         ]);
 
         foreach ($Entity->getAttributes() as $attribute) {
