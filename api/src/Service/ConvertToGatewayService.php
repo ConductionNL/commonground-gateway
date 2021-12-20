@@ -20,13 +20,15 @@ class ConvertToGatewayService
     private EntityManagerInterface $em;
     private SessionInterface $session;
     private GatewayService $gatewayService;
+    private FunctionService $functionService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
         $this->session = $session;
         $this->gatewayService = $gatewayService;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -211,7 +213,7 @@ class ConvertToGatewayService
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
         $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
         if ($entity->getFunction() === 'organization') {
-            $newObject->setOrganization($newObject->getUri());
+            $newObject = $this->functionService->createOrganization($newObject, $newObject->getUri());
         } elseif (key_exists('organization', $body) && !empty($body['organization'])) {
             $newObject->setOrganization($body['organization']);
         } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {

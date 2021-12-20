@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Service\AuthenticationService;
+use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -100,35 +101,28 @@ class UserController extends AbstractController
     }
 
     /**
-     * @param array               $organizations
-     * @param string              $organization
+     * @param array $organizations
+     * @param string $organization
      * @param CommonGroundService $commonGroundService
-     *
+     * @param FunctionService $functionService
      * @return array
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        if ($organization = $this->isResource($organization, $commonGroundService)) {
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
                         $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService);
+                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
                     }
                 }
             }
         }
 
         return $organizations;
-    }
-
-    public function isResource($url, CommonGroundService $commonGroundService)
-    {
-        try {
-            return $commonGroundService->getResource($url, [], false);
-        } catch (\Throwable $e) {
-            return false;
-        }
     }
 
     /**
