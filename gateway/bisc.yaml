@@ -44,7 +44,7 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
         documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
-
+        
 App\Entity\Entity:
     # User object
     user:
@@ -1864,5 +1864,15 @@ App\Entity\Attribute:
         entity: "@shareStudent"
                 
         
-# Basic setup for bisc
+# Basic setup for student download
+
+App\Entity\Document:
+    # User object
+    studentDownload:
+        name: studentDownload
+        route: "studentDownload"
+        object: "@student"
+        documentCreationService: "placeholder"
+        documentType: pdf
+        
 
