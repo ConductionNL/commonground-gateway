@@ -205,7 +205,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         //var_dump($filters);
         $query->leftJoin('o.objectValues', 'value');
         foreach($filters as $key => $filter){
-            if(){
+            if(!is_array($filter) && substr($key, 0, 1) != '_'){
                 $query->andWhere('value.stringValue = :'.$key)->setParameter($key, $filter);
             }
             elseif (!is_array($filter) && substr($key, 0, 1) == '_'){
