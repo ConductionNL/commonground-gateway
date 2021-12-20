@@ -1873,6 +1873,12 @@ App\Entity\Document:
         route: "studentDownload"
         object: "@student"
         documentCreationService: "placeholder"
-        documentType: pdf
+        documentType: student
+        
+    postalcodeDownload:
+        name: postalcodeDownload
+        route: "postalcodeDownload"
+        documentCreationService: "placeholder"
+        documentType: postalcode
         
 

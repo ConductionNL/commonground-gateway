@@ -143,7 +143,9 @@ class UserController extends AbstractController
     private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
     {
         if ($organization = $this->isResource($organization, $commonGroundService)) {
-            if (!in_array($organization['parentOrganization']['@id'], $organizations) && array_key_exists('parentOrganization', $organization)) {
+            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
+                && !in_array($organization['parentOrganization']['@id'], $organizations)
+                && array_key_exists('parentOrganization', $organization)) {
                 $organizations[] = $organization['parentOrganization']['@id'];
                 $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService);
             }

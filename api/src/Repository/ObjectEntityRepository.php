@@ -83,7 +83,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->setParameters(['entity' => $entity]);
 
         if (!empty($filters)) {
+
+            // Lets get the valid filters and filter for those
             $filterCheck = $this->getFilterParameters($entity);
+            foreach ($filters as $key=>$value) {
+                if (!in_array($key, $filterCheck)) {
+                    unset($filters[$key]);
+                    continue;
+                }
+            }
+
+            $query = $this->buildFilter($query, $filters);
+
+
             $query->leftJoin('o.objectValues', 'value');
             $level = 0;
 
@@ -101,17 +113,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     unset($filters[$key]); //todo: why unset if we never use filters after this?
                     continue;
                 }
-                // Lets see if this is an allowed filter
-                if (!in_array($key, $filterCheck)) {
-                    unset($filters[$key]); //todo: why unset if we never use filters after this?
-                    continue;
-                }
 
                 // let not dive to deep
                 if (!strpos($key, '.')) {
                     $query->andWhere('value.stringValue = :'.$key)
                         ->setParameter($key, $value);
                 }
+
                 /*@todo right now we only search on e level deep, lets make that 5 */
                 else {
                     $key = explode('.', $key);
@@ -177,6 +185,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     //todo: typecast?
 
+    private function buildFilter(QueryBuilder $query, $filters): QueryBuilder
+    {
+        var_dump($filters);
+
+        return $query;
+    }
+
+
     /**
      * @param QueryBuilder $query
      * @param $key
@@ -189,9 +205,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
-//        var_dump('filter :');
-//        var_dump($key);
-//        var_dump($value);
+        var_dump('filter :');
+        var_dump($key);
+        var_dump($value);
+
         switch ($key) {
             case 'id':
                 $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);
