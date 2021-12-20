@@ -42,7 +42,28 @@ class DocumentService
      */
     private function getData(Document $document, string $dataId): string
     {
-        $data = json_decode($this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getObject()), ['properties']), 'json'), true);
+        // opgeven van vertalingen
+        $translationVariables = [
+            "Unknown" => "Onbekend",
+            "Beginner" => "Beginner",
+            "Advanced" => "Gevorderd",
+            "Reasonable" => "Redelijk",
+            "CAN_NOT_WRITE" => "Kan niet schrijven",
+            "WRITE_NAW_DETAILS" => "Kan NAW gegevens schrijven",
+            "WRITE_SIMPLE_LETTERS" => "Kan (eenvoudige) brieven schrijven",
+            "WRITE_SIMPLE_TEXTS" => "Kan eenvoudige teksten schrijven (boodschappenbriefje etc.)",
+            "CAN_NOT_READ" => "Kan niet lezen",
+            "Male" => "Man",
+            "Female" => "Vrouw",
+            "English" => "Engels",
+        ];
+
+        $data = $this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getEntity()), ['properties']), 'json');
+
+        $data = $this->translationService->parse($data, true, $translationVariables);
+        $data = json_decode($data, true);
+
+
         if (isset($data['id'])) {
             unset($data['id']);
         }
