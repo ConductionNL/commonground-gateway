@@ -145,6 +145,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //            $user = $user->getUserIdentifier();
 //        }
 
+        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
+        if ($this->session->get('anonymous') === true && $query->getParameter('type')->getValue() === 'taalhuis') {
+            return $query;
+        }
+
         // TODO: owner
         // Multitenancy, only show objects this user is allowed to see.
         // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
@@ -166,9 +171,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
         */
         // SHOW SQL:
 
-        //echo $query->getQuery()->getSQL();
+//        echo $query->getQuery()->getSQL();
         // Show Parameters:
-        //echo $query->getQuery()->getParameters();
+//        echo $query->getQuery()->getParameters();
 
         return $query;
     }
