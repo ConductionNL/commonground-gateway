@@ -797,7 +797,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
-        inmutable: true
+        immutable: true
     student_team:
         name: team
         type: object

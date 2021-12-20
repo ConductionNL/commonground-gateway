@@ -166,10 +166,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $parentOrganizations = $this->session->get('parentOrganizations', []);
 
         //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) and o.entity.inherited == true) OR o.owner == :userId')
-        $query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) AND o.entity.inherited = true) ')
+        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) AND o.entity.inherited = true) ')
+        $query->andWhere('o.organization IN (:organizations)')
         //    ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations)
-            ->setParameter('parentOrganizations', $parentOrganizations);
+            ->setParameter('organizations', $organizations);
+       //     ->setParameter('parentOrganizations', $parentOrganizations);
         /*
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
@@ -205,9 +206,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
-        var_dump('filter :');
-        var_dump($key);
-        var_dump($value);
+        //var_dump('filter :');
+        //var_dump($key);
+        //var_dump($value);
 
         switch ($key) {
             case 'id':
