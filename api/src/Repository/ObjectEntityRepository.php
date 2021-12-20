@@ -87,10 +87,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // Lets get the valid filters
             $filterCheck = $this->getFilterParameters($entity);
 
-
             // Make a dot array
             $dot = new \Adbar\Dot();
-
 
             foreach ($filters as $key=>$value) {
                 $oldkey = $key;
@@ -111,7 +109,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // Then we need to turn our dot shizle into a propper array
             $dotFilters = new \Adbar\Dot();
             $query = $this->buildFilter($query, $dot->all());
-
 
             $level = 0;
 
@@ -184,7 +181,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query->andWhere('o.organization IN (:organizations)')
         //    ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations);
-       //     ->setParameter('parentOrganizations', $parentOrganizations);
+        //     ->setParameter('parentOrganizations', $parentOrganizations);
         /*
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
@@ -204,24 +201,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         //var_dump($filters);
         $query->leftJoin('o.objectValues', 'value');
-        foreach($filters as $key => $filter){
-            if(!is_array($filter) && substr($key, 0, 1) != '_'){
+        foreach ($filters as $key => $filter) {
+            if (!is_array($filter) && substr($key, 0, 1) != '_') {
                 $query->andWhere('value.stringValue = :'.$key)->setParameter($key, $filter);
-            }
-            elseif (!is_array($filter) && substr($key, 0, 1) == '_'){
+            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
                 // do magic
-            }
-            elseif(is_array($filter)){
-
-            }
-            else{
+            } elseif (is_array($filter)) {
+            } else {
                 // how dit we end up here?
             }
         }
 
         return $query;
     }
-
 
     /**
      * @param QueryBuilder $query
