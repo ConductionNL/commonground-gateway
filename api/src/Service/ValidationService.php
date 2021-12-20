@@ -45,6 +45,7 @@ class ValidationService
     private ObjectEntityService $objectEntityService;
     private TranslationService $translationService;
     private ParameterBagInterface $parameterBag;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -56,7 +57,8 @@ class ValidationService
         ConvertToGatewayService $convertToGatewayService,
         ObjectEntityService $objectEntityService,
         TranslationService $translationService,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        FunctionService $functionService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -68,6 +70,7 @@ class ValidationService
         $this->objectEntityService = $objectEntityService;
         $this->translationService = $translationService;
         $this->parameterBag = $parameterBag;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -473,8 +476,7 @@ class ValidationService
                     $subObject->setApplication($this->session->get('application'));
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
-                    $subObject->setOrganization($subObject->getUri());
-                    var_dump('TEST2');
+                    $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri());
                 }
 
                 // object toevoegen
@@ -903,7 +905,7 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->em->persist($subObject);
-                        $subObject->setOrganization($this->createUri($subObject));
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject));
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }

@@ -42,6 +42,7 @@ class EavService
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -55,7 +56,8 @@ class EavService
         ObjectEntityService $objectEntityService,
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
-        TranslationService $translationService
+        TranslationService $translationService,
+        FunctionService $functionService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -69,6 +71,7 @@ class EavService
         $this->responseService = $responseService;
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -246,14 +249,15 @@ class EavService
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
-        }
 
-        // Lets allow _mapping tot take place
-        /* @todo remove the old fields support */
-        if ($mapping = $request->query->get('_mapping')) {
-            foreach ($resultConfig['result'] as $key =>  $result) {
-                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-            }
+                // Lets allow _mapping tot take place
+                /* @todo remove the old fields support */
+                /* @todo make this universal */
+                if ($mapping = $request->query->get('_mapping')) {
+                    foreach ($resultConfig['result'] as $key =>  $result) {
+                        $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                    }
+                }
         }
 
         // Lets seriliaze the shizle
@@ -268,13 +272,11 @@ class EavService
                 'OTHER'     => 'Anders',
                 'YES_OTHER' => '"Ja, Anders"',
             ];
-            
+
             $result = $this->translationService->parse($result, true, $translationVariables);
-        }
-        else{
+        } else {
             $translationVariables = [];
         }
-
 
         /*
         if ($contentType === 'text/csv') {
@@ -410,7 +412,10 @@ class EavService
             $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
         }
         if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
-            $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
+            $this->session->set('organizations', [$this->session->get('activeOrganization')]);
+        }
+        if (!$this->session->get('parentOrganizations')) {
+            $this->session->set('parentOrganizations', []);
         }
 
         // Lets create an object
@@ -821,7 +826,7 @@ class EavService
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
-            $object->setOrganization($object->getUri());
+            $object = $this->functionService->createOrganization($object, $object->getUri());
         }
         $this->em->persist($object);
         $this->em->flush();
