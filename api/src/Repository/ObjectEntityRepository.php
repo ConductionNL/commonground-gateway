@@ -151,14 +151,24 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //            $user = $user->getUserIdentifier();
 //        }
 
-        // TODO: organizations or owner
+        // TODO: owner
         // Multitenancy, only show objects this user is allowed to see.
-        // Only show objects this user owns or object that have an organization this user is part of
+        // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
+        $organizations = $this->session->get('organizations', []);
+        $parentOrganizations = $this->session->get('parentOrganizations', []);
+
+        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) and o.entity.inherited == true) OR o.owner == :userId')
+        $query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) and o.entity.inherited == true) ')
+        //    ->setParameter('userId', $userId)
+            ->setParameter('organizations', $organizations)
+            ->setParameter('parentOrganizations', $parentOrganizations);
+        /*
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
         } else {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
+        */
 
 //        var_dump($query->getDQL());
 
