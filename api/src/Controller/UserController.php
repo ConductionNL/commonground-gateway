@@ -43,7 +43,7 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService)
+    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService, FunctionService $functionService)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
@@ -76,8 +76,8 @@ class UserController extends AbstractController
         // Add all the parent organisations
         $parentOrganizations = [];
         foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService);
+            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService, $functionService);
+            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService, $functionService);
         }
 
         $organizations[] = 'localhostOrganization';
@@ -141,16 +141,19 @@ class UserController extends AbstractController
      * @param array $organizations
      * @param string $organization
      * @param CommonGroundService $commonGroundService
+     * @param FunctionService $functionService
      * @return array
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
-    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService): array
+    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
-        if ($organization = $this->isResource($organization, $commonGroundService)) {
+        if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
                 && !in_array($organization['parentOrganization']['@id'], $organizations)
                 && array_key_exists('parentOrganization', $organization)) {
                 $organizations[] = $organization['parentOrganization']['@id'];
-                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService);
+                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
             }
         }
 

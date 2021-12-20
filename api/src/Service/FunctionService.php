@@ -6,7 +6,7 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface as CacheInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class FunctionService
 {
