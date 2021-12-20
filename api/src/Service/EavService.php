@@ -42,6 +42,7 @@ class EavService
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -55,7 +56,8 @@ class EavService
         ObjectEntityService $objectEntityService,
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
-        TranslationService $translationService
+        TranslationService $translationService,
+        FunctionService $functionService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -69,6 +71,7 @@ class EavService
         $this->responseService = $responseService;
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -825,7 +828,7 @@ class EavService
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
-            $object->setOrganization($object->getUri());
+            $object = $this->functionService->createOrganization($object, $object->getUri());
         }
         $this->em->persist($object);
         $this->em->flush();

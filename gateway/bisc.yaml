@@ -797,7 +797,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@organization"
         required: true
-        inmutable: true
+        immutable: true
     student_team:
         name: team
         type: object
@@ -1870,9 +1870,19 @@ App\Entity\Document:
     # User object
     studentDownload:
         name: studentDownload
+        data: "data"
+        data_id: "data_id"
         route: "studentDownload"
         object: "@student"
         documentCreationService: "placeholder"
-        documentType: pdf
+        documentType: student
+        
+    postalcodeDownload:
+        name: postalcodeDownload
+        data: "data"
+        data_id: "data_id"
+        route: "postalcodeDownload"
+        documentCreationService: "placeholder"
+        documentType: postalcode
         
 
