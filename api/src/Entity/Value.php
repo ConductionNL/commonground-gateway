@@ -36,8 +36,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Value
 {
     /**
-     * @var UuidInterface UUID of this person
+     * @var UuidInterface The UUID identifier of this resource
      *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
      * @Groups({"read"})
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
@@ -140,12 +143,12 @@ class Value
         $this->objects = new ArrayCollection();
     }
 
-    public function getId(): Uuid
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
 
-    public function setId(Uuid $id): self
+    public function setId(UuidInterface $id): self
     {
         $this->id = $id;
 
