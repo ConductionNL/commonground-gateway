@@ -954,7 +954,6 @@ class SOAPService
         else
             $object = $this->getLa01Hydration($entity, $soap);
 
-        var_dump($object);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
