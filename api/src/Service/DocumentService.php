@@ -46,22 +46,22 @@ class DocumentService
     {
         // opgeven van vertalingen
         $translationVariables = [
-            "Unknown" => "Onbekend",
-            "UNKNOWN" => "Onbekend",
-            "Beginner" => "Beginner",
-            "BEGINNER" => "Beginner",
-            "Advanced" => "Gevorderd",
-            "ADVANCED" => "Gevorderd",
-            "Reasonable" => "Redelijk",
-            "REASONABLE" => "Redelijk",
-            "CAN_NOT_WRITE" => "Kan niet schrijven",
-            "WRITE_NAW_DETAILS" => "Kan NAW gegevens schrijven",
-            "WRITE_SIMPLE_LETTERS" => "Kan (eenvoudige) brieven schrijven",
-            "WRITE_SIMPLE_TEXTS" => "Kan eenvoudige teksten schrijven (boodschappenbriefje etc.)",
-            "CAN_NOT_READ" => "Kan niet lezen",
-            "Male" => "Man",
-            "Female" => "Vrouw",
-            "English" => "Engels",
+            'Unknown'              => 'Onbekend',
+            'UNKNOWN'              => 'Onbekend',
+            'Beginner'             => 'Beginner',
+            'BEGINNER'             => 'Beginner',
+            'Advanced'             => 'Gevorderd',
+            'ADVANCED'             => 'Gevorderd',
+            'Reasonable'           => 'Redelijk',
+            'REASONABLE'           => 'Redelijk',
+            'CAN_NOT_WRITE'        => 'Kan niet schrijven',
+            'WRITE_NAW_DETAILS'    => 'Kan NAW gegevens schrijven',
+            'WRITE_SIMPLE_LETTERS' => 'Kan (eenvoudige) brieven schrijven',
+            'WRITE_SIMPLE_TEXTS'   => 'Kan eenvoudige teksten schrijven (boodschappenbriefje etc.)',
+            'CAN_NOT_READ'         => 'Kan niet lezen',
+            'Male'                 => 'Man',
+            'Female'               => 'Vrouw',
+            'English'              => 'Engels',
         ];
 
         $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json');
@@ -85,7 +85,7 @@ class DocumentService
     private function sendData(Document $document, string $data): Response
     {
         $url = $document->getDocumentCreationService();
-        
+
         return $this->gatewayService->createResponse($this->commonGroundService->callService($this->parameterBag->get('components')['dcs'], $url, $data, [], [], false, 'POST'));
     }
 }
