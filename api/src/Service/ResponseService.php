@@ -390,12 +390,13 @@ class ResponseService
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-        //TODO: this is a weird fix, find out why it is needed;
+
         if ($this->session->has('application') && $this->session->get('application') instanceof Application) {
-            $requestLog->setApplication($this->session->get('application'));
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')->getId()]);
         } else {
-            $requestLog->setApplication(null);
+            $application = null;
         }
+        $requestLog->setApplication($application);
         $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser(!is_string($this->tokenStorage->getToken()->getUser()) ? $this->tokenStorage->getToken()->getUser()->getUserIdentifier() : $this->tokenStorage->getToken()->getUser());
 
