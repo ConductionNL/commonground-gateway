@@ -1739,7 +1739,6 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         object: "@organization"
-        mayBeOrphaned: false
         inversedBy: "@organization_languageHouse_postalCodes"
     postalCode_team:
         name: team
