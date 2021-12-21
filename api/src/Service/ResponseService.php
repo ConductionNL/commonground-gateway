@@ -390,7 +390,6 @@ class ResponseService
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-
         if ($this->session->has('application') && $this->session->get('application') instanceof Application) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')->getId()]);
         } else {
