@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\Response;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
@@ -1386,14 +1387,19 @@ class ValidationService
         $format = str_replace(['telephone'], ['phone'], $format);
 
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
-        $allowedValidations = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json'];
+        $allowedValidations = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json', 'dutch_pc4'];
 
         // new route
         if (in_array($format, $allowedValidations)) {
-            try {
-                Validator::$format()->check($value);
-            } catch (ValidationException $exception) {
-                $objectEntity->addError($attribute->getName(), $exception->getMessage());
+            if ($format == 'dutch_pc4') {
+                //validate dutch_pc4
+                $this->validateDutchPC4($value);
+            } else {
+                try {
+                    Validator::$format()->check($value);
+                } catch (ValidationException $exception) {
+                    $objectEntity->addError($attribute->getName(), $exception->getMessage());
+                }
             }
 
             return $objectEntity;
@@ -1750,5 +1756,66 @@ class ValidationService
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
+    }
+
+    /**
+     * @return array
+     */
+    public function getDutchPC4List(): array
+    {
+        $file = fopen(dirname(__FILE__).'/csv/dutch_pc4.csv', 'r');
+
+        $i = 0;
+        $dutch_pc4_list = [];
+        while (!feof($file)) {
+            $line = fgetcsv($file);
+            if ($i === 0) {
+                $i++;
+                continue;
+            }
+            if (isset($line[1])) {
+                $dutch_pc4_list[] = $line[1];
+            }
+            $i++;
+        }
+
+        return $dutch_pc4_list;
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return bool
+     */
+    public function validateDutchPC4(string $value): bool
+    {
+        $dutch_pc4_list = $this->getDutchPC4List();
+
+        foreach ($dutch_pc4_list as $dutch_pc4) {
+            if ($dutch_pc4 == $value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function dutchPC4ToJson(): \Symfony\Component\HttpFoundation\Response
+    {
+        $dutch_pc4_list = $this->getDutchPC4List();
+
+        $data = [
+            'postalCodes' => $dutch_pc4_list,
+        ];
+
+        $json = json_encode($data);
+
+        $response = new \Symfony\Component\HttpFoundation\Response(
+            $json,
+            200,
+            ['content-type' => 'application/json']
+        );
+
+        return  $response;
     }
 }

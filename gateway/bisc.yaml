@@ -1731,6 +1731,7 @@ App\Entity\Attribute:
         entity: "@postalCode"
         searchable: true
         mustBeUnique: true
+        format: dutch_pc4
     postalCode_languageHouse:
         name: languageHouse
         type: object
