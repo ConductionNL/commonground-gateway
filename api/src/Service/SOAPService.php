@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Application;
 use App\Entity\Entity;
 use App\Entity\Gateway;
+use App\Entity\RequestLog;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use App\Entity\Soap;
 use \App\Service\EavService;
@@ -937,9 +938,6 @@ class SOAPService
     public function handleRequest(Soap $soap, array $data, array $namespaces, Request $request): string
     {
 
-        // Lets make the entity call
-        //$entity = $this->soapToEntity($soap, $data);
-
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope', 'xml_encoding' => 'utf-8', 'encoder_ignored_node_types' => [\XML_CDATA_SECTION_NODE]]);
         $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
 
@@ -956,6 +954,7 @@ class SOAPService
         else
             $object = $this->getLa01Hydration($entity, $soap);
 
+        var_dump($object);
         // Lets hydrate the returned data into our reponce, with al little help from https://github.com/adbario/php-dot-notation
         return $this->translationService->parse(
             $xmlEncoder->encode($this->translationService->dotHydrator($soap->getResponse() ? $xmlEncoder->decode($soap->getResponse(), 'xml') : [], $object, $soap->getResponseHydration()), 'xml'), true);
@@ -1182,7 +1181,7 @@ class SOAPService
             if($data->has('inp.bsn')){
                 $data->set('parent2Bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
             } else {
-                $data->set('inp.bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+                $data->set('inp&#2Ebsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
             }
         }
 
