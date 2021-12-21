@@ -12,9 +12,9 @@ parameters:
             location: https://digispoof.demodam.nl/
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
         dcs:
+            apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
             auth: apikey
-            location: https://conduction.demodam.nl/api/v1/document-creation-service
-            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+            location: https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service
         vrc:
             auth: apikey
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
