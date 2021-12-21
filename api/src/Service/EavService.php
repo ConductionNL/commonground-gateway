@@ -972,6 +972,7 @@ class EavService
             if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
                 return true;
             }
+
             return false;
         });
         if (count($cantBeOrphaned) > 0) {
@@ -980,6 +981,7 @@ class EavService
                 $data[] = $attribute->getName();
 //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
             }
+
             return [
                 'message' => 'You are not allowed to delete this object because of attributes that can not be orphaned.',
                 'type'    => 'Forbidden',
