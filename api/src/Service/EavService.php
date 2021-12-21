@@ -380,7 +380,7 @@ class EavService
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
         }));
-        if (count($applications) == 1) {
+        if (count($applications) > 0) {
             $this->session->set('application', $applications[0]);
         } else {
             //            var_dump('no application found');
@@ -712,6 +712,9 @@ class EavService
             case 'DELETE':
                 $result = $this->handleDelete($info['object']);
                 $responseType = Response::HTTP_NO_CONTENT;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             default:
                 $result = [
@@ -962,6 +965,30 @@ class EavService
 //
 //            return $objectEntity;
 //        }
+
+        // Check mayBeOrphaned
+        // Get all attributes with mayBeOrphaned == false and one or more objects
+        $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+                return true;
+            }
+
+            return false;
+        });
+        if (count($cantBeOrphaned) > 0) {
+            $data = [];
+            foreach ($cantBeOrphaned as $attribute) {
+                $data[] = $attribute->getName();
+//                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+            }
+
+            return [
+                'message' => 'You are not allowed to delete this object because of attributes that can not be orphaned.',
+                'type'    => 'Forbidden',
+                'path'    => $object->getEntity()->getName(),
+                'data'    => ['cantBeOrphaned' => $data],
+            ];
+        }
 
         // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
         if (is_null($maxDepth)) {
