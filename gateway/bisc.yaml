@@ -465,6 +465,7 @@ App\Entity\Attribute:
         entity: "@organization"
         object: "@employee"
         inversedBy: "@employee_teams"
+        mayBeOrphaned: false
     organization_languageHouse_postalCodes:
         name: langougeHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
@@ -751,6 +752,7 @@ App\Entity\Attribute:
         entity: "@employee"
         object: "@student"
         inversedBy: "@student_mentor"
+        mayBeOrphaned: false
     employee_teams:
         name: teams
         type: object
