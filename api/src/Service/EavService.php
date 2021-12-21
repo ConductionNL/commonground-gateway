@@ -380,7 +380,7 @@ class EavService
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
         }));
-        if (count($applications) == 1) {
+        if (count($applications) > 0) {
             $this->session->set('application', $applications[0]);
         } else {
             //            var_dump('no application found');
