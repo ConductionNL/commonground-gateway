@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
@@ -380,20 +381,21 @@ class ResponseService
         //        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
         $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
 
-        if ($request->getMethod() == 'POST' && $object) {
-            $this->em->persist($object);
-        }
-        $requestLog->setObjectEntity($object);
+//        if ($request->getMethod() == 'POST' && $object) {
+//            $this->em->persist($object);
+//        }
+//        $requestLog->setObjectEntity($object);
         $requestLog->setEntity($entity ?? ($object ? $object->getEntity() : null));
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
         //TODO: this is a weird fix, find out why it is needed;
-        if ($this->session->get('application')) {
-            $this->em->persist($this->session->get('application'));
+        if ($this->session->has('application') && $this->session->get('application') instanceof Application) {
+            $requestLog->setApplication($this->session->get('application'));
+        } else {
+            $requestLog->setApplication(null);
         }
-        $requestLog->setApplication($this->session->get('application'));
         $requestLog->setOrganization($this->session->get('activeOrganization'));
         $requestLog->setUser(!is_string($this->tokenStorage->getToken()->getUser()) ? $this->tokenStorage->getToken()->getUser()->getUserIdentifier() : $this->tokenStorage->getToken()->getUser());
 
