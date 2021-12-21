@@ -811,6 +811,7 @@ class EavService
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
             $this->handleDeleteOnError();
+
             return $errorsResponse;
         }
 
@@ -831,6 +832,7 @@ class EavService
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
             $this->handleDeleteOnError();
+
             return $errorsResponse;
         }
 
@@ -1037,7 +1039,7 @@ class EavService
     }
 
     /**
-     * We need to do a clean up if there are errors, almost same as handleDelete, but without the cascade checks and notifications
+     * We need to do a clean up if there are errors, almost same as handleDelete, but without the cascade checks and notifications.
      *
      * @return void
      */
@@ -1049,8 +1051,9 @@ class EavService
     }
 
     /**
-     * @param ObjectEntity $createdObject
+     * @param ObjectEntity      $createdObject
      * @param ObjectEntity|null $motherObject
+     *
      * @return void
      */
     private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
@@ -1070,6 +1073,7 @@ class EavService
 //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
         foreach ($createdObject->getObjectValues() as $value) {
             $this->deleteSubobjects($value, $motherObject);
+
             try {
                 if ($createdObject->getEntity()->getName() == 'email') {
                     $this->em->remove($value);
@@ -1097,8 +1101,9 @@ class EavService
     }
 
     /**
-     * @param Value $value
+     * @param Value             $value
      * @param ObjectEntity|null $motherObject
+     *
      * @return void
      */
     private function deleteSubobjects(Value $value, ?ObjectEntity $motherObject = null)
