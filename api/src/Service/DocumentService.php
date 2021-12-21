@@ -16,8 +16,9 @@ class DocumentService
     private GatewayService $gatewayService;
     private SerializerInterface $serializer;
     private ParameterBagInterface $parameterBag;
+    private TranslationService $translationService;
 
-    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag)
+    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag, TranslationService $translationService)
     {
         $this->eavService = $eavService;
         $this->responseService = $responseService;
@@ -25,6 +26,7 @@ class DocumentService
         $this->gatewayService = $gatewayService;
         $this->serializer = $serializer;
         $this->parameterBag = $parameterBag;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -42,7 +44,31 @@ class DocumentService
      */
     private function getData(Document $document, string $dataId): string
     {
-        $data = json_decode($this->serializer->serialize($this->responseService->renderResult($this->eavService->getObject($dataId, 'GET', $document->getObject()), ['properties']), 'json'), true);
+        // opgeven van vertalingen
+        $translationVariables = [
+            'Unknown'              => 'Onbekend',
+            'UNKNOWN'              => 'Onbekend',
+            'Beginner'             => 'Beginner',
+            'BEGINNER'             => 'Beginner',
+            'Advanced'             => 'Gevorderd',
+            'ADVANCED'             => 'Gevorderd',
+            'Reasonable'           => 'Redelijk',
+            'REASONABLE'           => 'Redelijk',
+            'CAN_NOT_WRITE'        => 'Kan niet schrijven',
+            'WRITE_NAW_DETAILS'    => 'Kan NAW gegevens schrijven',
+            'WRITE_SIMPLE_LETTERS' => 'Kan (eenvoudige) brieven schrijven',
+            'WRITE_SIMPLE_TEXTS'   => 'Kan eenvoudige teksten schrijven (boodschappenbriefje etc.)',
+            'CAN_NOT_READ'         => 'Kan niet lezen',
+            'Male'                 => 'Man',
+            'Female'               => 'Vrouw',
+            'English'              => 'Engels',
+        ];
+
+        $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json');
+
+        $data = $this->translationService->parse($data, true, $translationVariables);
+        $data = json_decode($data, true);
+
         if (isset($data['id'])) {
             unset($data['id']);
         }

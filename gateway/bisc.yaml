@@ -112,6 +112,9 @@ App\Entity\Entity:
             - addresses
             - emails
             - parentOrganization
+            - members
+            - langougeHouse_postalCodes
+            - team_postalCodes
 
     #Email Object
     email:
@@ -465,6 +468,7 @@ App\Entity\Attribute:
         entity: "@organization"
         object: "@employee"
         inversedBy: "@employee_teams"
+        mayBeOrphaned: false
     organization_languageHouse_postalCodes:
         name: langougeHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
@@ -751,6 +755,7 @@ App\Entity\Attribute:
         entity: "@employee"
         object: "@student"
         inversedBy: "@student_mentor"
+        mayBeOrphaned: false
     employee_teams:
         name: teams
         type: object
@@ -1731,6 +1736,7 @@ App\Entity\Attribute:
         entity: "@postalCode"
         searchable: true
         mustBeUnique: true
+        format: dutch_pc4
     postalCode_languageHouse:
         name: languageHouse
         type: object
@@ -1874,7 +1880,7 @@ App\Entity\Document:
         data_id: "data_id"
         route: "studentDownload"
         object: "@student"
-        documentCreationService: "placeholder"
+        documentCreationService: "https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service/templates/123d8c1b-9d2b-4e16-9307-c02e32421ed8/render/pdf"
         documentType: student
         
     postalcodeDownload:
