@@ -801,6 +801,9 @@ class EavService
 
         // Validation stap
         $this->validationService->setRequest($request);
+//        if ($request->getMethod() == 'POST') {
+//            var_dump($object->getEntity()->getName());
+//        }
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
         $object = $this->validationService->validateEntity($object, $body);
 
@@ -1041,25 +1044,69 @@ class EavService
     public function handleDeleteOnError()
     {
         foreach (array_reverse($this->validationService->createdObjects) as $createdObject) {
-            var_dump($createdObject->getUri());
-            if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
-                try {
-                    $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
-                    var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
-                    $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
-                } catch (\Throwable $e) {
-                    $resource = null;
+            $this->handleDeleteObjectOnError($createdObject); // see to do in this function
+        }
+    }
+
+    /**
+     * @param ObjectEntity $createdObject
+     * @param ObjectEntity|null $motherObject
+     * @return void
+     */
+    private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
+    {
+        //TODO: DO NOT TOUCH! This will only delete emails from the gateway when an error is thrown. should delete all created ObjectEntities...
+//        var_dump($createdObject->getUri());
+//        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+//            try {
+//                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
+//                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
+//                $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
+//            } catch (\Throwable $e) {
+//                $resource = null;
+//            }
+//        }
+//        var_dump('Delete: '.$createdObject->getEntity()->getName());
+//        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
+        foreach ($createdObject->getObjectValues() as $value) {
+            $this->deleteSubobjects($value, $motherObject);
+            try {
+                if ($createdObject->getEntity()->getName() == 'email') {
+                    $this->em->remove($value);
+                    $this->em->flush();
+//                    var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
                 }
+            } catch (Exception $exception) {
+//                var_dump($exception->getMessage());
+//                var_dump($value->getId()->toString());
+//                var_dump($value->getValue());
+//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName().' GAAT MIS');
+                continue;
             }
-            var_dump('Delete: '.$createdObject->getEntity()->getName());
-            var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
-            foreach ($createdObject->getObjectValues() as &$value) {
-                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
-                $this->em->remove($value);
+        }
+
+        try {
+            if ($createdObject->getEntity()->getName() == 'email') {
+                $this->em->remove($createdObject);
                 $this->em->flush();
+//                var_dump('Deleted: '.$createdObject->getEntity()->getName());
             }
-            $this->em->remove($createdObject);
-            $this->em->flush();
+        } catch (Exception $exception) {
+//            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
+        }
+    }
+
+    /**
+     * @param Value $value
+     * @param ObjectEntity|null $motherObject
+     * @return void
+     */
+    private function deleteSubobjects(Value $value, ?ObjectEntity $motherObject = null)
+    {
+        foreach ($value->getObjects() as $object) {
+            if ($object && (!$motherObject || $object->getId() !== $motherObject->getId())) {
+                $this->handleDeleteObjectOnError($object, $value->getObjectEntity());
+            }
         }
     }
 
