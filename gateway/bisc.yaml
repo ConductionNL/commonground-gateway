@@ -112,6 +112,9 @@ App\Entity\Entity:
             - addresses
             - emails
             - parentOrganization
+            - members
+            - langougeHouse_postalCodes
+            - team_postalCodes
 
     #Email Object
     email:
