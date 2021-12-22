@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class PostalCodesController extends AbstractController
 {
     /**
-     * @Route("/eav/postalCodes", methods={"get"})
+     * @Route("/eav/postal_codes", methods={"get"})
      */
     public function PostalCodesAction(ValidationService $validationService)
     {
