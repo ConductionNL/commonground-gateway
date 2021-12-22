@@ -64,7 +64,7 @@ class DocumentService
             'English'              => 'Engels',
         ];
 
-        $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject())->toArray(), 'json');
+        $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject()), 'json');
 
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
