@@ -44,13 +44,13 @@ class DocumentService
             return $response;
         }
 
-        return $this->sendData($document, $data);
+        return $this->sendData($document, json_encode($data));
     }
 
     /**
      * Get document data.
      */
-    private function getData(Document $document, string $dataId): string
+    private function getData(Document $document, string $dataId)
     {
         // opgeven van vertalingen
         $translationVariables = [
@@ -89,7 +89,7 @@ class DocumentService
             unset($data['@id']);
         }
 
-        return json_encode($data);
+        return $data;
     }
 
     /**
