@@ -36,6 +36,14 @@ class DocumentService
     {
         $data = $this->getData($document, $dataId);
 
+        // is we have an error we need to abort
+        if(array_key_exists('type', $data) && $data['type'] == 'error'){
+            $response = new Response();
+            $response->setContent($data);
+            $response->setStatusCode(404);
+            return $response;
+        }
+
         return $this->sendData($document, $data);
     }
 
@@ -64,8 +72,13 @@ class DocumentService
             'English'              => 'Engels',
         ];
 
-        $data = $this->serializer->serialize($this->eavService->getObject($dataId, 'GET', $document->getObject()), 'json');
+        $data = $this->eavService->getObject($dataId, 'GET', $document->getObject());
+        if(!is_array($data)){ // Lets see if we have an error
+            $data = $data->toArray();
+        }
 
+        // Lets do translations
+        $data = $this->serializer->serialize($data, 'json');
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
 
