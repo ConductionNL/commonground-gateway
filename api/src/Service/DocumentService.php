@@ -37,9 +37,9 @@ class DocumentService
         $data = $this->getData($document, $dataId);
 
         // is we have an error we need to abort
-        if(array_key_exists('type', $data) && $data['type'] == 'error'){
+        if(array_key_exists('type', $data) && in_array($data['type'], ["Bad Request", ""])  ){
             $response = new Response();
-            $response->setContent($data);
+            $response->setContent(json_encode($data));
             $response->setStatusCode(404);
             return $response;
         }
