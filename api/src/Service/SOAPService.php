@@ -1145,6 +1145,10 @@ class SOAPService
 
             $data->set('tijd', $time->format('H:i'));
 
+            $time = new DateTime($data->get('tijdlijkvinding'));
+
+            $data->set('tijdlijkvinding', $time->format('H:i'));
+
             if($data->get('natdood') == 'True')
                 $data->set('natdood', true);
             else
