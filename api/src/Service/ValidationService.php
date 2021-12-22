@@ -46,6 +46,7 @@ class ValidationService
     private ObjectEntityService $objectEntityService;
     private TranslationService $translationService;
     private ParameterBagInterface $parameterBag;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -57,7 +58,8 @@ class ValidationService
         ConvertToGatewayService $convertToGatewayService,
         ObjectEntityService $objectEntityService,
         TranslationService $translationService,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        FunctionService $functionService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -69,6 +71,7 @@ class ValidationService
         $this->objectEntityService = $objectEntityService;
         $this->translationService = $translationService;
         $this->parameterBag = $parameterBag;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -182,6 +185,7 @@ class ValidationService
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if (!$objectEntity->getHasErrors()) {
             if ($objectEntity->getEntity()->getGateway()) {
+                // We notify the notification component here in the createPromise function:
                 $promise = $this->createPromise($objectEntity, $post);
                 $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
                 $objectEntity->addPromise($promise);
@@ -198,16 +202,6 @@ class ValidationService
 
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
             $objectEntity->setOrganization($post['@organization']);
-        }
-
-        // TODO: In createPromise we use $this->notify to create a notification in nrc, but if we have errors here and undo all created objects, we shouldn't have notified already?
-        // TODO: Also, for POST en PUT we only seem to notify if there is a Gateway present on the Entity.
-        // TODO: So, if no errors notify foreach created/changed ObjectEntity! use entity->attributes if attribute type == object (see eavService->handleDelete())
-        // We need to do a clean up if there are errors
-        if ($objectEntity->getHasErrors()) {
-            foreach ($this->createdObjects as $createdObject) {
-                $this->commonGroundService->deleteResource(null, $createdObject->getUri());
-            }
         }
 
         return $objectEntity;
@@ -458,6 +452,8 @@ class ValidationService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
+                    $this->createdObjects[] = $subObject;
+//                    var_dump('1 '.$subObject->getEntity()->getName());
                 }
 
                 $subObject = $this->validateEntity($subObject, $object);
@@ -474,8 +470,7 @@ class ValidationService
                     $subObject->setApplication($this->session->get('application'));
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
-                    $subObject->setOrganization($subObject->getUri());
-                    var_dump('TEST2');
+                    $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                 }
 
                 // object toevoegen
@@ -902,9 +897,11 @@ class ValidationService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
+                    $this->createdObjects[] = $subObject;
+//                    var_dump('2 '.$subObject->getEntity()->getName());
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->em->persist($subObject);
-                        $subObject->setOrganization($this->createUri($subObject));
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
@@ -1624,6 +1621,9 @@ class ValidationService
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
                     $objectEntity->setApplication($this->session->get('application'));
                 }
+                if ($objectEntity->getEntity()->getFunction() === 'organization') {
+                    $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
+                }
                 if (isset($setOrganization)) {
                     $objectEntity->setOrganization($setOrganization);
                 }
@@ -1636,9 +1636,6 @@ class ValidationService
                     }, ARRAY_FILTER_USE_KEY);
                 }
                 $objectEntity->setExternalResult($result);
-
-                // Keep track of created objects
-                $this->createdObjects[] = $objectEntity;
 
                 // Notify notification component
                 $this->notify($objectEntity, $method);

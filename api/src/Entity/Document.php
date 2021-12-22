@@ -79,6 +79,14 @@ class Document
     private string $route;
 
     /**
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, fetch="EAGER")
+     * @ORM\JoinColumn(nullable=true)
+     * @MaxDepth(1)
+     */
+    private ?Entity $object = null;
+
+    /**
      * @var string The data of this Document.
      *
      * @Assert\Length(
@@ -130,7 +138,7 @@ class Document
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $requestLogs;
 
@@ -171,6 +179,19 @@ class Document
     public function setRoute(string $route): self
     {
         $this->route = $route;
+
+        return $this;
+    }
+
+    public function getObject(): ?Entity
+    {
+        return $this->object;
+    }
+
+    public function setObject(?Entity $object): self
+    {
+        $this->type = 'object';
+        $this->object = $object;
 
         return $this;
     }

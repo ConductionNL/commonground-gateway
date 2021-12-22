@@ -135,6 +135,14 @@ class Entity
     private $extend = false;
 
     /**
+     * Whether objects created from this entity should be available to child organisations.
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $inherited = false;
+
+    /**
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
@@ -210,7 +218,7 @@ class Entity
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $requestLogs;
 
@@ -680,6 +688,18 @@ class Entity
                 $soap->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getInherited(): ?bool
+    {
+        return $this->inherited;
+    }
+
+    public function setInherited(?bool $inherited): self
+    {
+        $this->inherited = $inherited;
 
         return $this;
     }

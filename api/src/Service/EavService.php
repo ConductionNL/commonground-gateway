@@ -42,6 +42,7 @@ class EavService
     private ResponseService $responseService;
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -55,7 +56,8 @@ class EavService
         ObjectEntityService $objectEntityService,
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
-        TranslationService $translationService
+        TranslationService $translationService,
+        FunctionService $functionService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -69,6 +71,7 @@ class EavService
         $this->responseService = $responseService;
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -246,14 +249,15 @@ class EavService
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
-        }
 
-        // Lets allow _mapping tot take place
-        /* @todo remove the old fields support */
-        if ($mapping = $request->query->get('_mapping')) {
-            foreach ($resultConfig['result'] as $key =>  $result) {
-                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-            }
+                // Lets allow _mapping tot take place
+                /* @todo remove the old fields support */
+                /* @todo make this universal */
+                if ($mapping = $request->query->get('_mapping')) {
+                    foreach ($resultConfig['result'] as $key =>  $result) {
+                        $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                    }
+                }
         }
 
         // Lets seriliaze the shizle
@@ -376,7 +380,7 @@ class EavService
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
         }));
-        if (count($applications) == 1) {
+        if (count($applications) > 0) {
             $this->session->set('application', $applications[0]);
         } else {
             //            var_dump('no application found');
@@ -408,7 +412,10 @@ class EavService
             $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
         }
         if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
-            $this->session->set('organizations', array_merge($this->session->get('organizations') ?? [], [$this->session->get('activeOrganization')]));
+            $this->session->set('organizations', [$this->session->get('activeOrganization')]);
+        }
+        if (!$this->session->get('parentOrganizations')) {
+            $this->session->set('parentOrganizations', []);
         }
 
         // Lets create an object
@@ -705,6 +712,9 @@ class EavService
             case 'DELETE':
                 $result = $this->handleDelete($info['object']);
                 $responseType = Response::HTTP_NO_CONTENT;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
                 break;
             default:
                 $result = [
@@ -791,11 +801,18 @@ class EavService
 
         // Validation stap
         $this->validationService->setRequest($request);
+//        if ($request->getMethod() == 'POST') {
+//            var_dump($object->getEntity()->getName());
+//        }
+        $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
         if ($object->getHasErrors()) {
-            return $this->returnErrors($object);
+            $errorsResponse = $this->returnErrors($object);
+            $this->handleDeleteOnError();
+
+            return $errorsResponse;
         }
 
         // TODO: use (ObjectEntity) $object->promises instead
@@ -813,13 +830,16 @@ class EavService
 
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
-            return $this->returnErrors($object);
+            $errorsResponse = $this->returnErrors($object);
+            $this->handleDeleteOnError();
+
+            return $errorsResponse;
         }
 
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
-            $object->setOrganization($object->getUri());
+            $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         }
         $this->em->persist($object);
         $this->em->flush();
@@ -956,6 +976,30 @@ class EavService
 //            return $objectEntity;
 //        }
 
+        // Check mayBeOrphaned
+        // Get all attributes with mayBeOrphaned == false and one or more objects
+        $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+                return true;
+            }
+
+            return false;
+        });
+        if (count($cantBeOrphaned) > 0) {
+            $data = [];
+            foreach ($cantBeOrphaned as $attribute) {
+                $data[] = $attribute->getName();
+//                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+            }
+
+            return [
+                'message' => 'You are not allowed to delete this object because of attributes that can not be orphaned.',
+                'type'    => 'Forbidden',
+                'path'    => $object->getEntity()->getName(),
+                'data'    => ['cantBeOrphaned' => $data],
+            ];
+        }
+
         // Lets keep track of objects we already encountered, for inversedBy, checking maxDepth 1, preventing recursion loop:
         if (is_null($maxDepth)) {
             $maxDepth = new ArrayCollection();
@@ -992,6 +1036,83 @@ class EavService
         $this->em->flush();
 
         return [];
+    }
+
+    /**
+     * We need to do a clean up if there are errors, almost same as handleDelete, but without the cascade checks and notifications.
+     *
+     * @return void
+     */
+    public function handleDeleteOnError()
+    {
+        foreach (array_reverse($this->validationService->createdObjects) as $createdObject) {
+            $this->handleDeleteObjectOnError($createdObject); // see to do in this function
+        }
+    }
+
+    /**
+     * @param ObjectEntity      $createdObject
+     * @param ObjectEntity|null $motherObject
+     *
+     * @return void
+     */
+    private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
+    {
+        //TODO: DO NOT TOUCH! This will only delete emails from the gateway when an error is thrown. should delete all created ObjectEntities...
+//        var_dump($createdObject->getUri());
+//        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+//            try {
+//                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
+//                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
+//                $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
+//            } catch (\Throwable $e) {
+//                $resource = null;
+//            }
+//        }
+//        var_dump('Delete: '.$createdObject->getEntity()->getName());
+//        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
+        foreach ($createdObject->getObjectValues() as $value) {
+            $this->deleteSubobjects($value, $motherObject);
+
+            try {
+                if ($createdObject->getEntity()->getName() == 'email') {
+                    $this->em->remove($value);
+                    $this->em->flush();
+//                    var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
+                }
+            } catch (Exception $exception) {
+//                var_dump($exception->getMessage());
+//                var_dump($value->getId()->toString());
+//                var_dump($value->getValue());
+//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName().' GAAT MIS');
+                continue;
+            }
+        }
+
+        try {
+            if ($createdObject->getEntity()->getName() == 'email') {
+                $this->em->remove($createdObject);
+                $this->em->flush();
+//                var_dump('Deleted: '.$createdObject->getEntity()->getName());
+            }
+        } catch (Exception $exception) {
+//            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
+        }
+    }
+
+    /**
+     * @param Value             $value
+     * @param ObjectEntity|null $motherObject
+     *
+     * @return void
+     */
+    private function deleteSubobjects(Value $value, ?ObjectEntity $motherObject = null)
+    {
+        foreach ($value->getObjects() as $object) {
+            if ($object && (!$motherObject || $object->getId() !== $motherObject->getId())) {
+                $this->handleDeleteObjectOnError($object, $value->getObjectEntity());
+            }
+        }
     }
 
     /**

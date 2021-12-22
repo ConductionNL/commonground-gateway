@@ -104,7 +104,7 @@ class Endpoint
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $requestLogs;
 

@@ -147,12 +147,12 @@ class Application
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $requestLogs;
 
     /**
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
