@@ -136,7 +136,7 @@ class TemplateService
             $content = 'no content found';
         }
 
-        switch ($document->getType()) {
+        switch ($type) {
             case 'twig':
                 $document = $this->templating->createTemplate($content);
                 return $document->render($variables);
@@ -147,6 +147,7 @@ class TemplateService
                 return $content;
             default;
                 /* @todo throw error */
+                return $content;
                 break;
         }
     }
