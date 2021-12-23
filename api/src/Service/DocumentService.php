@@ -3,9 +3,12 @@
 namespace App\Service;
 
 use App\Entity\Document;
+use App\Service\TemplateService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DocumentService
@@ -17,8 +20,9 @@ class DocumentService
     private SerializerInterface $serializer;
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
+    private TemplateService $templateService;
 
-    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag, TranslationService $translationService)
+    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag, TranslationService $translationService, TemplateService $templateService)
     {
         $this->eavService = $eavService;
         $this->responseService = $responseService;
@@ -27,6 +31,7 @@ class DocumentService
         $this->serializer = $serializer;
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
+        $this->templateService = $templateService;
     }
 
     /**
@@ -37,14 +42,26 @@ class DocumentService
         $data = $this->getData($document, $dataId);
 
         // is we have an error we need to abort
-        if(array_key_exists('type', $data) && $data['type'] == 'error'){
+        if(array_key_exists('type', $data) && in_array($data['type'], ["Bad Request", ""])  ){
             $response = new Response();
-            $response->setContent($data);
+            $response->setContent(json_encode($data));
             $response->setStatusCode(404);
             return $response;
         }
 
-        return $this->sendData($document, json_encode($data));
+        $date = new \DateTime();
+        $date = $date->format('Ymd_His');
+        $response = New Response();
+        $extension = 'pdf';
+        $file =  $this->templateService->renderPdf($document, $data);
+        $response->setContent($file);
+
+        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$document->getName()}_{$date}.{$extension}");
+        $response->headers->set('Content-Disposition', $disposition);
+
+        return $response;
+
+        //return $this->sendData($document, json_encode($data));
     }
 
     /**
