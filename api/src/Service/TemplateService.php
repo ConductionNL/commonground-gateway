@@ -131,15 +131,20 @@ class TemplateService
             $type = 'twig';
         }
 
+        $content = $document->getContent();
+        if(!$content || !is_string($content)){
+            $content = 'no content found';
+        }
+
         switch ($document->getType()) {
             case 'twig':
-                $document = $this->templating->createTemplate($document->getContent());
+                $document = $this->templating->createTemplate($content);
                 return $document->render($variables);
                 break;
             case 'md':
-                return $document->getContent();
+                return $content;
             case 'rt':
-                return $document->getContent();
+                return $content;
             default;
                 /* @todo throw error */
                 break;
