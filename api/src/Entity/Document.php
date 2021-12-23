@@ -136,25 +136,22 @@ class Document
      */
     private string $documentType;
 
-
-
     /**
      * @var string The type of template
      *
-     * @Assert\NotNull
      * @Assert\Length(
      *      max = 255
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $type = "twig";
+    private ?string $type;
 
     /**
      * @var string The content of the template
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", nullable=true)
      */
     private ?string $content;
 
@@ -296,7 +293,7 @@ class Document
         return $this;
     }
 
-    public function getType(): string
+    public function getType(): ?string
     {
         return $this->type;
     }
