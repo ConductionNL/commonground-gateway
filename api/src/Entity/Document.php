@@ -145,16 +145,6 @@ class Document
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"twig","md","rt","json","xml","html"})
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "enum"={"twig","md","rst","json","xml","html"},
-     *             "example"="twig"
-     *         }
-     *     }
-     * )
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -163,14 +153,6 @@ class Document
     /**
      * @var string The content of the template
      *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="template description"
-     *         }
-     *     }
-     * )
      * @Groups({"read", "write"})
      * @ORM\Column(type="text")
      */
