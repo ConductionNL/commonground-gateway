@@ -95,8 +95,7 @@ class DocumentService
             $data = $data->toArray();
         }
 
-        // Lets do translations
-        $data = json_encode($data->toArray()); // $this->serializer->serialize($data, 'json');
+        $data = json_encode($data); // $this->serializer->serialize($data, 'json');
         $data = $this->translationService->parse($data, true, $translationVariables);
         $data = json_decode($data, true);
 
