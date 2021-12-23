@@ -1227,6 +1227,10 @@ App\Entity\Attribute:
         object: "@email"
         cascade: true
         cascadeDelete: true
+    referringPerson_team:
+        name: team
+        type: string
+        entity: "@referringPerson"
 
     # Education properties
     education_name:
