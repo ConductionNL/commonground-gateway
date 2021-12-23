@@ -145,7 +145,7 @@ class Document
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $type = "twig";
+    private ?string $type = "twig";
 
     /**
      * @var string The content of the template
