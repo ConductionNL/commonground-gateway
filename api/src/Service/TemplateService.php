@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\Template;
+use App\Entity\Document;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use PhpOffice\PhpWord\IOFactory;

@@ -7,6 +7,8 @@ use App\Service\TemplateService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DocumentService
@@ -51,7 +53,7 @@ class DocumentService
         $date = $date->format('Ymd_His');
         $response = New Response();
         $extension = 'pdf';
-        $file =  $this->templateService->renderPdf($document, $variables);
+        $file =  $this->templateService->renderPdf($document, $data);
         $response->setContent($file);
 
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$document->getName()}_{$date}.{$extension}");
