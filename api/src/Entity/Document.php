@@ -136,6 +136,46 @@ class Document
      */
     private string $documentType;
 
+
+
+    /**
+     * @var string The type of template
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Assert\Choice({"twig","md","rt","json","xml","html"})
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "enum"={"twig","md","rst","json","xml","html"},
+     *             "example"="twig"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $type = "twig";
+
+    /**
+     * @var string The content of the template
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="template description"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="text")
+     */
+    private ?string $content;
+
     /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY", cascade={"remove"})
@@ -270,6 +310,30 @@ class Document
                 $requestLog->setDocument(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(string $content): self
+    {
+        $this->content = $content;
 
         return $this;
     }
