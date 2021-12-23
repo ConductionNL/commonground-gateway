@@ -143,7 +143,7 @@ class Document
      *      max = 255
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name="content_type")
      */
     private ?string $type;
 
