@@ -124,6 +124,13 @@ class TemplateService
 
         $variables = array_merge($variables, $this->getVariables());
 
+        $type = $document->getType();
+
+        //falbback
+        if(!$type || !is_string($type)){
+            $type = 'twig';
+        }
+
         switch ($document->getType()) {
             case 'twig':
                 $document = $this->templating->createTemplate($document->getContent());

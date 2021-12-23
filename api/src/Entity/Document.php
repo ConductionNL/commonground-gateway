@@ -136,8 +136,6 @@ class Document
      */
     private string $documentType;
 
-
-
     /**
      * @var string The type of template
      *
