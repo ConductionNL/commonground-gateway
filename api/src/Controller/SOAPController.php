@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\RequestLog;
 use App\Service\SOAPService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +32,12 @@ class SOAPController extends AbstractController
         $namespaces = $SOAPService->getNamespaces($data);
         $messageType = $SOAPService->getMessageType($data, $namespaces);
 
+        $requestLog = new RequestLog();
+        $requestLog->setRequestBody([$request->getContent()]);
+        $requestLog->setStatus('Success');
+        $requestLog->setStatusCode('200');
+        $requestLog->setResponseBody([]);
+        $requestLog->setMethod($request->getMethod());
 
         switch ($messageType) {
             case 'zakLv01':
@@ -56,6 +63,12 @@ class SOAPController extends AbstractController
                     break;
                 }
             else{
+
+                $requestLog->setStatus('Bad request');
+                $requestLog->setStatusCode('400');
+                $requestLog->setResponseBody(["The message type $messageType with case type $caseType is not supported at this moment"]);
+                $em->persist($requestLog);
+                $em->flush();
                     throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
             case 'OntvangenIntakeNotificatie':
@@ -71,6 +84,11 @@ class SOAPController extends AbstractController
                     break;
                 }
                 else{
+                    $requestLog->setStatus('Bad request');
+                    $requestLog->setStatusCode('400');
+                    $requestLog->setResponseBody(["The message type $messageType with case type $caseType is not supported at this moment"]);
+                    $em->persist($requestLog);
+                    $em->flush();
                     throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
                 break;
@@ -80,9 +98,18 @@ class SOAPController extends AbstractController
                     break;
                 }
                 else{
+                    $requestLog->setStatus('Bad request');
+                    $requestLog->setStatusCode('400');
+                    $requestLog->setResponseBody(["The message type $messageType is not supported at this moment"]);
+                    $em->persist($requestLog);
+                    $em->flush();
                     throw new BadRequestException("The message type $messageType is not supported at this moment");
                 }
         }
+
+        $requestLog->setResponseBody([$message]);
+        $em->persist($requestLog);
+        $em->flush();
 
         /* @todo we kunnen niet altijd een 200 terug geven */
         return new Response($message, 200, [

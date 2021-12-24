@@ -80,7 +80,7 @@ class GatewayResponseLog
     /**
      * @Groups({"read"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, inversedBy="responseLogs")
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="responseLogs")
      */
     private ?ObjectEntity $objectEntity;
 

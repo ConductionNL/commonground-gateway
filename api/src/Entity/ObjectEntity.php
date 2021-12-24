@@ -193,7 +193,7 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
      */
     private $responseLogs;
 
@@ -639,19 +639,19 @@ class ObjectEntity
     public function addResponseLog(GatewayResponseLog $responseLog): self
     {
         if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responceLog);
-            $responceLog->setObjectEntity($this);
+            $this->responseLogs->add($responseLog);
+            $responseLog->setObjectEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponseLog(GatewayResponseLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responseLog): self
     {
-        if ($this->responceLogs->removeElement($responceLog)) {
+        if ($this->responseLogs->removeElement($responseLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getObjectEntity() === $this) {
-                $responceLog->setObjectEntity(null);
+            if ($responseLog->getObjectEntity() === $this) {
+                $responseLog->setObjectEntity(null);
             }
         }
 
