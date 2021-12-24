@@ -88,7 +88,7 @@ class RequestLog
      * @var string|null An uuid or uri of a user for this RequestLog.
      *
      * @Groups({"read"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, name='user_column')
      */
     private ?string $user;
 
