@@ -283,7 +283,7 @@ class GatewayResponseLog
 
     public function getContent()
     {
-        return $this->content;
+        return stream_get_contents($this->content);
     }
 
     public function setContent($content): self
