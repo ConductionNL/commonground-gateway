@@ -9,28 +9,54 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\Criteria;
-use App\Repository\LogRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Repository\LogRepository;
 
 /**
- * @ApiResource()
- * @ORM\Entity(repositoryClass=LogRepository::class)
+ * This entity holds the information about a Logs.
+ *
+ * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/logs/{id}"},
+ *      "put"={"path"="/admin/logs/{id}"},
+ *      "delete"={"path"="/admin/logs/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/logs"},
+ *      "post"={"path"="/admin/logs"}
+ *  })
+ * )
+ * @ORM\Entity(repositoryClass="App\Repository\LogRepository")
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact",
+ *     "endpoint.id": "exact",
+ *     "sources.id": "exact",
+ *     "handler.id": "exact"
+ * })
  */
 class Log
 {
     /**
      * @var UuidInterface The UUID identifier of this Entity.
      *
-     * @Groups({"read"})
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
      * @ORM\GeneratedValue(strategy="CUSTOM")
@@ -133,7 +159,7 @@ class Log
     private $requestServer = [];
 
     /**
-     * @var string The request context for this Log.
+     * @var string The request content for this Log.
      *
      * @Assert\NotNull
      * @ApiProperty(
@@ -147,7 +173,7 @@ class Log
      * @Groups({"read","write"})
      * @ORM\Column(type="text")
      */
-    private $requestContext;
+    private $requestContent;
 
     /**
      * @var string The response status of this Log.
@@ -253,7 +279,7 @@ class Log
     private $responseTime;
 
     /**
-     * @var Datetime The moment this request was created
+     * @var Datetime The moment this log was created
      *
      * @Assert\NotNull
      * @Groups({"read"})
@@ -261,6 +287,14 @@ class Log
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
+
+    public function __construct()
+    {
+        //TODO: better way of defaulting dateCreated & dateModified with orm?
+        // (options CURRENT_TIMESTAMP or 0 does not work)
+        $now = new DateTime();
+        $this->setCreatedAt($now);
+    }
 
     public function getId()
     {
@@ -363,14 +397,14 @@ class Log
         return $this;
     }
 
-    public function getRequestContext(): ?string
+    public function getRequestContent(): ?string
     {
-        return $this->requestContext;
+        return $this->requestContent;
     }
 
-    public function setRequestContext(string $requestContext): self
+    public function setRequestContent(string $requestContent): self
     {
-        $this->requestContext = $requestContext;
+        $this->requestContent = $requestContent;
 
         return $this;
     }
@@ -507,12 +541,12 @@ class Log
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
 
