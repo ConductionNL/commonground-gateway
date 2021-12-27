@@ -61,6 +61,16 @@ class Log
     private $type;
 
     /**
+     * @var UuidInterface The call id of this Log.
+     *
+     * @Assert\NotNull
+     * @Gedmo\Versioned
+     * @Groups({"read","write"})
+     * @ORM\Column(type="uuid", unique=true)
+     */
+    private $callId;
+
+    /**
      * @var string The request method of this Log.
      *
      * @Assert\NotNull
@@ -105,15 +115,11 @@ class Log
     private $requestPathInfo;
 
     /**
-     * @var string The request languages of this Log.
+     * @var array The request languages of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array")
      */
     private $requestLanguages;
 
@@ -256,7 +262,7 @@ class Log
      */
     private $createdAt;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
@@ -269,6 +275,18 @@ class Log
     public function setType(string $type): self
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getCallId()
+    {
+        return $this->callId;
+    }
+
+    public function setCallId($callId): self
+    {
+        $this->callId = $callId;
 
         return $this;
     }
@@ -321,12 +339,12 @@ class Log
         return $this;
     }
 
-    public function getRequestLanguages(): ?string
+    public function getRequestLanguages(): ?array
     {
         return $this->requestLanguages;
     }
 
-    public function setRequestLanguages(string $requestLanguages): self
+    public function setRequestLanguages(array $requestLanguages): self
     {
         $this->requestLanguages = $requestLanguages;
 
@@ -500,4 +518,6 @@ class Log
 
         return $this;
     }
+
+
 }
