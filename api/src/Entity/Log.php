@@ -61,68 +61,75 @@ class Log
     private $type;
 
     /**
-     * @var ?string The request method of this Log.
+     * @var string The request method of this Log.
      *
+     * @Assert\NotNull
      * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $requestMethod;
 
     /**
-     * @var ?array The request headers of this Log.
+     * @var array The request headers of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $requestHeaders = [];
 
     /**
-     * @var ?array The request query of this Log.
+     * @var array The request query of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $requestQuery = [];
 
     /**
-     * @var ?string The request path info of this Log.
+     * @var string The request path info of this Log.
      *
+     * @Assert\NotNull
      * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $requestPathInfo;
 
     /**
-     * @var ?string The request languages of this Log.
+     * @var string The request languages of this Log.
      *
+     * @Assert\NotNull
      * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $requestLanguages;
 
     /**
-     * @var ?array The request server of this Log.
+     * @var array The request server of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $requestServer = [];
 
     /**
-     * @var ?string The request context for this Log.
+     * @var string The request context for this Log.
      *
+     * @Assert\NotNull
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -132,63 +139,69 @@ class Log
      *     }
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="text")
      */
     private $requestContext;
 
     /**
-     * @var ?string The response status of this Log.
+     * @var string The response status of this Log.
      *
+     * @Assert\NotNull
      * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $responseStatus;
 
     /**
-     * @var ?int The response status code of this Log.
+     * @var int The response status code of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer")
      */
     private $responseStatusCode;
 
     /**
-     * @var ?array The response headers of this Log.
+     * @var array The response headers of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $responseHeaders = [];
 
     /**
-     * @var ?array The response content of this Log.
+     * @var array The response content of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $responseContent = [];
 
     /**
-     * @var ?string The session of this Log.
+     * @var string The session of this Log.
      *
+     * @Assert\NotNull
      * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $session;
 
     /**
-     * @var ?array The session values of this Log.
+     * @var array The session values of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array")
      */
     private $sessionValues = [];
 
@@ -227,6 +240,7 @@ class Log
     /**
      * @var ?DateTime The endpoint of this Log.
      *
+     * @Assert\NotNull
      * @Groups({"read", "write"})
      * @ORM\Column(type="time")
      */
@@ -235,9 +249,10 @@ class Log
     /**
      * @var Datetime The moment this request was created
      *
+     * @Assert\NotNull
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime")
      */
     private $createdAt;
 
@@ -263,7 +278,7 @@ class Log
         return $this->requestMethod;
     }
 
-    public function setRequestMethod(?string $requestMethod): self
+    public function setRequestMethod(string $requestMethod): self
     {
         $this->requestMethod = $requestMethod;
 
@@ -275,7 +290,7 @@ class Log
         return $this->requestHeaders;
     }
 
-    public function setRequestHeaders(?array $requestHeaders): self
+    public function setRequestHeaders(array $requestHeaders): self
     {
         $this->requestHeaders = $requestHeaders;
 
@@ -287,7 +302,7 @@ class Log
         return $this->requestQuery;
     }
 
-    public function setRequestQuery(?array $requestQuery): self
+    public function setRequestQuery(array $requestQuery): self
     {
         $this->requestQuery = $requestQuery;
 
@@ -299,7 +314,7 @@ class Log
         return $this->requestPathInfo;
     }
 
-    public function setRequestPathInfo(?string $requestPathInfo): self
+    public function setRequestPathInfo(string $requestPathInfo): self
     {
         $this->requestPathInfo = $requestPathInfo;
 
@@ -311,7 +326,7 @@ class Log
         return $this->requestLanguages;
     }
 
-    public function setRequestLanguages(?string $requestLanguages): self
+    public function setRequestLanguages(string $requestLanguages): self
     {
         $this->requestLanguages = $requestLanguages;
 
@@ -323,7 +338,7 @@ class Log
         return $this->requestServer;
     }
 
-    public function setRequestServer(?array $requestServer): self
+    public function setRequestServer(array $requestServer): self
     {
         $this->requestServer = $requestServer;
 
@@ -335,7 +350,7 @@ class Log
         return $this->requestContext;
     }
 
-    public function setRequestContext(?string $requestContext): self
+    public function setRequestContext(string $requestContext): self
     {
         $this->requestContext = $requestContext;
 
@@ -347,7 +362,7 @@ class Log
         return $this->responseStatus;
     }
 
-    public function setResponseStatus(?string $responseStatus): self
+    public function setResponseStatus(string $responseStatus): self
     {
         $this->responseStatus = $responseStatus;
 
@@ -359,7 +374,7 @@ class Log
         return $this->responseStatusCode;
     }
 
-    public function setResponseStatusCode(?int $responseStatusCode): self
+    public function setResponseStatusCode(int $responseStatusCode): self
     {
         $this->responseStatusCode = $responseStatusCode;
 
@@ -371,7 +386,7 @@ class Log
         return $this->responseHeaders;
     }
 
-    public function setResponseHeaders(?array $responseHeaders): self
+    public function setResponseHeaders(array $responseHeaders): self
     {
         $this->responseHeaders = $responseHeaders;
 
@@ -383,7 +398,7 @@ class Log
         return $this->responseContent;
     }
 
-    public function setResponseContent(?array $responseContent): self
+    public function setResponseContent(array $responseContent): self
     {
         $this->responseContent = $responseContent;
 
@@ -395,7 +410,7 @@ class Log
         return $this->session;
     }
 
-    public function setSession(?string $session): self
+    public function setSession(string $session): self
     {
         $this->session = $session;
 
@@ -407,55 +422,55 @@ class Log
         return $this->sessionValues;
     }
 
-    public function setSessionValues(?array $sessionValues): self
+    public function setSessionValues(array $sessionValues): self
     {
         $this->sessionValues = $sessionValues;
 
         return $this;
     }
 
-    public function getEndpoint()
+    public function getEndpoint(): ?object
     {
         return $this->endpoint;
     }
 
-    public function setEndpoint($endpoint): self
+    public function setEndpoint(?object $endpoint): self
     {
         $this->endpoint = $endpoint;
 
         return $this;
     }
 
-    public function getHandler()
+    public function getHandler(): ?object
     {
         return $this->handler;
     }
 
-    public function setHandler($handler): self
+    public function setHandler(?object $handler): self
     {
         $this->handler = $handler;
 
         return $this;
     }
 
-    public function getEntity()
+    public function getEntity(): ?object
     {
         return $this->entity;
     }
 
-    public function setEntity($entity): self
+    public function setEntity(?object $entity): self
     {
         $this->entity = $entity;
 
         return $this;
     }
 
-    public function getSource()
+    public function getSource(): ?object
     {
         return $this->source;
     }
 
-    public function setSource($source): self
+    public function setSource(?object $source): self
     {
         $this->source = $source;
 
