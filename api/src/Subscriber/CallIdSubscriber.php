@@ -18,15 +18,14 @@ class CallIdSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            KernelEvents::REQUEST => ['gateway', EventPriorities::PRE_DESERIALIZE],
+            KernelEvents::REQUEST => ['OnFirstEvent', EventPriorities::PRE_DESERIALIZE],
         ];
     }
 
     public function OnFirstEvent(RequestEvent $event)
     {
-        unset($_SESSION['callId']);
-        $callId = Uuid::uuid4()->toString();
-        var_dump($callId);die;
-        $_SESSION['callId'] = $callId;
+        if (!isset($_SESSION['callId'])) {
+            $_SESSION['callId'] = Uuid::uuid4()->toString();
+        }
     }
 }
