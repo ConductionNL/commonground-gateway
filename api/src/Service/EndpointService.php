@@ -6,6 +6,11 @@ use ApiPlatform\Core\Exception\InvalidArgumentException;
 use App\Entity\Document;
 use App\Entity\File;
 use App\Entity\Endpoint;
+use App\Service\EavService;
+use App\Service\EavService;
+use App\Service\EavService;
+use App\Service\ValidationService;
+use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
@@ -17,11 +22,26 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class EndpointService
 {
     private EntityManagerInterface $entityManager;
+    private Request $request;
+    private ValidationService $validationService;
+    private TranslationService $translationService;
+    private SOAPService $soapService;
+    private EavService $eavService;
 
-    public function __construct(EntityManagerInterface $entityManager, Request $request)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        Request $request,
+        ValidationService $validationService,
+        TranslationService $translationService,
+        SOAPService $soapService,
+        EavService $eavService)
     {
         $this->entityManager = $entityManager;
         $this->request = $request;
+        $this->validationService = $validationService;
+        $this->translationService = $translationService;
+        $this->soapService = $soapService;
+        $this->eavService = $eavService;
     }
 
     /**
@@ -51,20 +71,51 @@ class EndpointService
     {
         /* @todo handler toevoegen aan sessie */
 
-        // Onderstaande zouden natuurlijk losse functies moeten zijn
+        $request = new Request();
+        // To start it al off we need the data from the incomming request
+        $data = $this->getDataFromRequest();
 
-        // voorbeelden voor al deze dingen vind je in de soap service
+        // Then we want to do the mapping in the incomming request
+        $skeleton = $handler->getSkeletonIn();
+        if(!$skeleton || empty($skeleton)){
+            $skeleton = $data;
+        }
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
-        // do mapping
+        // The we want to do  translations on the incomming request
+        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn);
+        $data = $this->translationService->parse($data, true, $translations);
 
-        // do translations (is nu nog een vaste array)
+        // If the handler is teid to an EAV object we want to resolve that in all of it glory
+        if($handler->getEntity()){
+            $data = $this->eavService->generateResult($request);
+        }
 
-        // all eav (if we have an entity) -> EAV service aantikken. 
+        // The we want to do  translations on the outgoing responce
+        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut);
+        $data = $this->translationService->parse($data, true, $translations);
 
-        // do translations
+        // Then we want to do to mapping on the outgoing responce
+        $skeleton = $handler->getSkeletonOut();
+        if(!$skeleton || empty($skeleton)){
+            $skeleton = $data;
+        }
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
-        // do mapping
+        // An lastly we want to create a responce
+        return $this->createResponse($data);
+    }
 
-        // create response (jatten de eav service)
+
+    public function getDataFromRequest(): array
+    {
+        return [];
+    }
+
+    public function createResponse(array $data): Response
+    {
+        $response = New Response();
+
+        return $response;
     }
 }
