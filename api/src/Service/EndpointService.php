@@ -7,8 +7,6 @@ use App\Entity\Document;
 use App\Entity\File;
 use App\Entity\Endpoint;
 use App\Service\EavService;
-use App\Service\EavService;
-use App\Service\EavService;
 use App\Service\ValidationService;
 use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -55,7 +53,7 @@ class EndpointService
 
         foreach($enpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            if(){
+            if(true){
                 return $this->handleHandler($handler);
             }
         }

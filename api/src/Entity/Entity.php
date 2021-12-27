@@ -238,6 +238,11 @@ class Entity
      */
     private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
 
+    /**
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
+     */
+    private $handlers;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -246,6 +251,7 @@ class Entity
         $this->responseLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
+        $this->handlers = new ArrayCollection();
     }
 
     public function export()
@@ -700,6 +706,36 @@ class Entity
     public function setInherited(?bool $inherited): self
     {
         $this->inherited = $inherited;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            // set the owning side to null (unless already changed)
+            if ($handler->getObject() === $this) {
+                $handler->setObject(null);
+            }
+        }
 
         return $this;
     }
