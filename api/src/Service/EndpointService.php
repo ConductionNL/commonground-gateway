@@ -73,7 +73,7 @@ class EndpointService
 
         $request = new Request();
         // To start it al off we need the data from the incomming request
-        $data = $this->getDataFromRequest();
+        $data = $this->getDataFromRequest($request);
 
         // Then we want to do the mapping in the incomming request
         $skeleton = $handler->getSkeletonIn();
@@ -87,8 +87,8 @@ class EndpointService
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if($handler->getEntity()){
-            $data = $this->eavService->generateResult($request);
+        if($entity = $handler->getEntity()){
+            $data = $this->eavService->generateResult($request, $entity);
         }
 
         // The we want to do  translations on the outgoing responce
@@ -107,9 +107,15 @@ class EndpointService
     }
 
 
-    public function getDataFromRequest(): array
+    public function getDataFromRequest(Request $request): array
     {
-        return [];
+        //@todo support xml messages
+
+        if($request->getContent()) {
+            $body = json_decode($request->getContent(), true);
+        }
+
+        return $body;
     }
 
     public function createResponse(array $data): Response
