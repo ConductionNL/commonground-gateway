@@ -5,6 +5,8 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\HandlerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * @ApiResource()
@@ -13,84 +15,142 @@ use Doctrine\ORM\Mapping as ORM;
 class Handler
 {
     /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
+     * @var string The name of this Handler.
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private $name;
 
     /**
+     * @var ?string The description of this Handler.
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
     /**
+     * @var int The sequence of this Handler.
+     *
+     * @Assert\NotNull
+     * @Groups({"read", "write"})
      * @ORM\Column(type="integer")
      */
     private $sequence;
 
     /**
+     * @var json The conditions of this Handler.
+     *
+     * @Assert\NotNull
+     * @Groups({"read", "write"})
      * @ORM\Column(type="json")
      */
     private $conditions = [];
 
     /**
+     * @var ?array The translations in.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $translationsIn = [];
 
     /**
+     * @var ?array The mapping in.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $mappingIn = [];
 
     /**
+     * @var ?array The skeleton in.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $skeletonIn = [];
 
     /**
+     * @var Entity The object of this Handler.
+     *
+     * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
     private $object;
 
     /**
+     * @var ?array The skeleton out.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $skeletonOut = [];
 
     /**
+     * @var ?array The mapping out.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $mappingOut = [];
 
     /**
+     * @var ?array The translations out.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $translationsOut = [];
 
     /**
+     * @var string The tamplate type of this Handler.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $templateType;
 
     /**
+     * @var ?string The template of this Handler.
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private $template;
 
     /**
+     * @var Endpoint The endpoint of this Handler.
+     *
+     * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="handlers")
      * @ORM\JoinColumn(nullable=false)
      */
     private $endpoint;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
