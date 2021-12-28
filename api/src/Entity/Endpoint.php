@@ -71,17 +71,19 @@ class Endpoint
     private string $name;
 
     /**
-     * @var string A description of this Endpoint.
+     * @var string|null A description of this Endpoint.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $description;
+    private ?string $description = null;
 
     /**
      * @var string The type of this Endpoint.
      *
+     * @Assert\NotNull
      * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
+     * 
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */
@@ -90,6 +92,8 @@ class Endpoint
     /**
      * @var string The path of this Endpoint.
      *
+     * @Assert\NotNull
+     * 
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */
@@ -118,9 +122,20 @@ class Endpoint
      */
     private array $loggingConfig = ['headers' => ['authorization']];
 
+
+    /**
+     * @var array|null The handlers used for this entity.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
+     */
+    private Collection $handlers;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
+        $this->handlers = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -233,6 +248,36 @@ class Endpoint
     public function setLoggingConfig(array $loggingConfig): self
     {
         $this->loggingConfig = $loggingConfig;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            // set the owning side to null (unless already changed)
+            if ($handler->getObject() === $this) {
+                $handler->setObject(null);
+            }
+        }
 
         return $this;
     }

@@ -236,7 +236,16 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
+    private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
+
+    /**
+     * @var array|null The handlers used for this entity.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
+     */
+    private Collection $handlers;
 
     public function __construct()
     {
@@ -246,13 +255,14 @@ class Entity
         $this->responseLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
+        $this->handlers = new ArrayCollection();
     }
 
     public function export()
     {
         if ($this->getGateway() !== null) {
             $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+            $gateway = '@' . $gateway;
         } else {
             $gateway = null;
         }
@@ -700,6 +710,37 @@ class Entity
     public function setInherited(?bool $inherited): self
     {
         $this->inherited = $inherited;
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            // set the owning side to null (unless already changed)
+            if ($handler->getObject() === $this) {
+                $handler->setObject(null);
+            }
+        }
 
         return $this;
     }
