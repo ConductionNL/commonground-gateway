@@ -28,6 +28,23 @@ class EndpointService
     private SOAPService $soapService;
     private EavService $eavService;
 
+    // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+    // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    public  $acceptHeaderToSerialiazation = [
+        'application/json'     => 'json',
+        'application/ld+json'  => 'jsonld',
+        'application/json+ld'  => 'jsonld',
+        'application/hal+json' => 'jsonhal',
+        'application/json+hal' => 'jsonhal',
+        'application/xml'      => 'xml',
+        'text/csv'             => 'csv',
+        'text/yaml'            => 'yaml',
+        // 'text/html'     => 'html',
+        // 'application/pdf'            => 'pdf',
+        // 'application/msword'            => 'doc',
+        // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
+    ];
+
     public function __construct(
         EntityManagerInterface $entityManager,
         Request $request,
@@ -146,52 +163,53 @@ class EndpointService
                 $status = Response::HTTP_OK;
         }
 
-        // Let create the actual responce
+        // Lets fill in some options
+        $options = [];
+
+        // Lets seriliaze the shizle
+        $contentType = $this->getRequestContentType();
+        $result = $this->serializerService->serialize($data, $contentType, $options);
+
+        // Lets create the actual response
         $response = new Response(
-            $data,
+            $result,
             $status,
-            $this->getRequestContentType()
+            $this->acceptHeaderToSerialiazation[array_search ($contentType, $this->acceptHeaderToSerialiazation)]
         );
+
+        // Lets handle file responces
+        // @todo we should grap the extension from the route properties
+        $routeParameters = $request->attributes->get('_route_params');
+        if(array_key_exists('extension') && $extension = $routeParameters['extension']){
+            $date = new \DateTime();
+            $date = $date->format('Ymd_His');
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
+            $response->headers->set('Content-Disposition', $disposition);
+        }
 
         $response->prepare($request);
 
         return $response;
     }
 
-    private function getRequestContentType(?string $extension): string
+    private function getRequestContentType(): string
     {
         // Let grap the request
         $request = new Request();
 
         // @todo we should grap the extension from the route properties
+        $routeParameters = $request->attributes->get('_route_params');
         $extension = false;
 
-        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
-        // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-        $acceptHeaderToSerialiazation = [
-            'application/json'     => 'json',
-            'application/ld+json'  => 'jsonld',
-            'application/json+ld'  => 'jsonld',
-            'application/hal+json' => 'jsonhal',
-            'application/json+hal' => 'jsonhal',
-            'application/xml'      => 'xml',
-            'text/csv'             => 'csv',
-            'text/yaml'            => 'yaml',
-            // 'text/html'     => 'html',
-            // 'application/pdf'            => 'pdf',
-            // 'application/msword'            => 'doc',
-            // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
-        ];
-
         // If we have an extension and the extension is a valid serialization format we will use that
-        if ($extension && $search =  array_search($extension, $acceptHeaderToSerialiazation)) {
+        if(array_key_exists('extension') && $extension = $routeParameters['extension'] && in_array($extension, $this->acceptHeaderToSerialiazation)){
             return $extension;
         }
 
         // Lets pick the first accaptable content type that we support
         foreach($request->getAcceptableContentTypes() as $contentType){
-            if(array_key_exists($contentType, $acceptHeaderToSerialiazation)){
-                return $acceptHeaderToSerialiazation[$contentType];
+            if(array_key_exists($contentType, $this->acceptHeaderToSerialiazation)){
+                return $this->acceptHeaderToSerialiazation[$contentType];
             }
         }
 
