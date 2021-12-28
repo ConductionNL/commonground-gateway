@@ -27,28 +27,28 @@ class EndpointService
     /**
      * Get the data for a document and send it to the document creation service.
      */
-    public function handleEndpoint(Endpoint $enpoint): Response
-    {
+    // public function handleEndpoint(Endpoint $enpoint): Response
+    // {
         /* @todo endpoint toevoegen aan sessie */
 
         // @tod creat logicdata, generalvaribales uit de translationservice
 
-        foreach($enpoint->getHandlers() as $handler){
+        // foreach($enpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            if(){
-                return $this->handleHandler($handler);
-            }
-        }
+            // if(){
+                // return $this->handleHandler($handler);
+            // }
+        // }
 
         // @todo we should end here so lets throw an error
-    }
+    // }
 
 
     /**
      * Get the data for a document and send it to the document creation service.
      */
-    public function handleHandler(Handler $handler): Response
-    {
+    // public function handleHandler(Handler $handler): Response
+    // {
         /* @todo handler toevoegen aan sessie */
 
         // Onderstaande zouden natuurlijk losse functies moeten zijn
@@ -66,5 +66,5 @@ class EndpointService
         // do mapping
 
         // create response (jatten de eav service)
-    }
+    // }
 }
