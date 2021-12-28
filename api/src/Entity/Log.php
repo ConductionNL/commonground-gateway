@@ -207,13 +207,17 @@ class Log
     private $responseHeaders = [];
 
     /**
-     * @var array The response content of this Log.
+     * @var string The response content of this Log.
      *
      * @Assert\NotNull
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="array")
+     * @Gedmo\Versioned
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
      */
-    private $responseContent = [];
+    private $responseContent;
 
     /**
      * @var string The session of this Log.
@@ -287,14 +291,6 @@ class Log
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
-
-    public function __construct()
-    {
-        //TODO: better way of defaulting dateCreated & dateModified with orm?
-        // (options CURRENT_TIMESTAMP or 0 does not work)
-        $now = new DateTime();
-        $this->setCreatedAt($now);
-    }
 
     public function getId()
     {
@@ -445,12 +441,12 @@ class Log
         return $this;
     }
 
-    public function getResponseContent(): ?array
+    public function getResponseContent(): ?string
     {
         return $this->responseContent;
     }
 
-    public function setResponseContent(array $responseContent): self
+    public function setResponseContent(string $responseContent): self
     {
         $this->responseContent = $responseContent;
 
@@ -529,12 +525,12 @@ class Log
         return $this;
     }
 
-    public function getResponseTime(): ?\DateTimeInterface
+    public function getResponseTime()
     {
         return $this->responseTime;
     }
 
-    public function setResponseTime(\DateTimeInterface $responseTime): self
+    public function setResponseTime($responseTime): self
     {
         $this->responseTime = $responseTime;
 
