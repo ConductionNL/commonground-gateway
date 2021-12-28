@@ -10,9 +10,10 @@ use App\Service\EavService;
 use App\Service\ValidationService;
 use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
+
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -39,10 +40,10 @@ class EndpointService
         'application/xml'      => 'xml',
         'text/csv'             => 'csv',
         'text/yaml'            => 'yaml',
-        // 'text/html'     => 'html',
-        // 'application/pdf'            => 'pdf',
-        // 'application/msword'            => 'doc',
-        // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
+        'text/html'            => 'html',
+        'application/pdf'      => 'pdf',
+        'application/msword'   => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
     ];
 
     public function __construct(
