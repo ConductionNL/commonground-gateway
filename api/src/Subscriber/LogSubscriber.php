@@ -52,6 +52,11 @@ class LogSubscriber implements EventSubscriberInterface
         $callLog->setResponseHeaders($response->headers->all());
         $callLog->setResponseContent($response->getContent());
 
+        $routeName = $request->attributes->get('_route');
+        $routeParameters = $request->attributes->get('_route_params');
+        $callLog->setRouteName($routeName);
+        $callLog->setRouteParameters($routeParameters);
+
         $now = new \DateTime();
         $requestTime = $request->server->get('REQUEST_TIME');
         $callLog->setResponseTime($now->getTimestamp() - $requestTime);
@@ -77,8 +82,8 @@ class LogSubscriber implements EventSubscriberInterface
             $callLog->setSessionValues($this->session->all());
         }
 
-        $this->entityManager->persist($callLog);
-        $this->entityManager->flush();
+//        $this->entityManager->persist($callLog);
+//        $this->entityManager->flush();
 
         return $callLog;
     }

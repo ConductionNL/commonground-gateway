@@ -286,6 +286,28 @@ class Log
      */
     private $createdAt;
 
+    /**
+     * @var string The route name of this Log.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $routeName;
+
+    /**
+     * @var string The route parameters of this Log.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $routeParameters;
+
     public function getId()
     {
         return $this->id;
@@ -539,6 +561,30 @@ class Log
     public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getRouteName(): ?string
+    {
+        return $this->routeName;
+    }
+
+    public function setRouteName(?string $routeName): self
+    {
+        $this->routeName = $routeName;
+
+        return $this;
+    }
+
+    public function getRouteParameters(): ?string
+    {
+        return $this->routeParameters;
+    }
+
+    public function setRouteParameters(?string $routeParameters): self
+    {
+        $this->routeParameters = $routeParameters;
 
         return $this;
     }
