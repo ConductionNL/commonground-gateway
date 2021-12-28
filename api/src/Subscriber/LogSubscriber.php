@@ -54,8 +54,8 @@ class LogSubscriber implements EventSubscriberInterface
 
         $routeName = $request->attributes->get('_route');
         $routeParameters = $request->attributes->get('_route_params');
-        $callLog->setRouteName($routeName);
-        $callLog->setRouteParameters($routeParameters);
+        $callLog->setRouteName($routeName ?? null);
+        $callLog->setRouteParameters($routeParameters ?? null);
 
         $now = new \DateTime();
         $requestTime = $request->server->get('REQUEST_TIME');

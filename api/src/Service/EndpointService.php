@@ -15,7 +15,7 @@ use JWadhams\JsonLogic as jsonLogic;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-//use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -57,7 +57,6 @@ class EndpointService extends AbstractController
     public function handleEndpoint(Endpoint $endpoint, string $idOfObject = null): Response
     {
         /* @todo endpoint toevoegen aan sessie */
-
         $this->session->set('endpoint', $endpoint->getId());
 
         // Get object through EAV Service ??
@@ -66,7 +65,6 @@ class EndpointService extends AbstractController
         die();
 
         // @todo create logicData, generalVariables uit de translationService
-
         foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             // Question Barry: How does/should sequence work? How is a condition tested and what should be returned
