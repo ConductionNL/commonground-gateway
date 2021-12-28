@@ -118,9 +118,15 @@ class Endpoint
      */
     private array $loggingConfig = ['headers' => ['authorization']];
 
+    /**
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="endpoint", orphanRemoval=true)
+     */
+    private $handlers;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
+        $this->handlers = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -233,6 +239,36 @@ class Endpoint
     public function setLoggingConfig(array $loggingConfig): self
     {
         $this->loggingConfig = $loggingConfig;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->setEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            // set the owning side to null (unless already changed)
+            if ($handler->getEndpoint() === $this) {
+                $handler->setEndpoint(null);
+            }
+        }
 
         return $this;
     }
