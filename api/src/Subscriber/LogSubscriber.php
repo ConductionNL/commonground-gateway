@@ -39,8 +39,8 @@ class LogSubscriber implements EventSubscriberInterface
 
         $callLog = new Log();
         $callLog->setType("in");
-        if (isset($session)) {
-            $callLog->setCallId($session->get('callId',null));
+        if ($this->session) {
+            $callLog->setCallId($this->session->get('callId',null));
         }
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
@@ -60,23 +60,23 @@ class LogSubscriber implements EventSubscriberInterface
         $callLog->setResponseTime($now->getTimestamp() - $requestTime);
         $callLog->setCreatedAt($now);
 
-        if (isset($session)) {
+        if ($this->session) {
             // add before removing
-            $callLog->setSession($session->getId());
-            $callLog->setEndpoint($session->get('endpoint', null));
-            $callLog->setEntity($session->get('entity', null));
-            $callLog->setSource($session->get('source', null));
-            $callLog->setHandler($session->get('handler', null));
+            $callLog->setSession($this->session->getId());
+            $callLog->setEndpoint($this->session->get('endpoint', null));
+            $callLog->setEntity($this->session->get('entity', null));
+            $callLog->setSource($this->session->get('source', null));
+            $callLog->setHandler($this->session->get('handler', null));
 
             // remove before setting the session values
-            $session->remove('callId');
-            $session->remove('endpoint');
-            $session->remove('entity');
-            $session->remove('source');
-            $session->remove('handler');
+            $this->session->remove('callId');
+            $this->session->remove('endpoint');
+            $this->session->remove('entity');
+            $this->session->remove('source');
+            $this->session->remove('handler');
 
             // add session values
-            $callLog->setSessionValues($session->all());
+            $callLog->setSessionValues($this->session->all());
         }
 
         $this->entityManager->persist($callLog);
