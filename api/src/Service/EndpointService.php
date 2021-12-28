@@ -4,6 +4,7 @@ namespace App\Service;
 
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use App\Entity\Document;
+use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Endpoint;
 use App\Service\EavService;
@@ -29,7 +30,7 @@ class EndpointService
     private SOAPService $soapService;
     private EavService $eavService;
 
-    // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+    // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     public  $acceptHeaderToSerialiazation = [
         'application/json'     => 'json',
@@ -106,7 +107,7 @@ class EndpointService
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
         if($entity = $handler->getEntity()){
-            $data = $this->eavService->generateResult($request, $entity);
+            $data = $this->eavSwitch($request, $entity);
         }
 
         // The we want to do  translations on the outgoing responce
@@ -136,6 +137,34 @@ class EndpointService
         }
 
         return $body;
+    }
+
+    public function eavSwitch(Request $request, Entity $entity): array
+    {
+        // Let grap the request
+        $request = new Request();
+
+        // We only end up here if there are no errors, so we only suply best case senario's
+        switch ($request->getMethod()) {
+            case 'GET':
+                return $this->eavService->getEntity();
+                break;
+            case 'POST':
+                $status = Response::HTTP_CREATED;
+                break;
+            case 'PUT':
+                $status = Response::HTTP_ACCEPTED;
+                break;
+            case 'UPDATE':
+                $status = Response::HTTP_ACCEPTED;
+                break;
+            case 'DELETE':
+                $status = Response::HTTP_NO_CONTENT;
+                break;
+            default:
+                /* invalid method */
+                /* @todo throw error */
+        }
     }
 
     public function createResponse(array $data): Response
@@ -175,11 +204,10 @@ class EndpointService
         $response = new Response(
             $result,
             $status,
-            $this->acceptHeaderToSerialiazation[array_search ($contentType, $this->acceptHeaderToSerialiazation)]
+            $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]
         );
 
-        // Lets handle file responces
-        // @todo we should grap the extension from the route properties
+        // Lets handle file responses
         $routeParameters = $request->attributes->get('_route_params');
         if(array_key_exists('extension') && $extension = $routeParameters['extension']){
             $date = new \DateTime();
@@ -198,13 +226,17 @@ class EndpointService
         // Let grap the request
         $request = new Request();
 
-        // @todo we should grap the extension from the route properties
+        // Lets grap the route parameters
         $routeParameters = $request->attributes->get('_route_params');
-        $extension = false;
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if(array_key_exists('extension') && $extension = $routeParameters['extension'] && in_array($extension, $this->acceptHeaderToSerialiazation)){
-            return $extension;
+        if(array_key_exists('extension')){
+            if(in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
+                return $routeParameters['extension'];
+            }
+            else{
+                /* @todo throw error, invalid extension requested */
+            }
         }
 
         // Lets pick the first accaptable content type that we support
