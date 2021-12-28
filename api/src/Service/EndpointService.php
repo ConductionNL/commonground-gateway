@@ -16,6 +16,8 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\AcceptHeader;
 
 class EndpointService
 {
@@ -48,12 +50,14 @@ class EndpointService
     public function handleEndpoint(Endpoint $enpoint): Response
     {
         /* @todo endpoint toevoegen aan sessie */
-
+        $session = new Session();
+        $session->set('endpoint', $enpoint);
         // @tod creat logicdata, generalvaribales uit de translationservice
 
         foreach($enpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             if(true){
+                $session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
         }
@@ -67,8 +71,6 @@ class EndpointService
      */
     public function handleHandler(Handler $handler): Response
     {
-        /* @todo handler toevoegen aan sessie */
-
         $request = new Request();
         // To start it al off we need the data from the incomming request
         $data = $this->getDataFromRequest($request);
@@ -101,7 +103,9 @@ class EndpointService
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
         // An lastly we want to create a responce
-        return $this->createResponse($data);
+        $response = $this->createResponse($data);
+
+        return $response;
     }
 
 
@@ -118,8 +122,52 @@ class EndpointService
 
     public function createResponse(array $data): Response
     {
-        $response = New Response();
+        // Let grap the request
+        $request = new Request();
+
+        // Let create the actual responce
+        $response = new Response(
+            $data,
+            Response::HTTP_OK,
+            $this->getRequestContentType()
+        );
+
+        $response->prepare($request);
 
         return $response;
+    }
+
+    private function getRequestContentType(?string $extension): string
+    {
+        // Let grap the request
+        $request = new Request();
+
+        // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+        $acceptHeaderToSerialiazation = [
+            'application/json'     => 'json',
+            'application/ld+json'  => 'jsonld',
+            'application/json+ld'  => 'jsonld',
+            'application/hal+json' => 'jsonhal',
+            'application/json+hal' => 'jsonhal',
+            'application/xml'      => 'xml',
+            'text/csv'             => 'csv',
+            'text/yaml'            => 'yaml',
+            // 'text/yaml'            => 'pdf',
+        ];
+
+        // If we have an extension and the extension is a valid serialization format we will use that
+        if ($extension && $search =  array_search($extension, $acceptHeaderToSerialiazation)) {
+            return $extension;
+        }
+
+        // Lets pick the first accaptable content type that we support
+        foreach($request->getAcceptableContentTypes() as $contentType){
+            if(array_key_exists($contentType, $acceptHeaderToSerialiazation)){
+                return $acceptHeaderToSerialiazation[$contentType];
+            }
+        }
+
+        // If we end up here we are dealing with an unsupported content type
+        /* @todo throw error */
     }
 }
