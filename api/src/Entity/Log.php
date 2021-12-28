@@ -289,22 +289,21 @@ class Log
     /**
      * @var string The route name of this Log.
      *
+     * @Assert\NotNull
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
     private $routeName;
 
     /**
-     * @var string The route parameters of this Log.
+     * @var array The route parameters of this Log.
      *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\NotNull
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array")
      */
     private $routeParameters;
 
@@ -570,19 +569,19 @@ class Log
         return $this->routeName;
     }
 
-    public function setRouteName(?string $routeName): self
+    public function setRouteName(string $routeName): self
     {
         $this->routeName = $routeName;
 
         return $this;
     }
 
-    public function getRouteParameters(): ?string
+    public function getRouteParameters(): ?array
     {
         return $this->routeParameters;
     }
 
-    public function setRouteParameters(?string $routeParameters): self
+    public function setRouteParameters(array $routeParameters): self
     {
         $this->routeParameters = $routeParameters;
 
