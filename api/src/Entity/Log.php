@@ -90,7 +90,6 @@ class Log
      * @var UuidInterface The call id of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Groups({"read","write"})
      * @ORM\Column(type="uuid", unique=true)
      */
@@ -100,7 +99,6 @@ class Log
      * @var string The request method of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
@@ -131,7 +129,6 @@ class Log
      * @var string The request path info of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
@@ -179,7 +176,6 @@ class Log
      * @var string The response status of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
@@ -210,7 +206,6 @@ class Log
      * @var string The response content of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
@@ -223,7 +218,6 @@ class Log
      * @var string The session of this Log.
      *
      * @Assert\NotNull
-     * @Gedmo\Versioned
      * @Assert\Length(
      *     max = 255
      * )
