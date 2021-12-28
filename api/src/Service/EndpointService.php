@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
+use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
 class EndpointService
 {
@@ -68,20 +69,20 @@ class EndpointService
      */
     public function handleEndpoint(Endpoint $enpoint): Response
     {
-        /* @todo endpoint toevoegen aan sessie */
         $session = new Session();
         $session->set('endpoint', $enpoint);
-        // @tod creat logicdata, generalvaribales uit de translationservice
+        // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach($enpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
+            /* @todo acctualy check for json logic */
             if(true){
                 $session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
         }
 
-        // @todo we should end here so lets throw an error
+        // @todo we should not end up here so lets throw an 'no handler found' error
     }
 
 
@@ -193,11 +194,20 @@ class EndpointService
                 $status = Response::HTTP_OK;
         }
 
+        $contentType = $this->getRequestContentType();
+
         // Lets fill in some options
         $options = [];
+        switch ($contentType) {
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
+                break;
+        }
 
         // Lets seriliaze the shizle
-        $contentType = $this->getRequestContentType();
         $result = $this->serializerService->serialize($data, $contentType, $options);
 
         // Lets create the actual response
@@ -230,7 +240,7 @@ class EndpointService
         $routeParameters = $request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if(array_key_exists('extension')){
+        if(array_key_exists('extension', $routeParameters)){
             if(in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             }
