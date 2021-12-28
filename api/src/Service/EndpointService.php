@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\AcceptHeader;
 class EndpointService extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-//    private Request $request;
+    //    private Request $request;
     private ValidationService $validationService;
     private TranslationService $translationService;
     private SOAPService $soapService;
@@ -35,16 +35,15 @@ class EndpointService extends AbstractController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-//        Request                $request,
+        //        Request                $request,
         ValidationService      $validationService,
         TranslationService     $translationService,
         SOAPService            $soapService,
         EavService             $eavService,
         SessionInterface $session
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
-//        $this->request = $request;
+        //        $this->request = $request;
         $this->validationService = $validationService;
         $this->translationService = $translationService;
         $this->soapService = $soapService;
@@ -55,28 +54,38 @@ class EndpointService extends AbstractController
     /**
      * This function determines the endpoint.
      */
-    public function handleEndpoint(): Response
+    public function handleEndpoint(Endpoint $endpoint): Response
     {
         /* @todo endpoint toevoegen aan sessie */
+
         $this->session->set('endpoint', $endpoint->getId());
-        var_dump($this->session->set('endpoint', $endpoint->getId()));die();
+
+        var_dump($this->session->get('endpoint'));
+        die();
+
         // @todo create logicData, generalVariables uit de translationService
 
         foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             if ($handler->getObject() !== null) {
                 $jsonLogicPassed = true;
-                $rule = $handler->getObject()->getAttribute()->getRequiredIf();
+                $attributes = $handler->getObject()->getAttributes();
 
-                if ($rule && jsonLogic::apply(json_decode($rule, true), $handler->getObject()->toArray())) {
-                    $jsonLogicPassed = false;
-                    $handler->getObject()->addError($handler->getObject()->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: ' . $rule);
+                if ($attributes !== null) {
+                    foreach ($attributes as $attribute) {
+                        $rules = $attribute->getRequiredIf();
+                        foreach ($rules as $rule) {
+                            if ($rule && jsonLogic::apply(json_decode($rule, true), $handler->getObjectEntity()->toArray())) {
+                                $jsonLogicPassed = false;
+                                $handler->getObjectEntity()->addError($handler->getObject()->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: ' . $rule);
+                            }
+                        }
+                    }
                 }
             }
 
             if ($jsonLogicPassed == true) {
                 $this->session->set('handlers', $this->session->get('handlers')[] = $handler->getId());
-                $this->session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
         }

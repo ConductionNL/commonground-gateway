@@ -5,12 +5,12 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Service\DocumentService;
 use App\Service\EavService;
-use App\Service\ValidationService;
 use App\Service\EndpointService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\ValidationService;
 
 class ZZController extends AbstractController
 {
@@ -37,7 +37,7 @@ class ZZController extends AbstractController
 
         // Let determine an endpoint (new way)
         if($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['route'=>$entity])){
-            return $endpointService->handleRequest($endpoint);
+            return $endpointService->handleEndpoint($endpoint);
         }
 
         // Continue as normal (old way)
