@@ -125,10 +125,31 @@ class EndpointService
         // Let grap the request
         $request = new Request();
 
+        // We only end up here if there are no errors, so we only suply best case senario's
+        switch ($request->getMethod()){
+            case 'GET':
+                $status = Response::HTTP_OK;
+                break;
+            case 'POST':
+                $status = Response::HTTP_CREATED;
+                break;
+            case 'PUT':
+                $status = Response::HTTP_ACCEPTED;
+                break;
+            case 'UPDATE':
+                $status = Response::HTTP_ACCEPTED;
+                break;
+            case 'DELETE':
+                $status = Response::HTTP_NO_CONTENT;
+                break;
+            default:
+                $status = Response::HTTP_OK;
+        }
+
         // Let create the actual responce
         $response = new Response(
             $data,
-            Response::HTTP_OK,
+            $status,
             $this->getRequestContentType()
         );
 
