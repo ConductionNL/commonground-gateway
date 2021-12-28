@@ -54,11 +54,13 @@ class EndpointService extends AbstractController
     /**
      * This function determines the endpoint.
      */
-    public function handleEndpoint(Endpoint $endpoint): Response
+    public function handleEndpoint(Endpoint $endpoint, string $idOfObject = null): Response
     {
         /* @todo endpoint toevoegen aan sessie */
 
         $this->session->set('endpoint', $endpoint->getId());
+
+        // Get object through EAV Service ??
 
         var_dump($this->session->get('endpoint'));
         die();
@@ -67,20 +69,12 @@ class EndpointService extends AbstractController
 
         foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            if ($handler->getObject() !== null) {
-                $jsonLogicPassed = true;
-                $attributes = $handler->getObject()->getAttributes();
-
-                if ($attributes !== null) {
-                    foreach ($attributes as $attribute) {
-                        $rules = $attribute->getRequiredIf();
-                        foreach ($rules as $rule) {
-                            if ($rule && jsonLogic::apply(json_decode($rule, true), $handler->getObjectEntity()->toArray())) {
-                                $jsonLogicPassed = false;
-                                $handler->getObjectEntity()->addError($handler->getObject()->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: ' . $rule);
-                            }
-                        }
-                    }
+            // Question Barry: How does/should sequence work? How is a condition tested and what should be returned
+            $jsonLogicPassed = true;
+            if ($handler->getConditions() !== null) {
+                foreach ($handler->getConditions() as $condition) {
+                    // Question Barry: How do we test a value against a condition?
+                    // if (jsonLogic::apply(json_decode($condition, true), $value))
                 }
             }
 
