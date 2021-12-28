@@ -11,12 +11,14 @@ use App\Service\EavService;
 use App\Service\ValidationService;
 use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic as jsonLogic;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
+//use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
@@ -24,48 +26,63 @@ use Symfony\Component\HttpFoundation\AcceptHeader;
 class EndpointService extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private Request $request;
+//    private Request $request;
     private ValidationService $validationService;
     private TranslationService $translationService;
     private SOAPService $soapService;
     private EavService $eavService;
+    private SessionInterface $session;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        Request $request,
-        ValidationService $validationService,
-        TranslationService $translationService,
-        SOAPService $soapService,
-        EavService $eavService)
+//        Request                $request,
+        ValidationService      $validationService,
+        TranslationService     $translationService,
+        SOAPService            $soapService,
+        EavService             $eavService,
+        SessionInterface $session
+    )
     {
         $this->entityManager = $entityManager;
-        $this->request = $request;
+//        $this->request = $request;
         $this->validationService = $validationService;
         $this->translationService = $translationService;
         $this->soapService = $soapService;
         $this->eavService = $eavService;
+        $this->session = $session;
     }
 
     /**
      * This function determines the endpoint.
      */
-     public function handleEndpoint(Endpoint $endpoint): Response
-     {
+    public function handleEndpoint(): Response
+    {
         /* @todo endpoint toevoegen aan sessie */
-        $session = new Session();
-        $session->set('endpoint', $endpoint);
+        $this->session->set('endpoint', $endpoint->getId());
+        var_dump($this->session->set('endpoint', $endpoint->getId()));die();
         // @todo create logicData, generalVariables uit de translationService
 
-         foreach($endpoint->getHandlers() as $handler){
+        foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            if(true){
-                $session->set('handler', $handler);
+            if ($handler->getObject() !== null) {
+                $jsonLogicPassed = true;
+                $rule = $handler->getObject()->getAttribute()->getRequiredIf();
+
+                if ($rule && jsonLogic::apply(json_decode($rule, true), $handler->getObject()->toArray())) {
+                    $jsonLogicPassed = false;
+                    $handler->getObject()->addError($handler->getObject()->getAttribute()->getName(), 'This value is REQUIRED because of the following JSON Logic: ' . $rule);
+                }
+            }
+
+            if ($jsonLogicPassed == true) {
+                $this->session->set('handlers', $this->session->get('handlers')[] = $handler->getId());
+                $this->session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
         }
 
         // @todo we should end here so lets throw an error
-     }
+    }
 
 
     /**
@@ -79,27 +96,27 @@ class EndpointService extends AbstractController
 
         // Then we want to do the mapping in the incoming request
         $skeleton = $handler->getSkeletonIn();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
         // We want to do  translations on the incoming request
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn());
+        $translations = $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is tied to an EAV object we want to resolve that in all of it glory
-        if($entity = $handler->getObject()){
+        if ($entity = $handler->getObject()) {
             $data = $this->eavService->generateResult($request, $entity);
         }
 
         // We want to do  translations on the outgoing response
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut());
+        $translations = $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut());
         $data = $this->translationService->parse($data, true, $translations);
 
         // Then we want to do to mapping on the outgoing response
         $skeleton = $handler->getSkeletonOut();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
@@ -113,7 +130,7 @@ class EndpointService extends AbstractController
     {
         //@todo support xml messages
 
-        if($request->getContent()) {
+        if ($request->getContent()) {
             $body = json_decode($request->getContent(), true);
         }
 
@@ -151,14 +168,14 @@ class EndpointService extends AbstractController
         // This should be moved to the commonground service and called true $this->serializerService->getRenderType($contentType);
         // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
         $acceptHeaderToSerialiazation = [
-            'application/json'     => 'json',
-            'application/ld+json'  => 'jsonld',
-            'application/json+ld'  => 'jsonld',
+            'application/json' => 'json',
+            'application/ld+json' => 'jsonld',
+            'application/json+ld' => 'jsonld',
             'application/hal+json' => 'jsonhal',
             'application/json+hal' => 'jsonhal',
-            'application/xml'      => 'xml',
-            'text/csv'             => 'csv',
-            'text/yaml'            => 'yaml',
+            'application/xml' => 'xml',
+            'text/csv' => 'csv',
+            'text/yaml' => 'yaml',
             // 'text/html'     => 'html',
             // 'application/pdf'            => 'pdf',
             // 'application/msword'            => 'doc',
@@ -166,13 +183,13 @@ class EndpointService extends AbstractController
         ];
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if ($extension && $search =  array_search($extension, $acceptHeaderToSerialiazation)) {
+        if ($extension && $search = array_search($extension, $acceptHeaderToSerialiazation)) {
             return $extension;
         }
 
         // Let's pick the first acceptable content type that we support
-        foreach($request->getAcceptableContentTypes() as $contentType){
-            if(array_key_exists($contentType, $acceptHeaderToSerialiazation)){
+        foreach ($request->getAcceptableContentTypes() as $contentType) {
+            if (array_key_exists($contentType, $acceptHeaderToSerialiazation)) {
                 return $acceptHeaderToSerialiazation[$contentType];
             }
         }
