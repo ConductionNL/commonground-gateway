@@ -142,7 +142,11 @@ class EndpointService
         // Let grap the request
         $request = new Request();
 
+        // @todo we should grap the extension from the route properties
+        $extension = false;
+
         // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
+        // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
         $acceptHeaderToSerialiazation = [
             'application/json'     => 'json',
             'application/ld+json'  => 'jsonld',
@@ -152,7 +156,10 @@ class EndpointService
             'application/xml'      => 'xml',
             'text/csv'             => 'csv',
             'text/yaml'            => 'yaml',
-            // 'text/yaml'            => 'pdf',
+            // 'text/html'     => 'html',
+            // 'application/pdf'            => 'pdf',
+            // 'application/msword'            => 'doc',
+            // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
         ];
 
         // If we have an extension and the extension is a valid serialization format we will use that
