@@ -39,9 +39,6 @@ class LogSubscriber implements EventSubscriberInterface
 
         $callLog = new Log();
         $callLog->setType("in");
-        if ($this->session) {
-            $callLog->setCallId($this->session->get('callId',null));
-        }
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all());
@@ -62,6 +59,7 @@ class LogSubscriber implements EventSubscriberInterface
 
         if ($this->session) {
             // add before removing
+            $callLog->setCallId($this->session->get('callId',null));
             $callLog->setSession($this->session->getId());
             $callLog->setEndpoint($this->session->get('endpoint', null));
             $callLog->setEntity($this->session->get('entity', null));
