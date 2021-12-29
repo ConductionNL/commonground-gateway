@@ -106,17 +106,19 @@ class HandlerService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
-        // The we want to do  translations on the incomming request
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn);
+        // The we want to do  translations on the incomming request       
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if($entity = $handler->getEntity()){
+        if($entity = $handler->getObject()){
             $data = $this->eavSwitch($this->request, $entity);
         }
 
         // The we want to do  translations on the outgoing responce
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut);
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
         $data = $this->translationService->parse($data, true, $translations);
 
         // Then we want to do to mapping on the outgoing responce
@@ -219,12 +221,12 @@ class HandlerService
         $response = new Response(
             $result,
             $status,
-            $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]
+            [$this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
         );
 
         // Lets handle file responses
         $routeParameters = $this->request->attributes->get('_route_params');
-        if(array_key_exists('extension') && $extension = $routeParameters['extension']){
+        if(array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']){
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
