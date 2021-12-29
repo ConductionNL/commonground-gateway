@@ -7,6 +7,7 @@ use App\Entity\Document;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Endpoint;
+use App\Entity\Handler;
 use App\Service\EavService;
 use App\Service\ValidationService;
 use App\Service\TranslationService;
@@ -22,7 +23,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
-class EndpointService
+class HandlerService
 {
     private EntityManagerInterface $entityManager;
     private Request $request;
