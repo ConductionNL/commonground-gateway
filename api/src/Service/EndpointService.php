@@ -70,15 +70,14 @@ class EndpointService extends AbstractController
      */
     public function handleEndpoint(Endpoint $enpoint): Response
     {
-        $session = new Session();
-        $session->set('endpoint', $enpoint);
+        $this->session->set('endpoint', $enpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach($enpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            /* @todo acctualy check for json logic */
+            /* @todo actually check for json logic */
             if(true){
-                $session->set('handler', $handler);
+                $this->session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
         }
