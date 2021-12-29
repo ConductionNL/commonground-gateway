@@ -692,7 +692,7 @@ class EavService
      *
      * @return array
      */
-    private function handleEntityEndpoint(Request $request, array $info): array
+    public function handleEntityEndpoint(Request $request, array $info): array
     {
         // Lets setup a switchy kinda thingy to handle the input
         // Its an enity endpoint
