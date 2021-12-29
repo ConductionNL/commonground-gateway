@@ -91,7 +91,7 @@ class EndpointService extends AbstractController
      */
     public function handleHandler(Handler $handler): Response
     {
-        $request = new Request();
+        $request = $this->request;
         // To start it al off we need the data from the incoming request
         $data = $this->getDataFromRequest($request);
 
@@ -108,7 +108,7 @@ class EndpointService extends AbstractController
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
         if($entity = $handler->getEntity()){
-            $data = $this->eavSwitch($request, $entity);
+            $data = $this->eavSwitch($entity);
         }
 
         // We want to do  translations on the outgoing response
@@ -138,24 +138,21 @@ class EndpointService extends AbstractController
     }
 
 
-    public function getDataFromRequest(Request $request): array
+    public function getDataFromRequest(): array
     {
         //@todo support xml messages
 
-        if($request->getContent()) {
-            $body = json_decode($request->getContent(), true);
+        if($this->request->getContent()) {
+            $body = json_decode($this->request->getContent(), true);
         }
 
         return $body;
     }
 
-    public function eavSwitch(Request $request, Entity $entity): array
+    public function eavSwitch(Entity $entity): array
     {
-        // Let grap the request
-        $request = new Request();
-
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($request->getMethod()) {
+        switch ($this->request->getMethod()) {
             case 'GET':
                 return $this->eavService->getEntity();
                 break;
@@ -179,11 +176,8 @@ class EndpointService extends AbstractController
 
     public function createResponse(array $data): Response
     {
-        // Let grab the request
-        $request = new Request();
-
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($request->getMethod()){
+        switch ($this->request->getMethod()){
             case 'GET':
                 $status = Response::HTTP_OK;
                 break;
@@ -227,7 +221,7 @@ class EndpointService extends AbstractController
         );
 
         // Lets handle file responses
-        $routeParameters = $request->attributes->get('_route_params');
+        $routeParameters = $this->request->attributes->get('_route_params');
         if(array_key_exists('extension') && $extension = $routeParameters['extension']){
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
@@ -235,18 +229,15 @@ class EndpointService extends AbstractController
             $response->headers->set('Content-Disposition', $disposition);
         }
 
-        $response->prepare($request);
+        $response->prepare($this->request);
 
         return $response;
     }
 
     private function getRequestContentType(): string
     {
-        // Let grab the request
-        $request = new Request();
-
         // Lets grap the route parameters
-        $routeParameters = $request->attributes->get('_route_params');
+        $routeParameters = $this->request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
         if(array_key_exists('extension', $routeParameters)){
@@ -259,7 +250,7 @@ class EndpointService extends AbstractController
         }
 
         // Let's pick the first acceptable content type that we support
-        foreach($request->getAcceptableContentTypes() as $contentType){
+        foreach($this->request->getAcceptableContentTypes() as $contentType){
             if(array_key_exists($contentType, $this->acceptHeaderToSerialiazation)){
                 return $this->acceptHeaderToSerialiazation[$contentType];
             }
