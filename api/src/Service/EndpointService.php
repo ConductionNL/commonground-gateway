@@ -25,8 +25,7 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 class EndpointService extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private ResponseEvent $event;
-    private Request $request;
+    private RequestStack $requestStack;
     private TranslationService $translationService;
     private EavService $eavService;
     private SessionInterface $session;
@@ -51,7 +50,7 @@ class EndpointService extends AbstractController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ResponseEvent $event,
+        RequestStack $requestStack,
         TranslationService $translationService,
         EavService $eavService,
         SessionInterface $session,
@@ -59,8 +58,7 @@ class EndpointService extends AbstractController
     )
     {
         $this->entityManager = $entityManager;
-        $this->event = $event;
-        $this->request = $event->getRequest();
+        $this->request = $requestStack->getCurrentRequest();
         $this->translationService = $translationService;
         $this->eavService = $eavService;
         $this->session = $session;
@@ -93,8 +91,9 @@ class EndpointService extends AbstractController
      */
     public function handleHandler(Handler $handler): Response
     {
+        $request = $this->request;
         // To start it al off we need the data from the incoming request
-        $data = $this->getDataFromRequest();
+        $data = $this->getDataFromRequest($request);
 
         // Then we want to do the mapping in the incoming request
         $skeleton = $handler->getSkeletonIn();
@@ -133,7 +132,7 @@ class EndpointService extends AbstractController
         $response = $this->createResponse($data);
 
         // Let log the stack
-//        $this->logService->createLog($response, $this->request);
+//        $this->logService->createLog($response, $request);
 
         return $response;
     }
