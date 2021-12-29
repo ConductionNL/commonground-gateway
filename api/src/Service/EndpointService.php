@@ -67,13 +67,13 @@ class EndpointService
     /**
      * Get the data for a document and send it to the document creation service.
      */
-    public function handleEndpoint(Endpoint $enpoint): Response
+    public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
-        $session->set('endpoint', $enpoint);
+        $session->set('endpoint', $endpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
-        foreach($enpoint->getHandlers() as $handler){
+        foreach($endpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
             if(true){
