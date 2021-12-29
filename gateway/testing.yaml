@@ -10,12 +10,18 @@ App\Entity\Handler:
     weatherHandler:
         name: Weather handler
         sequence: 0
-        translationsOut: ["weatherTable"]
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
         endpoint: "@weerEndpoint"
 
 App\Entity\Translation:
+    regenTranslation:
+        translationTable: weatherTable1
+        translateFrom: zonnig
+        translateTo: regen
+        language:  nl
     rainTranslation:
-        translationTable: weatherTable
+        translationTable: weatherTable2
         translateFrom: regen
         translateTo: rain
         language:  eng
