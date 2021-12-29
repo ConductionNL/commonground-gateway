@@ -1,0 +1,24 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+App\Entity\Endpoint:
+    weerEndpoint:
+        name: Weer handler
+        description: endpoint voor dingen rondom weer 
+        type: gateway-endpoint
+        path: weer
+
+App\Entity\Handler:
+    weatherHandler:
+        name: Weather handler
+        sequence: 0
+        translationsOut: ["weatherTable"]
+        endpoint: "@weerEndpoint"
+
+App\Entity\Translation:
+    rainTranslation:
+        translationTable: weatherTable
+        translateFrom: regen
+        translateTo: rain
+        language:  eng
+        
+        
+
