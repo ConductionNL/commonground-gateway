@@ -47,4 +47,25 @@ class TranslationRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    /*
+     * This function find all applicable translations
+     */
+    public function getTranslations(array $translationTables, array $languages = [])
+    {
+        $query = $this->createQueryBuilder('t')
+            ->andWhere('t.translationTable = IN (:translationTables)')
+            ->setParameter('translationTables', $translationTables)
+            ->orderBy('t.id', 'ASC')
+            ;
+
+        if(!empty($languages)){
+            $query
+                ->andWhere('t.language = IN (:languages) OR t.language = null')
+                ->setParameter('languages', $languages);
+        }
+
+
+        return $query->getQuery()->getResult();
+    }
 }

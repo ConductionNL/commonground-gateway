@@ -69,13 +69,12 @@ class Translation
     private $translateTo;
 
     /**
-     * @var array The languages of this Handler.
+     * @var string The languages of this Handler.
      *
-     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
-    private $languages = [];
+    private $language;
 
     public function getId()
     {
@@ -118,14 +117,14 @@ class Translation
         return $this;
     }
 
-    public function getLanguages(): ?array
+    public function getLanguage(): ?string
     {
-        return $this->languages;
+        return $this->language;
     }
 
-    public function setLanguages(?array $languages): self
+    public function setLanguage(?string $language): self
     {
-        $this->languages = $languages;
+        $this->language = $language;
 
         return $this;
     }
