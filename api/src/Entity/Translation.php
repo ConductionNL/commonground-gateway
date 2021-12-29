@@ -33,9 +33,9 @@ class Translation
     private $translateTo;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
-    private $languages = [];
+    private $language;
 
     public function getId(): ?int
     {
@@ -78,14 +78,14 @@ class Translation
         return $this;
     }
 
-    public function getLanguages(): ?array
+    public function getLanguage(): ?string
     {
-        return $this->languages;
+        return $this->language;
     }
 
-    public function setLanguages(?array $languages): self
+    public function setLanguage(?string $language): self
     {
-        $this->languages = $languages;
+        $this->language = $language;
 
         return $this;
     }
