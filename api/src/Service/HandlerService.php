@@ -14,6 +14,7 @@ use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Serializer\SerializerInterface;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,6 +32,7 @@ class HandlerService
     private TranslationService $translationService;
     private SOAPService $soapService;
     private EavService $eavService;
+    private SerializerInterface $serializerInterface;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -55,7 +57,8 @@ class HandlerService
         ValidationService $validationService,
         TranslationService $translationService,
         SOAPService $soapService,
-        EavService $eavService)
+        EavService $eavService,
+        SerializerInterface $serializer)
     {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -63,6 +66,7 @@ class HandlerService
         $this->translationService = $translationService;
         $this->soapService = $soapService;
         $this->eavService = $eavService;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -209,7 +213,7 @@ class HandlerService
         }
 
         // Lets seriliaze the shizle
-        $result = $this->serializerService->serialize($data, $contentType, $options);
+        $result = $this->serializer->serialize($data, $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
