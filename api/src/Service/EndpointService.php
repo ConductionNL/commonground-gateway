@@ -50,18 +50,19 @@ class EndpointService extends AbstractController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        Request $request,
-        ValidationService $validationService,
+        RequestStack $requestStack,
         TranslationService $translationService,
-        SOAPService $soapService,
-        EavService $eavService)
+        EavService $eavService,
+        SessionInterface $session,
+        LogService $logService
+    )
     {
         $this->entityManager = $entityManager;
-        $this->request = $request;
-        $this->validationService = $validationService;
+        $this->request = $requestStack->getCurrentRequest();
         $this->translationService = $translationService;
-        $this->soapService = $soapService;
         $this->eavService = $eavService;
+        $this->session = $session;
+        $this->logService = $logService;
     }
 
     /**
