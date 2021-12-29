@@ -58,8 +58,8 @@ class HandlerService
         TranslationService $translationService,
         SOAPService $soapService,
         EavService $eavService,
-        SerializerInterface $serializer)
-    {
+        SerializerInterface $serializer
+    ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
@@ -101,7 +101,7 @@ class HandlerService
 
         // Then we want to do the mapping in the incomming request
         $skeleton = $handler->getSkeletonIn();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
@@ -112,8 +112,24 @@ class HandlerService
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if($entity = $handler->getObject()){
-            $data = $this->eavSwitch($this->request, $entity);
+        if ($entity = $handler->getObject()) {
+
+            // prepare variables
+            $routeParameters = $this->request->attributes->get('_route_params');
+            if (array_key_exists('id', $routeParameters)) {
+                $id = $routeParameters['id'];
+            }
+            $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+
+            // Create an info array
+            $info = [
+                "object" => $object ?? null,
+                "body" => $data ?? null,
+                "fields" => $field ?? null,
+                "path" => $handler->getEndpoint()->getPath(),
+            ];
+            // Handle the eav side of things
+            $data = $this->eavService->handleEntityEndpoint($this->request, $info);
         }
 
         // The we want to do  translations on the outgoing responce
@@ -123,14 +139,14 @@ class HandlerService
 
         // Then we want to do to mapping on the outgoing responce
         $skeleton = $handler->getSkeletonOut();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
 
         // Lets see if we need te use a template
-        if($handler->getTemplatetype() && $handler->getTemplate()){
+        if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
         }
 
@@ -145,7 +161,7 @@ class HandlerService
     {
         //@todo support xml messages
 
-        if($this->request->getContent()) {
+        if ($this->request->getContent()) {
             $body = json_decode($this->request->getContent(), true);
         }
 
@@ -181,7 +197,7 @@ class HandlerService
     {
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($this->request->getMethod()){
+        switch ($this->request->getMethod()) {
             case 'GET':
                 $status = Response::HTTP_OK;
                 break;
@@ -226,7 +242,7 @@ class HandlerService
 
         // Lets handle file responses
         $routeParameters = $this->request->attributes->get('_route_params');
-        if(array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']){
+        if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
@@ -244,18 +260,17 @@ class HandlerService
         $routeParameters = $this->request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if(array_key_exists('extension', $routeParameters)){
-            if(in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
+        if (array_key_exists('extension', $routeParameters)) {
+            if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
-            }
-            else{
+            } else {
                 /* @todo throw error, invalid extension requested */
             }
         }
 
         // Lets pick the first accaptable content type that we support
-        foreach($this->request->getAcceptableContentTypes() as $contentType){
-            if(array_key_exists($contentType, $this->acceptHeaderToSerialiazation)){
+        foreach ($this->request->getAcceptableContentTypes() as $contentType) {
+            if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
                 return $this->acceptHeaderToSerialiazation[$contentType];
             }
         }
@@ -271,7 +286,7 @@ class HandlerService
         $variables = $data;
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($handler->getTemplateType()){
+        switch ($handler->getTemplateType()) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
                 return $document->render($variables);
