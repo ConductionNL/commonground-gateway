@@ -36,7 +36,7 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Let determine an endpoint (new way)
-        if($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['route'=>$entity])){
+        if($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path'=>$entity])){
             return $handlerService->handleEndpoint($endpoint);
         }
 
