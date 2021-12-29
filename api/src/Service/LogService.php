@@ -15,17 +15,19 @@ class LogService
 {
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
+    private ResponseEvent $event;
 
-    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session)
+    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session, ResponseEvent $event)
     {
         $this->entityManager = $entityManager;
         $this->session = $session;
+        $this->event = $event;
     }
 
-    public function createLog(ResponseEvent $event): Log
+    public function createLog(): Log
     {
-        $response = $event->getResponse();
-        $request = $event->getRequest();
+        $response = $this->event->getResponse();
+        $request = $this->event->getRequest();
 
         $callLog = new Log();
         $callLog->setType("in");
