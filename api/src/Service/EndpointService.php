@@ -3,34 +3,33 @@
 namespace App\Service;
 
 use ApiPlatform\Core\Exception\InvalidArgumentException;
-use App\Entity\Document;
 use App\Entity\Entity;
-use App\Entity\File;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Service\EavService;
-use App\Service\ValidationService;
 use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
-
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
 class EndpointService extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private Request $request;
-    private ValidationService $validationService;
+    private RequestStack $requestStack;
     private TranslationService $translationService;
-    private SOAPService $soapService;
     private EavService $eavService;
+    private SessionInterface $session;
+    private LogService $logService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
