@@ -131,6 +131,9 @@ class EndpointService extends AbstractController
         // An lastly we want to create a responce
         $response = $this->createResponse($data);
 
+        // Let log the stack
+//        $this->logService->createLog($response, $request);
+
         return $response;
     }
 
