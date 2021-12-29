@@ -122,6 +122,12 @@ class EndpointService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
+
+        // Lets see if we need te use a template
+        if($handler->getTemplatetype() && $handler->getTemplate()){
+            $data = $this->renderTemplate($handler, $data);
+        }
+
         // An lastly we want to create a responce
         $response = $this->createResponse($data);
 
@@ -258,5 +264,31 @@ class EndpointService
 
         // If we end up here we are dealing with an unsupported content type
         /* @todo throw error */
+    }
+
+
+    private function renderTemplate(Handler $handler, array $data): string
+    {
+        /* @todo add global variables */
+        $variables = $data;
+
+        // We only end up here if there are no errors, so we only suply best case senario's
+        switch ($handler->getTemplateType()){
+            case 'TWIG':
+                $document = $this->templating->createTemplate($handler->getTemplate());
+                return $document->render($variables);
+                break;
+            case 'MD':
+                return $handler->getTemplate();
+                break;
+            case 'RST':
+                return $handler->getTemplate();
+                break;
+            case 'HTML':
+                return $handler->getTemplate();
+                break;
+            default:
+                /* @todo we shouldnt end up here so throw an errar */
+        }
     }
 }
