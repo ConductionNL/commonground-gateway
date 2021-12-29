@@ -6,6 +6,7 @@ use App\Entity\Log;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -15,20 +16,15 @@ class LogService
 {
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
-    private ResponseEvent $event;
 
-    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session, ResponseEvent $event)
+    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session)
     {
         $this->entityManager = $entityManager;
         $this->session = $session;
-        $this->event = $event;
     }
 
-    public function createLog(): Log
+    public function createLog(Response $response, Request $request): Log
     {
-        $response = $this->event->getResponse();
-        $request = $this->event->getRequest();
-
         $callLog = new Log();
         $callLog->setType("in");
         $callLog->setRequestMethod($request->getMethod());
