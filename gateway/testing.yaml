@@ -6,6 +6,37 @@ App\Entity\Endpoint:
         type: gateway-endpoint
         path: weer
 
+App\Entity\Entity:
+    weekWeather:
+        route: "/api/weer"
+        name: weer
+        description: Dit endpoint behandeld weer.
+        endpoint: "weer"
+        availableProperties:
+            - maandag
+            - dinsdag
+        usedProperties:
+            - maandag
+            - dinsdag
+
+App\Entity\Attribute:
+
+    weekWeather_maandag:
+        name: maandag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_dinsdag:
+        name: dinsdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+
+
 App\Entity\Handler:
     weatherHandler:
         name: Weather handler
