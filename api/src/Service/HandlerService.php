@@ -15,7 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
 
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,7 +26,7 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 class HandlerService
 {
     private EntityManagerInterface $entityManager;
-    private Request $request;
+    private RequestStack $requestStack;
     private ValidationService $validationService;
     private TranslationService $translationService;
     private SOAPService $soapService;
@@ -51,14 +51,14 @@ class HandlerService
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        Request $request,
+        RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
         SOAPService $soapService,
         EavService $eavService)
     {
         $this->entityManager = $entityManager;
-        $this->request = $request;
+        $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
         $this->soapService = $soapService;
