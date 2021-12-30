@@ -45,10 +45,9 @@ class LogService
         $callLog->setRouteName($routeName);
         $callLog->setRouteParameters($routeParameters);
 
-        $now = new \DateTime();
-        $requestTime = $request->server->get('REQUEST_TIME');
-        $callLog->setResponseTime($now->getTimestamp() - $requestTime);
-        $callLog->setCreatedAt($now);
+        // $now = new \DateTime();
+        // $requestTime = $request->server->get('REQUEST_TIME');
+        // $callLog->setResponseTime(new \DateTime(date("u", $now->getTimestamp() - $requestTime)));
 
         if ($this->session) {
             // add before removing
@@ -70,8 +69,8 @@ class LogService
             $callLog->setSessionValues($this->session->all());
         }
 
-        $this->entityManager->persist($callLog);
-        $this->entityManager->flush();
+        // $this->entityManager->persist($callLog);
+        // $this->entityManager->flush();
 
         return $callLog;
     }
