@@ -78,10 +78,10 @@ class HandlerService
         $session->set('endpoint', $endpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
-        foreach($endpoint->getHandlers() as $handler){
+        foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
-            if(true){
+            if (true) {
                 $session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
@@ -129,7 +129,11 @@ class HandlerService
                 "path" => $handler->getEndpoint()->getPath(),
             ];
             // Handle the eav side of things
-            $data = $this->eavService->handleEntityEndpoint($this->request, $info);
+            if (isset($id)) {
+                $data = $this->eavService->handleEntityEndpoint($this->request, $info);
+            } else {
+                $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
+            }
         }
 
         // The we want to do  translations on the outgoing responce
