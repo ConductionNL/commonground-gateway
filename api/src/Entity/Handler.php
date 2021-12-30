@@ -61,7 +61,7 @@ class Handler
 
     /**
      * @var string|null The description of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
@@ -69,9 +69,9 @@ class Handler
 
     /**
      * @var int The order of how the JSON conditions will be tested.
-     * 
+     *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer")
      */
@@ -81,7 +81,7 @@ class Handler
      * @var array The JSON conditions of this Handler.
      *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json")
      */
@@ -89,7 +89,7 @@ class Handler
 
     /**
      * @var array|null The translations of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -97,7 +97,7 @@ class Handler
 
     /**
      * @var array|null The mapping of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -105,7 +105,7 @@ class Handler
 
     /**
      * @var array|null The mapping of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -113,16 +113,16 @@ class Handler
 
     /**
      * @var Entity The entity of this Handler.
-     * 
+     *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
-    private ?Entity $object = null;
+    private ?Entity $entity = null;
 
     /**
      * @var array|null The skeleton of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -130,7 +130,7 @@ class Handler
 
     /**
      * @var array|null The mappingOut of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -138,7 +138,7 @@ class Handler
 
     /**
      * @var array|null The translationsOut of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -146,7 +146,7 @@ class Handler
 
     /**
      * @var string|null The template type of this Handler.
-     * 
+     *
      * @Assert\Length(
      *     max = 255
      * )
@@ -256,14 +256,14 @@ class Handler
         return $this;
     }
 
-    public function getObject(): ?Entity
+    public function getEntity(): ?Entity
     {
-        return $this->object;
+        return $this->entity;
     }
 
-    public function setObject(?Entity $object): self
+    public function setEntity(?Entity $entity): self
     {
-        $this->object = $object;
+        $this->entity = $entity;
 
         return $this;
     }
