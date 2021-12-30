@@ -78,8 +78,8 @@ class LogService
             // add session values
             $callLog->setSessionValues($this->session->all());
         }
-        // $this->entityManager->persist($callLog);
-        // $this->entityManager->flush();
+        $this->entityManager->persist($callLog);
+        $this->entityManager->flush();
 
         return $callLog;
     }
@@ -97,5 +97,4 @@ class LogService
 
         return null;
     }
-
 }
