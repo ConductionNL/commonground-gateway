@@ -112,7 +112,7 @@ class HandlerService
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if ($entity = $handler->getObject()) {
+        if ($entity = $handler->getEntity()) {
 
             // prepare variables
             $routeParameters = $this->request->attributes->get('_route_params');
