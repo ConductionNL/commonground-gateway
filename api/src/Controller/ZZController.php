@@ -6,7 +6,7 @@ use App\Entity\Document;
 use App\Service\DocumentService;
 use App\Service\EavService;
 use App\Service\ValidationService;
-use App\Service\EndpointService;
+use App\Service\HandlerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +23,7 @@ class ZZController extends AbstractController
                                   EavService $eavService,
                                   DocumentService $documentService,
                                   ValidationService $validationService,
-                                  EndpointService $endpointService): Response
+                                  HandlerService $handlerService): Response
     {
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route'=>$entity]);
@@ -36,8 +36,8 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Let determine an endpoint (new way)
-        if($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['route'=>$entity])){
-            return $endpointService->handleRequest($endpoint);
+        if($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path'=>$entity])){
+            return $handlerService->handleEndpoint($endpoint);
         }
 
         // Continue as normal (old way)

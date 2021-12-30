@@ -3,94 +3,170 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\HandlerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
- * @ApiResource()
- * @ORM\Entity(repositoryClass=HandlerRepository::class)
+ * An handler.
+ *
+ * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/handlers/{id}"},
+ *      "put"={"path"="/admin/handlers/{id}"},
+ *      "delete"={"path"="/admin/handlers/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/handlers"},
+ *      "post"={"path"="/admin/handlers"}
+ *  })
+ * @ORM\Entity(repositoryClass="App\Repository\HandlerRepository")
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  */
 class Handler
 {
     /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @Groups({"read"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    private string $id;
 
     /**
+     * @var string The name of this Handler.
+     * 
+     * @Assert\NotNull
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
+     * @var string|null The description of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private ?string $description;
 
     /**
+     * @var int The order of how the JSON conditions will be tested.
+     * 
+     * @Assert\NotNull
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="integer")
      */
-    private $sequence;
+    private int $sequence;
 
     /**
+     * @var array The JSON conditions of this Handler.
+     *
+     * @Assert\NotNull
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="json")
      */
-    private $conditions = [];
+    private array $conditions = [];
 
     /**
+     * @var array|null The translations of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsIn = [];
+    private ?array $translationsIn = [];
 
     /**
+     * @var array|null The mapping of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $mappingIn = [];
+    private ?array $mappingIn = [];
 
     /**
+     * @var array|null The mapping of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $skeletonIn = [];
+    private ?array $skeletonIn = [];
 
     /**
+     * @var Entity The entity of this Handler.
+     * 
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
-    private $object;
+    private ?Entity $object = null;
 
     /**
+     * @var array|null The skeleton of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $skeletonOut = [];
+    private ?array $skeletonOut = [];
 
     /**
+     * @var array|null The mappingOut of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $mappingOut = [];
+    private ?array $mappingOut = [];
 
     /**
+     * @var array|null The translationsOut of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsOut = [];
+    private ?array $translationsOut = [];
 
     /**
+     * @var string|null The template type of this Handler.
+     * 
+     * @Groups({"read", "write"})
+     * @Assert\Choice({"twig", "markdown", "restructuredText"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $templateType;
+    private ?string $templateType;
 
     /**
+     * @var string|null The template of this Handler.
+     * 
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $template;
+    private ?string $template;
 
     /**
+     * @var Endpoint The endpoint of this Handler.
+     * 
+     * @Assert\NotNull
+     * 
+     * 
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="handlers")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $endpoint;
+    private Endpoint $endpoint;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
