@@ -2,8 +2,16 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TranslationRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=TranslationRepository::class)
@@ -11,33 +19,64 @@ use Doctrine\ORM\Mapping as ORM;
 class Translation
 {
     /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
+     * @var string The table of this Translation.
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private $translationTable;
 
     /**
+     * @var string Translate from of this Translation.
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private $translateFrom;
 
     /**
+     * @var string Translate to of this Translation.
+     *
+     * @Assert\NotNull
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private $translateTo;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @var string The languages of this Handler.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
      */
     private $language;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
