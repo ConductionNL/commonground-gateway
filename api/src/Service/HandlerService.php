@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Service\LogService;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,6 +34,7 @@ class HandlerService
     private SOAPService $soapService;
     private EavService $eavService;
     private SerializerInterface $serializerInterface;
+    private LogService $logService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -58,7 +60,8 @@ class HandlerService
         TranslationService $translationService,
         SOAPService $soapService,
         EavService $eavService,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        LogService $logService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -67,6 +70,7 @@ class HandlerService
         $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
+        $this->logService = $logService;
     }
 
     /**
@@ -156,6 +160,10 @@ class HandlerService
 
         // An lastly we want to create a responce
         $response = $this->createResponse($data);
+
+        // Create log
+        // TODO in logService get response 
+        // $this->logService->createLog();
 
         return $response;
     }
