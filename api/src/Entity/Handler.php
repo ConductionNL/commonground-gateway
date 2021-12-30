@@ -2,13 +2,16 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * An handler.
@@ -33,7 +36,10 @@ class Handler
     /**
      * @var UuidInterface The UUID identifier of this Entity.
      *
-     * @Groups({"read"})
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
      * @ORM\Column(type="uuid", unique=true)
      * @ORM\GeneratedValue(strategy="CUSTOM")
@@ -43,17 +49,19 @@ class Handler
 
     /**
      * @var string The name of this Handler.
-     * 
+     *
      * @Assert\NotNull
-     * 
-     * @Groups({"read", "write"})
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
 
     /**
      * @var string|null The description of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
@@ -61,9 +69,9 @@ class Handler
 
     /**
      * @var int The order of how the JSON conditions will be tested.
-     * 
+     *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer")
      */
@@ -73,7 +81,7 @@ class Handler
      * @var array The JSON conditions of this Handler.
      *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json")
      */
@@ -81,7 +89,7 @@ class Handler
 
     /**
      * @var array|null The translations of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -89,7 +97,7 @@ class Handler
 
     /**
      * @var array|null The mapping of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -97,7 +105,7 @@ class Handler
 
     /**
      * @var array|null The mapping of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -105,16 +113,16 @@ class Handler
 
     /**
      * @var Entity The entity of this Handler.
-     * 
+     *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
-    private ?Entity $object = null;
+    private ?Entity $entity = null;
 
     /**
      * @var array|null The skeleton of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -122,7 +130,7 @@ class Handler
 
     /**
      * @var array|null The mappingOut of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -130,7 +138,7 @@ class Handler
 
     /**
      * @var array|null The translationsOut of this Handler.
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -138,7 +146,10 @@ class Handler
 
     /**
      * @var string|null The template type of this Handler.
-     * 
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
      * @Groups({"read", "write"})
      * @Assert\Choice({"twig", "markdown", "restructuredText"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -146,21 +157,11 @@ class Handler
     private ?string $templateType;
 
     /**
-     * @var string|null The template of this Handler.
-     * 
-     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $template;
 
     /**
-     * @var Endpoint The endpoint of this Handler.
-     * 
-     * @Assert\NotNull
-     * 
-     * 
-     * @MaxDepth(1)
-     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="handlers")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -255,14 +256,14 @@ class Handler
         return $this;
     }
 
-    public function getObject(): ?Entity
+    public function getEntity(): ?Entity
     {
-        return $this->object;
+        return $this->entity;
     }
 
-    public function setObject(?Entity $object): self
+    public function setEntity(?Entity $entity): self
     {
-        $this->object = $object;
+        $this->entity = $entity;
 
         return $this;
     }
