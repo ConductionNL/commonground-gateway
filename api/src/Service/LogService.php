@@ -45,18 +45,25 @@ class LogService
         $callLog->setRouteName($routeName);
         $callLog->setRouteParameters($routeParameters);
 
-        // $now = new \DateTime();
-        // $requestTime = $request->server->get('REQUEST_TIME');
-        // $callLog->setResponseTime(new \DateTime(date("u", $now->getTimestamp() - $requestTime)));
+        $now = new \DateTime();
+        $requestTime = $request->server->get('REQUEST_TIME');
+        $callLog->setResponseTime($now->getTimestamp() - $requestTime);
 
         if ($this->session) {
             // add before removing
             $callLog->setCallId($this->session->get('callId',null));
             $callLog->setSession($this->session->getId());
-            $callLog->setEndpoint($this->session->get('endpoint', null));
-            $callLog->setEntity($this->session->get('entity', null));
-            $callLog->setSource($this->session->get('source', null));
-            $callLog->setHandler($this->session->get('handler', null));
+
+            // TODO endpoint disabled because might cause problems
+            // $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
+            $callLog->setEndpoint(null);
+            $callLog->setEntity(null);
+            
+            $callLog->setSource($this->session->get('source') ? $this->session->get('source') : null);
+
+            // TODO handler disabled because might cause problems
+            // $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
+            $callLog->setHandler(null);
 
             // remove before setting the session values
             $this->session->remove('callId');
@@ -69,8 +76,8 @@ class LogService
             $callLog->setSessionValues($this->session->all());
         }
 
-        // $this->entityManager->persist($callLog);
-        // $this->entityManager->flush();
+        $this->entityManager->persist($callLog);
+        $this->entityManager->flush();
 
         return $callLog;
     }
