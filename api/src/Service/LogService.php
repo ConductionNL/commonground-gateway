@@ -8,8 +8,6 @@ use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -17,48 +15,46 @@ class LogService
 {
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
-    private RequestStack $requestStack;
-    // private Response $response;
 
-    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session, RequestStack $requestStack, 
-    // Response $response
-    )
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        SessionInterface $session
+    ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
-        $this->request = $requestStack->getCurrentRequest();
-        // $this->response = $response;
     }
 
-    public function createLog(): Log
+    public function createLog(Response $response, Request $request): Log
     {
+        // TODO fix response
+
         $callLog = new Log();
         $callLog->setType("in");
-        $callLog->setRequestMethod($this->request->getMethod());
-        $callLog->setRequestHeaders($this->request->headers->all());
-        $callLog->setRequestQuery($this->request->query->all() ?? null);
-        $callLog->setRequestPathInfo($this->request->getPathInfo());
-        $callLog->setRequestLanguages($this->request->getLanguages() ?? null);
-        $callLog->setRequestServer($this->request->server->all());
-        $callLog->setRequestContent($this->request->getContent());
+        $callLog->setRequestMethod($request->getMethod());
+        $callLog->setRequestHeaders($request->headers->all());
+        $callLog->setRequestQuery($request->query->all() ?? null);
+        $callLog->setRequestPathInfo($request->getPathInfo());
+        $callLog->setRequestLanguages($request->getLanguages() ?? null);
+        $callLog->setRequestServer($request->server->all());
+        $callLog->setRequestContent($request->getContent());
         // @todo get status
-        // $callLog->setResponseStatus($this->getStatusWithCode($this->response->getStatusCode()));
-        // $callLog->setResponseStatusCode($this->response->getStatusCode());
-        // $callLog->setResponseHeaders($this->response->headers->all());
-        // $callLog->setResponseContent($this->response->getContent());
+        $callLog->setResponseStatus($this->getStatusWithCode($response->getStatusCode()));
+        $callLog->setResponseStatusCode($response->getStatusCode());
+        $callLog->setResponseHeaders($response->headers->all());
+        $callLog->setResponseContent($response->getContent());
 
-        $routeName = $this->request->attributes->get('_route') ?? null;
-        $routeParameters = $this->request->attributes->get('_route_params') ?? null;
+        $routeName = $request->attributes->get('_route') ?? null;
+        $routeParameters = $request->attributes->get('_route_params') ?? null;
         $callLog->setRouteName($routeName);
         $callLog->setRouteParameters($routeParameters);
 
         $now = new \DateTime();
-        $requestTime = $this->request->server->get('REQUEST_TIME');
+        $requestTime = $request->server->get('REQUEST_TIME');
         $callLog->setResponseTime($now->getTimestamp() - $requestTime);
 
         if ($this->session) {
             // add before removing
-            $callLog->setCallId($this->session->get('callId',null));
+            $callLog->setCallId($this->session->get('callId', null));
             $callLog->setSession($this->session->getId());
 
             // TODO endpoint disabled because might cause problems

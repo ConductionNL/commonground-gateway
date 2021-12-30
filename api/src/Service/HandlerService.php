@@ -162,8 +162,7 @@ class HandlerService
         $response = $this->createResponse($data);
 
         // Create log
-        // TODO in logService get response 
-        // $this->logService->createLog();
+        $this->logService->createLog($response, $this->request);
 
         return $response;
     }
