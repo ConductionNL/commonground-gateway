@@ -180,7 +180,9 @@ class TranslationService
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
-                $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+                if (is_string($subject)) {
+                    $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+                }
             }
             return $subject;
         }
@@ -196,10 +198,10 @@ class TranslationService
 
         $callback = function ($match) use ($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
-                case $escapeChar.$escapeChar:
+                case $escapeChar . $escapeChar:
                     return $escapeChar;
 
-                case $escapeChar.'{':
+                case $escapeChar . '{':
                     return '{';
 
                 default:
