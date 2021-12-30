@@ -243,7 +243,7 @@ class Entity
      *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity")
      */
     private Collection $handlers;
 
