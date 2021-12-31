@@ -68,25 +68,24 @@ App\Entity\Handler:
     weatherHandler:
         name: Weather handler
         sequence: 0
-        # mappingIn:
-        #     - maandag: monday
-        #     - dinsdag: tuesday
-        #     - woensdag: wednesday
-        #     - donderdag: thursday
-        #     - vrijdag: friday
-        #     - weekend.zaterdag: saturday
-        #     - weekend.zondag: sunday
+        mappingIn:
+            monday: maandag
+            tuesday: dinsdag
+            wednesday: woensdag
+            thursday: donderdag
+            friday: vrijdag
+            saturday: weekend.zaterdag
+            sunday: weekend.zondag
         translationsIn: ["weatherTable1"]
         translationsOut: ["weatherTable2"]
-        # mappingOut:
-        #     - monday: montag
-        #     - tuesday: dienstag
-        #     - wednesday: mittwoch
-        #     - thursday: donnerstag
-        #     - friday: freitag
-        #     - weekend: wochenende
-        #     - weekend.saturday: samstag
-        #     - weekend.sunday: sonntag
+        mappingOut:
+            montag: monday
+            dienstag: tuesday
+            mittwoch: wednesday
+            donnerstag: thursday 
+            freitag: friday 
+            wochenende.samstag:  saturday
+            wochenende.sonntag: sunday
         endpoint: "@weerEndpoint"
         entity: "@weekWeather"
 

@@ -110,7 +110,7 @@ class HandlerService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
-        // The we want to do  translations on the incomming request       
+        // The we want to do  translations on the incomming request
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
