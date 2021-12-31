@@ -186,6 +186,11 @@ class TranslationService
             return $subject;
         }
 
+        // We only translate strings
+        if(!is_string($subject)){
+            return $subject;
+        }
+
         $esc = preg_quote($escapeChar);
         $expr = "/
         $esc$esc(?=$esc*+{)
