@@ -236,12 +236,16 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
+    private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
 
     /**
+     * @var array|null The handlers used for this entity.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
      */
-    private $handlers;
+    private Collection $handlers;
 
     public function __construct()
     {
@@ -258,7 +262,7 @@ class Entity
     {
         if ($this->getGateway() !== null) {
             $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+            $gateway = '@' . $gateway;
         } else {
             $gateway = null;
         }
@@ -709,6 +713,7 @@ class Entity
 
         return $this;
     }
+
 
     /**
      * @return Collection|Handler[]

@@ -7,14 +7,16 @@ use App\Entity\Document;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Endpoint;
+use App\Entity\Handler;
 use App\Service\EavService;
 use App\Service\ValidationService;
 use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Serializer\SerializerInterface;
 
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -22,14 +24,15 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
-class EndpointService
+class HandlerService
 {
     private EntityManagerInterface $entityManager;
-    private Request $request;
+    private RequestStack $requestStack;
     private ValidationService $validationService;
     private TranslationService $translationService;
     private SOAPService $soapService;
     private EavService $eavService;
+    private SerializerInterface $serializerInterface;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -50,30 +53,32 @@ class EndpointService
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        Request $request,
+        RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
         SOAPService $soapService,
-        EavService $eavService)
-    {
+        EavService $eavService,
+        SerializerInterface $serializer
+    ) {
         $this->entityManager = $entityManager;
-        $this->request = $request;
+        $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
         $this->soapService = $soapService;
         $this->eavService = $eavService;
+        $this->serializer = $serializer;
     }
 
     /**
      * Get the data for a document and send it to the document creation service.
      */
-    public function handleEndpoint(Endpoint $enpoint): Response
+    public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
-        $session->set('endpoint', $enpoint);
+        $session->set('endpoint', $endpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
-        foreach($enpoint->getHandlers() as $handler){
+        foreach($endpoint->getHandlers() as $handler){
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
             if(true){
@@ -91,40 +96,57 @@ class EndpointService
      */
     public function handleHandler(Handler $handler): Response
     {
-        $request = new Request();
         // To start it al off we need the data from the incomming request
-        $data = $this->getDataFromRequest($request);
+        $data = $this->getDataFromRequest($this->request);
 
         // Then we want to do the mapping in the incomming request
         $skeleton = $handler->getSkeletonIn();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
-        // The we want to do  translations on the incomming request
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn);
+        // The we want to do  translations on the incomming request       
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if($entity = $handler->getEntity()){
-            $data = $this->eavSwitch($request, $entity);
+        if ($entity = $handler->getObject()) {
+
+            // prepare variables
+            $routeParameters = $this->request->attributes->get('_route_params');
+            if (array_key_exists('id', $routeParameters)) {
+                $id = $routeParameters['id'];
+            }
+            $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+
+            // Create an info array
+            $info = [
+                "object" => $object ?? null,
+                "body" => $data ?? null,
+                "fields" => $field ?? null,
+                "path" => $handler->getEndpoint()->getPath(),
+            ];
+            // Handle the eav side of things
+            $data = $this->eavService->handleEntityEndpoint($this->request, $info);
         }
 
         // The we want to do  translations on the outgoing responce
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut);
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
         $data = $this->translationService->parse($data, true, $translations);
 
         // Then we want to do to mapping on the outgoing responce
         $skeleton = $handler->getSkeletonOut();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
 
         // Lets see if we need te use a template
-        if($handler->getTemplatetype() && $handler->getTemplate()){
+        if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
         }
 
@@ -135,24 +157,21 @@ class EndpointService
     }
 
 
-    public function getDataFromRequest(Request $request): array
+    public function getDataFromRequest(): array
     {
         //@todo support xml messages
 
-        if($request->getContent()) {
-            $body = json_decode($request->getContent(), true);
+        if ($this->request->getContent()) {
+            $body = json_decode($this->request->getContent(), true);
         }
 
         return $body;
     }
 
-    public function eavSwitch(Request $request, Entity $entity): array
+    public function eavSwitch(Entity $entity): array
     {
-        // Let grap the request
-        $request = new Request();
-
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($request->getMethod()) {
+        switch ($this->request->getMethod()) {
             case 'GET':
                 return $this->eavService->getEntity();
                 break;
@@ -176,11 +195,9 @@ class EndpointService
 
     public function createResponse(array $data): Response
     {
-        // Let grap the request
-        $request = new Request();
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($request->getMethod()){
+        switch ($this->request->getMethod()) {
             case 'GET':
                 $status = Response::HTTP_OK;
                 break;
@@ -214,50 +231,46 @@ class EndpointService
         }
 
         // Lets seriliaze the shizle
-        $result = $this->serializerService->serialize($data, $contentType, $options);
+        $result = $this->serializer->serialize($data, $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
             $result,
             $status,
-            $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]
+            [$this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
         );
 
         // Lets handle file responses
-        $routeParameters = $request->attributes->get('_route_params');
-        if(array_key_exists('extension') && $extension = $routeParameters['extension']){
+        $routeParameters = $this->request->attributes->get('_route_params');
+        if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
             $response->headers->set('Content-Disposition', $disposition);
         }
 
-        $response->prepare($request);
+        $response->prepare($this->request);
 
         return $response;
     }
 
     private function getRequestContentType(): string
     {
-        // Let grap the request
-        $request = new Request();
-
         // Lets grap the route parameters
-        $routeParameters = $request->attributes->get('_route_params');
+        $routeParameters = $this->request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if(array_key_exists('extension', $routeParameters)){
-            if(in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
+        if (array_key_exists('extension', $routeParameters)) {
+            if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
-            }
-            else{
+            } else {
                 /* @todo throw error, invalid extension requested */
             }
         }
 
         // Lets pick the first accaptable content type that we support
-        foreach($request->getAcceptableContentTypes() as $contentType){
-            if(array_key_exists($contentType, $this->acceptHeaderToSerialiazation)){
+        foreach ($this->request->getAcceptableContentTypes() as $contentType) {
+            if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
                 return $this->acceptHeaderToSerialiazation[$contentType];
             }
         }
@@ -273,7 +286,7 @@ class EndpointService
         $variables = $data;
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($handler->getTemplateType()){
+        switch ($handler->getTemplateType()) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
                 return $document->render($variables);

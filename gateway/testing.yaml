@@ -1,0 +1,90 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+App\Entity\Endpoint:
+    weerEndpoint:
+        name: Weer handler
+        description: endpoint voor dingen rondom weer 
+        type: gateway-endpoint
+        path: weer
+
+App\Entity\Entity:
+    weekWeather:
+        route: "/api/weer"
+        name: weer
+        description: Dit endpoint behandeld weer.
+        endpoint: "weer"
+
+App\Entity\Attribute:
+    weekWeather_maandag:
+        name: maandag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_dinsdag:
+        name: dinsdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_woensdag:
+        name: woensdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_donderdag:
+        name: donderdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_vrijdag:
+        name: vrijdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_zaterdag:
+        name: zaterdag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_zondag:
+        name: zondag
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+
+
+App\Entity\Handler:
+    weatherHandler:
+        name: Weather handler
+        sequence: 0
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
+        endpoint: "@weerEndpoint"
+        entity: "@weekWeather"
+
+App\Entity\Translation:
+    regenTranslation:
+        translationTable: weatherTable1
+        translateFrom: zonnig
+        translateTo: regen
+        language:  nl
+    rainTranslation:
+        translationTable: weatherTable2
+        translateFrom: regen
+        translateTo: rain
+        language:  eng
+        
+        
+
