@@ -743,7 +743,7 @@ class EavService
      *
      * @return array
      */
-    private function handleCollectionEndpoint(Request $request, array $info): array
+    public function handleCollectionEndpoint(Request $request, array $info): array
     {
         // its a collection endpoint
         switch ($request->getMethod()) {

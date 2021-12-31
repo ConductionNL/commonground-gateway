@@ -9,7 +9,6 @@ use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LogService
@@ -17,14 +16,18 @@ class LogService
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
 
-    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        SessionInterface $session
+    ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
     }
 
     public function createLog(Response $response, Request $request): Log
     {
+        // TODO fix response
+
         $callLog = new Log();
         $callLog->setType("in");
         $callLog->setRequestMethod($request->getMethod());
@@ -48,16 +51,22 @@ class LogService
         $now = new \DateTime();
         $requestTime = $request->server->get('REQUEST_TIME');
         $callLog->setResponseTime($now->getTimestamp() - $requestTime);
-        $callLog->setCreatedAt($now);
 
         if ($this->session) {
             // add before removing
-            $callLog->setCallId($this->session->get('callId',null));
+            $callLog->setCallId($this->session->get('callId', null));
             $callLog->setSession($this->session->getId());
-            $callLog->setEndpoint($this->session->get('endpoint', null));
-            $callLog->setEntity($this->session->get('entity', null));
-            $callLog->setSource($this->session->get('source', null));
-            $callLog->setHandler($this->session->get('handler', null));
+
+            // TODO endpoint disabled because might cause problems
+            $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
+            // $callLog->setEndpoint(null);
+
+            $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
+            $callLog->setSource($this->session->get('source') ? $this->session->get('source') : null);
+
+            // TODO handler disabled because might cause problems
+            $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
+            // $callLog->setHandler(null);
 
             // remove before setting the session values
             $this->session->remove('callId');
@@ -69,7 +78,6 @@ class LogService
             // add session values
             $callLog->setSessionValues($this->session->all());
         }
-
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
 
@@ -89,5 +97,4 @@ class LogService
 
         return null;
     }
-
 }

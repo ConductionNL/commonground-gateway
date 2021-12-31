@@ -2,7 +2,7 @@
 App\Entity\Endpoint:
     weerEndpoint:
         name: Weer handler
-        description: endpoint voor dingen rondom weer 
+        description: endpoint voor dingen rondom weer
         type: gateway-endpoint
         path: weer
 
@@ -14,63 +14,79 @@ App\Entity\Entity:
         endpoint: "weer"
 
 App\Entity\Attribute:
-    weekWeather_maandag:
-        name: maandag
+    weekWeather_monday:
+        name: monday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_dinsdag:
-        name: dinsdag
+    weekWeather_tuesday:
+        name: tuesday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_woensdag:
-        name: woensdag
+    weekWeather_wednesday:
+        name: wednesday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_donderdag:
-        name: donderdag
+    weekWeather_thursday:
+        name: thursday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_vrijdag:
-        name: vrijdag
+    weekWeather_friday:
+        name: friday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_zaterdag:
-        name: zaterdag
+    weekWeather_saturday:
+        name: saturday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_zondag:
-        name: zondag
+    weekWeather_sunday:
+        name: sunday
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-
 
 App\Entity\Handler:
     weatherHandler:
         name: Weather handler
         sequence: 0
+        # mappingIn:
+        #     - maandag: monday
+        #     - dinsdag: tuesday
+        #     - woensdag: wednesday
+        #     - donderdag: thursday
+        #     - vrijdag: friday
+        #     - weekend.zaterdag: saturday
+        #     - weekend.zondag: sunday
         translationsIn: ["weatherTable1"]
         translationsOut: ["weatherTable2"]
+        # mappingOut:
+        #     - monday: montag
+        #     - tuesday: dienstag
+        #     - wednesday: mittwoch
+        #     - thursday: donnerstag
+        #     - friday: freitag
+        #     - weekend: wochenende
+        #     - weekend.saturday: samstag
+        #     - weekend.sunday: sonntag
         endpoint: "@weerEndpoint"
         entity: "@weekWeather"
 
@@ -79,12 +95,9 @@ App\Entity\Translation:
         translationTable: weatherTable1
         translateFrom: zonnig
         translateTo: regen
-        language:  nl
+        language: nl
     rainTranslation:
         translationTable: weatherTable2
         translateFrom: regen
         translateTo: rain
-        language:  eng
-        
-        
-
+        language: eng
