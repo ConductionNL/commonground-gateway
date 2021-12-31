@@ -242,7 +242,7 @@ class HandlerService
         }
 
         // Lets seriliaze the shizle
-        $result = $this->serializer->serialize($data, $contentType, $options);
+        $result = $this->serializer->serialize($data['result'], $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
