@@ -24,6 +24,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Twig\Environment as Environment;
 
 class HandlerService
 {
@@ -61,7 +62,8 @@ class HandlerService
         SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
-        LogService $logService
+        LogService $logService,
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -71,6 +73,7 @@ class HandlerService
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
+        $this->templating = $twig;
     }
 
     /**
@@ -164,6 +167,13 @@ class HandlerService
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
+        }
+
+        // If data is string it could be a document/template
+        if (is_string($data)) {
+            $result = $data;
+            $data = [];
+            $data['result'] = $result;
         }
 
         // An lastly we want to create a responce
@@ -305,7 +315,7 @@ class HandlerService
         $variables = $data;
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($handler->getTemplateType()) {
+        switch (strtoupper($handler->getTemplateType())) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
                 return $document->render($variables);
