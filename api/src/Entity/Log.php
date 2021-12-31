@@ -207,10 +207,10 @@ class Log
      *
      * @Assert\NotNull
      * @Assert\Length(
-     *     max = 255
+     *     max = 2555
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=2555)
      */
     private $responseContent;
 
@@ -268,21 +268,20 @@ class Log
     private $source;
 
     /**
-     * @var ?DateTime The endpoint of this Log.
+     * @var int The endpoint of this Log.
      *
      * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="time")
+     * @ORM\Column(type="integer")
      */
     private $responseTime;
 
     /**
      * @var Datetime The moment this log was created
      *
-     * @Assert\NotNull
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $createdAt;
 
@@ -538,12 +537,12 @@ class Log
         return $this;
     }
 
-    public function getResponseTime()
+    public function getResponseTime(): int
     {
         return $this->responseTime;
     }
 
-    public function setResponseTime($responseTime): self
+    public function setResponseTime(int $responseTime): self
     {
         $this->responseTime = $responseTime;
 

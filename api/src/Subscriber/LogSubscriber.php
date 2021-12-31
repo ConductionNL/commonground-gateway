@@ -32,6 +32,6 @@ class LogSubscriber implements EventSubscriberInterface
         $response = $event->getResponse();
         $request = $event->getRequest();
 
-        $this->logService->createLog($response, $request);
+        // $this->logService->createLog($response, $request);
     }
 }

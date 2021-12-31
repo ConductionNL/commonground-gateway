@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Http\Message\RequestInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Service\LogService;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,6 +34,7 @@ class HandlerService
     private SOAPService $soapService;
     private EavService $eavService;
     private SerializerInterface $serializerInterface;
+    private LogService $logService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -58,7 +60,8 @@ class HandlerService
         TranslationService $translationService,
         SOAPService $soapService,
         EavService $eavService,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        LogService $logService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -67,6 +70,7 @@ class HandlerService
         $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
+        $this->logService = $logService;
     }
 
     /**
@@ -78,10 +82,10 @@ class HandlerService
         $session->set('endpoint', $endpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
-        foreach($endpoint->getHandlers() as $handler){
+        foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
-            if(true){
+            if (true) {
                 $session->set('handler', $handler);
                 return $this->handleHandler($handler);
             }
@@ -112,7 +116,7 @@ class HandlerService
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if ($entity = $handler->getObject()) {
+        if ($entity = $handler->getEntity()) {
 
             // prepare variables
             $routeParameters = $this->request->attributes->get('_route_params');
@@ -129,7 +133,11 @@ class HandlerService
                 "path" => $handler->getEndpoint()->getPath(),
             ];
             // Handle the eav side of things
-            $data = $this->eavService->handleEntityEndpoint($this->request, $info);
+            if (isset($id)) {
+                $data = $this->eavService->handleEntityEndpoint($this->request, $info);
+            } else {
+                $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
+            }
         }
 
         // The we want to do  translations on the outgoing responce
@@ -152,6 +160,9 @@ class HandlerService
 
         // An lastly we want to create a responce
         $response = $this->createResponse($data);
+
+        // Create log
+        $this->logService->createLog($response, $this->request);
 
         return $response;
     }

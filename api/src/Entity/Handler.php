@@ -157,11 +157,18 @@ class Handler
     private ?string $templateType;
 
     /**
+     * @var string|null The template of this Handler.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $template;
 
     /**
+     * @var Endpoint The endpoint of this Handler.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="handlers")
      * @ORM\JoinColumn(nullable=false)
      */
