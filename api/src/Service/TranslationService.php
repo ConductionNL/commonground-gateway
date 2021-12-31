@@ -63,6 +63,7 @@ class TranslationService
             }
             if (!isset($format) || $format == 'string') {
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
+                unset($destination[$search]);
             } elseif ($format == 'json') {
                 $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;
             } elseif ($format == 'xml') {
@@ -180,10 +181,13 @@ class TranslationService
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
-                if (is_string($subject)) {
                     $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
-                }
             }
+            return $subject;
+        }
+
+        // We only translate strings
+        if(!is_string($subject)){
             return $subject;
         }
 

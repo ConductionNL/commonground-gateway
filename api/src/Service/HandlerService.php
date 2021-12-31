@@ -110,7 +110,7 @@ class HandlerService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
-        // The we want to do  translations on the incomming request       
+        // The we want to do  translations on the incomming request
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
@@ -242,7 +242,7 @@ class HandlerService
         }
 
         // Lets seriliaze the shizle
-        $result = $this->serializer->serialize($data, $contentType, $options);
+        $result = $this->serializer->serialize($data['result'], $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
