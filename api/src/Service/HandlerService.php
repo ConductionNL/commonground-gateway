@@ -143,14 +143,22 @@ class HandlerService
         // The we want to do  translations on the outgoing responce
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-        $data = $this->translationService->parse($data, true, $translations);
+        if (isset($data['result'])) {
+            $data['result'] = $this->translationService->parse($data['result'], true, $translations);
+        } else {
+            $data = $this->translationService->parse($data, true, $translations);
+        }
 
         // Then we want to do to mapping on the outgoing responce
         $skeleton = $handler->getSkeletonOut();
         if (!$skeleton || empty($skeleton)) {
-            $skeleton = $data;
+            isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
         }
-        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        if (isset($data['result'])) {
+            $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
+        } else {
+            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        }
 
 
         // Lets see if we need te use a template
