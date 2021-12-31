@@ -84,7 +84,7 @@ App\Entity\Handler:
             mittwoch: wednesday
             donnerstag: thursday 
             freitag: friday 
-            wochenende.samstag:  saturday
+            wochenende.samstag: saturday
             wochenende.sonntag: sunday
         endpoint: "@weerEndpoint"
         entity: "@weekWeather"
@@ -98,5 +98,5 @@ App\Entity\Translation:
     rainTranslation:
         translationTable: weatherTable2
         translateFrom: regen
-        translateTo: rain
-        language: eng
+        translateTo: sturm
+        language: de
