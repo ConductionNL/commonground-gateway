@@ -67,9 +67,7 @@ class SOAPController extends AbstractController
                 $requestLog->setStatus('Bad request');
                 $requestLog->setStatusCode('400');
                 $requestLog->setResponseBody(["The message type $messageType with case type $caseType is not supported at this moment"]);
-                $em->persist($requestLog);
-                $em->flush();
-                    throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
+                throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
             case 'OntvangenIntakeNotificatie':
                 $caseType = $data['SOAP-ENV:Header']['ns2:Stuurgegevens']['ns2:Zaaktype'];
@@ -87,8 +85,6 @@ class SOAPController extends AbstractController
                     $requestLog->setStatus('Bad request');
                     $requestLog->setStatusCode('400');
                     $requestLog->setResponseBody(["The message type $messageType with case type $caseType is not supported at this moment"]);
-                    $em->persist($requestLog);
-                    $em->flush();
                     throw new BadRequestException("The message type $messageType with case type $caseType is not supported at this moment");
                 }
                 break;
@@ -101,15 +97,11 @@ class SOAPController extends AbstractController
                     $requestLog->setStatus('Bad request');
                     $requestLog->setStatusCode('400');
                     $requestLog->setResponseBody(["The message type $messageType is not supported at this moment"]);
-                    $em->persist($requestLog);
-                    $em->flush();
                     throw new BadRequestException("The message type $messageType is not supported at this moment");
                 }
         }
 
         $requestLog->setResponseBody([$message]);
-        $em->persist($requestLog);
-        $em->flush();
 
         /* @todo we kunnen niet altijd een 200 terug geven */
         return new Response($message, 200, [
