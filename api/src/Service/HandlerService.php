@@ -24,6 +24,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Twig\Environment as Environment;
 
 class HandlerService
 {
@@ -61,7 +62,8 @@ class HandlerService
         SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
-        LogService $logService
+        LogService $logService,
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -71,6 +73,7 @@ class HandlerService
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
+        $this->templating = $twig;
     }
 
     /**
@@ -143,19 +146,34 @@ class HandlerService
         // The we want to do  translations on the outgoing responce
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-        $data = $this->translationService->parse($data, true, $translations);
+        if (isset($data['result'])) {
+            $data['result'] = $this->translationService->parse($data['result'], true, $translations);
+        } else {
+            $data = $this->translationService->parse($data, true, $translations);
+        }
 
         // Then we want to do to mapping on the outgoing responce
         $skeleton = $handler->getSkeletonOut();
         if (!$skeleton || empty($skeleton)) {
-            $skeleton = $data;
+            isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
         }
-        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        if (isset($data['result'])) {
+            $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
+        } else {
+            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        }
 
 
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
+        }
+
+        // If data is string it could be a document/template
+        if (is_string($data)) {
+            $result = $data;
+            $data = [];
+            $data['result'] = $result;
         }
 
         // An lastly we want to create a responce
@@ -297,7 +315,7 @@ class HandlerService
         $variables = $data;
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($handler->getTemplateType()) {
+        switch (strtoupper($handler->getTemplateType())) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
                 return $document->render($variables);
