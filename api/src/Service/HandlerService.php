@@ -139,12 +139,6 @@ class HandlerService
                 "fields" => $field ?? null,
                 "path" => $handler->getEndpoint()->getPath(),
             ];
-            // Handle the eav side of things
-            // if (isset($id)) {
-            //     $data = $this->eavService->handleEntityEndpoint($this->request, $info);
-            // } else {
-            //     $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
-            // }
         }
 
         // The we want to do  translations on the outgoing responce
