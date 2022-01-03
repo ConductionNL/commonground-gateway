@@ -140,11 +140,11 @@ class HandlerService
                 "path" => $handler->getEndpoint()->getPath(),
             ];
             // Handle the eav side of things
-            if (isset($id)) {
-                $data = $this->eavService->handleEntityEndpoint($this->request, $info);
-            } else {
-                $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
-            }
+            // if (isset($id)) {
+            //     $data = $this->eavService->handleEntityEndpoint($this->request, $info);
+            // } else {
+            //     $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
+            // }
         }
 
         // The we want to do  translations on the outgoing responce
@@ -274,7 +274,7 @@ class HandlerService
                 $result = $this->templateService->renderPdf($document);
                 break;
         }
-        
+
         // Lets seriliaze the shizle (if no document)
         !$document && $result = $this->serializer->serialize($data['result'], $contentType, $options);
 
