@@ -24,6 +24,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use App\Service\TemplateService;
 use Twig\Environment as Environment;
 
 class HandlerService
@@ -36,6 +37,7 @@ class HandlerService
     private EavService $eavService;
     private SerializerInterface $serializerInterface;
     private LogService $logService;
+    private TemplateService $templateService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -63,7 +65,8 @@ class HandlerService
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
-        Environment $twig
+        Environment $twig,
+        TemplateService $templateService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -74,6 +77,7 @@ class HandlerService
         $this->serializer = $serializer;
         $this->logService = $logService;
         $this->templating = $twig;
+        $this->templateService = $templateService;
     }
 
     /**
@@ -257,10 +261,22 @@ class HandlerService
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
                 break;
-        }
+            case 'pdf':
+                //create template
+                if (!is_string($data['result'])) {
+                    // throw error
 
-        // Lets seriliaze the shizle
-        $result = $this->serializer->serialize($data['result'], $contentType, $options);
+                }
+                $document = new Document;
+                $document->setDocumentType($contentType);
+                $document->setType('twig');
+                $document->setContent($data['result']);
+                $result = $this->templateService->renderPdf($document);
+                break;
+        }
+        
+        // Lets seriliaze the shizle (if no document)
+        !$document && $result = $this->serializer->serialize($data['result'], $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
