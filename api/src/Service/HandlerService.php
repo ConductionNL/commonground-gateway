@@ -2,28 +2,18 @@
 
 namespace App\Service;
 
-use ApiPlatform\Core\Exception\InvalidArgumentException;
 use App\Entity\Document;
+use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
-use App\Entity\Endpoint;
 use App\Entity\Handler;
-use App\Service\EavService;
-use App\Service\ValidationService;
-use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Http\Message\RequestInterface;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\Serializer\SerializerInterface;
-use App\Service\LogService;
-
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment as Environment;
 
 class HandlerService
@@ -36,21 +26,22 @@ class HandlerService
     private EavService $eavService;
     private SerializerInterface $serializerInterface;
     private LogService $logService;
+    private TemplateService $templateService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-    public  $acceptHeaderToSerialiazation = [
-        'application/json'     => 'json',
-        'application/ld+json'  => 'jsonld',
-        'application/json+ld'  => 'jsonld',
-        'application/hal+json' => 'jsonhal',
-        'application/json+hal' => 'jsonhal',
-        'application/xml'      => 'xml',
-        'text/csv'             => 'csv',
-        'text/yaml'            => 'yaml',
-        'text/html'            => 'html',
-        'application/pdf'      => 'pdf',
-        'application/msword'   => 'doc',
+    public $acceptHeaderToSerialiazation = [
+        'application/json'                                                                   => 'json',
+        'application/ld+json'                                                                => 'jsonld',
+        'application/json+ld'                                                                => 'jsonld',
+        'application/hal+json'                                                               => 'jsonhal',
+        'application/json+hal'                                                               => 'jsonhal',
+        'application/xml'                                                                    => 'xml',
+        'text/csv'                                                                           => 'csv',
+        'text/yaml'                                                                          => 'yaml',
+        'text/html'                                                                          => 'html',
+        'application/pdf'                                                                    => 'pdf',
+        'application/msword'                                                                 => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
     ];
 
@@ -63,7 +54,8 @@ class HandlerService
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
-        Environment $twig
+        Environment $twig,
+        TemplateService $templateService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -74,6 +66,7 @@ class HandlerService
         $this->serializer = $serializer;
         $this->logService = $logService;
         $this->templating = $twig;
+        $this->templateService = $templateService;
     }
 
     /**
@@ -90,13 +83,13 @@ class HandlerService
             /* @todo acctualy check for json logic */
             if (true) {
                 $session->set('handler', $handler);
+
                 return $this->handleHandler($handler);
             }
         }
 
         // @todo we should not end up here so lets throw an 'no handler found' error
     }
-
 
     /**
      * Get the data for a document and send it to the document creation service.
@@ -130,17 +123,11 @@ class HandlerService
 
             // Create an info array
             $info = [
-                "object" => $object ?? null,
-                "body" => $data ?? null,
-                "fields" => $field ?? null,
-                "path" => $handler->getEndpoint()->getPath(),
+                'object' => $object ?? null,
+                'body'   => $data ?? null,
+                'fields' => $field ?? null,
+                'path'   => $handler->getEndpoint()->getPath(),
             ];
-            // Handle the eav side of things
-            if (isset($id)) {
-                $data = $this->eavService->handleEntityEndpoint($this->request, $info);
-            } else {
-                $data = $this->eavService->handleCollectionEndpoint($this->request, $info);
-            }
         }
 
         // The we want to do  translations on the outgoing responce
@@ -163,7 +150,6 @@ class HandlerService
             $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
         }
 
-
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
@@ -184,7 +170,6 @@ class HandlerService
 
         return $response;
     }
-
 
     public function getDataFromRequest(): array
     {
@@ -257,10 +242,21 @@ class HandlerService
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
                 break;
+            case 'pdf':
+                //create template
+                if (!is_string($data['result'])) {
+                    // throw error
+                }
+                $document = new Document();
+                $document->setDocumentType($contentType);
+                $document->setType('twig');
+                $document->setContent($data['result']);
+                $result = $this->templateService->renderPdf($document);
+                break;
         }
 
-        // Lets seriliaze the shizle
-        $result = $this->serializer->serialize($data['result'], $contentType, $options);
+        // Lets seriliaze the shizle (if no document)
+        !$document && $result = $this->serializer->serialize($data['result'], $contentType, $options);
 
         // Lets create the actual response
         $response = new Response(
@@ -308,7 +304,6 @@ class HandlerService
         /* @todo throw error */
     }
 
-
     private function renderTemplate(Handler $handler, array $data): string
     {
         /* @todo add global variables */
@@ -318,6 +313,7 @@ class HandlerService
         switch (strtoupper($handler->getTemplateType())) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
+
                 return $document->render($variables);
                 break;
             case 'MD':

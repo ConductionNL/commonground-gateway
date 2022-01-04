@@ -4,12 +4,10 @@ namespace App\Service;
 
 use App\Entity\Log;
 use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LogService
 {
@@ -29,7 +27,7 @@ class LogService
         // TODO fix response
 
         $callLog = new Log();
-        $callLog->setType("in");
+        $callLog->setType('in');
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all() ?? null);
@@ -41,7 +39,12 @@ class LogService
         $callLog->setResponseStatus($this->getStatusWithCode($response->getStatusCode()));
         $callLog->setResponseStatusCode($response->getStatusCode());
         $callLog->setResponseHeaders($response->headers->all());
-        $callLog->setResponseContent($response->getContent());
+        // @todo Cant set response content if content is pdf
+        if (is_string($response->getContent()) && strpos($response->getContent(), 'PDF')) {
+            $callLog->setResponseContent('pdf');
+        } else {
+            $callLog->setResponseContent($response->getContent());
+        }
 
         $routeName = $request->attributes->get('_route') ?? null;
         $routeParameters = $request->attributes->get('_route_params') ?? null;

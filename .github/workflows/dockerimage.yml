@@ -16,6 +16,7 @@ on:
       - feature-admin
       - feature-soap
       - feature-soap-extra
+      - feature-cleanup
 
 jobs:
   build:
@@ -65,6 +66,12 @@ jobs:
         run: |
           echo "APP_ENV=soap">> $GITHUB_ENV
           echo "APP_BUILD=soap-$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to feature-cleanup
+        if: contains( github.ref, 'feature-cleanup' ) || contains( github.base_ref, 'feature-cleanup' )
+        run: |
+          echo "APP_ENV=cleanup">> $GITHUB_ENV
+          echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to soap-extensions
         if: contains( github.ref, 'feature-soap-extra' ) || contains( github.base_ref, 'feature-soap-extra' )
@@ -117,11 +124,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)

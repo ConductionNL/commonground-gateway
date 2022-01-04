@@ -83,7 +83,7 @@ class Endpoint
      *
      * @Assert\NotNull
      * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */
@@ -93,7 +93,7 @@ class Endpoint
      * @var string The path of this Endpoint.
      *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */
@@ -121,7 +121,6 @@ class Endpoint
      * @ORM\Column(type="array", nullable=true)
      */
     private array $loggingConfig = ['headers' => ['authorization']];
-
 
     /**
      * @var array|null The handlers used for this entity.
