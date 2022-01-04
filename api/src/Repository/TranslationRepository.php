@@ -56,10 +56,9 @@ class TranslationRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('t')
             ->andWhere('t.translationTable IN (:translationTables)')
             ->setParameter('translationTables', $translationTables)
-            ->orderBy('t.id', 'ASC')
-            ;
+            ->orderBy('t.id', 'ASC');
 
-        if(!empty($languages)){
+        if (!empty($languages)) {
             $query
                 ->andWhere('t.language = IN (:languages) OR t.language = null')
                 ->setParameter('languages', $languages);
