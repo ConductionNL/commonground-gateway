@@ -162,11 +162,11 @@ class TranslationService
      *
      * With a litle help from https://stackoverflow.com/questions/18197348/replacing-variables-in-a-string
      *
-     * @param string|array      $subject        The string to translate
-     * @param bool              $translate      Whether or not to also translate to string (defaults to true)
-     * @param array             $variables      Additional variables to replace
-     * @param string            $escapeChar     The escape charater to use (default to @)
-     * @param string|null       $errPlaceholder
+     * @param string|array $subject        The string to translate
+     * @param bool         $translate      Whether or not to also translate to string (defaults to true)
+     * @param array        $variables      Additional variables to replace
+     * @param string       $escapeChar     The escape charater to use (default to @)
+     * @param string|null  $errPlaceholder
      *
      * @return string|string[]|null
      */
@@ -181,13 +181,14 @@ class TranslationService
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {
-                    $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+                $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
             }
+
             return $subject;
         }
 
         // We only translate strings
-        if(!is_string($subject)){
+        if (!is_string($subject)) {
             return $subject;
         }
 
@@ -202,10 +203,10 @@ class TranslationService
 
         $callback = function ($match) use ($variables, $escapeChar, $errPlaceholder) {
             switch ($match[0]) {
-                case $escapeChar . $escapeChar:
+                case $escapeChar.$escapeChar:
                     return $escapeChar;
 
-                case $escapeChar . '{':
+                case $escapeChar.'{':
                     return '{';
 
                 default:

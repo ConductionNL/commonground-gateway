@@ -262,7 +262,7 @@ class Entity
     {
         if ($this->getGateway() !== null) {
             $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@' . $gateway;
+            $gateway = '@'.$gateway;
         } else {
             $gateway = null;
         }
@@ -713,7 +713,6 @@ class Entity
 
         return $this;
     }
-
 
     /**
      * @return Collection|Handler[]
