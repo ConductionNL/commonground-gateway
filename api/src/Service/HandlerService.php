@@ -110,6 +110,9 @@ class HandlerService
         // To start it al off we need the data from the incomming request
         $data = $this->getDataFromRequest($this->request);
 
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
         // Then we want to do the mapping in the incomming request
         $skeleton = $handler->getSkeletonIn();
         if (!$skeleton || empty($skeleton)) {
@@ -117,10 +120,16 @@ class HandlerService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
         // The we want to do  translations on the incomming request
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
         if ($entity = $handler->getEntity()) {
@@ -141,6 +150,9 @@ class HandlerService
             ];
         }
 
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
         // The we want to do  translations on the outgoing responce
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsOut());
@@ -149,6 +161,9 @@ class HandlerService
         } else {
             $data = $this->translationService->parse($data, true, $translations);
         }
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
 
         // Then we want to do to mapping on the outgoing responce
         $skeleton = $handler->getSkeletonOut();
@@ -161,6 +176,8 @@ class HandlerService
             $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
         }
 
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
 
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
@@ -174,11 +191,14 @@ class HandlerService
             $data['result'] = $result;
         }
 
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
         // An lastly we want to create a responce
         $response = $this->createResponse($data);
 
-        // Create log
-        $this->logService->createLog($response, $this->request);
+        // Final update Log
+        $this->logService->saveLog($this->request, $response, null, true);
 
         return $response;
     }
