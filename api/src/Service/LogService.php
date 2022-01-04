@@ -25,9 +25,9 @@ class LogService
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request $request The request to fill this Log with.
+     * @param Request  $request  The request to fill this Log with.
      * @param Response $response The response to fill this Log with.
-     * @param string $content The content to fill this Log with if there is no response.
+     * @param string   $content  The content to fill this Log with if there is no response.
      *
      * @return Log
      */
@@ -38,7 +38,7 @@ class LogService
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
-        $callLog->setType("in");
+        $callLog->setType('in');
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all() ?? null);
@@ -53,7 +53,7 @@ class LogService
 
         if ($content) {
             $callLog->setResponseContent($content);
-            // @todo Cant set response content if content is pdf 
+        // @todo Cant set response content if content is pdf
         } elseif ($response && !(is_string($response->getContent()) && strpos($response->getContent(), 'PDF'))) {
             $callLog->setResponseContent($response->getContent());
         }

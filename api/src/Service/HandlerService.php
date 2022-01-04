@@ -277,8 +277,8 @@ class HandlerService
         }
 
         // Lets seriliaze the shizle (if no document)
-        !isset($document) && ( isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
-         : $result = $this->serializer->serialize($data, $contentType, $options) );
+        !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
+         : $result = $this->serializer->serialize($data, $contentType, $options));
 
         // Lets create the actual response
         $response = new Response(
