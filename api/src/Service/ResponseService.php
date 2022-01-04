@@ -114,9 +114,9 @@ class ResponseService
 
         // Lets make it personal
         $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()) . '/' . $result->getId();
+        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/' . ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -297,7 +297,7 @@ class ResponseService
                     continue;
                 }
                 // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()) . '/' . $object->getId()];
+                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
                 continue;
             }
             $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
@@ -441,12 +441,12 @@ class ResponseService
                 unset($headers[$header]);
             }
             if (is_string($headerValue) && strlen($headerValue) > 250) {
-                $headers[$header] = substr($headerValue, 0, 250) . '...';
+                $headers[$header] = substr($headerValue, 0, 250).'...';
             } elseif (is_array($headerValue)) {
                 $headerValue = $this->filterRequestLogHeaders($endpoint, $headerValue, $level + 1);
             } elseif (!is_string($headerValue)) {
                 //todo?
-                $headers[$header] = 'Couldn\'t log this headers value because it is of type ' . gettype($headerValue);
+                $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
             }
         }
 
