@@ -257,20 +257,21 @@ class HandlerService
                 break;
             case 'pdf':
                 //create template
-                if (!is_string($data['result'])) {
+                if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
                     // throw error
 
                 }
                 $document = new Document;
                 $document->setDocumentType($contentType);
                 $document->setType('twig');
-                $document->setContent($data['result']);
+                isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
                 break;
         }
 
         // Lets seriliaze the shizle (if no document)
-        !$document && $result = $this->serializer->serialize($data['result'], $contentType, $options);
+        !isset($document) && ( isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
+         : $result = $this->serializer->serialize($data, $contentType, $options) );
 
         // Lets create the actual response
         $response = new Response(
