@@ -175,42 +175,38 @@ class Log
     /**
      * @var string The response status of this Log.
      *
-     * @Assert\NotNull
      * @Assert\Length(
      *     max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $responseStatus;
 
     /**
      * @var int The response status code of this Log.
      *
-     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      */
     private $responseStatusCode;
 
     /**
      * @var array The response headers of this Log.
      *
-     * @Assert\NotNull
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array")
+     * @ORM\Column(type="array", nullable=true)
      */
     private $responseHeaders = [];
 
     /**
      * @var string The response content of this Log.
      *
-     * @Assert\NotNull
      * @Assert\Length(
      *     max = 2555
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=2555)
+     * @ORM\Column(type="string", length=2555, nullable=true)
      */
     private $responseContent;
 
