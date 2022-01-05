@@ -27,6 +27,7 @@ class HandlerService
     private SerializerInterface $serializerInterface;
     private LogService $logService;
     private TemplateService $templateService;
+    private ObjectEntityService $objectEntityService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -55,7 +56,8 @@ class HandlerService
         SerializerInterface $serializer,
         LogService $logService,
         Environment $twig,
-        TemplateService $templateService
+        TemplateService $templateService,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -67,6 +69,7 @@ class HandlerService
         $this->logService = $logService;
         $this->templating = $twig;
         $this->templateService = $templateService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -120,24 +123,27 @@ class HandlerService
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
 
-        // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if ($entity = $handler->getEntity()) {
+        // eav new way
+        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null);
 
-            // prepare variables
-            $routeParameters = $this->request->attributes->get('_route_params');
-            if (array_key_exists('id', $routeParameters)) {
-                $id = $routeParameters['id'];
-            }
-            $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+        // // If the handler is teid to an EAV object we want to resolve that in all of it glory
+        // if ($entity = $handler->getEntity()) {
 
-            // Create an info array
-            $info = [
-                'object' => $object ?? null,
-                'body'   => $data ?? null,
-                'fields' => $field ?? null,
-                'path'   => $handler->getEndpoint()->getPath(),
-            ];
-        }
+        //     // prepare variables
+        //     $routeParameters = $this->request->attributes->get('_route_params');
+        //     if (array_key_exists('id', $routeParameters)) {
+        //         $id = $routeParameters['id'];
+        //     }
+        //     $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+
+        //     // Create an info array
+        //     $info = [
+        //         'object' => $object ?? null,
+        //         'body'   => $data ?? null,
+        //         'fields' => $field ?? null,
+        //         'path'   => $handler->getEndpoint()->getPath(),
+        //     ];
+        // }
 
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
