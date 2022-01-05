@@ -2,15 +2,13 @@
 
 namespace App\Service;
 
-use Symfony\Component\HttpFoundation\RequestStack;
 use App\Entity\Application;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-
 
 class ApplicationService
 {
-
     public function __construct(
         RequestStack $requestStack,
         EntityManagerInterface $entityManager,
@@ -47,7 +45,7 @@ class ApplicationService
                 $this->entityManager->persist($localhostApplication);
                 $this->entityManager->flush();
                 $this->session->set('application', $localhostApplication);
-                //                var_dump('Created Localhost Application');
+            //                var_dump('Created Localhost Application');
             } else {
                 $this->session->set('application', null);
                 // $responseType = Response::HTTP_FORBIDDEN;

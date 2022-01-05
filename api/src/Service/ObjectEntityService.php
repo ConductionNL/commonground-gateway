@@ -2,12 +2,10 @@
 
 namespace App\Service;
 
-use App\Entity\ObjectEntity;
 use App\Entity\Handler;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use App\Entity\ObjectEntity;
 use Symfony\Component\HttpFoundation\RequestStack;
-use App\Service\AuthorizationService;
-use App\Service\ApplicationService;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ObjectEntityService
 {
@@ -44,10 +42,10 @@ class ObjectEntityService
     }
 
     /**
-     * A function to handle calls to eav 
+     * A function to handle calls to eav.
      *
      * @param Handler $handler
-     * @param array $data Data to be set into the eav
+     * @param array   $data    Data to be set into the eav
      *
      * @return array $data
      */
@@ -94,9 +92,8 @@ class ObjectEntityService
             default:
                 // throw error
         }
-        
-        // use events
 
+        // use events
 
         return $data;
     }
