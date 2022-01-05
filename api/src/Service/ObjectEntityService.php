@@ -17,7 +17,7 @@ class ObjectEntityService
         TokenStorageInterface $tokenStorage,
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
-        ApplicationService $applicationService,
+        ApplicationService $applicationService
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -56,8 +56,8 @@ class ObjectEntityService
         // check application
         $this->applicationService->checkApplication();
 
-        // check rights/auth (what to give as scopes?)
-        $this->authorizationService->checkAuthorization();
+        // @todo check rights/auth (what to give as scopes?)
+        // $this->authorizationService->checkAuthorization();
 
         $entity = $handler->getEntity();
         $method = $this->request->getMethod();
@@ -94,7 +94,7 @@ class ObjectEntityService
             default:
                 // throw error
         }
-
+        
         // use events
 
 
