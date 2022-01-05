@@ -1001,8 +1001,11 @@ class SOAPService
         return $bsn;
     }
 
-    private function translateDeclarationType(string $declarationType): string
+    private function translateDeclarationType(?string $declarationType): ?string
     {
+        if(!$declarationType){
+            return null;
+        }
         $declarationTypes = [
             'REGISTERED' => 'I',
             'AUTHORITY_HOLDER' => 'G',
