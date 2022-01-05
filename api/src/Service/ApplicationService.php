@@ -5,6 +5,7 @@ namespace App\Service;
 use Symfony\Component\HttpFoundation\RequestStack;
 use App\Entity\Application;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 
 class ApplicationService
@@ -13,9 +14,11 @@ class ApplicationService
     public function __construct(
         RequestStack $requestStack,
         EntityManagerInterface $entityManager,
+        SessionInterface $session
     ) {
         $this->request = $requestStack->getCurrentRequest();
         $this->entityManager = $entityManager;
+        $this->session = $session;
     }
 
     /**
@@ -41,8 +44,8 @@ class ApplicationService
                 $localhostApplication->setPublic('');
                 $localhostApplication->setSecret('');
                 $localhostApplication->setOrganization('localhostOrganization');
-                $this->em->persist($localhostApplication);
-                $this->em->flush();
+                $this->entityManager->persist($localhostApplication);
+                $this->entityManager->flush();
                 $this->session->set('application', $localhostApplication);
                 //                var_dump('Created Localhost Application');
             } else {
