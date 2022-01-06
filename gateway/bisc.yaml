@@ -1743,13 +1743,11 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         object: "@organization"
-        inversedBy: "@organization_languageHouse_postalCodes"
     postalCode_team:
         name: team
         type: object
         entity: "@postalCode"
         object: "@organization"
-        inversedBy: "@organization_team_postalCodes"
 
     #TODO: Currently not used in release 1, 2 & 3 ?
     #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
@@ -1882,13 +1880,8 @@ App\Entity\Document:
         object: "@student"
         documentCreationService: "https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service/templates/123d8c1b-9d2b-4e16-9307-c02e32421ed8/render/pdf"
         documentType: student
+        type: twig
+        content: test
         
-    postalcodeDownload:
-        name: postalcodeDownload
-        data: "data"
-        data_id: "data_id"
-        route: "postalcodeDownload"
-        documentCreationService: "placeholder"
-        documentType: postalcode
         
 
