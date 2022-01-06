@@ -155,12 +155,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
         $organizations = $this->session->get('organizations', []);
         $parentOrganizations = [];
+        // Make sure we only check for parentOrganizations if inherited is true in the (ObjectEntity)->entity->inherited
         if ($entity->getInherited()) {
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) and o.entity.inherited == true) OR o.owner == :userId')
-        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) AND o.entity.inherited = true) ')
+        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
         $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
         //    ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations)
