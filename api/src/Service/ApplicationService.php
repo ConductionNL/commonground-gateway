@@ -6,6 +6,8 @@ use App\Entity\Application;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApplicationService
 {
@@ -22,42 +24,74 @@ class ApplicationService
     /**
      * A function that finds a application or creates one.
      */
-    public function checkApplication()
+    public function getApplication(): array|Application
     {
-        $host = $this->request->headers->get('host');
-
-        $applications = $this->entityManager->getRepository('App:Application')->findAll();
-        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
-            return in_array($host, $application->getDomains());
-        }));
-        if (count($applications) > 0) {
-            $this->session->set('application', $applications[0]);
-        } else {
-            //            var_dump('no application found');
-            if ($host == 'localhost') {
-                $localhostApplication = new Application();
-                $localhostApplication->setName('localhost');
-                $localhostApplication->setDescription('localhost application');
-                $localhostApplication->setDomains(['localhost']);
-                $localhostApplication->setPublic('');
-                $localhostApplication->setSecret('');
-                $localhostApplication->setOrganization('localhostOrganization');
-                $this->entityManager->persist($localhostApplication);
-                $this->entityManager->flush();
-                $this->session->set('application', $localhostApplication);
-            //                var_dump('Created Localhost Application');
-            } else {
-                $this->session->set('application', null);
-                // $responseType = Response::HTTP_FORBIDDEN;
-                // $result = [
-                //     'message' => 'No application found with domain ' . $host,
-                //     'type'    => 'Forbidden',
-                //     'path'    => $host,
-                //     'data'    => ['host' => $host],
-                // ];
-
-                // @todo throw error
-            }
+        if ($application = $this->session->get('application')) {
+            return $application;
         }
+
+        // get publickey
+        $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
+
+        // get host/domain
+        $host = ($this->request->headers->get('host') ??  $this->request->query->get('host'));
+
+        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application);
+        if (!$application) {
+            // @todo Create and use query in ApplicationRepository
+            $applications = $this->entityManager->getRepository('App:Application')->findAll();
+            $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+                return in_array($host, $application->getDomains());
+            }));
+            count($applications) > 0 && $application = $applications[0];
+        }
+
+        if (!$application && $host == 'localhost') {
+            $application = $this->createApplication('localhost', ['localhost'], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
+        } else {
+            $this->session->set('application', null);
+
+            // Set message
+            $public && $message = 'No application found with public ' . $public;
+            $host && $message = 'No application found with host ' . $host;
+            !$public && !$host && $message = 'No host or application given';
+
+            // Set data
+            $public && $data = ['public' => $public];
+            $host && $data = ['host' => $host];
+
+            $result = [
+                'message' => $message,
+                'type'    => 'Forbidden',
+                'path'    => $public ?? $host ?? 'Header',
+                'data'    => $data ?? null
+            ];
+
+            return $result;
+        }
+
+        $this->session->set('application', $application);
+        return $application;
+    }
+
+    /**
+     * A function that creates a application 
+     * @todo expand with more arguments/attributes.
+     * 
+     * @return Application
+     */
+    public function createApplication(string $name, array $domains, string $public, string $secret): Application
+    {
+        $application = new Application();
+        $application->setName($name);
+        $application->setDescription($name . ' application');
+        $application->setDomains($domains);
+        $application->setPublic($public);
+        $application->setSecret($secret);
+        $application->setOrganization($name . 'Organization');
+        $this->entityManager->persist($application);
+        $this->entityManager->flush();
+
+        return $application;
     }
 }
