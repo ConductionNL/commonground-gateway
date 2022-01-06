@@ -134,26 +134,30 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     // One level deep (student.id)
                     $level = 1;
                     $query->leftJoin('value.objects', 'subObjects'.$filterCount.$level);
-                    // Deal with _ filters for subresources
+                    if (isset($key[1])) {
+                        // Deal with _ filters for subresources
 //                    var_dump($filterCount.$level);
 //                    var_dump($key[1]);
-                    if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
-                        $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$filterCount.$level);
-                        continue;
+                        if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
+                            $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$filterCount.$level);
+                            continue;
+                        }
                     }
 
-                    // Two levels deep (student.languageHouse.id)
                     $query->leftJoin('subObjects'.$filterCount.$level.'.objectValues', 'subValue'.$filterCount.$level);
-                    $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level + 1));
-                    // Deal with _ filters for subresources
+                    if (isset($key[2])) {
+                        // Two levels deep (student.languageHouse.id)
+                        $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level + 1));
+                        // Deal with _ filters for subresources
 //                    var_dump($filterCount.($level+1));
 //                    var_dump($key[2]);
-                    if (substr($key[2], 0, 1) == '_' || $key[2] == 'id') {
-                        $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level + 1));
-                        continue;
+                        if (substr($key[2], 0, 1) == '_' || $key[2] == 'id') {
+                            $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level + 1));
+                            continue;
+                        }
                     }
 
-                    $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                    $query->andWhere('subValue'.$filterCount.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
                 }
             }
         }
