@@ -3,12 +3,12 @@
 namespace App\Service;
 
 use App\Entity\Document;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Dompdf\Dompdf;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Settings;
-use Dompdf\Dompdf;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Twig\Environment as Environment;
@@ -30,7 +30,7 @@ class TemplateService
     {
         $date = new \DateTime();
         $date = $date->format('Ymd_His');
-        $response = New Response();
+        $response = new Response();
 
         switch ($type) {
             case 'application/ld+json':
@@ -40,7 +40,7 @@ class TemplateService
             case 'application/vnd.ms-word':
             case 'docx':
                 $extension = 'docx';
-                $file= $this->renderWord($template);
+                $file = $this->renderWord($template);
                 $response->setContent($file);
                 break;
             case 'pdf':
@@ -48,7 +48,7 @@ class TemplateService
                 $file = $this->renderPdf($template);
                 $response->setContent($file);
                 break;
-            default;
+            default:
                 throw new BadRequestHttpException('Unsupported content type');
         }
 
@@ -71,7 +71,6 @@ class TemplateService
 
         return $filename;
     }
-
 
     public function renderPdf(Document $document, array $variables = []): ?string
     {
@@ -104,13 +103,13 @@ class TemplateService
     }
 
     /**
-     * Get the variables that can be used for rendering
+     * Get the variables that can be used for rendering.
      *
      * @return array
      */
     public function getVariables(): array
     {
-        $request = New Request;
+        $request = new Request();
         $query = $request->query->all();
 
         // @todo we want to support both json and xml here */
@@ -125,36 +124,34 @@ class TemplateService
 
     public function getContent(Document $document, array $variables = []): ?string
     {
-
         $variables = array_merge($variables, $this->getVariables());
 
         $type = $document->getType();
 
         //falbback
-        if(!$type || !is_string($type)){
+        if (!$type || !is_string($type)) {
             $type = 'twig';
         }
 
         $content = $document->getContent();
-        if(!$content || !is_string($content)){
+        if (!$content || !is_string($content)) {
             $content = 'no content found';
         }
 
         switch ($type) {
             case 'twig':
                 $document = $this->templating->createTemplate($content);
+
                 return $document->render($variables);
                 break;
             case 'md':
                 return $content;
             case 'rt':
                 return $content;
-            default;
+            default:
                 /* @todo throw error */
                 return $content;
                 break;
         }
     }
-
-
 }
