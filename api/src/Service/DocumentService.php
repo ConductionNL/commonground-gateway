@@ -3,12 +3,10 @@
 namespace App\Service;
 
 use App\Entity\Document;
-use App\Service\TemplateService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class DocumentService
@@ -42,18 +40,19 @@ class DocumentService
         $data = $this->getData($document, $dataId);
 
         // is we have an error we need to abort
-        if(array_key_exists('type', $data) && in_array($data['type'], ["Bad Request", ""])  ){
+        if (array_key_exists('type', $data) && in_array($data['type'], ['Bad Request', ''])) {
             $response = new Response();
             $response->setContent(json_encode($data));
             $response->setStatusCode(404);
+
             return $response;
         }
 
         $date = new \DateTime();
         $date = $date->format('Ymd_His');
-        $response = New Response();
+        $response = new Response();
         $extension = 'pdf';
-        $file =  $this->templateService->renderPdf($document, $data);
+        $file = $this->templateService->renderPdf($document, $data);
         $response->setContent($file);
 
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$document->getName()}_{$date}.{$extension}");
@@ -91,7 +90,7 @@ class DocumentService
 
         $data = $this->eavService->getObject($dataId, 'GET', $document->getObject());
 
-        if(!is_array($data)){ // Lets see if we have an error
+        if (!is_array($data)) { // Lets see if we have an error
             $data = $data->toArray();
         }
 
