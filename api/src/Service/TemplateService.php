@@ -116,6 +116,10 @@ class TemplateService
         // @todo we want to support both json and xml here */
         $body = json_decode($request->getContent(), true);
 
+        if($body === null){
+            $body = [];
+        }
+
         return array_merge($query, $body);
     }
 
