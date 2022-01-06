@@ -15,12 +15,14 @@ class ObjectEntityService
         TokenStorageInterface $tokenStorage,
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
-        ApplicationService $applicationService
+        ApplicationService $applicationService,
+        ValidaterService $validaterService
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
+        $this->validaterService = $validaterService;
     }
 
     /**
@@ -80,6 +82,7 @@ class ObjectEntityService
                 break;
             case 'POST':
                 // validate
+                $data = $this->validaterService->validateData($data, $entity, $method ?? null);
 
                 // create object
 
@@ -92,6 +95,7 @@ class ObjectEntityService
                 // get object
 
                 // validate
+                $data = $this->validaterService->validateData($data, $entity, $method ?? null);
 
                 // put object
                 break;
