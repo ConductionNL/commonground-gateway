@@ -44,21 +44,28 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler $handler
-     * @param array   $data    Data to be set into the eav
+     * @param Handler  $handler  
+     * @param array    $data     Data to be set into the eav
+     * @param string   $method   Method from request if there is a request
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, array $data = null): array
+    public function handleObject(Handler $handler, array $data = null, string $method = null): array
     {
         // check application
-        $this->applicationService->checkApplication();
+        $application = $this->applicationService->getApplication();
+
+        // If type is array application is a error
+        if (gettype($application) === "array") {
+            return $application;
+        }
+
+        $owner = $this->tokenStorage->getToken()->getUser();
 
         // @todo check rights/auth (what to give as scopes?)
         // $this->authorizationService->checkAuthorization();
 
         $entity = $handler->getEntity();
-        $method = $this->request->getMethod();
 
         // Check ID
         array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
@@ -75,6 +82,10 @@ class ObjectEntityService
                 // validate
 
                 // create object
+
+                // set owner and application
+
+                // set @id
                 break;
             case 'PUT':
             case 'PATCH':
