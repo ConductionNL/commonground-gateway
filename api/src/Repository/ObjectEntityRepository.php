@@ -144,12 +144,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
                     // Two levels deep (student.languageHouse.id)
                     $query->leftJoin('subObjects'.$filterCount.$level.'.objectValues', 'subValue'.$filterCount.$level);
-                    $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level+1));
+                    $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level + 1));
                     // Deal with _ filters for subresources
 //                    var_dump($filterCount.($level+1));
 //                    var_dump($key[2]);
                     if (substr($key[2], 0, 1) == '_' || $key[2] == 'id') {
-                        $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level+1));
+                        $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level + 1));
                         continue;
                     }
 
