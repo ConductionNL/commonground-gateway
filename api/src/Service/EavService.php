@@ -305,6 +305,9 @@ class EavService
                 "NEIGHBORHOOD_TEAM"                                     => 'Woonplaatsteam',
                 "VOLUNTEER_ORGANIZATION"                                => 'Vrijwilligersorganisatie',
                 "LANGUAGE_PROVIDER"                                     => 'Taalhuisaanbieder',
+                "PENDING"                                               => '"In afwachting"',
+                "ACCEPTED"                                              => 'Geaccepteerd', 
+                "REJECTED"                                              => 'Afgewezen',
             ];
 
             $result = $this->translationService->parse($result, true, $translationVariables);
