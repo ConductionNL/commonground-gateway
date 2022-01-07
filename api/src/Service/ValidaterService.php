@@ -3,15 +3,15 @@
 namespace App\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\Entity;
+use App\Entity\Entity;
 use App\Entity\Attribute;
 use Respect\Validation\Validator;
 
-class ValidationService
+class ValidaterService
 {
 
     public function __construct(
-        EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager
     ) {
         $this->entityManager = $entityManager;
     }
@@ -30,11 +30,10 @@ class ValidationService
         // Lets validate each attribute
         foreach ($entity->getAttributes() as $attribute) {
             // fallback for empty data
-            if (!array_key_exists($attribute->getName())) {
-                $data[$attribute->getName()] = null;
-            }
-            $validator->key($attribute->getName(), $this->createAttributeEntityValidator($data, $entity, $method, $validator));
+            !array_key_exists($attribute->getName(), $data) && $data[$attribute->getName()] = null;
 
+            $validator->key($attribute->getName(), $this->createAttributeEntityValidator($data, $attribute, $method, $validator));
+// 
             // Lets clean it up
             unset($data[$attribute->getName()]);
         }
@@ -66,7 +65,7 @@ class ValidationService
         
 
         // Let be a bit compasionate and compatable
-        $type = str_replace(['integer', 'boolean', 'text'], ['int', 'bool', 'string'], $type);
+        $type = str_replace(['integer', 'boolean', 'text'], ['int', 'bool', 'string'], $attribute->getType());
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
         $basicTypes = ['bool', 'string', 'int', 'array', 'float'];
         // new route
