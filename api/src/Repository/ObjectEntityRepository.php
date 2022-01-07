@@ -43,8 +43,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
     {
-//        var_dump('FIND...');
+        var_dump('FIND...');
         $query = $this->createQuery($entity, $filters);
+        var_dump($query->getDQL());
+        var_dump($query->getQuery()->getSQL());
 
         return $query
             // filters toevoegen
@@ -65,11 +67,25 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
-//        var_dump('COUNT...');
+        var_dump('COUNT...');
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
 
         return $query->getQuery()->getSingleScalarResult();
+    }
+
+    private function addSubresourceFilter(array $subresourceFilters, array $key, $value): array
+    {
+        $keyName = $key[0];
+        var_dump($keyName);
+        array_shift($key);
+        if (count($key) > 0) {
+            $subresourceFilters[$keyName] = array_key_exists($keyName, $subresourceFilters) ? $subresourceFilters[$keyName] : [];
+            return [$keyName => array_merge($subresourceFilters[$keyName], $this->addSubresourceFilter($subresourceFilters[$keyName], $key, $value))];
+        } else {
+            $subresourceFilters[$keyName] = $value;
+        }
+        return $subresourceFilters;
     }
 
     private function createQuery(Entity $entity, array $filters): QueryBuilder
@@ -81,6 +97,47 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
             $query->leftJoin('o.objectValues', 'value');
+
+            //todo:
+            // Find all subresources we want to filter on
+            // Add them to an array of arrays
+            // LeftJoin ObjectEntity for each subresource we want to filter
+            // Actually add the where cases for each filter
+            $subresourceFilters = [];
+            foreach ($filters as $key=>$value) {
+                // Symfony has the tendency to replace . with _ on query parameters
+                $key = str_replace(['_'], ['.'], $key);
+                $key = str_replace(['..'], ['._'], $key);
+                if (substr($key, 0, 1) == '.') {
+                    $key = '_' . ltrim($key, $key[0]);
+                }
+
+                // We want to use custom logic for _ filters, because they will be used directly on the ObjectEntities themselves.
+                if (substr($key, 0, 1) == '_') {
+                    $query = $this->getObjectEntityFilter($query, $key, $value);
+                    unset($filters[$key]); //todo: why unset if we never use filters after this?
+                    continue;
+                }
+                // Lets see if this is an allowed filter
+                if (!in_array($key, $filterCheck)) {
+                    unset($filters[$key]); //todo: why unset if we never use filters after this?
+                    continue;
+                }
+
+                // let not dive to deep
+                if (!strpos($key, '.')) {
+                    var_dump($key." -> ".$value);
+                    $query->andWhere('value.stringValue = :'.$key)
+                        ->setParameter($key, $value);
+                } else {
+                    // This is a filter on a subresource, save it in an array, so we can group them and go through them in a structured way after this.
+                    $key = explode('.', $key);
+                    $subresourceFilters = $this->addSubresourceFilter($subresourceFilters, $key, $value);
+                }
+            }
+            var_dump($subresourceFilters);
+            die();
+
 
             $filterCount = 0;
             foreach ($filters as $key=>$value) {
@@ -105,6 +162,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
                 // let not dive to deep
                 if (!strpos($key, '.')) {
+                    var_dump($key." -> ".$value);
                     $query->andWhere('value.stringValue = :'.$key)
                         ->setParameter($key, $value);
                 }
@@ -125,10 +183,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     //              name
 
                     $filterCount++; // Counter for filters, so we can do multiple filters on different subresources. (student.id & learningResult.id)
-//                    var_dump("Filter: ".$key);
-//                    var_dump($filterCount."(1)");
+                    var_dump("Filter: ".$key);
+                    var_dump($filterCount."(1)");
                     $key = explode('.', $key);
-//                    var_dump($key[0]);
+                    var_dump($key[0]);
 
                     // TODO: foreach so we can do more than just 2 levels deep ?
                     // One level deep (student.id)
@@ -136,8 +194,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     $query->leftJoin('value.objects', 'subObjects'.$filterCount.$level);
                     if (isset($key[1])) {
                         // Deal with _ filters for subresources
-//                    var_dump($filterCount.$level);
-//                    var_dump($key[1]);
+                        var_dump($filterCount.$level);
+                        var_dump($key[1]);
                         if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
                             $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$filterCount.$level);
                             continue;
@@ -149,8 +207,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         // Two levels deep (student.languageHouse.id)
                         $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level + 1));
                         // Deal with _ filters for subresources
-//                    var_dump($filterCount.($level+1));
-//                    var_dump($key[2]);
+                        var_dump($filterCount.($level+1));
+                        var_dump($key[2]);
                         if (substr($key[2], 0, 1) == '_' || $key[2] == 'id') {
                             $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level + 1));
                             continue;
@@ -158,6 +216,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     }
 
                     $query->andWhere('subValue'.$filterCount.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                    var_dump($key[1]." -> ".$value);
                 }
             }
         }
@@ -240,6 +299,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
+        if (!is_array($value)) {
+            var_dump($key." -> ".$value);
+        } else {
+            var_dump($key." -> ".implode(', ', $value));
+        }
         switch ($key) {
             case 'id':
                 $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);
@@ -311,7 +375,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ]);
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
+//            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
+            if ($attribute->getType() == 'string') {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 5 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
