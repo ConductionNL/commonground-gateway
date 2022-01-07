@@ -24,7 +24,7 @@ class ApplicationService
     /**
      * A function that finds a application or creates one.
      */
-    public function getApplication(): array|Application
+    public function getApplication()
     {
         if ($application = $this->session->get('application')) {
             return $application;
@@ -37,13 +37,15 @@ class ApplicationService
         $host = ($this->request->headers->get('host') ??  $this->request->query->get('host'));
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application);
-        if (!$application) {
+        if (!isset($application)) {
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
-            $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
-                return in_array($host, $application->getDomains());
-            }));
-            count($applications) > 0 && $application = $applications[0];
+            foreach ($applications as $app) {
+                $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
+                if(isset($application)) {
+                    break;
+                } 
+            }
         }
 
         if (!$application && $host == 'localhost') {
