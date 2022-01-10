@@ -6,9 +6,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Entity;
 use App\Entity\Attribute;
 use Respect\Validation\Exceptions\NestedValidationException;
-use Respect\Validation\Validator as v;
 use Respect\Validation\Validator;
 use Respect\Validation\Rules;
+use DateTime;
 
 
 class ValidaterService
@@ -22,17 +22,16 @@ class ValidaterService
 
     public function validateData(array $data, Entity $entity, string $method)
     {
-        // $testValidator = v::numericVal();
-        // dump($testValidator->validate('string'));die; // true
 
         $validator = new Validator;
+        // @todo if monday is posted as 5 (int) it still is a string here....
         // dump(is_int($data['monday']));
-        $data['monday'] = 5;
+        // $data['monday'] = 5;
         $validator = $this->addAttributeValidators($validator, $entity, $method);
 
         try {
             $validator->assert($data);
-        } catch(NestedValidationException $exception) {
+        } catch (NestedValidationException $exception) {
             return $exception->getMessages();
         }
     }
@@ -41,9 +40,102 @@ class ValidaterService
     {
         foreach ($entity->getAttributes() as $attribute) {
             $attributeValidator = new Validator;
+            // Add rule for type
             $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
+            // Add rules for valdiations
+            // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
 
-            $validator->AddRule(new Rules\Key( $attribute->getName(), $attributeValidator));
+            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator));
+        }
+
+        return $validator;
+    }
+
+    private function addValidationRules(Attribute $attribute, Validator $attributeValidator): Validator
+    {
+        $validations = $attribute->getValidations();
+        foreach ($validations as $validation => $config) {
+            switch ($validation) {
+                case 'multipleOf':
+                    $attributeValidator->AddRule(new Rules\Multiple($config));
+                case 'maximum':
+                case 'exclusiveMaximum': // doet niks
+                case 'minimum':
+                case 'exclusiveMinimum': // doet niks
+                    $attributeValidator->AddRule(new Rules\Between($validations['minimum'] ?? null, $validations['maximum'] ?? null));
+                    break;
+                case 'minLength':
+                case 'maxLength':
+                    $attributeValidator->AddRule(new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null));
+                    break;
+                case 'maxItems':
+                case 'minItems':
+                    $attributeValidator->AddRule(new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null));
+                    break;
+                case 'uniqueItems':
+                    $attributeValidator->AddRule(new Rules\Unique());
+                case 'maxProperties':
+                case 'minProperties':
+                    $attributeValidator->AddRule(new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null));
+                case 'minDate':
+                case 'maxDate':
+                    $attributeValidator->AddRule(new Rules\Length(new DateTime($validations['minDate'] ?? null) ?? null, new DateTime($validations['maxDate'] ?? null) ?? null));
+                    break;
+                case 'maxFileSize':
+                case 'fileType':
+                    // @TODO
+                    break;
+                case 'required':
+                    $attributeValidator->AddRule(new Rules\Not(Validator::notEmpty()));
+                    break;
+                case 'forbidden':
+                    $attributeValidator->AddRule(new Rules\Not(Validator::notEmpty()));
+                    break;
+                // case 'conditionals':
+                //     /// here we go
+                //     foreach ($config as $con) {
+                //         // Lets check if the referenced value is present
+                //         /* @tdo this isnt array proof */
+                //         if ($conValue = $objectEntity->getValueByName($con['property'])->value) {
+                //             switch ($con['condition']) {
+                //                 case '==':
+                //                     if ($conValue == $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //                 case '!=':
+                //                     if ($conValue != $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //                 case '<=':
+                //                     if ($conValue <= $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //                 case '>=':
+                //                     if ($conValue >= $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //                 case '>':
+                //                     if ($conValue > $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //                 case '<':
+                //                     if ($conValue < $con['value']) {
+                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+                //                     }
+                //                     break;
+                //             }
+                //         }
+                //     }
+                //     break;
+                default:
+                    // we should never end up here
+                    //$objectEntity->addError($attribute->getName(),'Has an an unknown validation: [' . (string) $validation . '] set to'. (string) $config);
+            }
         }
 
         return $validator;
@@ -87,7 +179,7 @@ class ValidaterService
             !array_key_exists($attribute->getName(), $data) && $data[$attribute->getName()] = null;
 
             $validator->key($attribute->getName(), $this->createAttributeEntityValidator($data, $attribute, $method, $validator));
-// 
+            // 
             // Lets clean it up
             unset($data[$attribute->getName()]);
         }
@@ -116,7 +208,7 @@ class ValidaterService
 
         // Validate type
         // kijk naar de huidige validations service on validateType()
-        
+
 
         // Let be a bit compasionate and compatable
         $type = str_replace(['integer', 'boolean', 'text'], ['int', 'bool', 'string'], $attribute->getType());
