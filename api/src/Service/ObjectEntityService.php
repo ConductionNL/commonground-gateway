@@ -46,9 +46,9 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler  $handler  
-     * @param array    $data     Data to be set into the eav
-     * @param string   $method   Method from request if there is a request
+     * @param Handler $handler
+     * @param array   $data    Data to be set into the eav
+     * @param string  $method  Method from request if there is a request
      *
      * @return array $data
      */
@@ -58,7 +58,7 @@ class ObjectEntityService
         $application = $this->applicationService->getApplication();
 
         // If type is array application is a error
-        if (gettype($application) === "array") {
+        if (gettype($application) === 'array') {
             return $application;
         }
 
