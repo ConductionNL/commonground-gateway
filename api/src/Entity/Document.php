@@ -137,6 +137,25 @@ class Document
     private string $documentType;
 
     /**
+     * @var string The type of template
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, name="content_type")
+     */
+    private ?string $type;
+
+    /**
+     * @var string The content of the template
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $content;
+
+    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="document", fetch="EXTRA_LAZY", cascade={"remove"})
      */
@@ -270,6 +289,30 @@ class Document
                 $requestLog->setDocument(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(string $content): self
+    {
+        $this->content = $content;
 
         return $this;
     }

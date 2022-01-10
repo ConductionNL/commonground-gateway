@@ -241,7 +241,7 @@ class EavService
         if (!isset($resultConfig['result'])) {
             $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
         }
-
+//        var_dump($resultConfig);
         $options = [];
         switch ($contentType) {
             case 'text/csv':
@@ -256,6 +256,9 @@ class EavService
                 if ($mapping = $request->query->get('_mapping')) {
                     foreach ($resultConfig['result'] as $key =>  $result) {
                         $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                        if ($dcKey = array_search('_dateCreated', $mapping)) {
+                            $resultConfig['result'][$key][$dcKey] = $result['@dateCreated']->format('d-m-Y');
+                        }
                     }
                 }
         }
@@ -269,8 +272,47 @@ class EavService
         /*@todo this should DEFINTLY be configuration */
         if ($contentType === 'text/csv') {
             $translationVariables = [
-                'OTHER'     => 'Anders',
-                'YES_OTHER' => '"Ja, Anders"',
+                'OTHER'                                                 => 'Anders',
+                'YES_OTHER'                                             => '"Ja, Anders"',
+                'DUTCH_READ'                                            => '"Nederlands: Lezen"',
+                'DUTCH_WRITE'                                           => '"Nederlands: Schrijven"',
+                'MATHEMATICS_NUMBERS'                                   => '"Rekenen: Getallen"',
+                'MATHEMATICS_PROPORTIONS'                               => '"Rekenen: Verhoudingen"',
+                'MATHEMATICS_MEASUREMENT_AND_GEOMETRY'                  => '"Rekenen: Meten en meetkunde"',
+                'THEMATICS_RELATIONS'                                   => '"Rekenen: Verbanden"',
+                'DIGITAL_SKILLS_USING_ICT_SYSTEMS'                      => '"Digitale vaardigheden: ICT-systemen gebruiken"',
+                'DIGITAL_SKILLS_LOOKING_FOR_INFORMATION'                => '"Digitale vaardigheden: Informatie zoeken"',
+                'DIGITAL_SKILLS_PROCESSING_AND_PRESENTING_INFORMATION'  => '"Digitale vaardigheden: Informatie verwerken en presenteren"',
+                'DIGITAL_SKILLS_COMMUNICATION'                          => '"Digitale vaardigheden: Communicatie"',
+                'KNOWLEDGE'                                             => 'Kennis',
+                'SKILLS'                                                => 'Vaardigheden',
+                'ATTITUDE'                                              => 'Houding',
+                'BEHAVIOUR'                                             => 'Gedrag',
+                'FAMILY_AND_UPBRINGING'                                 => '"Gezin en opvoeden"',
+                'LABOR_MARKET_AND_WORK'                                 => '"Arbeidsmarkt en werk"',
+                'HEALTH_AND_WELLBEING'                                  => '"Gezondheid en welzijn"',
+                'LIVING_AND_NEIGHBORHOOD'                               => '"Wonen en buurt"',
+                'SELF_SUSTAINABILITY'                                   => 'Zelfredzaamheid',
+                'NO'                                                    => 'Nee',
+                'YES_NOT_OFFERED_IN_TRAVEL_RANGE'                       => '"Ja, want: niet aangeboden binnen bereisbare afstand"',
+                'YES_QUEUE'                                             => '"Ja, want: wachtlijst"',
+                'VOLUNTEER_CENTER'                                      => 'Vrijwilliger',
+                'LIBRARY_WEBSITE'                                       => '"Website van de bibliotheek"',
+                'SOCIAL_MEDIA'                                          => '"Social Media"',
+                'NEWSPAPER'                                             => 'Krant',
+                'VIA_VIA'                                               => '"Via via"',
+                'UWV'                                                   => '"Uitvoeringsinstituut Werknemersverzekeringen"',
+                'SOCIAL_SERVICE'                                        => '"Sociale service"',
+                'LIBRARY'                                               => 'Bibliotheek',
+                'WELFARE_WORK'                                          => 'Welzijn',
+                'NEIGHBORHOOD_TEAM'                                     => 'Woonplaatsteam',
+                'VOLUNTEER_ORGANIZATION'                                => 'Vrijwilligersorganisatie',
+                'LANGUAGE_PROVIDER'                                     => 'Taalhuisaanbieder',
+                'PENDING'                                               => '"In afwachting"',
+                'ACCEPTED'                                              => 'Geaccepteerd',
+                'REJECTED'                                              => 'Afgewezen',
+                'INFLUX'                                                => 'Instroom',
+
             ];
 
             $result = $this->translationService->parse($result, true, $translationVariables);
