@@ -80,7 +80,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         var_dump($keyName);
         array_shift($key);
         if (count($key) > 0) {
-            $subresourceFilters[$keyName] = array_key_exists($keyName, $subresourceFilters) ? $subresourceFilters[$keyName] : [];
+//            $subresourceFilters[$keyName] = array_key_exists($keyName, $subresourceFilters) ? $subresourceFilters[$keyName] : [];
             return [$keyName => array_merge($subresourceFilters[$keyName], $this->addSubresourceFilter($subresourceFilters[$keyName], $key, $value))];
         } else {
             $subresourceFilters[$keyName] = $value;
@@ -132,7 +132,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 } else {
                     // This is a filter on a subresource, save it in an array, so we can group them and go through them in a structured way after this.
                     $key = explode('.', $key);
-                    $subresourceFilters = $this->addSubresourceFilter($subresourceFilters, $key, $value);
+                    $subresourceFilters = array_merge($subresourceFilters, $this->addSubresourceFilter($subresourceFilters, $key, $value));
                 }
             }
             var_dump($subresourceFilters);
