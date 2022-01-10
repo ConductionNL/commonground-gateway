@@ -2,16 +2,27 @@
 
 namespace App\Service;
 
+use App\Entity\Handler;
 use App\Entity\ObjectEntity;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ObjectEntityService
 {
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(TokenStorageInterface $tokenStorage)
-    {
+    public function __construct(
+        TokenStorageInterface $tokenStorage,
+        RequestStack $requestStack,
+        AuthorizationService $authorizationService,
+        ApplicationService $applicationService,
+        ValidaterService $validaterService
+    ) {
         $this->tokenStorage = $tokenStorage;
+        $this->request = $requestStack->getCurrentRequest();
+        $this->authorizationService = $authorizationService;
+        $this->applicationService = $applicationService;
+        $this->validaterService = $validaterService;
     }
 
     /**
@@ -30,6 +41,83 @@ class ObjectEntityService
         }
 
         return $result;
+    }
+
+    /**
+     * A function to handle calls to eav.
+     *
+     * @param Handler $handler
+     * @param array   $data    Data to be set into the eav
+     * @param string  $method  Method from request if there is a request
+     *
+     * @return array $data
+     */
+    public function handleObject(Handler $handler, array $data = null, string $method = null): array
+    {
+        // check application
+        $application = $this->applicationService->getApplication();
+
+        // If type is array application is a error
+        if (gettype($application) === 'array') {
+            return $application;
+        }
+
+        $owner = $this->tokenStorage->getToken()->getUser();
+
+        // @todo check rights/auth (what to give as scopes?)
+        // $this->authorizationService->checkAuthorization();
+
+        $entity = $handler->getEntity();
+
+        // Check ID
+        array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
+
+        // throw error if get/put/patch/delete and no id
+        // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && !isset($id) && //throw error
+
+        switch ($method) {
+            case 'GET':
+                // get object
+
+                break;
+            case 'POST':
+                // validate
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                    break;
+                }
+
+                // create object
+
+                // set owner and application
+
+                // set @id
+                break;
+            case 'PUT':
+            case 'PATCH':
+                // get object
+
+                // validate
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                    break;
+                }
+                // put object
+                break;
+            case 'DELETE':
+                // get object
+
+                // delete object
+                break;
+            default:
+                // throw error
+        }
+
+        if (isset($validationErrors)) {
+            // Do something with validation errors
+        }
+
+        // use events
+
+        return $data;
     }
 
     public function checkOwner(ObjectEntity $result): bool

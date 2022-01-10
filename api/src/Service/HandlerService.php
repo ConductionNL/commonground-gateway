@@ -27,6 +27,7 @@ class HandlerService
     private SerializerInterface $serializerInterface;
     private LogService $logService;
     private TemplateService $templateService;
+    private ObjectEntityService $objectEntityService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -55,7 +56,8 @@ class HandlerService
         SerializerInterface $serializer,
         LogService $logService,
         Environment $twig,
-        TemplateService $templateService
+        TemplateService $templateService,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -67,6 +69,7 @@ class HandlerService
         $this->logService = $logService;
         $this->templating = $twig;
         $this->templateService = $templateService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -120,66 +123,72 @@ class HandlerService
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
 
-        // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if ($entity = $handler->getEntity()) {
+        // eav new way
+        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $this->request->getMethod());
 
-            // prepare variables
-            $routeParameters = $this->request->attributes->get('_route_params');
-            if (array_key_exists('id', $routeParameters)) {
-                $id = $routeParameters['id'];
+        // If data contains error dont execute following code and create response
+        if (!(isset($data['type']) && isset($data['message']))) {
+
+            // // If the handler is teid to an EAV object we want to resolve that in all of it glory
+            // if ($entity = $handler->getEntity()) {
+
+            //     // prepare variables
+            //     $routeParameters = $this->request->attributes->get('_route_params');
+            //     if (array_key_exists('id', $routeParameters)) {
+            //         $id = $routeParameters['id'];
+            //     }
+            //     $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+
+            //     // Create an info array
+            //     $info = [
+            //         'object' => $object ?? null,
+            //         'body'   => $data ?? null,
+            //         'fields' => $field ?? null,
+            //         'path'   => $handler->getEndpoint()->getPath(),
+            //     ];
+            // }
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // The we want to do  translations on the outgoing responce
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+            $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+            if (isset($data['result'])) {
+                $data['result'] = $this->translationService->parse($data['result'], true, $translations);
+            } else {
+                $data = $this->translationService->parse($data, true, $translations);
             }
-            $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
 
-            // Create an info array
-            $info = [
-                'object' => $object ?? null,
-                'body'   => $data ?? null,
-                'fields' => $field ?? null,
-                'path'   => $handler->getEndpoint()->getPath(),
-            ];
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // Then we want to do to mapping on the outgoing responce
+            $skeleton = $handler->getSkeletonOut();
+            if (!$skeleton || empty($skeleton)) {
+                isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
+            }
+            if (isset($data['result'])) {
+                $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
+            } else {
+                $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+            }
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // Lets see if we need te use a template
+            if ($handler->getTemplatetype() && $handler->getTemplate()) {
+                $data = $this->renderTemplate($handler, $data);
+            }
+
+            // If data is string it could be a document/template
+            if (is_string($data)) {
+                $result = $data;
+                $data = [];
+                $data['result'] = $result;
+            }
         }
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
-
-        // The we want to do  translations on the outgoing responce
-        $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-        if (isset($data['result'])) {
-            $data['result'] = $this->translationService->parse($data['result'], true, $translations);
-        } else {
-            $data = $this->translationService->parse($data, true, $translations);
-        }
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
-
-        // Then we want to do to mapping on the outgoing responce
-        $skeleton = $handler->getSkeletonOut();
-        if (!$skeleton || empty($skeleton)) {
-            isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
-        }
-        if (isset($data['result'])) {
-            $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-        } else {
-            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
-        }
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
-
-        // Lets see if we need te use a template
-        if ($handler->getTemplatetype() && $handler->getTemplate()) {
-            $data = $this->renderTemplate($handler, $data);
-        }
-
-        // If data is string it could be a document/template
-        if (is_string($data)) {
-            $result = $data;
-            $data = [];
-            $data['result'] = $result;
-        }
-
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
 
@@ -278,7 +287,7 @@ class HandlerService
 
         // Lets seriliaze the shizle (if no document)
         !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
-         : $result = $this->serializer->serialize($data, $contentType, $options));
+            : $result = $this->serializer->serialize($data, $contentType, $options));
 
         // Lets create the actual response
         $response = new Response(
