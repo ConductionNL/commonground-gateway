@@ -311,6 +311,8 @@ class EavService
                 'PENDING'                                               => '"In afwachting"',
                 'ACCEPTED'                                              => 'Geaccepteerd',
                 'REJECTED'                                              => 'Afgewezen',
+                'INFLUX'                                                => 'Instroom',
+
             ];
 
             $result = $this->translationService->parse($result, true, $translationVariables);
