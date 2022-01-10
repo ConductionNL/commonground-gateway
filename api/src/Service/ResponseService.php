@@ -106,11 +106,7 @@ class ResponseService
         // Lets sort the result alphabeticly
 
         // Lets skip the pritty styff when dealing with a flat object
-        if ($flat) {
-            ksort($response);
 
-            return $response;
-        }
 
         // Lets make it personal
         $gatewayContext = [];
