@@ -43,6 +43,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
     {
+//        var_dump('FIND...');
         $query = $this->createQuery($entity, $filters);
 
         return $query
@@ -64,6 +65,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
+//        var_dump('COUNT...');
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
 
@@ -79,8 +81,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
             $query->leftJoin('o.objectValues', 'value');
-            $level = 0;
 
+            $filterCount = 0;
             foreach ($filters as $key=>$value) {
                 // Symfony has the tendency to replace . with _ on query parameters
                 $key = str_replace(['_'], ['.'], $key);
@@ -108,31 +110,55 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 }
                 /*@todo right now we only search on e level deep, lets make that 5 */
                 else {
-                    $key = explode('.', $key);
-                    // only one deep right now
-                    //if(count($key) == 2){
-                    if ($level == 0) {
-                        $level++;
-                        $query->leftJoin('value.objects', 'subObjects'.$level);
+                    // Example in comments based on following example entity structure:
+                    // LearningNeed ->
+                    //      id
+                    //      name
+                    //      learningResult ->
+                    //          id
+                    //          name
+                    //      student ->
+                    //          id
+                    //          name
+                    //          languageHouse ->
+                    //              id
+                    //              name
 
+                    $filterCount++; // Counter for filters, so we can do multiple filters on different subresources. (student.id & learningResult.id)
+//                    var_dump("Filter: ".$key);
+//                    var_dump($filterCount."(1)");
+                    $key = explode('.', $key);
+//                    var_dump($key[0]);
+
+                    // TODO: foreach so we can do more than just 2 levels deep ?
+                    // One level deep (student.id)
+                    $level = 1;
+                    $query->leftJoin('value.objects', 'subObjects'.$filterCount.$level);
+                    if (isset($key[1])) {
                         // Deal with _ filters for subresources
+//                    var_dump($filterCount.$level);
+//                    var_dump($key[1]);
                         if (substr($key[1], 0, 1) == '_' || $key[1] == 'id') {
-                            $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$level);
+                            $query = $this->getObjectEntityFilter($query, $key[1], $value, 'subObjects'.$filterCount.$level);
                             continue;
                         }
-                        $query->leftJoin('subObjects'.$level.'.objectValues', 'subValue'.$level);
                     }
-                    // Deal with _ filters for subresources
-                    $tempKey = end($key);
-                    if ($tempKey && (substr($tempKey, 0, 1) == '_' || $tempKey == 'id')) {
-                        /* @todo ik kom hier niet meer uit */
-                        //$query = $this->getObjectEntityFilter($query, $tempKey, $value, 'subObjects'.$level);
-                        continue;
-                    }
-                    $query->andWhere('subValue'.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
-                }
 
-                // lets suport level 1
+                    $query->leftJoin('subObjects'.$filterCount.$level.'.objectValues', 'subValue'.$filterCount.$level);
+                    if (isset($key[2])) {
+                        // Two levels deep (student.languageHouse.id)
+                        $query->leftJoin('subValue'.$filterCount.$level.'.objects', 'subObjects'.$filterCount.($level + 1));
+                        // Deal with _ filters for subresources
+//                    var_dump($filterCount.($level+1));
+//                    var_dump($key[2]);
+                        if (substr($key[2], 0, 1) == '_' || $key[2] == 'id') {
+                            $query = $this->getObjectEntityFilter($query, $key[2], $value, 'subObjects'.$filterCount.($level + 1));
+                            continue;
+                        }
+                    }
+
+                    $query->andWhere('subValue'.$filterCount.$level.'.stringValue = :'.$key[1])->setParameter($key[1], $value);
+                }
             }
         }
 
@@ -154,14 +180,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // Multitenancy, only show objects this user is allowed to see.
         // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
         $organizations = $this->session->get('organizations', []);
-        $parentOrganizations = $this->session->get('parentOrganizations', []);
+        $parentOrganizations = [];
+        // Make sure we only check for parentOrganizations if inherited is true in the (ObjectEntity)->entity->inherited
+        if ($entity->getInherited()) {
+            $parentOrganizations = $this->session->get('parentOrganizations', []);
+        }
 
-        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) and o.entity.inherited == true) OR o.owner == :userId')
-        //$query->andWhere('o.organization IN (:organizations) OR (o.organization IN (:parentOrganizations) AND o.entity.inherited = true) ')
-        $query->andWhere('o.organization IN (:organizations)')
+        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
+        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
         //    ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations);
-        //     ->setParameter('parentOrganizations', $parentOrganizations);
+            ->setParameter('organizations', $organizations)
+            ->setParameter('parentOrganizations', $parentOrganizations);
         /*
         if (empty($this->session->get('organizations'))) {
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
@@ -252,7 +281,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 break;
             default:
                 //todo: error?
-//                var_dump('Not supported filter for ObjectEntity');
+//                var_dump('Not supported filter for ObjectEntity: '.$key);
                 break;
         }
 
