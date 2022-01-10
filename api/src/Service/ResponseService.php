@@ -107,7 +107,6 @@ class ResponseService
 
         // Lets skip the pritty styff when dealing with a flat object
 
-
         // Lets make it personal
         $gatewayContext = [];
         $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
