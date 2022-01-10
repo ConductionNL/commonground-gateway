@@ -5,7 +5,11 @@ namespace App\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Entity;
 use App\Entity\Attribute;
+use Respect\Validation\Exceptions\NestedValidationException;
+use Respect\Validation\Validator as v;
 use Respect\Validation\Validator;
+use Respect\Validation\Rules;
+
 
 class ValidaterService
 {
@@ -18,11 +22,61 @@ class ValidaterService
 
     public function validateData(array $data, Entity $entity, string $method)
     {
-        $validatorData = $data;
-        $validator = new Validator;
-        $validator = $this->createEntityValidator($validatorData, $entity, $method, $validator);
+        // $testValidator = v::numericVal();
+        // dump($testValidator->validate('string'));die; // true
 
-        return $validator->validate($data);
+        $validator = new Validator;
+        // dump(is_int($data['monday']));
+        $data['monday'] = 5;
+        $validator = $this->addAttributeValidators($validator, $entity, $method);
+
+        try {
+            $validator->assert($data);
+        } catch(NestedValidationException $exception) {
+            return $exception->getMessages();
+        }
+    }
+
+    private function addAttributeValidators(Validator $validator, Entity $entity, string $method): Validator
+    {
+        foreach ($entity->getAttributes() as $attribute) {
+            $attributeValidator = new Validator;
+            $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
+
+            $validator->AddRule(new Rules\Key( $attribute->getName(), $attributeValidator));
+        }
+
+        return $validator;
+    }
+
+    private function getAttTypeRule($type)
+    {
+        switch ($type) {
+            case 'string':
+            case 'text':
+                return new Rules\StringType();
+                break;
+            case 'integer':
+            case 'int':
+                return new Rules\IntType();
+                break;
+            case 'float':
+                return new Rules\FloatType();
+                break;
+            case 'number':
+                return new Rules\Number();
+                break;
+            case 'datetime':
+                return new Rules\DateTime();
+                break;
+            case 'file':
+                return new Rules\File();
+                break;
+            case 'object':
+                return new Rules\ObjectType();
+                break;
+            default:
+        }
     }
 
     private function createEntityValidator(array $data, Entity $entity, string $method, Validator $validator)
