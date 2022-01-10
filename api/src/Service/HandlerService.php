@@ -124,7 +124,7 @@ class HandlerService
         $this->logService->saveLog($this->request, null, json_encode($data));
 
         // eav new way
-        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $this->request->getMethod());
+        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $this->request->getMethod());
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
