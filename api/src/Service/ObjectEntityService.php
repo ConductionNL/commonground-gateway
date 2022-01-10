@@ -82,7 +82,9 @@ class ObjectEntityService
                 break;
             case 'POST':
                 // validate
-                $data = $this->validaterService->validateData($data, $entity, $method ?? null);
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                    break;
+                }
 
                 // create object
 
@@ -95,8 +97,9 @@ class ObjectEntityService
                 // get object
 
                 // validate
-                $data = $this->validaterService->validateData($data, $entity, $method ?? null);
-
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                    break;
+                }
                 // put object
                 break;
             case 'DELETE':
@@ -106,6 +109,10 @@ class ObjectEntityService
                 break;
             default:
                 // throw error
+        }
+
+        if (isset($validationErrors)) {
+            // Do something with validation errors
         }
 
         // use events
