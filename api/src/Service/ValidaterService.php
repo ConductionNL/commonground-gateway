@@ -2,18 +2,16 @@
 
 namespace App\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Entity;
 use App\Entity\Attribute;
-use Respect\Validation\Exceptions\NestedValidationException;
-use Respect\Validation\Validator;
-use Respect\Validation\Rules;
+use App\Entity\Entity;
 use DateTime;
-
+use Doctrine\ORM\EntityManagerInterface;
+use Respect\Validation\Exceptions\NestedValidationException;
+use Respect\Validation\Rules;
+use Respect\Validation\Validator;
 
 class ValidaterService
 {
-
     public function __construct(
         EntityManagerInterface $entityManager
     ) {
@@ -22,8 +20,7 @@ class ValidaterService
 
     public function validateData(array $data, Entity $entity, string $method)
     {
-
-        $validator = new Validator;
+        $validator = new Validator();
         // @todo if monday is posted as 5 (int) it still is a string here....
         // dump(is_int($data['monday']));
         // $data['monday'] = 5;
@@ -39,7 +36,7 @@ class ValidaterService
     private function addAttributeValidators(Validator $validator, Entity $entity, string $method): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            $attributeValidator = new Validator;
+            $attributeValidator = new Validator();
             // Add rule for type
             $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
             // Add rules for valdiations
@@ -179,24 +176,21 @@ class ValidaterService
             !array_key_exists($attribute->getName(), $data) && $data[$attribute->getName()] = null;
 
             $validator->key($attribute->getName(), $this->createAttributeEntityValidator($data, $attribute, $method, $validator));
-            // 
+            //
             // Lets clean it up
             unset($data[$attribute->getName()]);
         }
-
 
         // Lets see if we have attributes that should not be here (if we haven’t cleaned it up it isn’t an attribute)
         foreach ($data as $key => $value) {
             $validator->key(
                 $key,
-                /** custom not allowed validator*/
+            /** custom not allowed validator*/
             );
         }
 
         return $validator;
     }
-
-
 
     private function createAttributeEntityValidator(array $data, Attribute $attribute, string $method, Validator $validator)
     {
@@ -208,7 +202,6 @@ class ValidaterService
 
         // Validate type
         // kijk naar de huidige validations service on validateType()
-
 
         // Let be a bit compasionate and compatable
         $type = str_replace(['integer', 'boolean', 'text'], ['int', 'bool', 'string'], $attribute->getType());

@@ -4,10 +4,9 @@ namespace App\Service;
 
 use App\Entity\Application;
 use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\HttpFoundation\Response;
 
 class ApplicationService
 {
@@ -34,7 +33,7 @@ class ApplicationService
         $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
 
         // get host/domain
-        $host = ($this->request->headers->get('host') ??  $this->request->query->get('host'));
+        $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application);
         if (!isset($application)) {
@@ -42,9 +41,9 @@ class ApplicationService
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
                 $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
-                if(isset($application)) {
+                if (isset($application)) {
                     break;
-                } 
+                }
             }
         }
 
@@ -54,8 +53,8 @@ class ApplicationService
             $this->session->set('application', null);
 
             // Set message
-            $public && $message = 'No application found with public ' . $public;
-            $host && $message = 'No application found with host ' . $host;
+            $public && $message = 'No application found with public '.$public;
+            $host && $message = 'No application found with host '.$host;
             !$public && !$host && $message = 'No host or application given';
 
             // Set data
@@ -66,31 +65,33 @@ class ApplicationService
                 'message' => $message,
                 'type'    => 'Forbidden',
                 'path'    => $public ?? $host ?? 'Header',
-                'data'    => $data ?? null
+                'data'    => $data ?? null,
             ];
 
             return $result;
         }
 
         $this->session->set('application', $application);
+
         return $application;
     }
 
     /**
-     * A function that creates a application 
+     * A function that creates a application.
+     *
      * @todo expand with more arguments/attributes.
-     * 
+     *
      * @return Application
      */
     public function createApplication(string $name, array $domains, string $public, string $secret): Application
     {
         $application = new Application();
         $application->setName($name);
-        $application->setDescription($name . ' application');
+        $application->setDescription($name.' application');
         $application->setDomains($domains);
         $application->setPublic($public);
         $application->setSecret($secret);
-        $application->setOrganization($name . 'Organization');
+        $application->setOrganization($name.'Organization');
         $this->entityManager->persist($application);
         $this->entityManager->flush();
 
