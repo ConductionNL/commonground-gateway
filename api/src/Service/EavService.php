@@ -241,7 +241,7 @@ class EavService
         if (!isset($resultConfig['result'])) {
             $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
         }
-
+        
         $options = [];
         switch ($contentType) {
             case 'text/csv':
@@ -256,6 +256,9 @@ class EavService
                 if ($mapping = $request->query->get('_mapping')) {
                     foreach ($resultConfig['result'] as $key =>  $result) {
                         $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                    }
+                    if($key = array_search('_dateCreated', $mapping)){
+                        $resultConfig['result'][$key] = $resultConfig['object']->getDateCreated()->format('d-m-Y');
                     }
                 }
         }
