@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TranslationRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
@@ -9,7 +10,23 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
+ * This entity holds the information about an Endpoint.
+ *
+ * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/translations/{id}"},
+ *      "put"={"path"="/admin/translations/{id}"},
+ *      "delete"={"path"="/admin/translations/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/translations"},
+ *      "post"={"path"="/admin/translations"}
+ *  })
+ * )
  * @ORM\Entity(repositoryClass=TranslationRepository::class)
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  */
 class Translation
 {
