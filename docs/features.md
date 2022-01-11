@@ -1,5 +1,5 @@
 #Features
-The web gateway is designed as an feature rich's solution to quickly developing prograsive web applications. 
+The web gateway is designed as an feature rich solution to quickly developing progressive web applications. 
 ##Sources
 Sources form the beating heart of the gateway. A source represents an external API (be it either registered or microservice in nature) that might be exposed through the web gateway. Adding an API as a source WILL NOT cause that API to be exposed. API’s might be added manually our through discovery, discovery methods currently on the roadmap are NLX, Autorisatie Component and Generic Kubernetes services.
 
@@ -114,7 +114,7 @@ So what does that mean for EAV mapping? Well simply put our objects become entit
 
 
 ###Entity
-Entities represent objects that you want to communicate to underlaying sources, to do this they requiquire and source and an endpoint on that source to send the object to. You may however choice to ignore this. And just ‘store’ you objects with the gateway, do this might be a good way to mock api’s in development environments it isn’t recommended for production environments.
+Entities represent objects that you want to communicate to underlaying sources, to do this they require a source and an endpoint on that source to send the object to. You may however choose to ignore this. And just ‘store’ you objects with the gateway, do this might be a good way to mock api’s in development environments it isn’t recommended for production environments.
 
 ####Properties
 An entity consists of the following properties that can be configured
