@@ -26,8 +26,7 @@ class ZZController extends AbstractController
         DocumentService $documentService,
         ValidationService $validationService,
         EndpointService $endpointService
-    ): Response
-    {
+    ): Response {
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route'=>$entity]);
         if ($document instanceof Document && $id) {
