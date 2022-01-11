@@ -120,7 +120,9 @@ class ResponseService
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         $gatewayContext['@organization'] = $result->getOrganization();
-        $gatewayContext['@application'] = $result->getApplication()->getId();
+        if ($result->getApplication() !== null) {
+            $gatewayContext['@application'] = $result->getApplication()->getId();
+        }
         $gatewayContext['@owner'] = $result->getOwner();
         if ($result->getUri()) {
             $gatewayContext['@uri'] = $result->getUri();
@@ -381,10 +383,10 @@ class ResponseService
         //        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
         $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
 
-//        if ($request->getMethod() == 'POST' && $object) {
-//            $this->em->persist($object);
-//        }
-//        $requestLog->setObjectEntity($object);
+        //        if ($request->getMethod() == 'POST' && $object) {
+        //            $this->em->persist($object);
+        //        }
+        //        $requestLog->setObjectEntity($object);
         $requestLog->setEntity($entity ?? ($object ? $object->getEntity() : null));
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo

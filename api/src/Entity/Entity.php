@@ -236,12 +236,16 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ['results'=>'hydra:member', 'id'=>'id', 'paginationNext'=>'hydra:view.hydra:next'];
+    private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
 
     /**
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="object")
+     * @var array|null The handlers used for this entity.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity")
      */
-    private $handlers;
+    private Collection $handlers;
 
     public function __construct()
     {

@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Service\DocumentService;
 use App\Service\EavService;
-use App\Service\EndpointService;
+use App\Service\HandlerService;
 use App\Service\ValidationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +25,7 @@ class ZZController extends AbstractController
         EavService $eavService,
         DocumentService $documentService,
         ValidationService $validationService,
-        EndpointService $endpointService
+        HandlerService $handlerService
     ): Response {
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route'=>$entity]);
@@ -39,7 +39,7 @@ class ZZController extends AbstractController
 
         // Let determine an endpoint (new way)
         if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path'=>$entity])) {
-            return $endpointService->handleEndpoint($endpoint);
+            return $handlerService->handleEndpoint($endpoint);
         }
 
         // Continue as normal (old way)

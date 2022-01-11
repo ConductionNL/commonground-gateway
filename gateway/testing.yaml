@@ -1,0 +1,105 @@
+# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+App\Entity\Endpoint:
+    weerEndpoint:
+        name: Weer handler
+        description: endpoint voor dingen rondom weer
+        type: gateway-endpoint
+        path: weer
+
+App\Entity\Entity:
+    weekWeather:
+        route: "/api/weer"
+        name: weer
+        description: Dit endpoint behandeld weer.
+        endpoint: "weer"
+
+App\Entity\Attribute:
+    weekWeather_monday:
+        name: monday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_tuesday:
+        name: tuesday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_wednesday:
+        name: wednesday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_thursday:
+        name: thursday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_friday:
+        name: friday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_saturday:
+        name: saturday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_sunday:
+        name: sunday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+
+App\Entity\Handler:
+    weatherHandler:
+        name: Weather handler
+        sequence: 0
+        mappingIn:
+            monday: maandag
+            tuesday: dinsdag
+            wednesday: woensdag
+            thursday: donderdag
+            friday: vrijdag
+            saturday: weekend.zaterdag
+            sunday: weekend.zondag
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
+        mappingOut:
+            montag: monday
+            dienstag: tuesday
+            mittwoch: wednesday
+            donnerstag: thursday 
+            freitag: friday 
+            wochenende.samstag: saturday
+            wochenende.sonntag: sunday
+        endpoint: "@weerEndpoint"
+        entity: "@weekWeather"
+        # Denormalizer throws error trying denormalize template (set with api call for now)
+        # template: "<html><body><h1>Test</h1></body></html>"
+        # templateType: twig
+
+App\Entity\Translation:
+    regenTranslation:
+        translationTable: weatherTable1
+        translateFrom: zonnig
+        translateTo: regen
+        language: nl
+    rainTranslation:
+        translationTable: weatherTable2
+        translateFrom: regen
+        translateTo: sturm
+        language: de

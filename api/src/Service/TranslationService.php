@@ -63,6 +63,7 @@ class TranslationService
             }
             if (!isset($format) || $format == 'string') {
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
+                unset($destination[$search]);
             } elseif ($format == 'json') {
                 $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;
             } elseif ($format == 'xml') {
@@ -161,21 +162,36 @@ class TranslationService
      *
      * With a litle help from https://stackoverflow.com/questions/18197348/replacing-variables-in-a-string
      *
-     * @param string      $subject        The string to translate
-     * @param bool        $translate      Whether or not to also translate to string (defaults to true)
-     * @param array       $variables      Additional variables to replace
-     * @param string      $escapeChar     The escape charater to use (default to @)
-     * @param string|null $errPlaceholder
+     * @param string|array $subject        The string to translate
+     * @param bool         $translate      Whether or not to also translate to string (defaults to true)
+     * @param array        $variables      Additional variables to replace
+     * @param string       $escapeChar     The escape charater to use (default to @)
+     * @param string|null  $errPlaceholder
      *
      * @return string|string[]|null
      */
     public function parse(
-        string $subject,
+        $subject,
         bool $translate = true,
         array $translationVariables = [],
         string $escapeChar = '@',
         string $errPlaceholder = null
     ) {
+
+        // TODO should be done with array_walk_recursive
+        if (is_array($subject)) {
+            foreach ($subject as $key => $value) {
+                $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+            }
+
+            return $subject;
+        }
+
+        // We only translate strings
+        if (!is_string($subject)) {
+            return $subject;
+        }
+
         $esc = preg_quote($escapeChar);
         $expr = "/
         $esc$esc(?=$esc*+{)

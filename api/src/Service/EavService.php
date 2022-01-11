@@ -692,7 +692,7 @@ class EavService
      *
      * @return array
      */
-    private function handleEntityEndpoint(Request $request, array $info): array
+    public function handleEntityEndpoint(Request $request, array $info): array
     {
         // Lets setup a switchy kinda thingy to handle the input
         // Its an enity endpoint
@@ -743,7 +743,7 @@ class EavService
      *
      * @return array
      */
-    private function handleCollectionEndpoint(Request $request, array $info): array
+    public function handleCollectionEndpoint(Request $request, array $info): array
     {
         // its a collection endpoint
         switch ($request->getMethod()) {

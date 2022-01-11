@@ -54,7 +54,7 @@ class TranslationRepository extends ServiceEntityRepository
     public function getTranslations(array $translationTables, array $languages = [])
     {
         $query = $this->createQueryBuilder('t')
-            ->andWhere('t.translationTable = IN (:translationTables)')
+            ->andWhere('t.translationTable IN (:translationTables)')
             ->setParameter('translationTables', $translationTables)
             ->orderBy('t.id', 'ASC');
 
@@ -64,6 +64,13 @@ class TranslationRepository extends ServiceEntityRepository
                 ->setParameter('languages', $languages);
         }
 
-        return $query->getQuery()->getResult();
+        $results = $query->getQuery()->getResult();
+
+        $translations = [];
+        foreach ($results as $result) {
+            $translations[$result->getTranslateFrom()] = $result->getTranslateTo();
+        }
+
+        return $translations;
     }
 }
