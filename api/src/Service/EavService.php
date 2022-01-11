@@ -852,7 +852,9 @@ class EavService
         // Let see if we have errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
+            if ($request->getMethod() == 'POST') {
+                $this->handleDeleteOnError();
+            }
 
             return $errorsResponse;
         }
@@ -873,7 +875,9 @@ class EavService
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
+            if ($request->getMethod() == 'POST') {
+                $this->handleDeleteOnError();
+            }
 
             return $errorsResponse;
         }
