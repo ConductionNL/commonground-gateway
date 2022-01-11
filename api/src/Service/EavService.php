@@ -256,7 +256,7 @@ class EavService
                 if ($mapping = $request->query->get('_mapping')) {
                     foreach ($resultConfig['result'] as $key =>  $result) {
                         $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-                        if ($dcKey = array_search('_dateCreated', $mapping)) {
+                        if ($dcKey = array_search('@dateCreated', $mapping)) {
                             $resultConfig['result'][$key][$dcKey] = $result['@dateCreated']->format('d-m-Y');
                         }
                     }
