@@ -254,7 +254,7 @@ class EavService
                 /* @todo remove the old fields support */
                 /* @todo make this universal */
                 if ($mapping = $request->query->get('_mapping')) {
-                    if($dcKey = array_search('@dateCreated', $mapping)){
+                    if ($dcKey = array_search('@dateCreated', $mapping)) {
                         $mapping[$dcKey] = '_dateCreated';
                     }
                     foreach ($resultConfig['result'] as $key =>  $result) {
