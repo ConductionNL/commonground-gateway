@@ -73,17 +73,19 @@ class HandlerService
     }
 
     /**
-     * Get the data for a document and send it to the document creation service.
+     * This function sets the endpoint in the session and executes handleHandler with its found Handler.
      */
     public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
         $session->set('endpoint', $endpoint);
+
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
+
             if (true) {
                 $session->set('handler', $handler);
 
@@ -95,40 +97,53 @@ class HandlerService
     }
 
     /**
-     * Get the data for a document and send it to the document creation service.
+     * This function walks through the $handler with $data from the request to perform mapping, translating and fetching/saving from/to the eav.
+     * 
+     * @todo throw error if there is no body
+     * @todo remove old eav code if new way is finished and working
+     * @todo better check if $data is a document/template line 199
      */
     public function handleHandler(Handler $handler): Response
     {
-        // To start it al off we need the data from the incomming request
-        $data = $this->getDataFromRequest($this->request);
+        $method = $this->request->getMethod();
 
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        // Only do mapping and translation -in for calls with body
+        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
 
-        // Then we want to do the mapping in the incomming request
-        $skeleton = $handler->getSkeletonIn();
-        if (!$skeleton || empty($skeleton)) {
-            $skeleton = $data;
+            // To start it al off we need the data from the incomming request
+            if (!$data = $this->getDataFromRequest($this->request)) {
+                // @todo throw error
+            };
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // Then we want to do the mapping in the incomming request
+            $skeleton = $handler->getSkeletonIn();
+            if (!$skeleton || empty($skeleton)) {
+                $skeleton = $data;
+            }
+            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // The we want to do translations on the incomming request
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+            $data = $this->translationService->parse($data, true, $translations);
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
         }
-        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
-
-        // The we want to do  translations on the incomming request
-        $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-        $data = $this->translationService->parse($data, true, $translations);
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
 
         // eav new way
-        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $this->request->getMethod());
+        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
+            // @todo remove this code if new eav way works
             // // If the handler is teid to an EAV object we want to resolve that in all of it glory
             // if ($entity = $handler->getEntity()) {
 
@@ -137,7 +152,7 @@ class HandlerService
             //     if (array_key_exists('id', $routeParameters)) {
             //         $id = $routeParameters['id'];
             //     }
-            //     $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
+            //     $object = $this->eavService->getObject($id ?? null, $method, $entity);
 
             //     // Create an info array
             //     $info = [
@@ -154,6 +169,7 @@ class HandlerService
             // The we want to do  translations on the outgoing responce
             $transRepo = $this->entityManager->getRepository('App:Translation');
             $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+
             if (isset($data['result'])) {
                 $data['result'] = $this->translationService->parse($data['result'], true, $translations);
             } else {
@@ -170,7 +186,7 @@ class HandlerService
             }
             if (isset($data['result'])) {
                 $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-            } else {
+            } elseif (isset($data)) {
                 $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
             }
 
@@ -182,6 +198,7 @@ class HandlerService
                 $data = $this->renderTemplate($handler, $data);
             }
 
+            // @todo should be done better
             // If data is string it could be a document/template
             if (is_string($data)) {
                 $result = $data;
@@ -192,7 +209,7 @@ class HandlerService
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
 
-        // An lastly we want to create a responce
+        // An lastly we want to create a response
         $response = $this->createResponse($data);
 
         // Final update Log
@@ -212,6 +229,9 @@ class HandlerService
         return $body;
     }
 
+    /**
+     * @todo this function is not being used, remove?
+     */
     public function eavSwitch(Entity $entity): array
     {
         // We only end up here if there are no errors, so we only suply best case senario's
@@ -237,6 +257,11 @@ class HandlerService
         }
     }
 
+    /**
+     * This function creates and prepares the response
+     * 
+     * @todo throw error if $data is not string when creating pdf
+     */
     public function createResponse(array $data): Response
     {
 
@@ -310,6 +335,12 @@ class HandlerService
         return $response;
     }
 
+    /**
+     * Validates content type from request
+     * 
+     * @todo throw error if invalid extension
+     * @todo throw error if unsupported content type
+     */
     private function getRequestContentType(): string
     {
         // Lets grap the route parameters
@@ -335,6 +366,11 @@ class HandlerService
         /* @todo throw error */
     }
 
+    /**
+     * Checks template type on handler and creates template
+     * 
+     * @todo Add global variables
+     */
     private function renderTemplate(Handler $handler, array $data): string
     {
         /* @todo add global variables */
