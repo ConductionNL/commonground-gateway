@@ -4,13 +4,10 @@ namespace App\Service;
 
 use App\Entity\Log;
 use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LogService
 {
@@ -26,7 +23,7 @@ class LogService
     public function createLog(Response $response, Request $request): Log
     {
         $callLog = new Log();
-        $callLog->setType("in");
+        $callLog->setType('in');
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all() ?? null);
@@ -52,7 +49,7 @@ class LogService
 
         if ($this->session) {
             // add before removing
-            $callLog->setCallId($this->session->get('callId',null));
+            $callLog->setCallId($this->session->get('callId', null));
             $callLog->setSession($this->session->getId());
             $callLog->setEndpoint($this->session->get('endpoint', null));
             $callLog->setEntity($this->session->get('entity', null));
@@ -89,5 +86,4 @@ class LogService
 
         return null;
     }
-
 }

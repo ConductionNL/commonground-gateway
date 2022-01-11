@@ -2,24 +2,16 @@
 
 namespace App\Service;
 
-use ApiPlatform\Core\Exception\InvalidArgumentException;
-use App\Entity\Entity;
 use App\Entity\Endpoint;
+use App\Entity\Entity;
 use App\Entity\Handler;
-use App\Service\EavService;
-use App\Service\TranslationService;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Http\Message\RequestInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpFoundation\AcceptHeader;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 
 class EndpointService extends AbstractController
@@ -33,18 +25,18 @@ class EndpointService extends AbstractController
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-    public  $acceptHeaderToSerialiazation = [
-        'application/json'     => 'json',
-        'application/ld+json'  => 'jsonld',
-        'application/json+ld'  => 'jsonld',
-        'application/hal+json' => 'jsonhal',
-        'application/json+hal' => 'jsonhal',
-        'application/xml'      => 'xml',
-        'text/csv'             => 'csv',
-        'text/yaml'            => 'yaml',
-        'text/html'            => 'html',
-        'application/pdf'      => 'pdf',
-        'application/msword'   => 'doc',
+    public $acceptHeaderToSerialiazation = [
+        'application/json'                                                                   => 'json',
+        'application/ld+json'                                                                => 'jsonld',
+        'application/json+ld'                                                                => 'jsonld',
+        'application/hal+json'                                                               => 'jsonhal',
+        'application/json+hal'                                                               => 'jsonhal',
+        'application/xml'                                                                    => 'xml',
+        'text/csv'                                                                           => 'csv',
+        'text/yaml'                                                                          => 'yaml',
+        'text/html'                                                                          => 'html',
+        'application/pdf'                                                                    => 'pdf',
+        'application/msword'                                                                 => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
     ];
 
@@ -55,8 +47,7 @@ class EndpointService extends AbstractController
         EavService $eavService,
         SessionInterface $session,
         LogService $logService
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
         $this->translationService = $translationService;
@@ -73,18 +64,18 @@ class EndpointService extends AbstractController
         $this->session->set('endpoint', $enpoint);
         // @todo creat logicdata, generalvaribales uit de translationservice
 
-        foreach($enpoint->getHandlers() as $handler){
+        foreach ($enpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo actually check for json logic */
-            if(true){
+            if (true) {
                 $this->session->set('handler', $handler);
+
                 return $this->handleHandler($handler);
             }
         }
 
         // @todo we should not end up here so lets throw an 'no handler found' error
     }
-
 
     /**
      * This function determines the handler.
@@ -97,34 +88,33 @@ class EndpointService extends AbstractController
 
         // Then we want to do the mapping in the incoming request
         $skeleton = $handler->getSkeletonIn();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
         // We want to do  translations on the incoming request
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn());
+        $translations = $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsIn());
         $data = $this->translationService->parse($data, true, $translations);
 
         // If the handler is teid to an EAV object we want to resolve that in all of it glory
-        if($entity = $handler->getEntity()){
+        if ($entity = $handler->getEntity()) {
             $data = $this->eavSwitch($entity);
         }
 
         // We want to do  translations on the outgoing response
-        $translations =  $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut());
+        $translations = $this->getDoctrine()->getRepository('App:Translation')->getTranslations($handler->getTranslationsOut());
         $data = $this->translationService->parse($data, true, $translations);
 
         // Then we want to do to mapping on the outgoing response
         $skeleton = $handler->getSkeletonOut();
-        if(!$skeleton || empty($skeleton)){
+        if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
-
         // Lets see if we need te use a template
-        if($handler->getTemplatetype() && $handler->getTemplate()){
+        if ($handler->getTemplatetype() && $handler->getTemplate()) {
             $data = $this->renderTemplate($handler, $data);
         }
 
@@ -137,12 +127,11 @@ class EndpointService extends AbstractController
         return $response;
     }
 
-
     public function getDataFromRequest(): array
     {
         //@todo support xml messages
 
-        if($this->request->getContent()) {
+        if ($this->request->getContent()) {
             $body = json_decode($this->request->getContent(), true);
         }
 
@@ -177,7 +166,7 @@ class EndpointService extends AbstractController
     public function createResponse(array $data): Response
     {
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($this->request->getMethod()){
+        switch ($this->request->getMethod()) {
             case 'GET':
                 $status = Response::HTTP_OK;
                 break;
@@ -222,7 +211,7 @@ class EndpointService extends AbstractController
 
         // Lets handle file responses
         $routeParameters = $this->request->attributes->get('_route_params');
-        if(array_key_exists('extension') && $extension = $routeParameters['extension']){
+        if (array_key_exists('extension') && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
@@ -240,18 +229,17 @@ class EndpointService extends AbstractController
         $routeParameters = $this->request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if(array_key_exists('extension', $routeParameters)){
-            if(in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
+        if (array_key_exists('extension', $routeParameters)) {
+            if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
-            }
-            else{
+            } else {
                 /* @todo throw error, invalid extension requested */
             }
         }
 
         // Let's pick the first acceptable content type that we support
-        foreach($this->request->getAcceptableContentTypes() as $contentType){
-            if(array_key_exists($contentType, $this->acceptHeaderToSerialiazation)){
+        foreach ($this->request->getAcceptableContentTypes() as $contentType) {
+            if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
                 return $this->acceptHeaderToSerialiazation[$contentType];
             }
         }
@@ -260,16 +248,16 @@ class EndpointService extends AbstractController
         /* @todo throw error */
     }
 
-
     private function renderTemplate(Handler $handler, array $data): string
     {
         /* @todo add global variables */
         $variables = $data;
 
         // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($handler->getTemplateType()){
+        switch ($handler->getTemplateType()) {
             case 'TWIG':
                 $document = $this->templating->createTemplate($handler->getTemplate());
+
                 return $document->render($variables);
                 break;
             case 'MD':
@@ -286,4 +274,3 @@ class EndpointService extends AbstractController
         }
     }
 }
-
