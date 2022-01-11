@@ -11,7 +11,6 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Json;
 
-
 /**
  * An handler.
  *
