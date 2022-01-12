@@ -1,4 +1,5 @@
-# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+# todo: NOTE: WARNING!!! Read before deploying: When copy pasting this for a deploy and changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
+# todo: 2nd WARNING!!! when UC fixtures are reloaded the test+biscadmin+scenario@conduction.nl user uuid will change, in the application below the resource is a reference to this user object, so when the uuid is changed this resource uri needs to be updated as well!!! otherwise the taalhuizen-logic service wont be able to communicate with the gateway!
 App\Entity\Application:
     application:
         name: main application
