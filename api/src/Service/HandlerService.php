@@ -148,7 +148,7 @@ class HandlerService
         }
 
         // eav new way
-        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
@@ -228,15 +228,17 @@ class HandlerService
         return $response;
     }
 
-    public function getDataFromRequest(): array
+    /**
+     * @return array|null
+     */
+    public function getDataFromRequest()
     {
         //@todo support xml messages
 
         if ($this->request->getContent()) {
-            $body = json_decode($this->request->getContent(), true);
-        }
-
-        return $body;
+            return json_decode($this->request->getContent(), true);
+        } 
+        return null;
     }
 
     /**
