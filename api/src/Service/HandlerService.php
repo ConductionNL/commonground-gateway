@@ -115,8 +115,14 @@ class HandlerService
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
 
             // To start it al off we need the data from the incomming request
-            if (!$data = $this->getDataFromRequest($this->request)) {
-                // @todo throw error
+            $data = $this->getDataFromRequest($this->request);
+            if ($data == null || empty($data)) {
+                $response = new Response(
+                    $this->serializer->serialize(['message' => 'No request body given for ' . $method, 'path' => 'Request body'],  $this->getRequestContentType()),
+                    Response::HTTP_NOT_FOUND,
+                    [$this->acceptHeaderToSerialiazation[array_search($this->getRequestContentType(), $this->acceptHeaderToSerialiazation)]]
+                );
+                return $response->prepare($this->request);
             };
 
             // Update current Log
