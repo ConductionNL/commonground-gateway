@@ -93,13 +93,17 @@ class HandlerService
             }
         }
 
-        // @todo we should not end up here so lets throw an 'no handler found' error
+        $response = new Response(
+            $this->serializer->serialize(['message' => 'No handler found for endpoint: ' . $endpoint->getName(), 'data' => $endpoint->getId()], $this->getRequestContentType()),
+            Response::HTTP_NOT_FOUND,
+            [$this->acceptHeaderToSerialiazation[array_search($this->getRequestContentType(), $this->acceptHeaderToSerialiazation)]]
+        );
+        return $response->prepare($this->request);
     }
 
     /**
      * This function walks through the $handler with $data from the request to perform mapping, translating and fetching/saving from/to the eav.
      * 
-     * @todo throw error if there is no body
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
