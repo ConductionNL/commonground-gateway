@@ -1080,6 +1080,7 @@ class SOAPService
 
     private function getPersonDetails(array $data, array $valueTypes, array $result): array
     {
+        ksort($data);
         foreach($data as $key=>$datum){
             $result = $this->getPersonDetail($key, $datum, $result, $valueTypes);
         }
