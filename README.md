@@ -26,7 +26,7 @@ This will build the container image needed to run the Commonground Gateway local
 
 ## Documentation
 
-Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). A more product owner focused (and less technical) product page is hosted at []().
+Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). A more product owner focused (and less technical) product page is hosted at [link to be added]().
 
 If you want to run the technical documentation locally, you can do so by using MKDocs build server and the serve command. Just go to the local repository and execute the following command for the documenation to be available on port 8000 (make sure to [install MKDocs](https://www.mkdocs.org/user-guide/installation/) first)
 
