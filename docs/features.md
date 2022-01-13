@@ -32,6 +32,7 @@ The web gateway provides an easy (and inline scripting save) way of providing ap
 -To be added-
 
 ##GDPR compliance and logging
+
 The web gateway supports logging all data requests and there ‘doelbinding’ to a GDPR registry (or in case of Dutch governmental agencies, the VNG doelbindings register). Be aware that activating this functionality can lead to double registrations in said registry if the receiving API is already logging all requests. Please check the API's documentation you are connecting to before activating this functionality
 
 ##Notifications and event driven
@@ -52,16 +53,19 @@ Occasionally, you might encounter a linked data uri to a different API in a Comm
 
 ##Smart search
 
-The web gateway allows searching on any attribute that is marked as ‘searchable’ even if the original API dosn’t allow for searching on that specific attribute or property. It also support the searching of sub entities by the way of dot annotation e.g. `?field1.subfield1=searchme. All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you to also use `?search=searchme` be aware tho that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string type attributes.
+The web gateway allows searching on any attribute marked as "searchable" even if the original API doesn't allow for searching that specific attribute or property. It also supports the searching of sub-entities way of dot annotation, e.g. `?field1.subfield1=searchme. All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you also to use `?search=searchme` be aware that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string-type attributes.
 
 ##Ordering results
-adas
+
+-To be added-
+
 ##Pagination
-The web gateway supports two different approaches to pagination, allowing the developer choose what fits him best. When making a GET call to a collection endpoint e.g. `/pet` instead of `/pet/{petId}` the result will always be an array of objects in the results property of the response (do the array might consist of zero items). Additionally a start(default 1), limit (default 25), page, pages and total property will be returned allowing you to slice the result any way you want. Basic slicing can be done using the start and limit properties, advanced slicing to the page end limit property (pagination). Lets assume that you have an collection containing a 125 result. A besic get would then get you something like
+
+The web gateway supports two different approaches to pagination, allowing the developer to choose what fits him best. When making a GET call to a collection endpoint, e.g. `/pet` instead of `/pet/{petId}`, the result will always be an array of objects in the results property of the response (even if the array has zero items). Additionally, a start(default 1), limit (default 25), page, pages, and total properties will be returned, allowing you to slice the result any way you want. Basic slicing can be done using the start and limit properties, advanced slicing to the page end limit property (pagination). Let's assume that you have a collection containing 125 results. A basic GET would then get you something like
 
 ```json
 {
-	“results”: .. ,#array containing 25 items
+	“results”: .. ,#array containing 125 items
 	“total”:125
 	“start”:1,
 	“limit”:25,
@@ -70,7 +74,7 @@ The web gateway supports two different approaches to pagination, allowing the de
 }
 ```
 
-Lets say that you are displaying the data in an table and want more results to start with so you set the limit to `?limit=100`, the expected result would then be
+Let's say you are displaying the data in a table and want more results to begin with, so you set the limit to `?limit=100`, the expected result would be
 
 ```json
 {
@@ -83,7 +87,7 @@ Lets say that you are displaying the data in an table and want more results to s
 }
 ```
 
-You can now provide pagination buttons to you user based directly on the pages property, lets say you make a button for each page and the user presses page 2 (or next) your following call will then be `?limit=100&page=2` and the result
+You can now provide pagination buttons to your users based directly on the pages property, let's say you make a button for each page, and the user presses page 2 (or next) your following call will then be `?limit=100&page=2` and the result
 
 ```json
 {
@@ -96,14 +100,17 @@ You can now provide pagination buttons to you user based directly on the pages p
 }
 ```
 
-Alternatively you could also query `?limit=100&start=101` for the same result
+Alternatively, you could query `?limit=100&start=101` for the same result
 
 ##Exporting files
-At some points you might want to provide a user a download option for an export of file containing a data set, for GDPR reasons it is preferable to create these through the web gateway (so that the data transfer can be properly logged in the gdpr registry). For this reason all the collection endpoints support returning downloadable files besides returning json objects. To initiate a file download simply set the ‘accept’ head to the prefferd file format. We current support `text/csv`,`application/ms-excel`,`application/pdf` keep in mind that you can use the field, extend and pagination query functionality to influence the result/data set.
-##Entities and Attributes
-Object storage and persistens to other api’s is handled trough an eav model. This means that any object from an underlying source can be made available through an mapping this mapping is necessary because you may not want all the properties of an api object to be externally available trough an ajax request, or you might want to provide additional validation or staked objects through the API.
 
-Generally speaking on underlying API will provide `endpoints` containing (collections of) `objects`. In case of the swagger petstore example that the `/pet` endpoint contains a list of pets in an results array and the `pet/{petId}` contains single pet `object` identified by id.
+At some point, you might want to provide the user a download option for the export of a file containing a data set; for GDPR reasons, it is preferable to create these through the web gateway (so that data transfers can be properly logged in the GDPR registry). For this reason, all the collection endpoints support returning downloadable files besides returning JSON objects. To initiate a file download, simply set the ‘accept’ head to the preferred file format. We currently support `text/csv`,`application/ms-excel`,`application/pdf`. Keep in mind that you can use the field, extend, and pagination query functionality to influence the result/data set.
+
+##Entities and Attributes
+
+Object storage and persistence to other API's are handled through an EAV model. Meaning any object from an underlying source can be made available through mapping. This mapping is necessary because you may not want all the properties of an API object to be externally available through an AJAX request, or you might want to provide additional validation or staked objects through the API.
+
+Generally speaking, an underlying API will provide `endpoints` containing (collections of) `objects`. In the case of the swagger pet store example, the `/pet` endpoint includes a list of pets in a results array, and the `pet/{petId}` contains a single pet `object` identified by id.
 
 An pet object looks something like this
 
@@ -126,31 +133,34 @@ An pet object looks something like this
 }
 ```
 
-So what does that mean for EAV mapping? Well simply put our objects become entities and our properties become attributes. So in this case we will have an entity called Pet that has the following attributes: ‘category’,’name’,’photoUrls’,’tags’ and ’status’/. Both entities and attributes can contain additional configuration, meaning the can do MORE than the original api object but never less. For example is the pet object requires you to provide a name for a pet (it does) you might chose to ignore that requirement on the name attribute but that will just cause the underlying api to throw an error any time you try to process a pet without a name.
+So what does that mean for EAV mapping? Well, simply put, our objects become entities, and our properties become attributes. So, in this case, we will have an entity called Pet that has the following attributes: ‘category’, ’name’, ’photoUrls’, ’tags’, and ’status’/. Both entities and attributes can contain additional configuration, meaning they can do MORE than the original API object but never less. For example, the pet object requires you to provide a name for a pet (it does), you might choose to ignore that requirement on the name attribute, but that will cause the underlying API to throw an error any time you try to process a pet without a name.
 
 ###Entity
-Entities represent objects that you want to communicate to underlaying sources, to do this they requiquire and source and an endpoint on that source to send the object to. You may however choice to ignore this. And just ‘store’ you objects with the gateway, do this might be a good way to mock api’s in development environments it isn’t recommended for production environments.
+
+Entities represent objects you want to communicate to underlaying sources. To do this, they require a source and an endpoint on that source to send the object to. You may choose to ignore this. And just 'store' your objects with the gateway, this might be an excellent way to mock API's in development environments, but it's not recommended for production environments.
 
 ####Properties
 An entity consists of the following properties that can be configured
 
 _name_: ‘required’ An unique name for this entity
-_description_: ‘optional’ The description for this entity that wil be shown in de API documentation
+_description_: ‘optional’ The description for this entity that will be shown in de API documentation
 _source_: ‘optional’ The source where this entity resides
 _endpoint_: ‘required if an source is provided’ The endpoint within the source that this entity should be posted to as an object
-_file_: ‘required’ Whethers this entity might contain file uploads, if present this should either be set to ‘no’,’yes’ or ‘multiple’. Where yes wil allow a single file to be uploaded through this entity and multiple wil allow multiple files to be uploaded through this entity. Read more under ‘Uploading files through the gateway’.
+_file_: ‘required’ Based on whether this entity contains file uploads, or not, this should either be set to 'no',' yes', or 'multiple'. Where 'yes' will allow a single file to be uploaded through this entity, and 'multiple' will allow multiple files to be uploaded. Read more under 'Uploading files through the gateway'.
 _fileRequirements_: ‘required if file is either yes or multiple’ Read more under ‘Uploading files through the gateway’.
 
 ###Attribute
-Attributes represent properties on objects that you want to communicatie to underlying sources. In a normal setup and attribute should at leas apply the same restrictions as the onderlying property (e.g. required) to prevent errors when pushing the entity to its source. It can however provide additional validations to an properte, for a example the source aiu might simply require the property ‘email’ to be an unique string but you could set the formt to ‘email’ causing the input to be validated as an iso compatible email adres.
+
+Attributes represent properties on objects that you want to communicate to underlying sources. In a standard setup, an attribute should apply the same restrictions as the underlying property (e.g., required) to prevent errors when pushing the entity to its source. It can, however, provide additional validations to a property. For example, the source aiu might require the property ‘email’ to be a unique string, but you could set the form to ‘email’, causing the input to be validated as an ISO compatible email address.
 
 ####Properties
-_name_: ’required’ An name for this attribute MUST be unique on an entity level and MAY NOT be ‘id’,’file’,‘files’, ’search’,’fields’,’start’,’page’,’limit’,’extend’,’organization’
+
+_name_: ’required’ A name for this attribute MUST be unique on an entity level and MAY NOT be ‘id’,’file’,‘files’, ’search’,’fields’,’start’,’page’,’limit’,’extend’,’organization’
 _type_: ’required’ See types
 _format_: ’optional’ See formats
 
 ####Types
-The type of an attribute provides basic validations and an way for the gateway to store and cahse values in an efficient manner. Types are derived from the OAS3 specification. Currently available types are:
+The type of an attribute provides basic validations and a way for the gateway to store and cache values in an efficient manner. Types are derived from the OAS3 specification. Currently available types are:
 
 _string_:
 _int_
@@ -158,22 +168,35 @@ _date_
 _date-time_
 
 ####Formats
-A format defines a way an value should be formated, and is directly connected to an type, for example an string MAY BE an format of email, but an integer cannot be an valid email. Formats are derived from the OAS3 specification but supplemented with formats that are generally needed in governmental applications (like bsn) . Currently available formats are:
+
+A format defines a value should be formated and is directly connected to a type, for example, a string MAY BE a format of email, but an integer cannot be a valid email. Formats are derived from the OAS3 specification but supplemented with formats generally needed in governmental applications (like BSN). Currently available formats are:
 
 _bsn_:
+
 ####Validations
-Besides validations on type and string you can also use specific validations, these are contained in the validation array. Validation might be specific to certain types or formats e.g. minValue can only be applied values that can be turned into numeric value. And other validations might be of an more general nature e.g. required.
+
+Besides validations on type and string, you can also use specific validations; these are contained in the validation array. Validation might be specific to certain types or formats e.g., minValue can only be applied values that can be turned into a numeric value. And other validations might be of a more general nature, e.g., the 'required' value.
+
 ##API Documentation
-ad
+
+-   To be Added -
 
 ##Uploading files through the gateway
-ad
+
+-   To be Added -
 
 ##Easy configuration
 
+-   To be Added -
+
 ###Dashboard
-gjgh
+
+-   To be Added -
+
 ###API
-fgfhfgh
+
+-   To be Added -
+
 ###YAML
-sdfs
+
+-   To be Added -
