@@ -254,6 +254,9 @@ class EavService
                 /* @todo remove the old fields support */
                 /* @todo make this universal */
                 if ($mapping = $request->query->get('_mapping')) {
+                    if ($dcKey = array_search('@dateCreated', $mapping)) {
+                        $mapping[$dcKey] = '_dateCreated';
+                    }
                     foreach ($resultConfig['result'] as $key =>  $result) {
                         $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
                         if ($dcKey = array_search('_dateCreated', $mapping)) {
@@ -311,6 +314,8 @@ class EavService
                 'PENDING'                                               => '"In afwachting"',
                 'ACCEPTED'                                              => 'Geaccepteerd',
                 'REJECTED'                                              => 'Afgewezen',
+                'INFLUX'                                                => 'Instroom',
+
             ];
 
             $result = $this->translationService->parse($result, true, $translationVariables);
@@ -850,7 +855,9 @@ class EavService
         // Let see if we have errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
+            if ($request->getMethod() == 'POST') {
+                $this->handleDeleteOnError();
+            }
 
             return $errorsResponse;
         }
@@ -871,7 +878,9 @@ class EavService
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
+            if ($request->getMethod() == 'POST') {
+                $this->handleDeleteOnError();
+            }
 
             return $errorsResponse;
         }
