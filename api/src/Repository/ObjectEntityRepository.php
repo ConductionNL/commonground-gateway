@@ -43,10 +43,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
     {
-        var_dump('FIND...');
+//        var_dump('FIND...');
         $query = $this->createQuery($entity, $filters);
-        var_dump($query->getDQL());
-        var_dump($query->getQuery()->getSQL());
+//        var_dump($query->getDQL());
+//        var_dump($query->getQuery()->getSQL());
 
         return $query
             // filters toevoegen
@@ -67,7 +67,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
-        var_dump('COUNT...');
         $query = $this->createQuery($entity, $filters);
         $query->select('count(o)');
 
@@ -77,7 +76,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function addSubresourceFilter(array $subresourceFilters, array $key, $value): array
     {
         $keyName = $key[0];
-        var_dump($keyName);
         array_shift($key);
         if (count($key) > 0) {
 //            $subresourceFilters[$keyName] = array_key_exists($keyName, $subresourceFilters) ? $subresourceFilters[$keyName] : [];
@@ -112,13 +110,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (substr($key, 0, 1) == '.') {
                 $key = '_' . ltrim($key, $key[0]);
             }
-            var_dump($key, !(substr($key, 0, 1) === '_'), in_array($key, $filterCheck), !(substr($key, 0, 1) === '_') && in_array($key, $filterCheck));
             if(!(substr($key, 0, 1) == '_') && in_array($key, $filterCheck)){
-                var_dump('hi!');
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
-        var_dump($result);
         return $result;
     }
 
@@ -126,7 +121,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         foreach ($filters as $key => $value) {
             if(is_array($value)){
-                $query->leftJoin('value.objects', 'subObjects'.$key.$level);
+                $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
+                $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
                 $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
                 $query = $this->buildQuery(
                     $value,
@@ -154,12 +150,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
 
-//            var_dump($filters);
             $filters = $this->cleanArray($filters, $filterCheck);
-//            var_dump($filters);
 
             $query->leftJoin('o.objectValues', 'value');
-            $this->buildQuery($filters, $query);
+            $this->buildQuery($filters, $query)->distinct();
         }
 
         //TODO: owner check
@@ -198,11 +192,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
         */
-        // SHOW SQL:
-
-//        echo $query->getQuery()->getSQL();
-        // Show Parameters:
-//        echo $query->getQuery()->getParameters();
 
         return $query;
     }
@@ -240,20 +229,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
-        if (!is_array($value)) {
-            var_dump($key." -> ".$value);
-        } else {
-            var_dump($key." -> ".implode(', ', $value));
-        }
         switch ($key) {
             case 'id':
-                $query->andWhere('('.$prefix.'.id = :'.$key.' OR '.$prefix.'.externalId = :'.$key.')')->setParameter($key, $value);
+                $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
                 break;
             case '_id':
-                $query->andWhere($prefix.'.id = :id')->setParameter('id', $value);
+                $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
                 break;
             case '_externalId':
-                $query->andWhere($prefix.'.externalId = :externalId')->setParameter('externalId', $value);
+                $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
                 break;
             case '_uri':
                 $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
