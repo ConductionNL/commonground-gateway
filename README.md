@@ -28,13 +28,13 @@ This will build the container image needed to run the Commonground Gateway local
 
 Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). A more product owner focused (and less technical) product page is hosted at []().
 
-If you want to run the technical documentation locally you can do so by using MKDocs build in server and the serve command. Just go to the local repository and execute the following command for the documenation to be available on port 8000 (make sure to [install MKDocs](https://www.mkdocs.org/user-guide/installation/) first)
+If you want to run the technical documentation locally, you can do so by using MKDocs build server and the serve command. Just go to the local repository and execute the following command for the documenation to be available on port 8000 (make sure to [install MKDocs](https://www.mkdocs.org/user-guide/installation/) first)
 
 ```cli
 $ mkdocs serve
 ```
 
-The (non-)technical product page is based on Gatsby and can also be published locally, just navigate to the repository and then to de docs directory. (make sure to [install Gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on your machine first though)
+The (non-)technical product page is based on Gatsby and can also be published locally, just navigate to the repository and then to the docs directory. (make sure to [install Gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on your machine first though)
 
 ```cli
 $ cd /product-page
@@ -48,4 +48,5 @@ $ cd /product-page
 $ npm run deploy
 ```
 
-## Update
+<!--
+## Update -->
