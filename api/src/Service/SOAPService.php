@@ -1141,9 +1141,10 @@ class SOAPService
 
             $data->set('geboortedatum', (int) $date);
 
-            $time = new DateTime($data->get('tijdoverlijden'));
-
-            $data->set('tijdoverlijden', $time->format('H:i'));
+            if($data->has('tijdoverlijden')){
+                $time = new DateTime($data->get('tijdoverlijden'));
+                $data->set('tijdoverlijden', $time->format('H:i'));
+            }
 
             $time = new DateTime($data->get('tijd'));
 

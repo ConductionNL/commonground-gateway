@@ -1222,8 +1222,8 @@ App\Entity\Soap:
             witnesses: witnesses | json
             officials: officials | json
             location.name: naam
-            partner2.nameAfterCommitment.nameUseType: geselecteerdNaamgebruik
-            partner1.nameAfterCommitment.nameUseType: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns1:extraElementen.ns1:extraElement.2.#"
+            partner2.nameAfterCommitment.nameUseType: geselecteerdNaamgebruikPartner
+            partner1.nameAfterCommitment.nameUseType: geselecteerdNaamgebruik
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope
@@ -1319,9 +1319,10 @@ App\Entity\Soap:
             dateOfDeath: datumoverlijden
             timeOfDeath: tijdoverlijden
             funeralServices.serviceType: type
-            funeralServices.date: datum
+            funeralServices.date: datumuitvaart
+            funeralServices.time: tijduitvaart
             funeralServices.outsideBenelux: buitenbenelux | bool
-            funeralServices.countryOfDestination.code: lnd&#2Elandcode
+            funeralServices.countryOfDestination.code: landcode
             funeralServices.placeOfDestination: plaatsbest
             funeralServices.via: viabest
             funeralServices.transportation: voertuigbest
@@ -1334,7 +1335,7 @@ App\Entity\Soap:
             correspondence.houseNumberLetter: aoa&#2Ehuisletter
             correspondence.houseNumberAddition: aoa&#2Ehuisnummertoevoeging
             correspondence.postalCode: aoa&#2Epostcode
-            correspondence.residence: wpl&#2Ewoonplaatsnaam
+            correspondence.residence: wpl&#2EwoonplaatsNaam
             extracts: extracts | json
             declarant.bsn: declarantBsn
         response: |
@@ -1383,12 +1384,13 @@ App\Entity\Soap:
             deceased.birthdate: geboortedatum
             deathByNaturalCauses: natdood | bool
             municipality.code: gemeentecode
-            dateOfFinding: datum
-            timeOfFinding: tijd
+            dateOfFinding: datumlijkvinding
+            timeOfFinding: tijdlijkvinding
             funeralServices.serviceType: type
-            funeralServices.date: datum
+            funeralServices.date: datumuitvaart
+            funeralServices.time: tijduitvaart
             funeralServices.outsideBenelux: buitenbenelux | bool
-            funeralServices.countryOfDestination.code: lnd&#2Elandcode
+            funeralServices.countryOfDestination.code: landcode
             funeralServices.placeOfDestination: plaatsbest
             funeralServices.via: viabest
             funeralServices.transportation: voertuigbest
@@ -1401,10 +1403,10 @@ App\Entity\Soap:
             correspondence.houseNumberLetter: aoa&#2Ehuisletter
             correspondence.houseNumberAddition: aoa&#2Ehuisnummertoevoeging
             correspondence.postalCode: aoa&#2Epostcode
-            correspondence.residence: wpl&#2Ewoonplaatsnaam
+            correspondence.residence: wpl&#2EwoonplaatsNaam
             extracts: extracts | json
             writtenDeclarantType: aangevertype
-            explanation: omschrijving
+            explanation: omschrijvinglijkvinding
         #            declarant.bsn: declarantBsn
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
