@@ -83,51 +83,54 @@ class ObjectEntityRepository extends ServiceEntityRepository
         } else {
             $subresourceFilters[$keyName] = $value;
         }
+
         return $subresourceFilters;
     }
 
     private function recursiveFilterSplit(array $key, $value, array $result): array
     {
-        if(count($key) > 1) {
+        if (count($key) > 1) {
             $currentKey = array_shift($key);
             $result[$currentKey] = $this->recursiveFilterSplit($key, $value, $result[$currentKey] ?? []);
         } else {
             $result[array_shift($key)] = $value;
         }
+
         return $result;
     }
 
     /**
      * @param $array
+     *
      * @return array
      */
     private function cleanArray(array $array, array $filterCheck): array
     {
         $result = [];
-        foreach($array as $key=>$value)
-        {
+        foreach ($array as $key=>$value) {
             $key = str_replace(['_', '..'], ['.', '._'], $key); //@TODO: test if this works correctly
             if (substr($key, 0, 1) == '.') {
-                $key = '_' . ltrim($key, $key[0]);
+                $key = '_'.ltrim($key, $key[0]);
             }
-            if(!(substr($key, 0, 1) == '_') && in_array($key, $filterCheck)){
+            if (!(substr($key, 0, 1) == '_') && in_array($key, $filterCheck)) {
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
+
         return $result;
     }
 
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
-            if(is_array($value)){
+            if (is_array($value)) {
                 $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
                 $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
                 $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
                 $query = $this->buildQuery(
                     $value,
                     $query,
-                    $level+1,
+                    $level + 1,
                     'subValue'.$key.$level,
                     'subObjects'.$key.$level
                 );
@@ -138,6 +141,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     ->setParameter($key, $value);
             }
         }
+
         return $query;
     }
 
