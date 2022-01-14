@@ -1128,7 +1128,6 @@ class EavService
                     foreach ($value->getObjects() as $object) {
                         $object->removeSubresourceOf($value);
                     }
-                    continue;
                 }
             }
 
