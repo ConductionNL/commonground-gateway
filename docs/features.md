@@ -53,7 +53,7 @@ Occasionally, you might encounter a linked data uri to a different API in a Comm
 
 ##Smart search
 
-The web gateway allows searching on any attribute marked as "searchable" even if the original API doesn't allow for searching that specific attribute or property. It also supports the searching of sub-entities way of dot annotation, e.g. `?field1.subfield1=searchme. All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you also to use `?search=searchme` be aware that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string-type attributes.
+The web gateway allows searching on any attribute marked as "searchable" even if the original API doesn't allow for searching that specific attribute or property. It also supports the searching of sub-entities way of dot annotation, e.g. `?field1.subfield1=searchme.` All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you also to use `?search=searchme` be aware that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string-type attributes.
 
 ##Ordering results
 
