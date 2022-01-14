@@ -535,12 +535,14 @@ App\Entity\Attribute:
         name: street
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_houseNumber:
         name: houseNumber
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_houseNumberSuffix:
@@ -553,12 +555,14 @@ App\Entity\Attribute:
         name: postalCode
         type: string
         maxLength: 255
+        required: true
         persistToGateway: true
         entity: "@address"
     address_locality:
         name: locality
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_country:
