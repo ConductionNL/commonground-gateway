@@ -1107,7 +1107,7 @@ class EavService
      */
     private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
     {
-        //TODO: DO NOT TOUCH! This will only delete emails from the gateway when an error is thrown. should delete all created ObjectEntities...
+        //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
 //        var_dump($createdObject->getUri());
 //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
 //            try {
@@ -1121,14 +1121,21 @@ class EavService
 //        var_dump('Delete: '.$createdObject->getEntity()->getName());
 //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
         foreach ($createdObject->getObjectValues() as $value) {
-            $this->deleteSubobjects($value, $motherObject);
+            if ($value->getAttribute()->getType() == 'object') {
+                if ($value->getAttribute()->getCascadeDelete()) {
+                    $this->deleteSubobjects($value, $motherObject);
+                } else {
+                    foreach ($value->getObjects() as $object) {
+                        $object->removeSubresourceOf($value);
+                    }
+                    continue;
+                }
+            }
 
             try {
-                if ($createdObject->getEntity()->getName() == 'email') {
-                    $this->em->remove($value);
-                    $this->em->flush();
-//                    var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
-                }
+                $this->em->remove($value);
+                $this->em->flush();
+//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
             } catch (Exception $exception) {
 //                var_dump($exception->getMessage());
 //                var_dump($value->getId()->toString());
@@ -1139,11 +1146,9 @@ class EavService
         }
 
         try {
-            if ($createdObject->getEntity()->getName() == 'email') {
-                $this->em->remove($createdObject);
-                $this->em->flush();
-//                var_dump('Deleted: '.$createdObject->getEntity()->getName());
-            }
+            $this->em->remove($createdObject);
+            $this->em->flush();
+//            var_dump('Deleted: '.$createdObject->getEntity()->getName());
         } catch (Exception $exception) {
 //            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
         }
