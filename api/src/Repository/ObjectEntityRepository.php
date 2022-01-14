@@ -73,20 +73,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query->getQuery()->getSingleScalarResult();
     }
 
-    private function addSubresourceFilter(array $subresourceFilters, array $key, $value): array
-    {
-        $keyName = $key[0];
-        array_shift($key);
-        if (count($key) > 0) {
-//            $subresourceFilters[$keyName] = array_key_exists($keyName, $subresourceFilters) ? $subresourceFilters[$keyName] : [];
-            return [$keyName => array_merge($subresourceFilters[$keyName], $this->addSubresourceFilter($subresourceFilters[$keyName], $key, $value))];
-        } else {
-            $subresourceFilters[$keyName] = $value;
-        }
-
-        return $subresourceFilters;
-    }
-
     private function recursiveFilterSplit(array $key, $value, array $result): array
     {
         if (count($key) > 1) {
