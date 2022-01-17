@@ -1219,6 +1219,7 @@ App\Entity\Soap:
             partner2.bsn: inp&#2Ebsn
             planning.commitmentDateTime: commitmentDateTime
             planning.commitmentType: verbintenisType
+            planning.intentionDate: intentionDate
             witnesses: witnesses | json
             officials: officials | json
             location.name: naam
