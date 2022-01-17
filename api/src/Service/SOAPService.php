@@ -1173,8 +1173,10 @@ class SOAPService
             $data->set('date', $this->parseDate($data->get("SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:registratiedatum")));
             $data->merge($this->flattenExtraElements($extraElementen));
             $time = new \DateTime($data->get('verbintenisTijd'));
+            $now = new \DateTime();
             $dateTime = new \DateTime($data->get('verbintenisDatum').'T'.$time->format('H:i:s'));
             $data->set('commitmentDateTime', $dateTime->format('Y-m-d\TH:i:s\Z'));
+            $data->set('intentionDate', $now->format('Y-m-d'));
             $data->set('witnesses', json_encode($this->getWitnesses($data->flatten())));
             $data->set('officials', json_encode($this->getOfficials($data->flatten())));
         }
