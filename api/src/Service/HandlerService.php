@@ -116,9 +116,10 @@ class HandlerService
 
             // To start it al off we need the data from the incomming request
             $data = $this->getDataFromRequest($this->request);
+
             if ($data == null || empty($data)) {
                 $response = new Response(
-                    $this->serializer->serialize(['message' => 'No request body given for ' . $method, 'path' => 'Request body'],  $this->getRequestContentType()),
+                    $this->serializer->serialize(['message' => 'No request body given for ' . $method . ' or faulty body given', 'path' => 'Request body'],  $this->getRequestContentType()),
                     Response::HTTP_NOT_FOUND,
                     [$this->acceptHeaderToSerialiazation[array_search($this->getRequestContentType(), $this->acceptHeaderToSerialiazation)]]
                 );
@@ -313,6 +314,7 @@ class HandlerService
                 //create template
                 if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
                     // throw error
+                    throw new \Exception("PDF couldn't be created");
                 }
                 $document = new Document();
                 $document->setDocumentType($contentType);
@@ -363,11 +365,12 @@ class HandlerService
             if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             } else {
-                /* @todo throw error, invalid extension requested */
+                throw new \Exception("invalid extension requested");
             }
         }
 
         // Lets pick the first accaptable content type that we support
+        // @todo where is request->acceptablecontenttypes being set?
         foreach ($this->request->getAcceptableContentTypes() as $contentType) {
             if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
                 return $this->acceptHeaderToSerialiazation[$contentType];
@@ -375,7 +378,7 @@ class HandlerService
         }
 
         // If we end up here we are dealing with an unsupported content type
-        /* @todo throw error */
+        throw new \Exception("Unsupported content type");
     }
 
     /**
@@ -405,7 +408,7 @@ class HandlerService
                 return $handler->getTemplate();
                 break;
             default:
-                /* @todo we shouldnt end up here so throw an errar */
+                throw new \Exception("Unsupported template type");
         }
     }
 }
