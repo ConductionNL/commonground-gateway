@@ -535,12 +535,14 @@ App\Entity\Attribute:
         name: street
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_houseNumber:
         name: houseNumber
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_houseNumberSuffix:
@@ -553,12 +555,14 @@ App\Entity\Attribute:
         name: postalCode
         type: string
         maxLength: 255
+        required: true
         persistToGateway: true
         entity: "@address"
     address_locality:
         name: locality
         type: string
         maxLength: 255
+        required: true
         entity: "@address"
         persistToGateway: true
     address_country:
@@ -1880,7 +1884,7 @@ App\Entity\Document:
         documentCreationService: "https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service/templates/123d8c1b-9d2b-4e16-9307-c02e32421ed8/render/pdf"
         documentType: student
         type: twig
-        content: test
+        content: "placeholder, change me!" #to: "<html><head><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap' rel='stylesheet'><style>html * {font-family: 'Source Sans Pro', sans-serif;}</style></head><body><h4 style='text-align: right'>{{'now'|date('d/m/Y')}}</h4><h1>Gegevens {{ person.givenName~' ' }}{% if person.additionalName|default %}{{ person.additionalName~' ' }}{%endif%}{{person.familyName}}</h1><h3>Persoonsgegevens{% if person.gender|default %}<p>Geslacht: {{person.gender}}</p>{% endif %}{% if person.Geboorteday|default %}<p>Geboortedag: {{person.Geboorteday}}</p>{% endif %}{% if person|default %} <p>Geboorteplaats: {{person.Geboorteplace}}</p>{% endif %}{% if person.primaryLanguage|default %}<p>Moedertaal: {{person.primaryLanguage}}</p>{% endif %}{% if person.speakingLanguages|default %}<p>Spreektalen: {{person.speakingLanguages}}</p>{% endif %}{% if person.country|default %}<p>Land: {{person.country}}</p>{% endif %}<br><h3>Contactgegevens</h3><p>Emails: </p>{% if person.emails|default %}<ul><li>{{person.emails.email}}</li></ul>{% endif %}{% if person.telephones|default %}<p>Telefoonnummers: </p>{% if person.telephones|default %}<ul><li>{{person.telephones.telephone}}</li></ul>{% endif %}{% endif %}{% if intake|default %}<br><h3>Intake gegevens</h3>{% if intake.dutchNTLevel|default %}<p>NT level: {{intake.dutchNTLevel}}</p>{% endif %}{% if intake.dutchNTLevel|default %}<p>Laatst bekende level: {{intake.lastKnownLevel}}</p>{% endif %}{% if intake.speakingLevel|default %}<p>Spreekniveau: {{intake.speakingLevel}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Leestoets resultaat: {{intake.readingTestResult}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Schrijftoets resultaat: {{intake.writingTestResult}}</p>{% endif %}{% if intake.remarks|default %}<p>Opmerkingen aanbieder: {{intake.remarks}}</p>{% endif %}{% endif %}{% if learningNeeds|default %}<br><h3>Leervragen</h3>{% for need in learningNeeds %}{% if need.description|default %}<h4>Beschrijving</h4><p> {{need.description}}</p>{% endif %}{% if need.motivation|default %}<h4>Motivatie</h4><p> {{need.motivation}}</p>{% endif %}{% if need.desiredOffer|default %}<h4>Gewenst leeruitkomst</h4><p> {{need.desiredOffer}}</p>{% endif %}{% if need.advisedOffer|default %}<h4>Geadviseerd aanbod</h4><p> {{need.advisedOffer}}</p>{% endif %}{% if need.agreements|default %}<h4>Afspraken</h4><p> {{need.agreements}}</p>{% endif %}<br>{% endfor %}{% endif %}</body></html>"
         
         
 

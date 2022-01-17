@@ -453,7 +453,6 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
-//                    var_dump('1 '.$subObject->getEntity()->getName());
                 }
 
                 $subObject = $this->validateEntity($subObject, $object);
@@ -898,7 +897,6 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
-//                    var_dump('2 '.$subObject->getEntity()->getName());
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->em->persist($subObject);
                         $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
