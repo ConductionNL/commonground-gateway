@@ -397,6 +397,11 @@ class Value
                     if ($value === null) {
                         return $this;
                     }
+                    if ($value === []) {
+                        foreach ($this->objects as $object) {
+                            $object->removeSubresourceOf($this);
+                        }
+                    }
                     $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
