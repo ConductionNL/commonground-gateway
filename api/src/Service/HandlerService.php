@@ -210,16 +210,29 @@ class HandlerService
     }
 
     /**
+     * Checks content type and decodes that if needed
+     * 
      * @return array|null
+     * 
+     * @todo more content types ?
+     * @todo check for specific error when decoding
+     * @todo support xml messages (xml is not in request->getAcceptableContentTypes)
      */
     public function getDataFromRequest()
     {
-        //@todo support xml messages
-
-        if ($this->request->getContent()) {
-            return json_decode($this->request->getContent(), true);
-        } 
-        return null;
+        $content = $this->request->getContent();
+        $contentType = $this->getRequestContentType();
+        switch ($contentType) {
+            case 'json':
+                return json_decode($this->request->getContent(), true);
+                // @todo support xml messages (xml is not in request->getAcceptableContentTypes)
+            case 'xml':
+                $xml = simplexml_load_string($content, "SimpleXMLElement", LIBXML_NOCDATA);
+                $json = json_encode($xml);
+                return json_decode($json, TRUE);
+            default:
+                return null;
+        }
     }
 
     /**
