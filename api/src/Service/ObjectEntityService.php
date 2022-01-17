@@ -73,11 +73,13 @@ class ObjectEntityService
         array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
 
         // throw error if get/put/patch/delete and no id
-        // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && !isset($id) && //throw error
+        // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && //throw error
 
         switch ($method) {
             case 'GET':
                 // get object
+
+                // if id get single object
 
                 break;
             case 'POST':
