@@ -153,27 +153,7 @@ class HandlerService
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
-
-            // @todo remove this code if new eav way works
-            // // If the handler is teid to an EAV object we want to resolve that in all of it glory
-            // if ($entity = $handler->getEntity()) {
-
-            //     // prepare variables
-            //     $routeParameters = $this->request->attributes->get('_route_params');
-            //     if (array_key_exists('id', $routeParameters)) {
-            //         $id = $routeParameters['id'];
-            //     }
-            //     $object = $this->eavService->getObject($id ?? null, $method, $entity);
-
-            //     // Create an info array
-            //     $info = [
-            //         'object' => $object ?? null,
-            //         'body'   => $data ?? null,
-            //         'fields' => $field ?? null,
-            //         'path'   => $handler->getEndpoint()->getPath(),
-            //     ];
-            // }
-
+            
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
