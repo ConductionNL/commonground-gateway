@@ -225,41 +225,12 @@ class HandlerService
         switch ($contentType) {
             case 'json':
                 return json_decode($this->request->getContent(), true);
-                // @todo support xml messages (xml is not in request->getAcceptableContentTypes)
+                // @todo support xml messages (xml in $content looks already decoded?)
             case 'xml':
-                $xml = simplexml_load_string($content, "SimpleXMLElement", LIBXML_NOCDATA);
-                $json = json_encode($xml);
-                return json_decode($json, TRUE);
+                throw new \Exception('XML is not yet supported');
+                // return simplexml_load_string($content);
             default:
-                return null;
-        }
-    }
-
-    /**
-     * @todo this function is not being used, remove?
-     */
-    public function eavSwitch(Entity $entity): array
-    {
-        // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($this->request->getMethod()) {
-            case 'GET':
-                return $this->eavService->getEntity();
-                break;
-            case 'POST':
-                $status = Response::HTTP_CREATED;
-                break;
-            case 'PUT':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'UPDATE':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'DELETE':
-                $status = Response::HTTP_NO_CONTENT;
-                break;
-            default:
-                /* invalid method */
-                /* @todo throw error */
+                throw new \Exception('Unsupported content type');
         }
     }
 
