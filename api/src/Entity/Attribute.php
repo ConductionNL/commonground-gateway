@@ -1354,7 +1354,7 @@ class Attribute
         return $this;
     }
 
-    public function getUnsetable (): ?bool
+    public function getUnsetable(): ?bool
     {
         return $this->unsetable;
     }
