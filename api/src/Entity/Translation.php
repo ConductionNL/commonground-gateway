@@ -18,11 +18,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/translations/{id}"},
+ *      "get"={"path"="/admin/getTranslationTables/{id}"},
  *      "put"={"path"="/admin/translations/{id}"},
  *      "delete"={"path"="/admin/translations/{id}"}
  *  },
  *  collectionOperations={
  *      "get"={"path"="/admin/translations"},
+ *      "get"={"path"="/admin/getTranslationTables"},
  *      "post"={"path"="/admin/translations"}
  *  })
  * )
