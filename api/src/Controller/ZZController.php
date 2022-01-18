@@ -48,7 +48,8 @@ class ZZController extends AbstractController
             } catch (\Exception $e) {
                 $response = new Response(
                     $serializer->serialize(['message' => 'An unexpected error occured: ' . $e->getMessage()], 'json'),
-                    Response::HTTP_INTERNAL_SERVER_ERROR
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                    ['content-type' => 'json']
                 );
                 return $response->prepare($request);
             }

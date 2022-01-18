@@ -216,7 +216,7 @@ class HandlerService
      * 
      * @todo more content types ?
      * @todo check for specific error when decoding
-     * @todo support xml messages (xml is not in request->getAcceptableContentTypes)
+     * @todo support xml messages (xml is already decoded??)
      */
     public function getDataFromRequest()
     {
@@ -296,7 +296,7 @@ class HandlerService
         $response = new Response(
             $result,
             $status,
-            [$this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
+            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
         );
 
         // Lets handle file responses
