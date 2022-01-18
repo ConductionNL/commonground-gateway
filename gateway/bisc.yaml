@@ -815,6 +815,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@employee"
         inversedBy: "@employee_mentees"
+        unsetable: true
     student_intake:
         name: intake
         type: object

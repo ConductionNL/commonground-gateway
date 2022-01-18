@@ -556,6 +556,14 @@ class Attribute
      */
     private bool $immutable = false;
 
+    /**
+     * Setting this property to true makes it so that this property is only allowed to be set or changed after creation.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $unsetable = false;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1342,6 +1350,18 @@ class Attribute
     public function setImmutable(?bool $immutable): self
     {
         $this->immutable = $immutable;
+
+        return $this;
+    }
+
+    public function getUnsetable (): ?bool
+    {
+        return $this->unsetable;
+    }
+
+    public function setUnsetable(?bool $unsetable): self
+    {
+        $this->unsetable = $unsetable;
 
         return $this;
     }
