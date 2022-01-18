@@ -28,13 +28,14 @@ class TranslationTablesSubscriber implements EventSubscriberInterface
     public function translationTablesNames(ViewEvent $event)
     {
         $route = $event->getRequest()->attributes->get('_route');
+        $path = $event->getRequest()->getPathInfo();
 
         if (
-            $route !== 'api_translations_get_collection'
+            $route !== 'api_translations_get_collection' && $path !== '/admin/getTranslationTables'
         ) {
             return;
         }
-
+        
        return;
     }
 }
