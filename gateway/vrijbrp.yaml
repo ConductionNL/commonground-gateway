@@ -1327,6 +1327,7 @@ App\Entity\Soap:
             funeralServices.placeOfDestination: plaatsbest
             funeralServices.via: viabest
             funeralServices.transportation: voertuigbest
+            funeralServices.causeOfDeathType: oorzaakoverlijden
             correspondence.communicationType: communicatietype
             correspondence.organization: handelsnaam #could also be kvknummer. Awaiting comment
             correspondence.name: naam
@@ -1395,6 +1396,7 @@ App\Entity\Soap:
             funeralServices.placeOfDestination: plaatsbest
             funeralServices.via: viabest
             funeralServices.transportation: voertuigbest
+            funeralServices.causeOfDeathType: oorzaakoverlijden
             correspondence.communicationType: communicatietype
             correspondence.organization: handelsnaam #could also be kvknummer. Awaiting comment
             correspondence.name: naam
