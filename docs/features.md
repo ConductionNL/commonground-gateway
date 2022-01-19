@@ -26,7 +26,7 @@ The web gateway provides multi-tenancy by separating all the data it holds (both
 
 ##NL Design System Ready
 
-The web gateway provides an easy (and inline scripting save) way of providing applications with NL Design System token files based on the organization that is currently served (see multy-tenancy). This allows applications to quickly implement NL Design using NL Design tokens (a complete list can be found here). The only action an application needs to take is to include the following line before loading other ccs files `/api/organisation/{id}/nl-design-tokens.css`. Security-wise, the API is to be provided from the same domain as the application.
+The web gateway provides an easy (and inline scripting save) way of providing applications with NL Design System token files based on the organization that is currently served (see multy-tenancy). This allows applications to quickly implement NL Design using NL Design tokens (a complete list can be found here). The only action an application needs to take is to include the following line before loading other ccs files `/api/organisations/{id}/nl-design-tokens.css`. Security-wise, the API is to be provided from the same domain as the application.
 
 ##Haven ready
 -To be added-
