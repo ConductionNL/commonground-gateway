@@ -228,37 +228,37 @@ class Log
      */
     private $sessionValues = [];
 
-    /**
-     * @var ?object The endpoint of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $endpoint;
+    // /**
+    //  * @var ?object The endpoint of this Log.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="object", nullable=true)
+    //  */
+    // private $endpoint;
 
-    /**
-     * @var ?object The handler of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $handler;
+    // /**
+    //  * @var ?object The handler of this Log.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="object", nullable=true)
+    //  */
+    // private $handler;
 
-    /**
-     * @var ?object The entity of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $entity;
+    // /**
+    //  * @var ?object The entity of this Log.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="object", nullable=true)
+    //  */
+    // private $entity;
 
-    /**
-     * @var ?object The source of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $source;
+    // /**
+    //  * @var ?object The source of this Log.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="object", nullable=true)
+    //  */
+    // private $source;
 
     /**
      * @var int The endpoint of this Log.
@@ -482,53 +482,53 @@ class Log
         return $this;
     }
 
-    public function getEndpoint(): ?object
-    {
-        return $this->endpoint;
-    }
+    // public function getEndpoint(): ?object
+    // {
+    //     return $this->endpoint;
+    // }
 
-    public function setEndpoint(?object $endpoint): self
-    {
-        $this->endpoint = $endpoint;
+    // public function setEndpoint(?object $endpoint): self
+    // {
+    //     $this->endpoint = $endpoint;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function getHandler(): ?object
-    {
-        return $this->handler;
-    }
+    // public function getHandler(): ?object
+    // {
+    //     return $this->handler;
+    // }
 
-    public function setHandler(?object $handler): self
-    {
-        $this->handler = $handler;
+    // public function setHandler(?object $handler): self
+    // {
+    //     $this->handler = $handler;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function getEntity(): ?object
-    {
-        return $this->entity;
-    }
+    // public function getEntity(): ?object
+    // {
+    //     return $this->entity;
+    // }
 
-    public function setEntity(?object $entity): self
-    {
-        $this->entity = $entity;
+    // public function setEntity(?object $entity): self
+    // {
+    //     $this->entity = $entity;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function getSource(): ?object
-    {
-        return $this->source;
-    }
+    // public function getSource(): ?object
+    // {
+    //     return $this->source;
+    // }
 
-    public function setSource(?object $source): self
-    {
-        $this->source = $source;
+    // public function setSource(?object $source): self
+    // {
+    //     $this->source = $source;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getResponseTime(): int
     {
