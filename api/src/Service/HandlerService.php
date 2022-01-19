@@ -96,8 +96,9 @@ class HandlerService
         $response = new Response(
             $this->serializer->serialize(['message' => 'No handler found for endpoint: ' . $endpoint->getName(), 'data' => $endpoint->getId()], $this->getRequestContentType()),
             Response::HTTP_NOT_FOUND,
-            [$this->acceptHeaderToSerialiazation[array_search($this->getRequestContentType(), $this->acceptHeaderToSerialiazation)]]
+            ['content-type' => 'json']
         );
+        $this->logService->saveLog($this->request, $response);
         return $response->prepare($this->request);
     }
 
@@ -121,8 +122,9 @@ class HandlerService
                 $response = new Response(
                     $this->serializer->serialize(['message' => 'No request body given for ' . $method . ' or faulty body given', 'path' => 'Request body'],  $this->getRequestContentType()),
                     Response::HTTP_NOT_FOUND,
-                    [$this->acceptHeaderToSerialiazation[array_search($this->getRequestContentType(), $this->acceptHeaderToSerialiazation)]]
+                    ['content-type' => 'json']
                 );
+                $this->logService->saveLog($this->request, $response);
                 return $response->prepare($this->request);
             };
 
