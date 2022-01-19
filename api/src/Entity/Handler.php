@@ -109,14 +109,14 @@ class Handler
      */
     private ?array $skeletonIn = [];
 
-    /**
-     * @var Entity The entity of this Handler.
-     *
-     * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
-     */
-    private ?Entity $entity = null;
+    // /**
+    //  * @var Entity The entity of this Handler.
+    //  *
+    //  * @MaxDepth(1)
+    //  * @Groups({"read", "write"})
+    //  * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
+    //  */
+    // private ?Entity $entity = null;
 
     /**
      * @var array|null The skeleton of this Handler.
@@ -171,6 +171,13 @@ class Handler
      * @ORM\JoinColumn(nullable=false)
      */
     private Endpoint $endpoint;
+
+    /**
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
+     */
+    private $entity;
 
     public function getId()
     {
@@ -261,17 +268,17 @@ class Handler
         return $this;
     }
 
-    public function getEntity(): ?Entity
-    {
-        return $this->entity;
-    }
+    // public function getEntity(): ?Entity
+    // {
+    //     return $this->entity;
+    // }
 
-    public function setEntity(?Entity $entity): self
-    {
-        $this->entity = $entity;
+    // public function setEntity(?Entity $entity): self
+    // {
+    //     $this->entity = $entity;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getSkeletonOut(): ?array
     {
@@ -341,6 +348,18 @@ class Handler
     public function setEndpoint(?Endpoint $endpoint): self
     {
         $this->endpoint = $endpoint;
+
+        return $this;
+    }
+
+    public function getEntity(): ?Entity
+    {
+        return $this->entity;
+    }
+
+    public function setEntity(?Entity $entity): self
+    {
+        $this->entity = $entity;
 
         return $this;
     }
