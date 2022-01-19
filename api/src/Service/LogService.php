@@ -72,15 +72,17 @@ class LogService
             $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
-            // TODO endpoint disabled because might cause problems
-            $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
-            // $callLog->setEndpoint(null);
+            // @todo these sets cause errors :
 
-            $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
-            $callLog->setSource($this->session->get('source') ? $this->session->get('source') : null);
+            // TODO endpoint disabled because might cause problems
+            // $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
+            // // $callLog->setEndpoint(null);
+
+            // $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
+            // $callLog->setSource($this->session->get('source') ? $this->session->get('source') : null);
 
             // TODO handler disabled because might cause problems
-            $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
+            // $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
             // $callLog->setHandler(null);
 
             // remove before setting the session values
@@ -92,8 +94,10 @@ class LogService
                 $this->session->remove('handler');
             }
 
+            // @todo these sets cause errors :
             // add session values
-            $callLog->setSessionValues($this->session->all());
+            // $callLog->setSessionValues($this->session->all());
+            $callLog->setSessionValues([]);
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
