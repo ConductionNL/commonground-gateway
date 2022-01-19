@@ -58,13 +58,13 @@ class Entity
      */
     private $id;
 
-    /**
-     * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
-     * @ORM\JoinColumn(nullable=true)
-     * @MaxDepth(1)
-     */
-    private ?Gateway $gateway;
+    // /**
+    //  * @Groups({"read","write"})
+    //  * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
+    //  * @ORM\JoinColumn(nullable=true)
+    //  * @MaxDepth(1)
+    //  */
+    // private ?Gateway $gateway;
 
     /**
      * @var string The type of this Entity
@@ -77,18 +77,6 @@ class Entity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $endpoint;
-
-    /**
-     * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
-     * @MaxDepth(1)
-     */
-    private ?soap $toSoap;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
-     */
-    private $fromSoap;
 
     /**
      * @var string The name of this Entity
@@ -143,13 +131,6 @@ class Entity
     private $inherited = false;
 
     /**
-     * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
-     * @MaxDepth(1)
-     */
-    private Collection $attributes;
-
-    /**
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"})
      * @MaxDepth(1)
@@ -195,21 +176,21 @@ class Entity
      */
     private ?string $route = null;
 
-    /**
-     * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
-     */
-    private ?array $availableProperties;
+    // /**
+    //  * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="array", nullable=true)
+    //  */
+    // private ?array $availableProperties;
 
-    /**
-     * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true)
-     */
-    private ?array $usedProperties;
+    // /**
+    //  * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="array", nullable=true)
+    //  */
+    // private ?array $usedProperties;
 
     /**
      * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
@@ -238,14 +219,26 @@ class Entity
      */
     private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
 
+    // /**
+    //  * @Groups({"read","write"})
+    //  * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
+    //  * @MaxDepth(1)
+    //  */
+    // private $attributes;
+
     /**
-     * @var array|null The handlers used for this entity.
-     *
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", orphanRemoval=true)
      * @MaxDepth(1)
+     */
+    private $attributes;
+
+    /**
      * @Groups({"read", "write"})
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity")
+     * @MaxDepth(1)
      */
-    private Collection $handlers;
+    private $handlers;
 
     public function __construct()
     {
@@ -254,29 +247,28 @@ class Entity
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
-        $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
     }
 
     public function export()
     {
-        if ($this->getGateway() !== null) {
-            $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
-        } else {
-            $gateway = null;
-        }
+        // if ($this->getGateway() !== null) {
+        //     $gateway = $this->getGateway()->getId()->toString();
+        //     $gateway = '@'.$gateway;
+        // } else {
+        //     $gateway = null;
+        // }
 
         $data = [
-            'gateway'             => $gateway,
+            // 'gateway'             => $gateway,
             'endpoint'            => $this->getEndpoint(),
             'name'                => $this->getName(),
             'description'         => $this->getDescription(),
             'extend'              => $this->getExtend(),
             'transformations'     => $this->getTransformations(),
             'route'               => $this->getRoute(),
-            'availableProperties' => $this->getAvailableProperties(),
-            'usedProperties'      => $this->getUsedProperties(),
+            // 'availableProperties' => $this->getAvailableProperties(),
+            // 'usedProperties'      => $this->getUsedProperties(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
@@ -287,17 +279,17 @@ class Entity
         return $this->id;
     }
 
-    public function getGateway(): ?Gateway
-    {
-        return $this->gateway;
-    }
+    // public function getGateway(): ?Gateway
+    // {
+    //     return $this->gateway;
+    // }
 
-    public function setGateway(?Gateway $gateway): self
-    {
-        $this->gateway = $gateway;
+    // public function setGateway(?Gateway $gateway): self
+    // {
+    //     $this->gateway = $gateway;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getEndpoint(): ?string
     {
@@ -307,48 +299,6 @@ class Entity
     public function setEndpoint(string $endpoint): self
     {
         $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
-    public function getToSoap(): ?Soap
-    {
-        return $this->toSoap;
-    }
-
-    public function setToSoap(?Soap $toSoap): self
-    {
-        $this->toSoap = $toSoap;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Soap[]
-     */
-    public function getFromSoap(): Collection
-    {
-        return $this->fromSoap;
-    }
-
-    public function addFromSoap(Soap $fromSoap): self
-    {
-        if (!$this->fromSoap->contains($fromSoap)) {
-            $this->fromSoap[] = $fromSoap;
-            $fromSoap->setToEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFromSoap(Soap $fromSoap): self
-    {
-        if ($this->fromSoap->removeElement($fromSoap)) {
-            // set the owning side to null (unless already changed)
-            if ($fromSoap->getToEntity() === $this) {
-                $fromSoap->setToEntity(null);
-            }
-        }
 
         return $this;
     }
@@ -394,55 +344,55 @@ class Entity
         return $this;
     }
 
-    /**
-     * Get an value based on a attribut.
-     *
-     * @param string $name the name of the attribute that you are searching for
-     *
-     * @return Attribute|bool Iether the found attribute or false if no attribute could be found
-     */
-    public function getAttributeByName(string $name)
-    {
-        // Check if value with this attribute exists for this ObjectEntity
-        $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
-        $attributes = $this->getAttributes()->matching($criteria);
+    // /**
+    //  * Get an value based on a attribut.
+    //  *
+    //  * @param string $name the name of the attribute that you are searching for
+    //  *
+    //  * @return Attribute|bool Iether the found attribute or false if no attribute could be found
+    //  */
+    // public function getAttributeByName(string $name)
+    // {
+    //     // Check if value with this attribute exists for this ObjectEntity
+    //     $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('name', $name))->setMaxResults(1);
+    //     $attributes = $this->getAttributes()->matching($criteria);
 
-        if ($attributes->isEmpty()) {
-            return false;
-        }
+    //     if ($attributes->isEmpty()) {
+    //         return false;
+    //     }
 
-        return $attributes->first();
-    }
+    //     return $attributes->first();
+    // }
 
-    /**
-     * @return Collection|Attribute[]
-     */
-    public function getAttributes(): Collection
-    {
-        return $this->attributes;
-    }
+    // /**
+    //  * @return Collection|Attribute[]
+    //  */
+    // public function getAttributes(): ?Collection
+    // {
+    //     return $this->attributes;
+    // }
 
-    public function addAttribute(Attribute $attribute): self
-    {
-        if (!$this->attributes->contains($attribute)) {
-            $this->attributes[] = $attribute;
-            $attribute->setEntity($this);
-        }
+    // public function addAttribute(Attribute $attribute): self
+    // {
+    //     if (!$this->attributes->contains($attribute)) {
+    //         $this->attributes[] = $attribute;
+    //         $attribute->setEntity($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeAttribute(Attribute $attribute): self
-    {
-        if ($this->attributes->removeElement($attribute)) {
-            // set the owning side to null (unless already changed)
-            if ($attribute->getEntity() === $this) {
-                $attribute->setEntity(null);
-            }
-        }
+    // public function removeAttribute(Attribute $attribute): self
+    // {
+    //     if ($this->attributes->removeElement($attribute)) {
+    //         // set the owning side to null (unless already changed)
+    //         if ($attribute->getEntity() === $this) {
+    //             $attribute->setEntity(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * @return Collection|ObjectEntity[]
@@ -477,7 +427,7 @@ class Entity
     /**
      * @return Collection|Attribute[]
      */
-    public function getUsedIn(): Collection
+    public function getUsedIn(): ?Collection
     {
         return $this->usedIn;
     }
@@ -552,29 +502,29 @@ class Entity
         return $this;
     }
 
-    public function getAvailableProperties(): ?array
-    {
-        return $this->availableProperties;
-    }
+    // public function getAvailableProperties(): ?array
+    // {
+    //     return $this->availableProperties;
+    // }
 
-    public function setAvailableProperties(?array $availableProperties): self
-    {
-        $this->availableProperties = $availableProperties;
+    // public function setAvailableProperties(?array $availableProperties): self
+    // {
+    //     $this->availableProperties = $availableProperties;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function getUsedProperties(): ?array
-    {
-        return $this->usedProperties;
-    }
+    // public function getUsedProperties(): ?array
+    // {
+    //     return $this->usedProperties;
+    // }
 
-    public function setUsedProperties(?array $usedProperties): self
-    {
-        $this->usedProperties = $usedProperties;
+    // public function setUsedProperties(?array $usedProperties): self
+    // {
+    //     $this->usedProperties = $usedProperties;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * @return Collection|GatewayResponseLog[]
@@ -672,35 +622,35 @@ class Entity
         return $this;
     }
 
-    /**
-     * @return Collection|Soap[]
-     */
-    public function getSoap(): Collection
-    {
-        return $this->soap;
-    }
+    // /**
+    //  * @return Collection|Soap[]
+    //  */
+    // public function getSoap(): Collection
+    // {
+    //     return $this->soap;
+    // }
 
-    public function addSoap(Soap $soap): self
-    {
-        if (!$this->soap->contains($soap)) {
-            $this->soap[] = $soap;
-            $soap->setEntity($this);
-        }
+    // public function addSoap(Soap $soap): self
+    // {
+    //     if (!$this->soap->contains($soap)) {
+    //         $this->soap[] = $soap;
+    //         $soap->setEntity($this);
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    public function removeSoap(Soap $soap): self
-    {
-        if ($this->soap->removeElement($soap)) {
-            // set the owning side to null (unless already changed)
-            if ($soap->getEntity() === $this) {
-                $soap->setEntity(null);
-            }
-        }
+    // public function removeSoap(Soap $soap): self
+    // {
+    //     if ($this->soap->removeElement($soap)) {
+    //         // set the owning side to null (unless already changed)
+    //         if ($soap->getEntity() === $this) {
+    //             $soap->setEntity(null);
+    //         }
+    //     }
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getInherited(): ?bool
     {
@@ -717,7 +667,7 @@ class Entity
     /**
      * @return Collection|Handler[]
      */
-    public function getHandlers(): Collection
+    public function getHandlers(): ?Collection
     {
         return $this->handlers;
     }
@@ -726,7 +676,7 @@ class Entity
     {
         if (!$this->handlers->contains($handler)) {
             $this->handlers[] = $handler;
-            $handler->setObject($this);
+            $handler->setEntity($this);
         }
 
         return $this;
