@@ -736,8 +736,38 @@ class Entity
     {
         if ($this->handlers->removeElement($handler)) {
             // set the owning side to null (unless already changed)
-            if ($handler->getObject() === $this) {
-                $handler->setObject(null);
+            if ($handler->getEntity() === $this) {
+                $handler->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getAttributes(): ?Collection
+    {
+        return $this->attributes;
+    }
+
+    public function addAttribute(Attribute $attribute): self
+    {
+        if (!$this->attributes->contains($attribute)) {
+            $this->attributes[] = $attribute;
+            $attribute->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAttribute(Attribute $attribute): self
+    {
+        if ($this->attributes->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getEntity() === $this) {
+                $attribute->setEntity(null);
             }
         }
 

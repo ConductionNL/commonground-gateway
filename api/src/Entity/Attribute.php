@@ -114,12 +114,12 @@ class Attribute
      */
     private bool $multiple = false;
 
-    /**
-     * @Groups({"write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
-     * @MaxDepth(1)
-     */
-    private Entity $entity;
+    // /**
+    //  * @Groups({"write"})
+    //  * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
+    //  * @MaxDepth(1)
+    //  */
+    // private $entity;
 
     /**
      * @Groups({"write"})
@@ -134,7 +134,7 @@ class Attribute
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Entity $object = null;
+    private $object;
 
     /**
      * Used for schema or oas parsing.
@@ -556,6 +556,14 @@ class Attribute
      */
     private bool $immutable = false;
 
+    /**
+     * @Groups({"write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
+     * @ORM\JoinColumn(nullable=false)
+     * @MaxDepth(1)
+     */
+    private $entity;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -667,17 +675,17 @@ class Attribute
         return $this;
     }
 
-    public function getEntity(): ?Entity
-    {
-        return $this->entity;
-    }
+    // public function getEntity(): ?Entity
+    // {
+    //     return $this->entity;
+    // }
 
-    public function setEntity(?Entity $entity): self
-    {
-        $this->entity = $entity;
+    // public function setEntity(?Entity $entity): self
+    // {
+    //     $this->entity = $entity;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * @return Collection|Value[]
@@ -1342,6 +1350,18 @@ class Attribute
     public function setImmutable(?bool $immutable): self
     {
         $this->immutable = $immutable;
+
+        return $this;
+    }
+
+    public function getEntity(): ?Entity
+    {
+        return $this->entity;
+    }
+
+    public function setEntity(?Entity $entity): self
+    {
+        $this->entity = $entity;
 
         return $this;
     }
