@@ -1224,7 +1224,11 @@ App\Entity\Soap:
             officials: officials | json
             location.name: naam
             partner2.nameAfterCommitment.nameUseType: geselecteerdNaamgebruikPartner
+            partner2.nameAfterCommitment.lastname: geslachtsnaam
+            partner2.nameAfterCommitment.prefix: voorvoegselGeslachtsnaam
             partner1.nameAfterCommitment.nameUseType: geselecteerdNaamgebruik
+            partner1.nameAfterCommitment.lastname: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:geslachtsnaam"
+            partner1.nameAfterCommitment.prefix: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:voorvoegselGeslachtsnaam"
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope
