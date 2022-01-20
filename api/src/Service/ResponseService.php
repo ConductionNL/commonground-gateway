@@ -62,6 +62,12 @@ class ResponseService
             return $response;
         }
 
+        if ($level > 5) {
+            return [
+                '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId()
+            ];
+        }
+
         // Lets start with the external results
         if (!empty($result->getExternalResult())) {
             $response = array_merge($response, $result->getExternalResult());
