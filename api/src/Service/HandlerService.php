@@ -137,7 +137,7 @@ class HandlerService
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
-            
+
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
@@ -357,7 +357,7 @@ class HandlerService
                 return $handler->getTemplate();
                 break;
             default:
-                throw new \Exception("Unsupported template type");
+                throw new GatewayException("Unsupported template type", null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
     }
 }

@@ -4,7 +4,7 @@ namespace App\Exception;
 
 /**
  * Custom exception used in HandlerService. 
- * Examples can be found in HandlerService of usage
+ * Examples of usage can be found in HandlerService 
  */
 class GatewayException extends \Exception
 {
