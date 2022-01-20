@@ -114,12 +114,12 @@ class Attribute
      */
     private bool $multiple = false;
 
-    // /**
-    //  * @Groups({"write"})
-    //  * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
-    //  * @MaxDepth(1)
-    //  */
-    // private $entity;
+    /**
+     * @Groups({"write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
+     * @MaxDepth(1)
+     */
+    private Entity $entity;
 
     /**
      * @Groups({"write"})
@@ -134,7 +134,7 @@ class Attribute
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private $object;
+    private ?Entity $object = null;
 
     /**
      * Used for schema or oas parsing.
@@ -507,14 +507,6 @@ class Attribute
     private bool $cascadeDelete = false;
 
     /**
-     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
-     */
-    private bool $mayBeOrphaned = true;
-
-    /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @Groups({"read", "write"})
@@ -555,14 +547,6 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $immutable = false;
-
-    /**
-     * @Groups({"write"})
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
-     * @ORM\JoinColumn(nullable=false)
-     * @MaxDepth(1)
-     */
-    private $entity;
 
     public function __construct()
     {
@@ -675,17 +659,17 @@ class Attribute
         return $this;
     }
 
-    // public function getEntity(): ?Entity
-    // {
-    //     return $this->entity;
-    // }
+    public function getEntity(): ?Entity
+    {
+        return $this->entity;
+    }
 
-    // public function setEntity(?Entity $entity): self
-    // {
-    //     $this->entity = $entity;
+    public function setEntity(?Entity $entity): self
+    {
+        $this->entity = $entity;
 
-    //     return $this;
-    // }
+        return $this;
+    }
 
     /**
      * @return Collection|Value[]
@@ -1330,18 +1314,6 @@ class Attribute
         return $this;
     }
 
-    public function getMayBeOrphaned(): ?bool
-    {
-        return $this->mayBeOrphaned;
-    }
-
-    public function setMayBeOrphaned(?bool $mayBeOrphaned): self
-    {
-        $this->mayBeOrphaned = $mayBeOrphaned;
-
-        return $this;
-    }
-
     public function getImmutable(): ?bool
     {
         return $this->immutable;
@@ -1350,18 +1322,6 @@ class Attribute
     public function setImmutable(?bool $immutable): self
     {
         $this->immutable = $immutable;
-
-        return $this;
-    }
-
-    public function getEntity(): ?Entity
-    {
-        return $this->entity;
-    }
-
-    public function setEntity(?Entity $entity): self
-    {
-        $this->entity = $entity;
 
         return $this;
     }
