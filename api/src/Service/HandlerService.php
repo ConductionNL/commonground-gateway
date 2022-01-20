@@ -259,11 +259,12 @@ class HandlerService
                 ];
                 break;
             case 'pdf':
-                //create template
+                // If data['result'] or data is not a string its not a document
                 if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
                     // throw error
                     throw new GatewayException("PDF couldn't be created", null, null, ['data' => $data, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
                 }
+                // Create template
                 $document = new Document();
                 $document->setDocumentType($contentType);
                 $document->setType('twig');
@@ -272,7 +273,7 @@ class HandlerService
                 break;
         }
 
-        // Lets seriliaze the shizle (if no document)
+        // Lets seriliaze the shizle (if no document and we have a result)
         !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
             : $result = $this->serializer->serialize($data, $contentType, $options));
 
