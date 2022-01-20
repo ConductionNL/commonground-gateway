@@ -815,7 +815,7 @@ class ValidationService
         }
 
         // Check forbidden
-        $rule = $valueObject->getAttribute()->getForbidenIf();
+        $rule = $valueObject->getAttribute()->getForbiddenIf();
         if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
             $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: '.$rule);
         }

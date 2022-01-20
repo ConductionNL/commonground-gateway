@@ -314,7 +314,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $forbidenIf = [];
+    private $forbiddenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -606,7 +606,7 @@ class Attribute
             'inversedBy'       => $inversed,
             'required'         => $this->getRequired(),
             'requiredIf'       => $this->getRequiredIf(),
-            'forbidenIf'       => $this->getForbidenIf(),
+            'forbiddenIf'       => $this->getForbiddenIf(),
             'enum'             => $this->getEnum(),
             'allOf'            => $this->getAllOf(),
             'anyOf'            => $this->getAnyOf(),
@@ -902,14 +902,14 @@ class Attribute
         return $this;
     }
 
-    public function getForbidenIf(): ?array
+    public function getForbiddenIf(): ?array
     {
-        return $this->forbidenIf;
+        return $this->forbiddenIf;
     }
 
-    public function setForbidenIf(?array $forbidenIf): self
+    public function setForbiddenIf(?array $forbiddenIf): self
     {
-        $this->forbidenIf = $forbidenIf;
+        $this->forbiddenIf = $forbiddenIf;
 
         return $this;
     }
