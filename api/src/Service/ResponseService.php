@@ -44,13 +44,13 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-//     * @param ArrayCollection|null $maxDepth
-     * @param bool                 $flat
-     * @param int                  $level
+     * //     * @param ArrayCollection|null $maxDepth
+     * @param bool $flat
+     * @param int  $level
      *
      * @return array
      */
-// Old $MaxDepth;
+    // Old $MaxDepth;
 //    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
     public function renderResult(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
     {
@@ -67,7 +67,7 @@ class ResponseService
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
             return [
-                '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId()
+                '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId(),
             ];
         }
 
@@ -160,13 +160,13 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-//     * @param ArrayCollection|null $maxDepth
-     * @param bool                 $flat
-     * @param int                  $level
+     * //     * @param ArrayCollection|null $maxDepth
+     * @param bool $flat
+     * @param int  $level
      *
      * @return array
      */
-// Old $MaxDepth;
+    // Old $MaxDepth;
 //    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
     private function renderValues(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
     {
@@ -266,13 +266,13 @@ class ResponseService
      *
      * @param Value $value
      * @param $fields
-//     * @param ArrayCollection|null $maxDepth
-     * @param bool                 $flat
-     * @param int                  $level
+     * //     * @param ArrayCollection|null $maxDepth
+     * @param bool $flat
+     * @param int  $level
      *
      * @return array|null
      */
-// Old $MaxDepth;
+    // Old $MaxDepth;
 //    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
     private function renderObjects(Value $value, $fields, bool $flat = false, int $level = 0): ?array
     {
