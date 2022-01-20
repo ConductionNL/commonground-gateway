@@ -44,13 +44,12 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-     * @param ArrayCollection|null $maxDepth
      * @param bool                 $flat
      * @param int                  $level
      *
      * @return array
      */
-    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
+    public function renderResult(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
     {
         $response = [];
         if (
@@ -62,7 +61,8 @@ class ResponseService
             return $response;
         }
 
-        if ($level > 5) {
+        // Make sure to break infinite render loops! (MaxDepth)
+        if ($level > 3) {
             return [
                 '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId()
             ];
@@ -107,7 +107,7 @@ class ResponseService
         }
 
         // Let get the internal results
-        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
+        $response = array_merge($response, $this->renderValues($result, $fields, $flat, $level));
 
         // Lets sort the result alphabeticly
 
@@ -155,13 +155,12 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-     * @param ArrayCollection|null $maxDepth
      * @param bool                 $flat
      * @param int                  $level
      *
      * @return array
      */
-    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
+    private function renderValues(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -224,19 +223,9 @@ class ResponseService
                     // Only use maxDepth for subresources if inversedBy is set on this attribute or if one of the parent objects has an attribute with inversedBy this attribute.
                     // If we do not check this, we might skip rendering of entire objects (subresources) we do want to render!!!
                     if ($attribute->getInversedBy() || count($parentInversedByAttribute) > 0) {
-                        // Lets keep track of objects we already rendered, for inversedBy, checking maxDepth 1:
-                        $maxDepthPerValue = $maxDepth;
-                        if (is_null($maxDepth)) {
-                            $maxDepthPerValue = new ArrayCollection();
-                        }
-                        $maxDepthPerValue->add($result);
-                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $maxDepthPerValue, $flat, $level);
+                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $flat, $level);
                     } else {
-                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, null, $flat, $level);
-                    }
-
-                    if ($response[$attribute->getName()] === ['continue' => 'continue']) {
-                        unset($response[$attribute->getName()]);
+                        $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $flat, $level);
                     }
                     continue;
                 } catch (AccessDeniedException $exception) {
@@ -257,13 +246,12 @@ class ResponseService
      *
      * @param Value $value
      * @param $fields
-     * @param ArrayCollection|null $maxDepth
      * @param bool                 $flat
      * @param int                  $level
      *
      * @return array|null
      */
-    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
+    private function renderObjects(Value $value, $fields, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 
@@ -273,33 +261,14 @@ class ResponseService
 
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
-            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if ($maxDepth) {
-                if (!$maxDepth->contains($value->getValue())) {
-                    return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
-                }
-
-                return ['continue' => 'continue']; //TODO NOTE: We want this here
-            }
-
-            return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
+            return $this->renderResult($value->getValue(), $fields, $flat, $level);
         }
 
         // If we can have multiple Objects (because multiple = true)
         $objects = $value->getValue();
         $objectsArray = [];
         foreach ($objects as $object) {
-            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-            if ($maxDepth) {
-                if (!$maxDepth->contains($object)) {
-                    $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
-                    continue;
-                }
-                // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
-                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
-                continue;
-            }
-            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
+            $objectsArray[] = $this->renderResult($object, $fields, $flat, $level);
         }
 
         return $objectsArray;

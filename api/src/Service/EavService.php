@@ -985,7 +985,7 @@ class EavService
 
         $results = [];
         foreach ($objects as $object) {
-            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, $flat);
         }
 
         // If we need a flattend responce we are al done
