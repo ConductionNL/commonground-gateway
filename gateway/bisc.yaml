@@ -114,7 +114,7 @@ App\Entity\Entity:
             - emails
             - parentOrganization
             - members
-            - langougeHouse_postalCodes
+            - languageHouse_postalCodes
             - team_postalCodes
 
     #Email Object
@@ -471,7 +471,7 @@ App\Entity\Attribute:
         inversedBy: "@employee_teams"
         mayBeOrphaned: false
     organization_languageHouse_postalCodes:
-        name: langougeHouse_postalCodes
+        name: languageHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
         type: object
         multiple: true
