@@ -484,6 +484,9 @@ class ValidationService
             }
             // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
             if ($this->request->getMethod() == 'PUT') {
+                foreach ($valueObject->getObjects() as $object) {
+                    $object->removeSubresourceOf($valueObject);
+                }
                 $valueObject->getObjects()->clear();
             }
             // Actually add the objects to the valueObject
@@ -894,6 +897,9 @@ class ValidationService
                     }
 
                     // Object toevoegen
+                    foreach ($valueObject->getObjects() as $object) {
+                        $object->removeSubresourceOf($valueObject);
+                    }
                     $valueObject->getObjects()->clear(); // We start with a default object
                     $valueObject->addObject($subObject);
                     break;

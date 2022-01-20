@@ -492,6 +492,9 @@ class ConvertToGatewayService
 
         // Object toevoegen
         if (!$attribute->getMultiple()) {
+            foreach ($valueObject->getObjects() as $object) {
+                $object->removeSubresourceOf($valueObject);
+            }
             $valueObject->getObjects()->clear(); // We start with a default object
         }
         $valueObject->addObject($subObject);
