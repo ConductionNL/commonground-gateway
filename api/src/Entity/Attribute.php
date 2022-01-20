@@ -314,7 +314,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $forbidenIf = [];
+    private $forbiddenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -593,47 +593,47 @@ class Attribute
         }
 
         $data = [
-            'name'             => $this->getName(),
-            'type'             => $this->getType(),
-            'format'           => $this->getFormat(),
-            'multiple'         => $this->getMultiple(),
-            'entity'           => $entity,
-            'object'           => $object,
-            'multipleOf'       => $this->getMultipleOf(),
-            'maximum'          => $this->getMaximum(),
-            'exclusiveMaximum' => $this->getExclusiveMaximum(),
-            'minimum'          => $this->getMinimum(),
-            'exclusiveMinimum' => $this->getExclusiveMaximum(),
-            'maxLength'        => $this->getMaxLength(),
-            'minLength'        => $this->getMinLength(),
-            'maxItems'         => $this->getMaxItems(),
-            'minItems'         => $this->getMinItems(),
-            'uniqueItems'      => $this->getUniqueItems(),
-            'maxProperties'    => $this->getMaxProperties(),
-            'minProperties'    => $this->getMinProperties(),
-            'inversedBy'       => $inversed,
-            'required'         => $this->getRequired(),
-            'requiredIf'       => $this->getRequiredIf(),
-            'forbidenIf'       => $this->getForbidenIf(),
-            'enum'             => $this->getEnum(),
-            'allOf'            => $this->getAllOf(),
-            'anyOf'            => $this->getAnyOf(),
-            'oneOf'            => $this->getOneOf(),
-            'description'      => $this->getDescription(),
-            'defaultValue'     => $this->getDefaultValue(),
-            'nullable'         => $this->getNullable(),
-            'mustBeUnique'     => $this->getMustBeUnique(),
-            'readOnly'         => $this->getReadOnly(),
-            'writeOnly'        => $this->getWriteOnly(),
-            'example'          => $this->getExample(),
-            'deprecated'       => $this->getDeprecated(),
-            'minDate'          => $this->getMinDate(),
-            'maxDate'          => $this->getMaxDate(),
-            'maxFileSize'      => $this->getMaxFileSize(),
-            'fileTypes'        => $this->getFileTypes(),
-            'persistToGateway' => $this->getPersistToGateway(),
-            'searchable'       => $this->getSearchable(),
-            'cascade'          => $this->getCascade(),
+            'name'              => $this->getName(),
+            'type'              => $this->getType(),
+            'format'            => $this->getFormat(),
+            'multiple'          => $this->getMultiple(),
+            'entity'            => $entity,
+            'object'            => $object,
+            'multipleOf'        => $this->getMultipleOf(),
+            'maximum'           => $this->getMaximum(),
+            'exclusiveMaximum'  => $this->getExclusiveMaximum(),
+            'minimum'           => $this->getMinimum(),
+            'exclusiveMinimum'  => $this->getExclusiveMaximum(),
+            'maxLength'         => $this->getMaxLength(),
+            'minLength'         => $this->getMinLength(),
+            'maxItems'          => $this->getMaxItems(),
+            'minItems'          => $this->getMinItems(),
+            'uniqueItems'       => $this->getUniqueItems(),
+            'maxProperties'     => $this->getMaxProperties(),
+            'minProperties'     => $this->getMinProperties(),
+            'inversedBy'        => $inversed,
+            'required'          => $this->getRequired(),
+            'requiredIf'        => $this->getRequiredIf(),
+            'forbiddenIf'       => $this->getForbiddenIf(),
+            'enum'              => $this->getEnum(),
+            'allOf'             => $this->getAllOf(),
+            'anyOf'             => $this->getAnyOf(),
+            'oneOf'             => $this->getOneOf(),
+            'description'       => $this->getDescription(),
+            'defaultValue'      => $this->getDefaultValue(),
+            'nullable'          => $this->getNullable(),
+            'mustBeUnique'      => $this->getMustBeUnique(),
+            'readOnly'          => $this->getReadOnly(),
+            'writeOnly'         => $this->getWriteOnly(),
+            'example'           => $this->getExample(),
+            'deprecated'        => $this->getDeprecated(),
+            'minDate'           => $this->getMinDate(),
+            'maxDate'           => $this->getMaxDate(),
+            'maxFileSize'       => $this->getMaxFileSize(),
+            'fileTypes'         => $this->getFileTypes(),
+            'persistToGateway'  => $this->getPersistToGateway(),
+            'searchable'        => $this->getSearchable(),
+            'cascade'           => $this->getCascade(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
@@ -910,14 +910,14 @@ class Attribute
         return $this;
     }
 
-    public function getForbidenIf(): ?array
+    public function getForbiddenIf(): ?array
     {
-        return $this->forbidenIf;
+        return $this->forbiddenIf;
     }
 
-    public function setForbidenIf(?array $forbidenIf): self
+    public function setForbiddenIf(?array $forbiddenIf): self
     {
-        $this->forbidenIf = $forbidenIf;
+        $this->forbiddenIf = $forbiddenIf;
 
         return $this;
     }

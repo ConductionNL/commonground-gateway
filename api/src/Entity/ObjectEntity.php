@@ -677,7 +677,7 @@ class ObjectEntity
             }
             // Oke loop the conditions
             /*
-            foreach($value->getAttribute()->getForbidenIf() as $conditionProperty=>$conditionValue){
+            foreach($value->getAttribute()->getForbiddenIf() as $conditionProperty=>$conditionValue){
                 // we only have a problem if the current value is full
                 if(!$value->getValue()){continue;}
                 // so lets see if we should have a value
