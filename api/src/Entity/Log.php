@@ -229,38 +229,6 @@ class Log
      */
     private $sessionValues = [];
 
-    // /**
-    //  * @var ?object The endpoint of this Log.
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="object", nullable=true)
-    //  */
-    // private $endpoint;
-
-    // /**
-    //  * @var ?object The handler of this Log.
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="object", nullable=true)
-    //  */
-    // private $handler;
-
-    // /**
-    //  * @var ?object The entity of this Log.
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="object", nullable=true)
-    //  */
-    // private $entity;
-
-    // /**
-    //  * @var ?object The source of this Log.
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="object", nullable=true)
-    //  */
-    // private $source;
-
     /**
      * @var int The endpoint of this Log.
      *
