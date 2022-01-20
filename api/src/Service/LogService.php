@@ -46,7 +46,6 @@ class LogService
         $callLog->setRequestLanguages($request->getLanguages() ?? null);
         $callLog->setRequestServer($request->server->all());
         $callLog->setRequestContent($request->getContent());
-        // @todo get status
         $response && $callLog->setResponseStatus($this->getStatusWithCode($response->getStatusCode()));
         $response && $callLog->setResponseStatusCode($response->getStatusCode());
         $response && $callLog->setResponseHeaders($response->headers->all());
@@ -72,18 +71,10 @@ class LogService
             $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
-            // @todo these sets cause errors :
-
-            // TODO endpoint disabled because might cause problems
-            // $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
-            // // $callLog->setEndpoint(null);
-
-            // $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
-            // $callLog->setSource($this->session->get('source') ? $this->session->get('source') : null);
-
-            // TODO handler disabled because might cause problems
-            // $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
-            // $callLog->setHandler(null);
+            $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
+            $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
+            $callLog->setGateway($this->session->get('source') ? $this->session->get('source') : null);
+            $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
 
             // remove before setting the session values
             if ($finalSave === true) {
@@ -93,11 +84,7 @@ class LogService
                 $this->session->remove('source');
                 $this->session->remove('handler');
             }
-
-            // @todo these sets cause errors :
-            // add session values
-            // $callLog->setSessionValues($this->session->all());
-            $callLog->setSessionValues([]);
+            $callLog->setSessionValues($this->session->all());
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
