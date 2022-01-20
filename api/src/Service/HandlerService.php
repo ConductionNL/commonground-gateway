@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment as Environment;
+use App\Exception\GatewayException;
 
 class HandlerService
 {
@@ -93,13 +94,7 @@ class HandlerService
             }
         }
 
-        $response = new Response(
-            $this->serializer->serialize(['message' => 'No handler found for endpoint: ' . $endpoint->getName(), 'data' => $endpoint->getId()], $this->getRequestContentType()),
-            Response::HTTP_NOT_FOUND,
-            ['content-type' => 'json']
-        );
-        $this->logService->saveLog($this->request, $response);
-        return $response->prepare($this->request);
+        throw new GatewayException('No handler found for endpoint: ' . $endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
@@ -119,13 +114,7 @@ class HandlerService
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
-                $response = new Response(
-                    $this->serializer->serialize(['message' => 'No request body given for ' . $method . ' or faulty body given', 'path' => 'Request body'],  $this->getRequestContentType()),
-                    Response::HTTP_NOT_FOUND,
-                    ['content-type' => 'json']
-                );
-                $this->logService->saveLog($this->request, $response);
-                return $response->prepare($this->request);
+                throw new GatewayException('No request body given for ' . $method . ' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
             };
 
             // Update current Log
@@ -226,13 +215,13 @@ class HandlerService
         $contentType = $this->getRequestContentType();
         switch ($contentType) {
             case 'json':
-                return json_decode($this->request->getContent(), true);
+                return json_decode($content, true);
                 // @todo support xml messages (xml in $content looks already decoded?)
             case 'xml':
-                throw new \Exception('XML is not yet supported');
+                throw new GatewayException('XML is not yet supported', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
                 // return simplexml_load_string($content);
             default:
-                throw new \Exception('Unsupported content type');
+                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
     }
 
@@ -280,7 +269,7 @@ class HandlerService
                 //create template
                 if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
                     // throw error
-                    throw new \Exception("PDF couldn't be created");
+                    throw new GatewayException("PDF couldn't be created", null, null, ['data' => $data, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
                 }
                 $document = new Document();
                 $document->setDocumentType($contentType);
@@ -331,7 +320,7 @@ class HandlerService
             if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             } else {
-                throw new \Exception("invalid extension requested");
+                throw new GatewayException("invalid extension requested", null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
             }
         }
 
@@ -344,7 +333,7 @@ class HandlerService
         }
 
         // If we end up here we are dealing with an unsupported content type
-        throw new \Exception("Unsupported content type");
+        throw new GatewayException("Unsupported content type", null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
     }
 
     /**

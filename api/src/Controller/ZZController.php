@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Document;
+use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\EavService;
 use App\Service\HandlerService;
@@ -12,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\LogService;
 
 class ZZController extends AbstractController
 {
@@ -27,7 +29,8 @@ class ZZController extends AbstractController
         DocumentService $documentService,
         ValidationService $validationService,
         HandlerService $handlerService,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        LogService $logService
     ): Response {
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
@@ -43,14 +46,16 @@ class ZZController extends AbstractController
         if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $entity])) {
             try {
                 return $handlerService->handleEndpoint($endpoint);
-            // @todo Custom exception with path, message and data
-            // @todo get format
-            } catch (\Exception $e) {
+                // @todo Custom exception with path, message and data
+                // @todo get format
+            } catch (GatewayException $e) {
+                $options = $e->getOptions();
                 $response = new Response(
-                    $serializer->serialize(['message' => 'An unexpected error occured: ' . $e->getMessage()], 'json'),
-                    Response::HTTP_INTERNAL_SERVER_ERROR,
+                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
+                    $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
                     ['content-type' => 'json']
                 );
+                $logService->saveLog($request, $response);
                 return $response->prepare($request);
             }
         }
