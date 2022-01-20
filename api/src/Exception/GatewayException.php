@@ -3,12 +3,11 @@
 namespace App\Exception;
 
 /**
- * Custom exception used in HandlerService. 
- * Examples of usage can be found in HandlerService 
+ * Custom exception used in HandlerService.
+ * Examples of usage can be found in HandlerService.
  */
 class GatewayException extends \Exception
 {
-
     private $_options;
 
     public function __construct(
@@ -19,7 +18,7 @@ class GatewayException extends \Exception
         // Can be null
         \Exception $previous = null,
         // Array with body, path and responseType (201, 404, 502 etc)
-        $options = array('params')
+        $options = ['params']
     ) {
         parent::__construct($message, $code, $previous);
 
