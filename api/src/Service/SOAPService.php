@@ -1061,7 +1061,7 @@ class SOAPService
         foreach($data as $key=>$datum){
             $result['chosen'] = $this->getPersonDetail($key, $datum, $result['chosen'], ['voornamen', 'voorvoegselGeslachtsnaam', 'geslachtsnaam', 'geboortedatum', 'bsn']);
         }
-        $result['numberOfMunicipalWitnesses'] = isset($data['verzorgdgem']) ? $data['verzorgdgem'] : 0;
+        $result['numberOfMunicipalWitnesses'] = isset($data['verzorgdgem']) ? (int)$data['verzorgdgem'] : 0;
 
         return $result;
     }
