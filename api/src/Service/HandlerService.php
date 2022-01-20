@@ -4,8 +4,6 @@ namespace App\Service;
 
 use App\Entity\Document;
 use App\Entity\Endpoint;
-use App\Entity\Entity;
-use App\Entity\File;
 use App\Entity\Handler;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -20,12 +18,7 @@ use App\Exception\GatewayException;
 class HandlerService
 {
     private EntityManagerInterface $entityManager;
-    private RequestStack $requestStack;
-    private ValidationService $validationService;
     private TranslationService $translationService;
-    private SOAPService $soapService;
-    private EavService $eavService;
-    private SerializerInterface $serializerInterface;
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
