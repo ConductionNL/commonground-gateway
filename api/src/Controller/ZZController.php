@@ -44,12 +44,12 @@ class ZZController extends AbstractController
 
         // Let determine an endpoint (new way)
         if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $entity])) {
+            // Try handler proces and catch exceptions
             try {
                 return $handlerService->handleEndpoint($endpoint);
-                // @todo Custom exception with path, message and data
-                // @todo get format
             } catch (GatewayException $e) {
                 $options = $e->getOptions();
+                // @todo get format
                 $response = new Response(
                     $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
