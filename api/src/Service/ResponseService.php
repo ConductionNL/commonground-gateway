@@ -303,7 +303,7 @@ class ResponseService
         $objects = $value->getValue();
         $objectsArray = [];
         foreach ($objects as $object) {
-            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
+            $objectsArray[] = $this->renderResult($object, $fields, $flat, $level);
 
             // Old $MaxDepth;
 //            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
