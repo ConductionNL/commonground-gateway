@@ -737,7 +737,10 @@ class ObjectEntity
 
     public function removeSubresourceOf(Value $subresourceOf): self
     {
-        $this->subresourceOf->removeElement($subresourceOf);
+        if ($this->subresourceOf->contains($subresourceOf)) {
+            // SubresourceOf will be removed from this ObjectEntity in this function;
+            $subresourceOf->removeObject($this);
+        }
 
         return $this;
     }

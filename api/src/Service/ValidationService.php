@@ -482,11 +482,19 @@ class ValidationService
                 // object toevoegen
                 $saveSubObjects->add($subObject);
             }
-            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
+            // If we are doing a put, we want to actually clear (or remove) all objects connected to this valueObject before (re-)adding them
             if ($this->request->getMethod() == 'PUT') {
                 foreach ($valueObject->getObjects() as $object) {
-                    $object->removeSubresourceOf($valueObject);
+                    // If we are not re-adding this object...
+                    if (!$saveSubObjects->contains($object)) {
+                        $object->removeSubresourceOf($valueObject);
+                        // ...delete it entirely if it has no other 'parent' connections
+                        if (count($object->getSubresourceOf()) == 0) {
+                            $this->em->remove($object);
+                        }
+                    }
                 }
+                $this->em->flush();
                 $valueObject->getObjects()->clear();
             }
             // Actually add the objects to the valueObject
