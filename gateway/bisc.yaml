@@ -423,12 +423,13 @@ App\Entity\Attribute:
         name: parentOrganization
         description: The larger organization that this organization is a subOrganization of.
         type: object
-        required: true
         entity: "@organization"
         object: "@organization"
         persistToGateway: true
         searchable: true
         immutable: true
+        requiredIf:
+            type: team.noDefaultValue
         defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
