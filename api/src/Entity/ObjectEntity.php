@@ -644,7 +644,15 @@ class ObjectEntity
             foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
                 if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
-                    continue;
+                    $explodedConditionValue = explode(".", $conditionValue);
+                    $getValue = $value->getValue() instanceof ObjectEntity ? $value->getValue()->getExternalId() : $value->getValue();
+                    if (!$value->getAttribute()->getDefaultValue()
+                        || ($value->getAttribute()->getDefaultValue() !== $getValue)
+                        || end($explodedConditionValue) != 'noDefaultValue') {
+                        continue;
+                    } else {
+                        $conditionValue = implode(".", array_slice($explodedConditionValue, 0, -1));
+                    }
                 }
                 // so lets see if we should have a value
                 //var_dump($conditionProperty);
