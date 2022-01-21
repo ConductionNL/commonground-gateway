@@ -749,6 +749,7 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+        persistToGateway: true
     employee_mentees:
         name: mentees
         type: object

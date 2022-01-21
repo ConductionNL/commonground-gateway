@@ -855,9 +855,7 @@ class EavService
         // Let see if we have errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            if ($request->getMethod() == 'POST') {
-                $this->handleDeleteOnError();
-            }
+            $this->handleDeleteOnError();
 
             return $errorsResponse;
         }
@@ -878,9 +876,7 @@ class EavService
         // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
-            if ($request->getMethod() == 'POST') {
-                $this->handleDeleteOnError();
-            }
+            $this->handleDeleteOnError();
 
             return $errorsResponse;
         }
@@ -1107,7 +1103,7 @@ class EavService
      *
      * @return void
      */
-    private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
+    private function handleDeleteObjectOnError(ObjectEntity $createdObject)
     {
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
 //        var_dump($createdObject->getUri());
@@ -1124,12 +1120,8 @@ class EavService
 //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
         foreach ($createdObject->getObjectValues() as $value) {
             if ($value->getAttribute()->getType() == 'object') {
-                if ($value->getAttribute()->getCascadeDelete()) {
-                    $this->deleteSubobjects($value, $motherObject);
-                } else {
-                    foreach ($value->getObjects() as $object) {
-                        $object->removeSubresourceOf($value);
-                    }
+                foreach ($value->getObjects() as $object) {
+                    $object->removeSubresourceOf($value);
                 }
             }
 
@@ -1152,21 +1144,6 @@ class EavService
 //            var_dump('Deleted: '.$createdObject->getEntity()->getName());
         } catch (Exception $exception) {
 //            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
-        }
-    }
-
-    /**
-     * @param Value             $value
-     * @param ObjectEntity|null $motherObject
-     *
-     * @return void
-     */
-    private function deleteSubobjects(Value $value, ?ObjectEntity $motherObject = null)
-    {
-        foreach ($value->getObjects() as $object) {
-            if ($object && (!$motherObject || $object->getId() !== $motherObject->getId())) {
-                $this->handleDeleteObjectOnError($object, $value->getObjectEntity());
-            }
         }
     }
 
