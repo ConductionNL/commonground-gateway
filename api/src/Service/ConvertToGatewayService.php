@@ -494,7 +494,12 @@ class ConvertToGatewayService
         if (!$attribute->getMultiple()) {
             foreach ($valueObject->getObjects() as $object) {
                 $object->removeSubresourceOf($valueObject);
+                // ...delete it entirely if it has no other 'parent' connections
+                if (count($object->getSubresourceOf()) == 0) {
+                    $this->em->remove($object);
+                }
             }
+            $this->em->flush();
             $valueObject->getObjects()->clear(); // We start with a default object
         }
         $valueObject->addObject($subObject);
