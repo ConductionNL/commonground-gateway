@@ -87,7 +87,7 @@ class HandlerService
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: ' . $endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
@@ -107,7 +107,7 @@ class HandlerService
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
-                throw new GatewayException('No request body given for '.$method.' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
             }
 
             // Update current Log
