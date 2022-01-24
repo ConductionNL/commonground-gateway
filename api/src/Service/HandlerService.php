@@ -87,7 +87,7 @@ class HandlerService
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: ' . $endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
@@ -211,16 +211,18 @@ class HandlerService
             case 'xml':
                 // otherwise xml will throw its own error bypassing our exception handling
                 libxml_use_internal_errors(true);
-                // string to xml object, encode that to json then decode to array 
+                // string to xml object, encode that to json then decode to array
                 $xml = simplexml_load_string($content);
                 // if xml is false get errors and throw exception
                 if ($xml === false) {
                     $errors = 'Something went wrong decoding xml:';
                     foreach (libxml_get_errors() as $e) {
-                        $errors .= ' ' . $e->message;
+                        $errors .= ' '.$e->message;
                     }
+
                     throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
                 }
+
                 return json_decode(json_encode($xml), true);
             default:
                 throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
@@ -309,8 +311,9 @@ class HandlerService
 
     /**
      * Validates content or accept type from request.
-     * 
+     *
      * @param string $type 'content-type' or 'accept'
+     *
      * @return string Accept or content-type
      */
     public function getRequestType(string $type): string
