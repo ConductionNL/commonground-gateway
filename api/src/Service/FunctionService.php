@@ -22,10 +22,11 @@ class FunctionService
      *
      * @param ObjectEntity $objectEntity
      * @param string       $uri
+     * @param string|null  $organizationType This is nullable so that it won't trigger 500's when no organization type is given, but a nice and correct error (if organization type is configured to be required, as it should)
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @return ObjectEntity
      */
-    public function createOrganization(ObjectEntity $objectEntity, string $uri, string $organizationType)
+    public function createOrganization(ObjectEntity $objectEntity, string $uri, ?string $organizationType): ObjectEntity
     {
         //TODO: $organizationType is a quick fix for taalhuizen, we need to find a better solution!
         if ($organizationType == 'taalhuis') {

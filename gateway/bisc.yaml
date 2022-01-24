@@ -114,7 +114,7 @@ App\Entity\Entity:
             - emails
             - parentOrganization
             - members
-            - langougeHouse_postalCodes
+            - languageHouse_postalCodes
             - team_postalCodes
 
     #Email Object
@@ -423,12 +423,13 @@ App\Entity\Attribute:
         name: parentOrganization
         description: The larger organization that this organization is a subOrganization of.
         type: object
-        required: true
         entity: "@organization"
         object: "@organization"
         persistToGateway: true
         searchable: true
         immutable: true
+        requiredIf:
+            type: team.noDefaultValue
         defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
@@ -471,7 +472,7 @@ App\Entity\Attribute:
         inversedBy: "@employee_teams"
         mayBeOrphaned: false
     organization_languageHouse_postalCodes:
-        name: langougeHouse_postalCodes
+        name: languageHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
         type: object
         multiple: true
@@ -749,6 +750,7 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+        persistToGateway: true
     employee_mentees:
         name: mentees
         type: object
@@ -815,6 +817,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@employee"
         inversedBy: "@employee_mentees"
+        unsetable: true
     student_intake:
         name: intake
         type: object
