@@ -884,7 +884,6 @@ class EavService
         // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
         if ($request->getMethod() == 'PUT') {
             foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {
-                var_dump($removeObjectOnPut['object']->getId()->toString());
                 $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
                 // ...delete it entirely if it has no other 'parent' connections
                 if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0) {
