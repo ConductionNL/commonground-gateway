@@ -726,7 +726,7 @@ class Entity
     {
         if (!$this->handlers->contains($handler)) {
             $this->handlers[] = $handler;
-            $handler->setObject($this);
+            $handler->setEntity($this);
         }
 
         return $this;
@@ -736,8 +736,8 @@ class Entity
     {
         if ($this->handlers->removeElement($handler)) {
             // set the owning side to null (unless already changed)
-            if ($handler->getObject() === $this) {
-                $handler->setObject(null);
+            if ($handler->getEntity() === $this) {
+                $handler->setEntity(null);
             }
         }
 

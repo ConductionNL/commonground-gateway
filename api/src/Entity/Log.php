@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -41,7 +42,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "entity.id": "exact",
  *     "endpoint.id": "exact",
- *     "sources.id": "exact",
+ *     "gateway.id": "exact",
  *     "handler.id": "exact"
  * })
  */
@@ -229,38 +230,6 @@ class Log
     private $sessionValues = [];
 
     /**
-     * @var ?object The endpoint of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $endpoint;
-
-    /**
-     * @var ?object The handler of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $handler;
-
-    /**
-     * @var ?object The entity of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $entity;
-
-    /**
-     * @var ?object The source of this Log.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="object", nullable=true)
-     */
-    private $source;
-
-    /**
      * @var int The endpoint of this Log.
      *
      * @Assert\NotNull
@@ -296,6 +265,34 @@ class Log
      * @ORM\Column(type="array", nullable=true)
      */
     private $routeParameters;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class)
+     * @MaxDepth(1)
+     */
+    private $entity;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Endpoint::class)
+     * @MaxDepth(1)
+     */
+    private $endpoint;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @MaxDepth(1)
+     */
+    private $gateway;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @MaxDepth(1)
+     */
+    private $handler;
 
     public function getId()
     {
@@ -482,54 +479,6 @@ class Log
         return $this;
     }
 
-    public function getEndpoint(): ?object
-    {
-        return $this->endpoint;
-    }
-
-    public function setEndpoint(?object $endpoint): self
-    {
-        $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
-    public function getHandler(): ?object
-    {
-        return $this->handler;
-    }
-
-    public function setHandler(?object $handler): self
-    {
-        $this->handler = $handler;
-
-        return $this;
-    }
-
-    public function getEntity(): ?object
-    {
-        return $this->entity;
-    }
-
-    public function setEntity(?object $entity): self
-    {
-        $this->entity = $entity;
-
-        return $this;
-    }
-
-    public function getSource(): ?object
-    {
-        return $this->source;
-    }
-
-    public function setSource(?object $source): self
-    {
-        $this->source = $source;
-
-        return $this;
-    }
-
     public function getResponseTime(): int
     {
         return $this->responseTime;
@@ -574,6 +523,54 @@ class Log
     public function setRouteParameters(?array $routeParameters): self
     {
         $this->routeParameters = $routeParameters;
+
+        return $this;
+    }
+
+    public function getEntity(): ?Entity
+    {
+        return $this->entity;
+    }
+
+    public function setEntity(?Entity $entity): self
+    {
+        $this->entity = $entity;
+
+        return $this;
+    }
+
+    public function getEndpoint(): ?Endpoint
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(?Endpoint $endpoint): self
+    {
+        $this->endpoint = $endpoint;
+
+        return $this;
+    }
+
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getHandler(): ?Handler
+    {
+        return $this->handler;
+    }
+
+    public function setHandler(?Handler $handler): self
+    {
+        $this->handler = $handler;
 
         return $this;
     }

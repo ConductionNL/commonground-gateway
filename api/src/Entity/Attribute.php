@@ -507,14 +507,6 @@ class Attribute
     private bool $cascadeDelete = false;
 
     /**
-     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
-     */
-    private bool $mayBeOrphaned = true;
-
-    /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @Groups({"read", "write"})
@@ -1318,18 +1310,6 @@ class Attribute
     public function setCascadeDelete(?bool $cascadeDelete): self
     {
         $this->cascadeDelete = $cascadeDelete;
-
-        return $this;
-    }
-
-    public function getMayBeOrphaned(): ?bool
-    {
-        return $this->mayBeOrphaned;
-    }
-
-    public function setMayBeOrphaned(?bool $mayBeOrphaned): self
-    {
-        $this->mayBeOrphaned = $mayBeOrphaned;
 
         return $this;
     }
