@@ -173,11 +173,13 @@ class Handler
     private Endpoint $endpoint;
 
     /**
+     * @var Entity The entity of this Handler.
+     *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
-    private $entity;
+    private ?Entity $entity = null;
 
     public function getId()
     {
@@ -267,18 +269,6 @@ class Handler
 
         return $this;
     }
-
-    // public function getEntity(): ?Entity
-    // {
-    //     return $this->entity;
-    // }
-
-    // public function setEntity(?Entity $entity): self
-    // {
-    //     $this->entity = $entity;
-
-    //     return $this;
-    // }
 
     public function getSkeletonOut(): ?array
     {
