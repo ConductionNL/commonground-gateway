@@ -51,9 +51,9 @@ class ZZController extends AbstractController
                 $options = $e->getOptions();
                 // @todo get format
                 $response = new Response(
-                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
+                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $handlerService->getRequestType('accept')),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-                    ['content-type' => 'json']
+                    ['content-type' => $handlerService->getRequestType('accept')]
                 );
                 $logService->saveLog($request, $response);
 
