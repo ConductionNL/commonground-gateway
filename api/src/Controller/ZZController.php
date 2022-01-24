@@ -49,11 +49,11 @@ class ZZController extends AbstractController
                 return $handlerService->handleEndpoint($endpoint);
             } catch (GatewayException $e) {
                 $options = $e->getOptions();
-                // @todo get format
+                $acceptType = $handlerService->getRequestType('accept');
                 $response = new Response(
-                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $handlerService->getRequestType('accept')),
+                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-                    ['content-type' => $handlerService->getRequestType('accept')]
+                    ['content-type' => $acceptType]
                 );
                 $logService->saveLog($request, $response);
 
