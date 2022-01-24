@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class TranslationService
 {
+    public const TRUE_VALUES = ['true', 'True', 'ja', 'Ja', 'yes', 'Yes', 1, '1'];
 
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array
     {
@@ -72,7 +73,9 @@ class TranslationService
                 $xmlEncoder = new XmlEncoder();
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
             } elseif($format == 'bool') {
-                $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
+                $destination[$replace] = isset($source[$search]) ? in_array($source[$search], self::TRUE_VALUES) : ((bool) $destination[$replace]) ?? null;
+            } elseif($format == 'key') {
+                $destination[$replace] = $search;
             }
 
             if(($destination[$replace] === [] || $destination[$replace] === "") && (!isset($format) || $format !== 'required')){
@@ -80,6 +83,7 @@ class TranslationService
             }
             unset($format);
         }
+
 
         // Let turn the dot array back into an array
         $destination = $destination->all();

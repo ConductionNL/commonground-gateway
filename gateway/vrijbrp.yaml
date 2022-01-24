@@ -1223,6 +1223,9 @@ App\Entity\Soap:
             witnesses: witnesses | json
             officials: officials | json
             location.name: naam
+            location.options.0.name: boekje | key
+            location.options.0.type: BOOLEAN | key
+            location.options.0.value: boekje | bool
             partner2.nameAfterCommitment.nameUseType: geselecteerdNaamgebruikPartner
             partner2.nameAfterCommitment.lastname: geslachtsnaam
             partner2.nameAfterCommitment.prefix: voorvoegselGeslachtsnaam
@@ -1270,11 +1273,12 @@ App\Entity\Soap:
             dossier.startDate: date
             declarant.bsn: "SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp&#2Ebsn"
             fatherDuoMother.bsn: parent2Bsn
-            mother.bsn: inp&#2Ebsn
+            mother.bsn: motherBsn
             children: children | json
-            nameSelection.lastname: geslachtsnaam
-            nameSelection.prefix: voorvoegselGeslachtsnaam
-            nameSelection.titlePredicate: adellijkeTitelPredikaat
+            nameSelection.lastname: geslachtsnaamgebkind
+            nameSelection.prefix: voorvoegselGeslachtsnaamgebkind
+            nameSelection.titlePredicate: adellijkeTitelPredikaatgebkind
+            qualificationForDeclaringType: relatie
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
             <SOAP-ENV:Envelope

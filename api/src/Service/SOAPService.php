@@ -1188,10 +1188,18 @@ class SOAPService
             $data->merge($this->flattenExtraElements($extraElementen));
             $data->set('children', json_encode($this->filterChildren($this->getPersonDetails($data->flatten(), ['voornamen', 'geboortedatum', 'geboortetijd', 'geslachtsaanduiding'], []))));
 
-            if($data->has('inp.bsn')){
+//            if($data->has('inp.bsn')){
+//                $data->set('parent2Bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+//            } else {
+//                $data->set('inp&#2Ebsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+//            }
+
+            if($data->has('relatie') && $data->get('relatie') == 'MOTHER'){
+                $data->set('parent2Bsn', $data->has('inp.bsn') ? $data->get('inp.bsn') : null);
+                $data->set('motherBsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
+            } elseif($data->has('relatie')){
+                $data->set('motherBsn', $data->has('inp.bsn') ? $data->get('inp.bsn') : null);
                 $data->set('parent2Bsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
-            } else {
-                $data->set('inp&#2Ebsn', $data->flatten()["SOAP-ENV:Body.ns2:zakLk01.ns2:object.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:natuurlijkPersoon.ns3:inp.bsn"]);
             }
         }
 
