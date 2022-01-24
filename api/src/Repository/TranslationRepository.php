@@ -77,7 +77,8 @@ class TranslationRepository extends ServiceEntityRepository
     public function getTables()
     {
         $query = $this->createQueryBuilder('t')
-            ->select('DISTINCT t.translationTable');
+            ->select('t.translationTable')
+            ->distinct();
 
         $results = $query->getQuery()->getResult();
 
