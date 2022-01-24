@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +14,6 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment as Environment;
-use App\Exception\GatewayException;
 
 class HandlerService
 {
@@ -87,12 +87,12 @@ class HandlerService
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: ' . $endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
      * This function walks through the $handler with $data from the request to perform mapping, translating and fetching/saving from/to the eav.
-     * 
+     *
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
@@ -107,8 +107,8 @@ class HandlerService
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
-                throw new GatewayException('No request body given for ' . $method . ' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-            };
+                throw new GatewayException('No request body given for '.$method.' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+            }
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
@@ -194,10 +194,10 @@ class HandlerService
     }
 
     /**
-     * Checks content type and decodes that if needed
-     * 
+     * Checks content type and decodes that if needed.
+     *
      * @return array|null
-     * 
+     *
      * @todo more content types ?
      * @todo check for specific error when decoding
      * @todo support xml messages (xml is already decoded??)
@@ -219,8 +219,8 @@ class HandlerService
     }
 
     /**
-     * This function creates and prepares the response
-     * 
+     * This function creates and prepares the response.
+     *
      * @todo throw error if $data is not string when creating pdf
      */
     public function createResponse(array $data): Response
@@ -299,8 +299,8 @@ class HandlerService
     }
 
     /**
-     * Validates content type from request
-     * 
+     * Validates content type from request.
+     *
      * @todo throw error if invalid extension
      * @todo throw error if unsupported content type
      */
@@ -314,7 +314,7 @@ class HandlerService
             if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             } else {
-                throw new GatewayException("invalid extension requested", null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException('invalid extension requested', null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
             }
         }
 
@@ -327,12 +327,12 @@ class HandlerService
         }
 
         // If we end up here we are dealing with an unsupported content type
-        throw new GatewayException("Unsupported content type", null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
     }
 
     /**
-     * Checks template type on handler and creates template
-     * 
+     * Checks template type on handler and creates template.
+     *
      * @todo Add global variables
      */
     private function renderTemplate(Handler $handler, array $data): string
@@ -357,7 +357,7 @@ class HandlerService
                 return $handler->getTemplate();
                 break;
             default:
-                throw new GatewayException("Unsupported template type", null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
     }
 }

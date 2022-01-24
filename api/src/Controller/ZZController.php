@@ -7,13 +7,13 @@ use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\EavService;
 use App\Service\HandlerService;
+use App\Service\LogService;
 use App\Service\ValidationService;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Service\LogService;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ZZController extends AbstractController
 {
@@ -56,6 +56,7 @@ class ZZController extends AbstractController
                     ['content-type' => 'json']
                 );
                 $logService->saveLog($request, $response);
+
                 return $response->prepare($request);
             }
         }
