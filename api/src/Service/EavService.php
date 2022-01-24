@@ -1117,6 +1117,7 @@ class EavService
      */
     private function handleDeleteObjectOnError(ObjectEntity $createdObject)
     {
+        $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
 //        var_dump($createdObject->getUri());
 //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
