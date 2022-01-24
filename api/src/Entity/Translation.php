@@ -23,7 +23,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  },
  *  collectionOperations={
  *      "get"={"path"="/admin/translations"},
- *      "get"={"path"="/admin/getTranslationTables"},
+ *      "get"={"path"="/admin/table_names"},
  *      "post"={"path"="/admin/translations"}
  *  })
  * )
