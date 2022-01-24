@@ -243,7 +243,19 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $objectEntity->getValueByAttribute($attribute)->setValue([]);
+                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                if ($attribute->getType() == 'object') {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object...
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                    $valueObject->getObjects()->clear();
+                } else {
+                    $valueObject->setValue([]);
+                }
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }

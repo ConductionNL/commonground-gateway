@@ -890,6 +890,7 @@ class EavService
                     $this->em->remove($removeObjectOnPut['object']);
                 }
             }
+            $this->em->flush();
         }
 
         // Saving the data
