@@ -489,8 +489,8 @@ class ValidationService
                     // If we are not re-adding this object...
                     if (!$saveSubObjects->contains($object)) {
                         $this->removeObjectsOnPut[] = [
-                          'valueObject' => $valueObject,
-                          'object' => $object
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
                         ];
                     }
                 }
@@ -908,7 +908,7 @@ class ValidationService
                         foreach ($valueObject->getObjects() as $object) {
                             $this->removeObjectsOnPut[] = [
                                 'valueObject' => $valueObject,
-                                'object' => $object
+                                'object'      => $object,
                             ];
                         }
                         $valueObject->getObjects()->clear(); // We start with a default object
