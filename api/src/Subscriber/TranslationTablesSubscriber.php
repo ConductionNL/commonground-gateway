@@ -40,7 +40,7 @@ class TranslationTablesSubscriber implements EventSubscriberInterface
         $translationsRepo = $this->entityManager->getRepository('App:Translation');
 
         $event->setResponse(new Response(json_encode([
-            'results' => $translationsRepo->getTables()
+            'results' => $translationsRepo->getTables(),
         ]), 200, ['Content-type' => 'application/json']));
     }
 }

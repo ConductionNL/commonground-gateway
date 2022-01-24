@@ -97,5 +97,4 @@ class TranslationRepository extends ServiceEntityRepository
 
         return $tableNames;
     }
-
 }
