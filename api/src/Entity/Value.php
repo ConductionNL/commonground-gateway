@@ -404,18 +404,17 @@ class Value
                     if ($value === null) {
                         return $this;
                     }
-                    if (!$this->objectEntity->getHasErrors()) {
-                        foreach ($this->objects as $object) {
-                            $object->removeSubresourceOf($this);
-                            //todo:
+                    // todo: We never use setValue function for array of objects, but if we ever do, take a look at $removeObjectsOnPut in validationService and EavService!
+//                    if (!$this->objectEntity->getHasErrors()) {
+//                        foreach ($this->objects as $object) {
+//                            $object->removeSubresourceOf($this);
 //                            // ...delete it entirely if it has no other 'parent' connections
 //                            if (count($object->getSubresourceOf()) == 0) {
 //                                $this->em->remove($object);
 //                            }
-                        }
-//                        $this->em->flush();
-                        $this->objects->clear();
-                    }
+//                        }
+//                    }
+                    $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $object) {
