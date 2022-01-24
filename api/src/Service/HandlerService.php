@@ -107,7 +107,7 @@ class HandlerService
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
-                throw new GatewayException('No request body given for '.$method.' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
             }
 
             // Update current Log
@@ -200,19 +200,30 @@ class HandlerService
      *
      * @todo more content types ?
      * @todo check for specific error when decoding
-     * @todo support xml messages (xml is already decoded??)
      */
     public function getDataFromRequest()
     {
         $content = $this->request->getContent();
-        $contentType = $this->getRequestContentType();
+        $contentType = $this->getRequestType('content-type');
         switch ($contentType) {
             case 'json':
                 return json_decode($content, true);
-                // @todo support xml messages (xml in $content looks already decoded?)
             case 'xml':
-                throw new GatewayException('XML is not yet supported', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
-                // return simplexml_load_string($content);
+                // otherwise xml will throw its own error bypassing our exception handling
+                libxml_use_internal_errors(true);
+                // string to xml object, encode that to json then decode to array
+                $xml = simplexml_load_string($content);
+                // if xml is false get errors and throw exception
+                if ($xml === false) {
+                    $errors = 'Something went wrong decoding xml:';
+                    foreach (libxml_get_errors() as $e) {
+                        $errors .= ' '.$e->message;
+                    }
+
+                    throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                }
+
+                return json_decode(json_encode($xml), true);
             default:
                 throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
@@ -247,11 +258,11 @@ class HandlerService
                 $status = Response::HTTP_OK;
         }
 
-        $contentType = $this->getRequestContentType();
+        $acceptType = $this->getRequestType('accept');
 
         // Lets fill in some options
         $options = [];
-        switch ($contentType) {
+        switch ($acceptType) {
             case 'text/csv':
                 $options = [
                     CsvEncoder::ENCLOSURE_KEY   => '"',
@@ -266,7 +277,7 @@ class HandlerService
                 }
                 // Create template
                 $document = new Document();
-                $document->setDocumentType($contentType);
+                $document->setDocumentType($acceptType);
                 $document->setType('twig');
                 isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
@@ -274,14 +285,14 @@ class HandlerService
         }
 
         // Lets seriliaze the shizle (if no document and we have a result)
-        !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
-            : $result = $this->serializer->serialize($data, $contentType, $options));
+        !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $acceptType, $options)
+            : $result = $this->serializer->serialize($data, $acceptType, $options));
 
         // Lets create the actual response
         $response = new Response(
             $result,
             $status,
-            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
+            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
         );
 
         // Lets handle file responses
@@ -299,18 +310,19 @@ class HandlerService
     }
 
     /**
-     * Validates content type from request.
+     * Validates content or accept type from request.
      *
-     * @todo throw error if invalid extension
-     * @todo throw error if unsupported content type
+     * @param string $type 'content-type' or 'accept'
+     *
+     * @return string Accept or content-type
      */
-    private function getRequestContentType(): string
+    public function getRequestType(string $type): string
     {
         // Lets grap the route parameters
         $routeParameters = $this->request->attributes->get('_route_params');
 
         // If we have an extension and the extension is a valid serialization format we will use that
-        if (array_key_exists('extension', $routeParameters)) {
+        if ($type == 'content-type' && array_key_exists('extension', $routeParameters)) {
             if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             } else {
@@ -319,11 +331,9 @@ class HandlerService
         }
 
         // Lets pick the first accaptable content type that we support
-        // @todo where is request->acceptablecontenttypes being set?
-        foreach ($this->request->getAcceptableContentTypes() as $contentType) {
-            if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
-                return $this->acceptHeaderToSerialiazation[$contentType];
-            }
+        $typeValue = $this->request->headers->get($type);
+        if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
+            return $this->acceptHeaderToSerialiazation[$typeValue];
         }
 
         // If we end up here we are dealing with an unsupported content type
