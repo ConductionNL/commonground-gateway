@@ -73,4 +73,29 @@ class TranslationRepository extends ServiceEntityRepository
 
         return $translations;
     }
+
+    public function getTables()
+    {
+        $query = $this->createQueryBuilder('t')
+            ->select('DISTINCT t.translationTable');
+
+        $results = $query->getQuery()->getResult();
+
+        $tableNames = [];
+        foreach ($results as $tables) {
+            $tableNames = $this->getTableNames($tables, $tableNames);
+        }
+
+        return $tableNames;
+    }
+
+    public function getTableNames(array $tables, array $tableNames)
+    {
+        foreach ($tables as $tableName) {
+            array_push($tableNames, $tableName);
+        }
+
+        return $tableNames;
+    }
+
 }
