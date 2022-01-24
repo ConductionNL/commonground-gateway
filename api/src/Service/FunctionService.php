@@ -61,6 +61,7 @@ class FunctionService
             $item->tag('organization');
 
             $this->cache->save($item);
+
             return $organization;
         }
 
