@@ -3,14 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\Document;
+use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\EavService;
 use App\Service\HandlerService;
+use App\Service\LogService;
 use App\Service\ValidationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ZZController extends AbstractController
 {
@@ -25,10 +28,12 @@ class ZZController extends AbstractController
         EavService $eavService,
         DocumentService $documentService,
         ValidationService $validationService,
-        HandlerService $handlerService
+        HandlerService $handlerService,
+        SerializerInterface $serializer,
+        LogService $logService
     ): Response {
         // Below is hacky tacky
-        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route'=>$entity]);
+        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
         if ($document instanceof Document && $id) {
             return $documentService->handleDocument($document, $id);
         }
@@ -38,8 +43,22 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Let determine an endpoint (new way)
-        if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path'=>$entity])) {
-            return $handlerService->handleEndpoint($endpoint);
+        if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $entity])) {
+            // Try handler proces and catch exceptions
+            try {
+                return $handlerService->handleEndpoint($endpoint);
+            } catch (GatewayException $e) {
+                $options = $e->getOptions();
+                // @todo get format
+                $response = new Response(
+                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
+                    $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
+                    ['content-type' => 'json']
+                );
+                $logService->saveLog($request, $response);
+
+                return $response->prepare($request);
+            }
         }
 
         // Continue as normal (old way)

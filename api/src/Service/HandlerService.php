@@ -4,9 +4,8 @@ namespace App\Service;
 
 use App\Entity\Document;
 use App\Entity\Endpoint;
-use App\Entity\Entity;
-use App\Entity\File;
 use App\Entity\Handler;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,12 +18,7 @@ use Twig\Environment as Environment;
 class HandlerService
 {
     private EntityManagerInterface $entityManager;
-    private RequestStack $requestStack;
-    private ValidationService $validationService;
     private TranslationService $translationService;
-    private SOAPService $soapService;
-    private EavService $eavService;
-    private SerializerInterface $serializerInterface;
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
@@ -73,17 +67,19 @@ class HandlerService
     }
 
     /**
-     * Get the data for a document and send it to the document creation service.
+     * This function sets the endpoint in the session and executes handleHandler with its found Handler.
      */
     public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
         $session->set('endpoint', $endpoint);
+
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach ($endpoint->getHandlers() as $handler) {
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
+
             if (true) {
                 $session->set('handler', $handler);
 
@@ -91,62 +87,56 @@ class HandlerService
             }
         }
 
-        // @todo we should not end up here so lets throw an 'no handler found' error
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
-     * Get the data for a document and send it to the document creation service.
+     * This function walks through the $handler with $data from the request to perform mapping, translating and fetching/saving from/to the eav.
+     *
+     * @todo remove old eav code if new way is finished and working
+     * @todo better check if $data is a document/template line 199
      */
     public function handleHandler(Handler $handler): Response
     {
-        // To start it al off we need the data from the incomming request
-        $data = $this->getDataFromRequest($this->request);
+        $method = $this->request->getMethod();
 
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        // Only do mapping and translation -in for calls with body
+        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
 
-        // Then we want to do the mapping in the incomming request
-        $skeleton = $handler->getSkeletonIn();
-        if (!$skeleton || empty($skeleton)) {
-            $skeleton = $data;
+            // To start it al off we need the data from the incomming request
+            $data = $this->getDataFromRequest($this->request);
+
+            if ($data == null || empty($data)) {
+                throw new GatewayException('No request body given for '.$method.' or faulty body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+            }
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // Then we want to do the mapping in the incomming request
+            $skeleton = $handler->getSkeletonIn();
+            if (!$skeleton || empty($skeleton)) {
+                $skeleton = $data;
+            }
+            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
+
+            // The we want to do translations on the incomming request
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+            $data = $this->translationService->parse($data, true, $translations);
+
+            // Update current Log
+            $this->logService->saveLog($this->request, null, json_encode($data));
         }
-        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
-
-        // The we want to do  translations on the incomming request
-        $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-        $data = $this->translationService->parse($data, true, $translations);
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
 
         // eav new way
-        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $this->request->getMethod());
+        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
-
-            // // If the handler is teid to an EAV object we want to resolve that in all of it glory
-            // if ($entity = $handler->getEntity()) {
-
-            //     // prepare variables
-            //     $routeParameters = $this->request->attributes->get('_route_params');
-            //     if (array_key_exists('id', $routeParameters)) {
-            //         $id = $routeParameters['id'];
-            //     }
-            //     $object = $this->eavService->getObject($id ?? null, $this->request->getMethod(), $entity);
-
-            //     // Create an info array
-            //     $info = [
-            //         'object' => $object ?? null,
-            //         'body'   => $data ?? null,
-            //         'fields' => $field ?? null,
-            //         'path'   => $handler->getEndpoint()->getPath(),
-            //     ];
-            // }
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
@@ -154,6 +144,7 @@ class HandlerService
             // The we want to do  translations on the outgoing responce
             $transRepo = $this->entityManager->getRepository('App:Translation');
             $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+
             if (isset($data['result'])) {
                 $data['result'] = $this->translationService->parse($data['result'], true, $translations);
             } else {
@@ -170,7 +161,7 @@ class HandlerService
             }
             if (isset($data['result'])) {
                 $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-            } else {
+            } elseif (isset($data)) {
                 $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
             }
 
@@ -182,6 +173,7 @@ class HandlerService
                 $data = $this->renderTemplate($handler, $data);
             }
 
+            // @todo should be done better
             // If data is string it could be a document/template
             if (is_string($data)) {
                 $result = $data;
@@ -192,7 +184,7 @@ class HandlerService
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
 
-        // An lastly we want to create a responce
+        // An lastly we want to create a response
         $response = $this->createResponse($data);
 
         // Final update Log
@@ -201,42 +193,36 @@ class HandlerService
         return $response;
     }
 
-    public function getDataFromRequest(): array
+    /**
+     * Checks content type and decodes that if needed.
+     *
+     * @return array|null
+     *
+     * @todo more content types ?
+     * @todo check for specific error when decoding
+     * @todo support xml messages (xml is already decoded??)
+     */
+    public function getDataFromRequest()
     {
-        //@todo support xml messages
-
-        if ($this->request->getContent()) {
-            $body = json_decode($this->request->getContent(), true);
-        }
-
-        return $body;
-    }
-
-    public function eavSwitch(Entity $entity): array
-    {
-        // We only end up here if there are no errors, so we only suply best case senario's
-        switch ($this->request->getMethod()) {
-            case 'GET':
-                return $this->eavService->getEntity();
-                break;
-            case 'POST':
-                $status = Response::HTTP_CREATED;
-                break;
-            case 'PUT':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'UPDATE':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'DELETE':
-                $status = Response::HTTP_NO_CONTENT;
-                break;
+        $content = $this->request->getContent();
+        $contentType = $this->getRequestContentType();
+        switch ($contentType) {
+            case 'json':
+                return json_decode($content, true);
+                // @todo support xml messages (xml in $content looks already decoded?)
+            case 'xml':
+                throw new GatewayException('XML is not yet supported', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                // return simplexml_load_string($content);
             default:
-                /* invalid method */
-                /* @todo throw error */
+                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
     }
 
+    /**
+     * This function creates and prepares the response.
+     *
+     * @todo throw error if $data is not string when creating pdf
+     */
     public function createResponse(array $data): Response
     {
 
@@ -273,10 +259,12 @@ class HandlerService
                 ];
                 break;
             case 'pdf':
-                //create template
+                // If data['result'] or data is not a string its not a document
                 if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
                     // throw error
+                    throw new GatewayException("PDF couldn't be created", null, null, ['data' => $data, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
                 }
+                // Create template
                 $document = new Document();
                 $document->setDocumentType($contentType);
                 $document->setType('twig');
@@ -285,7 +273,7 @@ class HandlerService
                 break;
         }
 
-        // Lets seriliaze the shizle (if no document)
+        // Lets seriliaze the shizle (if no document and we have a result)
         !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $contentType, $options)
             : $result = $this->serializer->serialize($data, $contentType, $options));
 
@@ -293,7 +281,7 @@ class HandlerService
         $response = new Response(
             $result,
             $status,
-            [$this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
+            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($contentType, $this->acceptHeaderToSerialiazation)]]
         );
 
         // Lets handle file responses
@@ -310,6 +298,12 @@ class HandlerService
         return $response;
     }
 
+    /**
+     * Validates content type from request.
+     *
+     * @todo throw error if invalid extension
+     * @todo throw error if unsupported content type
+     */
     private function getRequestContentType(): string
     {
         // Lets grap the route parameters
@@ -320,11 +314,12 @@ class HandlerService
             if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
                 return $routeParameters['extension'];
             } else {
-                /* @todo throw error, invalid extension requested */
+                throw new GatewayException('invalid extension requested', null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
             }
         }
 
         // Lets pick the first accaptable content type that we support
+        // @todo where is request->acceptablecontenttypes being set?
         foreach ($this->request->getAcceptableContentTypes() as $contentType) {
             if (array_key_exists($contentType, $this->acceptHeaderToSerialiazation)) {
                 return $this->acceptHeaderToSerialiazation[$contentType];
@@ -332,9 +327,14 @@ class HandlerService
         }
 
         // If we end up here we are dealing with an unsupported content type
-        /* @todo throw error */
+        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
     }
 
+    /**
+     * Checks template type on handler and creates template.
+     *
+     * @todo Add global variables
+     */
     private function renderTemplate(Handler $handler, array $data): string
     {
         /* @todo add global variables */
@@ -357,7 +357,7 @@ class HandlerService
                 return $handler->getTemplate();
                 break;
             default:
-                /* @todo we shouldnt end up here so throw an errar */
+                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
     }
 }
