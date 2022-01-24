@@ -1127,6 +1127,15 @@ class Attribute
         return $this;
     }
 
+    /**
+     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $mayBeOrphaned = true;
+
+
     public function getValidations(): ?array
     {
         //TODO: this list of validations is not complete!
@@ -1322,6 +1331,18 @@ class Attribute
     public function setImmutable(?bool $immutable): self
     {
         $this->immutable = $immutable;
+
+        return $this;
+    }
+
+    public function getMayBeOrphaned(): ?bool
+    {
+        return $this->mayBeOrphaned;
+    }
+
+    public function setMayBeOrphaned(?bool $mayBeOrphaned): self
+    {
+        $this->mayBeOrphaned = $mayBeOrphaned;
 
         return $this;
     }
