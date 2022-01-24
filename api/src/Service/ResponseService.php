@@ -403,7 +403,10 @@ class ResponseService
 //            $this->em->persist($object);
 //        }
 //        $requestLog->setObjectEntity($object);
-        $requestLog->setEntity($entity ?? ($object ? $object->getEntity() : null));
+        if ($entity) {
+            $entity = $this->em->getRepository('App:Entity')->findOneBy(['id' => $entity->getId()->toString()]);
+        }
+        $requestLog->setEntity($entity ?? null); // $entity ?? ($object ? $object->getEntity() : null)
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);

@@ -881,6 +881,18 @@ class EavService
             return $errorsResponse;
         }
 
+        // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
+        if ($request->getMethod() == 'PUT') {
+            foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {
+                $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
+                // ...delete it entirely if it has no other 'parent' connections
+                if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0) {
+                    $this->em->remove($removeObjectOnPut['object']);
+                }
+            }
+            $this->em->flush();
+        }
+
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
@@ -1105,6 +1117,7 @@ class EavService
      */
     private function handleDeleteObjectOnError(ObjectEntity $createdObject)
     {
+        $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
 //        var_dump($createdObject->getUri());
 //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
