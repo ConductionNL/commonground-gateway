@@ -200,19 +200,28 @@ class HandlerService
      *
      * @todo more content types ?
      * @todo check for specific error when decoding
-     * @todo support xml messages (xml is already decoded??)
      */
     public function getDataFromRequest()
     {
         $content = $this->request->getContent();
-        $contentType = $this->getRequestContentType();
+        $contentType = $this->getRequestType('content-type');
         switch ($contentType) {
             case 'json':
                 return json_decode($content, true);
-                // @todo support xml messages (xml in $content looks already decoded?)
             case 'xml':
-                throw new GatewayException('XML is not yet supported', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
-                // return simplexml_load_string($content);
+                // otherwise xml will throw its own error bypassing our exception handling
+                libxml_use_internal_errors(true);
+                // string to xml object, encode that to json then decode to array 
+                $xml = simplexml_load_string($content);
+                // if xml is false get errors and throw exception
+                if ($xml === false) {
+                    $errors = 'Something went wrong decoding xml:';
+                    foreach (libxml_get_errors() as $e) {
+                        $errors .= ' ' . $e->message;
+                    }
+                    throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                }
+                return json_decode(json_encode($xml), true);
             default:
                 throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
