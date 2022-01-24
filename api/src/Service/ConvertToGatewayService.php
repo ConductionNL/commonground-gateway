@@ -491,7 +491,7 @@ class ConvertToGatewayService
         }
 
         // Object toevoegen
-        if (!$attribute->getMultiple()) {
+        if (!$attribute->getMultiple() && !$objectEntity->getHasErrors() && !$valueObject->getObjectEntity()->getHasErrors()) {
             foreach ($valueObject->getObjects() as $object) {
                 $object->removeSubresourceOf($valueObject);
                 // ...delete it entirely if it has no other 'parent' connections

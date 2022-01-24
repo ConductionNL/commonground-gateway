@@ -404,16 +404,18 @@ class Value
                     if ($value === null) {
                         return $this;
                     }
-                    foreach ($this->objects as $object) {
-                        $object->removeSubresourceOf($this);
-                        //todo:
-//                        // ...delete it entirely if it has no other 'parent' connections
-//                        if (count($object->getSubresourceOf()) == 0) {
-//                            $this->em->remove($object);
-//                        }
+                    if (!$this->objectEntity->getHasErrors()) {
+                        foreach ($this->objects as $object) {
+                            $object->removeSubresourceOf($this);
+                            //todo:
+//                            // ...delete it entirely if it has no other 'parent' connections
+//                            if (count($object->getSubresourceOf()) == 0) {
+//                                $this->em->remove($object);
+//                            }
+                        }
+//                        $this->em->flush();
+                        $this->objects->clear();
                     }
-//                    $this->em->flush();
-                    $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
                         foreach ($value as $object) {
