@@ -916,15 +916,7 @@ class ValidationService
                     }
 
                     // Object toevoegen
-                    if (!$objectEntity->getHasErrors()) {
-                        foreach ($valueObject->getObjects() as $object) {
-                            $this->removeObjectsOnPut[] = [
-                                'valueObject' => $valueObject,
-                                'object'      => $object,
-                            ];
-                        }
-                        $valueObject->getObjects()->clear(); // We start with a default object
-                    }
+                    $valueObject->getObjects()->clear(); // We start with a default object
                     $valueObject->addObject($subObject);
                     break;
                 }
