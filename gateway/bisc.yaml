@@ -120,7 +120,17 @@ App\Entity\Entity:
     #Email Object
     email:
         name: email
-        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie.
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres moet uniek zijn.
+        gateway: "@contacten_api"
+        endpoint: "emails"
+        availableProperties:
+            - name
+            - email
+                
+    #notUniqueEmail Object
+    notUniqueEmail:
+        name: email
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres hoeft niet uniek te zijn.
         gateway: "@contacten_api"
         endpoint: "emails"
         availableProperties:
@@ -507,6 +517,22 @@ App\Entity\Attribute:
         format: email
         mustBeUnique: true
         entity: "@email"
+        persistToGateway: true
+        
+    # Not unique Email
+    notUniqueEmail_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@notUniqueEmail"
+        persistToGateway: true
+    notUniqueEmail_email:
+        name: email
+        type: string
+        maxLength: 255
+        required: true
+        format: email
+        entity: "@notUniqueEmail"
         persistToGateway: true
 
     #Telephone
@@ -1228,7 +1254,7 @@ App\Entity\Attribute:
         type: object
         multiple: true
         entity: "@referringPerson"
-        object: "@email"
+        object: "@notUniqueEmail"
         cascade: true
         cascadeDelete: true
     referringPerson_team:
