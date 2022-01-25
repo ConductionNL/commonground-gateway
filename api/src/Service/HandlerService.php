@@ -268,14 +268,21 @@ class HandlerService
 
         $acceptType = $this->getRequestType('accept');
 
+        // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
+        isset($data['result']) && $data = $data['result'];
+
+
         // Lets fill in some options
         $options = [];
         switch ($acceptType) {
             case 'text/csv':
+                // @todo do something with options?
                 $options = [
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
+                $data = $this->serializer->encode($data, 'csv');
+                
                 break;
             case 'pdf':
                 $document = new Document();
@@ -284,10 +291,8 @@ class HandlerService
                 $document->setDocumentType($acceptType);
                 $document->setType('pdf');
                 // If data is not a template json_encode it
-                if (isset($data) && !is_string($data) && !isset($data['result'])) {
-                    $data['result'] = json_encode($data);
-                } elseif (!is_string($data['result'])) {
-                    $data['result'] = json_encode($data['result']);
+                if (isset($data) && !is_string($data)) {
+                    $data= json_encode($data);
                 }
                 isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
@@ -296,11 +301,9 @@ class HandlerService
 
         // Lets seriliaze the shizle (if no document and we have a result)
         try {
-            !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $acceptType, $options)
-                : $result = $this->serializer->serialize($data, $acceptType, $options));
+            !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
         } catch (NotEncodableValueException $e) {
-            !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], 'json', $options)
-                : $result = $this->serializer->serialize($data, 'json', $options));
+            !isset($document) && $result = $this->serializer->serialize($data, 'json', $options);
             // throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
 
