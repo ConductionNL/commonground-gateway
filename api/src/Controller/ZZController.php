@@ -13,8 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ZZController extends AbstractController
 {
@@ -51,6 +51,7 @@ class ZZController extends AbstractController
             } catch (GatewayException $gatewayException) {
                 $options = $gatewayException->getOptions();
                 $acceptType = $handlerService->getRequestType('accept');
+
                 try {
                     $response = new Response(
                         $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),

@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment as Environment;
-use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 
 class HandlerService
 {
@@ -88,7 +88,7 @@ class HandlerService
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: ' . $endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
@@ -138,7 +138,7 @@ class HandlerService
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
-            throw new GatewayException('Could not fetch object(s) on endpoint: /' . $handler->getEndpoint()->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$handler->getEndpoint()->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // If data contains error dont execute following code and create response
@@ -225,7 +225,7 @@ class HandlerService
                 if ($xml === false) {
                     $errors = 'Something went wrong decoding xml:';
                     foreach (libxml_get_errors() as $e) {
-                        $errors .= ' ' . $e->message;
+                        $errors .= ' '.$e->message;
                     }
 
                     throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
@@ -271,7 +271,6 @@ class HandlerService
         // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
         isset($data['result']) && $data = $data['result'];
 
-
         // Lets fill in some options
         $options = [];
         switch ($acceptType) {
@@ -282,7 +281,7 @@ class HandlerService
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
                 $data = $this->serializer->encode($data, 'csv');
-                
+
                 break;
             case 'pdf':
                 $document = new Document();
@@ -292,7 +291,7 @@ class HandlerService
                 $document->setType('pdf');
                 // If data is not a template json_encode it
                 if (isset($data) && !is_string($data)) {
-                    $data= json_encode($data);
+                    $data = json_encode($data);
                 }
                 isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
