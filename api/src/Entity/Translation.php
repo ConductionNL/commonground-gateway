@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\TranslationRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -11,7 +13,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about an Endpoint.
+ * This entity holds the information about an Translation.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -23,12 +25,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  },
  *  collectionOperations={
  *      "get"={"path"="/admin/translations"},
- *      "get"={"path"="/admin/table_names"},
+ *      "get_table_names"={
+ *          "method"="GET",
+ *          "path"="/admin/table_names"
+ *      },
  *      "post"={"path"="/admin/translations"}
  *  })
- * )
  * @ORM\Entity(repositoryClass=TranslationRepository::class)
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "translationTable": "exact"
+ * })
  */
 class Translation
 {
