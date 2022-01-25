@@ -57,6 +57,7 @@ class ZZController extends AbstractController
                         $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
                         ['content-type' => $acceptType]
                     );
+                    // Catch NotEncodableValueException from symfony serializer
                 } catch (NotEncodableValueException $e) {
                     $response = new Response(
                         $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
