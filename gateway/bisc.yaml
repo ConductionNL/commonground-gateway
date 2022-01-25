@@ -1431,10 +1431,6 @@ App\Entity\Attribute:
                 "DIGITAL_SKILLS_LOOKING_FOR_INFORMATION",
                 "DIGITAL_SKILLS_PROCESSING_AND_PRESENTING_INFORMATION",
                 "DIGITAL_SKILLS_COMMUNICATION",
-                "KNOWLEDGE",
-                "SKILLS",
-                "ATTITUDE",
-                "BEHAVIOUR",
                 "OTHER",
             ]
         entity: "@learningResult"
