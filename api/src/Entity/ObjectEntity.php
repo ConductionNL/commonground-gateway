@@ -708,13 +708,20 @@ class ObjectEntity
     {
         $array = [];
         $array['id'] = (string) $this->getId();
-        foreach ($this->getObjectValues() as $value) {
-            if (!$value->getObjects()->isEmpty() && $level < 5) {
-                foreach ($value->getObjects() as $object) {
-                    $array[$value->getAttribute()->getName()] = $object->toArray($level + 1);
+        foreach ($this->getEntity()->getAttributes() as $attribute) {
+            $valueObject = $this->getValueByAttribute($attribute);
+            if ($attribute->getType() == 'object') {
+                if ($valueObject->getValue() == null) {
+                    $array[$attribute->getName()] = null;
+                } elseif (!$attribute->getMultiple() && $level < 5) {
+                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1);
+                } elseif ($level < 5) {
+                    foreach ($valueObject->getObjects() as $object) {
+                        $array[$attribute->getName()][] = $object->toArray($level + 1); // getValue will return a single ObjectEntity
+                    }
                 }
             } else {
-                $array[$value->getAttribute()->getName()] = $value->getValue();
+                $array[$attribute->getName()] = $valueObject->getValue();
             }
         }
 
