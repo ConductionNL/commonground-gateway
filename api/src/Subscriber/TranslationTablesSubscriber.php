@@ -33,14 +33,16 @@ class TranslationTablesSubscriber implements EventSubscriberInterface
         $route = $event->getRequest()->attributes->get('_route');
         $path = $event->getRequest()->getPathInfo();
 
-        if ($route !== 'api_translations_get_collection' && $path !== '/admin/table_names') {
-            return false;
+        if ($route === 'api_translations_get_table_names_collection' && $path === '/admin/table_names') {
+            $translationsRepo = $this->entityManager->getRepository('App:Translation');
+
+            $event->setResponse(new Response(json_encode([
+                'results' => $translationsRepo->getTables(),
+            ]), 200, ['Content-type' => 'application/json']));
         }
 
-        $translationsRepo = $this->entityManager->getRepository('App:Translation');
-
-        $event->setResponse(new Response(json_encode([
-            'results' => $translationsRepo->getTables(),
-        ]), 200, ['Content-type' => 'application/json']));
+        if ($route !== 'api_translations_get_collection') {
+            return false;
+        }
     }
 }
