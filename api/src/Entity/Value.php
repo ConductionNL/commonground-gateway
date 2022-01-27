@@ -270,11 +270,6 @@ class Value
 
     public function removeObject(ObjectEntity $object): self
     {
-        //Remove inversed by
-        if ($this->getAttribute()->getInversedBy() and $object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
-            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->removeObject($this->getObjectEntity());
-        }
-
         // handle subresources
         if ($object->getSubresourceOf()->contains($this)) {
             $object->getSubresourceOf()->removeElement($this);
@@ -282,6 +277,11 @@ class Value
         // let remove this
         if ($this->objects->contains($object)) {
             $this->objects->removeElement($object);
+        }
+
+        //Remove inversed by
+        if ($this->getAttribute()->getInversedBy() and $object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
+            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->removeObject($this->getObjectEntity());
         }
 
         return $this;
