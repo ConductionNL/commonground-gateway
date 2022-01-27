@@ -43,7 +43,7 @@ module.exports = {
         short_name: `Commonground gateway`,
         start_url: `/`,
         display: `standalone`,
-        icon: `src/images/conduction_logo.svg`,
+        icon: `src/images/conduction_logo_blauw.svg`,
       },
     },
     `gatsby-plugin-i18n`,
