@@ -13,10 +13,10 @@ site/
 
 api/public/bundles
 
-gatsby/.cache/
-gatsby/node_modules/
-gatsby/public/
-gatsby/npm-debug.log
+docs/.cache/
+docs/node_modules/
+docs/public/
+docs/npm-debug.log
 .cache/
 node_modules/
 public/
