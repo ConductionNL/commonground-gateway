@@ -43,10 +43,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
     {
-//        var_dump('FIND...');
         $query = $this->createQuery($entity, $filters);
-//        var_dump($query->getDQL());
-//        var_dump($query->getQuery()->getSQL());
 
         return $query
             // filters toevoegen
@@ -67,11 +64,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
-//        var_dump("COUNT...");
         $query = $this->createQuery($entity, $filters);
         $query->select($query->expr()->countDistinct('o'));
-//        var_dump($query->getDQL());
-//        var_dump($query->getQuery()->getSQL());
 
         return $query->getQuery()->getSingleScalarResult();
     }
