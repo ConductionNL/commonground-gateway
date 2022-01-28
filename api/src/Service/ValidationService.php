@@ -40,6 +40,7 @@ class ValidationService
     public $putPromiseUris = [];
     public $createdObjects = [];
     public $removeObjectsOnPut = [];
+    public $removeObjectsNotMultiple = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -510,6 +511,7 @@ class ValidationService
             }
             // Actually add the objects to the valueObject
             foreach ($saveSubObjects as $saveSubObject) {
+                // TODO: see TODO notes in addObject function!
                 $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
@@ -916,7 +918,25 @@ class ValidationService
                     }
 
                     // Object toevoegen
-                    $valueObject->getObjects()->clear(); // We start with a default object
+                    if (!$objectEntity->getHasErrors()) {
+                        // TODO: not sure if we be needing this here
+                        // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                        if (count($valueObject->getObjects()) > 0) {
+                            foreach ($valueObject->getObjects() as $object) {
+                                // If we are not re-adding this object...
+                                if ($object !== $subObject) {
+                                    $this->removeObjectsNotMultiple[] = [
+                                        'valueObject' => $valueObject,
+                                        'object'      => $object,
+                                    ];
+                                }
+                            }
+                        }
+
+                        $valueObject->getObjects()->clear(); // We start with a default object
+                    }
+
+                    // TODO: see TODO notes in addObject function!
                     $valueObject->addObject($subObject);
                     break;
                 }

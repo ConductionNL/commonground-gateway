@@ -1771,11 +1771,13 @@ App\Entity\Attribute:
         required: true
         entity: "@postalCode"
         object: "@organization"
+        inversedBy: "@organization_languageHouse_postalCodes"
     postalCode_team:
         name: team
         type: object
         entity: "@postalCode"
         object: "@organization"
+        inversedBy: "@organization_team_postalCodes"
 
     #TODO: Currently not used in release 1, 2 & 3 ?
     #TODO: note: it looks like course was once connected to participation and is now merged into the participation properties
