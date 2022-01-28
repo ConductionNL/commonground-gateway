@@ -67,8 +67,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
+//        var_dump("COUNT...");
         $query = $this->createQuery($entity, $filters);
-        $query->select('count(o)');
+        $query->select($query->expr()->countDistinct('o'));
+//        var_dump($query->getDQL());
+//        var_dump($query->getQuery()->getSQL());
 
         return $query->getQuery()->getSingleScalarResult();
     }
