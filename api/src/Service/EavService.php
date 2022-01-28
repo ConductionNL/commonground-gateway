@@ -885,9 +885,18 @@ class EavService
         if ($request->getMethod() == 'PUT') {
             foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {
                 $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
-                // ...delete it entirely if it has no other 'parent' connections
-                if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0) {
-                    $this->em->remove($removeObjectOnPut['object']);
+                // If the object has no other 'parent' connections, if the attribute of the value must be unique...
+                // Example: Entity "Organization" has Attribute "organization_postalCodes" (array of postalCodes objects) that mustBeUnique
+                if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0 && $removeObjectOnPut['valueObject']->getAttribute()->getMustBeUnique()) {
+                    // ...and if the object of the attribute has a value that must be unique
+                    // Example: Entity "postalCode" has Attribute "code" (integer) that mustBeUnique
+                    foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
+                        if ($attribute->getMustBeUnique()) {
+                            // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
+                            $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
+                            break;
+                        }
+                    }
                 }
             }
             $this->em->flush();
