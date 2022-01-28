@@ -1053,8 +1053,8 @@ class ValidationService
             $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], none of these equal extension '.$fileArray['extension'].'. ('.$fileArray['name'].')');
         }
         // Validate if mime type and extension match
-        if ($this->mimeToExt($fileArray['mimeType']) != $fileArray['extension']) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.$fileArray['extension'].') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
+        if ($this->mimeToExt($fileArray['mimeType']) != strtolower($fileArray['extension'])) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.strtolower($fileArray['extension']).') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
         }
 
         if ($fileArray['name']) {
