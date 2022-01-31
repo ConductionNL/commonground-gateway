@@ -39,6 +39,7 @@ class ValidationService
     public $postPromiseUris = [];
     public $putPromiseUris = [];
     public $createdObjects = [];
+    public $removeObjectsOnPut = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -115,6 +116,13 @@ class ValidationService
             if ($this->request->getMethod() == 'PUT' && $attribute->getImmutable()) {
                 if (key_exists($attribute->getName(), $post)) {
                     $objectEntity->addError($attribute->getName(), 'This attribute is immutable, it can\'t be changed');
+                    unset($post[$attribute->getName()]);
+                }
+                continue;
+            } // Do not post 'unsetable' attributes!
+            elseif ($this->request->getMethod() == 'POST' && $attribute->getUnsetable()) {
+                if (key_exists($attribute->getName(), $post)) {
+                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: ['.$attribute->getEntity()->getName().']');
                     unset($post[$attribute->getName()]);
                 }
                 continue;
@@ -235,7 +243,19 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $objectEntity->getValueByAttribute($attribute)->setValue([]);
+                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                if ($attribute->getType() == 'object') {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object...
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                    $valueObject->getObjects()->clear();
+                } else {
+                    $valueObject->setValue([]);
+                }
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -475,8 +495,17 @@ class ValidationService
                 // object toevoegen
                 $saveSubObjects->add($subObject);
             }
-            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
-            if ($this->request->getMethod() == 'PUT') {
+            // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
+            if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+                foreach ($valueObject->getObjects() as $object) {
+                    // If we are not re-adding this object...
+                    if (!$saveSubObjects->contains($object)) {
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                }
                 $valueObject->getObjects()->clear();
             }
             // Actually add the objects to the valueObject
@@ -815,7 +844,7 @@ class ValidationService
         }
 
         // Check forbidden
-        $rule = $valueObject->getAttribute()->getForbidenIf();
+        $rule = $valueObject->getAttribute()->getForbiddenIf();
         if ($rule && jsonLogic::apply(json_decode($rule, true), $value)) {
             $objectEntity->addError($valueObject->getAttribute()->getName(), 'This value is FORBIDDEN because of the following JSON Logic: '.$rule);
         }

@@ -114,13 +114,23 @@ App\Entity\Entity:
             - emails
             - parentOrganization
             - members
-            - langougeHouse_postalCodes
+            - languageHouse_postalCodes
             - team_postalCodes
 
     #Email Object
     email:
         name: email
-        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie.
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres moet uniek zijn.
+        gateway: "@contacten_api"
+        endpoint: "emails"
+        availableProperties:
+            - name
+            - email
+                
+    #notUniqueEmail Object
+    notUniqueEmail:
+        name: email
+        description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres hoeft niet uniek te zijn.
         gateway: "@contacten_api"
         endpoint: "emails"
         availableProperties:
@@ -423,12 +433,13 @@ App\Entity\Attribute:
         name: parentOrganization
         description: The larger organization that this organization is a subOrganization of.
         type: object
-        required: true
         entity: "@organization"
         object: "@organization"
         persistToGateway: true
         searchable: true
         immutable: true
+        requiredIf:
+            type: team.noDefaultValue
         defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_address:
         name: addresses
@@ -471,7 +482,7 @@ App\Entity\Attribute:
         inversedBy: "@employee_teams"
         mayBeOrphaned: false
     organization_languageHouse_postalCodes:
-        name: langougeHouse_postalCodes
+        name: languageHouse_postalCodes
         description: The postalcodes that are asigned to this languagehouse.
         type: object
         multiple: true
@@ -506,6 +517,22 @@ App\Entity\Attribute:
         format: email
         mustBeUnique: true
         entity: "@email"
+        persistToGateway: true
+        
+    # Not unique Email
+    notUniqueEmail_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@notUniqueEmail"
+        persistToGateway: true
+    notUniqueEmail_email:
+        name: email
+        type: string
+        maxLength: 255
+        required: true
+        format: email
+        entity: "@notUniqueEmail"
         persistToGateway: true
 
     #Telephone
@@ -749,6 +776,7 @@ App\Entity\Attribute:
         type: object
         entity: "@employee"
         object: "@organization"
+        persistToGateway: true
     employee_mentees:
         name: mentees
         type: object
@@ -815,6 +843,7 @@ App\Entity\Attribute:
         entity: "@student"
         object: "@employee"
         inversedBy: "@employee_mentees"
+        unsetable: true
     student_intake:
         name: intake
         type: object
@@ -1225,7 +1254,7 @@ App\Entity\Attribute:
         type: object
         multiple: true
         entity: "@referringPerson"
-        object: "@email"
+        object: "@notUniqueEmail"
         cascade: true
         cascadeDelete: true
     referringPerson_team:
@@ -1428,10 +1457,6 @@ App\Entity\Attribute:
                 "DIGITAL_SKILLS_LOOKING_FOR_INFORMATION",
                 "DIGITAL_SKILLS_PROCESSING_AND_PRESENTING_INFORMATION",
                 "DIGITAL_SKILLS_COMMUNICATION",
-                "KNOWLEDGE",
-                "SKILLS",
-                "ATTITUDE",
-                "BEHAVIOUR",
                 "OTHER",
             ]
         entity: "@learningResult"
@@ -1884,7 +1909,7 @@ App\Entity\Document:
         documentCreationService: "https://taalhuizen-bisc.commonground.nu/api/v1/document-creation-service/templates/123d8c1b-9d2b-4e16-9307-c02e32421ed8/render/pdf"
         documentType: student
         type: twig
-        content: "placeholder, change me!" #to: "<html><head><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap' rel='stylesheet'><style>html * {font-family: 'Source Sans Pro', sans-serif;}</style></head><body><h4 style='text-align: right'>{{'now'|date('d/m/Y')}}</h4><h1>Gegevens {{ person.givenName~' ' }}{% if person.additionalName|default %}{{ person.additionalName~' ' }}{%endif%}{{person.familyName}}</h1><h3>Persoonsgegevens{% if person.gender|default %}<p>Geslacht: {{person.gender}}</p>{% endif %}{% if person.Geboorteday|default %}<p>Geboortedag: {{person.Geboorteday}}</p>{% endif %}{% if person|default %} <p>Geboorteplaats: {{person.Geboorteplace}}</p>{% endif %}{% if person.primaryLanguage|default %}<p>Moedertaal: {{person.primaryLanguage}}</p>{% endif %}{% if person.speakingLanguages|default %}<p>Spreektalen: {{person.speakingLanguages}}</p>{% endif %}{% if person.country|default %}<p>Land: {{person.country}}</p>{% endif %}<br><h3>Contactgegevens</h3><p>Emails: </p>{% if person.emails|default %}<ul><li>{{person.emails.email}}</li></ul>{% endif %}{% if person.telephones|default %}<p>Telefoonnummers: </p>{% if person.telephones|default %}<ul><li>{{person.telephones.telephone}}</li></ul>{% endif %}{% endif %}{% if intake|default %}<br><h3>Intake gegevens</h3>{% if intake.dutchNTLevel|default %}<p>NT level: {{intake.dutchNTLevel}}</p>{% endif %}{% if intake.dutchNTLevel|default %}<p>Laatst bekende level: {{intake.lastKnownLevel}}</p>{% endif %}{% if intake.speakingLevel|default %}<p>Spreekniveau: {{intake.speakingLevel}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Leestoets resultaat: {{intake.readingTestResult}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Schrijftoets resultaat: {{intake.writingTestResult}}</p>{% endif %}{% if intake.remarks|default %}<p>Opmerkingen aanbieder: {{intake.remarks}}</p>{% endif %}{% endif %}{% if learningNeeds|default %}<br><h3>Leervragen</h3>{% for need in learningNeeds %}{% if need.description|default %}<h4>Beschrijving</h4><p> {{need.description}}</p>{% endif %}{% if need.motivation|default %}<h4>Motivatie</h4><p> {{need.motivation}}</p>{% endif %}{% if need.desiredOffer|default %}<h4>Gewenst leeruitkomst</h4><p> {{need.desiredOffer}}</p>{% endif %}{% if need.advisedOffer|default %}<h4>Geadviseerd aanbod</h4><p> {{need.advisedOffer}}</p>{% endif %}{% if need.agreements|default %}<h4>Afspraken</h4><p> {{need.agreements}}</p>{% endif %}<br>{% endfor %}{% endif %}</body></html>"
+        content: "placeholder, change me!" #to: "<html><head><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap' rel='stylesheet'><style>html * {font-family: 'Source Sans Pro', sans-serif;}</style></head><body><h4 style='text-align: right'>{{'now'|date('d/m/Y')}}</h4><h1>Gegevens {{ person.givenName~' ' }}{% if person.additionalName|default %}{{ person.additionalName~' ' }}{%endif%}{{person.familyName}}</h1><h3>Persoonsgegevens{% if person.gender|default %}<p>Geslacht: {{person.gender}}</p>{% endif %}{% if person.Geboorteday|default %}<p>Geboortedag: {{person.Geboorteday}}</p>{% endif %}{% if person|default %} <p>Geboorteplaats: {{person.Geboorteplace}}</p>{% endif %}{% if person.primaryLanguage|default %}<p>Moedertaal: {{person.primaryLanguage}}</p>{% endif %}{% if person.speakingLanguages|default %}<p>Spreektalen: {{person.speakingLanguages}}</p>{% endif %}{% if person.country|default %}<p>Land: {{person.country}}</p>{% endif %}<br><h3>Contactgegevens</h3><p>Emails: </p>{% if person.emails|default %}<ul><li>{{person.emails[0].email}}</li></ul>{% endif %}{% if person.telephones|default %}<p>Telefoonnummers: </p>{% if person.telephones|default %}<ul><li>{{person.telephones[0].telephone}}</li></ul>{% endif %}{% endif %}{% if intake|default %}<br><h3>Intake gegevens</h3>{% if intake.dutchNTLevel|default %}<p>NT level: {{intake.dutchNTLevel}}</p>{% endif %}{% if intake.dutchNTLevel|default %}<p>Laatst bekende level: {{intake.lastKnownLevel}}</p>{% endif %}{% if intake.speakingLevel|default %}<p>Spreekniveau: {{intake.speakingLevel}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Leestoets resultaat: {{intake.readingTestResult}}</p>{% endif %}{% if intake.readingTestResult|default %}<p>Schrijftoets resultaat: {{intake.writingTestResult}}</p>{% endif %}{% if intake.remarks|default %}<p>Opmerkingen aanbieder: {{intake.remarks}}</p>{% endif %}{% endif %}{% if learningNeeds|default %}<br><h3>Leervragen</h3>{% for key, need in learningNeeds %}<h4>Leervraag {{ key + 1 }}</h4>{% if need.description|default %}<p>Beschrijving: {{need.description}}</p>{% endif %}{% if need.motivation|default %}<p>Motivatie: {{need.motivation}}</p>{% endif %}{% if need.learningResults|default %}<h5>Gewenste leeruitkomst</h5>{% if need.learningResults[0].verb|default %}<p>Werkwoord: {{need.learningResults[0].verb}}</p>{% endif %}{% if need.learningResults[0].subject|default %}<p>Onderwerp: {{need.learningResults[0].subject}}</p>{% if need.learningResults[0].subject == \"OTHER\" %}<p>Onderwerp: Anders, namelijk: {{need.learningResults[0].subjectOther}}</p>{% endif %}{% endif %}{% if need.learningResults[0].application|default %}<p>Toepassing: {{need.learningResults[0].application}}</p>{% if need.learningResults[0].application == \"OTHER\" %}<p>Toepassing: Anders, namelijk: {{need.learningResults[0].applicationOther}}</p>{% endif %}{% endif %}{% if need.learningResults[0].level|default %}<p>Niveau: {{need.learningResults[0].level}}</p>{% if need.learningResults[0].level == \"OTHER\" %}<p>Niveau: Anders, namelijk: {{need.learningResults[0].levelOther}}</p>{% endif %}{% endif %}{% endif %}<h5>Aanbod</h5>{% if need.desiredOffer|default %}<p>Aanbod: {{need.desiredOffer}}</p>{% endif %}{% if need.advisedOffer|default %}<p>Geadviseerd aanbod: {{need.advisedOffer}}</p>{% endif %}{% if need.offerDifference|default %}<p>Verschil tussen wens en advies: {{need.offerDifference}}</p>{% if need.offerDifference == \"YES_OTHER\" %}<p>Verschil: Ja, want: anders: {{need.offerDifferenceOther}}</p>{% endif %}{% endif %}{% if need.agreements|default %}<p>Afspraken: {{need.agreements}}</p>{% endif %}<br>{% endfor %}{% endif %}</body></html>"
         
         
 
