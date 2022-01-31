@@ -270,11 +270,18 @@ class Value
 
     public function removeObject(ObjectEntity $object): self
     {
-        if ($this->objects->removeElement($object)) {
-            // set the owning side to null (unless already changed)
-            if ($object->getSubresourceOf()->contains($this)) {
-                $object->getSubresourceOf()->removeElement($this);
-            }
+        // handle subresources
+        if ($object->getSubresourceOf()->contains($this)) {
+            $object->getSubresourceOf()->removeElement($this);
+        }
+        // let remove this
+        if ($this->objects->contains($object)) {
+            $this->objects->removeElement($object);
+        }
+
+        //Remove inversed by
+        if ($this->getAttribute()->getInversedBy() and $object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
+            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->removeObject($this->getObjectEntity());
         }
 
         return $this;
@@ -397,11 +404,16 @@ class Value
                     if ($value === null) {
                         return $this;
                     }
-                    if ($value === []) {
-                        foreach ($this->objects as $object) {
-                            $object->removeSubresourceOf($this);
-                        }
-                    }
+                    // todo: We never use setValue function for array of objects, but if we ever do, take a look at $removeObjectsOnPut in validationService and EavService!
+//                    if (!$this->objectEntity->getHasErrors()) {
+//                        foreach ($this->objects as $object) {
+//                            $object->removeSubresourceOf($this);
+//                            // ...delete it entirely if it has no other 'parent' connections
+//                            if (count($object->getSubresourceOf()) == 0) {
+//                                $this->em->remove($object);
+//                            }
+//                        }
+//                    }
                     $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {

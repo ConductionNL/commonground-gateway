@@ -39,6 +39,7 @@ class ValidationService
     public $postPromiseUris = [];
     public $putPromiseUris = [];
     public $createdObjects = [];
+    public $removeObjectsOnPut = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -242,7 +243,19 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $objectEntity->getValueByAttribute($attribute)->setValue([]);
+                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                if ($attribute->getType() == 'object') {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object...
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                    $valueObject->getObjects()->clear();
+                } else {
+                    $valueObject->setValue([]);
+                }
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -482,8 +495,17 @@ class ValidationService
                 // object toevoegen
                 $saveSubObjects->add($subObject);
             }
-            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
-            if ($this->request->getMethod() == 'PUT') {
+            // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
+            if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+                foreach ($valueObject->getObjects() as $object) {
+                    // If we are not re-adding this object...
+                    if (!$saveSubObjects->contains($object)) {
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                }
                 $valueObject->getObjects()->clear();
             }
             // Actually add the objects to the valueObject
@@ -1031,8 +1053,8 @@ class ValidationService
             $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], none of these equal extension '.$fileArray['extension'].'. ('.$fileArray['name'].')');
         }
         // Validate if mime type and extension match
-        if ($this->mimeToExt($fileArray['mimeType']) != $fileArray['extension']) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.$fileArray['extension'].') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
+        if ($this->mimeToExt($fileArray['mimeType']) != strtolower($fileArray['extension'])) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.strtolower($fileArray['extension']).') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
         }
 
         if ($fileArray['name']) {
