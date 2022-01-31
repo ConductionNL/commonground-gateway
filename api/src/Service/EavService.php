@@ -881,6 +881,12 @@ class EavService
             return $errorsResponse;
         }
 
+        // Remove relations for inversedBy objects that are not multiple (example-> POST organization.postalCodes: ["postalCodeUuid"] when the used postalCode already has a postalCode.organization connected, we are disconnecting the old connection here)
+        foreach ($this->validationService->removeObjectsNotMultiple as $removeObjectNotMultiple) {
+            $removeObjectNotMultiple['object']->removeSubresourceOf($removeObjectNotMultiple['valueObject']);
+        }
+        $this->em->flush();
+
         // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
         if ($request->getMethod() == 'PUT') {
             foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {

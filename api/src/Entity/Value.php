@@ -263,21 +263,8 @@ class Value
         // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
         // Handle inversed by
         if ($this->getAttribute()->getInversedBy()) {
-            var_dump($this->getAttribute()->getEntity()->getName());
-            var_dump($this->getAttribute()->getName());
-            var_dump('test1');
             $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
             if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
-                var_dump('test2');
-                // TODO: move this IF to somewhere so it only triggers when we have no errors in the POST or PUT flow...
-                // If inversedBy attribute is not multiple it should only have one object connected to it
-                if (!$this->attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
-                    var_dump('test3');
-                    // Remove old objects
-                    var_dump(count($inversedByValue->getObjects())); // todo: <<<--- this number should not ever be going up! (if multiple = false)
-                    //todo maybe store these objects in an array and return them, so we can remove the relations if there are no errors during the POST / PUT call?
-                }
-
                 $inversedByValue->addObject($this->getObjectEntity());
             }
         }
@@ -297,8 +284,11 @@ class Value
         }
 
         // Remove inversed by
-        if ($this->getAttribute()->getInversedBy() and $object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
-            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->removeObject($this->getObjectEntity());
+        if ($this->getAttribute()->getInversedBy()) {
+            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+                $inversedByValue->removeObject($this->getObjectEntity());
+            }
         }
 
         return $this;
