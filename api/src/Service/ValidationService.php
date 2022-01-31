@@ -961,6 +961,7 @@ class ValidationService
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
+                    // TODO: clear objects, add to removeObjectsNotMultiple if needed and use add object ipv setValue
                     $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
                 }
                 break;

@@ -422,14 +422,17 @@ class Value
                         return $this;
                     }
                     // todo: We never use setValue function for array of objects, but if we ever do, take a look at $removeObjectsOnPut in validationService and EavService!
-//                    if (!$this->objectEntity->getHasErrors()) {
-//                        foreach ($this->objects as $object) {
-//                            $object->removeSubresourceOf($this);
-//                            // ...delete it entirely if it has no other 'parent' connections
-//                            if (count($object->getSubresourceOf()) == 0) {
-//                                $this->em->remove($object);
+//                    if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+//                        foreach ($valueObject->getObjects() as $object) {
+//                            // If we are not re-adding this object...
+//                            if (!$saveSubObjects->contains($object)) {
+//                                $this->removeObjectsOnPut[] = [
+//                                    'valueObject' => $valueObject,
+//                                    'object'      => $object,
+//                                ];
 //                            }
 //                        }
+//                        $valueObject->getObjects()->clear();
 //                    }
                     $this->objects->clear();
                     // if multiple is true value should be an array
