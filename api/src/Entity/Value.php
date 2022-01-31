@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
@@ -25,13 +26,25 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @category Entity
  *
+ * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/values/{id}"},
+ *      "put"={"path"="/admin/values/{id}"},
+ *      "delete"={"path"="/admin/values/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/values"},
+ *      "post"={"path"="/admin/values"}
+ *  })
  * @ORM\Entity(repositoryClass="App\Repository\ValueRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={"objectEntity.id": "exact"})
  */
 class Value
 {
