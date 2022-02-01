@@ -178,7 +178,14 @@ class ValidationService
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } elseif ($attribute->getNullable() === false) {
-                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                if ($this->request->getMethod() == 'PUT') {
+                    $value = $objectEntity->getValueByAttribute($attribute)->getValue();
+                    if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+                        $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                    }
+                } elseif ($this->request->getMethod() == 'POST') {
+                    $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                }
             } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
