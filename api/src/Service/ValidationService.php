@@ -40,6 +40,7 @@ class ValidationService
     public $putPromiseUris = [];
     public $createdObjects = [];
     public $removeObjectsOnPut = [];
+    public $removeObjectsNotMultiple = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -510,6 +511,23 @@ class ValidationService
             }
             // Actually add the objects to the valueObject
             foreach ($saveSubObjects as $saveSubObject) {
+                // If we have inversedBy on this attribute
+                if ($attribute->getInversedBy()) {
+                    $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
+                    if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                        // If inversedBy attribute is not multiple it should only have one object connected to it
+                        if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                            // Remove old objects
+                            foreach ($inversedByValue->getObjects() as $object) {
+                                // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                                $this->removeObjectsNotMultiple[] = [
+                                    'valueObject' => $inversedByValue,
+                                    'object'      => $object,
+                                ];
+                            }
+                        }
+                    }
+                }
                 $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
@@ -916,6 +934,23 @@ class ValidationService
                     }
 
                     // Object toevoegen
+                    // If we have inversedBy on this attribute
+                    if ($attribute->getInversedBy()) {
+                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                            // If inversedBy attribute is not multiple it should only have one object connected to it
+                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                                // Remove old objects
+                                foreach ($inversedByValue->getObjects() as $object) {
+                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                                    $this->removeObjectsNotMultiple[] = [
+                                        'valueObject' => $inversedByValue,
+                                        'object'      => $object,
+                                    ];
+                                }
+                            }
+                        }
+                    }
                     $valueObject->getObjects()->clear(); // We start with a default object
                     $valueObject->addObject($subObject);
                     break;
@@ -941,6 +976,7 @@ class ValidationService
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
+                    // TODO: clear objects, add to removeObjectsNotMultiple if needed and use add object ipv setValue
                     $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
                 }
                 break;
