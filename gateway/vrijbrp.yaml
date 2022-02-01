@@ -524,6 +524,12 @@ App\Entity\Attribute:
         required: false
         entity: '@birth'
 
+    birth_qualificationForDeclaringType:
+        name: qualificationForDeclaringType
+        type: string
+        required: false
+        entity: '@birth'
+
     # Commitment
     commitment_commitment:
         name: dossier
@@ -1275,9 +1281,9 @@ App\Entity\Soap:
             fatherDuoMother.bsn: parent2Bsn
             mother.bsn: motherBsn
             children: children | json
-            nameSelection.lastname: geslachtsnaamgebkind
-            nameSelection.prefix: voorvoegselGeslachtsnaamgebkind
-            nameSelection.titlePredicate: adellijkeTitelPredikaatgebkind
+            nameSelection.lastname: geslachtsnaam
+            nameSelection.prefix: voorvoegselGeslachtsnaam
+            nameSelection.titlePredicate: adellijkeTitelPredikaat
             qualificationForDeclaringType: relatie
         response: |
             <?xml version="1.0" encoding="UTF-8"?>
