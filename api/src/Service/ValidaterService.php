@@ -18,13 +18,12 @@ class ValidaterService
         $this->entityManager = $entityManager;
     }
 
-    public function validateData(array $data, Entity $entity, string $method)
+    public function validateData(array $data, Entity $entity)
     {
-        $validator = new Validator();
         // @todo if monday is posted as 5 (int) it still is a string here....
         // dump(is_int($data['monday']));
         // $data['monday'] = 5;
-        $validator = $this->addAttributeValidators($validator, $entity, $method);
+        $validator = $this->validateEntity($entity);
 
         try {
             $validator->assert($data);
@@ -33,14 +32,19 @@ class ValidaterService
         }
     }
 
-    private function addAttributeValidators(Validator $validator, Entity $entity, string $method): Validator
+    private function validateEntity(Entity $entity): Validator
+    {
+        $validator = new Validator();
+
+        // todo: caching
+
+        return $this->addAttributeValidators($entity, $validator);
+    }
+
+    private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            $attributeValidator = new Validator();
-            // Add rule for type
-            $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
-            // Add rules for valdiations
-            // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+            $attributeValidator = $this->validateAttribute($attribute);
 
             $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator));
         }
@@ -48,8 +52,66 @@ class ValidaterService
         return $validator;
     }
 
+    private function validateAttribute(Attribute $attribute): Validator
+    {
+        $attributeValidator = new Validator();
+
+        // Add rule for type
+        $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
+
+        // Add rule for format
+        // TODO:
+//        $attribute->getFormat() !== null && $attributeValidator->AddRule($this->getAttFormatRule($attribute->getFormat()));
+
+        // Add rules for validations
+        // TODO:
+        // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+
+        return $attributeValidator;
+    }
+
+    private function getAttTypeRule($type)
+    {
+        switch ($type) {
+            case 'string':
+            case 'text':
+                return new Rules\StringType();
+                break;
+            case 'integer':
+            case 'int':
+                return new Rules\IntType();
+                break;
+            case 'float':
+                return new Rules\FloatType();
+                break;
+            case 'number':
+                return new Rules\Number();
+                break;
+            case 'datetime':
+                return new Rules\DateTime();
+                break;
+            case 'file':
+                return new Rules\File();
+                break;
+            case 'object':
+                return new Rules\ObjectType();
+                break;
+            default:
+        }
+    }
+
+    private function getAttFormatRule($format)
+    {
+        // todo;
+        switch ($format) {
+            case 'string':
+            default:
+        }
+    }
+
     private function addValidationRules(Attribute $attribute, Validator $attributeValidator): Validator
     {
+        // todo; testen en uitbreiden
         $validations = $attribute->getValidations();
         foreach ($validations as $validation => $config) {
             switch ($validation) {
@@ -135,38 +197,13 @@ class ValidaterService
             }
         }
 
-        return $validator;
+        return $attributeValidator;
     }
 
-    private function getAttTypeRule($type)
-    {
-        switch ($type) {
-            case 'string':
-            case 'text':
-                return new Rules\StringType();
-                break;
-            case 'integer':
-            case 'int':
-                return new Rules\IntType();
-                break;
-            case 'float':
-                return new Rules\FloatType();
-                break;
-            case 'number':
-                return new Rules\Number();
-                break;
-            case 'datetime':
-                return new Rules\DateTime();
-                break;
-            case 'file':
-                return new Rules\File();
-                break;
-            case 'object':
-                return new Rules\ObjectType();
-                break;
-            default:
-        }
-    }
+
+    // Example code:
+    // TODO: translate / move this code below to functions above^
+    // TODO: remove functions below after... >>>
 
     private function createEntityValidator(array $data, Entity $entity, string $method, Validator $validator)
     {

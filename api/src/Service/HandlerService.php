@@ -134,7 +134,7 @@ class HandlerService
         }
 
         // eav new way
-        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+         $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
