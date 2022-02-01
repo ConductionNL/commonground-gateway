@@ -87,7 +87,7 @@ class ObjectEntityService
             case 'POST':
                 // validate
                 if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
-                    throw new GatewayException('Validation errors: ... todo', null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+                    throw new GatewayException('Validation errors: ... todo', null, null, ['data' => $validationErrors, 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
                     break;
                 }
 
@@ -103,7 +103,7 @@ class ObjectEntityService
 
                 // validate
                 if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
-                    throw new GatewayException('Validation errors: ... todo', null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+                    throw new GatewayException('Validation errors: ... todo', null, null, ['data' => $validationErrors, 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
                     break;
                 }
                 // put object
