@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class ZZController extends AbstractController
@@ -47,14 +48,24 @@ class ZZController extends AbstractController
             // Try handler proces and catch exceptions
             try {
                 return $handlerService->handleEndpoint($endpoint);
-            } catch (GatewayException $e) {
-                $options = $e->getOptions();
-                // @todo get format
-                $response = new Response(
-                    $serializer->serialize(['message' =>  $e->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $handlerService->getRequestType('accept')),
-                    $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-                    ['content-type' => $handlerService->getRequestType('accept')]
-                );
+            } catch (GatewayException $gatewayException) {
+                $options = $gatewayException->getOptions();
+                $acceptType = $handlerService->getRequestType('accept');
+
+                try {
+                    $response = new Response(
+                        $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),
+                        $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
+                        ['content-type' => $acceptType]
+                    );
+                    // Catch NotEncodableValueException from symfony serializer
+                } catch (NotEncodableValueException $e) {
+                    $response = new Response(
+                        $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], 'json'),
+                        $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
+                        ['content-type' => 'json']
+                    );
+                }
                 $logService->saveLog($request, $response);
 
                 return $response->prepare($request);

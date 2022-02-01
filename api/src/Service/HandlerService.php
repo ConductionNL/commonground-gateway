@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment as Environment;
 
@@ -135,13 +136,18 @@ class HandlerService
         // eav new way
         // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
+        // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
+        if (!isset($data)) {
+            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$handler->getEndpoint()->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        }
+
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
-            // The we want to do  translations on the outgoing responce
+            // The we want to do  translations on the outgoing response
             $transRepo = $this->entityManager->getRepository('App:Translation');
             $translations = $transRepo->getTranslations($handler->getTranslationsOut());
 
@@ -154,7 +160,7 @@ class HandlerService
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
-            // Then we want to do to mapping on the outgoing responce
+            // Then we want to do to mapping on the outgoing response
             $skeleton = $handler->getSkeletonOut();
             if (!$skeleton || empty($skeleton)) {
                 isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
@@ -207,6 +213,8 @@ class HandlerService
         $contentType = $this->getRequestType('content-type');
         switch ($contentType) {
             case 'json':
+            case 'jsonhal':
+            case 'jsonld':
                 return json_decode($content, true);
             case 'xml':
                 // otherwise xml will throw its own error bypassing our exception handling
@@ -225,7 +233,7 @@ class HandlerService
 
                 return json_decode(json_encode($xml), true);
             default:
-                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
     }
 
@@ -260,33 +268,43 @@ class HandlerService
 
         $acceptType = $this->getRequestType('accept');
 
+        // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
+        isset($data['result']) && $data = $data['result'];
+
         // Lets fill in some options
         $options = [];
         switch ($acceptType) {
             case 'text/csv':
+                // @todo do something with options?
                 $options = [
                     CsvEncoder::ENCLOSURE_KEY   => '"',
                     CsvEncoder::ESCAPE_CHAR_KEY => '+',
                 ];
+                $data = $this->serializer->encode($data, 'csv');
+
                 break;
             case 'pdf':
-                // If data['result'] or data is not a string its not a document
-                if (!is_string($data['result']) || (!isset($data['result']) && !is_string($data))) {
-                    // throw error
-                    throw new GatewayException("PDF couldn't be created", null, null, ['data' => $data, 'path' => null, 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
-                }
-                // Create template
                 $document = new Document();
+                // @todo find better name for document
+                $document->setName('pdf');
                 $document->setDocumentType($acceptType);
-                $document->setType('twig');
+                $document->setType('pdf');
+                // If data is not a template json_encode it
+                if (isset($data) && !is_string($data)) {
+                    $data = json_encode($data);
+                }
                 isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
                 break;
         }
 
         // Lets seriliaze the shizle (if no document and we have a result)
-        !isset($document) && (isset($data['result']) ? $result = $this->serializer->serialize($data['result'], $acceptType, $options)
-            : $result = $this->serializer->serialize($data, $acceptType, $options));
+        try {
+            !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
+        } catch (NotEncodableValueException $e) {
+            !isset($document) && $result = $this->serializer->serialize($data, 'json', $options);
+            // throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+        }
 
         // Lets create the actual response
         $response = new Response(
@@ -300,7 +318,7 @@ class HandlerService
         if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
             $date = $date->format('Ymd_His');
-            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$contentType}");
+            $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$acceptType}");
             $response->headers->set('Content-Disposition', $disposition);
         }
 
@@ -337,7 +355,7 @@ class HandlerService
         }
 
         // If we end up here we are dealing with an unsupported content type
-        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
     }
 
     /**
@@ -367,7 +385,7 @@ class HandlerService
                 return $handler->getTemplate();
                 break;
             default:
-                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
     }
 }
