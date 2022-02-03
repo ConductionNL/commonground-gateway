@@ -41,7 +41,6 @@ class ValidaterService
 
     private function getEntityValidator(Entity $entity): Validator
     {
-        var_dump($entity->getName());
         // Get validator for this Entity from cache.
         $item = $this->cache->getItem('entities_'.md5($entity->getName()));
         if ($item->isHit()) {
@@ -86,12 +85,12 @@ class ValidaterService
         // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
 
         if ($attribute->getType() == 'object') {
-            $subresourceValidator = $this->getEntityValidator($attribute->getObject());
+            $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth...
             if ($attribute->getMultiple()) {
-                // use 'each'
-//                $attributeValidator->AddRule(new Rules\Key($attribute->getObject()->getName(), $subresourceValidator, false)); // mandatory = required
+                $attributeValidator->addRule(new Rules\Each($subresourceValidator));
+                // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
             } else {
-                $attributeValidator->AddRule(new Rules\Key($attribute->getObject()->getName(), $subresourceValidator, false)); // mandatory = required
+                $attributeValidator->AddRule($subresourceValidator);
             }
         }
 
@@ -116,12 +115,12 @@ class ValidaterService
             case 'file':
                 return new Rules\File();
             case 'object':
-                // TODO loop back to Entity level validation somehow, for the $attribute->getObject() Entity...
                 if ($attribute->getMultiple()) {
                     // TODO: make sure this is an array of objects
                     return new Rules\ArrayType();
                 }
-                return new Rules\ObjectType();
+                return new Rules\ArrayType();
+//                return new Rules\ObjectType(); // ObjectType expect an actual class object not a json object, so this will not work...
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -144,7 +143,6 @@ class ValidaterService
             case 'uuid':
                 return new Rules\Uuid();
             case 'email':
-                var_dump('email format');
                 return new Rules\Email();
             case 'phone':
                 return new Rules\Phone();
