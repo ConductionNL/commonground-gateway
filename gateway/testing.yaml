@@ -1,16 +1,21 @@
-# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
 App\Entity\Endpoint:
     weerEndpoint:
-        name: Weer handler
+        name: Weer endpoint
         description: endpoint voor dingen rondom weer
         type: gateway-endpoint
         path: weer
         
     peopleEndpoint:
-        name: People handler
+        name: People endpoint
         description: endpoint voor dingen rondom contactgegevens
         type: gateway-endpoint
         path: people
+        
+    emailEndpoint:
+        name: Email endpoint
+        description: endpoint voor dingen rondom emails
+        type: gateway-endpoint
+        path: emails
 
 App\Entity\Entity:
     weekWeather:
@@ -152,6 +157,18 @@ App\Entity\Handler:
         # Denormalizer throws error trying denormalize template (set with api call for now)
         # template: "<html><body><h1>Test</h1></body></html>"
         # templateType: twig
+        
+    peopleHandler:
+        name: People handler
+        sequence: 0
+        endpoint: "@peopleEndpoint"
+        entity: "@person"
+        
+    emailHandler:
+        name: Email handler
+        sequence: 0
+        endpoint: "@emailEndpoint"
+        entity: "@email"
 
 App\Entity\Translation:
     regenTranslation:

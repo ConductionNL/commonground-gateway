@@ -41,6 +41,7 @@ class ValidaterService
 
     private function getEntityValidator(Entity $entity): Validator
     {
+        var_dump($entity->getName());
         // Get validator for this Entity from cache.
         $item = $this->cache->getItem('entities_'.md5($entity->getName()));
         if ($item->isHit()) {
@@ -64,7 +65,7 @@ class ValidaterService
         foreach ($entity->getAttributes() as $attribute) {
             $attributeValidator = $this->getAttributeValidator($attribute);
 
-            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator));
+            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator, false)); // mandatory = required
         }
 
         return $validator;
@@ -83,6 +84,16 @@ class ValidaterService
         // Add rules for validations
         // TODO:
         // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+
+        if ($attribute->getType() == 'object') {
+            $subresourceValidator = $this->getEntityValidator($attribute->getObject());
+            if ($attribute->getMultiple()) {
+                // use 'each'
+//                $attributeValidator->AddRule(new Rules\Key($attribute->getObject()->getName(), $subresourceValidator, false)); // mandatory = required
+            } else {
+                $attributeValidator->AddRule(new Rules\Key($attribute->getObject()->getName(), $subresourceValidator, false)); // mandatory = required
+            }
+        }
 
         return $attributeValidator;
     }
@@ -106,6 +117,10 @@ class ValidaterService
                 return new Rules\File();
             case 'object':
                 // TODO loop back to Entity level validation somehow, for the $attribute->getObject() Entity...
+                if ($attribute->getMultiple()) {
+                    // TODO: make sure this is an array of objects
+                    return new Rules\ArrayType();
+                }
                 return new Rules\ObjectType();
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
@@ -129,6 +144,7 @@ class ValidaterService
             case 'uuid':
                 return new Rules\Uuid();
             case 'email':
+                var_dump('email format');
                 return new Rules\Email();
             case 'phone':
                 return new Rules\Phone();
