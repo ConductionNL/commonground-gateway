@@ -9,12 +9,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class ValidaterService
 {
+    public CacheInterface $cache;
+
     public function __construct(
+        CacheInterface $cache,
         EntityManagerInterface $entityManager
     ) {
+        $this->cache = $cache;
         $this->entityManager = $entityManager;
     }
 
@@ -34,11 +39,20 @@ class ValidaterService
 
     private function validateEntity(Entity $entity): Validator
     {
+        $item = $this->cache->getItem('entities_'.md5($entity->getName()));
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
         $validator = new Validator();
+        $validator = $this->addAttributeValidators($entity, $validator);
 
-        // todo: caching
+        $item->set($validator);
+        $item->tag('entity');
 
-        return $this->addAttributeValidators($entity, $validator);
+        $this->cache->save($item);
+
+        return $validator;
     }
 
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
