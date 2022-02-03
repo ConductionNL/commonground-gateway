@@ -429,11 +429,17 @@ class Gateway
     private $logging;
 
     /**
+     * @var array ...
+     *
+     * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $oas = [];
 
     /**
+     * @var array ...
+     *
+     * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $paths = [];
