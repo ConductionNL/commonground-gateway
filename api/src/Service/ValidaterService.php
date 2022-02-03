@@ -4,12 +4,14 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
+use App\Exception\GatewayException;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class ValidaterService
 {
@@ -28,7 +30,7 @@ class ValidaterService
         // @todo if monday is posted as 5 (int) it still is a string here....
         // dump(is_int($data['monday']));
         // $data['monday'] = 5;
-        $validator = $this->validateEntity($entity);
+        $validator = $this->getEntityValidator($entity);
 
         try {
             $validator->assert($data);
@@ -37,13 +39,15 @@ class ValidaterService
         }
     }
 
-    private function validateEntity(Entity $entity): Validator
+    private function getEntityValidator(Entity $entity): Validator
     {
+        // Get validator for this Entity from cache.
         $item = $this->cache->getItem('entities_'.md5($entity->getName()));
         if ($item->isHit()) {
-            return $item->get();
+//            return $item->get(); // TODO: put this back so we can use caching
         }
 
+        // No Validator cached for this Entity, so create a new Validator and cache it.
         $validator = new Validator();
         $validator = $this->addAttributeValidators($entity, $validator);
 
@@ -58,7 +62,7 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            $attributeValidator = $this->validateAttribute($attribute);
+            $attributeValidator = $this->getAttributeValidator($attribute);
 
             $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator));
         }
@@ -66,16 +70,15 @@ class ValidaterService
         return $validator;
     }
 
-    private function validateAttribute(Attribute $attribute): Validator
+    private function getAttributeValidator(Attribute $attribute): Validator
     {
         $attributeValidator = new Validator();
 
         // Add rule for type
-        $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
+        $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute));
 
         // Add rule for format
-        // TODO:
-//        $attribute->getFormat() !== null && $attributeValidator->AddRule($this->getAttFormatRule($attribute->getFormat()));
+        $attribute->getFormat() !== null && $attributeValidator->AddRule($this->getAttFormatRule($attribute));
 
         // Add rules for validations
         // TODO:
@@ -84,42 +87,57 @@ class ValidaterService
         return $attributeValidator;
     }
 
-    private function getAttTypeRule($type)
+    private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
-        switch ($type) {
+        switch ($attribute->getType()) {
             case 'string':
             case 'text':
                 return new Rules\StringType();
-                break;
             case 'integer':
             case 'int':
                 return new Rules\IntType();
-                break;
             case 'float':
                 return new Rules\FloatType();
-                break;
             case 'number':
                 return new Rules\Number();
-                break;
             case 'datetime':
                 return new Rules\DateTime();
-                break;
             case 'file':
                 return new Rules\File();
-                break;
             case 'object':
+                // TODO loop back to Entity level validation somehow, for the $attribute->getObject() Entity...
                 return new Rules\ObjectType();
-                break;
             default:
+                throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
     }
 
-    private function getAttFormatRule($format)
+    private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
     {
-        // todo;
+        $format = $attribute->getFormat();
+
+        // Let be a bit compassionate and compatible
+        $format = str_replace(['telephone'], ['phone'], $format);
+
         switch ($format) {
-            case 'string':
+            case 'countryCode':
+                return new Rules\CountryCode();
+            case 'bsn':
+                return new Rules\Bsn();
+            case 'url':
+                return new Rules\Url();
+            case 'uuid':
+                return new Rules\Uuid();
+            case 'email':
+                return new Rules\Email();
+            case 'phone':
+                return new Rules\Phone();
+            case 'json':
+                return new Rules\Json();
+            case 'dutch_pc4':
+                // TODO
             default:
+                throw new GatewayException('Unknown attribute format!', null, null, ['data' => $format, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
     }
 
