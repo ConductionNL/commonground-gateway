@@ -1,6 +1,8 @@
-# Contributing
+# Design Decisions
 
 For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+
+## API First
 
 ## Documentation
 
