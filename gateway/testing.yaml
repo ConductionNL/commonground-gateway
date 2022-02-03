@@ -24,6 +24,7 @@ App\Entity\Entity:
         description: Dit endpoint behandeld weer.
         endpoint: "weer"
         
+    # This does not work with bisc.yaml
     person:
         route: "/api/people"
         name: person
