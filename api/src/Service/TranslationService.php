@@ -95,6 +95,7 @@ class TranslationService
      */
     public function generalVariables(): array
     {
+        // todo Caching
         $faker = \Faker\Factory::create();
         $now = new DateTime();
 

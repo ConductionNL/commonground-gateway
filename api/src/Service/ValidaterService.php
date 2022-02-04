@@ -45,7 +45,7 @@ class ValidaterService
     private function getEntityValidator(Entity $entity): Validator
     {
         // Get validator for this Entity from cache.
-        $item = $this->cache->getItem('entities_'.md5($entity->getName()));
+        $item = $this->cache->getItem('entityValidators_'.$entity->getId());
         if ($item->isHit()) {
 //            return $item->get(); // TODO: put this back so we can use caching
         }
@@ -55,7 +55,7 @@ class ValidaterService
         $validator = $this->addAttributeValidators($entity, $validator);
 
         $item->set($validator);
-        $item->tag('entity');
+        $item->tag('entityValidator');
 
         $this->cache->save($item);
 
@@ -67,7 +67,7 @@ class ValidaterService
         foreach ($entity->getAttributes() as $attribute) {
             $attributeValidator = $this->getAttributeValidator($attribute);
 
-            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator, false)); // mandatory = required
+            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator, array_key_exists('required', $attribute->getValidations()))); // mandatory = required
         }
 
         return $validator;
@@ -87,6 +87,7 @@ class ValidaterService
         // TODO:
         // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
 
+        // Add object (/subresource) validations
         if ($attribute->getType() == 'object') {
             $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth...
             if ($attribute->getMultiple()) {
@@ -120,10 +121,9 @@ class ValidaterService
             case 'object':
                 if ($attribute->getMultiple()) {
                     // TODO: make sure this is an array of objects
-                    return new Rules\ArrayType();
+                    return new Rules\ArrayType(); // check multidimensional array
                 }
                 return new Rules\ArrayType();
-//                return new Rules\ObjectType(); // TODO: ObjectType expects an actual class object not a json object, so this will not work...
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -193,7 +193,7 @@ class ValidaterService
                 case 'fileType':
                     // @TODO
                     break;
-                case 'required':
+                case 'nullable':
                     $attributeValidator->AddRule(new Rules\Not(Validator::notEmpty()));
                     break;
                 case 'forbidden':

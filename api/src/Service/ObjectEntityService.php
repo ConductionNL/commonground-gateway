@@ -87,7 +87,7 @@ class ObjectEntityService
             case 'POST':
                 // validate
                 if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
-                    throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                    break;
                 }
 
                 // create object
@@ -102,7 +102,7 @@ class ObjectEntityService
 
                 // validate
                 if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
-                    throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                    break;
                 }
                 // put object
                 break;
@@ -116,7 +116,7 @@ class ObjectEntityService
         }
 
         if (isset($validationErrors)) {
-            // Do something with validation errors
+            throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 
         // use events
