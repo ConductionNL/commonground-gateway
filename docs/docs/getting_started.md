@@ -60,7 +60,7 @@ volumes:
     db-mysql: {}
 ```
 
-You can simply download this file to any directory on your computer, then open up your favorite (command line tool)[https://www.google.com/search?q=command+line+tool] or shell, navigate to the specific folder and tell docker to start your containers with the `docker-compose up` command:
+You can simply download this file to any directory on your computer, then open up your favorite (command line tool)[https://www.google.com/search?q=command+line+tool] or shell, navigate to the specific folder and tell docker to start your containers with the docker-compose up command
 
 ```cli
 $ docker-compose up
