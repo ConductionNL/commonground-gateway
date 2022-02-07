@@ -253,6 +253,7 @@ class Value
         if (!$this->objects->contains($object)) {
             $this->objects->add($object);
         }
+
         // handle subresources
         if (!$object->getSubresourceOf()->contains($this)) {
             $object->addSubresourceOf($this);
@@ -260,9 +261,12 @@ class Value
 
         // TODO: see https://conduction.atlassian.net/browse/CON-2030
         // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
-        //Handle inversed by
-        if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
-            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
+        // Handle inversed by
+        if ($this->getAttribute()->getInversedBy()) {
+            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+                $inversedByValue->addObject($this->getObjectEntity());
+            }
         }
 
         return $this;
@@ -279,9 +283,12 @@ class Value
             $this->objects->removeElement($object);
         }
 
-        //Remove inversed by
-        if ($this->getAttribute()->getInversedBy() and $object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
-            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->removeObject($this->getObjectEntity());
+        // Remove inversed by
+        if ($this->getAttribute()->getInversedBy()) {
+            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+                $inversedByValue->removeObject($this->getObjectEntity());
+            }
         }
 
         return $this;
@@ -405,14 +412,17 @@ class Value
                         return $this;
                     }
                     // todo: We never use setValue function for array of objects, but if we ever do, take a look at $removeObjectsOnPut in validationService and EavService!
-//                    if (!$this->objectEntity->getHasErrors()) {
-//                        foreach ($this->objects as $object) {
-//                            $object->removeSubresourceOf($this);
-//                            // ...delete it entirely if it has no other 'parent' connections
-//                            if (count($object->getSubresourceOf()) == 0) {
-//                                $this->em->remove($object);
+//                    if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+//                        foreach ($valueObject->getObjects() as $object) {
+//                            // If we are not re-adding this object...
+//                            if (!$saveSubObjects->contains($object)) {
+//                                $this->removeObjectsOnPut[] = [
+//                                    'valueObject' => $valueObject,
+//                                    'object'      => $object,
+//                                ];
 //                            }
 //                        }
+//                        $valueObject->getObjects()->clear();
 //                    }
                     $this->objects->clear();
                     // if multiple is true value should be an array
