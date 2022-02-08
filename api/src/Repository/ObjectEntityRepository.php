@@ -153,7 +153,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //        }
 
         // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-        if ($this->session->get('anonymous') === true && $query->getParameter('type')->getValue() === 'taalhuis') {
+        if ($this->session->get('anonymous') === true && ($query->getParameter('type')->getValue() === 'taalhuis' || $query->getParameter('type')->getValue() === 'team')) {
             return $query;
         }
 
