@@ -60,10 +60,10 @@ const IndexPage = ({location}) => (
 
       <Section>
         <Flex>
-          <Box width={2 / 5}>
+          {/* <Box width={2 / 5}>
             <ResponsiveImage src={casesImage} alt="Illustratie van persoon en document"/>
-          </Box>
-          <Box width={3 / 5}>
+          </Box> */}
+          <Box width={5 / 5}>
             <h2>Standaard rijk uitgevoerd</h2>
             <p>De commonground gateway bind api’s niet alleen aan elkaar vast maar voorziet ook in specifieke
               oplossingen voor het ecosysteem, zo kan hij objecten uit meerdere register als één object aan de ui
@@ -78,7 +78,7 @@ const IndexPage = ({location}) => (
 
       <Section>
         <Flex>
-          <Box width={3 / 5}>
+          <Box width={5 / 5}>
             <h2>Standaard veilig</h2>
             <p>De commonground gateway ondersteund zonder externe afhankelijkheden DigiD, eHerkening, OpenId Connect en
               ADFS. Alternatief kan er ook gebruik worden gemaakt van kubernetes oplossingen zo als keycloak of
@@ -87,18 +87,18 @@ const IndexPage = ({location}) => (
               veilige, stabiel en betrouwbaar platform voor applicatie ontwikkeling.
             </p>
           </Box>
-          <Box width={2 / 5}>
+          {/* <Box width={2 / 5}>
             <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
-          </Box>
+          </Box> */}
         </Flex>
       </Section>
 
       <Section>
         <Flex>
-          <Box width={2 / 5}>
+          {/* <Box width={2 / 5}>
             <ResponsiveImage src={casesImage} alt="Illustratie van persoon en document"/>
-          </Box>
-          <Box width={3 / 5}>
+          </Box> */}
+          <Box width={5 / 5}>
             <h2>Standaard sneller</h2>
             <p>Niet alleen is de gateway technisch sneller door slim gebruik van cashing, asynchrone bevragingen en
               andere
@@ -114,7 +114,7 @@ const IndexPage = ({location}) => (
 
       <Section>
         <Flex>
-          <Box width={3 / 5}>
+          <Box width={5 / 5}>
             <h2>Standaard in Standaarden</h2>
             <p>De common ground gateway is specifiek ontworpen met het ondersteunen van common ground applicaties in
               gedachte. De straightforward en simpele restful api is gemakkelijk te integreren in React of Angular
@@ -123,9 +123,9 @@ const IndexPage = ({location}) => (
               realtime bijwerken van gegevens in de UI aan de hand van polling of webhooks.
             </p>
           </Box>
-          <Box width={2 / 5}>
+          {/* <Box width={2 / 5}>
             <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
-          </Box>
+          </Box> */}
         </Flex>
       </Section>
 
