@@ -41,6 +41,7 @@ class ValidationService
     public $createdObjects = [];
     public $removeObjectsOnPut = [];
     public $removeObjectsNotMultiple = [];
+    public $notifications = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -178,7 +179,14 @@ class ValidationService
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } elseif ($attribute->getNullable() === false) {
-                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                if ($this->request->getMethod() == 'PUT') {
+                    $value = $objectEntity->getValueByAttribute($attribute)->getValue();
+                    if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+                        $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                    }
+                } elseif ($this->request->getMethod() == 'POST') {
+                    $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                }
             } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
@@ -205,7 +213,10 @@ class ValidationService
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
                 // Notify notification component
-                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method'       => $this->request->getMethod(),
+                ];
             }
         }
 
@@ -1701,7 +1712,10 @@ class ValidationService
                 $objectEntity->setExternalResult($result);
 
                 // Notify notification component
-                $this->notify($objectEntity, $method);
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method'       => $method,
+                ];
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);

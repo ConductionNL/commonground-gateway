@@ -846,10 +846,9 @@ class EavService
 
         // Validation stap
         $this->validationService->setRequest($request);
-//        if ($request->getMethod() == 'POST') {
-//            var_dump($object->getEntity()->getName());
-//        }
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
+        $this->validationService->removeObjectsNotMultiple = []; // to be sure
+        $this->validationService->notifications = []; // to be sure
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
@@ -915,6 +914,11 @@ class EavService
         }
         $this->em->persist($object);
         $this->em->flush();
+
+        // Send notifications
+        foreach ($this->validationService->notifications as $notification) {
+            $this->validationService->notify($notification['objectEntity'], $notification['method']);
+        }
 
         return $this->responseService->renderResult($object, $fields);
     }
@@ -1104,10 +1108,11 @@ class EavService
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
         }
-        $this->validationService->notify($object, 'DELETE');
 
         $this->em->remove($object);
         $this->em->flush();
+
+        $this->validationService->notify($object, 'DELETE');
 
         return [];
     }

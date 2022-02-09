@@ -21,6 +21,7 @@ class ConvertToGatewayService
     private SessionInterface $session;
     private GatewayService $gatewayService;
     private FunctionService $functionService;
+    public $notifications = []; // todo maybe use an array of notifications here as well (see validationService)
 
     public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService)
     {
@@ -239,7 +240,7 @@ class ConvertToGatewayService
 //            var_dump('persist and flush');
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
-            $this->notify($newObject, 'Create');
+            $this->notify($newObject, 'Create'); // todo: use $notifications array for this (EVERYWHERE convertToGatewayObject() is used, also outside this service!)
         }
 
         return $newObject;
