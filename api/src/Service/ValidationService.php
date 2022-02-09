@@ -41,6 +41,7 @@ class ValidationService
     public $createdObjects = [];
     public $removeObjectsOnPut = [];
     public $removeObjectsNotMultiple = [];
+    public $notifications = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -212,7 +213,10 @@ class ValidationService
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
                 // Notify notification component
-                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method' => $this->request->getMethod()
+                ];
             }
         }
 
@@ -1708,7 +1712,10 @@ class ValidationService
                 $objectEntity->setExternalResult($result);
 
                 // Notify notification component
-                $this->notify($objectEntity, $method);
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method' => $method
+                ];
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);
