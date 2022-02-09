@@ -215,7 +215,7 @@ class ValidationService
                 // Notify notification component
                 $this->notifications[] = [
                     'objectEntity' => $objectEntity,
-                    'method' => $this->request->getMethod()
+                    'method'       => $this->request->getMethod(),
                 ];
             }
         }
@@ -1714,7 +1714,7 @@ class ValidationService
                 // Notify notification component
                 $this->notifications[] = [
                     'objectEntity' => $objectEntity,
-                    'method' => $method
+                    'method'       => $method,
                 ];
 
                 // Lets stuff this into the cache for speed reasons
