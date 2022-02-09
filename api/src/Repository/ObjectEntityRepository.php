@@ -152,8 +152,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //            $user = $user->getUserIdentifier();
 //        }
 
-        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-        if ($this->session->get('anonymous') === true && $query->getParameter('type')->getValue() === 'taalhuis') {
+        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
+        if ($this->session->get('anonymous') === true && in_array($query->getParameter('type')->getValue(), ['taalhuis', 'team'])) {
             return $query;
         }
 
