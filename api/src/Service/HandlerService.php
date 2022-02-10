@@ -313,6 +313,15 @@ class HandlerService
             ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
         );
 
+        // Get application and set CORS
+        // if ($domains = $this->session->get('application')['domains']) {
+            // $domainString = implode(' ', $domains);
+            $response->headers->add([
+                'Access-Control-Allow-Origin' => 'test',
+                'Access-Control-Allow-Test' => 'test',
+            ]);
+        // }
+
         // Lets handle file responses
         $routeParameters = $this->request->attributes->get('_route_params');
         if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
