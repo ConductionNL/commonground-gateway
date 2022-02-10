@@ -316,10 +316,10 @@ class HandlerService
         // Get application and set CORS
         // if ($domains = $this->session->get('application')['domains']) {
             // $domainString = implode(' ', $domains);
-            $response->headers->add([
-                'Access-Control-Allow-Origin' => 'test',
-                'Access-Control-Allow-Test' => 'test',
-            ]);
+            // $response->headers->add([
+            //     'Access-Control-Allow-Origin' => 'test',
+            //     'Access-Control-Allow-Test' => 'test',
+            // ]);
         // }
 
         // Lets handle file responses
