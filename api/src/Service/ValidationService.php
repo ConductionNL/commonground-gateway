@@ -349,7 +349,7 @@ class ValidationService
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
-            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: '.$value.'.');
+            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: '. $attribute->getCaseSensitive() ? $value : strtolower($value) .'.');
         }
 
         return $objectEntity;
