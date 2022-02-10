@@ -381,7 +381,7 @@ class Attribute
     private $nullable;
 
     /**
-     * @var bool Whether or not this property must be unique
+     * @var bool Whether or not this property must be unique. Does not work for attribute->type = object
      *
      * @example false
      *
