@@ -733,6 +733,7 @@ App\Entity\Attribute:
         name: emails
         type: object
         mustBeUnique: true
+        caseSensitive: false
         multiple: true
         entity: "@person"
         object: "@email"

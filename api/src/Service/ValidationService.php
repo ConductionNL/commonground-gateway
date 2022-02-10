@@ -328,6 +328,9 @@ class ValidationService
                     //                case 'object':
                     //                    return $valueObject->getObjects() == $value;
                 case 'string':
+                    if (!$valueObject->getAttribute()->getCaseSensitive()) {
+                        return strtolower($valueObject->getStringValue()) == strtolower($value);
+                    }
                     return $valueObject->getStringValue() == $value;
                 case 'number':
                     return $valueObject->getNumberValue() == $value;

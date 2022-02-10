@@ -392,6 +392,17 @@ class Attribute
     private $mustBeUnique;
 
     /**
+     * @var bool Whether or not the mustBeUnique check is case sensitive
+     *
+     * @example false
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":true})
+     */
+    private bool $caseSensitive = true;
+
+    /**
      * @var bool Whether or not this property is read only
      *
      * @example false
@@ -1047,6 +1058,18 @@ class Attribute
         return $this;
     }
 
+    public function getCaseSensitive(): ?bool
+    {
+        return $this->caseSensitive;
+    }
+
+    public function setCaseSensitive(bool $caseSensitive): self
+    {
+        $this->caseSensitive = $caseSensitive;
+
+        return $this;
+    }
+
     public function getReadOnly(): ?bool
     {
         return $this->readOnly;
@@ -1166,6 +1189,7 @@ class Attribute
         $validations['defaultValue'] = $this->getDefaultValue();
         $validations['nullable'] = $this->getNullable();
         $validations['mustBeUnique'] = $this->getMustBeUnique();
+        $validations['caseSensitive'] = $this->getCaseSensitive();
 
         return $validations;
     }
@@ -1229,6 +1253,9 @@ class Attribute
         }
         if (array_key_exists('mustBeUnique', $validations)) {
             $this->setMustBeUnique($validations['mustBeUnique']);
+        }
+        if (array_key_exists('caseSensitive', $validations)) {
+            $this->setCaseSensitive($validations['caseSensitive']);
         }
 
         return $this;
