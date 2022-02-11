@@ -27,24 +27,24 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/mrc
         documentation: https://raw.githubusercontent.com/ConductionNL/medewerkercatalogus/master/api/public/schema/openapi.yaml
-    memo_api:
-        name: memo component
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
-        documentation: https://raw.githubusercontent.com/ConductionNL/memo-component/master/api/public/schema/openapi.yaml
+#    memo_api:
+#        name: memo component
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/memo
+#        documentation: https://raw.githubusercontent.com/ConductionNL/memo-component/master/api/public/schema/openapi.yaml
     uc_api:
         name: user component
         auth: apikey
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v2/uc
         documentation: https://raw.githubusercontent.com/ConductionNL/user-component/master/api/public/schema/openapi.yaml
-    wrc_api:
-        name: webresource catalogus
-        auth: apikey
-        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
-        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
+#    wrc_api:
+#        name: webresource catalogus
+#        auth: apikey
+#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+#        location: https://taalhuizen-bisc.commonground.nu/api/v1/wrc
+#        documentation: https://raw.githubusercontent.com/ConductionNL/webresourcecatalogus/master/api/public/schema/openapi.yaml
         
 App\Entity\Entity:
     # User object
@@ -516,6 +516,7 @@ App\Entity\Attribute:
         required: true
         format: email
         mustBeUnique: true
+        caseSensitive: false
         entity: "@email"
         persistToGateway: true
         
