@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class EavService
 {
@@ -43,6 +44,7 @@ class EavService
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
     private FunctionService $functionService;
+    private Stopwatch $stopwatch;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -57,7 +59,8 @@ class EavService
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
         TranslationService $translationService,
-        FunctionService $functionService
+        FunctionService $functionService,
+        Stopwatch $stopwatch
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -72,6 +75,7 @@ class EavService
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
         $this->functionService = $functionService;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -206,6 +210,8 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
+        $this->stopwatch->start('handleRequest');
+
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
@@ -393,6 +399,9 @@ class EavService
         if ($this->responseService->checkForErrorResponse($resultConfig['result'], $resultConfig['responseType'])) {
             $this->responseService->createRequestLog($request, $entity ?? null, $resultConfig['result'], $response, $resultConfig['object'] ?? null);
         }
+
+        $this->stopwatch->stop('handleRequest');
+        var_dump((string) $this->stopwatch->getEvent("handleRequest"));
 
         return $response;
     }
