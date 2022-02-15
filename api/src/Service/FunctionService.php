@@ -21,8 +21,9 @@ class FunctionService
      * Handles the function of an Entity, this can be done in very different situations. That is why the data array should always contains a few specific keys!
      *
      * @param ObjectEntity $objectEntity
-     * @param string $function
-     * @param array $data Should at least contain the following key: method
+     * @param string       $function
+     * @param array        $data         Should at least contain the following key: method
+     *
      * @return ObjectEntity
      */
     public function handleFunction(ObjectEntity $objectEntity, string $function, array $data): ObjectEntity
@@ -34,7 +35,7 @@ class FunctionService
                 } else {
                     $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
                 }
-                $objectEntity = $this->createOrganization($objectEntity, $data['uri'],$organizationType);
+                $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 break;
             case 'userGroup':
                 if ($data['method'] == 'PUT') {
@@ -55,7 +56,7 @@ class FunctionService
 
     //todo: note: this createOrganization function is also used in different places than only the handleFunction function above^
     /**
-     * Performs the organization function. This is called when a new ObjectEntity is created for an Entity with function = 'organization'
+     * Performs the organization function. This is called when a new ObjectEntity is created for an Entity with function = 'organization'.
      *
      * @param ObjectEntity $objectEntity
      * @param string       $uri

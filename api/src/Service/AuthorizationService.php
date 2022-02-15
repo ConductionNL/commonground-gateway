@@ -6,7 +6,6 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
-use DateInterval;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;

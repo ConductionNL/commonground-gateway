@@ -506,10 +506,10 @@ class ValidationService
                     $subObject->setApplication($this->session->get('application'));
                 }
                 $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
-                    'method' => $this->request->getMethod(),
-                    'uri' => $subObject->getUri(),
+                    'method'           => $this->request->getMethod(),
+                    'uri'              => $subObject->getUri(),
                     'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
-                    'userGroupName' => array_key_exists('name', $object) ? $object['name'] : null
+                    'userGroupName'    => array_key_exists('name', $object) ? $object['name'] : null,
                 ]);
 
                 // object toevoegen
@@ -1708,7 +1708,7 @@ class ValidationService
                 }
                 $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
                     'method' => $method,
-                    'uri' => $objectEntity->getUri()
+                    'uri'    => $objectEntity->getUri(),
                 ]);
                 if (isset($setOrganization)) {
                     $objectEntity->setOrganization($setOrganization);
