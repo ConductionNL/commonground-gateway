@@ -490,6 +490,7 @@ App\Entity\Attribute:
         entity: "@organization"
         object: "@postalCode"
         cascade: true
+        cascadeDelete: true
         inversedBy: "@postalCode_languageHouse"
     organization_team_postalCodes:
         name: team_postalCodes
