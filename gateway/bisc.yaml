@@ -73,6 +73,7 @@ App\Entity\Entity:
 
     # UserGroup (security) object
     usergroup:
+        function: "userGroup"
         route: "/api/user_groups"
         name: user_groups
         description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet.
@@ -83,8 +84,8 @@ App\Entity\Entity:
             - name
             - description
             - code
-    #            - scopes
-    #            - users
+            - scopes
+#            - users
 
     # Organization Object
     organization:
