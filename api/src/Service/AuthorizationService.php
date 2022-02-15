@@ -92,7 +92,7 @@ class AuthorizationService
             $item->set($scopes);
             $item->tag('anonymousScopes');
             $this->cache->save($item);
-            
+
             return $scopes;
         } else {
             throw new AuthenticationException('Authentication Required');
