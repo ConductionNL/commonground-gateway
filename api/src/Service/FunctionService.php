@@ -18,7 +18,44 @@ class FunctionService
     }
 
     /**
-     * Performs the organization function.
+     * Handles the function of an Entity, this can be done in very different situations. That is why the data array should always contains a few specific keys!
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string $function
+     * @param array $data Should at least contain the following key: method
+     * @return ObjectEntity
+     */
+    public function handleFunction(ObjectEntity $objectEntity, string $function, array $data): ObjectEntity
+    {
+        switch ($function) {
+            case 'organization':
+                if (array_key_exists('organizationType', $data) && $data['organizationType']) {
+                    $organizationType = $data['organizationType'];
+                } else {
+                    $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                }
+                $objectEntity = $this->createOrganization($objectEntity, $data['uri'],$organizationType);
+                break;
+            case 'userGroup':
+                if ($data['method'] == 'PUT') {
+                    if (array_key_exists('userGroupName', $data) && $data['userGroupName']) {
+                        $userGroupName = $data['userGroupName'];
+                    } else {
+                        $userGroupName = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('name'))->getValue();
+                    }
+                    $objectEntity = $this->updateUserGroup($objectEntity, $userGroupName);
+                }
+                break;
+            default:
+                break;
+        }
+
+        return $objectEntity;
+    }
+
+    //todo: note: this createOrganization function is also used in different places than only the handleFunction function above^
+    /**
+     * Performs the organization function. This is called when a new ObjectEntity is created for an Entity with function = 'organization'
      *
      * @param ObjectEntity $objectEntity
      * @param string       $uri
@@ -28,10 +65,26 @@ class FunctionService
      */
     public function createOrganization(ObjectEntity $objectEntity, string $uri, ?string $organizationType): ObjectEntity
     {
-        //TODO: $organizationType is a quick fix for taalhuizen, we need to find a better solution!
         if ($organizationType == 'taalhuis') {
             $objectEntity->setOrganization($uri);
             $this->cache->invalidateTags(['organization']);
+        }
+
+        return $objectEntity;
+    }
+
+    /**
+     * Performs the userGroup function.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string|null  $userGroupName This is nullable so that it won't trigger 500's when no group name is given
+     *
+     * @return ObjectEntity
+     */
+    public function updateUserGroup(ObjectEntity $objectEntity, ?string $userGroupName): ObjectEntity
+    {
+        if ($userGroupName == 'ANONYMOUS') {
+            $this->cache->invalidateTags(['anonymousScopes']);
         }
 
         return $objectEntity;

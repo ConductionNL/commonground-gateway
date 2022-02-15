@@ -505,9 +505,12 @@ class ValidationService
                     $subObject->setOrganization($this->session->get('activeOrganization'));
                     $subObject->setApplication($this->session->get('application'));
                 }
-                if ($subObject->getEntity()->getFunction() === 'organization') {
-                    $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
-                }
+                $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
+                    'method' => $this->request->getMethod(),
+                    'uri' => $subObject->getUri(),
+                    'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
+                    'userGroupName' => array_key_exists('name', $object) ? $object['name'] : null
+                ]);
 
                 // object toevoegen
                 $saveSubObjects->add($subObject);
@@ -1703,6 +1706,10 @@ class ValidationService
                 if ($objectEntity->getEntity()->getFunction() === 'organization') {
                     $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
                 }
+                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+                    'method' => $method,
+                    'uri' => $objectEntity->getUri()
+                ]);
                 if (isset($setOrganization)) {
                     $objectEntity->setOrganization($setOrganization);
                 }

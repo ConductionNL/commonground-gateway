@@ -6,7 +6,9 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
+use DateInterval;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -25,6 +27,7 @@ class AuthorizationService
     private CommonGroundService $commonGroundService;
     private Security $security;
     private SessionInterface $session;
+    public CacheInterface $cache;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -33,13 +36,15 @@ class AuthorizationService
         ParameterBagInterface $parameterBag,
         CommonGroundService $commonGroundService,
         Security $security,
-        SessionInterface $session
+        SessionInterface $session,
+        CacheInterface $cache
     ) {
         $this->authorizationChecker = new AuthorizationChecker($tokenStorage, $authenticationManager, $accessDecisionManager);
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->security = $security;
         $this->session = $session;
+        $this->cache = $cache;
     }
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
@@ -68,6 +73,13 @@ class AuthorizationService
 
     public function getScopesForAnonymous(): array
     {
+        // First check if we have these scopes in cache (this gets removed from cache when a userGroup with name ANONYMOUS is changed, see FunctionService)
+        $item = $this->cache->getItem('anonymousScopes');
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
+        // Get the ANONYMOUS userGroup
         $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'])['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
@@ -76,6 +88,11 @@ class AuthorizationService
             }
         }
         if (count($scopes) > 0) {
+            // Save in cache
+            $item->set($scopes);
+            $item->tag('anonymousScopes');
+            $this->cache->save($item);
+            
             return $scopes;
         } else {
             throw new AuthenticationException('Authentication Required');
