@@ -10,6 +10,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Json;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
  * An handler.
@@ -28,6 +30,9 @@ use Symfony\Component\Validator\Constraints\Json;
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\HandlerRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "endpoint.id": "exact"
+ * })
  */
 class Handler
 {
