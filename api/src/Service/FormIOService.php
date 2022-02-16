@@ -88,7 +88,7 @@ class FormIOService
         case 'string': 
         case 'date': 
         case 'date-time':
-          $type = 'text';
+          $type = 'textfield';
           break;
         case 'integer':
         case 'float':
