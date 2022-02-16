@@ -1129,11 +1129,11 @@ class SOAPService
                 !$this->isAssoc($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])
             ) {
                 foreach ($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"] as $coMover) {
-                    $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']];
+                    $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']]];
                 }
             } elseif (isset($data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"])) {
                 $coMover = $data->all()["SOAP-ENV:Body"]["ns2:OntvangenIntakeNotificatie"]["Body"]["SIMXML"]["ELEMENTEN"]["MEEVERHUIZENDE_GEZINSLEDEN"]["MEEVERHUIZEND_GEZINSLID"];
-                $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']];
+                $relocators[] = ['bsn' => $coMover['BSN'], 'declarationType' => $declarationTypes[$coMover['BSN']]];
             }
             $data->set('relocators', json_encode($relocators));
         }
