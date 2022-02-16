@@ -1119,7 +1119,7 @@ class SOAPService
 
             $declarationTypes = [];
             foreach($relatives['relatives'] as $relative){
-                $declarationTypes[$relative['person']['bsn']] = $this->translateDeclarationType($relative['declarationType']);
+                $declarationTypes[$relative['person']['bsn']] = $relative['declarationType'];
             }
 
             $relocators[] = ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN"), 'declarationType' => $declarationTypes[$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN")]];
