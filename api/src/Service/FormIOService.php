@@ -20,14 +20,21 @@ class FormIOService
     {
       $formIOArray['components'] = [];
 
+      // Basic values for a input
       $basicComponent = [
         'input' => true,
         'tableView' => true,
         'inputMask' => '',
         'prefix' => '',
         'suffix' => '',
+        'persistent' => true,
+        'autofocus' => false,
+        'hidden' => false,
+        'clearOnHide' => true,
+        'spellCheck' => false
       ];
 
+      // All attributes as inputs
       foreach ($entity->getAttributes() as $attr) {
         $component = $basicComponent;
 
@@ -36,6 +43,7 @@ class FormIOService
         $component['multiple'] = $attr->getMultiple();
         $component['defaultValue'] = $attr->getDefaultValue() ?? '';
         $component['placeholder'] = $attr->getExample() ?? '';
+        $component['unique'] = $attr->getMustBeUnique() ?? '';
 
         $component['validate'] = [
           'required' => $attr->getRequired() ?? false,
@@ -51,7 +59,23 @@ class FormIOService
         $formIOArray['components'][] = $component;
       }
 
-      
+      // Submit button
+      $formIOArray['components'][] = [
+        'type' => 'button',
+        'theme' => 'primary',
+        'disableOnInvalid' => true,
+        'action' => 'submit',
+        'rightIcon' => '',
+        'leftIcon' => '',
+        'size' => 'md',
+        'key' => 'submit',
+        'tableView' => false,
+        'label' => 'Submit',
+        'input' => 'true'
+      ];
+
+      $formIOArray['display'] = 'form';
+      $formIOArray['page'] = 0;
 
       return $formIOArray;
     }

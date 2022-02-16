@@ -106,8 +106,13 @@ class HandlerService
     {
         $method = $this->request->getMethod();
         
+        // Form.io components array
         if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
-          $data = $this->formIOService->createFormIOArray($handler->getEntity());
+             return new Response (
+               $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
+               Response::HTTP_OK,
+               ['content-type' => 'json']
+             );
         }
 
         // Only do mapping and translation -in for calls with body
