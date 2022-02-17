@@ -314,7 +314,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $forbidenIf = [];
+    private $forbiddenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
@@ -598,7 +598,7 @@ class Attribute
             'inversedBy'       => $inversed,
             'required'         => $this->getRequired(),
             'requiredIf'       => $this->getRequiredIf(),
-            'forbidenIf'       => $this->getForbidenIf(),
+            'forbiddenIf'      => $this->getForbiddenIf(),
             'enum'             => $this->getEnum(),
             'allOf'            => $this->getAllOf(),
             'anyOf'            => $this->getAnyOf(),
@@ -894,14 +894,14 @@ class Attribute
         return $this;
     }
 
-    public function getForbidenIf(): ?array
+    public function getForbiddenIf(): ?array
     {
-        return $this->forbidenIf;
+        return $this->forbiddenIf;
     }
 
-    public function setForbidenIf(?array $forbidenIf): self
+    public function setForbiddenIf(?array $forbiddenIf): self
     {
-        $this->forbidenIf = $forbidenIf;
+        $this->forbiddenIf = $forbiddenIf;
 
         return $this;
     }
@@ -1139,6 +1139,7 @@ class Attribute
     {
         //TODO: this list of validations is not complete!
         $validations = [];
+        $validations['multipleOf'] = $this->getMultipleOf();
         $validations['maximum'] = $this->getMaximum();
         $validations['exclusiveMaximum'] = $this->getExclusiveMaximum();
         $validations['minimum'] = $this->getMinimum();
@@ -1158,6 +1159,8 @@ class Attribute
         $validations['defaultValue'] = $this->getDefaultValue();
         $validations['nullable'] = $this->getNullable();
         $validations['mustBeUnique'] = $this->getMustBeUnique();
+        $validations['maxDate'] = $this->getMaxDate();
+        $validations['minDate'] = $this->getMinDate();
 
         return $validations;
     }
@@ -1165,6 +1168,9 @@ class Attribute
     public function setValidations(?array $validations): self
     {
         //TODO: this list of validations is not complete!
+        if (array_key_exists('multipleOf', $validations)) {
+            $this->setMultipleOf($validations['multipleOf']);
+        }
         if (array_key_exists('maximum', $validations)) {
             $this->setMaximum($validations['maximum']);
         }
@@ -1221,6 +1227,12 @@ class Attribute
         }
         if (array_key_exists('mustBeUnique', $validations)) {
             $this->setMustBeUnique($validations['mustBeUnique']);
+        }
+        if (array_key_exists('maxDate', $validations)) {
+            $this->setMaxDate($validations['maxDate']);
+        }
+        if (array_key_exists('minDate', $validations)) {
+            $this->setMinDate($validations['minDate']);
         }
 
         return $this;

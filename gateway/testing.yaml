@@ -27,7 +27,7 @@ App\Entity\Entity:
     # This does not work with bisc.yaml
     person:
         route: "/api/people"
-        name: person
+        name: persons
         description: Dit endpoint behandeld contactgegevens.
         endpoint: "people"
         
@@ -113,8 +113,14 @@ App\Entity\Attribute:
         multiple: true
         entity: "@person"
         object: "@email"
-        cascade: true #todo: test it
-        cascadeDelete: true #todo: test it
+#        cascade: true #todo: test it
+#        cascadeDelete: true #todo: test it
+    person_birthday:
+        name: birthday
+        type: date
+        nullable: true
+        minDate: "2022-02-10"
+        entity: "@person"
         
     # email Attributes
     email_name:
@@ -128,7 +134,7 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         format: email
-        mustBeUnique: true #todo: test it
+#        mustBeUnique: true #todo: test it
         entity: "@email"
 
 App\Entity\Handler:
