@@ -59,7 +59,7 @@ class HandlerService
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
-        SessionInterface $session
+        SessionInterface $session,
         FormIOService $formIOService
     ) {
         $this->entityManager = $entityManager;
