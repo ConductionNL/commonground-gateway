@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Twig\Environment as Environment;
+use Twig\Environment;
 
 class HandlerService
 {
@@ -23,6 +23,7 @@ class HandlerService
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
+    private FormIOService $formIOService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -39,6 +40,7 @@ class HandlerService
         'application/pdf'                                                                    => 'pdf',
         'application/msword'                                                                 => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
+        'application/form.io'                                                                => 'form.io',
     ];
 
     public function __construct(
@@ -52,7 +54,8 @@ class HandlerService
         LogService $logService,
         Environment $twig,
         TemplateService $templateService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        FormIOService $formIOService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -65,6 +68,7 @@ class HandlerService
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService;
+        $this->formIOService = $formIOService;
     }
 
     /**
@@ -100,6 +104,15 @@ class HandlerService
     public function handleHandler(Handler $handler): Response
     {
         $method = $this->request->getMethod();
+
+        // Form.io components array
+        if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+            return new Response(
+                $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
+                Response::HTTP_OK,
+                ['content-type' => 'json']
+            );
+        }
 
         // Only do mapping and translation -in for calls with body
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
