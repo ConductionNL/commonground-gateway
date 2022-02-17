@@ -5,7 +5,7 @@
 
 ## Quickstart
 
-Clone this repository (green button ) or use it in the terminal
+Clone this repository (green button ) or use the following command in the terminal:
 
 ```cli
 $ git clone https://github.com/ConductionNL/commonground-gateway
