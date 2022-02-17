@@ -66,7 +66,7 @@ class TranslationService
                     // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
                     $destination[$replace] = $source[$search];
                 } else {
-                    $destination[$replace] = $source[$search] ?? ((string)$destination[$replace]) ?? null;
+                    $destination[$replace] = $source[$search] ?? ((string) $destination[$replace]) ?? null;
                 }
                 unset($destination[$search]);
             } elseif ($format == 'json') {

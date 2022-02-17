@@ -81,7 +81,7 @@ class ValidaterService
             $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth...
             if ($attribute->getMultiple()) {
                 $attributeValidator->addRule(new Rules\Each($subresourceValidator));
-                // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
+            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
             } else {
                 $attributeValidator->AddRule($subresourceValidator);
             }
@@ -123,6 +123,7 @@ class ValidaterService
                     // Make sure this is an array of objects, multidimensional array
                     return new Rules\Each(new Rules\ArrayType());
                 }
+
                 return new Rules\ArrayType();
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
