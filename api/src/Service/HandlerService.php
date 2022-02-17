@@ -196,8 +196,7 @@ class HandlerService
         if ($method == 'GET') {
             //TODO: old code for getting an ObjectEntity
             $data = $this->eavService->handleGet($object, null);
-        }
-        else {
+        } else {
             //todo: -end- old code...
 
             // eav new way
