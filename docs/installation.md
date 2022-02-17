@@ -3,4 +3,5 @@
 For full documentation visit [mkdocs.org](https://www.mkdocs.org).
 
 ## Documentation
-We host technical documentation on read the doc's and general user information on githhub pages, to make documentation compatible with githb we document in in markdown (ins stead of restructerd text) documentation is parst of the projects and containded withing the /docs folder
+
+We host technical documentation on [Read the Doc's](https://readthedocs.org/) and general user information on GitHub pages, to make the documentation compatible with GitHub we document in markdown (instead of reStructuredText). Documentation is part of the project and contained within the `/docs` folder.
