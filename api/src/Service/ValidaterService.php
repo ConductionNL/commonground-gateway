@@ -163,7 +163,7 @@ class ValidaterService
         // todo; testen en uitbreiden
         foreach ($attribute->getValidations() as $validation => $config) {
             // If attribute can not be null add NotEmpty rule
-            if ($attribute->getValidations()['nullable'] !== true) {
+            if ($attribute->getValidations()['nullable'] !== true) { //todo: something about defaultValue
                 $attributeValidator->AddRule(new Rules\NotEmpty());
             } else {
                 // if we have no config or validation config == false continue without adding a new Rule.
