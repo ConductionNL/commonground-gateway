@@ -6,7 +6,6 @@ use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Exception\GatewayException;
-use App\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +14,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Twig\Environment as Environment;
+use Twig\Environment;
 
 class HandlerService
 {
@@ -41,7 +40,7 @@ class HandlerService
         'application/pdf'                                                                    => 'pdf',
         'application/msword'                                                                 => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
-        'application/form.io'                                                                => 'form.io'
+        'application/form.io'                                                                => 'form.io',
     ];
 
     public function __construct(
@@ -105,14 +104,14 @@ class HandlerService
     public function handleHandler(Handler $handler): Response
     {
         $method = $this->request->getMethod();
-        
+
         // Form.io components array
         if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
-             return new Response (
-               $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
-               Response::HTTP_OK,
-               ['content-type' => 'json']
-             );
+            return new Response(
+                $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
+                Response::HTTP_OK,
+                ['content-type' => 'json']
+            );
         }
 
         // Only do mapping and translation -in for calls with body

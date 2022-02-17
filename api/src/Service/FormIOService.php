@@ -3,12 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Entity;
-use Attribute;
 
 class FormIOService
 {
-
-
     public function __construct(
     ) {
     }
@@ -18,75 +15,75 @@ class FormIOService
      */
     public function createFormIOArray(Entity $entity): array
     {
-      $formIOArray['components'] = [];
+        $formIOArray['components'] = [];
 
-      // Basic values for a input
-      $basicComponent = [
-        'input' => true,
-        'tableView' => true,
-        'inputMask' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'persistent' => true,
-        'autofocus' => false,
-        'hidden' => false,
-        'clearOnHide' => true,
-        'spellCheck' => false
-      ];
-
-      // All attributes as inputs
-      foreach ($entity->getAttributes() as $attr) {
-        $component = $basicComponent;
-
-        $component['label'] = $attr->getName();
-        $component['key'] = $attr->getName();
-        $component['multiple'] = $attr->getMultiple();
-        $component['defaultValue'] = $attr->getDefaultValue() ?? '';
-        $component['placeholder'] = $attr->getExample() ?? '';
-        $component['unique'] = $attr->getMustBeUnique() ?? '';
-
-        $component['validate'] = [
-          'required' => $attr->getRequired() ?? false,
-          'minLength' => $attr->getMinLength() ?? '',
-          'maxLength' => $attr->getMaxLength() ?? '',
-          'pattern' => '',
-          'custom' => '',
-          'customPrivate' => false
+        // Basic values for a input
+        $basicComponent = [
+            'input'       => true,
+            'tableView'   => true,
+            'inputMask'   => '',
+            'prefix'      => '',
+            'suffix'      => '',
+            'persistent'  => true,
+            'autofocus'   => false,
+            'hidden'      => false,
+            'clearOnHide' => true,
+            'spellCheck'  => false,
         ];
 
-        $component['type'] = $this->getAttributeInputType($attr);
+        // All attributes as inputs
+        foreach ($entity->getAttributes() as $attr) {
+            $component = $basicComponent;
 
-        $formIOArray['components'][] = $component;
-      }
+            $component['label'] = $attr->getName();
+            $component['key'] = $attr->getName();
+            $component['multiple'] = $attr->getMultiple();
+            $component['defaultValue'] = $attr->getDefaultValue() ?? '';
+            $component['placeholder'] = $attr->getExample() ?? '';
+            $component['unique'] = $attr->getMustBeUnique() ?? '';
 
-      // Submit button
-      $formIOArray['components'][] = [
-        'type' => 'button',
-        'theme' => 'primary',
-        'disableOnInvalid' => true,
-        'action' => 'submit',
-        'rightIcon' => '',
-        'leftIcon' => '',
-        'size' => 'md',
-        'key' => 'submit',
-        'tableView' => false,
-        'label' => 'Submit',
-        'input' => 'true'
-      ];
+            $component['validate'] = [
+                'required'      => $attr->getRequired() ?? false,
+                'minLength'     => $attr->getMinLength() ?? '',
+                'maxLength'     => $attr->getMaxLength() ?? '',
+                'pattern'       => '',
+                'custom'        => '',
+                'customPrivate' => false,
+            ];
 
-      $formIOArray['display'] = 'form';
-      $formIOArray['page'] = 0;
+            $component['type'] = $this->getAttributeInputType($attr);
 
-      return $formIOArray;
+            $formIOArray['components'][] = $component;
+        }
+
+        // Submit button
+        $formIOArray['components'][] = [
+            'type'             => 'button',
+            'theme'            => 'primary',
+            'disableOnInvalid' => true,
+            'action'           => 'submit',
+            'rightIcon'        => '',
+            'leftIcon'         => '',
+            'size'             => 'md',
+            'key'              => 'submit',
+            'tableView'        => false,
+            'label'            => 'Submit',
+            'input'            => 'true',
+        ];
+
+        $formIOArray['display'] = 'form';
+        $formIOArray['page'] = 0;
+
+        return $formIOArray;
     }
 
     private function getAttributeInputType($attr): string
     {
-      $type = 'text';
+        $type = 'text';
 
-      switch ($attr->getType()) {
-        case 'string': 
-        case 'date': 
+        switch ($attr->getType()) {
+        case 'string':
+        case 'date':
         case 'date-time':
           $type = 'textfield';
           break;
@@ -103,18 +100,18 @@ class FormIOService
           break;
       }
 
-      switch ($attr->getFormat()) {
-        case 'email': 
+        switch ($attr->getFormat()) {
+        case 'email':
           $type = 'email';
           break;
-        case 'phone': 
+        case 'phone':
           $type = 'tel';
           break;
-        case 'url': 
+        case 'url':
           $type = 'url';
           break;
       }
 
-      return $type;
+        return $type;
     }
 }
