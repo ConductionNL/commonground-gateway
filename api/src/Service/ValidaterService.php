@@ -171,8 +171,8 @@ class ValidaterService
                 if (empty($config) || $validation == 'required') {
                     continue;
                 }
-                var_dump($attribute->getName());
-                var_dump($validation);
+//                var_dump($attribute->getName());
+//                var_dump($validation);
                 // Only apply the rule if input is notEmpty, else skip rule (AlwaysValid).
                 $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->addValidationRule($attribute, $validation, $config), new Rules\AlwaysValid()));
             }
