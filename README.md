@@ -1,28 +1,52 @@
 # Commonground Gateway
+
 [![Documentation Status](https://readthedocs.org/projects/commonground-gateway/badge/?version=latest)](https://commonground-gateway.readthedocs.io/en/latest/?badge=latest)
 [![BCH compliance](https://bettercodehub.com/edge/badge/ConductionNL/commonground-gateway?branch=master)](https://bettercodehub.com/)
 
-## Quick start
+## Quickstart
+
+Clone this repository (green button ) or use it in the terminal
+
+```cli
+$ git clone https://github.com/ConductionNL/commonground-gateway
+
+cd commonground-gateway
+```
+
+To run the Commonground Gateway API - built and run as a container - you will need to have Docker
+installed on your machine. If you do not have Docker installed on your machine, please head to [Docker](https://docs.docker.com/get-started/) and choose the installation method for your device.
+
+Then, use the following command in your terminal:
+
+```cli
+$docker-compose up
+```
+
+This command will only build the container image needed to run the Commonground Gateway locally. You will also need to run the frontend part of the [Commonground Gateway](https://github.com/ConductionNL/commonground-gateway-frontend). EDIT: due to an update, running the frontend alone is sufficient. It has the gateway included.
 
 ## Documentation
-Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). An more product owner focused (and lesd tehcnical) product page is hosted at [](). 
 
-If you want to run the technical documantation localy you van do so by using MKDocs build in server and the serve command. Just go to the local reposiroty and execute the fowwing command for the documenation to be available on post 8000 (make sure to [instal MKDocs](mkdocs.org/user-guide/installation/) first)
+Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). A more product owner-focused (and less technical) product page can be found here [link to be added]().
+
+If you want to run the technical documentation locally, you can use MKDocs' build server, and the `mkdocs serve` command. Navigate to the local repository and execute the following command for the documentation to be available on `port 8000` (make sure to [install MKDocs](https://www.mkdocs.org/user-guide/installation/) first)
+
 ```cli
-$ mkdocs serve
+$mkdocs serve
 ```
 
-The (non-)technical product page is based on gatsby and can als be published localy, jsut navigate to the repostory and then to de docs directory. (make sure to [install gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on you machine first doh) 
+The (non-)technical product page is based on Gatsby and can also be published locally, head over to the repository, and then to the docs directory. (make sure to [install Gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on your machine first, though)
+
 ```cli
-$ cd /product-page
-$ gatsby develop
+$cd /product-page
+$gatsby develop
 ```
 
-Its is also posible to update the product page dicetly from the reposotry by running the pre-configures deploy command for the product-page direcotry, or 
+It's also possible to update the product page directly from the repository by running the pre-configured deploy command for the product-page directory, or
+
 ```cli
-$ cd /product-page
-$ npm run deploy
+cd /product-page
+npm run deploy
 ```
 
-## Updat
-      
+<!--
+## Update -->
