@@ -6,9 +6,6 @@ use App\Entity\Entity;
 
 class FormIOService
 {
-    public function __construct(
-    ) {
-    }
 
     /**
      * This function creates a form.io array for rendering forms in front-ends from a entity and its attributes.
