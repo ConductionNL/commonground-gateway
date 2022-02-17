@@ -4,5 +4,5 @@ version: 2
 formats: all
 
 mkdocs:
-    configuration: mkdocs.yml
+    configuration: /redoc/mkdocs.yml
     fail_on_warning: false
