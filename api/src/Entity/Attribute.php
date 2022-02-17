@@ -1152,13 +1152,13 @@ class Attribute
         $validations['maxProperties'] = $this->getMaxProperties();
         $validations['minProperties'] = $this->getMinProperties();
         $validations['required'] = $this->getRequired();
-        $validations['enum'] = $this->getEnum();
-        $validations['allOf'] = $this->getAllOf();
-        $validations['anyOf'] = $this->getAnyOf();
-        $validations['oneOf'] = $this->getOneOf();
-        $validations['defaultValue'] = $this->getDefaultValue();
+        $validations['enum'] = $this->getEnum(); //todo: validation/BL toevoegen
+        $validations['allOf'] = $this->getAllOf(); //todo: validation/BL toevoegen
+        $validations['anyOf'] = $this->getAnyOf(); //todo: validation/BL toevoegen
+        $validations['oneOf'] = $this->getOneOf(); //todo: validation/BL toevoegen
+        $validations['defaultValue'] = $this->getDefaultValue(); //todo: validation/BL toevoegen
         $validations['nullable'] = $this->getNullable();
-        $validations['mustBeUnique'] = $this->getMustBeUnique();
+        $validations['mustBeUnique'] = $this->getMustBeUnique(); //todo: validation/BL toevoegen
         $validations['maxDate'] = $this->getMaxDate();
         $validations['minDate'] = $this->getMinDate();
 

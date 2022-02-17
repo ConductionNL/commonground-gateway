@@ -101,6 +101,8 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@person"
+        enum: ["de", "het", "van", "von", "van de", "van der", "van het", "den", "ter", "te", "ten"]
+        nullable: true
     person_familyName:
         name: familyName
         type: string

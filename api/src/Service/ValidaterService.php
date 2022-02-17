@@ -168,7 +168,7 @@ class ValidaterService
             } else {
                 // if we have no config or validation config == false continue without adding a new Rule.
                 // And validation required is not done through the addValidationRule function!
-                if (empty($config) || $validation == 'required') {
+                if (empty($config) || $validation == 'required' || $validation == 'nullable') {
                     continue;
                 }
 //                var_dump($attribute->getName());
@@ -184,6 +184,8 @@ class ValidaterService
     private function addValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
         switch ($validation) {
+            case 'enum':
+                return new Rules\In($config);
             case 'multipleOf':
                 return new Rules\Multiple($config);
             case 'maximum':
