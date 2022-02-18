@@ -4,11 +4,33 @@ The web gateway is designed as a feature-rich solution to quickly developing Pro
 
 ## Sources
 
-Sources form the beating heart of the gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web gateway. Adding an API as a source WILL NOT leave that API exposed. API’s might be added manually through discovery. Discovery methods currently on the roadmap are NLX, Autorisatie Component, and Generic Kubernetes services.
+Sources form the beating heart of the gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web gateway.
 
+Adding an API as a source WILL NOT leave that API exposed. API’s might be added manually through discovery. Discovery methods currently on the roadmap are NLX, Autorisatie Component, and Generic Kubernetes services.
+
+Here is where you can configure access and communicate with those sources. You can create new sources or update existing ones.
+
+The fields with \* are mandatory. Special mention to the documentation field where you can specify the URL to your API documentation. Recommended for working in developers working in teams.
+
+```json
 Properties
 _name_:
-_description_
+_location_:
+_type_:
+_accept_:
+_locale_:
+_auth_:
+_jwt_:
+_jwtid_:
+_secret_:
+_apikey_:
+_documentation_:
+_authorizationHeader_:
+_userName_:
+_password_:
+```
+
+You can add additional header specification, OAS and paths below.
 
 ## Authentication
 
@@ -68,12 +90,12 @@ The web gateway supports two different approaches to pagination, allowing the de
 
 ```json
 {
-	“results”: .. ,#array containing 125 items
-	“total”:125
-	“start”:1,
-	“limit”:25,
-	“page”:1
-	“pages”:5
+ “results”: .. ,#array containing 125 items
+ “total”:125
+ “start”:1,
+ “limit”:25,
+ “page”:1
+ “pages”:5
 }
 ```
 
@@ -81,12 +103,12 @@ Let's say you are displaying the data in a table and want more results to begin 
 
 ```json
 {
-	“results”: .. , #array containing 100 items
-	“total”:125
-	“start”:1,
-	“limit”:100,
-	“page”:1
-	“pages”:2
+ “results”: .. , #array containing 100 items
+ “total”:125
+ “start”:1,
+ “limit”:100,
+ “page”:1
+ “pages”:2
 }
 ```
 
@@ -94,12 +116,12 @@ You can now provide pagination buttons to your users based directly on the pages
 
 ```json
 {
-	“results”: .. , #array containing 25 items
-	“total”:125
-	“start”:101,
-	“limit”:100,
-	“page”:2
-	“pages”:2
+ “results”: .. , #array containing 25 items
+ “total”:125
+ “start”:101,
+ “limit”:100,
+ “page”:2
+ “pages”:2
 }
 ```
 
