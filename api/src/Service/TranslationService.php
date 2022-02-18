@@ -62,7 +62,12 @@ class TranslationService
                 $format = trim($searches[1]);
             }
             if (!isset($format) || $format == 'string') {
-                $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
+                if (isset($source[$search]) && !is_string($source[$search])) {
+                    // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
+                    $destination[$replace] = $source[$search];
+                } else {
+                    $destination[$replace] = $source[$search] ?? ((string) $destination[$replace]) ?? null;
+                }
                 unset($destination[$search]);
             } elseif ($format == 'json') {
                 $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;
@@ -95,6 +100,7 @@ class TranslationService
      */
     public function generalVariables(): array
     {
+        // todo Caching
         $faker = \Faker\Factory::create();
         $now = new DateTime();
 
@@ -177,7 +183,6 @@ class TranslationService
         string $escapeChar = '@',
         string $errPlaceholder = null
     ) {
-
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
             foreach ($subject as $key => $value) {

@@ -2,15 +2,18 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
+use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -23,6 +26,7 @@ class HandlerService
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
+    private SessionInterface $session;
     private FormIOService $formIOService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
@@ -55,6 +59,7 @@ class HandlerService
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
+        SessionInterface $session,
         FormIOService $formIOService
     ) {
         $this->entityManager = $entityManager;
@@ -68,6 +73,7 @@ class HandlerService
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService;
+        $this->session = $session;
         $this->formIOService = $formIOService;
     }
 
@@ -146,8 +152,56 @@ class HandlerService
             $this->logService->saveLog($this->request, null, json_encode($data));
         }
 
-        // eav new way
-        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        //todo: -start- old code...
+        //TODO: old code for application creation, used for old way of creating ObjectEntity, needed for getObject function
+
+        // Get the application by searching for an application with a domain that matches the host of this request
+        $host = $this->request->headers->get('host');
+//        var_dump($host);
+        $applications = $this->entityManager->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+        if (count($applications) > 0) {
+//            var_dump(count($applications));
+            $this->session->set('application', $applications[0]);
+        } else {
+            //            var_dump('no application found');
+            if ($host == 'localhost') {
+                $localhostApplication = new Application();
+                $localhostApplication->setName('localhost');
+                $localhostApplication->setDescription('localhost application');
+                $localhostApplication->setDomains(['localhost']);
+                $localhostApplication->setPublic('');
+                $localhostApplication->setSecret('');
+                $localhostApplication->setOrganization('localhostOrganization');
+                $this->entityManager->persist($localhostApplication);
+                $this->entityManager->flush();
+                $this->session->set('application', $localhostApplication);
+//                var_dump('Created Localhost Application');
+            } else {
+                $this->session->set('application', null);
+                $responseType = Response::HTTP_FORBIDDEN;
+                $result = [
+                    'message' => 'No application found with domain '.$host,
+                    'type'    => 'Forbidden',
+                    'path'    => $host,
+                    'data'    => ['host' => $host],
+                ];
+            }
+        }
+
+        $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
+        $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+        if ($method == 'GET') {
+            //TODO: old code for getting an ObjectEntity
+            $data = $this->eavService->handleGet($object, null);
+        } else {
+            //todo: -end- old code...
+
+            // eav new way
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        }
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
@@ -156,6 +210,20 @@ class HandlerService
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
+
+            //todo: -start- old code...
+
+            //TODO: old code for creating or updating an ObjectEntity
+            if ($method == 'POST' || $method == 'PUT') {
+//                var_dump('Old validation & object creation start');
+                $this->validationService->setRequest($this->request);
+                $object = $this->validationService->validateEntity($object, $data);
+                $this->entityManager->persist($object);
+                $this->entityManager->flush();
+                $data['id'] = $object->getId()->toString();
+//                var_dump('Old validation & object creation end');
+            }
+            //todo: -end- old code...
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));

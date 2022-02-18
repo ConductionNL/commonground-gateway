@@ -1,10 +1,21 @@
-# todo: NOTE: When changing this .yaml from dev to stag or acc. Don't forget to change the organization_parentOrganization defaultValue!!!
 App\Entity\Endpoint:
     weerEndpoint:
-        name: Weer handler
+        name: Weer endpoint
         description: endpoint voor dingen rondom weer
         type: gateway-endpoint
         path: weer
+        
+    peopleEndpoint:
+        name: People endpoint
+        description: endpoint voor dingen rondom contactgegevens
+        type: gateway-endpoint
+        path: people
+        
+    emailEndpoint:
+        name: Email endpoint
+        description: endpoint voor dingen rondom emails
+        type: gateway-endpoint
+        path: emails
 
 App\Entity\Entity:
     weekWeather:
@@ -12,8 +23,22 @@ App\Entity\Entity:
         name: weer
         description: Dit endpoint behandeld weer.
         endpoint: "weer"
+        
+    # This does not work with bisc.yaml
+    person:
+        route: "/api/people"
+        name: persons
+        description: Dit endpoint behandeld contactgegevens.
+        endpoint: "people"
+        
+    email:
+        route: "/api/emails"
+        name: email
+        description: Dit endpoint behandeld emails.
+        endpoint: "emails"
 
 App\Entity\Attribute:
+    # weekWeather Attributes
     weekWeather_monday:
         name: monday
         description: Weather of this day.
@@ -63,6 +88,56 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         entity: "@weekWeather"
+        
+    # person Attributes
+    person_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: "@person"
+    person_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: "@person"
+        enum: ["de", "het", "van", "von", "van de", "van der", "van het", "den", "ter", "te", "ten"]
+        nullable: true
+    person_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: "@person"
+        required: true
+    person_email:
+        name: emails
+        type: object
+        multiple: true
+        entity: "@person"
+        object: "@email"
+#        cascade: true #todo: test it
+#        cascadeDelete: true #todo: test it
+    person_birthday:
+        name: birthday
+        type: date
+        nullable: true
+        minDate: "2022-02-10"
+        entity: "@person"
+        
+    # email Attributes
+    email_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@email"
+    email_email:
+        name: email
+        type: string
+        maxLength: 255
+        required: true
+        format: email
+#        mustBeUnique: true #todo: test it
+        entity: "@email"
 
 App\Entity\Handler:
     weatherHandler:
@@ -91,6 +166,18 @@ App\Entity\Handler:
         # Denormalizer throws error trying denormalize template (set with api call for now)
         # template: "<html><body><h1>Test</h1></body></html>"
         # templateType: twig
+        
+    peopleHandler:
+        name: People handler
+        sequence: 0
+        endpoint: "@peopleEndpoint"
+        entity: "@person"
+        
+    emailHandler:
+        name: Email handler
+        sequence: 0
+        endpoint: "@emailEndpoint"
+        entity: "@email"
 
 App\Entity\Translation:
     regenTranslation:
