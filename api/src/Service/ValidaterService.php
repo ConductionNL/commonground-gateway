@@ -26,12 +26,14 @@ class ValidaterService
     }
 
     /**
-     * Validates an array with data using the Validator for the given Entity
+     * Validates an array with data using the Validator for the given Entity.
      *
-     * @param array $data
+     * @param array  $data
      * @param Entity $entity
-     * @return string[]|void
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return string[]|void
      */
     public function validateData(array $data, Entity $entity)
     {
@@ -50,9 +52,11 @@ class ValidaterService
      * Gets a Validator for the given Entity, uses caching.
      *
      * @param Entity $entity
-     * @return Validator
+     *
      * @throws CacheException
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function getEntityValidator(Entity $entity): Validator
     {
@@ -77,10 +81,12 @@ class ValidaterService
     /**
      * Adds Attribute Validators to an Entity Validator.
      *
-     * @param Entity $entity
+     * @param Entity    $entity
      * @param Validator $validator
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
@@ -97,8 +103,10 @@ class ValidaterService
      * Gets a Validator for the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function getAttributeValidator(Attribute $attribute): Validator
     {
@@ -111,8 +119,10 @@ class ValidaterService
      * Checks if the attribute is nullable and adds the correct Rules for this if needed.
      *
      * @param Attribute $attribute
-     * @return Rules\AbstractRule
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Rules\AbstractRule
      */
     private function checkIfAttNullable(Attribute $attribute): Rules\AbstractRule
     {
@@ -121,6 +131,7 @@ class ValidaterService
             // When works like this: When(IF, TRUE, FALSE)
             return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute), new Rules\AlwaysValid());
         }
+
         return $this->checkIfAttMultiple($attribute);
     }
 
@@ -128,8 +139,10 @@ class ValidaterService
      * Checks if the attribute is an array (multiple) and adds the correct Rules for this if needed.
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function checkIfAttMultiple(Attribute $attribute): Validator
     {
@@ -143,8 +156,10 @@ class ValidaterService
             if ($attribute->getValidations()['uniqueItems'] === true) {
                 $multipleValidator->addRule(new Rules\Unique());
             }
+
             return $multipleValidator;
         }
+
         return $attributeRulesValidator;
     }
 
@@ -152,8 +167,10 @@ class ValidaterService
      * Gets all (other) validation, format and type Rules for the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function getAttributeRules(Attribute $attribute): Validator
     {
@@ -177,8 +194,10 @@ class ValidaterService
      * Gets the correct Rule(s) for the type of the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Rules\AbstractRule
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Rules\AbstractRule
      */
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -206,6 +225,7 @@ class ValidaterService
                 // Add object (/subresource) validations
                 $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth... ?
                 $objectValidator->AddRule($subresourceValidator);
+
                 return $objectValidator;
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
@@ -216,8 +236,10 @@ class ValidaterService
      * Gets the correct Rule for the format of the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Rules\AbstractRule
+     *
      * @throws GatewayException
+     *
+     * @return Rules\AbstractRule
      */
     private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -253,8 +275,10 @@ class ValidaterService
      *
      * @param Attribute $attribute
      * @param Validator $attributeRulesValidator
-     * @return Validator
+     *
      * @throws GatewayException|ComponentException
+     *
+     * @return Validator
      */
     private function addValidationRules(Attribute $attribute, Validator $attributeRulesValidator): Validator
     {
@@ -278,8 +302,10 @@ class ValidaterService
      * @param Attribute $attribute
      * @param $validation
      * @param $config
-     * @return Rules\AbstractRule|null
+     *
      * @throws ComponentException|GatewayException
+     *
+     * @return Rules\AbstractRule|null
      */
     private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
