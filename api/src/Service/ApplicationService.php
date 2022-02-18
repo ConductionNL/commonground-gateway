@@ -95,6 +95,8 @@ class ApplicationService
         $this->entityManager->persist($application);
         $this->entityManager->flush();
 
+        $this->session->set('application', $application);
+
         return $application;
     }
 }
