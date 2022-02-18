@@ -215,6 +215,7 @@ class HandlerService
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
+                $data['validationServiceErrors'] = $object->getAllErrors();
 //                var_dump('Old validation & object creation end');
             }
             //todo: -end- old code...
