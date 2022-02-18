@@ -4,27 +4,33 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
+use App\Exception\GatewayException;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
+use Sabberworm\CSS\Rule\Rule;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class ValidaterService
 {
+    public CacheInterface $cache;
+
     public function __construct(
+        CacheInterface $cache,
         EntityManagerInterface $entityManager
     ) {
+        $this->cache = $cache;
         $this->entityManager = $entityManager;
     }
 
-    public function validateData(array $data, Entity $entity, string $method)
+    public function validateData(array $data, Entity $entity)
     {
-        $validator = new Validator();
-        // @todo if monday is posted as 5 (int) it still is a string here....
-        // dump(is_int($data['monday']));
-        // $data['monday'] = 5;
-        $validator = $this->addAttributeValidators($validator, $entity, $method);
+        $validator = $this->getEntityValidator($entity);
+
+        // TODO: what if we have fields in $data that do not exist on this Entity?
 
         try {
             $validator->assert($data);
@@ -33,228 +39,231 @@ class ValidaterService
         }
     }
 
-    private function addAttributeValidators(Validator $validator, Entity $entity, string $method): Validator
+    private function getEntityValidator(Entity $entity): Validator
+    {
+        // Get validator for this Entity from cache.
+        $item = $this->cache->getItem('entityValidators_'.$entity->getId());
+        if ($item->isHit()) {
+//            return $item->get(); // TODO: put this back so we can use caching
+        }
+
+        // No Validator cached for this Entity, so create a new Validator and cache it.
+        $validator = new Validator();
+        $validator = $this->addAttributeValidators($entity, $validator);
+
+        $item->set($validator);
+        $item->tag('entityValidator');
+
+        $this->cache->save($item);
+
+        return $validator;
+    }
+
+    private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            $attributeValidator = new Validator();
-            // Add rule for type
-            $attribute->getType() !== null && $attributeValidator->AddRule($this->getAttTypeRule($attribute->getType()));
-            // Add rules for valdiations
-            // $attribute->getValidations !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+            $attributeValidator = $this->getAttributeValidator($attribute);
 
-            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator));
+            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator, $attribute->getValidations()['required'] === true)); // mandatory = required
         }
 
         return $validator;
+    }
+
+    private function getAttributeValidator(Attribute $attribute): Validator
+    {
+        // note: When multiple rules are broken and somehow only one error is returned for one of the two rules, only the last added rule will be shown in the error message.
+        // ^this is why the rules in this function are added in the current order. Subresources->Validations->Format->Type
+        $attributeValidator = new Validator();
+
+        // Add object (/subresource) validations
+        if ($attribute->getType() == 'object') {
+            $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth...
+            if ($attribute->getMultiple()) {
+                $attributeValidator->addRule(new Rules\Each($subresourceValidator));
+            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
+            } else {
+                $attributeValidator->AddRule($subresourceValidator);
+            }
+        }
+
+        // Add rules for validations
+        $attribute->getValidations() !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+
+        // Add rule for format, but only if input is not empty.
+        $attribute->getFormat() !== null && $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->getAttFormatRule($attribute), new Rules\AlwaysValid()));
+
+        // Add rule for type, but only if input is not empty.
+        $attribute->getType() !== null && $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->getAttTypeRule($attribute), new Rules\AlwaysValid()));
+
+        return $attributeValidator;
+    }
+
+    private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
+    {
+        switch ($attribute->getType()) {
+            case 'string':
+            case 'text':
+                return new Rules\StringType();
+            case 'integer':
+            case 'int':
+                return new Rules\IntType();
+            case 'float':
+                return new Rules\FloatType();
+            case 'number':
+                return new Rules\Number();
+            case 'date':
+                return new Rules\Date();
+            case 'datetime':
+                return new Rules\DateTime();
+            case 'file':
+                return new Rules\File(); // todo: this is probably incorrect
+            case 'object':
+                if ($attribute->getMultiple()) {
+                    // Make sure this is an array of objects, multidimensional array
+                    return new Rules\Each(new Rules\ArrayType());
+                }
+
+                return new Rules\ArrayType();
+            default:
+                throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+        }
+    }
+
+    private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
+    {
+        $format = $attribute->getFormat();
+
+        // Let be a bit compassionate and compatible
+        $format = str_replace(['telephone'], ['phone'], $format);
+
+        switch ($format) {
+            case 'countryCode':
+                return new Rules\CountryCode();
+            case 'bsn':
+                return new Rules\Bsn();
+            case 'url':
+                return new Rules\Url();
+            case 'uuid':
+                return new Rules\Uuid();
+            case 'email':
+                return new Rules\Email();
+            case 'phone':
+                return new Rules\Phone();
+            case 'json':
+                return new Rules\Json();
+            case 'dutch_pc4':
+                // TODO
+            default:
+                throw new GatewayException('Unknown attribute format!', null, null, ['data' => $format, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+        }
     }
 
     private function addValidationRules(Attribute $attribute, Validator $attributeValidator): Validator
     {
-        $validations = $attribute->getValidations();
-        foreach ($validations as $validation => $config) {
-            switch ($validation) {
-                case 'multipleOf':
-                    $attributeValidator->AddRule(new Rules\Multiple($config));
-                case 'maximum':
-                case 'exclusiveMaximum': // doet niks
-                case 'minimum':
-                case 'exclusiveMinimum': // doet niks
-                    $attributeValidator->AddRule(new Rules\Between($validations['minimum'] ?? null, $validations['maximum'] ?? null));
-                    break;
-                case 'minLength':
-                case 'maxLength':
-                    $attributeValidator->AddRule(new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null));
-                    break;
-                case 'maxItems':
-                case 'minItems':
-                    $attributeValidator->AddRule(new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null));
-                    break;
-                case 'uniqueItems':
-                    $attributeValidator->AddRule(new Rules\Unique());
-                case 'maxProperties':
-                case 'minProperties':
-                    $attributeValidator->AddRule(new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null));
-                case 'minDate':
-                case 'maxDate':
-                    $attributeValidator->AddRule(new Rules\Length(new DateTime($validations['minDate'] ?? null) ?? null, new DateTime($validations['maxDate'] ?? null) ?? null));
-                    break;
-                case 'maxFileSize':
-                case 'fileType':
-                    // @TODO
-                    break;
-                case 'required':
-                    $attributeValidator->AddRule(new Rules\Not(Validator::notEmpty()));
-                    break;
-                case 'forbidden':
-                    $attributeValidator->AddRule(new Rules\Not(Validator::notEmpty()));
-                    break;
-                // case 'conditionals':
-                //     /// here we go
-                //     foreach ($config as $con) {
-                //         // Lets check if the referenced value is present
-                //         /* @tdo this isnt array proof */
-                //         if ($conValue = $objectEntity->getValueByName($con['property'])->value) {
-                //             switch ($con['condition']) {
-                //                 case '==':
-                //                     if ($conValue == $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //                 case '!=':
-                //                     if ($conValue != $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //                 case '<=':
-                //                     if ($conValue <= $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //                 case '>=':
-                //                     if ($conValue >= $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //                 case '>':
-                //                     if ($conValue > $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //                 case '<':
-                //                     if ($conValue < $con['value']) {
-                //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
-                //                     }
-                //                     break;
-                //             }
-                //         }
-                //     }
-                //     break;
-                default:
-                    // we should never end up here
-                    //$objectEntity->addError($attribute->getName(),'Has an an unknown validation: [' . (string) $validation . '] set to'. (string) $config);
+        // todo; testen en uitbreiden
+        foreach ($attribute->getValidations() as $validation => $config) {
+            // If attribute can not be null add NotEmpty rule
+            if ($attribute->getValidations()['nullable'] !== true) { //todo: something about defaultValue
+                $attributeValidator->AddRule(new Rules\NotEmpty());
+            } else {
+                // if we have no config or validation config == false continue without adding a new Rule.
+                // And validation required is not done through the addValidationRule function!
+                if (empty($config) || $validation == 'required' || $validation == 'nullable') {
+                    continue;
+                }
+//                var_dump($attribute->getName());
+//                var_dump($validation);
+                // Only apply the rule if input is notEmpty, else skip rule (AlwaysValid).
+                $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->addValidationRule($attribute, $validation, $config), new Rules\AlwaysValid()));
             }
         }
 
-        return $validator;
+        return $attributeValidator;
     }
 
-    private function getAttTypeRule($type)
+    private function addValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
-        switch ($type) {
-            case 'string':
-            case 'text':
-                return new Rules\StringType();
+        switch ($validation) {
+            case 'enum':
+                return new Rules\In($config);
+            case 'multipleOf':
+                return new Rules\Multiple($config);
+            case 'maximum':
+                return new Rules\Max($config);
+            case 'exclusiveMaximum':
+                return new Rules\LessThan($config);
+            case 'minimum':
+                return new Rules\Min($config);
+            case 'exclusiveMinimum':
+                return new Rules\GreaterThan($config);
+            case 'minLength':
+            case 'maxLength':
+                return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
+            case 'maxItems':
+            case 'minItems':
+                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
+            case 'uniqueItems':
+                return new Rules\Unique();
+            case 'maxProperties':
+            case 'minProperties':
+                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
+            case 'minDate':
+                return new Rules\Min(new DateTime($config));
+            case 'maxDate':
+                return new Rules\Max(new DateTime($config));
+            case 'maxFileSize':
+            case 'fileType':
+                // @TODO
                 break;
-            case 'integer':
-            case 'int':
-                return new Rules\IntType();
-                break;
-            case 'float':
-                return new Rules\FloatType();
-                break;
-            case 'number':
-                return new Rules\Number();
-                break;
-            case 'datetime':
-                return new Rules\DateTime();
-                break;
-            case 'file':
-                return new Rules\File();
-                break;
-            case 'object':
-                return new Rules\ObjectType();
-                break;
+            case 'forbidden':
+                return new Rules\Not(Validator::notEmpty());
+            // case 'conditionals':
+            //     /// here we go
+            //     foreach ($config as $con) {
+            //         // Lets check if the referenced value is present
+            //         /* @tdo this isnt array proof */
+            //         if ($conValue = $objectEntity->getValueByName($con['property'])->value) {
+            //             switch ($con['condition']) {
+            //                 case '==':
+            //                     if ($conValue == $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //                 case '!=':
+            //                     if ($conValue != $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //                 case '<=':
+            //                     if ($conValue <= $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //                 case '>=':
+            //                     if ($conValue >= $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //                 case '>':
+            //                     if ($conValue > $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //                 case '<':
+            //                     if ($conValue < $con['value']) {
+            //                         $validator = $this->validateValue($objectEntity, $value, $con['validations'], $validator);
+            //                     }
+            //                     break;
+            //             }
+            //         }
+            //     }
+            //     break;
             default:
-        }
-    }
-
-    private function createEntityValidator(array $data, Entity $entity, string $method, Validator $validator)
-    {
-        // Lets validate each attribute
-        foreach ($entity->getAttributes() as $attribute) {
-            // fallback for empty data
-            !array_key_exists($attribute->getName(), $data) && $data[$attribute->getName()] = null;
-
-            $validator->key($attribute->getName(), $this->createAttributeEntityValidator($data, $attribute, $method, $validator));
-            //
-            // Lets clean it up
-            unset($data[$attribute->getName()]);
+                // we should never end up here
+                throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 
-        // Lets see if we have attributes that should not be here (if we haven’t cleaned it up it isn’t an attribute)
-        foreach ($data as $key => $value) {
-            $validator->key(
-                $key,
-            /** custom not allowed validator*/
-            );
-        }
-
-        return $validator;
-    }
-
-    private function createAttributeEntityValidator(array $data, Attribute $attribute, string $method, Validator $validator)
-    {
-        // if this is an entity we can skip al this
-        if ($attribute->getType() === 'object' || $attribute->getType() === null) {
-            // @todo maybe error?
-            return $validator;
-        }
-
-        // Validate type
-        // kijk naar de huidige validations service on validateType()
-
-        // Let be a bit compasionate and compatable
-        $type = str_replace(['integer', 'boolean', 'text'], ['int', 'bool', 'string'], $attribute->getType());
-        // In order not to allow any respect/validation function to be called we explicatly call those containing formats
-        $basicTypes = ['bool', 'string', 'int', 'array', 'float'];
-        // new route
-        if (in_array($type, $basicTypes)) {
-            $validator->type($type);
-        } else {
-            // The are some uncoverd types so we will have to add those manualy
-            switch ($type) {
-                case 'date':
-                    $validator->date();
-                    break;
-                case 'datetime':
-                    $validator->dateTime();
-                    break;
-                case 'number':
-                    $validator->numericVal();
-                    break;
-                case 'object':
-                    // We dont validate an object normaly but hand it over to its own validator
-                    $this->validate($data[$attribute->getName()]);
-                    break;
-                default:
-                    // we should never end up here
-                    /* @todo throw an custom error */
-            }
-        }
-
-        // Validate format
-        // kijk naar de huidige validations service on validateType()
-
-        // Besides the type and format there could be other validations (like minimal datetime, requered etc)
-        foreach ($attribute->getValidations() as $key => $value) {
-            switch ($key) {
-                    // first we need to do of casses (anything not natively supported by validator or requiring additional logic)
-                case 'jsonlogic':
-                    // code to be executed if n=label1;
-                    break;
-                case 'postalcode':
-                    // code to be executed if n=label2;
-                    break;
-                case 'label3':
-                    // code to be executed if n=label3;
-                    break;
-                    // what is then left is the generic stuff
-                default:
-                    // we should not end up here…
-                    // @todo throw error
-            }
-        }
-
-        return $validator;
+        return new Rules\NotEmpty();
     }
 }
