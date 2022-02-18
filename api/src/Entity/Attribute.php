@@ -325,7 +325,7 @@ class Attribute
     private $enum = [];
 
     /**
-     * @var array *mutually exclusive with using type* An array of possible types that an property should confirm to]
+     * @var array *mutually exclusive with using type* An array of possible types that an property should confirm to
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
@@ -333,7 +333,7 @@ class Attribute
     private $allOf = [];
 
     /**
-     * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to]
+     * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
@@ -341,7 +341,7 @@ class Attribute
     private $anyOf = [];
 
     /**
-     * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to]
+     * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
@@ -1161,6 +1161,7 @@ class Attribute
         $validations['mustBeUnique'] = $this->getMustBeUnique(); //todo: validation/BL toevoegen
         $validations['maxDate'] = $this->getMaxDate();
         $validations['minDate'] = $this->getMinDate();
+        $validations['multiple'] = $this->getMultiple();
 
         return $validations;
     }
@@ -1233,6 +1234,9 @@ class Attribute
         }
         if (array_key_exists('minDate', $validations)) {
             $this->setMinDate($validations['minDate']);
+        }
+        if (array_key_exists('multiple', $validations)) {
+            $this->setMultiple($validations['multiple']);
         }
 
         return $this;
