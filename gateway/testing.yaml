@@ -2,19 +2,16 @@ App\Entity\Endpoint:
     weerEndpoint:
         name: Weer endpoint
         description: endpoint voor dingen rondom weer
-        type: gateway-endpoint
         path: weer
         
     peopleEndpoint:
         name: People endpoint
         description: endpoint voor dingen rondom contactgegevens
-        type: gateway-endpoint
         path: people
         
     emailEndpoint:
         name: Email endpoint
         description: endpoint voor dingen rondom emails
-        type: gateway-endpoint
         path: emails
 
 App\Entity\Entity:
