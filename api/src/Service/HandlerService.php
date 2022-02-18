@@ -167,11 +167,11 @@ class HandlerService
             $this->session->set('application', $applications[0]);
         } else {
             //            var_dump('no application found');
-            if ($host == 'localhost') {
+            if (str_contains($host, 'localhost')) {
                 $localhostApplication = new Application();
                 $localhostApplication->setName('localhost');
                 $localhostApplication->setDescription('localhost application');
-                $localhostApplication->setDomains(['localhost']);
+                $localhostApplication->setDomains([$host]);
                 $localhostApplication->setPublic('');
                 $localhostApplication->setSecret('');
                 $localhostApplication->setOrganization('localhostOrganization');
