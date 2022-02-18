@@ -327,10 +327,10 @@ class ValidaterService
                 return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
             case 'maxItems':
             case 'minItems':
-                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
+                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null); // todo: merge this with min/maxlength?
             case 'maxProperties':
             case 'minProperties':
-                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
+                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null); // todo: merge this with min/maxlength?
             case 'minDate':
                 return new Rules\Min(new DateTime($config));
             case 'maxDate':
