@@ -6,11 +6,12 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Exception\GatewayException;
 use DateTime;
-use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
-use Sabberworm\CSS\Rule\Rule;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -19,13 +20,19 @@ class ValidaterService
     public CacheInterface $cache;
 
     public function __construct(
-        CacheInterface $cache,
-        EntityManagerInterface $entityManager
+        CacheInterface $cache
     ) {
         $this->cache = $cache;
-        $this->entityManager = $entityManager;
     }
 
+    /**
+     * Validates an array with data using the Validator for the given Entity
+     *
+     * @param array $data
+     * @param Entity $entity
+     * @return string[]|void
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     public function validateData(array $data, Entity $entity)
     {
         $validator = $this->getEntityValidator($entity);
@@ -39,6 +46,14 @@ class ValidaterService
         }
     }
 
+    /**
+     * Gets a Validator for the given Entity, uses caching.
+     *
+     * @param Entity $entity
+     * @return Validator
+     * @throws CacheException
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function getEntityValidator(Entity $entity): Validator
     {
         // Get validator for this Entity from cache.
@@ -59,6 +74,14 @@ class ValidaterService
         return $validator;
     }
 
+    /**
+     * Adds Attribute Validators to an Entity Validator.
+     *
+     * @param Entity $entity
+     * @param Validator $validator
+     * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
@@ -71,10 +94,11 @@ class ValidaterService
     }
 
     /**
-     * Function that always returns a Validator for an Attribute
+     * Gets a Validator for the given Attribute.
      *
      * @param Attribute $attribute
      * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      */
     private function getAttributeValidator(Attribute $attribute): Validator
     {
@@ -83,6 +107,13 @@ class ValidaterService
         return $attributeValidator->addRule($this->checkIfAttNullable($attribute));
     }
 
+    /**
+     * Checks if the attribute is nullable and adds the correct Rules for this if needed.
+     *
+     * @param Attribute $attribute
+     * @return Rules\AbstractRule
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function checkIfAttNullable(Attribute $attribute): Rules\AbstractRule
     {
         // Check if this attribute can be null
@@ -93,22 +124,37 @@ class ValidaterService
         return $this->checkIfAttMultiple($attribute);
     }
 
+    /**
+     * Checks if the attribute is an array (multiple) and adds the correct Rules for this if needed.
+     *
+     * @param Attribute $attribute
+     * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function checkIfAttMultiple(Attribute $attribute): Validator
     {
         // Get all validations for this attribute
-        $attributeValidator = $this->getAttributeRules($attribute);
+        $attributeRulesValidator = $this->getAttributeRules($attribute);
 
+        // Check if this attribute is an array
         if ($attribute->getValidations()['multiple'] === true) {
             $multipleValidator = new Validator();
-            $multipleValidator->addRule(new Rules\Each($attributeValidator));
+            $multipleValidator->addRule(new Rules\Each($attributeRulesValidator));
             if ($attribute->getValidations()['uniqueItems'] === true) {
                 $multipleValidator->addRule(new Rules\Unique());
             }
             return $multipleValidator;
         }
-        return $attributeValidator;
+        return $attributeRulesValidator;
     }
 
+    /**
+     * Gets all (other) validation, format and type Rules for the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function getAttributeRules(Attribute $attribute): Validator
     {
         // note: When multiple rules are broken and somehow only one error is returned for one of the two rules, only the last added rule will be shown in the error message.
@@ -127,6 +173,13 @@ class ValidaterService
         return $attributeRulesValidator;
     }
 
+    /**
+     * Gets the correct Rule(s) for the type of the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @return Rules\AbstractRule
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
         switch ($attribute->getType()) {
@@ -159,6 +212,13 @@ class ValidaterService
         }
     }
 
+    /**
+     * Gets the correct Rule for the format of the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @return Rules\AbstractRule
+     * @throws GatewayException
+     */
     private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
     {
         $format = $attribute->getFormat();
@@ -188,6 +248,14 @@ class ValidaterService
         }
     }
 
+    /**
+     * Adds the correct Rules for (almost) all the validations of the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @param Validator $attributeRulesValidator
+     * @return Validator
+     * @throws GatewayException|ComponentException
+     */
     private function addValidationRules(Attribute $attribute, Validator $attributeRulesValidator): Validator
     {
         foreach ($attribute->getValidations() as $validation => $config) {
@@ -198,13 +266,22 @@ class ValidaterService
             }
 //            var_dump($attribute->getName());
 //            var_dump($validation);
-            $attributeRulesValidator->AddRule($this->addValidationRule($attribute, $validation, $config));
+            $attributeRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
         }
 
         return $attributeRulesValidator;
     }
 
-    private function addValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
+    /**
+     * Gets the correct Rule for a specific validation of the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @param $validation
+     * @param $config
+     * @return Rules\AbstractRule|null
+     * @throws ComponentException|GatewayException
+     */
+    private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
         switch ($validation) {
             case 'enum':
@@ -284,6 +361,6 @@ class ValidaterService
                 throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 
-        return new Rules\NotEmpty();
+        return null;
     }
 }
