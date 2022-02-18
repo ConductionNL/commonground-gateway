@@ -247,6 +247,15 @@ class Entity
      */
     private Collection $handlers;
 
+    /**
+     * @var string|null The name of the table containing this entity in the database
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=127, nullable=true)
+     *
+     * @TODO: Length and allowable words depend on the kind of database. Validation has to be done according to the chosen data warehouse
+     */
+    private ?string $tableName = null;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -742,5 +751,17 @@ class Entity
         }
 
         return $this;
+    }
+
+    public function setTableName(?string $tableName): self
+    {
+        $this->tableName = $tableName;
+
+        return $this;
+    }
+
+    public function getTableName(): ?string
+    {
+        return $this->tableName;
     }
 }

@@ -42,3 +42,8 @@ services:
     Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
         arguments:
             - '@Redis'
+    
+    conduction.orm.metadata.gateway:
+        class: App\ORM\Driver\GatewayMetadataDriver
+        arguments:
+            - '@doctrine.orm.default_entity_manager'

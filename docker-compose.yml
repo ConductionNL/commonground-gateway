@@ -30,7 +30,7 @@ services:
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      #- DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - DATAWAREHOUSE_URL=postgres://api-platform:!ChangeMe!@datawarehouse/api?serverVersion=10.1
       - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - APP_ENV=${APP_ENV}
       - APP_CONTAINER=${APP_CONTAINER}
@@ -122,6 +122,18 @@ services:
       - db-mysql:/var/lib/mysql:rw
     ports:
       - "3366:3306"
+
+  datawarehouse:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=api-platform
+      # You should definitely change the password in production
+      - POSTGRES_PASSWORD=!ChangeMe!
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
 
 networks:
   nlx:

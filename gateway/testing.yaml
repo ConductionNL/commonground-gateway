@@ -12,8 +12,45 @@ App\Entity\Entity:
         name: weer
         description: Dit endpoint behandeld weer.
         endpoint: "weer"
+    user:
+        tableName: user_table 
+        name: user
+        description: Test user table for relations and reserved keywords
+    userGroup:
+        name: userGroup
+        description: Test user group table for relations
 
 App\Entity\Attribute:
+    username:
+        name: username
+        description: username for our test user
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@user'
+    userUserGroup:
+        name: userGroups
+        type: object
+        object: '@userGroup'
+        inversedBy: '@userGroupUsers'
+        multiple: true
+        entity: '@user'
+        
+    userGroupName:
+        name: name
+        description: name of the user group
+        type: string
+        maxLength: 255
+        required: true
+        entity: '@userGroup'
+    userGroupUsers:
+        name: users
+        type: object
+        object: '@user'
+        inversedBy: '@userUserGroup'
+        multiple: true
+        entity: '@userGroup'
+    
     weekWeather_monday:
         name: monday
         description: Weather of this day.

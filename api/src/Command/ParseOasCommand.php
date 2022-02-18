@@ -5,6 +5,7 @@
 namespace App\Command;
 
 use App\Service\OasParserService;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,11 +17,14 @@ class ParseOasCommand extends Command
     protected static $defaultName = 'parse:oas';
     protected OasParserService $oasParserService;
 
-    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '')
+    protected $doctrine;
+
+    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '', ManagerRegistry $doctrine)
     {
         $this->oasParserService = $oasParserService;
         $this->url = $url;
         $this->gateway = $gateway;
+        $this->doctrine = $doctrine;
 
         parent::__construct();
     }

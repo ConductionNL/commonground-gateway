@@ -548,6 +548,15 @@ class Attribute
      */
     private bool $immutable = false;
 
+    /**
+     * @var string|null The column name in the datawarehouse table, leave empty to use the attribute name
+     *
+     * @ORM\Column (type="string", length=127, nullable=true)
+     *
+     * @TODO Limits to this field wildly differ between database software. This has to be validated according to the chosen data warehouse.
+     */
+    private ?string $columnName = null;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1344,5 +1353,16 @@ class Attribute
         $this->mayBeOrphaned = $mayBeOrphaned;
 
         return $this;
+    }
+
+    public function setColumnName(?string $columnName): self
+    {
+        $this->columnName = $columnName;
+        return $this;
+    }
+
+    public function getColumnName(): ?string
+    {
+        return $this->columnName;
     }
 }
