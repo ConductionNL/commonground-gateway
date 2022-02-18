@@ -62,41 +62,69 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            $attributeValidator = $this->getAttributeValidator($attribute);
+            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
 
-            $validator->AddRule(new Rules\Key($attribute->getName(), $attributeValidator, $attribute->getValidations()['required'] === true)); // mandatory = required
+            $validator->AddRule(new Rules\Key($attribute->getName(), $this->getAttributeValidator($attribute), $attribute->getValidations()['required'] === true)); // mandatory = required
         }
 
         return $validator;
     }
 
+    /**
+     * Function that always returns a Validator for an Attribute
+     *
+     * @param Attribute $attribute
+     * @return Validator
+     */
     private function getAttributeValidator(Attribute $attribute): Validator
+    {
+        $attributeValidator = new Validator();
+
+        return $attributeValidator->addRule($this->checkIfAttNullable($attribute));
+    }
+
+    private function checkIfAttNullable(Attribute $attribute): Rules\AbstractRule
+    {
+        // Check if this attribute can be null
+        if ($attribute->getValidations()['nullable'] === true) {
+            // When works like this: When(IF, TRUE, FALSE)
+            return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute), new Rules\AlwaysValid());
+        }
+        return $this->checkIfAttMultiple($attribute);
+    }
+
+    private function checkIfAttMultiple(Attribute $attribute): Validator
+    {
+        // Get all validations for this attribute
+        $attributeValidator = $this->getAttributeRules($attribute);
+
+        if ($attribute->getValidations()['multiple'] === true) {
+            $multipleValidator = new Validator();
+            $multipleValidator->addRule(new Rules\Each($attributeValidator));
+            if ($attribute->getValidations()['uniqueItems'] === true) {
+                $multipleValidator->addRule(new Rules\Unique());
+            }
+            return $multipleValidator;
+        }
+        return $attributeValidator;
+    }
+
+    private function getAttributeRules(Attribute $attribute): Validator
     {
         // note: When multiple rules are broken and somehow only one error is returned for one of the two rules, only the last added rule will be shown in the error message.
         // ^this is why the rules in this function are added in the current order. Subresources->Validations->Format->Type
-        $attributeValidator = new Validator();
-
-        // Add object (/subresource) validations
-        if ($attribute->getType() == 'object') {
-            $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth...
-            if ($attribute->getMultiple()) {
-                $attributeValidator->addRule(new Rules\Each($subresourceValidator));
-            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
-            } else {
-                $attributeValidator->AddRule($subresourceValidator);
-            }
-        }
+        $attributeRulesValidator = new Validator();
 
         // Add rules for validations
-        $attribute->getValidations() !== null && $attributeValidator = $this->addValidationRules($attribute, $attributeValidator);
+        $attributeRulesValidator = $this->addValidationRules($attribute, $attributeRulesValidator);
 
         // Add rule for format, but only if input is not empty.
-        $attribute->getFormat() !== null && $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->getAttFormatRule($attribute), new Rules\AlwaysValid()));
+        $attribute->getFormat() !== null && $attributeRulesValidator->AddRule($this->getAttFormatRule($attribute));
 
         // Add rule for type, but only if input is not empty.
-        $attribute->getType() !== null && $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->getAttTypeRule($attribute), new Rules\AlwaysValid()));
+        $attribute->getType() !== null && $attributeRulesValidator->AddRule($this->getAttTypeRule($attribute));
 
-        return $attributeValidator;
+        return $attributeRulesValidator;
     }
 
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
@@ -119,12 +147,13 @@ class ValidaterService
             case 'file':
                 return new Rules\File(); // todo: this is probably incorrect
             case 'object':
-                if ($attribute->getMultiple()) {
-                    // Make sure this is an array of objects, multidimensional array
-                    return new Rules\Each(new Rules\ArrayType());
-                }
+                $objectValidator = new Validator();
+                $objectValidator->addRule(new Rules\ArrayType());
 
-                return new Rules\ArrayType();
+                // Add object (/subresource) validations
+                $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth... ?
+                $objectValidator->AddRule($subresourceValidator);
+                return $objectValidator;
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -159,27 +188,20 @@ class ValidaterService
         }
     }
 
-    private function addValidationRules(Attribute $attribute, Validator $attributeValidator): Validator
+    private function addValidationRules(Attribute $attribute, Validator $attributeRulesValidator): Validator
     {
-        // todo; testen en uitbreiden
         foreach ($attribute->getValidations() as $validation => $config) {
-            // If attribute can not be null add NotEmpty rule
-            if ($attribute->getValidations()['nullable'] !== true) { //todo: something about defaultValue
-                $attributeValidator->AddRule(new Rules\NotEmpty());
-            } else {
-                // if we have no config or validation config == false continue without adding a new Rule.
-                // And validation required is not done through the addValidationRule function!
-                if (empty($config) || $validation == 'required' || $validation == 'nullable') {
-                    continue;
-                }
-//                var_dump($attribute->getName());
-//                var_dump($validation);
-                // Only apply the rule if input is notEmpty, else skip rule (AlwaysValid).
-                $attributeValidator->AddRule(new Rules\When(new Rules\NotEmpty(), $this->addValidationRule($attribute, $validation, $config), new Rules\AlwaysValid()));
+            // if we have no config or validation config == false continue without adding a new Rule.
+            // And validation required, nullable, multiple & uniqueItems are not done through the addValidationRule function!
+            if (empty($config) || in_array($validation, ['required', 'nullable', 'multiple', 'uniqueItems'])) {
+                continue;
             }
+//            var_dump($attribute->getName());
+//            var_dump($validation);
+            $attributeRulesValidator->AddRule($this->addValidationRule($attribute, $validation, $config));
         }
 
-        return $attributeValidator;
+        return $attributeRulesValidator;
     }
 
     private function addValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
@@ -203,8 +225,6 @@ class ValidaterService
             case 'maxItems':
             case 'minItems':
                 return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
-            case 'uniqueItems':
-                return new Rules\Unique();
             case 'maxProperties':
             case 'minProperties':
                 return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);

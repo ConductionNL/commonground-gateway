@@ -112,6 +112,7 @@ App\Entity\Attribute:
     person_email:
         name: emails
         type: object
+        uniqueItems: true
         multiple: true
         entity: "@person"
         object: "@email"
@@ -120,6 +121,8 @@ App\Entity\Attribute:
     person_birthday:
         name: birthday
         type: date
+        uniqueItems: true
+        multiple: true
         nullable: true
         minDate: "2022-02-10"
         entity: "@person"
