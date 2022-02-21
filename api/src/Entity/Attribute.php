@@ -466,6 +466,16 @@ class Attribute
     private $maxFileSize;
 
     /**
+     * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
+     *
+     * @example 32000
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $minFileSize;
+
+    /**
      * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
@@ -1119,6 +1129,18 @@ class Attribute
     public function setMaxFileSize(?int $maxFileSize): self
     {
         $this->maxFileSize = $maxFileSize;
+
+        return $this;
+    }
+
+    public function getMinFileSize(): ?int
+    {
+        return $this->minFileSize;
+    }
+
+    public function setMinFileSize(?int $minFileSize): self
+    {
+        $this->minFileSize = $minFileSize;
 
         return $this;
     }
