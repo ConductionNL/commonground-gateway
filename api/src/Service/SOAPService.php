@@ -1145,7 +1145,7 @@ class SOAPService
 
             $declarationTypes = [];
             foreach($relatives['relatives'] as $relative){
-                $declarationTypes[$relative['person']['bsn']] = $this->translateDeclarationType($relative['declarationType']);
+                $declarationTypes[$relative['person']['bsn']] = $relative['declarationType'] ? $this->translateDeclarationType($relative['declarationType']) : '';
             }
             $relocators = '<ns10:MeeEmigranten xmlns:ns10="urn:nl/procura/gba/v1.5/diensten/emigratie">';
             $relocators .= "<ns10:MeeEmigrant>
