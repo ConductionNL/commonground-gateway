@@ -510,6 +510,7 @@ class Attribute
      * @Groups({"read", "write"})
      *
      * @Assert\Type("array")
+     *
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
     private $validations = [];
