@@ -596,7 +596,7 @@ class Attribute
     private bool $unsetable = false;
 
     /**
-     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
+     * Whether or not this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
