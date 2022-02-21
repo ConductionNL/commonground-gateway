@@ -548,6 +548,14 @@ class Attribute
      */
     private bool $immutable = false;
 
+    /**
+     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $mayBeOrphaned = true;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1126,14 +1134,6 @@ class Attribute
 
         return $this;
     }
-
-    /**
-     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
-     */
-    private bool $mayBeOrphaned = true;
 
     public function getValidations(): ?array
     {
