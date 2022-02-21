@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - acceptance
       - staging
       - development
       - feature-soap
@@ -11,6 +12,7 @@ on:
   push:
     branches:
       - master
+      - acceptance
       - staging
       - development
       - feature-admin
@@ -54,6 +56,12 @@ jobs:
           echo "APP_ENV=stag">> $GITHUB_ENV
           echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"  
+      - name: Setting APP_ENV to acc
+        if: contains( github.ref, 'acceptance' ) || contains( github.base_ref, 'acceptance' )
+        run: |
+            echo "APP_ENV=prod">> $GITHUB_ENV
+            echo "APP_BUILD=acc-$RELEASE">> $GITHUB_ENV
+            echo "set APP_ENV to $APP_ENV" 
       - name: Setting APP_ENV to admin
         if: contains( github.ref, 'feature-admin' ) || contains( github.base_ref, 'feature-admin' )
         run: |
@@ -117,11 +125,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/acceptance' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/acceptance' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
