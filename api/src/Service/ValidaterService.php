@@ -347,6 +347,7 @@ class ValidaterService
      */
     private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
+        $validations = $attribute->getValidations();
         switch ($validation) {
             case 'enum':
                 return new Rules\In($config);
@@ -355,11 +356,11 @@ class ValidaterService
             case 'maximum':
                 return new Rules\Max($config);
             case 'exclusiveMaximum':
-                return new Rules\LessThan($config);
+                return new Rules\LessThan($validations['maximum']);
             case 'minimum':
                 return new Rules\Min($config);
             case 'exclusiveMinimum':
-                return new Rules\GreaterThan($config);
+                return new Rules\GreaterThan($validations['minimum']);
             case 'minLength':
             case 'maxLength':
                 return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);

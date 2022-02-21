@@ -149,11 +149,19 @@ App\Entity\Attribute:
 #                "image/pjpeg",
 #            ]
         entity: "@person"
+    person_int:
+        name: int
+        minimum: 3
+        exclusiveMinimum: true
+        maximum: 12
+        type: integer
+        entity: "@person"
         
     # email Attributes
     email_name:
         name: name
         type: string
+        minLength: 5
         maxLength: 255
         entity: "@email"
     email_email:
