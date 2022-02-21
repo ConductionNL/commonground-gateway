@@ -116,8 +116,8 @@ App\Entity\Attribute:
         multiple: true
         entity: "@person"
         object: "@email"
-#        cascade: true #todo: test it
-#        cascadeDelete: true #todo: test it
+#        cascade: true #todo:
+#        cascadeDelete: true #todo:
     person_birthday:
         name: birthday
         type: date
@@ -125,6 +125,29 @@ App\Entity\Attribute:
         multiple: true
         nullable: true
         minDate: "2022-02-10"
+        entity: "@person"
+    person_file:
+        name: file
+        type: file
+#        multiple: true
+#        maxFileSize: 550000 #todo:
+#        fileTypes: # see function mimeToExt() in ValidationService #todo:
+#            [
+#                "application/pdf",
+#                "text/plain",
+#                "text/xml",
+#                "text/json",
+#                "text/x-comma-separated-values",
+#                "text/comma-separated-values",
+#                "application/vnd.msexcel",
+#                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+#                "video/mp4",
+#                "audio/mp3",
+#                "image/png",
+#                "image/x-png",
+#                "image/jpeg",
+#                "image/pjpeg",
+#            ]
         entity: "@person"
         
     # email Attributes
@@ -139,7 +162,7 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         format: email
-#        mustBeUnique: true #todo: test it
+#        mustBeUnique: true #todo:
         entity: "@email"
 
 App\Entity\Handler:

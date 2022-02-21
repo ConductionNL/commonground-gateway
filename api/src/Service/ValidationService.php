@@ -445,7 +445,7 @@ class ValidationService
                 else {
                     //Lets do a cascade check here. As in, if cascade = false we should expect an uuid not an array/body
                     if (!$attribute->getCascade() && !is_string($value)) {
-                        $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+                        $objectEntity->addError($attribute->getName(), 'Is not a string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
                         continue;
                     }
 
@@ -865,7 +865,7 @@ class ValidationService
 
                 // Lets check for cascading
                 if (!$attribute->getCascade() && !is_string($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Is not an string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
+                    $objectEntity->addError($attribute->getName(), 'Is not a string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
                     break;
                 }
 

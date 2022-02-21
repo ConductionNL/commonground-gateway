@@ -217,8 +217,12 @@ class ValidaterService
             case 'datetime':
                 return new Rules\DateTime();
             case 'file':
-                return new Rules\File(); // todo: this is probably incorrect
+                return new Rules\KeySet(
+                    new Rules\Key('filename', $this->getFilenameValidator(), false),
+                    new Rules\Key('base64', $this->getBase64Validator(), true)
+                );
             case 'object':
+                // TODO: move this to a getObjectValidator function?
                 $objectValidator = new Validator();
                 $objectValidator->addRule(new Rules\ArrayType());
 
@@ -230,6 +234,40 @@ class ValidaterService
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
+    }
+
+    /**
+     * Gets a Validator with rules used for validating a filename.
+     *
+     * @return Validator
+     */
+    private function getFilenameValidator(): Validator
+    {
+        $filenameValidator = new Validator();
+
+        // todo: maybe add validation rule for filename to the respect validator lib?
+        $filenameValidator->addRule(new Rules\StringType());
+        $filenameValidator->addRule(new Rules\Regex('/^[\w,\s-]{1,255}\.[A-Za-z0-9]{1,5}$/'));
+
+        return $filenameValidator;
+    }
+
+    /**
+     * @todo
+     *
+     * @return Validator
+     */
+    private function getBase64Validator(): Validator
+    {
+        $base64Validator = new Validator();
+
+        // example: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
+        $base64Validator->addRule(new Rules\StringType());
+        $base64Validator->addRule(new Rules\Base64()); // todo: this only validates: ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50 of above example
+//        new Rules\Mimetype();
+//        new Rules\Size('min', 'max');
+
+        return $base64Validator;
     }
 
     /**
