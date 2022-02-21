@@ -62,9 +62,8 @@ class LogService
         $callLog->setRouteName($routeName);
         $callLog->setRouteParameters($routeParameters);
 
-        $now = new \DateTime();
-        $requestTime = $request->server->get('REQUEST_TIME');
-        $callLog->setResponseTime($now->getTimestamp() - $requestTime);
+        $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
+        $callLog->setResponseTime(intval($time * 1000));
 
         if ($this->session) {
             // add before removing
