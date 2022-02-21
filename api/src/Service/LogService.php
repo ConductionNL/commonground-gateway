@@ -62,7 +62,7 @@ class LogService
         $callLog->setRouteName($routeName);
         $callLog->setRouteParameters($routeParameters);
 
-        $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+        $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
         $callLog->setResponseTime(intval($time * 1000));
 
         if ($this->session) {

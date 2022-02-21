@@ -181,6 +181,7 @@ class HandlerService
 //                var_dump('Created Localhost Application');
             } else {
                 $this->session->set('application', null);
+
                 throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
             }
         }
