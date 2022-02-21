@@ -1,4 +1,5 @@
-site_name: Commonground Gateway
+site_name: Conductor
+site_url: docs.conductor-gateway.app
 repo_url: https://github.com/ConductionNL/commonground-gateway/
 edit_uri: docs/
 theme: readthedocs
