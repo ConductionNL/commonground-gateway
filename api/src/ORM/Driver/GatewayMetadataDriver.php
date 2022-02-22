@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\InvalidEntityRepository;
 use Doctrine\ORM\Mapping\Builder\AssociationBuilder;
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Ramsey\Uuid\Doctrine\UuidGenerator;
@@ -18,10 +19,12 @@ class GatewayMetadataDriver implements MappingDriver
 {
 
     private EntityManagerInterface $generalEntityManager;
+    private array $associationTables;
 
     public function __construct(EntityManagerInterface $generalEntityManager)
     {
         $this->generalEntityManager = $generalEntityManager;
+        $this->associationTables = [];
     }
 
     /**
@@ -45,12 +48,21 @@ class GatewayMetadataDriver implements MappingDriver
         return $builder;
     }
 
-    public function buildManyToManyRelation(Attribute $attribute, ClassMetadataBuilder &$classMetadataBuilder): AssociationBuilder
+    public function buildManyToManyRelation(Attribute $attribute, ClassMetadataBuilder &$classMetadataBuilder): ?AssociationBuilder
     {
         $fieldName = $attribute->getColumnName() ?? $attribute->getName();
 
+        $inverse = $attribute->getInversedBy()->getColumnName() ?? $attribute->getInversedBy()->getName();
+
+        if(in_array(strtolower($inverse.'_'.$attribute->getInversedBy()->getEntity()->getName()), $this->associationTables)){
+            $tableName = strtolower($inverse.'_'.$attribute->getInversedBy()->getEntity()->getName());
+            return null;
+        } else {
+            $tableName = strtolower($fieldName.'_'.$attribute->getEntity()->getName());
+        }
+
         $builder = $classMetadataBuilder->createManyToMany($fieldName, $attribute->getInversedBy()->getEntity()->getName());
-        $builder->setJoinTable($fieldName.'_'.$attribute->getEntity()->getName());
+        $builder->setJoinTable($tableName);
         $builder->setIndexBy('id');
         $builder->addInverseJoinColumn($attribute->getInversedBy()->getEntity()->getName().'_id', 'id');
         $builder->addJoinColumn($attribute->getEntity()->getName().'_id', 'id');
@@ -65,6 +77,10 @@ class GatewayMetadataDriver implements MappingDriver
         $builder->fetchLazy();
         $builder->build();
 
+        if(!in_array($tableName, $this->associationTables)){
+            $this->associationTables[] = $tableName;
+        }
+
         return $builder;
     }
 
@@ -78,7 +94,6 @@ class GatewayMetadataDriver implements MappingDriver
     {
 
         if($attribute->getMultiple() && $attribute->getInversedBy()->getMultiple()){
-            var_dump('hi');
             $this->buildManyToManyRelation($attribute, $builder);
 //            $relation = $builder->createManyToMany($attribute->getName(), $attribute->getInversedBy()->getEntity()->getName())->mappedBy($attribute->getInversedBy()->getName())->setJoinTable($attribute->getEntity()->getName().'_'.$attribute->getInversedBy()->getEntity()->getName())->setIndexBy('id')->addInverseJoinColumn($attribute->getInversedBy()->getEntity()->getName().'_id', 'id')->addJoinColumn($attribute->getEntity()->getName().'_id', 'id');
         } elseif($attribute->getMultiple()) {

@@ -17,15 +17,11 @@ class ParseOasCommand extends Command
     protected static $defaultName = 'parse:oas';
     protected OasParserService $oasParserService;
 
-    protected $doctrine;
-
-    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '', ManagerRegistry $doctrine)
+    public function __construct(OasParserService $oasParserService, string $url = '', string $gateway = '')
     {
         $this->oasParserService = $oasParserService;
         $this->url = $url;
         $this->gateway = $gateway;
-        $this->doctrine = $doctrine;
-
         parent::__construct();
     }
 
