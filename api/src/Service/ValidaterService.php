@@ -10,8 +10,10 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Respect\Validation\Exceptions\NestedValidationException;
+use Respect\Validation\Factory;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
+use App\Service\Validation\Rules as CustomRules;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,6 +25,10 @@ class ValidaterService
         CacheInterface $cache
     ) {
         $this->cache = $cache;
+        Factory::setDefaultInstance((new Factory())
+            ->withRuleNamespace('App\Service\Validation\Rules')
+            ->withExceptionNamespace('App\Service\Validation\Exceptions')
+        );
     }
 
     /**
@@ -302,7 +308,8 @@ class ValidaterService
             case 'json':
                 return new Rules\Json();
             case 'dutch_pc4':
-                // TODO
+                return new CustomRules\DutchPostalcode();
+//                return Validator::dutchPostalcode();
             default:
                 throw new GatewayException('Unknown attribute format!', null, null, ['data' => $format, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }

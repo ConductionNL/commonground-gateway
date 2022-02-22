@@ -156,6 +156,12 @@ App\Entity\Attribute:
         maximum: 12
         type: integer
         entity: "@person"
+    person_postalCode:
+        name: code
+        type: integer
+        required: true
+        entity: "@person"
+        format: dutch_pc4
         
     # email Attributes
     email_name:
