@@ -97,8 +97,16 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
-
+            if ($attribute->getValidations()['requiredIf']) {
+                // todo: this works but doesn't give a nice error response when the rule is broken...
+                // When works like this: When(IF, TRUE, FALSE)
+                $validator->addRule(new Rules\When(new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), new Rules\Key($attribute->getName()), new Rules\AlwaysValid()));
+            }
+            if ($attribute->getValidations()['forbiddenIf']) {
+                // todo: this works but doesn't give a nice error response when the rule is broken...
+                // When works like this: When(IF, TRUE, FALSE)
+                $validator->addRule(new Rules\When(new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), new Rules\Not(new Rules\Key($attribute->getName())), new Rules\AlwaysValid()));
+            }
             $validator->AddRule(new Rules\Key($attribute->getName(), $this->getAttributeValidator($attribute), $attribute->getValidations()['required'] === true)); // mandatory = required
         }
 
@@ -157,6 +165,8 @@ class ValidaterService
 
         // Check if this attribute is an array
         if ($attribute->getValidations()['multiple'] === true) {
+            // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
+
             $multipleValidator = new Validator();
             $multipleValidator->addRule(new Rules\Each($attributeRulesValidator));
             if ($attribute->getValidations()['uniqueItems'] === true) {
@@ -272,6 +282,7 @@ class ValidaterService
         $base64Validator->addRule(new Rules\Base64()); // todo: this only validates: ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50 of above example
 //        new Rules\Mimetype();
 //        new Rules\Size('min', 'max');
+        //todo: see: $this->getValidationRule()
 
         return $base64Validator;
     }
@@ -329,8 +340,8 @@ class ValidaterService
     {
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
-            // And validation required, nullable, multiple & uniqueItems are not done through the addValidationRule function!
-            if (empty($config) || in_array($validation, ['required', 'nullable', 'multiple', 'uniqueItems'])) {
+            // And validations in_array here are not done through this addValidationRule function, but somewhere else!
+            if (empty($config) || in_array($validation, ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf'])) {
                 continue;
             }
 //            var_dump($attribute->getName());
@@ -382,11 +393,12 @@ class ValidaterService
             case 'maxDate':
                 return new Rules\Max(new DateTime($config));
             case 'maxFileSize':
+            case 'minFileSize':
             case 'fileType':
-                // @TODO
+                // @TODO see: $this->getAttTypeRule()
+//                new Rules\Size('min', 'max');
+//                new Rules\Mimetype();
                 break;
-            case 'forbidden':
-                return new Rules\Not(Validator::notEmpty());
             // case 'conditionals':
             //     /// here we go
             //     foreach ($config as $con) {
@@ -430,6 +442,9 @@ class ValidaterService
             //     break;
             default:
                 // we should never end up here
+                if (is_array($config)) {
+                    $config = http_build_query($config, '', ', ');
+                }
                 throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 

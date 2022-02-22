@@ -28,7 +28,7 @@ final class JsonLogic extends AbstractRule
     public function validate($input): bool
     {
         if (is_string($this->jsonLogic)) {
-            // todo, what if we can't cast $input to string?
+            // todo, what if we can't cast $input to string? maybe use try catch?
             $this->jsonLogic = str_replace('{{input}}', (string)$input, $this->jsonLogic);
             $this->jsonLogic = json_decode($this->jsonLogic, true);
             $input = null;
@@ -45,7 +45,16 @@ final class JsonLogic extends AbstractRule
      * With $jsonLogic as a string, in this case $input should be equal to "apples"
      * new App\Service\Validation\Rules\JsonLogic('{"==":["apples", "{{input}}"]}');
      *
-     * With $jsonLogic as a array, in this case $input should ... todo
-     * new App\Service\Validation\Rules\JsonLogic([todo]);
+     * With $jsonLogic as an array, in this case $input should be an array that has the key "int" with the value 12
+     * new App\Service\Validation\Rules\JsonLogic(["==" => [ ["var" => "int"], 12 ]);
+     * Input like this wil result in true:
+     * {
+     *   "test": "someRandomValue"
+     *   "int": 12
+     * }
+     * Input like this wil result in false:
+     * {
+     *   "int": 11
+     * }
      */
 }

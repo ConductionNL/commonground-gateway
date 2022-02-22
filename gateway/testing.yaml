@@ -159,7 +159,10 @@ App\Entity\Attribute:
     person_postalCode:
         name: code
         type: integer
-        required: true
+        requiredIf:
+            '==': [{ var: int }, 12]
+        forbiddenIf:
+            '<': [{ var: int }, 12]
         entity: "@person"
         format: dutch_pc4
         

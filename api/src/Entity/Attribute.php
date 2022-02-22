@@ -1225,6 +1225,8 @@ class Attribute
         $validations['maxProperties'] = $this->getMaxProperties();
         $validations['minProperties'] = $this->getMinProperties();
         $validations['required'] = $this->getRequired();
+        $validations['requiredIf'] = $this->getRequiredIf();
+        $validations['forbiddenIf'] = $this->getForbiddenIf();
         $validations['enum'] = $this->getEnum();
         $validations['allOf'] = $this->getAllOf(); //todo: validation/BL toevoegen
         $validations['anyOf'] = $this->getAnyOf(); //todo: validation/BL toevoegen
@@ -1280,6 +1282,12 @@ class Attribute
         }
         if (array_key_exists('required', $validations)) {
             $this->setRequired($validations['required']);
+        }
+        if (array_key_exists('requiredIf', $validations)) {
+            $this->setRequiredIf($validations['requiredIf']);
+        }
+        if (array_key_exists('forbiddenIf', $validations)) {
+            $this->setForbiddenIf($validations['forbiddenIf']);
         }
         if (array_key_exists('enum', $validations)) {
             $this->setEnum($validations['enum']);
