@@ -301,6 +301,7 @@ class Attribute
      *
      * @example false
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -311,6 +312,7 @@ class Attribute
      *
      * @example false
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -319,6 +321,7 @@ class Attribute
     /**
      * @var array An array of possible values, input is limited to this array]
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -327,6 +330,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property should confirm to
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -335,6 +339,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -343,6 +348,7 @@ class Attribute
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -353,6 +359,7 @@ class Attribute
      *
      * @example My value
      *
+     * @Assert\Type("string")
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
@@ -390,6 +397,17 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $mustBeUnique;
+
+    /**
+     * @var bool Whether or not the mustBeUnique check is case sensitive
+     *
+     * @example false
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":true})
+     */
+    private bool $caseSensitive = true;
 
     /**
      * @var bool Whether or not this property is read only
@@ -460,16 +478,29 @@ class Attribute
      *
      * @example 32000
      *
+     * @Assert\Type("integer")
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
     private $maxFileSize;
 
     /**
+     * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
+     *
+     * @example 32000
+     *
+     * @Assert\Type("integer")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $minFileSize;
+
+    /**
      * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -478,6 +509,8 @@ class Attribute
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\Type("array")
+     *
      * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
      */
     private $validations = [];
@@ -485,6 +518,7 @@ class Attribute
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
      *
+     * @Assert\Type("bool")
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -493,6 +527,7 @@ class Attribute
     /**
      * Whether or not this property is searchable.
      *
+     * @Assert\Type("bool")
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -501,6 +536,7 @@ class Attribute
     /**
      * Whether or not the object of this property will be deleted if the parent object is deleted.
      *
+     * @Assert\Type("bool")
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -509,6 +545,7 @@ class Attribute
     /**
      * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
+     * @Assert\Type("bool")
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
      */
@@ -535,6 +572,7 @@ class Attribute
     /**
      * @var array Config for getting the object result info from the correct places (id is required!). "envelope" for where to find this item and "id" for where to find the id. (both from the root! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
+     * @Assert\Type("array")
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -543,10 +581,29 @@ class Attribute
     /**
      * Setting this property to true makes it so that this property is not allowed to be changed after creation.
      *
+     * @Assert\Type("bool")
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $immutable = false;
+
+    /**
+     * Setting this property to true makes it so that this property is only allowed to be set or changed after creation.
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $unsetable = false;
+
+    /**
+     * Whether or not this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $mayBeOrphaned = true;
 
     public function __construct()
     {
@@ -1031,6 +1088,18 @@ class Attribute
         return $this;
     }
 
+    public function getCaseSensitive(): ?bool
+    {
+        return $this->caseSensitive;
+    }
+
+    public function setCaseSensitive(bool $caseSensitive): self
+    {
+        $this->caseSensitive = $caseSensitive;
+
+        return $this;
+    }
+
     public function getReadOnly(): ?bool
     {
         return $this->readOnly;
@@ -1115,6 +1184,18 @@ class Attribute
         return $this;
     }
 
+    public function getMinFileSize(): ?int
+    {
+        return $this->minFileSize;
+    }
+
+    public function setMinFileSize(?int $minFileSize): self
+    {
+        $this->minFileSize = $minFileSize;
+
+        return $this;
+    }
+
     public function getFileTypes(): ?array
     {
         return $this->fileTypes;
@@ -1126,14 +1207,6 @@ class Attribute
 
         return $this;
     }
-
-    /**
-     * Whether or not the this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
-     */
-    private bool $mayBeOrphaned = true;
 
     public function getValidations(): ?array
     {
@@ -1346,6 +1419,18 @@ class Attribute
     public function setImmutable(?bool $immutable): self
     {
         $this->immutable = $immutable;
+
+        return $this;
+    }
+
+    public function getUnsetable(): ?bool
+    {
+        return $this->unsetable;
+    }
+
+    public function setUnsetable(?bool $unsetable): self
+    {
+        $this->unsetable = $unsetable;
 
         return $this;
     }

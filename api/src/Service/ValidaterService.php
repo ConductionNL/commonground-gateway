@@ -217,8 +217,12 @@ class ValidaterService
             case 'datetime':
                 return new Rules\DateTime();
             case 'file':
-                return new Rules\File(); // todo: this is probably incorrect
+                return new Rules\KeySet(
+                    new Rules\Key('filename', $this->getFilenameValidator(), false),
+                    new Rules\Key('base64', $this->getBase64Validator(), true)
+                );
             case 'object':
+                // TODO: move this to a getObjectValidator function?
                 $objectValidator = new Validator();
                 $objectValidator->addRule(new Rules\ArrayType());
 
@@ -230,6 +234,40 @@ class ValidaterService
             default:
                 throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
+    }
+
+    /**
+     * Gets a Validator with rules used for validating a filename.
+     *
+     * @return Validator
+     */
+    private function getFilenameValidator(): Validator
+    {
+        $filenameValidator = new Validator();
+
+        // todo: maybe add validation rule for filename to the respect validator lib?
+        $filenameValidator->addRule(new Rules\StringType());
+        $filenameValidator->addRule(new Rules\Regex('/^[\w,\s-]{1,255}\.[A-Za-z0-9]{1,5}$/'));
+
+        return $filenameValidator;
+    }
+
+    /**
+     * @todo
+     *
+     * @return Validator
+     */
+    private function getBase64Validator(): Validator
+    {
+        $base64Validator = new Validator();
+
+        // example: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
+        $base64Validator->addRule(new Rules\StringType());
+        $base64Validator->addRule(new Rules\Base64()); // todo: this only validates: ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50 of above example
+//        new Rules\Mimetype();
+//        new Rules\Size('min', 'max');
+
+        return $base64Validator;
     }
 
     /**
@@ -309,6 +347,7 @@ class ValidaterService
      */
     private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
+        $validations = $attribute->getValidations();
         switch ($validation) {
             case 'enum':
                 return new Rules\In($config);
@@ -317,20 +356,20 @@ class ValidaterService
             case 'maximum':
                 return new Rules\Max($config);
             case 'exclusiveMaximum':
-                return new Rules\LessThan($config);
+                return new Rules\LessThan($validations['maximum']);
             case 'minimum':
                 return new Rules\Min($config);
             case 'exclusiveMinimum':
-                return new Rules\GreaterThan($config);
+                return new Rules\GreaterThan($validations['minimum']);
             case 'minLength':
             case 'maxLength':
                 return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
             case 'maxItems':
             case 'minItems':
-                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
+                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null); // todo: merge this with min/maxlength?
             case 'maxProperties':
             case 'minProperties':
-                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
+                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null); // todo: merge this with min/maxlength?
             case 'minDate':
                 return new Rules\Min(new DateTime($config));
             case 'maxDate':

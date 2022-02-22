@@ -660,7 +660,7 @@ class EavService
      *
      * @return array
      */
-    private function getRequestFields(Request $request): ?array
+    public function getRequestFields(Request $request): ?array
     {
         $fields = $request->query->get('fields');
 
