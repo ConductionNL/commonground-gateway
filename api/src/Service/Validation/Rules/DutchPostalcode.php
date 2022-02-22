@@ -6,10 +6,9 @@ use Respect\Validation\Rules\AbstractRule;
 
 final class DutchPostalcode extends AbstractRule
 {
-
     /**
-    * @inheritDoc
-    */
+     * @inheritDoc
+     */
     public function validate($input): bool
     {
         $dutch_pc4_list = $this->getDutchPC4List();

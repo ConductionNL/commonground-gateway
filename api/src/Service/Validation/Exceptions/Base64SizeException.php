@@ -15,13 +15,13 @@ final class Base64SizeException extends NestedValidationException
      */
     protected $defaultTemplates = [
         self::MODE_DEFAULT => [
-            self::BOTH => '{{name}} must be a file size between {{minSize}} bytes and {{maxSize}} bytes',
-            self::LOWER => '{{name}} is to small, file size must be greater than {{minSize}} bytes',
+            self::BOTH    => '{{name}} must be a file size between {{minSize}} bytes and {{maxSize}} bytes',
+            self::LOWER   => '{{name}} is to small, file size must be greater than {{minSize}} bytes',
             self::GREATER => '{{name}} is to big, file size must be lower than {{maxSize}} bytes',
         ],
         self::MODE_NEGATIVE => [
-            self::BOTH => '{{name}} must not be a file size between {{minSize}} bytes and {{maxSize}} bytes',
-            self::LOWER => '{{name}} is to big, file size must not be greater than {{minSize}} bytes',
+            self::BOTH    => '{{name}} must not be a file size between {{minSize}} bytes and {{maxSize}} bytes',
+            self::LOWER   => '{{name}} is to big, file size must not be greater than {{minSize}} bytes',
             self::GREATER => '{{name}} is to small, file size must not be lower than {{maxSize}} bytes',
         ],
     ];
