@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Exception\GatewayException;
+use App\Service\Validation\Rules as CustomRules;
 use DateTime;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -13,7 +14,6 @@ use Respect\Validation\Exceptions\NestedValidationException;
 use Respect\Validation\Factory;
 use Respect\Validation\Rules;
 use Respect\Validation\Validator;
-use App\Service\Validation\Rules as CustomRules;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -25,7 +25,8 @@ class ValidaterService
         CacheInterface $cache
     ) {
         $this->cache = $cache;
-        Factory::setDefaultInstance((new Factory())
+        Factory::setDefaultInstance(
+            (new Factory())
             ->withRuleNamespace('App\Service\Validation\Rules')
             ->withExceptionNamespace('App\Service\Validation\Exceptions')
         );
@@ -387,6 +388,7 @@ class ValidaterService
                 if (is_array($config)) {
                     $config = http_build_query($config, '', ', ');
                 }
+
                 throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 

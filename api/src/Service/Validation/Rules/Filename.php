@@ -2,8 +2,8 @@
 
 namespace App\Service\Validation\Rules;
 
-use Respect\Validation\Validator;
 use Respect\Validation\Rules\AbstractRule;
+use Respect\Validation\Validator;
 
 final class Filename extends AbstractRule
 {
@@ -21,8 +21,8 @@ final class Filename extends AbstractRule
     }
 
     /**
-    * @inheritDoc
-    */
+     * @inheritDoc
+     */
     public function validate($input): bool
     {
         if (Validator::stringType()->validate($input) &&

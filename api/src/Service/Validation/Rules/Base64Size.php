@@ -3,18 +3,17 @@
 namespace App\Service\Validation\Rules;
 
 use Exception;
-use Respect\Validation\Validator;
 use Respect\Validation\Rules\AbstractRule;
 
 final class Base64Size extends AbstractRule
 {
     /**
-     * @var integer|null
+     * @var int|null
      */
     private ?int $minSize;
 
     /**
-     * @var integer|null
+     * @var int|null
      */
     private ?int $maxSize;
 
@@ -29,14 +28,15 @@ final class Base64Size extends AbstractRule
     }
 
     /**
-    * @inheritDoc
-    */
+     * @inheritDoc
+     */
     public function validate($input): bool
     {
         $size = $this->getBase64Size($input);
         if ($this->isValidSize($size)) {
             return true;
         }
+
         return false;
     }
 
@@ -62,9 +62,10 @@ final class Base64Size extends AbstractRule
     }
 
     /**
-     * Checks if given size is a valid size compared to the min & max size
+     * Checks if given size is a valid size compared to the min & max size.
      *
      * @param int $size
+     *
      * @return bool
      */
     private function isValidSize(int $size): bool

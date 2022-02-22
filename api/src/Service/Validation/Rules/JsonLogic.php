@@ -3,8 +3,8 @@
 namespace App\Service\Validation\Rules;
 
 use Exception;
-use Respect\Validation\Rules\AbstractRule;
 use JWadhams\JsonLogic as jsonLogicLib;
+use Respect\Validation\Rules\AbstractRule;
 
 final class JsonLogic extends AbstractRule
 {
@@ -23,19 +23,21 @@ final class JsonLogic extends AbstractRule
 
     /**
      * @inheritDoc
+     *
      * @throws Exception
      */
     public function validate($input): bool
     {
         if (is_string($this->jsonLogic)) {
             // todo, what if we can't cast $input to string? maybe use try catch?
-            $this->jsonLogic = str_replace('{{input}}', (string)$input, $this->jsonLogic);
+            $this->jsonLogic = str_replace('{{input}}', (string) $input, $this->jsonLogic);
             $this->jsonLogic = json_decode($this->jsonLogic, true);
             $input = null;
         }
         if (is_array($this->jsonLogic) && jsonLogicLib::apply($this->jsonLogic, $input)) {
             return true;
         }
+
         return false;
     }
 
