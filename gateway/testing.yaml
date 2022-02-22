@@ -116,7 +116,7 @@ App\Entity\Attribute:
         multiple: true
         entity: "@person"
         object: "@email"
-#        cascade: true #todo:
+        cascade: true #todo:
 #        cascadeDelete: true #todo:
     person_birthday:
         name: birthday

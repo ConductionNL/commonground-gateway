@@ -186,11 +186,25 @@ class HandlerService
             }
         }
 
+        //TODO: old code for getting an Entity and Object
         $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
-        $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+        $id = $this->request->attributes->get('id');
+        if (isset($id) || $method == 'POST') {
+            $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+        }
         if ($method == 'GET') {
+            // Lets allow for filtering specific fields
+            $fields = $this->eavService->getRequestFields($this->request);
             //TODO: old code for getting an ObjectEntity
-            $data = $this->eavService->handleGet($object, null);
+            if (isset($object)) {
+                $data = $this->eavService->handleGet($object, $fields);
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
+            } else {
+                $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
+            }
         } else {
             //todo: -end- old code...
 
@@ -210,14 +224,18 @@ class HandlerService
 
             //TODO: old code for creating or updating an ObjectEntity
             if ($method == 'POST' || $method == 'PUT') {
-//                var_dump('Old validation & object creation start');
                 $this->validationService->setRequest($this->request);
+                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                $this->validationService->removeObjectsOnPut = []; // to be sure
                 $object = $this->validationService->validateEntity($object, $data);
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
-                $data['validationServiceErrors'] = $object->getAllErrors();
-//                var_dump('Old validation & object creation end');
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
             }
             //todo: -end- old code...
 
