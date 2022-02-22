@@ -234,7 +234,7 @@ class ValidaterService
                 return new Rules\DateTime();
             case 'file':
                 return new Rules\KeySet(
-                    new Rules\Key('filename', $this->getFilenameValidator(), false),
+                    new Rules\Key('filename', new CustomRules\Filename(), false),
                     new Rules\Key('base64', $this->getBase64Validator(), true)
                 );
             case 'object':
@@ -254,22 +254,6 @@ class ValidaterService
 
     // todo: make this into a customRule
     /**
-     * Gets a Validator with rules used for validating a filename.
-     *
-     * @return Validator
-     */
-    private function getFilenameValidator(): Validator
-    {
-        $filenameValidator = new Validator();
-
-        $filenameValidator->addRule(new Rules\StringType());
-        $filenameValidator->addRule(new Rules\Regex('/^[\w,\s-]{1,255}\.[A-Za-z0-9]{1,5}$/'));
-
-        return $filenameValidator;
-    }
-
-    // todo: make this into a customRule
-    /**
      * Gets a Validator with rules used for validating a base64 string.
      *
      * @return Validator
@@ -284,7 +268,6 @@ class ValidaterService
         // todo: in this function we should validate if the base64 string has the correct structure (as shown in EXAMPLE above^)
         // todo: for validation of allowed mime types and file size we should make customRules and use those in the $this->getValidationRule() function
 //        new Rules\Mimetype();
-//        new Rules\Size('min', 'max');
 
         return $base64Validator;
     }
@@ -393,11 +376,11 @@ class ValidaterService
                 return new Rules\Max(new DateTime($config));
             case 'maxFileSize':
             case 'minFileSize':
-            case 'fileType':
+                // base64 Key is mandatory, but this shouldn't be checked here, see: $this->getAttTypeRule(), let's prevent double error messages...
+                return new Rules\Key('base64', new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null), false);
+            case 'fileTypes':
                 // todo: see: $this->getAttTypeRule() & $this->getBase64Validator()
-                // todo: here we should use new customRules in combination with the KeyNested rule to get the base64 from {"filename": "something.txt", "base64": "data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50"}
-//                new Rules\Size('min', 'max');
-//                new Rules\Mimetype();
+                // todo: here we should use new customRules in combination with the Key rule to get the base64 and mimeType from {"filename": "something.txt", "base64": "data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50"}
                 break;
             default:
                 // we should never end up here

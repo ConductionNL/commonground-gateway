@@ -129,8 +129,9 @@ App\Entity\Attribute:
     person_file:
         name: file
         type: file
-#        multiple: true
-#        maxFileSize: 550000 #todo:
+#        multiple: true #todo, test it
+        minFileSize: 20
+        maxFileSize: 50000
 #        fileTypes: # see function mimeToExt() in ValidationService #todo:
 #            [
 #                "application/pdf",

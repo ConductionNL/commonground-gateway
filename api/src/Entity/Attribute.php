@@ -1237,6 +1237,9 @@ class Attribute
         $validations['maxDate'] = $this->getMaxDate();
         $validations['minDate'] = $this->getMinDate();
         $validations['multiple'] = $this->getMultiple();
+        $validations['maxFileSize'] = $this->getMaxFileSize();
+        $validations['minFileSize'] = $this->getMinFileSize();
+        $validations['fileTypes'] = $this->getFileTypes();
 
         return $validations;
     }
