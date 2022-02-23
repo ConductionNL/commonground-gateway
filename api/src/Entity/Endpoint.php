@@ -78,16 +78,17 @@ class Endpoint
      */
     private ?string $description = null;
 
-    /**
-     * @var string The type of this Endpoint.
-     *
-     * @Assert\NotNull
-     * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
-     *
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string")
-     */
-    private string $type;
+    // @TODO remove totally?
+    // /**
+    //  * @var string The type of this Endpoint.
+    //  *
+    //  * @Assert\NotNull
+    //  * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
+    //  *
+    //  * @Groups({"read", "write"})
+    //  * @ORM\Column(type="string")
+    //  */
+    // private string $type;
 
     /**
      * @var string The path of this Endpoint.
@@ -173,17 +174,17 @@ class Endpoint
         return $this;
     }
 
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
+    // public function getType(): ?string
+    // {
+    //     return $this->type;
+    // }
 
-    public function setType(string $type): self
-    {
-        $this->type = $type;
+    // public function setType(string $type): self
+    // {
+    //     $this->type = $type;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getPath(): ?string
     {

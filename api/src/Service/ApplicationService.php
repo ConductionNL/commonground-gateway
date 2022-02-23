@@ -47,8 +47,8 @@ class ApplicationService
             }
         }
 
-        if (!$application && $host == 'localhost') {
-            $application = $this->createApplication('localhost', ['localhost'], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
+        if (!$application && str_contains($host, 'localhost')) {
+            $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
         } else {
             $this->session->set('application', null);
 
@@ -94,6 +94,8 @@ class ApplicationService
         $application->setOrganization($name.'Organization');
         $this->entityManager->persist($application);
         $this->entityManager->flush();
+
+        $this->session->set('application', $application);
 
         return $application;
     }

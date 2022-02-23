@@ -110,7 +110,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $resource;
+    private ?string $resource = null;
 
     /**
      *  @ORM\PrePersist

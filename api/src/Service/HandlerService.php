@@ -2,19 +2,22 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
+use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Twig\Environment as Environment;
+use Twig\Environment;
 
 class HandlerService
 {
@@ -23,6 +26,8 @@ class HandlerService
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
+    private SessionInterface $session;
+    private FormIOService $formIOService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -39,6 +44,7 @@ class HandlerService
         'application/pdf'                                                                    => 'pdf',
         'application/msword'                                                                 => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
+        'application/form.io'                                                                => 'form.io',
     ];
 
     public function __construct(
@@ -52,7 +58,9 @@ class HandlerService
         LogService $logService,
         Environment $twig,
         TemplateService $templateService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        SessionInterface $session,
+        FormIOService $formIOService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -65,6 +73,8 @@ class HandlerService
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService;
+        $this->session = $session;
+        $this->formIOService = $formIOService;
     }
 
     /**
@@ -101,6 +111,15 @@ class HandlerService
     {
         $method = $this->request->getMethod();
 
+        // Form.io components array
+        if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+            return new Response(
+                $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
+                Response::HTTP_OK,
+                ['content-type' => 'json']
+            );
+        }
+
         // Only do mapping and translation -in for calls with body
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
 
@@ -133,8 +152,65 @@ class HandlerService
             $this->logService->saveLog($this->request, null, json_encode($data));
         }
 
-        // eav new way
-        // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        //todo: -start- old code...
+        //TODO: old code for application creation, used for old way of creating ObjectEntity, needed for getObject function
+
+        // Get the application by searching for an application with a domain that matches the host of this request
+        $host = $this->request->headers->get('host');
+//        var_dump($host);
+        $applications = $this->entityManager->getRepository('App:Application')->findAll();
+        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
+            return in_array($host, $application->getDomains());
+        }));
+        if (count($applications) > 0) {
+//            var_dump(count($applications));
+            $this->session->set('application', $applications[0]);
+        } else {
+            //            var_dump('no application found');
+            if (str_contains($host, 'localhost')) {
+                $localhostApplication = new Application();
+                $localhostApplication->setName('localhost');
+                $localhostApplication->setDescription('localhost application');
+                $localhostApplication->setDomains([$host]);
+                $localhostApplication->setPublic('');
+                $localhostApplication->setSecret('');
+                $localhostApplication->setOrganization('localhostOrganization');
+                $this->entityManager->persist($localhostApplication);
+                $this->entityManager->flush();
+                $this->session->set('application', $localhostApplication);
+//                var_dump('Created Localhost Application');
+            } else {
+                $this->session->set('application', null);
+
+                throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
+            }
+        }
+
+        //TODO: old code for getting an Entity and Object
+        $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
+        $id = $this->request->attributes->get('id');
+        if (isset($id) || $method == 'POST') {
+            $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+        }
+        if ($method == 'GET') {
+            // Lets allow for filtering specific fields
+            $fields = $this->eavService->getRequestFields($this->request);
+            //TODO: old code for getting an ObjectEntity
+            if (isset($object)) {
+                $data = $this->eavService->handleGet($object, $fields);
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
+            } else {
+                $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
+            }
+        } else {
+            //todo: -end- old code...
+
+            // eav new way
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        }
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
@@ -143,6 +219,25 @@ class HandlerService
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
+
+            //todo: -start- old code...
+
+            //TODO: old code for creating or updating an ObjectEntity
+            if ($method == 'POST' || $method == 'PUT') {
+                $this->validationService->setRequest($this->request);
+                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $object = $this->validationService->validateEntity($object, $data);
+                $this->entityManager->persist($object);
+                $this->entityManager->flush();
+                $data['id'] = $object->getId()->toString();
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
+            }
+            //todo: -end- old code...
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));

@@ -4,7 +4,9 @@ namespace App\Service;
 
 use App\Entity\Handler;
 use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ObjectEntityService
@@ -84,7 +86,7 @@ class ObjectEntityService
                 break;
             case 'POST':
                 // validate
-                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
                     break;
                 }
 
@@ -99,7 +101,7 @@ class ObjectEntityService
                 // get object
 
                 // validate
-                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method ?? null)) {
+                if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
                     break;
                 }
                 // put object
@@ -114,7 +116,7 @@ class ObjectEntityService
         }
 
         if (isset($validationErrors)) {
-            // Do something with validation errors
+            throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 
         // use events
