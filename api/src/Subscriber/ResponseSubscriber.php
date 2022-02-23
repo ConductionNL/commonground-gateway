@@ -34,5 +34,6 @@ class ResponseSubscriber implements EventSubscriberInterface
         $response->headers->add([
             'Access-Control-Allow-Credentials' => 'true',
         ]);
+        $response->headers->remove('Access-Control-Allow-Origin');
     }
 }
