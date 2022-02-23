@@ -1,4 +1,14 @@
 site_name: Commonground Gateway
 repo_url: https://github.com/ConductionNL/commonground-gateway/
-edit_uri: docs/
-theme: readthedocs
+docs_dir: redoc/docs
+theme:
+    name: readthedocs
+nav:
+    - "index.md"
+    - "getting_started.md"
+    - "how_does_it_work.md"
+    - "features.md"
+    - "design_decisions.md"
+    - "contributing.md"
+    - "installation.md"
+    - "security.md"
