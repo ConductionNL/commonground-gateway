@@ -122,7 +122,7 @@ const IndexPage = ({location}) => (
     <Box width={5 / 5}>
       <h2>Zowel los als in samenhang</h2>
       <p>Op dit moment is Conductor alleen al losse container beschikbaar, bij de ontwikkeling is er echter bewust gekozen voor het hergebruik van bekende PHP 
-        libraires. Hierdoor is het mogelijk om conductor ook als onderdeel (plugin) van een Wordpress, Drupal of Joomla installatie te draaien. We streven er 
+        libraries. Hierdoor is het mogelijk om conductor ook als onderdeel (plugin) van een Wordpress, Drupal of Joomla installatie te draaien. We streven er 
         naar om Conductor 2022 als integreerbare oplossing aan te bieden.
       </p>
     </Box>
