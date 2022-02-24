@@ -7,11 +7,13 @@ use Respect\Validation\Rules\AbstractRule;
 
 final class Base64Size extends AbstractRule
 {
+    //todo getter setter
     /**
      * @var int|null
      */
     private ?int $minSize;
 
+    //todo getter setter
     /**
      * @var int|null
      */
