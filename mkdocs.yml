@@ -1,5 +1,5 @@
 site_name: Conductor
-site_url: docs.conductor-gateway.app
+# site_url: docs.conductor-gateway.app
 repo_url: https://github.com/ConductionNL/commonground-gateway/
 docs_dir: redoc/docs
 theme:
