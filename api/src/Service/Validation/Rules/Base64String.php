@@ -21,6 +21,8 @@ final class Base64String extends AbstractRule
      */
     public function validate($input): bool
     {
+        // todo: split code in this function into multiple subFunctions
+
         // Example of a (full length) base64 string: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
         // Make sure we have a string as input
         if (!Validator::stringType()->validate($input)) {
@@ -56,7 +58,7 @@ final class Base64String extends AbstractRule
             // Take the part before the comma (',') and look for the mimeType in it
             $matchesCount = preg_match('/data:([\w\/]+);base64/', $exploded_input[0], $matches);
             if ($matchesCount == 1) {
-                // We found a mimeType in the base64 input string
+                // Found a mimeType in the base64 input string
                 $mimeType2 = $matches[1];
             }
         }

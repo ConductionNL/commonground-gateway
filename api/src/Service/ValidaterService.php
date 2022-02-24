@@ -236,7 +236,8 @@ class ValidaterService
             case 'datetime':
                 return new Rules\DateTime();
             case 'file':
-                // todo: make one custom rule for a file where we use these other custom rules. also validate if mime_type and extension match in this custom rule
+                // todo: make one custom rule for a file where we use these other custom rules. But also validate if mime_type and extension match
+//                return new CustomRules\Base64File();
                 return new Rules\KeySet(
                     new Rules\Key('filename', new CustomRules\Filename(), false),
                     new Rules\Key('base64', new CustomRules\Base64String(), true)
@@ -350,10 +351,10 @@ class ValidaterService
                 return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
             case 'maxItems':
             case 'minItems':
-                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null); // todo: merge this with min/maxlength?
+                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
             case 'maxProperties':
             case 'minProperties':
-                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null); // todo: merge this with min/maxlength?
+                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
             case 'minDate':
                 return new Rules\Min(new DateTime($config));
             case 'maxDate':
