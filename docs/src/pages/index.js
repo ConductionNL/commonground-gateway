@@ -43,7 +43,7 @@ const IndexPage = ({location}) => (
           <Box>
             <h2>Common Ground Gateway</h2>
             <p>Een micro-service architectuur (zoals Common Ground) bestaat uit een groot aantal losse API’s en registers. Deze één voor één integreren in een voorkant is een tijdrovende en bijna ondoenlijke klus.
-               Exact daarvoor is Conductor ontwikkeld, deze koppelt gemakkelijk meerdere API’s aan elkaar vast tot één restful API die meteen implementeerbaar is. Zo functioneert Conductor als schakel tussen de frontend en backend,
+               Exact daarvoor is Conductor ontwikkeld, deze koppelt gemakkelijk meerdere API’s aan elkaar vast tot één RESTful API die meteen implementeerbaar is. Zo functioneert Conductor als schakel tussen de frontend en backend,
                 waarmee het minder complex en sneller wordt om aan de hand van (Common Ground) componenten een applicatie te ontwikkelen. 
             </p>
           </Box>
