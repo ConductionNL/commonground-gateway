@@ -7,7 +7,7 @@ nav:
     - "index.md"
     - "getting_started.md"
     - "how_does_it_work.md"
-    - "features.md"
+    - Features: "./features/index.md"
     - "design_decisions.md"
     - "contributing.md"
     - "installation.md"
