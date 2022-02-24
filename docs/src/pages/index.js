@@ -76,8 +76,8 @@ const IndexPage = ({location}) => (
             <h2>Standaard veilig</h2>
             <p>Conductor ondersteunt zonder extra componenten DigiD, eHerkenning, OpenID Connect en ADFS. Als alternatief kan er ook gebruik worden gemaakt van
                Kubernetes oplossingen, zoals Keycloak of commerciële oplossingen, zoals Auth0. Conductor is zowel gepentest als aan een TPM audit onderworpen en
-                levert met haar standaard ondersteuning voor PKI certificaten (zowel browser als machine tot machine) een veilig, stabiel en betrouwbaar platform 
-                voor applicatie ontwikkeling.
+                levert met haar standaard ondersteuning voor PKI-certificaten (zowel browser als machine tot machine) een veilig, stabiel en betrouwbaar platform 
+                voor applicatieontwikkeling.
             </p>
           </Box>
           {/* <Box width={2 / 5}>
@@ -89,14 +89,14 @@ const IndexPage = ({location}) => (
       <Section>
         <Flex>
           {/* <Box width={2 / 5}>
-            <ResponsiveImage src={casesImage} alt="Illustratie van persoon en document"/>
+            <ResponsiveImage src={casesImage} alt="Illustratie van pefrsoon en document"/>
           </Box> */}
           <Box width={5 / 5}>
             <h2>Standaard sneller</h2>
             <p>Niet alleen is de Conductor technisch sneller door slim gebruik van caching, asynchrone bevragingen en andere aspecten van het Common Ground ecosysteem,
                zoals linked data. Het is ook specifiek ontworpen voor sneller ontwikkelen, het kan snel en simpel lokaal worden gedraaid en is in staat volledige API’s
-                (zoals ZGW) te mocken, hiermee kan een developer meteen aan de slag. De standaard uitgebreide functionaliteit zorgt er voor dat developers zich niet
-                 langer zorgen hoeven te maken over aspecten, zoals verwerkingen of DigiD maar zich volledig kunnen richten op de frontend. </p>
+                (zoals ZGW) te mocken, hiermee kan een developer meteen aan de slag. De standaard uitgebreide functionaliteit zorgt ervoor dat developers zich niet
+                 langer zorgen hoeven te maken over aspecten, zoals verwerkingen of DigiD, maar zich volledig kunnen richten op de frontend. </p>
           </Box>
         </Flex>
       </Section>
@@ -105,9 +105,9 @@ const IndexPage = ({location}) => (
   <Flex>
     <Box width={5 / 5}>
       <h2>Standaard in Standaarden</h2>
-      <p>Conductor is specifiek ontworpen met het ondersteunen van Common Ground applicaties in gedachten. De straightforward en simpele restful API is
+      <p>Conductor is specifiek ontworpen met het ondersteunen van Common Ground applicaties in gedachten. De straightforward en simpele RESTful API is
          gemakkelijk te integreren in React of Angular applicaties, zoals NL Design System en werkt goed samen met verschillende AJAX libraries (zoals 
-         restful React). Deze ondersteuning gaat verder dan standaard lees verkeer en ondersteunt bijvoorbeeld ook het realtime bijwerken van gegevens 
+         RESTful React). Deze ondersteuning gaat verder dan standaard lees verkeer en ondersteunt bijvoorbeeld ook het realtime bijwerken van gegevens 
          in de UI aan de hand van polling of webhooks.
       </p>
     </Box>
@@ -122,7 +122,7 @@ const IndexPage = ({location}) => (
     <Box width={5 / 5}>
       <h2>Zowel los als in samenhang</h2>
       <p>Op dit moment is Conductor alleen al losse container beschikbaar, bij de ontwikkeling is er echter bewust gekozen voor het hergebruik van bekende PHP 
-        libraries. Hierdoor is het mogelijk om conductor ook als onderdeel (plugin) van een Wordpress, Drupal of Joomla installatie te draaien. We streven er 
+        libraries. Hierdoor is het mogelijk om conductor ook als onderdeel (plug-in) van een WordPress, Drupal of Joomla installatie te draaien. We streven er 
         naar om Conductor 2022 als integreerbare oplossing aan te bieden.
       </p>
     </Box>
