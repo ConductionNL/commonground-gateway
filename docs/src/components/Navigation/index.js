@@ -58,6 +58,9 @@ const Navigation = ({ location }) => {
             <Link to={item.link} activeClassName="active" partiallyActive={item.partiallyActive}>{item.title}</Link>
           </StyledListItem>
         ))}
+        <StyledListItem key={5}> {/* Dumb way of settin key */}
+          <Link to='https://docs.conductor-gateway.app/en/latest/' target='__blank' >Docs</Link>
+        </StyledListItem>
         <StyledListItem>
           <a href="https://github.com/ConductionNL/Proto-component-commonground" target="_blank" rel="noopener noreferrer" aria-label="Bekijk project op Github">
             <GithubLogo width="26px" height="24px" />
@@ -66,9 +69,9 @@ const Navigation = ({ location }) => {
           {/*  <SlackLogo width="26px" />*/}
           {/*</a>*/}
         </StyledListItem>
-        <StyledListItem>
+        {/* <StyledListItem>
           <LanguageSelector languages={languageSelector} />
-        </StyledListItem>
+        </StyledListItem> */}
       </StyledList>
     </StyledNav>
   )
