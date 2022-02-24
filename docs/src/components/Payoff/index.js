@@ -6,7 +6,7 @@ const Payoff = () => (
   <StyledContainer>
     <StyledIntro>
       <StyledTextContainer>
-        <StyledHeading>Commonground Gateway</StyledHeading>
+        <StyledHeading>Conductor</StyledHeading>
         <StyledParagraph>Conductor integreert meerdere API’s tot één (AJAX-first) rest-API die meteen in een Angular, React of Vue frontend kan worden geïntegreerd. 
 </StyledParagraph>
 
