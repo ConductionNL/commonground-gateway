@@ -364,18 +364,13 @@ class ValidaterService
                 return new Rules\Key('base64', new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null), false);
             case 'fileTypes':
                 // base64 Key is mandatory but false here, because it is already checked in: $this->getAttTypeRule(), let's prevent double error messages...
-                // todo: here we should use new customRule in combination with the Key rule to get the mimeType from base64 and compare it to the allowed mime types
-//                return new Rules\Key('base64', new CustomRules\Base64MimeTypes($config), false);
-                break;
+                return new Rules\Key('base64', new CustomRules\Base64MimeTypes($config), false);
             default:
                 // we should never end up here
                 if (is_array($config)) {
                     $config = http_build_query($config, '', ', ');
                 }
-
                 throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
-
-        return null;
     }
 }

@@ -14,14 +14,14 @@ final class Base64String extends AbstractRule
      *
      * @var string|null
      */
-    private ?string $exceptionMessage;
+    private ?string $exceptionMessage = null;
 
     /**
      * @inheritDoc
      */
     public function validate($input): bool
     {
-        // Example of how input should look like: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
+        // Example of a (full length) base64 string: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
         // Make sure we have a string as input
         if (!Validator::stringType()->validate($input)) {
             $this->setExceptionMessage("This is not a string.");
@@ -36,33 +36,33 @@ final class Base64String extends AbstractRule
             return false;
         }
 
+        // Get mimeType using the base64 to open a file and compare it with the mimeType from the base64 input string
         try {
-            // Get mimeType using the base64 to open a file and compare it with the mimeType from the base64 input string
             // Use the base64 to open a file and get the mimeType
             $fileData = base64_decode($base64);
             $f = finfo_open();
-            $mimeType2 = finfo_buffer($f, $fileData, FILEINFO_MIME_TYPE);
+            $mimeType1 = finfo_buffer($f, $fileData, FILEINFO_MIME_TYPE);
             finfo_close($f);
-
-            // Support normal base64 validation as well
-            $mimeType1 = $mimeType2;
-
-            // If input string has a single comma (',') in it count($exploded_input) will return 2
-            if (count($exploded_input) == 2) {
-                // Take the part before the comma (',') and look for the mimeType in it
-                $matchesCount = preg_match('/data:([\w\/]+);base64/', $exploded_input[0], $matches);
-                if ($matchesCount == 1) {
-                    // We found a mimeType in the base64 input string
-                    $mimeType1 = $matches[1];
-                }
-            }
-
-            if ($mimeType1 !== $mimeType2) {
-                $this->setExceptionMessage("Mime type mismatch: ".$mimeType1." should match: ".$mimeType2);
-                return false;
-            }
         } catch (Exception $exception) {
             $this->setExceptionMessage($exception->getMessage());
+            return false;
+        }
+
+        // Support normal base64 validation as well, example: ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
+        $mimeType2 = $mimeType1;
+
+        // If input string has a single comma (',') in it, count($exploded_input) will return 2
+        if (count($exploded_input) == 2) {
+            // Take the part before the comma (',') and look for the mimeType in it
+            $matchesCount = preg_match('/data:([\w\/]+);base64/', $exploded_input[0], $matches);
+            if ($matchesCount == 1) {
+                // We found a mimeType in the base64 input string
+                $mimeType2 = $matches[1];
+            }
+        }
+
+        if ($mimeType2 !== $mimeType1) {
+            $this->setExceptionMessage("Mime type mismatch: ".$mimeType2." should match: ".$mimeType1);
             return false;
         }
 

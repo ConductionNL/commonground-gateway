@@ -132,23 +132,23 @@ App\Entity\Attribute:
 #        multiple: true #todo, test it
         minFileSize: 20
         maxFileSize: 50000
-#        fileTypes: # see function mimeToExt() in ValidationService #todo:
-#            [
-#                "application/pdf",
-#                "text/plain",
-#                "text/xml",
-#                "text/json",
-#                "text/x-comma-separated-values",
-#                "text/comma-separated-values",
-#                "application/vnd.msexcel",
-#                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-#                "video/mp4",
-#                "audio/mp3",
-#                "image/png",
-#                "image/x-png",
-#                "image/jpeg",
-#                "image/pjpeg",
-#            ]
+        fileTypes: # see function mimeToExt() in ValidationService #todo:
+            [
+                "application/pdf",
+                "text/plain",
+                "text/xml",
+                "text/json",
+                "text/x-comma-separated-values",
+                "text/comma-separated-values",
+                "application/vnd.msexcel",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "video/mp4",
+                "audio/mp3",
+                "image/png",
+                "image/x-png",
+                "image/jpeg",
+                "image/pjpeg",
+            ]
         entity: "@person"
     person_int:
         name: int

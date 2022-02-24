@@ -20,6 +20,8 @@ final class Base64Size extends AbstractRule
     private ?int $maxSize;
 
     /**
+     * It is recommended to use the Base64String validation rule before using this rule.
+     *
      * @param int|null $minSize
      * @param int|null $maxSize
      */
@@ -34,6 +36,8 @@ final class Base64Size extends AbstractRule
      */
     public function validate($input): bool
     {
+        // todo: we could just move and merge all validations from here to the Base64String rule?
+
         $size = $this->getBase64Size($input);
         if ($this->isValidSize($size)) {
             return true;
