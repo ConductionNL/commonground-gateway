@@ -24,10 +24,6 @@ It is possible to split authorization based on application profiles, providing a
 
 The web gateway provides multi-tenancy by separating all the data it holds (both configuration and actual usage) along the lines of organizational IDs. This is hardcoded into the database queries and provides a fool-proof way of running a multi-tenancy setup from a single installation. If you, however, prefer a separation of databases on a tenant base, we advise you to use a multi-installation setup.
 
-## NL Design System Ready
-
-The web gateway provides an easy (and inline scripting save) way of providing applications with NL Design System token files based on the organization that is currently served (see multy-tenancy). This allows applications to quickly implement NL Design using NL Design tokens [a complete list can be found here](https://github.com/nl-design-system). The only action an application needs to take is to include the following line before loading other ccs files `/api/organisations/{id}/nl-design-tokens.css`. Security-wise, the API is to be provided from the same domain as the application.
-
 ## Haven ready
 
 -To be added-
