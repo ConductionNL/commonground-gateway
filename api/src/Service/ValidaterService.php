@@ -191,18 +191,20 @@ class ValidaterService
      */
     private function getAttributeRules(Attribute $attribute): Validator
     {
-        // note: When multiple rules are broken and somehow only one error is returned for one of the two rules, only the last added rule will be shown in the error message.
-        // ^this is why the rules in this function are added in the current order. Subresources->Validations->Format->Type
         $attributeRulesValidator = new Validator();
 
-        // Add rules for validations
-        $attributeRulesValidator = $this->addValidationRules($attribute, $attributeRulesValidator);
+        // Add rule for type, but only if input is not empty.
+        $attribute->getType() !== null && $attributeRulesValidator->AddRule($this->getAttTypeRule($attribute));
+
+        //todo: only do format validation if type validation didn't give any errors
 
         // Add rule for format, but only if input is not empty.
         $attribute->getFormat() !== null && $attributeRulesValidator->AddRule($this->getAttFormatRule($attribute));
 
-        // Add rule for type, but only if input is not empty.
-        $attribute->getType() !== null && $attributeRulesValidator->AddRule($this->getAttTypeRule($attribute));
+        //todo: only do rules validation if type & format validation didn't give any errors
+
+        // Add rules for validations
+        $attributeRulesValidator = $this->addValidationRules($attribute, $attributeRulesValidator);
 
         return $attributeRulesValidator;
     }
@@ -234,9 +236,10 @@ class ValidaterService
             case 'datetime':
                 return new Rules\DateTime();
             case 'file':
+                // todo: make one custom rule for a file where we use these other custom rules. also validate if mime_type and extension match in this custom rule
                 return new Rules\KeySet(
                     new Rules\Key('filename', new CustomRules\Filename(), false),
-                    new Rules\Key('base64', $this->getBase64Validator(), true)
+                    new Rules\Key('base64', new CustomRules\Base64String(), true)
                 );
             case 'object':
                 // TODO: move this to a getObjectValidator function?
@@ -377,11 +380,12 @@ class ValidaterService
                 return new Rules\Max(new DateTime($config));
             case 'maxFileSize':
             case 'minFileSize':
-                // base64 Key is mandatory, but this shouldn't be checked here, see: $this->getAttTypeRule(), let's prevent double error messages...
+                // base64 Key is mandatory but false here, because it is already checked in: $this->getAttTypeRule(), let's prevent double error messages...
                 return new Rules\Key('base64', new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null), false);
             case 'fileTypes':
-                // todo: see: $this->getAttTypeRule() & $this->getBase64Validator()
-                // todo: here we should use new customRules in combination with the Key rule to get the base64 and mimeType from {"filename": "something.txt", "base64": "data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50"}
+                // base64 Key is mandatory but false here, because it is already checked in: $this->getAttTypeRule(), let's prevent double error messages...
+                // todo: here we should use new customRule in combination with the Key rule to get the mimeType from base64 and compare it to the allowed mime types
+//                return new Rules\Key('base64', new CustomRules\Base64MimeTypes($config), false);
                 break;
             default:
                 // we should never end up here
