@@ -126,8 +126,9 @@ App\Entity\Attribute:
     person_file:
         name: file
         type: file
-#        multiple: true
-#        maxFileSize: 550000 #todo:
+#        multiple: true #todo, test it
+        minFileSize: 20
+        maxFileSize: 50000
 #        fileTypes: # see function mimeToExt() in ValidationService #todo:
 #            [
 #                "application/pdf",
@@ -153,6 +154,15 @@ App\Entity\Attribute:
         maximum: 12
         type: integer
         entity: "@person"
+    person_postalCode:
+        name: code
+        type: integer
+        requiredIf:
+            '==': [{ var: int }, 12]
+        forbiddenIf:
+            '<': [{ var: int }, 12]
+        entity: "@person"
+        format: dutch_pc4
         
     # email Attributes
     email_name:

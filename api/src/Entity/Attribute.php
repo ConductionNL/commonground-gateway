@@ -97,7 +97,7 @@ class Attribute
      * @example string
      *
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"countryCode","bsn","url","uuid","email","phone","json"})
+     * @Assert\Choice({"countryCode","bsn","url","uuid","email","phone","json","dutch_pc4"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -1225,6 +1225,8 @@ class Attribute
         $validations['maxProperties'] = $this->getMaxProperties();
         $validations['minProperties'] = $this->getMinProperties();
         $validations['required'] = $this->getRequired();
+        $validations['requiredIf'] = $this->getRequiredIf();
+        $validations['forbiddenIf'] = $this->getForbiddenIf();
         $validations['enum'] = $this->getEnum();
         $validations['allOf'] = $this->getAllOf(); //todo: validation/BL toevoegen
         $validations['anyOf'] = $this->getAnyOf(); //todo: validation/BL toevoegen
@@ -1235,6 +1237,9 @@ class Attribute
         $validations['maxDate'] = $this->getMaxDate();
         $validations['minDate'] = $this->getMinDate();
         $validations['multiple'] = $this->getMultiple();
+        $validations['maxFileSize'] = $this->getMaxFileSize();
+        $validations['minFileSize'] = $this->getMinFileSize();
+        $validations['fileTypes'] = $this->getFileTypes();
 
         return $validations;
     }
@@ -1280,6 +1285,12 @@ class Attribute
         }
         if (array_key_exists('required', $validations)) {
             $this->setRequired($validations['required']);
+        }
+        if (array_key_exists('requiredIf', $validations)) {
+            $this->setRequiredIf($validations['requiredIf']);
+        }
+        if (array_key_exists('forbiddenIf', $validations)) {
+            $this->setForbiddenIf($validations['forbiddenIf']);
         }
         if (array_key_exists('enum', $validations)) {
             $this->setEnum($validations['enum']);
