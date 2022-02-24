@@ -62,8 +62,7 @@ const IndexPage = ({location}) => (
           <Box width={5 / 5}>
             <h2>Standaard rijk uitgevoerd</h2>
             <p>Conductor bindt API’s niet alleen aan elkaar vast, maar voorziet ook in specifieke oplossingen voor het ecosysteem. Het kan objecten uit meerdere API’s 
-              als één object aan de UI leveren en bij het opslaan hiervan ook de gegevens weer over de verschillende API’s verdelen. Daarnaast kan Conductor objecten v
-              errijken, cachen en verwerkingen in een verwerkingen register vastleggen. Uiteraard worden standaard Common Ground componenten, zoals autorisaties, 
+              als één object aan de UI leveren en bij het opslaan hiervan ook de gegevens weer over de verschillende API’s verdelen. Daarnaast kan Conductor objecten verrijken, cachen en verwerkingen in een verwerkingen register vastleggen. Uiteraard worden standaard Common Ground componenten, zoals autorisaties, 
               notificaties en ZGW volledig ondersteund. Hierdoor hoeft dit soort logica niet meer zelf te worden ontwikkeld en blijft de frontend ook echt de 
               frontend.
               </p>
