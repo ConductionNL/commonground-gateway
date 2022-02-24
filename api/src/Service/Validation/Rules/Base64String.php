@@ -37,8 +37,16 @@ final class Base64String extends AbstractRule
         }
 
         try {
-            $mimeType1 = false;
-            // Get mimeType from the base64 input string and compare it with the mimeType we get from using the base64 to open a file and get the mimeType
+            // Get mimeType using the base64 to open a file and compare it with the mimeType from the base64 input string
+            // Use the base64 to open a file and get the mimeType
+            $fileData = base64_decode($base64);
+            $f = finfo_open();
+            $mimeType2 = finfo_buffer($f, $fileData, FILEINFO_MIME_TYPE);
+            finfo_close($f);
+
+            // Support normal base64 validation as well
+            $mimeType1 = $mimeType2;
+
             // If input string has a single comma (',') in it count($exploded_input) will return 2
             if (count($exploded_input) == 2) {
                 // Take the part before the comma (',') and look for the mimeType in it
@@ -48,12 +56,6 @@ final class Base64String extends AbstractRule
                     $mimeType1 = $matches[1];
                 }
             }
-
-            // Use the base64 to open a file and get the mimeType
-            $fileData = base64_decode($base64);
-            $f = finfo_open();
-            $mimeType2 = finfo_buffer($f, $fileData, FILEINFO_MIME_TYPE);
-            finfo_close($f);
 
             if ($mimeType1 !== $mimeType2) {
                 $this->setExceptionMessage("Mime type mismatch: ".$mimeType1." should match: ".$mimeType2);
