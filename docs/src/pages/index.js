@@ -74,7 +74,7 @@ const IndexPage = ({location}) => (
         <Flex>
           <Box width={5 / 5}>
             <h2>Standaard veilig</h2>
-            <p>Conductor ondersteunt zonder extra componenten DigiD, eHerkenning, OpenId Connect en ADFS. Als alternatief kan er ook gebruik worden gemaakt van
+            <p>Conductor ondersteunt zonder extra componenten DigiD, eHerkenning, OpenID Connect en ADFS. Als alternatief kan er ook gebruik worden gemaakt van
                Kubernetes oplossingen, zoals Keycloak of commerciële oplossingen, zoals Auth0. Conductor is zowel gepentest als aan een TPM audit onderworpen en
                 levert met haar standaard ondersteuning voor PKI certificaten (zowel browser als machine tot machine) een veilig, stabiel en betrouwbaar platform 
                 voor applicatie ontwikkeling.
