@@ -256,26 +256,6 @@ class ValidaterService
         }
     }
 
-    // todo: make this into a customRule
-    /**
-     * Gets a Validator with rules used for validating a base64 string.
-     *
-     * @return Validator
-     */
-    private function getBase64Validator(): Validator
-    {
-        $base64Validator = new Validator();
-
-        // todo: EXAMPLE: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
-        $base64Validator->addRule(new Rules\StringType());
-        $base64Validator->addRule(new Rules\Base64()); // this only validates: ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50 of above EXAMPLE
-        // todo: in this function we should validate if the base64 string has the correct structure (as shown in EXAMPLE above^)
-        // todo: for validation of allowed mime types and file size we should make customRules and use those in the $this->getValidationRule() function
-//        new Rules\Mimetype();
-
-        return $base64Validator;
-    }
-
     /**
      * Gets the correct Rule for the format of the given Attribute.
      *
