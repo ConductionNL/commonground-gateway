@@ -101,13 +101,6 @@ class Endpoint
     private string $path;
 
     /**
-     * @Groups({"read", "write"})
-     * @MaxDepth(1)
-     * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="endpoints")
-     */
-    private ?Application $application;
-
-    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY", cascade={"remove"})
      */
@@ -132,10 +125,18 @@ class Endpoint
      */
     private Collection $handlers;
 
+    /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=Application::class, mappedBy="endpoints")
+     */
+    private $applications;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
+        $this->applications = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -194,18 +195,6 @@ class Endpoint
     public function setPath(string $path): self
     {
         $this->path = $path;
-
-        return $this;
-    }
-
-    public function getApplication(): ?Application
-    {
-        return $this->application;
-    }
-
-    public function setApplication(?Application $application): self
-    {
-        $this->application = $application;
 
         return $this;
     }
@@ -277,6 +266,33 @@ class Endpoint
             if ($handler->getObject() === $this) {
                 $handler->setObject(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Application[]
+     */
+    public function getApplications(): Collection
+    {
+        return $this->applications;
+    }
+
+    public function addApplication(Application $application): self
+    {
+        if (!$this->applications->contains($application)) {
+            $this->applications[] = $application;
+            $application->addEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeApplication(Application $application): self
+    {
+        if ($this->applications->removeElement($application)) {
+            $application->removeEndpoint($this);
         }
 
         return $this;
