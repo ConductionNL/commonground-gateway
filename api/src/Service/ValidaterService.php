@@ -237,11 +237,7 @@ class ValidaterService
                 return new Rules\DateTime();
             case 'file':
                 // todo: make one custom rule for a file where we use these other custom rules. But also validate if mime_type and extension match
-//                return new CustomRules\Base64File();
-                return new Rules\KeySet(
-                    new Rules\Key('filename', new CustomRules\Filename(), false),
-                    new Rules\Key('base64', new CustomRules\Base64String(), true)
-                );
+                return new CustomRules\Base64File();
             case 'object':
                 // TODO: move this to a getObjectValidator function?
                 $objectValidator = new Validator();
