@@ -263,3 +263,4 @@ App\Entity\Subscriber:
             freitag: friday 
             wochenende.samstag: saturday
             wochenende.sonntag: sunday
+        endpoint: "@weerEndpoint"

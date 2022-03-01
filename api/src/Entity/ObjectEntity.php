@@ -187,6 +187,13 @@ class ObjectEntity
      */
     private Collection $requestLogs;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="objectEntity", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $subscriber;
+
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
@@ -792,6 +799,28 @@ class ObjectEntity
                 $requestLog->setObjectEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubscriber(): ?Subscriber
+    {
+        return $this->subscriber;
+    }
+
+    public function setSubscriber(?Subscriber $subscriber): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriber === null && $this->subscriber !== null) {
+            $this->subscriber->setObjectEntity(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriber !== null && $subscriber->getObjectEntity() !== $this) {
+            $subscriber->setObjectEntity($this);
+        }
+
+        $this->subscriber = $subscriber;
 
         return $this;
     }

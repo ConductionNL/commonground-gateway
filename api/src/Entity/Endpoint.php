@@ -132,6 +132,13 @@ class Endpoint
      */
     private $applications;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="endpoint", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $subscriber;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
@@ -294,6 +301,28 @@ class Endpoint
         if ($this->applications->removeElement($application)) {
             $application->removeEndpoint($this);
         }
+
+        return $this;
+    }
+
+    public function getSubscriber(): ?Subscriber
+    {
+        return $this->subscriber;
+    }
+
+    public function setSubscriber(?Subscriber $subscriber): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriber === null && $this->subscriber !== null) {
+            $this->subscriber->setEndpoint(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriber !== null && $subscriber->getEndpoint() !== $this) {
+            $subscriber->setEndpoint($this);
+        }
+
+        $this->subscriber = $subscriber;
 
         return $this;
     }

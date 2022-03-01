@@ -153,6 +153,27 @@ class Subscriber
      */
     private $mappingOut = [];
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=ObjectEntity::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $objectEntity;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $gateway;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $endpoint;
+
     public function getId()
     {
         return $this->id;
@@ -310,6 +331,42 @@ class Subscriber
     public function setMappingOut(?array $mappingOut): self
     {
         $this->mappingOut = $mappingOut;
+
+        return $this;
+    }
+
+    public function getObjectEntity(): ?ObjectEntity
+    {
+        return $this->objectEntity;
+    }
+
+    public function setObjectEntity(?ObjectEntity $objectEntity): self
+    {
+        $this->objectEntity = $objectEntity;
+
+        return $this;
+    }
+
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getEndpoint(): ?Endpoint
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(?Endpoint $endpoint): self
+    {
+        $this->endpoint = $endpoint;
 
         return $this;
     }
