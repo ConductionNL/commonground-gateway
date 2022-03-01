@@ -7,6 +7,7 @@ use App\Entity\Entity;
 use App\Exception\GatewayException;
 use App\Service\Validation\Rules as CustomRules;
 use DateTime;
+use Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
@@ -99,16 +100,35 @@ class ValidaterService
     {
         foreach ($entity->getAttributes() as $attribute) {
             if ($attribute->getValidations()['requiredIf']) {
-                // todo: this works but doesn't give a nice error response when the rule is broken...
-                // When works like this: When(IF, TRUE, FALSE)
-                $validator->addRule(new Rules\When(new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), new Rules\Key($attribute->getName()), new Rules\AlwaysValid()));
+                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+                $validator->addRule(
+                    new Rules\When(
+                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
+                        new Rules\Key($attribute->getName()), // TRUE
+                        new Rules\AlwaysValid() // FALSE
+//                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']) // FALSE
+                    )
+                );
             }
             if ($attribute->getValidations()['forbiddenIf']) {
-                // todo: this works but doesn't give a nice error response when the rule is broken...
-                // When works like this: When(IF, TRUE, FALSE)
-                $validator->addRule(new Rules\When(new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), new Rules\Not(new Rules\Key($attribute->getName())), new Rules\AlwaysValid()));
+                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+                $validator->addRule(
+                    new Rules\When(
+                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
+                        new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
+                        new Rules\AlwaysValid() // FALSE
+//                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']) // FALSE
+                    )
+                );
             }
-            $validator->AddRule(new Rules\Key($attribute->getName(), $this->getAttributeValidator($attribute), $attribute->getValidations()['required'] === true)); // mandatory = required
+
+            $validator->AddRule(
+                new Rules\Key(
+                    $attribute->getName(),
+                    $this->getAttributeValidator($attribute),
+                    $attribute->getValidations()['required'] === true // mandatory = required
+                )
+            );
         }
 
         return $validator;
@@ -162,7 +182,7 @@ class ValidaterService
     private function checkIfAttMultiple(Attribute $attribute): Validator
     {
         // Get all validations for this attribute
-        $attributeRulesValidator = $this->getAttributeRules($attribute);
+        $attributeRulesValidator = $this->getAttTypeValidator($attribute);
 
         // Check if this attribute is an array
         if ($attribute->getValidations()['multiple'] === true) {
@@ -181,42 +201,57 @@ class ValidaterService
     }
 
     /**
-     * Gets all (other) validation, format and type Rules for the given Attribute.
+     * Gets a Validator for the type of the given Attribute. (And format and other validations if type validation is true)
      *
      * @param Attribute $attribute
-     *
-     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
-     *
      * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      */
-    private function getAttributeRules(Attribute $attribute): Validator
+    private function getAttTypeValidator(Attribute $attribute): Validator
     {
-        $attributeRulesValidator = new Validator();
+        $attributeTypeValidator = new Validator();
 
-        // Add rule for type, but only if input is not empty.
-        $attribute->getType() !== null && $attributeRulesValidator->AddRule($this->getAttTypeRule($attribute));
+        // If attribute type is correct continue validation of attribute format
+        $attributeTypeValidator->addRule(
+            new Rules\When(
+                $this->getAttTypeRule($attribute), // IF
+                $this->getAttFormatValidator($attribute), // TRUE
+                $this->getAttTypeRule($attribute) // FALSE
+            )
+        );
 
-        //todo: only do format validation if type validation didn't give any errors
+        return $attributeTypeValidator;
+    }
 
-        // Add rule for format, but only if input is not empty.
-        $attribute->getFormat() !== null && $attributeRulesValidator->AddRule($this->getAttFormatRule($attribute));
+    /**
+     * Gets a Validator for the format of the given Attribute. (And other validations if format validation is true)
+     *
+     * @param Attribute $attribute
+     * @return Validator
+     * @throws ComponentException|GatewayException
+     */
+    private function getAttFormatValidator(Attribute $attribute): Validator
+    {
+        $attributeFormatValidator = new Validator();
 
-        //todo: only do rules validation if type & format validation didn't give any errors
+        // If attribute format is correct continue validation of other validationRules
+        $attributeFormatValidator->addRule(
+            new Rules\When(
+                $this->getAttFormatRule($attribute), // IF
+                $this->getAttValidationRulesValidator($attribute), // TRUE
+                $this->getAttFormatRule($attribute) // FALSE
+            )
+        );
 
-        // Add rules for validations
-        $attributeRulesValidator = $this->addValidationRules($attribute, $attributeRulesValidator);
-
-        return $attributeRulesValidator;
+        return $attributeFormatValidator;
     }
 
     /**
      * Gets the correct Rule(s) for the type of the given Attribute.
      *
      * @param Attribute $attribute
-     *
-     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
-     *
      * @return Rules\AbstractRule
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      */
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -237,10 +272,6 @@ class ValidaterService
                 return new Rules\DateTime();
             case 'file':
                 return new CustomRules\Base64File();
-//                return new Rules\KeySet(
-//                    new Rules\Key('filename', new CustomRules\Filename(), false),
-//                    new Rules\Key('base64', new CustomRules\Base64String(), true)
-//                );
             case 'object':
                 // TODO: move this to a getObjectValidator function?
                 $objectValidator = new Validator();
@@ -252,18 +283,25 @@ class ValidaterService
 
                 return $objectValidator;
             default:
-                throw new GatewayException('Unknown attribute type!', null, null, ['data' => $attribute->getType(), 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException(
+                    'Unknown attribute type!',
+                    null,
+                    null,
+                    [
+                        'data' => $attribute->getType(),
+                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST
+                    ]
+                );
         }
     }
 
     /**
-     * Gets the correct Rule for the format of the given Attribute.
+     * Gets the correct Rule for the format of the given Attribute. If attribute has no format this will return alwaysValid.
      *
      * @param Attribute $attribute
-     *
-     * @throws GatewayException
-     *
      * @return Rules\AbstractRule
+     * @throws GatewayException
      */
     private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -289,33 +327,44 @@ class ValidaterService
                 return new Rules\Json();
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
+            case null:
+                return new Rules\AlwaysValid();
             default:
-                throw new GatewayException('Unknown attribute format!', null, null, ['data' => $format, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException(
+                    'Unknown attribute format!',
+                    null,
+                    null,
+                    [
+                        'data' => $format,
+                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST
+                    ]
+                );
         }
     }
 
     /**
-     * Adds the correct Rules for (almost) all the validations of the given Attribute.
+     * Gets a Validator with the correct Rules for (almost) all the validations of the given Attribute.
      *
      * @param Attribute $attribute
-     * @param Validator $attributeRulesValidator
-     *
-     * @throws GatewayException|ComponentException
-     *
      * @return Validator
+     * @throws ComponentException|GatewayException
      */
-    private function addValidationRules(Attribute $attribute, Validator $attributeRulesValidator): Validator
+    private function getAttValidationRulesValidator(Attribute $attribute): Validator
     {
+        $validationRulesValidator = new Validator();
+
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
-            // And validations in_array here are not done through this addValidationRule function, but somewhere else!
-            if (empty($config) || in_array($validation, ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf'])) {
+            // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf'];
+            if (empty($config) || in_array($validation, $ignoredValidations)) {
                 continue;
             }
-            $attributeRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
+            $validationRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
         }
 
-        return $attributeRulesValidator;
+        return $validationRulesValidator;
     }
 
     /**
@@ -324,10 +373,8 @@ class ValidaterService
      * @param Attribute $attribute
      * @param $validation
      * @param $config
-     *
-     * @throws ComponentException|GatewayException
-     *
      * @return Rules\AbstractRule|null
+     * @throws ComponentException|GatewayException|Exception
      */
     private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
@@ -360,17 +407,31 @@ class ValidaterService
                 return new Rules\Max(new DateTime($config));
             case 'maxFileSize':
             case 'minFileSize':
-                // base64 Key is mandatory but false here, because it is already checked in: $this->getAttTypeRule(), let's prevent double error messages...
-                return new Rules\Key('base64', new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null), false);
+                return new Rules\Key(
+                    'base64',
+                    new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null),
+                    true
+                );
             case 'fileTypes':
-                // base64 Key is mandatory but false here, because it is already checked in: $this->getAttTypeRule(), let's prevent double error messages...
-                return new Rules\Key('base64', new CustomRules\Base64MimeTypes($config), false);
+                return new Rules\Key(
+                    'base64',
+                    new CustomRules\Base64MimeTypes($config),
+                    true);
             default:
                 // we should never end up here
                 if (is_array($config)) {
                     $config = http_build_query($config, '', ', ');
                 }
-                throw new GatewayException('Unknown validation!', null, null, ['data' => $validation.' set to '.$config, 'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                throw new GatewayException(
+                    'Unknown validation!',
+                    null,
+                    null,
+                    [
+                        'data' => $validation.' set to '.$config,
+                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST
+                    ]
+                );
         }
     }
 }
