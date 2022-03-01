@@ -23,7 +23,7 @@ final class Base64File extends Rules\AllOf
      */
     public function validate($input): bool
     {
-        // todo: extension
+        // todo: Also validate if mime_type and extension match
         if ($input == false) {
             return false;
         }
