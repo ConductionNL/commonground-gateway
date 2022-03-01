@@ -12,6 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
  * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
@@ -29,6 +30,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/subscribers"}
  *  })
  * @ORM\Entity(repositoryClass=SubscriberRepository::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "entity.id": "exact"
+ * })
  */
 class Subscriber
 {
@@ -155,10 +159,10 @@ class Subscriber
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=ObjectEntity::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $objectEntity;
+    private $entity;
 
     /**
      * @Groups({"read", "write"})
@@ -335,14 +339,14 @@ class Subscriber
         return $this;
     }
 
-    public function getObjectEntity(): ?ObjectEntity
+    public function getEntity(): ?Entity
     {
-        return $this->objectEntity;
+        return $this->entity;
     }
 
-    public function setObjectEntity(?ObjectEntity $objectEntity): self
+    public function setEntity(?Entity $entity): self
     {
-        $this->objectEntity = $objectEntity;
+        $this->entity = $entity;
 
         return $this;
     }

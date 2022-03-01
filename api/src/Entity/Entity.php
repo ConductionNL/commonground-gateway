@@ -247,6 +247,13 @@ class Entity
      */
     private Collection $handlers;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entity", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private $subscriber;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -740,6 +747,28 @@ class Entity
                 $handler->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubscriber(): ?Subscriber
+    {
+        return $this->subscriber;
+    }
+
+    public function setSubscriber(?Subscriber $subscriber): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriber === null && $this->subscriber !== null) {
+            $this->subscriber->setEntity(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriber !== null && $subscriber->getEntity() !== $this) {
+            $subscriber->setEntity($this);
+        }
+
+        $this->subscriber = $subscriber;
 
         return $this;
     }
