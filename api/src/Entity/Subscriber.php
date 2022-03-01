@@ -2,12 +2,9 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\SubscriberRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -36,24 +33,24 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
  */
 class Subscriber
 {
-  /**
-   * @var UuidInterface The UUID identifier of this Entity.
-   *
-   * @example e2984465-190a-4562-829e-a8cca81aa35d
-   *
-   * @Assert\Uuid
-   * @Groups({"read","read_secure"})
-   * @ORM\Id
-   * @ORM\Column(type="uuid", unique=true)
-   * @ORM\GeneratedValue(strategy="CUSTOM")
-   * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
-   */
-  private $id;
+    /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
+     * @ORM\Id
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
+     */
+    private $id;
 
     /**
      * @Assert\NotNull
      * @Assert\Type("string")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
@@ -61,7 +58,7 @@ class Subscriber
 
     /**
      * @Assert\Type("string")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -70,15 +67,15 @@ class Subscriber
     /**
      * @Assert\Type("string")
      * @Assert\Choice({"GET", "POST", "PUT", "PATCH"})
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, options={"default": "POST"})
      */
-    private $method = "POST";
+    private $method = 'POST';
 
     /**
      * @Assert\Type("integer")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
@@ -87,7 +84,7 @@ class Subscriber
     /**
      * @Assert\Type("string")
      * @Assert\Json()
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
@@ -95,7 +92,7 @@ class Subscriber
 
     /**
      * @Assert\Type("bool")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", options={"default": true})
      */
@@ -103,7 +100,7 @@ class Subscriber
 
     /**
      * @Assert\Type("bool")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
@@ -111,7 +108,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
@@ -119,7 +116,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
@@ -127,7 +124,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -135,7 +132,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
@@ -143,7 +140,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
@@ -151,7 +148,7 @@ class Subscriber
 
     /**
      * @Assert\Type("array")
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
