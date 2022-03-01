@@ -110,7 +110,7 @@ class Application
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private ?string $resource;
+    private ?string $resource = null;
 
     /**
      *  @ORM\PrePersist
@@ -139,13 +139,6 @@ class Application
     private ?string $organization;
 
     /**
-     * @Groups({"read", "write"})
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="application")
-     */
-    private Collection $endpoints;
-
-    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      */
@@ -157,11 +150,18 @@ class Application
      */
     private Collection $objectEntities;
 
+    /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="applications")
+     */
+    private $endpoints;
+
     public function __construct()
     {
-        $this->endpoints = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
+        $this->endpoints = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -261,36 +261,6 @@ class Application
     }
 
     /**
-     * @return Collection|Endpoint[]
-     */
-    public function getEndpoints(): Collection
-    {
-        return $this->endpoints;
-    }
-
-    public function addEndpoint(Endpoint $endpoint): self
-    {
-        if (!$this->endpoints->contains($endpoint)) {
-            $this->endpoints[] = $endpoint;
-            $endpoint->setApplication($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEndpoint(Endpoint $endpoint): self
-    {
-        if ($this->endpoints->removeElement($endpoint)) {
-            // set the owning side to null (unless already changed)
-            if ($endpoint->getApplication() === $this) {
-                $endpoint->setApplication(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|RequestLog[]
      */
     public function getRequestLogs(): Collection
@@ -346,6 +316,30 @@ class Application
                 $objectEntity->setApplication(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        $this->endpoints->removeElement($endpoint);
 
         return $this;
     }

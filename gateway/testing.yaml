@@ -2,19 +2,16 @@ App\Entity\Endpoint:
     weerEndpoint:
         name: Weer endpoint
         description: endpoint voor dingen rondom weer
-        type: gateway-endpoint
         path: weer
         
     peopleEndpoint:
         name: People endpoint
         description: endpoint voor dingen rondom contactgegevens
-        type: gateway-endpoint
         path: people
         
     emailEndpoint:
         name: Email endpoint
         description: endpoint voor dingen rondom emails
-        type: gateway-endpoint
         path: emails
 
 App\Entity\Entity:
@@ -187,6 +184,7 @@ App\Entity\Handler:
     weatherHandler:
         name: Weather handler
         sequence: 0
+        conditions: "{}"
         mappingIn:
             monday: maandag
             tuesday: dinsdag
@@ -214,12 +212,14 @@ App\Entity\Handler:
     peopleHandler:
         name: People handler
         sequence: 0
+        conditions: "{}"
         endpoint: "@peopleEndpoint"
         entity: "@person"
         
     emailHandler:
         name: Email handler
         sequence: 0
+        conditions: "{}"
         endpoint: "@emailEndpoint"
         entity: "@email"
 
