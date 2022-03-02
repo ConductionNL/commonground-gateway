@@ -11,6 +11,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
@@ -18,6 +19,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/subscribers/{id}"},
  *      "put"={"path"="/admin/subscribers/{id}"},
@@ -156,25 +159,27 @@ class Subscriber
     private $mappingOut = [];
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @var Entity|null The entity of this Subscriber.
+     *
      * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="subscribers")
      */
-    private $entity;
+    private ?Entity $entity = null;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?gateway $gateway;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $endpoint;
+    private ?endpoint $endpoint;
 
     public function getId()
     {
