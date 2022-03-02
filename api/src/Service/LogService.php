@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Log;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,13 +31,12 @@ class LogService
      *
      * @return Log
      */
-    public function saveLog (
-      Request $request,
-      Response $response = null, 
-      string $content = null, 
-      bool $finalSave = null
-    ): Log
-    {
+    public function saveLog(
+        Request $request,
+        Response $response = null,
+        string $content = null,
+        bool $finalSave = null
+    ): Log {
         $logRepo = $this->entityManager->getRepository('App:Log');
         $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]);
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
