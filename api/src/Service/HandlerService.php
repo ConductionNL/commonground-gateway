@@ -228,7 +228,7 @@ class HandlerService
                 $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 $this->validationService->removeObjectsOnPut = []; // to be sure
-                $object = $this->validationService->validateEntity($object, $data);
+//                $object = $this->validationService->validateEntity($object, $data, false, false);
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
