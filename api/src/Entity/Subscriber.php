@@ -7,10 +7,12 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\SubscriberRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
@@ -18,6 +20,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/subscribers/{id}"},
  *      "put"={"path"="/admin/subscribers/{id}"},

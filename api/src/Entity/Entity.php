@@ -248,7 +248,7 @@ class Entity
     private Collection $handlers;
 
     /**
-     * @var Collection|null The subscribers used for this entity.
+     * @var array|null The subscribers used for this entity.
      *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
