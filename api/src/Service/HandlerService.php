@@ -188,6 +188,10 @@ class HandlerService
 
         //TODO: old code for getting an Entity and Object
         $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
+
+        // Set entity for logging
+        $this->session->set('entity', $entity);
+
         $id = $this->request->attributes->get('id');
         if (isset($id) || $method == 'POST') {
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
