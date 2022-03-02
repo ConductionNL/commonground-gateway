@@ -471,7 +471,7 @@ class Gateway
      * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="gateway", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $subscriber;
+    private ?Subscriber $subscriber;
 
     public function __construct()
     {

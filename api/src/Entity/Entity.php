@@ -248,11 +248,13 @@ class Entity
     private Collection $handlers;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entity", cascade={"persist", "remove"})
+     * @var Collection|null The subscribers used for this entity.
+     *
      * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity")
      */
-    private $subscriber;
+    private Collection $subscribers;
 
     public function __construct()
     {
@@ -263,6 +265,7 @@ class Entity
         $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
+        $this->subscribers = new ArrayCollection();
     }
 
     public function export()
@@ -751,24 +754,32 @@ class Entity
         return $this;
     }
 
-    public function getSubscriber(): ?Subscriber
+    /**
+     * @return Collection|Subscriber[]
+     */
+    public function getSubscribers(): Collection
     {
-        return $this->subscriber;
+        return $this->subscribers;
     }
 
-    public function setSubscriber(?Subscriber $subscriber): self
+    public function addSubscribers(Subscriber $subscriber): self
     {
-        // unset the owning side of the relation if necessary
-        if ($subscriber === null && $this->subscriber !== null) {
-            $this->subscriber->setEntity(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriber !== null && $subscriber->getEntity() !== $this) {
+        if (!$this->subscribers->contains($subscriber)) {
+            $this->subscribers[] = $subscriber;
             $subscriber->setEntity($this);
         }
 
-        $this->subscriber = $subscriber;
+        return $this;
+    }
+
+    public function removeSubscribers(Subscriber $subscriber): self
+    {
+        if ($this->subscribers->removeElement($subscriber)) {
+            // set the owning side to null (unless already changed)
+            if ($subscriber->getEntity() === $this) {
+                $subscriber->setEntity(null);
+            }
+        }
 
         return $this;
     }

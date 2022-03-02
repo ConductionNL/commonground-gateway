@@ -156,25 +156,27 @@ class Subscriber
     private $mappingOut = [];
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @var Entity|null The entity of this Subscriber.
+     *
      * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="subscribers")
      */
-    private $entity;
+    private ?Entity $entity = null;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?gateway $gateway;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $endpoint;
+    private ?endpoint $endpoint;
 
     public function getId()
     {
