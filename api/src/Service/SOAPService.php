@@ -925,6 +925,26 @@ class SOAPService
         return $xmlEncoder->encode($this->getFo02Message(), 'xml');
     }
 
+    public function runPostHydrationCode(array $entity): array
+    {
+        if(
+            in_array('partner1', array_keys($entity)) &&
+            isset($entity['partner1']['nameAfterCommitment']) &&
+            !isset($entity['partner1']['nameAfterCommitment']['nameUseType'])
+        ) {
+            unset($entity['partner1']['nameAfterCommitment']);
+        }
+        if(
+            in_array('partner2', array_keys($entity)) &&
+            isset($entity['partner2']['nameAfterCommitment']) &&
+            !isset($entity['partner2']['nameAfterCommitment']['nameUseType'])
+        ) {
+            unset($entity['partner2']['nameAfterCommitment']);
+        }
+
+        return $entity;
+    }
+
 
     /**
      * This function handles generic SOAP INCOMMING SOAP calls based on the soap entity
@@ -940,6 +960,7 @@ class SOAPService
 
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'SOAP-ENV:Envelope', 'xml_encoding' => 'utf-8', 'encoder_ignored_node_types' => [\XML_CDATA_SECTION_NODE]]);
         $entity = $this->translationService->dotHydrator($soap->getRequest() ? $xmlEncoder->decode($soap->getRequest(), 'xml') : [],$data,$soap->getRequestHydration());
+        $entity = $this->runPostHydrationCode($entity);
 
         $requestBase = [
             "path" => $soap->getToEntity()->getRoute(),
