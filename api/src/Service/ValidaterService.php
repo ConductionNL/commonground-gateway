@@ -99,6 +99,16 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
+            // todo: immutable
+            if ($attribute->getValidations()['immutable']) { // & method = PUT
+
+            }
+
+            // todo: unsetable
+            if ($attribute->getValidations()['unsetable']) { // & method = POST
+
+            }
+
             if ($attribute->getValidations()['requiredIf']) {
                 // todo: this works but doesn't give a nice and clear error response why the rule is broken.
                 $validator->addRule(
