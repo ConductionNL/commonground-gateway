@@ -99,6 +99,17 @@ class ConvenienceController extends AbstractController
         // Set description from first method description
         (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $newEndpoint->setDescription($path[array_key_first($path)]['description']);
 
+        // Check reference to schema object (Entity)
+        // foreach ($path['responses'] as $response) {
+        //   if (isset($response['content']) && isset($response['content']['application/json']) && 
+        //   isset($response['content']['application/json']['schema']) && isset($response['content']['application/json']['schema']['results']) && 
+        //   isset($response['content']['application/json']['schema']['results']['items']) && isset($response['content']['application/json']['schema']['results']['items']['$ref'])) {
+        //     $entityName = $response['content']['application/json']['schema']['results']['items']['$ref'];
+        //     $entityName = substr($entityName, strrpos($entityName, '/') + 1);
+        //   }
+
+        // }
+
         $this->entityManager->persist($newEndpoint);
       }
 
