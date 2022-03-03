@@ -44,7 +44,7 @@ class ConvenienceController extends AbstractController
         $client = new Client();
         $response = $client->get($url);
         $redoc = Yaml::parse($response->getBody()->getContents());
-        
+
         try {
           // Persist yaml to objects
           $this->persistRedoc($redoc);
@@ -92,6 +92,11 @@ class ConvenienceController extends AbstractController
         isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
         isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
         isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
+
+        // @TODO set link to object if attribute is object (what if seeked object is not yet created?)
+        // if ($property['type'] === 'object') {
+
+        // }
 
         $newAttribute->setEntity($newEntity);
 
