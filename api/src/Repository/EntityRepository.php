@@ -47,4 +47,16 @@ class EntityRepository extends ServiceEntityRepository
         ;
     }
     */
+    public function findOneByName(string $name): ?Entity
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.name = :name')
+            ->setParameter('name', $name);
+
+        $query = $qb->getQuery();
+
+        $entity = $query->setMaxResults(1)->getOneOrNullResult();
+
+        return $entity;
+    }
 }

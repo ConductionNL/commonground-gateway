@@ -17,102 +17,131 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class ConvenienceController extends AbstractController
 {
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        SerializerInterface $serializer
-    ) {
-      $this->entityManager = $entityManager;
-      $this->serializer = $serializer;
-    }
+  public function __construct(
+    EntityManagerInterface $entityManager,
+    SerializerInterface $serializer
+  ) {
+    $this->entityManager = $entityManager;
+    $this->serializer = $serializer;
+  }
 
-    /**
-     * @Route("/admin/load/{type}", name="dynamic_route_load_type")
-     */
-    public function loadAction(Request $request, string $type): Response {
-      switch ($type) {
-        case 'redoc':
-          $request->query->get('url') ? $url = $request->query->get('url') : $errMsg = 'No url given';
-          if ($url) {
-            $client = new Client();
-            $response = $client->get($url);
-            $redoc = Yaml::parse($response->getBody()->getContents());
-            try {
-              $this->persistRedoc($redoc);
-            } catch (\Exception $e) {
-              $errMessage = $this->serializer->serialize([
-                'message' => $e
-              ], 'json');
-            }
+  /**
+   * @Route("/admin/load/{type}", name="dynamic_route_load_type")
+   */
+  public function loadAction(Request $request, string $type): Response
+  {
+    switch ($type) {
+      case 'redoc':
+        $request->query->get('url') ? $url = $request->query->get('url') : $errMsg = 'No url given';
+        if ($url) {
+          $client = new Client();
+          $response = $client->get($url);
+          $redoc = Yaml::parse($response->getBody()->getContents());
+          try {
+            $this->persistRedoc($redoc);
+          } catch (\Exception $e) {
+            $errMessage = $this->serializer->serialize([
+              'message' => $e
+            ], 'json');
           }
-          break;
-      }
-
-      return new Response(
-        isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
-        isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
-        ['content-type' => 'json']
-    );;
+        }
+        break;
     }
 
-    private function persistRedoc(array $redoc) {
+    return new Response(
+      isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
+      isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
+      ['content-type' => 'json']
+    );;
+  }
 
-      // Persist Entities and Attributes
-      foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
-        // Continue if we have no properties
-        if (!isset($entityInfo['properties'])) continue;
+  private function persistRedoc(array $redoc)
+  {
 
-        // Create Entity with entityName
-        $newEntity = new Entity();
-        $newEntity->setName($entityName);
+    // Persist Entities and Attributes
+    foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
+      // Continue if we have no properties
+      if (!isset($entityInfo['properties'])) continue;
 
-        $this->entityManager->persist($newEntity);
+      // Create Entity with entityName
+      $newEntity = new Entity();
+      $newEntity->setName($entityName);
 
-        // Loop through properties and create Attribute(s)
-        foreach ($entityInfo['properties'] as $propertyName => $property) {
-            $newAttribute = new Attribute();
-            $newAttribute->setName($propertyName);
-            (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
-            isset($property['description']) && $newAttribute->setDescription($property['description']);
-            isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
-            isset($property['format']) && $newAttribute->setFormat($property['format']);
-            isset($property['readyOnly']) && $newAttribute->setReadOnly($property['readOnly']);
-            isset($property['maxLength']) && $newAttribute->setMaxLength($property['maxLength']);
-            isset($property['minLength']) && $newAttribute->setMinLength($property['minLength']);
-            isset($property['enum']) && $newAttribute->setEnum($property['enum']);
-            isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
-            isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
-            isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
+      $this->entityManager->persist($newEntity);
 
-            $newAttribute->setEntity($newEntity);
+      // Loop through properties and create Attribute(s)
+      foreach ($entityInfo['properties'] as $propertyName => $property) {
+        $newAttribute = new Attribute();
+        $newAttribute->setName($propertyName);
+        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
+        isset($property['description']) && $newAttribute->setDescription($property['description']);
+        isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
+        isset($property['format']) && $newAttribute->setFormat($property['format']);
+        isset($property['readyOnly']) && $newAttribute->setReadOnly($property['readOnly']);
+        isset($property['maxLength']) && $newAttribute->setMaxLength($property['maxLength']);
+        isset($property['minLength']) && $newAttribute->setMinLength($property['minLength']);
+        isset($property['enum']) && $newAttribute->setEnum($property['enum']);
+        isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
+        isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
+        isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
 
-            // Persist attribute
-            $this->entityManager->persist($newAttribute);
+        $newAttribute->setEntity($newEntity);
+
+        // Persist attribute
+        $this->entityManager->persist($newAttribute);
+      }
+    }
+
+    $this->entityManager->flush();
+
+    // Persist Endpoints
+    foreach ($redoc['paths'] as $pathName => $path) {
+      $newEndpoint = new Endpoint();
+
+      $pathName[0] === '/' && $pathName = substr($pathName, 1);
+
+      $newEndpoint->setName($pathName);
+      $newEndpoint->setPath($pathName);
+
+      // Set description from first method description
+      (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $newEndpoint->setDescription($path[array_key_first($path)]['description']);
+
+      // Check reference to schema object (Entity)
+      foreach ($path as $key => $response) {
+        if ($key !== 'post') continue;
+        if (
+          isset($response['requestBody']) &&  isset($response['requestBody']['content']) && 
+          isset($response['requestBody']['content']['application/json']) &&
+          isset($response['requestBody']['content']['application/json']['schema']) && 
+          isset($response['requestBody']['content']['application/json']['schema']['$ref'])
+        ) {
+          $entityNameToJoin = $response['requestBody']['content']['application/json']['schema']['$ref'];
+          $entityNameToJoin = substr($entityNameToJoin, strrpos($entityNameToJoin, '/') + 1);;
+           break;
         }
       }
 
-      // Persist Endpoints
-      foreach ($redoc['paths'] as $pathName => $path) {
-        $newEndpoint = new Endpoint();
-        $newEndpoint->setName($pathName);
-        $newEndpoint->setPath($pathName);
+      // Check if we can find a entity with this name to link 
+      if (isset($entityNameToJoin)) {
+        $entityRepo = $this->entityManager->getRepository('App:Entity');
+        $entity = $entityRepo->findOneByName($entityNameToJoin);
 
-        // Set description from first method description
-        (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $newEndpoint->setDescription($path[array_key_first($path)]['description']);
+        if (isset($entity)) {
 
-        // Check reference to schema object (Entity)
-        // foreach ($path['responses'] as $response) {
-        //   if (isset($response['content']) && isset($response['content']['application/json']) && 
-        //   isset($response['content']['application/json']['schema']) && isset($response['content']['application/json']['schema']['results']) && 
-        //   isset($response['content']['application/json']['schema']['results']['items']) && isset($response['content']['application/json']['schema']['results']['items']['$ref'])) {
-        //     $entityName = $response['content']['application/json']['schema']['results']['items']['$ref'];
-        //     $entityName = substr($entityName, strrpos($entityName, '/') + 1);
-        //   }
+        // Endpoint has no relation to entity yet
+        // $newEndpoint->setEntity($entity);
 
-        // }
-
-        $this->entityManager->persist($newEndpoint);
+          $entity->setRoute('/api/' . $pathName);
+          $entity->setEndpoint($pathName);
+    
+          $this->entityManager->persist($entity);
+        }
       }
 
-      $this->entityManager->flush();
+      $this->entityManager->persist($newEndpoint);
     }
+
+    $this->entityManager->flush();
+
+  }
 }
