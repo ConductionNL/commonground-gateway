@@ -47,8 +47,7 @@ class EavSubscriber implements EventSubscriberInterface
         $resource = $event->getControllerResult();
 
         if ($route == 'api_object_entities_get_sync_item') {
-            //todo:
-//            $this->convertToGatewayService->syncObjectEntity($event->getRequest()->attributes->get('id'));
+            $this->convertToGatewayService->syncObjectEntity($event->getRequest()->attributes->get('id'));
         }
 
         // Make sure we only triggen when needed

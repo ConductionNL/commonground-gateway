@@ -245,6 +245,30 @@ class ConvertToGatewayService
         return $newObject;
     }
 
+    public function syncObjectEntity(string $id): ?ObjectEntity
+    {
+        $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
+
+        if ($objectEntity instanceof ObjectEntity && $objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getEndpoint()) {
+            $entity = $objectEntity->getEntity();
+
+            $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+            $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
+            $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
+            // if no resource with this $id exists... (callservice returns array on error)
+            if (is_array($response)) {
+                var_dump("return null 1");
+                return null; //Or false or error? //todo?
+            }
+            $body = json_decode($response->getBody()->getContents(), true);
+        } else {
+            var_dump("return null");
+            return null;
+        }
+
+        return $objectEntity;
+    }
+
     // TODO: duplicate with notify function in validationService, move this to a notificationService
     /**
      * @param ObjectEntity $objectEntity
