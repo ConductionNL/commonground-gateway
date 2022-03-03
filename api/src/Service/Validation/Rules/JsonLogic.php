@@ -8,6 +8,7 @@ use Respect\Validation\Rules\AbstractRule;
 
 final class JsonLogic extends AbstractRule
 {
+    //todo getter setter
     /**
      * @var mixed
      */

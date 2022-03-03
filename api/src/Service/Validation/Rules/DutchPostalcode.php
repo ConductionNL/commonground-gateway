@@ -11,10 +11,10 @@ final class DutchPostalcode extends AbstractRule
      */
     public function validate($input): bool
     {
-        $dutch_pc4_list = $this->getDutchPC4List();
+        $dutchPc4List = $this->getDutchPC4List();
 
-        foreach ($dutch_pc4_list as $dutch_pc4) {
-            if ($dutch_pc4 == $input) {
+        foreach ($dutchPc4List as $dutchPc4) {
+            if ($dutchPc4 == $input) {
                 return true;
             }
         }
@@ -27,7 +27,7 @@ final class DutchPostalcode extends AbstractRule
         $file = fopen(dirname(__FILE__).'../../../csv/dutch_pc4.csv', 'r');
 
         $i = 0;
-        $dutch_pc4_list = [];
+        $dutchPc4List = [];
         while (!feof($file)) {
             $line = fgetcsv($file);
             if ($i === 0) {
@@ -35,11 +35,11 @@ final class DutchPostalcode extends AbstractRule
                 continue;
             }
             if (isset($line[1])) {
-                $dutch_pc4_list[] = $line[1];
+                $dutchPc4List[] = $line[1];
             }
             $i++;
         }
 
-        return $dutch_pc4_list;
+        return $dutchPc4List;
     }
 }

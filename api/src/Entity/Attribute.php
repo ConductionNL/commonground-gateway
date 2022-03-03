@@ -1240,6 +1240,7 @@ class Attribute
         $validations['maxFileSize'] = $this->getMaxFileSize();
         $validations['minFileSize'] = $this->getMinFileSize();
         $validations['fileTypes'] = $this->getFileTypes();
+        $validations['cascade'] = $this->getCascade();
 
         return $validations;
     }
@@ -1321,6 +1322,9 @@ class Attribute
         }
         if (array_key_exists('multiple', $validations)) {
             $this->setMultiple($validations['multiple']);
+        }
+        if (array_key_exists('cascade', $validations)) {
+            $this->setCascade($validations['cascade']);
         }
 
         return $this;
