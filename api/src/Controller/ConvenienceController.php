@@ -32,18 +32,26 @@ class ConvenienceController extends AbstractController
   {
     switch ($type) {
       case 'redoc':
-        $request->query->get('url') ? $url = $request->query->get('url') : $errMsg = 'No url given';
-        if ($url) {
-          $client = new Client();
-          $response = $client->get($url);
-          $redoc = Yaml::parse($response->getBody()->getContents());
-          try {
-            $this->persistRedoc($redoc);
-          } catch (\Exception $e) {
-            $errMessage = $this->serializer->serialize([
-              'message' => $e
-            ], 'json');
-          }
+
+        // Get and check url from query or body
+        $request->query->get('url') && $url = $request->query->get('url');
+        !isset($url) && $request->getContent() && $body = json_decode($request->getContent(), true);
+        if (!isset($url) && !isset($body)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+        !isset($url) && isset($body['url']) && $url = $body['url'];
+        if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+
+        // Send GET to fetch redoc
+        $client = new Client();
+        $response = $client->get($url);
+        $redoc = Yaml::parse($response->getBody()->getContents());
+        
+        try {
+          // Persist yaml to objects
+          $this->persistRedoc($redoc);
+        } catch (\Exception $e) {
+          $errMessage = $this->serializer->serialize([
+            'message' => $e
+          ], 'json');
         }
         break;
     }
@@ -52,7 +60,7 @@ class ConvenienceController extends AbstractController
       isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
       isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
       ['content-type' => 'json']
-    );;
+    );
   }
 
   private function persistRedoc(array $redoc)
