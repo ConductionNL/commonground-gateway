@@ -2,11 +2,11 @@ App\Entity\Gateway:
     zaaksysteem:
         name: zaaksysteem
         auth: apikey
-        apikey: 304d707a-ef1c-4859-a2f4-d5849ee02558
+        apikey: Ge9J&TYLB5*C2xGf^jObf$
         location: https://demo.pre.zaaksysteem.app/api/v1
         authorizationHeader: API-Key
         headers:
-            Api-Interface-Id: 351
+            Api-Interface-Id: 676
 
 App\Entity\Endpoint:
     caseEndpoint:

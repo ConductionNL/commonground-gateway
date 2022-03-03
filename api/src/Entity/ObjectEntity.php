@@ -34,7 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get_sync"={
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
- *      }
+ *      },
  *      "put"={"path"="/admin/object_entities/{id}"},
  *      "delete"={"path"="/admin/object_entities/{id}"}
  *  },
