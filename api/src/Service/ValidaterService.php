@@ -273,15 +273,7 @@ class ValidaterService
             case 'file':
                 return new CustomRules\Base64File();
             case 'object':
-                // TODO: move this to a getObjectValidator function?
-                $objectValidator = new Validator();
-                $objectValidator->addRule(new Rules\ArrayType());
-
-                // Add object (/subresource) validations
-                $subresourceValidator = $this->getEntityValidator($attribute->getObject()); // TODO: max depth... ?
-                $objectValidator->AddRule($subresourceValidator);
-
-                return $objectValidator;
+                return $this->getObjectValidator($attribute);
             default:
                 throw new GatewayException(
                     'Unknown attribute type!',
@@ -294,6 +286,41 @@ class ValidaterService
                     ]
                 );
         }
+    }
+
+    /**
+     * Gets a Validator for the object of the given Attribute with type = 'object'.
+     *
+     * @param Attribute $attribute
+     * @return Validator
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
+    private function getObjectValidator(Attribute $attribute): Validator
+    {
+        $objectValidator = new Validator();
+
+        // TODO: Make a custom rule for cascading so we can give custom exception messages back?
+        // Validate for cascading
+        if ($attribute->getValidations()['cascade'] === true) {
+            // Array or Uuid
+            $objectValidator->addRule(new Rules\OneOf(
+                new Rules\ArrayType(),
+                new Rules\Uuid()
+            ));
+            // If we are allowed to cascade and the input is an array, validate the input array for the Attribute->object Entity
+            $objectValidator->addRule(
+                new Rules\When(
+                    new Rules\ArrayType(), // IF
+                    $this->getEntityValidator($attribute->getObject()), // TRUE // TODO: max depth... ?
+                    new Rules\AlwaysValid() // FALSE
+                )
+            );
+        } else {
+            // Uuid
+            $objectValidator->addRule(new Rules\Uuid());
+        }
+
+        return $objectValidator;
     }
 
     /**
@@ -357,7 +384,8 @@ class ValidaterService
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
-            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf'];
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade'];
+            // todo: instead of this^ array we could also add these options to the getValidationRule function but return the AlwaysValid rule?
             if (empty($config) || in_array($validation, $ignoredValidations)) {
                 continue;
             }
