@@ -7,6 +7,7 @@ use Respect\Validation\Validator;
 
 final class Filename extends AbstractRule
 {
+    //todo getter setter
     /**
      * @var string
      */
