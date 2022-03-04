@@ -56,7 +56,7 @@ class EavSubscriber implements EventSubscriberInterface
             'api_object_entities_put_eav_object_item',
             'api_object_entities_delete_eav_object_item',
             'api_object_entities_get_eav_object_collection',
-            'api_object_entities_get_eav_objects_collection'
+            'api_object_entities_get_eav_objects_collection',
         ])) {
             return;
         }

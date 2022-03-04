@@ -14,7 +14,7 @@ final class Base64MimeTypes extends AbstractRule
     private array $allowedTypes;
 
     /**
-     * Used for Base64StringException
+     * Used for Base64StringException.
      *
      * @var string|null
      */
@@ -49,6 +49,7 @@ final class Base64MimeTypes extends AbstractRule
             finfo_close($f);
         } catch (Exception $exception) {
             $this->setExceptionMessage($exception->getMessage());
+
             return false;
         }
 
@@ -65,6 +66,7 @@ final class Base64MimeTypes extends AbstractRule
 
     /**
      * @param array $allowedTypes
+     *
      * @return Validatable
      */
     public function setAllowedTypes(array $allowedTypes): Validatable
@@ -84,6 +86,7 @@ final class Base64MimeTypes extends AbstractRule
 
     /**
      * @param string $exceptionMessage
+     *
      * @return Validatable
      */
     public function setExceptionMessage(string $exceptionMessage): Validatable
