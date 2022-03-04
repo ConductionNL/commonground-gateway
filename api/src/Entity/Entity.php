@@ -239,6 +239,14 @@ class Entity
     private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
 
     /**
+     * @var array Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $itemConfig = [];
+
+    /**
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
@@ -678,6 +686,18 @@ class Entity
     public function setCollectionConfig(?array $collectionConfig): self
     {
         $this->collectionConfig = $collectionConfig;
+
+        return $this;
+    }
+
+    public function getItemConfig(): ?array
+    {
+        return $this->itemConfig;
+    }
+
+    public function setItemConfig(?array $itemConfig): self
+    {
+        $this->itemConfig = $itemConfig;
 
         return $this;
     }
