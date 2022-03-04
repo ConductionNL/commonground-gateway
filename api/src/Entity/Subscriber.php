@@ -78,6 +78,19 @@ class Subscriber
     private $method = 'POST';
 
     /**
+     * @var string The type of this subscriber
+     *
+     * @example string
+     *
+     * @Assert\NotBlank
+     * @Assert\Length(max = 255)
+     * @Assert\Choice({"externSource", "internGateway"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private $type = 'externSource';
+
+    /**
      * @Assert\Type("integer")
      *
      * @Groups({"read", "write"})
@@ -290,6 +303,18 @@ class Subscriber
     public function setMethod(string $method): self
     {
         $this->method = $method;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }
