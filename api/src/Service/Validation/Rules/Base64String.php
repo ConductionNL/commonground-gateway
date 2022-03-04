@@ -10,7 +10,7 @@ use Respect\Validation\Validator;
 final class Base64String extends AbstractRule
 {
     /**
-     * Used for Base64StringException
+     * Used for Base64StringException.
      *
      * @var string|null
      */
@@ -26,7 +26,8 @@ final class Base64String extends AbstractRule
         // Example of a (full length) base64 string: data:text/plain;base64,ZGl0IGlzIGVlbiB0ZXN0IGRvY3VtZW50
         // Make sure we have a string as input
         if (!Validator::stringType()->validate($input)) {
-            $this->setExceptionMessage("This is not a string.");
+            $this->setExceptionMessage('This is not a string.');
+
             return false;
         }
 
@@ -34,7 +35,8 @@ final class Base64String extends AbstractRule
         $exploded_input = explode(',', $input);
         $base64 = end($exploded_input);
         if (!Validator::base64()->validate($base64)) {
-            $this->setExceptionMessage("This is not a valid base64.");
+            $this->setExceptionMessage('This is not a valid base64.');
+
             return false;
         }
 
@@ -47,6 +49,7 @@ final class Base64String extends AbstractRule
             finfo_close($f);
         } catch (Exception $exception) {
             $this->setExceptionMessage($exception->getMessage());
+
             return false;
         }
 
@@ -64,7 +67,8 @@ final class Base64String extends AbstractRule
         }
 
         if ($mimeType2 !== $mimeType1) {
-            $this->setExceptionMessage("Mime type mismatch: ".$mimeType2." should match: ".$mimeType1);
+            $this->setExceptionMessage('Mime type mismatch: '.$mimeType2.' should match: '.$mimeType1);
+
             return false;
         }
 
@@ -81,6 +85,7 @@ final class Base64String extends AbstractRule
 
     /**
      * @param string $exceptionMessage
+     *
      * @return Validatable
      */
     public function setExceptionMessage(string $exceptionMessage): Validatable
