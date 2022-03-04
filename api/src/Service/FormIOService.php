@@ -69,6 +69,7 @@ class FormIOService
 
         $formIOArray['display'] = 'form';
         $formIOArray['page'] = 0;
+        $formIOArray['entity'] = $entity->getName();
 
         return $formIOArray;
     }
