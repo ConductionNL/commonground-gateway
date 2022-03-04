@@ -34,7 +34,8 @@ class LogService
     public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null): Log
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
-        
+
+        var_dump($this->session->get('callId'));
         $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]) : $existingLog = null;
 
 
