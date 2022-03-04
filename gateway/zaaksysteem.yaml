@@ -1,3 +1,10 @@
+App\Entity\Application:
+    application:
+        domains:
+            - zaaksysteem-demo-api.commonground.nu
+        name: main application
+        organization: https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951
+
 App\Entity\Gateway:
     zaaksysteem:
         name: zaaksysteem
@@ -31,6 +38,8 @@ App\Entity\Entity:
         route: "/api/notification"
         description: Holds information about a case
         endpoint: "notifications"
+#        subscribers:
+#            todo
 
     # Case Object
     case:

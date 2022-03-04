@@ -281,6 +281,8 @@ class HandlerService
                 $data = [];
                 $data['result'] = $result;
             }
+
+            // todo check if we need to trigger subscribers for this entity
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
