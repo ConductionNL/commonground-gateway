@@ -197,41 +197,58 @@ class ConvertToGatewayService
             return $entity->getAttributeByName($propertyName);
         }, ARRAY_FILTER_USE_KEY);
 
-        $newObject = new ObjectEntity();
-        $newObject->setEntity($entity);
-        if (!is_null($subresourceOf)) {
-            $newObject->addSubresourceOf($subresourceOf);
-        }
+        // These following if check has no effect if this function (convertToGatewayObject) is called from the (old) ValidationService. Because there we already checked if an ObjectEntity exists with the given id and if so, this convertToGatewayObject function is never called!
+        // Check if there already exists an objectEntity with this id as externalId
+        if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
+            $object = new ObjectEntity();
+            $object->setEntity($entity);
 
-        // Set the externalId, uri, organization and application.
-        $newObject->setExternalId($id);
-        $newObject->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+            // Set the externalId, uri, organization and application.
+            $object->setExternalId($id);
+            $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+        }
+        if (!is_null($subresourceOf)) {
+            $object->addSubresourceOf($subresourceOf);
+        }
 
         // If extern object has dateCreated & dateModified, set them for this new ObjectEntity
         if (key_exists('dateCreated', $body)) {
-            $newObject->setDateCreated(new DateTime($body['dateCreated']));
+            $object->setDateCreated(new DateTime($body['dateCreated']));
+        }
+        if (key_exists('date_created', $body)) {
+            $object->setDateCreated(new DateTime($body['date_created']));
         }
         if (key_exists('dateModified', $body)) {
-            $newObject->setDateModified(new DateTime($body['dateModified']));
+            $object->setDateModified(new DateTime($body['dateModified']));
+        }
+        if (key_exists('date_modified', $body)) {
+            $object->setDateModified(new DateTime($body['date_modified']));
         }
 
-        // Set organization & application for this object
+        // Set application for this object
+        if ($this->session->get('application')) {
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')->getId()->toString()]);
+            if (!empty($application)) {
+                $object->setApplication($application); // Default application (can be changed after this if needed)
+            }
+        }
+
+        // Set organization (& application) for this object
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
-        $newObject->setApplication($this->session->get('application')); // Default application (can be changed after this if needed)
         if ($entity->getFunction() === 'organization') {
-            $newObject = $this->functionService->createOrganization($newObject, $newObject->getUri(), $body['type']);
+            $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         } elseif (key_exists('organization', $body) && !empty($body['organization'])) {
-            $newObject->setOrganization($body['organization']);
-        } elseif (count($newObject->getSubresourceOf()) > 0 && !empty($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-            $newObject->setOrganization($newObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-            if (!is_null($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
-                $newObject->setApplication($newObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+            $object->setOrganization($body['organization']);
+        } elseif (count($object->getSubresourceOf()) > 0 && !empty($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+            $object->setOrganization($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+            if (!is_null($object->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
+                $object->setApplication($object->getSubresourceOf()->first()->getObjectEntity()->getApplication());
             }
         } else {
-            $newObject->setOrganization($this->session->get('activeOrganization'));
+            $object->setOrganization($this->session->get('activeOrganization'));
         }
 
-        $newObject = $this->checkAttributes($newObject, $availableBody, $objectEntity);
+        $object = $this->checkAttributes($object, $availableBody, $objectEntity);
 
 //        var_dump($newObject->getExternalId());
 //        if ($newObject->getHasErrors()) {
@@ -241,35 +258,23 @@ class ConvertToGatewayService
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
-        if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
+        if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$object->getHasErrors()) {
 //            var_dump('persist and flush');
-            $this->em->persist($newObject);
+            $this->em->persist($object);
             $this->em->flush(); // Needed here! read comment above!
-            $this->notify($newObject, 'Create');
+            $this->notify($object, 'Create');
         }
 
-        return $newObject;
+        return $object;
     }
 
     public function syncObjectEntity(string $id): ?ObjectEntity
     {
+        // Should we support externalId as $id input option?
         $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
 
-        if ($objectEntity instanceof ObjectEntity && $objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getEndpoint()) {
-            $entity = $objectEntity->getEntity();
-
-            $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-            $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
-            $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
-            // if no resource with this $id exists... (callservice returns array on error)
-            if (is_array($response)) {
-                var_dump("return null 1");
-                return null; //Or false or error? //todo?
-            }
-            $body = json_decode($response->getBody()->getContents(), true);
-        } else {
-            var_dump("return null");
-            return null;
+        if ($objectEntity instanceof ObjectEntity && $objectEntity->getExternalId()) {
+            $objectEntity = $this->convertToGatewayObject($objectEntity->getEntity(), null, $objectEntity->getExternalId());
         }
 
         return $objectEntity;
