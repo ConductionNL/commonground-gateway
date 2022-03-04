@@ -90,7 +90,9 @@ class TranslationService
 
         // Empty values will be unset
         foreach ($destination as $key => $property) {
-          if (empty($property)) unset($destination[$key]);
+            if (empty($property)) {
+                unset($destination[$key]);
+            }
         }
 
         return $destination;
