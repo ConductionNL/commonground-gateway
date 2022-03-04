@@ -58,7 +58,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private ?string $name;
 
     /**
      * @Assert\Type("string")
@@ -66,7 +66,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $description;
+    private ?string $description;
 
     /**
      * @Assert\Type("string")
@@ -75,7 +75,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, options={"default": "POST"})
      */
-    private $method = 'POST';
+    private string $method = 'POST';
 
     /**
      * @var string The type of this subscriber
@@ -88,7 +88,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $type = 'externSource';
+    private string $type = 'externSource';
 
     /**
      * @Assert\Type("integer")
@@ -96,7 +96,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
-    private $runOrder = 0;
+    private int $runOrder = 0;
 
     /**
      * @Assert\Type("string")
@@ -105,7 +105,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private $conditions;
+    private ?string $conditions;
 
     /**
      * @Assert\Type("bool")
@@ -113,7 +113,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", options={"default": true})
      */
-    private $asynchronous = true;
+    private bool $asynchronous = true;
 
     /**
      * @Assert\Type("bool")
@@ -121,7 +121,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     /**
      * @Assert\Type("array")
@@ -129,7 +129,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $headers = [];
+    private array $headers = [];
 
     /**
      * @Assert\Type("array")
@@ -137,7 +137,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $queryParameters = [];
+    private array $queryParameters = [];
 
     /**
      * @Assert\Type("array")
@@ -145,7 +145,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsIn = [];
+    private array $translationsIn = [];
 
     /**
      * @Assert\Type("array")
@@ -153,7 +153,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsOut = [];
+    private array $translationsOut = [];
 
     /**
      * @Assert\Type("array")
@@ -161,7 +161,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $mappingIn = [];
+    private array $mappingIn = [];
 
     /**
      * @Assert\Type("array")
@@ -169,7 +169,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $mappingOut = [];
+    private array $mappingOut = [];
 
     /**
      * @var Entity|null The entity of this Subscriber.
