@@ -211,11 +211,13 @@ class ValidaterService
     }
 
     /**
-     * Gets a Validator for the type of the given Attribute. (And format and other validations if type validation is true)
+     * Gets a Validator for the type of the given Attribute. (And format and other validations if type validation is true).
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function getAttTypeValidator(Attribute $attribute): Validator
     {
@@ -234,11 +236,13 @@ class ValidaterService
     }
 
     /**
-     * Gets a Validator for the format of the given Attribute. (And other validations if format validation is true)
+     * Gets a Validator for the format of the given Attribute. (And other validations if format validation is true).
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws ComponentException|GatewayException
+     *
+     * @return Validator
      */
     private function getAttFormatValidator(Attribute $attribute): Validator
     {
@@ -260,8 +264,10 @@ class ValidaterService
      * Gets the correct Rule(s) for the type of the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Rules\AbstractRule
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Rules\AbstractRule
      */
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -290,9 +296,9 @@ class ValidaterService
                     null,
                     null,
                     [
-                        'data' => $attribute->getType(),
-                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                        'responseType' => Response::HTTP_BAD_REQUEST
+                        'data'         => $attribute->getType(),
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
                     ]
                 );
         }
@@ -302,8 +308,10 @@ class ValidaterService
      * Gets a Validator for the object of the given Attribute with type = 'object'.
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Validator
      */
     private function getObjectValidator(Attribute $attribute): Validator
     {
@@ -337,8 +345,10 @@ class ValidaterService
      * Gets the correct Rule for the format of the given Attribute. If attribute has no format this will return alwaysValid.
      *
      * @param Attribute $attribute
-     * @return Rules\AbstractRule
+     *
      * @throws GatewayException
+     *
+     * @return Rules\AbstractRule
      */
     private function getAttFormatRule(Attribute $attribute): Rules\AbstractRule
     {
@@ -372,9 +382,9 @@ class ValidaterService
                     null,
                     null,
                     [
-                        'data' => $format,
-                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                        'responseType' => Response::HTTP_BAD_REQUEST
+                        'data'         => $format,
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
                     ]
                 );
         }
@@ -384,8 +394,10 @@ class ValidaterService
      * Gets a Validator with the correct Rules for (almost) all the validations of the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Validator
+     *
      * @throws ComponentException|GatewayException
+     *
+     * @return Validator
      */
     private function getAttValidationRulesValidator(Attribute $attribute): Validator
     {
@@ -411,8 +423,10 @@ class ValidaterService
      * @param Attribute $attribute
      * @param $validation
      * @param $config
-     * @return Rules\AbstractRule|null
+     *
      * @throws ComponentException|GatewayException|Exception
+     *
+     * @return Rules\AbstractRule|null
      */
     private function getValidationRule(Attribute $attribute, $validation, $config): ?Rules\AbstractRule
     {
@@ -454,20 +468,22 @@ class ValidaterService
                 return new Rules\Key(
                     'base64',
                     new CustomRules\Base64MimeTypes($config),
-                    true);
+                    true
+                );
             default:
                 // we should never end up here
                 if (is_array($config)) {
                     $config = http_build_query($config, '', ', ');
                 }
+
                 throw new GatewayException(
                     'Unknown validation!',
                     null,
                     null,
                     [
-                        'data' => $validation.' set to '.$config,
-                        'path' => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                        'responseType' => Response::HTTP_BAD_REQUEST
+                        'data'         => $validation.' set to '.$config,
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
                     ]
                 );
         }
