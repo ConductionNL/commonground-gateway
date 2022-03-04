@@ -173,11 +173,17 @@ class ConvertToGatewayService
                     return null; //Or false or error? //todo?
                 }
                 $body = json_decode($response->getBody()->getContents(), true);
+                if (array_key_exists('envelope', $entity->getItemConfig())) {
+                    $itemConfigEnvelope = explode('.', $entity->getItemConfig()['envelope']);
+                    foreach ($itemConfigEnvelope as $item) {
+                        $body = $body[$item];
+                    }
+                }
             }
         } elseif (!$id) {
             $id = $body;
-            $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
-            foreach ($collectionConfigId as $item) {
+            $itemConfigEnvelope = explode('.', $entity->getCollectionConfig()['id']);
+            foreach ($itemConfigEnvelope as $item) {
                 $id = $id[$item];
             }
         }

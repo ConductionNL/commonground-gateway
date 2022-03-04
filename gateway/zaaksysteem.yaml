@@ -34,6 +34,9 @@ App\Entity\Entity:
             envelope: 'instance'
             id: 'instance.id'
             paginationNext: 'result.instance.pager.next'
+        #TODO: move itemConfig to endpoint object later
+        itemConfig:
+            envelope: 'result.instance'
         #TODO: move translationConfig to endpoint object later
         translationConfig:
             PUT:
@@ -55,6 +58,9 @@ App\Entity\Entity:
             envelope: 'instance'
             id: 'instance.id'
             paginationNext: 'result.instance.pager.next'
+        #TODO: move itemConfig to endpoint object later
+        itemConfig:
+            envelope: 'result.instance'
 
 App\Entity\Attribute:
 

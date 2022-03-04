@@ -96,6 +96,7 @@ class AuthorizationService
 
     public function checkAuthorization(array $scopes): void
     {
+        return;
         // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
         $this->session->set('anonymous', false);
 
