@@ -202,11 +202,8 @@ class Log
     /**
      * @var string The response content of this Log.
      *
-     * @Assert\Length(
-     *     max = 2555
-     * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=2555, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $responseContent;
 
