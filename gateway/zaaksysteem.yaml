@@ -1,3 +1,10 @@
+App\Entity\Application:
+    application:
+        domains:
+            - zaaksysteem-demo-api.commonground.nu
+        name: main application
+        organization: https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951
+
 App\Entity\Gateway:
     zaaksysteem:
         name: zaaksysteem
@@ -23,6 +30,11 @@ App\Entity\Gateway:
         secret: 'offcourseIwillnottellyoumysecret'
 
 App\Entity\Endpoint:
+    notificationEndpoint:
+        name: Notification endpoint
+        description: Endpoint for notifications
+        path: notifications
+    
     caseEndpoint:
         name: Case endpoint
         description: endpoint for cases
@@ -33,7 +45,29 @@ App\Entity\Endpoint:
         description: endpoint for case types
         path: casetypes
 
+App\Entity\Subscriber:
+    notificationToCase:
+        name: notificationToCase
+        description: A subscriber on a notifications that converts a exxellence case to a gateway case object.
+        method: POST # default is post this can be removed
+        type: internGateway
+        entityOut: '@case'
+        asynchronous: false
+        entity: '@notification'
+        mappingIn:
+            externalUri: instance.case_url
+            externalId: instance.case.reference
+#        mappingOut:
+#            instance.case_url: externalUri
+#            instance.case.reference: externalId
+
 App\Entity\Entity:
+    # Notification Object
+    notification:
+        name: notifications
+        route: "/api/notification"
+        description: Holds information about a case
+        endpoint: "notifications"
 
     # Case Object
     case:
@@ -388,6 +422,61 @@ App\Entity\Attribute:
         entity: '@zgwCase'
         persistToGateway: true
 
+    # Notification attributes
+    notification_caseUrl:
+        name: caseUrl
+        description: Url of this case.
+        type: string
+        required: true
+        entity: "@notification"
+
+    notification_caseReference:
+        name: caseReference
+        description: Reference of this case.
+        type: string
+        required: true
+        entity: "@notification"
+
+    notification_caseInstance:
+        name: caseInstance
+        description: Instance of this case.
+        type: string
+        entity: "@notification"
+
+    notification_caseType:
+        name: caseType
+        description: Type of this case.
+        type: string
+        required: true
+        entity: "@notification"
+
+    notification_instanceType:
+        name: instanceType
+        description: Type of this instance.
+        type: string
+        required: true
+        entity: "@notification"
+
+    notification_text:
+        name: text
+        description: Message from this notification.
+        type: string
+        required: true
+        entity: "@notification"
+
+    notification_reference:
+        name: reference
+        description: Reference from this notification.
+        type: string
+        entity: "@notification"
+
+    notification_type:
+        name: type
+        description: Type from this notification.
+        type: string
+        required: true
+        entity: "@notification"
+
     # Case attributes
     case_casetype:
         name: casetype
@@ -493,6 +582,25 @@ App\Entity\Attribute:
         persistToGateway: true
 
 App\Entity\Handler:
+    notificationHandler:
+        name: Notification handler
+        sequence: 0
+        conditions: "{}"
+        mappingIn:
+            caseUrl: instance.case_url
+            caseReference: instance.case.reference
+            caseInstance: instance.case.instance
+            caseType: instance.case.type
+            instanceType: instance.type
+        mappingOut:
+            instance.case_url: caseUrl
+            instance.case.reference: caseReference
+            instance.case.instance: caseInstance
+            instance.case.type: caseType
+            instance.type: instanceType
+        endpoint: "@notificationEndpoint"
+        entity: "@notification"
+    
     caseHandler:
         name: Case handler
         sequence: 0

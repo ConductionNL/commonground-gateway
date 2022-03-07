@@ -28,6 +28,7 @@ class HandlerService
     private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private FormIOService $formIOService;
+    private SubscriberService $subscriberService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -60,7 +61,8 @@ class HandlerService
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
-        FormIOService $formIOService
+        FormIOService $formIOService,
+        SubscriberService $subscriberService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -75,6 +77,7 @@ class HandlerService
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->formIOService = $formIOService;
+        $this->subscriberService = $subscriberService;
     }
 
     /**
@@ -229,6 +232,13 @@ class HandlerService
                 $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 $this->validationService->removeObjectsOnPut = []; // to be sure
                 $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
@@ -281,6 +291,9 @@ class HandlerService
                 $data = [];
                 $data['result'] = $result;
             }
+
+            // Check if we need to trigger subscribers for this entity
+            $this->subscriberService->handleSubscribers($entity, $data); //todo
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
@@ -445,7 +458,7 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        (!isset($typeValue) || $typeValue === '*/*')  && $typeValue = 'application/json';
+        (!isset($typeValue) || $typeValue === '*/*') && $typeValue = 'application/json';
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }

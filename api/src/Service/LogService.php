@@ -35,9 +35,7 @@ class LogService
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
-        var_dump($this->session->get('callId'));
         $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]) : $existingLog = null;
-
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
@@ -86,7 +84,18 @@ class LogService
                 $this->session->remove('source');
                 $this->session->remove('handler');
             }
-            $callLog->setSessionValues($this->session->all());
+
+            // Set session values without relations we already know
+            $sessionValues = $this->session->all();
+            unset($sessionValues['endpoint']);
+            unset($sessionValues['source']);
+            unset($sessionValues['entity']);
+            unset($sessionValues['endpoint']);
+            unset($sessionValues['handler']);
+            unset($sessionValues['application']);
+            unset($sessionValues['applications']);
+            $callLog->setSessionValues($sessionValues);
+
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
