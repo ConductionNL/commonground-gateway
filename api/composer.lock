@@ -731,12 +731,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/CommonGroundBundle.git",
-                "reference": "47ff4154922a4af05ce84df54e5cf20c4cf71961"
+                "reference": "bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/CommonGroundBundle/zipball/47ff4154922a4af05ce84df54e5cf20c4cf71961",
-                "reference": "47ff4154922a4af05ce84df54e5cf20c4cf71961",
+                "url": "https://api.github.com/repos/ConductionNL/CommonGroundBundle/zipball/bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2",
+                "reference": "bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2",
                 "shasum": ""
             },
             "require": {
@@ -819,7 +819,7 @@
                 "issues": "https://github.com/ConductionNL/ConductionCommonGroundBundle/issues",
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
-            "time": "2021-12-19T08:01:18+00:00"
+            "time": "2022-03-07T11:54:01+00:00"
         },
         {
             "name": "conduction/digidbundle",
@@ -10876,5 +10876,5 @@
         "ext-iconv": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }
