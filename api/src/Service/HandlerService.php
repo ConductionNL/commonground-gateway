@@ -232,6 +232,13 @@ class HandlerService
                 $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 $this->validationService->removeObjectsOnPut = []; // to be sure
                 $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
