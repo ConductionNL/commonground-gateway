@@ -98,7 +98,6 @@ class LogService
 
         }
         $this->entityManager->persist($callLog);
-        dump($callLog);
         $this->entityManager->flush();
 
         return $callLog;
