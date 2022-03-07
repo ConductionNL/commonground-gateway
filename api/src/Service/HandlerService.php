@@ -445,7 +445,7 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        (!isset($typeValue) || $typeValue === '*/*')  && $typeValue = 'application/json';
+        (!isset($typeValue) || $typeValue === '*/*') && $typeValue = 'application/json';
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
