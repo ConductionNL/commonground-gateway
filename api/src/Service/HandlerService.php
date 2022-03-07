@@ -28,6 +28,7 @@ class HandlerService
     private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private FormIOService $formIOService;
+    private SubscriberService $subscriberService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -60,7 +61,8 @@ class HandlerService
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
-        FormIOService $formIOService
+        FormIOService $formIOService,
+        SubscriberService $subscriberService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -75,6 +77,7 @@ class HandlerService
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->formIOService = $formIOService;
+        $this->subscriberService = $subscriberService;
     }
 
     /**
@@ -281,6 +284,9 @@ class HandlerService
                 $data = [];
                 $data['result'] = $result;
             }
+
+            // Check if we need to trigger subscribers for this entity
+            $this->subscriberService->handleSubscribers($entity, $data); //todo
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
