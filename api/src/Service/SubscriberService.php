@@ -86,12 +86,17 @@ class SubscriberService
                     // todo log this^
                 } elseif (array_key_exists('externalUri', $data)) {
                     // todo: get id from uri instead and do the above^
+                } else {
+                    // todo: create a gateway object of entity $subscriber->getEntityOut() with the $data array
+                    
                 }
                 break;
             case 'GET':
             default:
                 break;
         }
+
+        // todo mapping out?
 
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)
     }
