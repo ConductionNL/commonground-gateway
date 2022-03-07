@@ -88,7 +88,7 @@ class LogService
             $callLog->setSessionValues($this->session->all());
         }
         $this->entityManager->persist($callLog);
-        dump($this->session->get('callId'));
+        dump($callLog);
         $this->entityManager->flush();
 
         return $callLog;
