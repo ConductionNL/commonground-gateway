@@ -91,7 +91,7 @@ class LogService
             unset($sessionValues['source']);
             unset($sessionValues['entity']);
             unset($sessionValues['endpoint']);
-            $callLog->setSessionValues($this->session->all());
+            $callLog->setSessionValues($sessionValues);
 
         }
         $this->entityManager->persist($callLog);
