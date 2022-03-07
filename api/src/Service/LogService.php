@@ -84,7 +84,15 @@ class LogService
                 $this->session->remove('source');
                 $this->session->remove('handler');
             }
+
+            // Set session values without relations we already have
+            $sessionValues = $this->session->all();
+            unset($sessionValues['endpoint']);
+            unset($sessionValues['source']);
+            unset($sessionValues['entity']);
+            unset($sessionValues['endpoint']);
             $callLog->setSessionValues($this->session->all());
+
         }
         $this->entityManager->persist($callLog);
         dump($callLog);
