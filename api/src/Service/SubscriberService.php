@@ -13,27 +13,33 @@ class SubscriberService
     private EntityManagerInterface $entityManager;
     private ConvertToGatewayService $convertToGatewayService;
     private TranslationService $translationService;
+    private EavService $eavService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ConvertToGatewayService $convertToGatewayService,
-        TranslationService $translationService
+        TranslationService $translationService,
+        EavService $eavService
     ) {
         $this->entityManager = $entityManager;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->translationService = $translationService;
+        $this->eavService = $eavService;
     }
 
     /**
      * This function handles all subscribers for an Entity with the given data.
      */
-    public function handleSubscribers(Entity $entity, array $data)
+    public function handleSubscribers(Entity $entity, array $data, string $method)
     {
         if (empty($entity->getSubscribers())) {
             return;
         }
         //todo
         foreach ($entity->getSubscribers() as $subscriber) {
+            if ($method !== $subscriber->getMethod()) {
+                continue;
+            }
             switch ($subscriber->getType()) {
                 case 'externSource':
                     $this->handleExternSource($subscriber, $data);
@@ -75,29 +81,28 @@ class SubscriberService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingIn());
 
-        switch ($subscriber->getMethod()) {
-            case 'POST':
-//                var_dump('do a post with this data:');
-//                var_dump($data);
-                // If we have an 'externalId' or externalUri after mapping we use that to create a gateway object with the ConvertToGatewayService.
-                if (array_key_exists('externalId', $data)) {
-                    $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
-//                    var_dump($newObjectEntity->getId()->toString());
-                    // todo log this^
-                } elseif (array_key_exists('externalUri', $data)) {
-                    // todo: get id from uri instead and do the above^
-                } else {
-                    // todo: create a gateway object of entity $subscriber->getEntityOut() with the $data array
-                    
-                }
-                break;
-            case 'GET':
-            default:
-                break;
+//        var_dump('do a post with this data:');
+//        var_dump($data);
+        // If we have an 'externalId' or externalUri after mapping we use that to create a gateway object with the ConvertToGatewayService.
+        if (array_key_exists('externalId', $data)) {
+            $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
+//            var_dump($subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
+//            var_dump('Created a new objectEntity: '.$newObjectEntity->getId()->toString());
+            // todo log this^
+        } elseif (array_key_exists('externalUri', $data)) {
+            // todo: get id from uri instead and do the above^
+        } else {
+            // todo: create a gateway object of entity $subscriber->getEntityOut() with the $data array
+//            var_dump('InternGatewaySubscriber for entity: '.$subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
         }
 
         // todo mapping out?
+        $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
 
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)
+
+        // Check if we need to trigger subscribers for this newly create objectEntity
+        $newObjectData = $this->eavService->handleGet($newObjectEntity, []);
+        $this->handleSubscribers($subscriber->getEntityOut(), $newObjectData, "POST");
     }
 }

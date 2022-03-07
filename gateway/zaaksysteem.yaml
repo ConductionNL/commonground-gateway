@@ -34,7 +34,7 @@ App\Entity\Endpoint:
 App\Entity\Subscriber:
     notificationToCase:
         name: notificationToCase
-        description: A subscriber on a notifications that converts a exxellence case to a gateway case object.
+        description: A subscriber on a notifications that converts a Exxellence case to a gateway case object.
         method: POST # default is post this can be removed
         type: internGateway
         entityOut: '@case'
@@ -43,6 +43,20 @@ App\Entity\Subscriber:
         mappingIn:
             externalUri: instance.case_url
             externalId: instance.case.reference
+        mappingOut:
+            instance.case_url: externalUri
+            instance.case.reference: externalId
+    caseToZgwCase:
+        name: caseToZgwCase
+        description: A subscriber on a gateway (Exxellence) case object that converts that object to a gateway zgw case object.
+        method: POST # default is post this can be removed
+        type: internGateway
+        entityOut: '@zgwCase'
+        asynchronous: false
+        entity: '@case'
+#        mappingIn:
+#            externalUri: instance.case_url
+#            externalId: instance.case.reference
 #        mappingOut:
 #            instance.case_url: externalUri
 #            instance.case.reference: externalId

@@ -9,6 +9,7 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Promise\Utils;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -200,10 +201,14 @@ class HandlerService
             $fields = $this->eavService->getRequestFields($this->request);
             //TODO: old code for getting an ObjectEntity
             if (isset($object)) {
-                $data = $this->eavService->handleGet($object, $fields);
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                if ($object instanceof ObjectEntity) {
+                    $data = $this->eavService->handleGet($object, $fields);
+                    if ($object->getHasErrors()) {
+                        $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                        $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                    }
+                } else {
+                    $data['error'] = $object;
                 }
             } else {
                 $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
@@ -293,7 +298,7 @@ class HandlerService
             }
 
             // Check if we need to trigger subscribers for this entity
-            $this->subscriberService->handleSubscribers($entity, $data); //todo
+            $this->subscriberService->handleSubscribers($entity, $data, $method);
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
