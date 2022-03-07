@@ -85,13 +85,15 @@ class LogService
                 $this->session->remove('handler');
             }
 
-            // Set session values without relations we already have
+            // Set session values without relations we already know
             $sessionValues = $this->session->all();
             unset($sessionValues['endpoint']);
             unset($sessionValues['source']);
             unset($sessionValues['entity']);
             unset($sessionValues['endpoint']);
             unset($sessionValues['handler']);
+            unset($sessionValues['application']);
+            unset($sessionValues['applications']);
             $callLog->setSessionValues($sessionValues);
 
         }
