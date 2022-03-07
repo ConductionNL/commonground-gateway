@@ -95,7 +95,6 @@ class LogService
             unset($sessionValues['application']);
             unset($sessionValues['applications']);
             $callLog->setSessionValues($sessionValues);
-
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
