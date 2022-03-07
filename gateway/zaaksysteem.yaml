@@ -61,11 +61,13 @@ App\Entity\Subscriber:
         asynchronous: false
         entity: '@notification'
         mappingIn:
-            externalUri: instance.case_url
             externalId: instance.case.reference
         mappingOut:
-            instance.case_url: externalUri
-            instance.case.reference: externalId
+            startdatum: date_of_registration
+            registratiedatum: date_of_registration
+#        mappingOut:
+#            instance.case.reference: externalId
+            
     caseToZgwCase:
         name: caseToZgwCase
         description: A subscriber on a gateway (Exxellence) case object that converts that object to a gateway zgw case object.
@@ -75,10 +77,12 @@ App\Entity\Subscriber:
         asynchronous: false
         entity: '@case'
 #        mappingIn:
-#            externalUri: instance.case_url
-#            externalId: instance.case.reference
+#            zaaktype: casetype.name # todo: doesn't work like this but this: "https://openzaak.sed-xllnc.commonground.nu/catalogi/api/v1/zaaktypen/1d92456b-ed8e-43e7-ad4a-03b8e8556139"
+#            verantwoordelijkeOrganisatie: something #todo: 999993653
+#            startdatum: date_of_registration #todo: see notificationToCase mappingOut
+#            registratiedatum: date_of_registration #todo: see notificationToCase mappingOut
+#            bronorganisatie: something #todo: 999993653
 #        mappingOut:
-#            instance.case_url: externalUri
 #            instance.case.reference: externalId
 
 App\Entity\Entity:

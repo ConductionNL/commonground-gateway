@@ -233,9 +233,9 @@ class HandlerService
             //TODO: old code for creating or updating an ObjectEntity
             if ($method == 'POST' || $method == 'PUT') {
                 $this->validationService->setRequest($this->request);
-                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-                $this->validationService->removeObjectsOnPut = []; // to be sure
+//                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+//                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+//                $this->validationService->removeObjectsOnPut = []; // to be sure
                 $object = $this->validationService->validateEntity($object, $data);
                 if (!empty($this->validationService->promises)) {
                     Utils::settle($this->validationService->promises)->wait();
