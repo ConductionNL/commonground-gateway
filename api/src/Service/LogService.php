@@ -86,15 +86,16 @@ class LogService
             }
 
             // Set session values without relations we already know
-            $sessionValues = $this->session->all();
-            unset($sessionValues['endpoint']);
-            unset($sessionValues['source']);
-            unset($sessionValues['entity']);
-            unset($sessionValues['endpoint']);
-            unset($sessionValues['handler']);
-            unset($sessionValues['application']);
-            unset($sessionValues['applications']);
-            $callLog->setSessionValues($sessionValues);
+            // $sessionValues = $this->session->all();
+            // unset($sessionValues['endpoint']);
+            // unset($sessionValues['source']);
+            // unset($sessionValues['entity']);
+            // unset($sessionValues['endpoint']);
+            // unset($sessionValues['handler']);
+            // unset($sessionValues['application']);
+            // unset($sessionValues['applications']);
+            // $callLog->setSessionValues($sessionValues);
+
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
