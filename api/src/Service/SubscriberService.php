@@ -76,7 +76,7 @@ class SubscriberService
         $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingIn());
 
         switch ($subscriber->getMethod()) {
-            case "POST":
+            case 'POST':
 //                var_dump('do a post with this data:');
 //                var_dump($data);
                 // If we have an 'externalId' or externalUri after mapping we use that to create a gateway object with the ConvertToGatewayService.
@@ -88,7 +88,7 @@ class SubscriberService
                     // todo: get id from uri instead and do the above^
                 }
                 break;
-            case "GET":
+            case 'GET':
             default:
                 break;
         }
