@@ -286,6 +286,11 @@ class ValidaterService
                 return new Rules\Date();
             case 'datetime':
                 return new Rules\DateTime();
+            case 'array':
+                return new Rules\ArrayType();
+            case 'boolean':
+            case 'bool':
+                return new Rules\BoolType();
             case 'file':
                 return new CustomRules\Base64File();
             case 'object':
