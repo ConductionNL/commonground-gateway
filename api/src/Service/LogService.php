@@ -91,6 +91,7 @@ class LogService
             unset($sessionValues['source']);
             unset($sessionValues['entity']);
             unset($sessionValues['endpoint']);
+            unset($sessionValues['handler']);
             $callLog->setSessionValues($sessionValues);
 
         }
