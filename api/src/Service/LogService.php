@@ -35,7 +35,6 @@ class LogService
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
-        var_dump($this->session->get('callId'));
         $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]) : $existingLog = null;
 
 
@@ -89,6 +88,7 @@ class LogService
             $callLog->setSessionValues($this->session->all());
         }
         $this->entityManager->persist($callLog);
+        dump($this->session->get('callId'));
         $this->entityManager->flush();
 
         return $callLog;
