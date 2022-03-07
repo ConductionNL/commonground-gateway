@@ -37,7 +37,6 @@ class LogService
 
         $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]) : $existingLog = null;
 
-
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
         $callLog->setType('in');
