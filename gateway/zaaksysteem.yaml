@@ -31,6 +31,22 @@ App\Entity\Endpoint:
         description: endpoint for case types
         path: casetypes
 
+App\Entity\Subscriber:
+    notificationToCase:
+        name: notificationToCase
+        description: A subscriber on a notifications that converts a exxellence case to a gateway case object.
+        method: POST # default is post this can be removed
+        type: internGateway
+        entityOut: '@case'
+        asynchronous: false
+        entity: '@notification'
+        mappingIn:
+            externalUri: instance.case_url
+            externalId: instance.case.reference
+#        mappingOut:
+#            instance.case_url: externalUri
+#            instance.case.reference: externalId
+
 App\Entity\Entity:
     # Notification Object
     notification:
@@ -38,8 +54,6 @@ App\Entity\Entity:
         route: "/api/notification"
         description: Holds information about a case
         endpoint: "notifications"
-#        subscribers:
-#            todo
 
     # Case Object
     case:

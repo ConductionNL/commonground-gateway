@@ -264,6 +264,13 @@ class Entity
      */
     private Collection $subscribers;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entityOut")
+     * @MaxDepth(1)
+     */
+    private ?Subscriber $subscriberOut;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -800,6 +807,28 @@ class Entity
                 $subscriber->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubscriberOut(): ?Subscriber
+    {
+        return $this->subscriberOut;
+    }
+
+    public function setSubscriberOut(?Subscriber $subscriberOut): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriberOut === null && $this->subscriberOut !== null) {
+            $this->subscriberOut->setEntityOut(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriberOut !== null && $subscriberOut->getEntityOut() !== $this) {
+            $subscriberOut->setEntityOut($this);
+        }
+
+        $this->subscriberOut = $subscriberOut;
 
         return $this;
     }

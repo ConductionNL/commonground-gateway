@@ -172,7 +172,7 @@ class Subscriber
     private array $mappingOut = [];
 
     /**
-     * @var Entity|null The entity of this Subscriber.
+     * @var Entity|null The entity that triggers this Subscriber.
      *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
@@ -181,6 +181,17 @@ class Subscriber
     private ?Entity $entity = null;
 
     /**
+     * @var Entity|null The entity for which a new object is created when this subscriber is triggered. (if type is internGateway)
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="subscriberOut", cascade={"persist", "remove"})
+     */
+    private ?Entity $entityOut = null;
+
+    /**
+     * @var Gateway|null The gateway for the output of this Subscriber. (if type is externSource)
+     *
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
@@ -188,6 +199,8 @@ class Subscriber
     private ?gateway $gateway;
 
     /**
+     * @var Endpoint|null An endpoint for the output of this Subscriber. (?)
+     *
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
@@ -375,6 +388,18 @@ class Subscriber
     public function setEntity(?Entity $entity): self
     {
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    public function getEntityOut(): ?Entity
+    {
+        return $this->entityOut;
+    }
+
+    public function setEntityOut(?Entity $entityOut): self
+    {
+        $this->entityOut = $entityOut;
 
         return $this;
     }
