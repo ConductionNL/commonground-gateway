@@ -7,6 +7,20 @@ App\Entity\Gateway:
         authorizationHeader: API-Key
         headers:
             Api-Interface-Id: 676
+            
+    openzaak_zrc:
+        name: open-zaak
+        location: http://open-zaak.openzaak.svc.cluster.local/zaken
+        auth: jwt-hs256
+        id: demo
+        secret: 'offcourseIwillnottellyoumysecret'
+        
+    openzaak_ztc:
+        name: open-zaak
+        location: http://open-zaak.openzaak.svc.cluster.local/catalogi/api/v1
+        auth: jwt-hs256
+        id: demo
+        secret: 'offcourseIwillnottellyoumysecret'
 
 App\Entity\Endpoint:
     caseEndpoint:
@@ -61,8 +75,318 @@ App\Entity\Entity:
         #TODO: move itemConfig to endpoint object later
         itemConfig:
             envelope: 'result.instance'
+            
+    zgwCase:
+        endpoint: '/api/v1/zaken'
+        name: zgwCase
+        description: A case on the ZGW endpoints
+        gateway: '@openzaak_zrc'
+        route: '/api/zaken'
+        
+    zgwGeoJsonGeometry:
+        name: zgwGeoJsonGeometry
+        description: The GeoJSON Geometry for a case
+    
+    zgwExtension:
+        name: zgwExtension
+        description: An extension object for a case
+
+    zgwSuspension:
+        name: zgwSuspension
+        description: An extension object for a case
+        
+    zgwRelevantOtherCase:
+        name: zgwRelevantOtherCase
+        description: A case that is relevant to the current case
+        
+    zgwProperty:
+        name: zgwProperty
+        description: A property to a case
 
 App\Entity\Attribute:
+    
+    zgwProperty_property:
+        name: kenmerk
+        description: Identifies the case in another administration
+        required: true
+        type: string
+        maxLength: 40
+        minLength: 1
+        persistToGateway: true
+        entity: '@zgwProperty'    
+    zgwProperty_source:
+        name: bron
+        description: Identifies the administration relevant to the property
+        required: true
+        type: string
+        maxLength: 40
+        minLength: 1
+        persistToGateway: true
+        entity: '@zgwProperty'
+        
+    
+    zgwRelevantOtherCase_url:
+        type: string
+        name: url
+        description: URL reference to the relevant case
+        required: true
+        persistToGateway: true
+        entity: '@zgwRelevantOtherCase'
+    zgwRelevantOtherCase_relationType:
+        type: string
+        name: aardRelatie
+        description: The kind of relation to other cases relevant to this case
+        enum:
+            - vervolg
+            - onderwerp
+            - bijdrage
+        required: true
+        persistToGateway: true
+        entity: '@zgwRelevantOtherCase'
+    
+    zgwExtension_reason:
+        name: reden
+        description: Description of the reason for the extension of the case process
+        type: string
+        maxLength: 200
+        minLength: 1
+        required: true
+        persistToGateway: true
+        entity: '@zgwExtension'
+    zgwExtension_duration:
+        name: duration
+        description: The number of working days the case process has been extended compared to the previous end date
+        type: string
+        required: true
+        persistToGateway: true
+        entity: '@zgwExtension'
+        
+    zgwSuspension_reason:
+        name: reden
+        description: Description of the reason for the extension of the case process
+        type: string
+        maxLength: 200
+        minLength: 1
+        required: true
+        persistToGateway: true
+        entity: '@zgwSuspension'
+    zgwSuspension_indication:
+        name: indicatie
+        description: Indication if the case has been suspended 
+        type: boolean
+        required: true
+        persistToGateway: true
+        entity: '@zgwSuspension'
+        
+    
+    zgwGeoJSON_type:
+        name: type
+        type: string
+        enum:
+            - Point
+            - MultiPoint
+            - LineString
+            - MultiLineString
+            - Polygon
+            - MultiPolygon
+        entity: '@zgwGeoJsonGeometry'
+        persistToGateway: true
+    zgwGeoJSON_coordinates:
+        name: coordinates
+        type: array
+        description: (A collection of) 2D Point(s)
+        entity: '@zgwGeoJsonGeometry'
+        persistToGateway: true
+    
+    zgwCase_identification:
+        name: identificatie
+        description: The id of the case
+        maxLength: 40
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_sourceOrganization:
+        name: brongorganisatie
+        description: The source organisation of the case, RSIN number
+        type: string
+        minLength: 1
+        maxLength: 9
+        required: true
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_description:
+        name: omschrijving
+        description: A short description of the case
+        maxLength: 80
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_explanation:
+        name: toelichting
+        description: A description of the case
+        maxLength: 1000
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_caseType:
+        name: zaaktype
+        description: The URL reference to the case type in the catalogi-api
+        type: string
+        minLength: 1
+        maxLength: 1000
+        required: true
+        persistToGateway: true
+        entity: '@zgwCase'        
+    zgwCase_registrationDate:
+        name: registratiedatum
+        description: The date the case has been registered
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_responsibleOrganization:
+        name: verantwoordelijkeOrganisatie
+        description: The organization responsible for treating the case (RSIN)
+        type: string
+        minLength: 1
+        maxLength: 9
+        required: true
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_startDate:
+        name: startdatum
+        description: The date the execution of the case has started
+        type: string
+        required: true
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_endDatePlanned:
+        name: einddatumGepland
+        description: The date that the case will be completed according to planning
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_endDateFinal:
+        name: einddatumGepland
+        description: The date that the case will be completed according to planning
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_publicationDate:
+        name: publicatiedatum
+        description: The date the case will be published
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_communicationChannel:
+        name: communicatiekanaal
+        description: The medium used to retrieve a case. URL from the VNG reference list for communication channels
+        type: string
+        maxLength: 1000
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_productsOrServices:
+        name: productenOfDiensten
+        description: The products and/or services that the case should produce. This are URLs to resources on the Products and Services API. Products and Services should be in the case type also.
+        type: array
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_confidentialitySetting:
+        name: vertrouwelijkheidsaanduiding
+        description: How confidential the case should be. If not filled the default will be taken from the case type
+        type: string
+        enum: ['openbaar', 'beperkt_openbaar', 'intern', 'zaakvertrouwelijk', 'vertrouwelijk', 'confidentieel', 'geheim', 'zeer_geheim']
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_paymentIndication:
+        name: betalingsindicatie
+        description: Indication if the costs related to the case have been payed by the person or organization concerned
+        type: string
+        enum: ['nvt', 'nog_niet', 'gedeeltelijk', 'geheel']
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_lastPaymentDate:
+        name: laatsteBetaaldatum
+        description: The date the last payment of costs related to the case has been processed
+        type: string
+        persistToGateway: true
+        entity: '@zgwCase'
+    zgwCase_caseGeometry:
+        name: zaakgeometrie
+        description: The geometry of the case
+        type: object
+        object: '@zgwGeoJSONGeometry'
+        entity: '@zgwCase'
+        persistToGateway: true
+        cascade: true
+    zgwCase_extension:
+        name: verlenging
+        description: Data about the extension of the time allocated for processing the case
+        type: object
+        object: '@zgwExtension'
+        entity: '@zgwCase'
+        persistToGateway: true
+        cascade: true
+    zgwCase_suspension:
+        name: opschorting
+        description: Data about the temporary suspension of the case
+        type: object
+        object: '@zgwSuspension'
+        entity: '@zgwCase'
+        persistToGateway: true
+        cascade: true
+    zgwCase_selectionListClass:
+        name: selectielijstklasse
+        type: string
+        description: URL reference to the category in the selection list 'Archiefbescheiden' that, according to the case type and result type, decides the archivation regime for the case\
+        entity: '@zgwCase'
+        persistToGateway: true
+    zgwCase_mainCase:
+        name: hoofdzaak
+        type: string
+        description: URL reference to the case of which the case is a sub-case
+        entity: '@zgwCase'
+        persistToGateway: true
+    zgwCase_relevantOtherCases:
+        name: relevanteAndereZaken
+        type: object
+        multiple: true
+        description: A list of relevant cases
+        object: '@zgwRelevantCase'
+        entity: '@zgwCase'
+        persistToGateway: true
+        cascade: true
+    zgwCase_properties:
+        name: kenmerken
+        type: object
+        multiple: true
+        object: '@zgwProperty'
+        entity: '@zgwCase'
+        persistToGateway: true
+        cascade: true
+    zgwCase_archiveNomination:
+        name: archiefnominatie
+        type: string
+        description: The indication if a case file should be retained indefenitely or destroyed after a certain period of time
+        enum:
+            - blijvend_bewaren
+            - vernietigen
+        entity: '@zgwCase'
+        persistToGateway: true
+    zgwCase_archiveStatus:
+        name: archiefstatus
+        type: string
+        description: Indication of the archivation status of a case
+        enum:
+            - nog_te_archiveren
+            - gearchiveerd
+            - gearchiveerd_procestermijn_onbekend
+            - overgedragen
+        entity: '@zgwCase'
+        persistToGateway: true
+    zgwCase_archiveActionDate:
+        name: archiefactiedatum
+        type: string
+        description: The date the archived case file has to be desctroyed or moved to an archive depot. Will automatically be decided on creating or changing the result of this case if not filled.
+        entity: '@zgwCase'
+        persistToGateway: true
 
     # Case attributes
     case_casetype:
