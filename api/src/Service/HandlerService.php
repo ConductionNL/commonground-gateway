@@ -254,6 +254,9 @@ class HandlerService
             }
             //todo: -end- old code...
 
+            // Check if we need to trigger subscribers for this entity
+            $this->subscriberService->handleSubscribers($entity, $data, $method);
+
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
@@ -295,9 +298,6 @@ class HandlerService
                 $data = [];
                 $data['result'] = $result;
             }
-
-            // Check if we need to trigger subscribers for this entity
-            $this->subscriberService->handleSubscribers($entity, $data, $method);
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
