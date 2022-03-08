@@ -261,25 +261,24 @@ class HandlerService
             $transRepo = $this->entityManager->getRepository('App:Translation');
             $translations = $transRepo->getTranslations($handler->getTranslationsOut());
 
-            if (isset($data['result'])) {
-                $data['result'] = $this->translationService->parse($data['result'], true, $translations);
-            } else {
+            // if (isset($data['result'])) {
+            //     $data['result'] = $this->translationService->parse($data['result'], true, $translations);
+            // } else {
                 $data = $this->translationService->parse($data, true, $translations);
-            }
-
+            // }
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
             // Then we want to do to mapping on the outgoing response
             $skeleton = $handler->getSkeletonOut();
             if (!$skeleton || empty($skeleton)) {
-                isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
+                $skeleton = $data;
             }
-            if (isset($data['result'])) {
-                $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-            } elseif (isset($data)) {
+            // if (isset($data['result'])) {
+            //     $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
+            // } elseif (isset($data)) {
                 $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
-            }
+            // }
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
@@ -382,7 +381,7 @@ class HandlerService
         $acceptType = $this->getRequestType('accept');
 
         // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
-        isset($data['result']) && $data = $data['result'];
+        // isset($data['result']) && $data = $data['result'];
 
         // Lets fill in some options
         $options = [];
@@ -406,7 +405,7 @@ class HandlerService
                 if (isset($data) && !is_string($data)) {
                     $data = json_encode($data);
                 }
-                isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
+                $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
                 break;
         }
