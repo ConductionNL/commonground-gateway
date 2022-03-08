@@ -1642,8 +1642,9 @@ class ValidationService
                 // Notify notification component
                 $this->notify($objectEntity, $method);
 
+                $responseLog = new Response(json_encode($result), 201, []);
                 // log hier
-                $this->logService->saveLog($this->logService->makeRequest(), $response, json_encode($result), null, 'out');
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($result), null, 'out');
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);
