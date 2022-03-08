@@ -36,7 +36,7 @@ class LogService
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
-        $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]) : $existingLog = null;
+        $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), "type" => $type]) : $existingLog = null;
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
@@ -67,10 +67,10 @@ class LogService
         $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
         $callLog->setResponseTime(intval($time * 1000));
 
-        $callLog->setCallId($this->session->get('callId'));
 
         if ($this->session) {
             // add before removing
+            $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
             $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
@@ -79,13 +79,13 @@ class LogService
             $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
 
             // remove before setting the session values
-            if ($finalSave === true) {
-                $this->session->remove('callId');
-                $this->session->remove('endpoint');
-                $this->session->remove('entity');
-                $this->session->remove('source');
-                $this->session->remove('handler');
-            }
+//            if ($finalSave === true) {
+//                $this->session->remove('callId');
+//                $this->session->remove('endpoint');
+//                $this->session->remove('entity');
+//                $this->session->remove('source');
+//                $this->session->remove('handler');
+//            }
 
             // Set session values without relations we already know
             // $sessionValues = $this->session->all();
