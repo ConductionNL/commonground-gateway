@@ -168,7 +168,10 @@ class GatewayMetadataDriver implements MappingDriver
      */
     public function loadMetadataForClass($className, ClassMetadata $metadata)
     {
-        $className = substr($className, strlen('Database\\'));
+        var_dump($className, 'entity name');
+        while(strpos($className, 'Database\\')){
+            $className = substr($className, strlen('Database\\'));
+        }
         $entity = $this->generalEntityManager->getRepository('App:Entity')->findOneBy(['name' => $className]);
         if(!($entity instanceof Entity) || !($metadata instanceof \Doctrine\ORM\Mapping\ClassMetadata)){
             return;
