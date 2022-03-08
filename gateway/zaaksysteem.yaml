@@ -60,7 +60,7 @@ App\Entity\Subscriber:
         asynchronous: false
         entity: '@notification'
         mappingIn:
-            externalId: instance.case.reference
+            externalId: caseReference
             
     caseToZgwCase:
         name: caseToZgwCase
