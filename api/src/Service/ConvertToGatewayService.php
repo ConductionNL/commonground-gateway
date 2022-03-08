@@ -177,9 +177,10 @@ class ConvertToGatewayService
                 }
 
                 $content = $response->getBody()->getContents();
+                $status = $response->getStatusCode();
                 // create log
-                $responseLog = new Response("", Response::HTTP_OK, $entity->getGateway()->getHeaders());
-                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, 'out');
+                $responseLog = new Response($content, $status, $entity->getGateway()->getHeaders());
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, null, 'out');
 
                 $body = json_decode($content, true);
 //                var_dump($body);die();
