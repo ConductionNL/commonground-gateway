@@ -71,7 +71,8 @@ class SubscriberService
     {
         // todo: add code for asynchronous option
 
-        // todo: here we should handle the creation of a zgw zaak, instead of with the old validationService... see code in createPromise function...
+        // todo: here we should handle the creation of a zgw zaak, instead of with the old validationService...
+        // todo: see code in validationService->createPromise function...
 
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)
     }
@@ -149,7 +150,7 @@ class SubscriberService
 //            var_dump('Created a new objectEntity: '.$newObjectEntity->getId()->toString());
 
             // Check if we need to trigger subscribers for this newly create objectEntity
-            $this->handleSubscribers($subscriber->getEntityOut(), $data, 'POST');
+            $this->handleSubscribers($subscriber->getEntityOut(), $data, $subscriber->getMethod());
         }
     }
 }
