@@ -176,9 +176,9 @@ class ConvertToGatewayService
                     return null; //Or false or error? //todo?
                 }
 
+                // create log
                 $content = $response->getBody()->getContents();
                 $status = $response->getStatusCode();
-                // create log
                 $responseLog = new Response($content, $status, $entity->getGateway()->getHeaders());
                 $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, null, 'out');
 

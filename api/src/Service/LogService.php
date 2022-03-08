@@ -36,7 +36,7 @@ class LogService
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
-        $this->session->get('callId') !== null ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), "type" => $type]) : $existingLog = null;
+        $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), "type" => $type]) : $existingLog = null;
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
