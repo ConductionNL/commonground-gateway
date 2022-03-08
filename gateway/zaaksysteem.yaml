@@ -65,6 +65,7 @@ App\Entity\Subscriber:
         mappingOut:
             startdatum: date_of_registration
             registratiedatum: date_of_registration
+            identificatie: number|string
 #        mappingOut:
 #            instance.case.reference: externalId
             

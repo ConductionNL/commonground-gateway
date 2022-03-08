@@ -71,6 +71,8 @@ class SubscriberService
     {
         // todo: add code for asynchronous option
 
+        // todo: here we should handle the creation of a zgw zaak, instead of with the old validationService... see code in createPromise function...
+
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)
     }
 
@@ -103,6 +105,13 @@ class SubscriberService
                 'verantwoordelijkeOrganisatie' => '999993653',
             ];
             $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
+
+            //todo: use translationService to change datetime format
+            $startdatum = new \DateTime($data['startdatum']);
+            $data['startdatum'] = $startdatum->format('Y-m-d');
+            $registratiedatum = new \DateTime($data['registratiedatum']);
+            $data['registratiedatum'] = $registratiedatum->format('Y-m-d');
+            $data['identificatie'] = "{$data['identificatie']}";
 //            var_dump($data);
         } else {
             // todo: create a gateway object of entity $subscriber->getEntityOut() with the $data array
