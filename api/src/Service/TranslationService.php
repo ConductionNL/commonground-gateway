@@ -61,13 +61,12 @@ class TranslationService
                 $search = trim($searches[0]);
                 $format = trim($searches[1]);
             }
-            if (!isset($format) || $format == 'string') {
-                if (isset($source[$search]) && !is_string($source[$search])) {
-                    // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
-                    $destination[$replace] = $source[$search];
-                } else {
-                    $destination[$replace] = $source[$search] ?? ((string) $destination[$replace]) ?? null;
-                }
+            if (!isset($format)) {
+                // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
+                $destination[$replace] = $source[$search] ?? ($destination[$replace]) ?? null;
+                unset($destination[$search]);
+            } elseif ($format == 'string') {
+                $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
                 unset($destination[$search]);
             } elseif ($format == 'json') {
                 $destination[$replace] = isset($source[$search]) ? json_decode($source[$search], true) : ($destination[$replace]) ?? null;

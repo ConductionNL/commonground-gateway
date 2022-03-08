@@ -97,9 +97,6 @@ class SubscriberService
             $registratiedatum = new \DateTime($data['registratiedatum']);
             $data['registratiedatum'] = $registratiedatum->format('Y-m-d');
         }
-        if (array_key_exists('identificatie', $data)) {
-            $data['identificatie'] = "{$data['identificatie']}";
-        }
 
 //        var_dump('InternGatewaySubscriber for entity: '.$subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
 //        var_dump($data);
