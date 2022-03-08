@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ConvertToGatewayService
@@ -21,14 +22,16 @@ class ConvertToGatewayService
     private SessionInterface $session;
     private GatewayService $gatewayService;
     private FunctionService $functionService;
+    private LogService $logService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
         $this->session = $session;
         $this->gatewayService = $gatewayService;
         $this->functionService = $functionService;
+        $this->logService = $logService;
     }
 
     /**
@@ -172,7 +175,14 @@ class ConvertToGatewayService
                 if (is_array($response)) {
                     return null; //Or false or error? //todo?
                 }
-                $body = json_decode($response->getBody()->getContents(), true);
+
+                // create log
+                $content = $response->getBody()->getContents();
+                $status = $response->getStatusCode();
+                $responseLog = new Response($content, $status, $entity->getGateway()->getHeaders());
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, null, 'out');
+
+                $body = json_decode($content, true);
                 if (array_key_exists('envelope', $entity->getItemConfig())) {
                     $itemConfigEnvelope = explode('.', $entity->getItemConfig()['envelope']);
                     foreach ($itemConfigEnvelope as $item) {

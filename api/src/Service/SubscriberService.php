@@ -17,19 +17,22 @@ class SubscriberService
     private TranslationService $translationService;
     private EavService $eavService;
     private ValidationService $validationService;
+    private LogService $logService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ConvertToGatewayService $convertToGatewayService,
         TranslationService $translationService,
         EavService $eavService,
-        ValidationService $validationService
+        ValidationService $validationService,
+        LogService $logService
     ) {
         $this->entityManager = $entityManager;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->translationService = $translationService;
         $this->eavService = $eavService;
         $this->validationService = $validationService;
+        $this->logService = $logService;
     }
 
     /**
@@ -108,6 +111,10 @@ class SubscriberService
             $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
             $data = $this->eavService->handleGet($newObjectEntity, null);
 //            var_dump($data);
+
+            // create log
+            $responseLog = new Response(json_encode($data), 201, []);
+            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($data), null, 'out');
         } else {
             // Create a gateway object of entity $subscriber->getEntityOut() with the $data array
             $newObjectEntity = $this->eavService->getObject(null, 'POST', $subscriber->getEntityOut());
