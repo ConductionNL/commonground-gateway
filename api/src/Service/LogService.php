@@ -25,13 +25,14 @@ class LogService
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request  $request  The request to fill this Log with.
-     * @param Response $response The response to fill this Log with.
-     * @param string   $content  The content to fill this Log with if there is no response.
-     *
+     * @param Request $request The request to fill this Log with.
+     * @param Response|null $response The response to fill this Log with.
+     * @param string|null $content The content to fill this Log with if there is no response.
+     * @param bool|null $finalSave
+     * @param string $type
      * @return Log
      */
-    public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null): Log
+    public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null, string $type = 'in'): Log
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
@@ -39,7 +40,7 @@ class LogService
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
-        $callLog->setType('in');
+        $callLog->setType($type);
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all() ?? null);
@@ -66,9 +67,10 @@ class LogService
         $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
         $callLog->setResponseTime(intval($time * 1000));
 
+        $callLog->setCallId($this->session->get('callId'));
+
         if ($this->session) {
             // add before removing
-            $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
             $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
@@ -102,7 +104,19 @@ class LogService
         return $callLog;
     }
 
-    private function getStatusWithCode(int $statusCode): ?string
+    public function makeRequest(): Request
+    {
+        return new Request(
+            $_GET,
+            $_POST,
+            [],
+            $_COOKIE,
+            $_FILES,
+            $_SERVER
+        );
+    }
+
+    public function getStatusWithCode(int $statusCode): ?string
     {
         $reflectionClass = new ReflectionClass(Response::class);
         $constants = $reflectionClass->getConstants();
