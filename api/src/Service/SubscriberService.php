@@ -40,7 +40,7 @@ class SubscriberService
         if (empty($entity->getSubscribers())) {
             return;
         }
-        //todo
+        //todo subscriber->runOrder
         foreach ($entity->getSubscribers() as $subscriber) {
             if ($method !== $subscriber->getMethod()) {
                 continue;
@@ -80,41 +80,38 @@ class SubscriberService
     {
         // todo: add code for asynchronous option
 
-        // todo: mapping & translation
-//        $skeleton = $subscriber->getSkeletonIn();
-        $skeleton = [];
-        if (!$skeleton || empty($skeleton)) {
+        // Mapping in incl. skeletonIn
+        $skeleton = $subscriber->getSkeletonIn();
+        if (empty($skeleton)) {
             $skeleton = $data;
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingIn());
 
-//        var_dump('InternGatewaySubscriber for entity: '.$subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
-
-        // If we have an 'externalId' or externalUri after mapping we use that to create a gateway object with the ConvertToGatewayService.
-        if (array_key_exists('externalId', $data)) {
-            $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
-            // todo log this^
-            $data = $this->eavService->handleGet($newObjectEntity, null);
-
-            //todo: move this to the bottom where we do mapping out?
-            //todo: or even better use mapping in, in the next subscriber instead?
-            //todo: add skeletonIn and skeletonOut to subscriber config?
-            $skeleton = [
-                'zaaktype'                     => 'https://openzaak.sed-xllnc.commonground.nu/catalogi/api/v1/zaaktypen/1d92456b-ed8e-43e7-ad4a-03b8e8556139',
-                'bronorganisatie'              => '999993653',
-                'verantwoordelijkeOrganisatie' => '999993653',
-            ];
-            $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
-
-            //todo: use translationService to change datetime format
+        // todo: translation
+        //todo: use translationService to change datetime format
+        if (array_key_exists('startdatum', $data)) {
             $startdatum = new \DateTime($data['startdatum']);
             $data['startdatum'] = $startdatum->format('Y-m-d');
+        }
+        if (array_key_exists('registratiedatum', $data)) {
             $registratiedatum = new \DateTime($data['registratiedatum']);
             $data['registratiedatum'] = $registratiedatum->format('Y-m-d');
+        }
+        if (array_key_exists('identificatie', $data)) {
             $data['identificatie'] = "{$data['identificatie']}";
+        }
+
+//        var_dump('InternGatewaySubscriber for entity: '.$subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
+//        var_dump($data);
+
+        // If we have an 'externalId' after mapping we use that to create a gateway object with the ConvertToGatewayService.
+        if (array_key_exists('externalId', $data)) {
+            // Convert an object outside the gateway into an ObjectEntity in the gateway
+            $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
+            $data = $this->eavService->handleGet($newObjectEntity, null);
 //            var_dump($data);
         } else {
-            // todo: create a gateway object of entity $subscriber->getEntityOut() with the $data array
+            // Create a gateway object of entity $subscriber->getEntityOut() with the $data array
             $newObjectEntity = $this->eavService->getObject(null, 'POST', $subscriber->getEntityOut());
 
             $validationServiceRequest = new Request();
@@ -140,10 +137,14 @@ class SubscriberService
 //                var_dump($data);
 //                var_dump($data['validationServiceErrors']);
             }
-        }
 
-        // todo mapping out?
-//        $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
+            // todo mapping out & translation out?
+//            $skeleton = $subscriber->getSkeletonOut();
+//            if (empty($skeleton)) {
+//                $skeleton = $data;
+//            }
+//            $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
+        }
 
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)
 

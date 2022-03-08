@@ -55,34 +55,30 @@ App\Entity\Subscriber:
     notificationToCase:
         name: notificationToCase
         description: A subscriber on a notifications that converts a Exxellence case to a gateway case object.
-        method: POST # default is post this can be removed
         type: internGateway
         entityOut: '@case'
         asynchronous: false
         entity: '@notification'
         mappingIn:
             externalId: instance.case.reference
-        mappingOut:
-            startdatum: date_of_registration
-            registratiedatum: date_of_registration
-            identificatie: number|string
 #        mappingOut:
 #            instance.case.reference: externalId
             
     caseToZgwCase:
         name: caseToZgwCase
         description: A subscriber on a gateway (Exxellence) case object that converts that object to a gateway zgw case object.
-        method: POST # default is post this can be removed
         type: internGateway
         entityOut: '@zgwCase'
         asynchronous: false
         entity: '@case'
-#        mappingIn:
-#            zaaktype: casetype.name # todo: doesn't work like this but this: "https://openzaak.sed-xllnc.commonground.nu/catalogi/api/v1/zaaktypen/1d92456b-ed8e-43e7-ad4a-03b8e8556139"
-#            verantwoordelijkeOrganisatie: something #todo: 999993653
-#            startdatum: date_of_registration #todo: see notificationToCase mappingOut
-#            registratiedatum: date_of_registration #todo: see notificationToCase mappingOut
-#            bronorganisatie: something #todo: 999993653
+        skeletonIn:
+            zaaktype: 'https://openzaak.sed-xllnc.commonground.nu/catalogi/api/v1/zaaktypen/1d92456b-ed8e-43e7-ad4a-03b8e8556139'
+            bronorganisatie: '999993653'
+            verantwoordelijkeOrganisatie: '999993653'
+        mappingIn:
+            startdatum: date_of_registration
+            registratiedatum: date_of_registration
+            identificatie: number|string
 #        mappingOut:
 #            instance.case.reference: externalId
 
