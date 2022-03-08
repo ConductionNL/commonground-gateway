@@ -183,7 +183,6 @@ class ConvertToGatewayService
                 $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, null, 'out');
 
                 $body = json_decode($content, true);
-//                var_dump($body);die();
                 if (array_key_exists('envelope', $entity->getItemConfig())) {
                     $itemConfigEnvelope = explode('.', $entity->getItemConfig()['envelope']);
                     foreach ($itemConfigEnvelope as $item) {

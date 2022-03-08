@@ -69,6 +69,8 @@ class Subscriber
     private ?string $description;
 
     /**
+     * @var string The method that triggers this subscriber.
+     *
      * @Assert\Type("string")
      * @Assert\Choice({"GET", "POST", "PUT", "PATCH"})
      *
@@ -78,7 +80,7 @@ class Subscriber
     private string $method = 'POST';
 
     /**
-     * @var string The type of this subscriber
+     * @var string The type of this subscriber. externSource will result in a call outside the gateway and internGateway will result in a new object inside the gateway.
      *
      * @example string
      *
@@ -170,6 +172,22 @@ class Subscriber
      * @ORM\Column(type="json", nullable=true)
      */
     private array $mappingOut = [];
+
+    /**
+     * @Assert\Type("array")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $skeletonIn = [];
+
+    /**
+     * @Assert\Type("array")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $skeletonOut = [];
 
     /**
      * @var Entity|null The entity that triggers this Subscriber.
@@ -376,6 +394,30 @@ class Subscriber
     public function setMappingOut(?array $mappingOut): self
     {
         $this->mappingOut = $mappingOut;
+
+        return $this;
+    }
+
+    public function getSkeletonIn(): ?array
+    {
+        return $this->skeletonIn;
+    }
+
+    public function setSkeletonIn(?array $skeletonIn): self
+    {
+        $this->skeletonIn = $skeletonIn;
+
+        return $this;
+    }
+
+    public function getSkeletonOut(): ?array
+    {
+        return $this->skeletonOut;
+    }
+
+    public function setSkeletonOut(?array $skeletonOut): self
+    {
+        $this->skeletonOut = $skeletonOut;
 
         return $this;
     }
