@@ -25,18 +25,19 @@ class LogService
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request $request The request to fill this Log with.
-     * @param Response|null $response The response to fill this Log with.
-     * @param string|null $content The content to fill this Log with if there is no response.
-     * @param bool|null $finalSave
-     * @param string $type
+     * @param Request       $request   The request to fill this Log with.
+     * @param Response|null $response  The response to fill this Log with.
+     * @param string|null   $content   The content to fill this Log with if there is no response.
+     * @param bool|null     $finalSave
+     * @param string        $type
+     *
      * @return Log
      */
     public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null, string $type = 'in'): Log
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
 
-        $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), "type" => $type]) : $existingLog = null;
+        $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), 'type' => $type]) : $existingLog = null;
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
@@ -68,7 +69,6 @@ class LogService
         $callLog->setResponseTime(intval($time * 1000));
 
         $callLog->setCreatedAt(new \DateTime());
-
 
         if ($this->session) {
             // add before removing
