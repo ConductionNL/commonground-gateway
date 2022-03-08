@@ -9,6 +9,7 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Promise\Utils;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -28,6 +29,7 @@ class HandlerService
     private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private FormIOService $formIOService;
+    private SubscriberService $subscriberService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -60,7 +62,8 @@ class HandlerService
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
-        FormIOService $formIOService
+        FormIOService $formIOService,
+        SubscriberService $subscriberService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -75,6 +78,7 @@ class HandlerService
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->formIOService = $formIOService;
+        $this->subscriberService = $subscriberService;
     }
 
     /**
@@ -197,10 +201,14 @@ class HandlerService
             $fields = $this->eavService->getRequestFields($this->request);
             //TODO: old code for getting an ObjectEntity
             if (isset($object)) {
-                $data = $this->eavService->handleGet($object, $fields);
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                if ($object instanceof ObjectEntity) {
+                    $data = $this->eavService->handleGet($object, $fields);
+                    if ($object->getHasErrors()) {
+                        $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                        $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                    }
+                } else {
+                    $data['error'] = $object;
                 }
             } else {
                 $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
@@ -225,10 +233,17 @@ class HandlerService
             //TODO: old code for creating or updating an ObjectEntity
             if ($method == 'POST' || $method == 'PUT') {
                 $this->validationService->setRequest($this->request);
-                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-                $this->validationService->removeObjectsOnPut = []; // to be sure
+//                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+//                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+//                $this->validationService->removeObjectsOnPut = []; // to be sure
                 $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
@@ -238,6 +253,9 @@ class HandlerService
                 }
             }
             //todo: -end- old code...
+
+            // Check if we need to trigger subscribers for this entity
+            $this->subscriberService->handleSubscribers($entity, $data, $method);
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
@@ -445,6 +463,7 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
+        (!isset($typeValue) || $typeValue === '*/*') && $typeValue = 'application/json';
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }

@@ -234,3 +234,33 @@ App\Entity\Translation:
         translateFrom: regen
         translateTo: sturm
         language: de
+
+App\Entity\Subscriber:
+    weerSubscriber:
+        name: Weer subscriber 
+        runOrder: 0
+        conditions: "{}" 
+        method: POST
+        headers: 
+            accept: application/json
+        queryParameters: 
+            param: value
+        mappingIn:
+            monday: maandag
+            tuesday: dinsdag
+            wednesday: woensdag
+            thursday: donderdag
+            friday: vrijdag
+            saturday: weekend.zaterdag
+            sunday: weekend.zondag
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
+        mappingOut:
+            montag: monday
+            dienstag: tuesday
+            mittwoch: wednesday
+            donnerstag: thursday 
+            freitag: friday 
+            wochenende.samstag: saturday
+            wochenende.sonntag: sunday
+        endpoint: "@weerEndpoint"

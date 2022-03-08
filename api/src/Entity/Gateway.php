@@ -466,6 +466,13 @@ class Gateway
      */
     private Collection $requestLogs;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="gateway", cascade={"persist", "remove"})
+     * @MaxDepth(1)
+     */
+    private ?Subscriber $subscriber;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -805,6 +812,28 @@ class Gateway
                 $requestLog->setGateway(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubscriber(): ?Subscriber
+    {
+        return $this->subscriber;
+    }
+
+    public function setSubscriber(?Subscriber $subscriber): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriber === null && $this->subscriber !== null) {
+            $this->subscriber->setGateway(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriber !== null && $subscriber->getGateway() !== $this) {
+            $subscriber->setGateway($this);
+        }
+
+        $this->subscriber = $subscriber;
 
         return $this;
     }

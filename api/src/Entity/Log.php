@@ -43,7 +43,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "entity.id": "exact",
  *     "endpoint.id": "exact",
  *     "gateway.id": "exact",
- *     "handler.id": "exact"
+ *     "handler.id": "exact",
+ *     "callId": "exact",
+ *     "session": "exact"
  * })
  */
 class Log
@@ -89,7 +91,7 @@ class Log
      *
      * @Assert\NotNull
      * @Groups({"read","write"})
-     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\Column(type="uuid")
      */
     private $callId;
 
@@ -200,11 +202,8 @@ class Log
     /**
      * @var string The response content of this Log.
      *
-     * @Assert\Length(
-     *     max = 2555
-     * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=2555, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $responseContent;
 
