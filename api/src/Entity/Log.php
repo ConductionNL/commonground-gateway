@@ -91,7 +91,7 @@ class Log
      *
      * @Assert\NotNull
      * @Groups({"read","write"})
-     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\Column(type="uuid")
      */
     private $callId;
 

@@ -17,19 +17,22 @@ class SubscriberService
     private TranslationService $translationService;
     private EavService $eavService;
     private ValidationService $validationService;
+    private LogService $logService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ConvertToGatewayService $convertToGatewayService,
         TranslationService $translationService,
         EavService $eavService,
-        ValidationService $validationService
+        ValidationService $validationService,
+        LogService $logService
     ) {
         $this->entityManager = $entityManager;
         $this->convertToGatewayService = $convertToGatewayService;
         $this->translationService = $translationService;
         $this->eavService = $eavService;
         $this->validationService = $validationService;
+        $this->logService = $logService;
     }
 
     /**
@@ -94,7 +97,11 @@ class SubscriberService
         if (array_key_exists('externalId', $data)) {
             $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
             // todo log this^
+
+            // create log
             $data = $this->eavService->handleGet($newObjectEntity, null);
+            $responseLog = new Response(json_encode($data), 201, []);
+            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($data), null, 'out');
 
             //todo: move this to the bottom where we do mapping out?
             //todo: or even better use mapping in, in the next subscriber instead?
