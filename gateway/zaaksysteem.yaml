@@ -61,8 +61,6 @@ App\Entity\Subscriber:
         entity: '@notification'
         mappingIn:
             externalId: instance.case.reference
-#        mappingOut:
-#            instance.case.reference: externalId
             
     caseToZgwCase:
         name: caseToZgwCase
@@ -80,7 +78,9 @@ App\Entity\Subscriber:
             registratiedatum: date_of_registration
             identificatie: number|string
 #        mappingOut:
-#            instance.case.reference: externalId
+#            date_of_registration: startdatum
+#            date_of_registration: registratiedatum
+#            number: identificatie|int
 
 App\Entity\Entity:
     # Notification Object
