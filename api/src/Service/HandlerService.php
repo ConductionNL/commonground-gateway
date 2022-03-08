@@ -228,9 +228,9 @@ class HandlerService
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-            //todo: -start- old code...
+            // @todo: -start- old code...
 
-            //TODO: old code for creating or updating an ObjectEntity
+            // @TODO: old code for creating or updating an ObjectEntity
             if ($method == 'POST' || $method == 'PUT') {
                 $this->validationService->setRequest($this->request);
 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
@@ -264,11 +264,8 @@ class HandlerService
             $transRepo = $this->entityManager->getRepository('App:Translation');
             $translations = $transRepo->getTranslations($handler->getTranslationsOut());
 
-            // if (isset($data['result'])) {
-            //     $data['result'] = $this->translationService->parse($data['result'], true, $translations);
-            // } else {
-                $data = $this->translationService->parse($data, true, $translations);
-            // }
+            $data = $this->translationService->parse($data, true, $translations);
+
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
@@ -277,11 +274,8 @@ class HandlerService
             if (!$skeleton || empty($skeleton)) {
                 $skeleton = $data;
             }
-            // if (isset($data['result'])) {
-            //     $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-            // } elseif (isset($data)) {
-                $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
-            // }
+
+            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
@@ -289,14 +283,6 @@ class HandlerService
             // Lets see if we need te use a template
             if ($handler->getTemplatetype() && $handler->getTemplate()) {
                 $data = $this->renderTemplate($handler, $data);
-            }
-
-            // @todo should be done better
-            // If data is string it could be a document/template
-            if (is_string($data)) {
-                $result = $data;
-                $data = [];
-                $data['result'] = $result;
             }
         }
         // Update current Log
@@ -379,9 +365,6 @@ class HandlerService
         }
 
         $acceptType = $this->getRequestType('accept');
-
-        // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
-        // isset($data['result']) && $data = $data['result'];
 
         // Lets fill in some options
         $options = [];
