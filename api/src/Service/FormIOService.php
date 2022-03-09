@@ -76,7 +76,7 @@ class FormIOService
 
     private function getAttributeInputType($attr): string
     {
-      // Default as textfield
+        // Default as textfield
         $type = 'textfield';
 
         switch ($attr->getType()) {
