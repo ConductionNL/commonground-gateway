@@ -163,6 +163,16 @@ App\Entity\Attribute:
             '<': [{ var: int }, 12]
         entity: "@person"
         format: dutch_pc4
+    person_immutable:
+        name: immutable
+        type: string
+        entity: '@person'
+        immutable: true
+    person_unsetable:
+        name: unsetable
+        type: string
+        entity: '@person'
+        unsetable: true
         
     # email Attributes
     email_name:

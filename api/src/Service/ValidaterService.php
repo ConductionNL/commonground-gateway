@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ValidaterService
 {
     public CacheInterface $cache;
+    private string $method;
 
     public function __construct(
         CacheInterface $cache
@@ -38,13 +39,28 @@ class ValidaterService
      *
      * @param array  $data
      * @param Entity $entity
+     * @param string $method used to be able to use different validations for different methods.
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
      * @return string[]|void
      */
-    public function validateData(array $data, Entity $entity)
+    public function validateData(array $data, Entity $entity, string $method)
     {
+        // We could use a different function to set the $method, but this way we can only validate data if we also have a method.
+        if (!in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            throw new GatewayException(
+                'This validation method is not allowed.',
+                null,
+                null,
+                [
+                    'data'         => $method,
+                    'path'         => $entity->getName(),
+                    'responseType' => Response::HTTP_BAD_REQUEST,
+                ]
+            );
+        }
+        $this->method = $method;
         $validator = $this->getEntityValidator($entity);
 
         // TODO: what if we have fields in $data that do not exist on this Entity?
@@ -69,9 +85,9 @@ class ValidaterService
     private function getEntityValidator(Entity $entity): Validator
     {
         // Get validator for this Entity from cache.
-        $item = $this->cache->getItem('entityValidators_'.$entity->getId());
+        $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
-//            return $item->get(); // TODO: put this back so we can use caching
+//            return $item->get(); // TODO: put this back so that we use caching
         }
 
         // No Validator cached for this Entity, so create a new Validator and cache it.
@@ -79,7 +95,8 @@ class ValidaterService
         $validator = $this->addAttributeValidators($entity, $validator);
 
         $item->set($validator);
-        $item->tag('entityValidator');
+        $item->tag('entityValidator'); // Tag for all Entity Validators
+        $item->tag('entityValidator_'.$entity->getId()->toString()); // Tag for the Validators of this specific Entity.
 
         $this->cache->save($item);
 
@@ -99,15 +116,18 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            // todo: immutable
-//            if ($attribute->getValidations()['immutable']) { // & method = PUT
-//
-//            }
-
-            // todo: unsetable
-//            if ($attribute->getValidations()['unsetable']) { // & method = POST
-//
-//            }
+            if (($this->method == 'PUT' || $this->method == 'PATCH') && $attribute->getValidations()['immutable']) {
+                // If immutable this attribute should not be present when doing a PUT or PATCH.
+                $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
+                // Skip any other validations
+                continue;
+            }
+            if ($this->method == 'POST' && $attribute->getValidations()['unsetable']) {
+                // If unsetable this attribute should not be present when doing a POST.
+                $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
+                // Skip any other validations
+                continue;
+            }
 
             if ($attribute->getValidations()['requiredIf']) {
                 // todo: this works but doesn't give a nice and clear error response why the rule is broken.
@@ -132,6 +152,8 @@ class ValidaterService
                 );
             }
 
+            // todo: only validate the following rule if the requiredIf and forbiddenIf rules above do not return an exception.
+            // todo: Use when rule or make a custom rule for this?
             $validator->AddRule(
                 new Rules\Key(
                     $attribute->getName(),
@@ -303,7 +325,7 @@ class ValidaterService
                 return $this->getObjectValidator($attribute);
             default:
                 throw new GatewayException(
-                    'Unknown attribute type!',
+                    'Unknown attribute type.',
                     null,
                     null,
                     [
@@ -389,7 +411,7 @@ class ValidaterService
                 return new Rules\AlwaysValid();
             default:
                 throw new GatewayException(
-                    'Unknown attribute format!',
+                    'Unknown attribute format.',
                     null,
                     null,
                     [
@@ -417,7 +439,7 @@ class ValidaterService
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
-            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade'];
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
             // todo: instead of this^ array we could also add these options to the getValidationRule function but return the AlwaysValid rule?
             if (empty($config) || in_array($validation, $ignoredValidations)) {
                 continue;
@@ -488,7 +510,7 @@ class ValidaterService
                 }
 
                 throw new GatewayException(
-                    'Unknown validation!',
+                    'Unknown validation.',
                     null,
                     null,
                     [
