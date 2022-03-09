@@ -129,6 +129,33 @@ class ValidaterService
                 continue;
             }
 
+            // todo: test this and improve it than replace the requiredIf, forbiddenIf and getAttributeValidator rules with this:
+            // todo: add missing $attribute->getValidations()['requiredIf & forbiddenIf'] checks somehow:
+//            $conditional = new Rules\AllOf(
+//                new Rules\When(
+//                    new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
+//                    new Rules\Key($attribute->getName()), // TRUE
+//                    new Rules\AlwaysValid() // FALSE
+//                ),
+//                new Rules\When(
+//                    new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
+//                    new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
+//                    new Rules\AlwaysValid() // FALSE
+//                )
+//            );
+//
+//            $validator->addRule(
+//                new Rules\When(
+//                    $conditional, // IF
+//                    new Rules\Key(
+//                        $attribute->getName(),
+//                        $this->getAttributeValidator($attribute),
+//                        $attribute->getValidations()['required'] === true // mandatory = required
+//                    ), // TRUE
+//                    $conditional // FALSE
+//                )
+//            );
+
             if ($attribute->getValidations()['requiredIf']) {
                 // todo: this works but doesn't give a nice and clear error response why the rule is broken.
                 $validator->addRule(
@@ -163,7 +190,7 @@ class ValidaterService
             }
 
             // todo: only validate the following rule if the requiredIf and forbiddenIf rules above do not return an exception.
-            // todo: See FALSE options for requiredIf and forbiddenIf that match this rule:
+            // todo: See commented out code above the requiredIf and forbiddenIf rules
             $validator->AddRule(
                 new Rules\Key(
                     $attribute->getName(),
