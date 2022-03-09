@@ -585,6 +585,72 @@ App\Entity\Attribute:
         type: datetime
         persistToGateway: true
         entity: '@case'
+    case_result_id:
+        name: result_id
+        description: The result_id of this case
+        type: integer
+        persistToGateway: true
+        entity: '@case'
+    case_price:
+        name: price
+        description: The price of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    # case_suspension_rationale:
+    #     name: suspension_rationale
+    #     description: The suspension_rationale of this case
+    #     type: string
+    #     persistToGateway: true
+    #     entity: '@case'
+    case_date_of_completion:
+        name: date_of_completion
+        description: The date_of_completion of this case
+        type: datetime
+        persistToGateway: true
+        entity: '@case'
+    case_result:
+        name: result
+        description: The result of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_active_selection_list:
+        name: active_selection_list
+        description: The active_selection_list of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_aggregation_scope:
+        name: aggregation_scope
+        description: The aggregation_scope of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_premature_completion_rationale:
+        name: premature_completion_rationale
+        description: The premature_completion_rationale of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_date_destruction:
+        name: date_destruction
+        description: The date_destruction of this case
+        type: datetime
+        persistToGateway: true
+        entity: '@case'
+    case_html_email_template:
+        name: html_email_template
+        description: The html_email_template of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
+    case_phase:
+        name: phase
+        description: The phase of this case
+        type: string
+        persistToGateway: true
+        entity: '@case'
 
     # Casetype attributes
     caseType_name: # = casetype_title
