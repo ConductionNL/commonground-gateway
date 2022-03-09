@@ -76,13 +76,13 @@ class FormIOService
 
     private function getAttributeInputType($attr): string
     {
-        $type = 'text';
+        $type = 'textfield';
 
         switch ($attr->getType()) {
         case 'string':
         case 'date':
-        case 'date-time':
-          $type = 'textfield';
+        case 'datetime':
+          $type = 'datetime';
           break;
         case 'integer':
         case 'float':
