@@ -136,6 +136,11 @@ class ValidaterService
                         new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
                         new Rules\Key($attribute->getName()), // TRUE
                         new Rules\AlwaysValid() // FALSE
+//                        new Rules\Key(
+//                            $attribute->getName(),
+//                            $this->getAttributeValidator($attribute),
+//                            $attribute->getValidations()['required'] === true // mandatory = required
+//                        ) // FALSE
 //                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']) // FALSE
                     )
                 );
@@ -147,13 +152,18 @@ class ValidaterService
                         new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
                         new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
                         new Rules\AlwaysValid() // FALSE
+//                        new Rules\Key(
+//                            $attribute->getName(),
+//                            $this->getAttributeValidator($attribute),
+//                            $attribute->getValidations()['required'] === true // mandatory = required
+//                        ) // FALSE
 //                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']) // FALSE
                     )
                 );
             }
 
             // todo: only validate the following rule if the requiredIf and forbiddenIf rules above do not return an exception.
-            // todo: Use when rule or make a custom rule for this?
+            // todo: See FALSE options for requiredIf and forbiddenIf that match this rule:
             $validator->AddRule(
                 new Rules\Key(
                     $attribute->getName(),
