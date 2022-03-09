@@ -223,12 +223,15 @@ class ValidaterService
     {
         $attributeTypeValidator = new Validator();
 
+        // Make sure we do not call functions like this twice when using Validations or Rules twice in the When Rule.
+        $attTypeRule = $this->getAttTypeRule($attribute);
+
         // If attribute type is correct continue validation of attribute format
         $attributeTypeValidator->addRule(
             new Rules\When(
-                $this->getAttTypeRule($attribute), // IF
+                $attTypeRule, // IF
                 $this->getAttFormatValidator($attribute), // TRUE
-                $this->getAttTypeRule($attribute) // FALSE
+                $attTypeRule // FALSE
             )
         );
 
@@ -248,12 +251,15 @@ class ValidaterService
     {
         $attributeFormatValidator = new Validator();
 
+        // Make sure we do not call functions like this twice when using Validations or Rules twice in the When Rule.
+        $attFormatRule = $this->getAttFormatRule($attribute);
+
         // If attribute format is correct continue validation of other validationRules
         $attributeFormatValidator->addRule(
             new Rules\When(
-                $this->getAttFormatRule($attribute), // IF
+                $attFormatRule, // IF
                 $this->getAttValidationRulesValidator($attribute), // TRUE
-                $this->getAttFormatRule($attribute) // FALSE
+                $attFormatRule // FALSE
             )
         );
 
