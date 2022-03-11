@@ -129,78 +129,59 @@ class ValidaterService
                 continue;
             }
 
-            // todo: test this and improve it than replace the requiredIf, forbiddenIf and getAttributeValidator rules with this:
-            // todo: add missing $attribute->getValidations()['requiredIf & forbiddenIf'] checks somehow:
-//            $conditional = new Rules\AllOf(
-//                new Rules\When(
-//                    new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
-//                    new Rules\Key($attribute->getName()), // TRUE
-//                    new Rules\AlwaysValid() // FALSE
-//                ),
-//                new Rules\When(
-//                    new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
-//                    new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
-//                    new Rules\AlwaysValid() // FALSE
-//                )
-//            );
-//
-//            $validator->addRule(
-//                new Rules\When(
-//                    $conditional, // IF
-//                    new Rules\Key(
-//                        $attribute->getName(),
-//                        $this->getAttributeValidator($attribute),
-//                        $attribute->getValidations()['required'] === true // mandatory = required
-//                    ), // TRUE
-//                    $conditional // FALSE
-//                )
-//            );
+            // Check if we need conditional Rules and if so, add these Rules, else = AlwaysValid Rule.
+            $conditionals = $this->getConditionalsRule($attribute);
 
-            if ($attribute->getValidations()['requiredIf']) {
-                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
-                $validator->addRule(
-                    new Rules\When(
-                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
-                        new Rules\Key($attribute->getName()), // TRUE
-                        new Rules\AlwaysValid() // FALSE
-//                        new Rules\Key(
-//                            $attribute->getName(),
-//                            $this->getAttributeValidator($attribute),
-//                            $attribute->getValidations()['required'] === true // mandatory = required
-//                        ) // FALSE
-//                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']) // FALSE
-                    )
-                );
-            }
-            if ($attribute->getValidations()['forbiddenIf']) {
-                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
-                $validator->addRule(
-                    new Rules\When(
-                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
-                        new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
-                        new Rules\AlwaysValid() // FALSE
-//                        new Rules\Key(
-//                            $attribute->getName(),
-//                            $this->getAttributeValidator($attribute),
-//                            $attribute->getValidations()['required'] === true // mandatory = required
-//                        ) // FALSE
-//                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']) // FALSE
-                    )
-                );
-            }
-
-            // todo: only validate the following rule if the requiredIf and forbiddenIf rules above do not return an exception.
-            // todo: See commented out code above the requiredIf and forbiddenIf rules
-            $validator->AddRule(
-                new Rules\Key(
-                    $attribute->getName(),
-                    $this->getAttributeValidator($attribute),
-                    $attribute->getValidations()['required'] === true // mandatory = required
+            // If we need to check conditionals the $conditionals rule above will do so in this When rule below.
+            $validator->addRule(
+                new Rules\When(
+                    $conditionals, // IF (the $conditionals Rule does not return any exceptions)
+                    new Rules\Key(
+                        $attribute->getName(),
+                        $this->getAttributeValidator($attribute),
+                        $attribute->getValidations()['required'] === true // mandatory = required validation.
+                    ), // TRUE (continue with the 'normal' / other Attribute validations)
+                    $conditionals // FALSE (return exception message from $conditionals Rule)
                 )
             );
         }
 
         return $validator;
+    }
+
+    /**
+     * Returns an AllOf Rule with all conditional Rules for the given Attribute.
+     *
+     * @param Attribute $attribute
+     * @return Rules\AllOf
+     * @throws ComponentException
+     */
+    private function getConditionalsRule(Attribute $attribute): Rules\AllOf
+    {
+        $requiredIf = new Rules\AlwaysValid(); // <- If (JsonLogic for) requiredIf isn't set
+        if ($attribute->getValidations()['requiredIf']) {
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+            $requiredIf = new Rules\When(
+                new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF (the requiredIf JsonLogic finds a match / is true)
+                new Rules\Key($attribute->getName()), // TRUE (attribute is required)
+                new Rules\AlwaysValid() // FALSE
+            );
+        }
+
+        $forbiddenIf = new Rules\AlwaysValid(); // <- If JsonLogic for forbiddenIf isn't set
+        if ($attribute->getValidations()['forbiddenIf']) {
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+            $forbiddenIf = new Rules\When(
+                new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF (the requiredIf JsonLogic finds a match / is true)
+                new Rules\Not(new Rules\Key($attribute->getName())), // TRUE (attribute should not be present)
+                new Rules\AlwaysValid() // FALSE
+            );
+        }
+
+        return new Rules\AllOf(
+            $requiredIf,
+            $forbiddenIf
+        );
     }
 
     /**
