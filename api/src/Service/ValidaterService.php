@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ValidaterService
 {
     public CacheInterface $cache;
+    private string $method;
 
     public function __construct(
         CacheInterface $cache
@@ -38,13 +39,28 @@ class ValidaterService
      *
      * @param array  $data
      * @param Entity $entity
+     * @param string $method used to be able to use different validations for different methods.
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
      * @return string[]|void
      */
-    public function validateData(array $data, Entity $entity)
+    public function validateData(array $data, Entity $entity, string $method)
     {
+        // We could use a different function to set the $method, but this way we can only validate data if we also have a method.
+        if (!in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            throw new GatewayException(
+                'This validation method is not allowed.',
+                null,
+                null,
+                [
+                    'data'         => $method,
+                    'path'         => $entity->getName(),
+                    'responseType' => Response::HTTP_BAD_REQUEST,
+                ]
+            );
+        }
+        $this->method = $method; // This is used for the immutable and unsetable Rules later in addAttributeValidators().
         $validator = $this->getEntityValidator($entity);
 
         // TODO: what if we have fields in $data that do not exist on this Entity?
@@ -68,18 +84,19 @@ class ValidaterService
      */
     private function getEntityValidator(Entity $entity): Validator
     {
-        // Get validator for this Entity from cache.
-        $item = $this->cache->getItem('entityValidators_'.$entity->getId());
+        // Try and get a validator for this Entity(+method) from cache.
+        $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
-//            return $item->get(); // TODO: put this back so we can use caching
+//            return $item->get(); // TODO: put this back so that we use caching
         }
 
-        // No Validator cached for this Entity, so create a new Validator and cache it.
+        // No Validator found in cache for this Entity(+method), so create a new Validator and cache that.
         $validator = new Validator();
         $validator = $this->addAttributeValidators($entity, $validator);
 
         $item->set($validator);
-        $item->tag('entityValidator');
+        $item->tag('entityValidator'); // Tag for all Entity Validators
+        $item->tag('entityValidator_'.$entity->getId()->toString()); // Tag for the Validators of this specific Entity.
 
         $this->cache->save($item);
 
@@ -99,44 +116,32 @@ class ValidaterService
     private function addAttributeValidators(Entity $entity, Validator $validator): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            // todo: immutable
-//            if ($attribute->getValidations()['immutable']) { // & method = PUT
-//
-//            }
-
-            // todo: unsetable
-//            if ($attribute->getValidations()['unsetable']) { // & method = POST
-//
-//            }
-
-            if ($attribute->getValidations()['requiredIf']) {
-                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
-                $validator->addRule(
-                    new Rules\When(
-                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF
-                        new Rules\Key($attribute->getName()), // TRUE
-                        new Rules\AlwaysValid() // FALSE
-//                        new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']) // FALSE
-                    )
-                );
+            if (($this->method == 'PUT' || $this->method == 'PATCH') && $attribute->getValidations()['immutable']) {
+                // If immutable this attribute should not be present when doing a PUT or PATCH.
+                $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
+                // Skip any other validations
+                continue;
             }
-            if ($attribute->getValidations()['forbiddenIf']) {
-                // todo: this works but doesn't give a nice and clear error response why the rule is broken.
-                $validator->addRule(
-                    new Rules\When(
-                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF
-                        new Rules\Not(new Rules\Key($attribute->getName())), // TRUE
-                        new Rules\AlwaysValid() // FALSE
-//                        new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']) // FALSE
-                    )
-                );
+            if ($this->method == 'POST' && $attribute->getValidations()['unsetable']) {
+                // If unsetable this attribute should not be present when doing a POST.
+                $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
+                // Skip any other validations
+                continue;
             }
 
-            $validator->AddRule(
-                new Rules\Key(
-                    $attribute->getName(),
-                    $this->getAttributeValidator($attribute),
-                    $attribute->getValidations()['required'] === true // mandatory = required
+            // If we need to check conditional Rules add these Rules in one AllOf Rule, else $conditionals = AlwaysValid Rule.
+            $conditionals = $this->getConditionalsRule($attribute);
+
+            // If we need to check conditionals the $conditionals Rule above will do so in this When Rule below.
+            $validator->addRule(
+                new Rules\When(
+                    $conditionals, // IF (the $conditionals Rule does not return any exceptions)
+                    new Rules\Key(
+                        $attribute->getName(),
+                        $this->getAttributeValidator($attribute),
+                        $attribute->getValidations()['required'] === true // mandatory = required validation.
+                    ), // TRUE (continue with the 'normal' / other Attribute validations)
+                    $conditionals // FALSE (return exception message from $conditionals Rule)
                 )
             );
         }
@@ -145,7 +150,45 @@ class ValidaterService
     }
 
     /**
-     * Gets a Validator for the given Attribute.
+     * Returns an AllOf Rule with all conditional Rules for the given Attribute.
+     *
+     * @param Attribute $attribute
+     *
+     * @throws ComponentException
+     *
+     * @return Rules\AllOf
+     */
+    private function getConditionalsRule(Attribute $attribute): Rules\AllOf
+    {
+        $requiredIf = new Rules\AlwaysValid(); // <- If (JsonLogic for) requiredIf isn't set
+        if ($attribute->getValidations()['requiredIf']) {
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must be present")
+            $requiredIf = new Rules\When(
+                new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF (the requiredIf JsonLogic finds a match / is true)
+                new Rules\Key($attribute->getName()), // TRUE (attribute is required)
+                new Rules\AlwaysValid() // FALSE
+            );
+        }
+
+        $forbiddenIf = new Rules\AlwaysValid(); // <- If JsonLogic for forbiddenIf isn't set
+        if ($attribute->getValidations()['forbiddenIf']) {
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must not be present")
+            $forbiddenIf = new Rules\When(
+                new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF (the requiredIf JsonLogic finds a match / is true)
+                new Rules\Not(new Rules\Key($attribute->getName())), // TRUE (attribute should not be present)
+                new Rules\AlwaysValid() // FALSE
+            );
+        }
+
+        // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("allOf": broken rules)
+        return new Rules\AllOf(
+            $requiredIf,
+            $forbiddenIf
+        );
+    }
+
+    /**
+     * Gets a Validator for the given Attribute. This function is the point from where we start validating the actual value of an Attribute.
      *
      * @param Attribute $attribute
      *
@@ -191,10 +234,11 @@ class ValidaterService
      */
     private function checkIfAttMultiple(Attribute $attribute): Validator
     {
-        // Get all validations for this attribute
+        // Get all validations for validating this Attributes value in one Validator.
+        // This includes Rules for the type, format and possible other validations.
         $attributeRulesValidator = $this->getAttTypeValidator($attribute);
 
-        // Check if this attribute is an array
+        // Check if this attribute should be an array
         if ($attribute->getValidations()['multiple'] === true) {
             // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
 
@@ -223,12 +267,16 @@ class ValidaterService
     {
         $attributeTypeValidator = new Validator();
 
+        // Get the Rule for the type of this Attribute.
+        // (Note: make sure to not call functions like this twice when using the Rule twice in a When Rule).
+        $attTypeRule = $this->getAttTypeRule($attribute);
+
         // If attribute type is correct continue validation of attribute format
         $attributeTypeValidator->addRule(
             new Rules\When(
-                $this->getAttTypeRule($attribute), // IF
+                $attTypeRule, // IF
                 $this->getAttFormatValidator($attribute), // TRUE
-                $this->getAttTypeRule($attribute) // FALSE
+                $attTypeRule // FALSE
             )
         );
 
@@ -248,12 +296,16 @@ class ValidaterService
     {
         $attributeFormatValidator = new Validator();
 
+        // Get the Rule for the format of this Attribute.
+        // (Note: make sure to not call functions like this twice when using the Rule twice in a When Rule).
+        $attFormatRule = $this->getAttFormatRule($attribute);
+
         // If attribute format is correct continue validation of other validationRules
         $attributeFormatValidator->addRule(
             new Rules\When(
-                $this->getAttFormatRule($attribute), // IF
+                $attFormatRule, // IF
                 $this->getAttValidationRulesValidator($attribute), // TRUE
-                $this->getAttFormatRule($attribute) // FALSE
+                $attFormatRule // FALSE
             )
         );
 
@@ -297,7 +349,7 @@ class ValidaterService
                 return $this->getObjectValidator($attribute);
             default:
                 throw new GatewayException(
-                    'Unknown attribute type!',
+                    'Unknown attribute type.',
                     null,
                     null,
                     [
@@ -380,10 +432,11 @@ class ValidaterService
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
             case null:
+                // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();
             default:
                 throw new GatewayException(
-                    'Unknown attribute format!',
+                    'Unknown attribute format.',
                     null,
                     null,
                     [
@@ -411,8 +464,8 @@ class ValidaterService
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
-            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade'];
-            // todo: instead of this^ array we could also add these options to the getValidationRule function but return the AlwaysValid rule?
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
+            // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
             if (empty($config) || in_array($validation, $ignoredValidations)) {
                 continue;
             }
@@ -482,7 +535,7 @@ class ValidaterService
                 }
 
                 throw new GatewayException(
-                    'Unknown validation!',
+                    'Unknown validation.',
                     null,
                     null,
                     [

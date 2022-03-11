@@ -86,7 +86,7 @@ class ObjectEntityService
                 break;
             case 'POST':
                 // validate
-                if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
 
@@ -101,7 +101,7 @@ class ObjectEntityService
                 // get object
 
                 // validate
-                if ($validationErrors = $this->validaterService->validateData($data, $entity)) {
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
                 // put object
