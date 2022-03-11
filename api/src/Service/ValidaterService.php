@@ -60,7 +60,7 @@ class ValidaterService
                 ]
             );
         }
-        $this->method = $method;
+        $this->method = $method; // This is used for the immutable and unsetable Rules later in addAttributeValidators().
         $validator = $this->getEntityValidator($entity);
 
         // TODO: what if we have fields in $data that do not exist on this Entity?
@@ -84,13 +84,13 @@ class ValidaterService
      */
     private function getEntityValidator(Entity $entity): Validator
     {
-        // Get validator for this Entity from cache.
+        // Try and get a validator for this Entity(+method) from cache.
         $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
 //            return $item->get(); // TODO: put this back so that we use caching
         }
 
-        // No Validator cached for this Entity, so create a new Validator and cache it.
+        // No Validator found in cache for this Entity(+method), so create a new Validator and cache that.
         $validator = new Validator();
         $validator = $this->addAttributeValidators($entity, $validator);
 
@@ -129,10 +129,10 @@ class ValidaterService
                 continue;
             }
 
-            // Check if we need conditional Rules and if so, add these Rules, else = AlwaysValid Rule.
+            // If we need to check conditional Rules add these Rules in one AllOf Rule, else $conditionals = AlwaysValid Rule.
             $conditionals = $this->getConditionalsRule($attribute);
 
-            // If we need to check conditionals the $conditionals rule above will do so in this When rule below.
+            // If we need to check conditionals the $conditionals Rule above will do so in this When Rule below.
             $validator->addRule(
                 new Rules\When(
                     $conditionals, // IF (the $conditionals Rule does not return any exceptions)
@@ -186,7 +186,7 @@ class ValidaterService
     }
 
     /**
-     * Gets a Validator for the given Attribute.
+     * Gets a Validator for the given Attribute. This function is the point from where we start validating the actual value of an Attribute.
      *
      * @param Attribute $attribute
      *
@@ -232,10 +232,11 @@ class ValidaterService
      */
     private function checkIfAttMultiple(Attribute $attribute): Validator
     {
-        // Get all validations for this attribute
+        // Get all validations for validating this Attributes value in one Validator.
+        // This includes Rules for the type, format and possible other validations.
         $attributeRulesValidator = $this->getAttTypeValidator($attribute);
 
-        // Check if this attribute is an array
+        // Check if this attribute should be an array
         if ($attribute->getValidations()['multiple'] === true) {
             // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
 
@@ -264,7 +265,8 @@ class ValidaterService
     {
         $attributeTypeValidator = new Validator();
 
-        // Make sure we do not call functions like this twice when using Validations or Rules twice in the When Rule.
+        // Get the Rule for the type of this Attribute.
+        // (Note: make sure to not call functions like this twice when using the Rule twice in a When Rule).
         $attTypeRule = $this->getAttTypeRule($attribute);
 
         // If attribute type is correct continue validation of attribute format
@@ -292,7 +294,8 @@ class ValidaterService
     {
         $attributeFormatValidator = new Validator();
 
-        // Make sure we do not call functions like this twice when using Validations or Rules twice in the When Rule.
+        // Get the Rule for the format of this Attribute.
+        // (Note: make sure to not call functions like this twice when using the Rule twice in a When Rule).
         $attFormatRule = $this->getAttFormatRule($attribute);
 
         // If attribute format is correct continue validation of other validationRules
@@ -427,6 +430,7 @@ class ValidaterService
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
             case null:
+                // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();
             default:
                 throw new GatewayException(
@@ -459,7 +463,7 @@ class ValidaterService
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
             $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
-            // todo: instead of this^ array we could also add these options to the getValidationRule function but return the AlwaysValid rule?
+            // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
             if (empty($config) || in_array($validation, $ignoredValidations)) {
                 continue;
             }
