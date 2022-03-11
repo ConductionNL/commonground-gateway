@@ -75,10 +75,22 @@ class LogService
             $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
-            $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
-            $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
-            $callLog->setGateway($this->session->get('source') ? $this->session->get('source') : null);
-            $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
+            if ($this->session->get('endpoint')) {
+                $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')->getId()->toString()]);
+            }
+            $callLog->setEndpoint(!empty($endpoint) ? $endpoint : null);
+            if ($this->session->get('entity')) {
+                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')->getId()->toString()]);
+            }
+            $callLog->setEntity(!empty($entity) ? $entity : null);
+            if ($this->session->get('source')) {
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->session->get('source')->getId()->toString()]);
+            }
+            $callLog->setGateway(!empty($source) ? $source : null);
+            if ($this->session->get('handler')) {
+                $handler = $this->entityManager->getRepository('App:Handler')->findOneBy(['id' => $this->session->get('handler')->getId()]);
+            }
+            $callLog->setHandler(!empty($handler) ? $handler : null);
 
             // remove before setting the session values
 //            if ($finalSave === true) {
