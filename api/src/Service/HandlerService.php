@@ -126,15 +126,14 @@ class HandlerService
             );
         }
 
-        
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-          $data = $this->getDataFromRequest($this->request);
-          
-          if ($data == null || empty($data)) {
-              throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-          }
-        } 
+            $data = $this->getDataFromRequest($this->request);
+
+            if ($data == null || empty($data)) {
+                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+            }
+        }
 
         // Update current Log
         isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
@@ -248,7 +247,6 @@ class HandlerService
             $this->logService->saveLog($this->request, null, json_encode($data));
 
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
-
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
@@ -504,6 +502,4 @@ class HandlerService
 
         return $data;
     }
-
-
 }
