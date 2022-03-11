@@ -160,7 +160,7 @@ class ValidaterService
     {
         $requiredIf = new Rules\AlwaysValid(); // <- If (JsonLogic for) requiredIf isn't set
         if ($attribute->getValidations()['requiredIf']) {
-            // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must be present")
             $requiredIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF (the requiredIf JsonLogic finds a match / is true)
                 new Rules\Key($attribute->getName()), // TRUE (attribute is required)
@@ -170,7 +170,7 @@ class ValidaterService
 
         $forbiddenIf = new Rules\AlwaysValid(); // <- If JsonLogic for forbiddenIf isn't set
         if ($attribute->getValidations()['forbiddenIf']) {
-            // todo: this works but doesn't give a nice and clear error response why the rule is broken.
+            // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must not be present")
             $forbiddenIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF (the requiredIf JsonLogic finds a match / is true)
                 new Rules\Not(new Rules\Key($attribute->getName())), // TRUE (attribute should not be present)
@@ -178,6 +178,7 @@ class ValidaterService
             );
         }
 
+        // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("allOf": broken rules)
         return new Rules\AllOf(
             $requiredIf,
             $forbiddenIf
