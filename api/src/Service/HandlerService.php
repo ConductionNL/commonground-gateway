@@ -98,9 +98,11 @@ class HandlerService
             if (true) {
                 $session->set('handler', $handler);
 
-                return $this->handleHandler($handler);
+                return $this->handleHandler($handler, $endpoint);
             }
         }
+
+        return $this->handleHandler(null, $endpoint);
 
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
@@ -111,7 +113,7 @@ class HandlerService
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
-    public function handleHandler(Handler $handler): Response
+    public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
     {
         $method = $this->request->getMethod();
 
@@ -124,37 +126,21 @@ class HandlerService
             );
         }
 
-        // Only do mapping and translation -in for calls with body
+        
+        // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+          $data = $this->getDataFromRequest($this->request);
+          
+          if ($data == null || empty($data)) {
+              throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+          }
+        } 
 
-            // To start it al off we need the data from the incomming request
-            $data = $this->getDataFromRequest($this->request);
+        // Update current Log
+        isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
 
-            if ($data == null || empty($data)) {
-                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-            }
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Then we want to do the mapping in the incomming request
-            $skeleton = $handler->getSkeletonIn();
-            if (!$skeleton || empty($skeleton)) {
-                $skeleton = $data;
-            }
-            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // The we want to do translations on the incomming request
-            $transRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-            $data = $this->translationService->parse($data, true, $translations);
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-        }
+        // Only do mapping and translation -in for calls with body
+        in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
 
         //todo: -start- old code...
         //TODO: old code for application creation, used for old way of creating ObjectEntity, needed for getObject function
@@ -192,6 +178,7 @@ class HandlerService
 
         //TODO: old code for getting an Entity and Object
         $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
+        $this->session->set('entity', $entity);
         $id = $this->request->attributes->get('id');
         if (isset($id) || $method == 'POST') {
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
@@ -222,7 +209,7 @@ class HandlerService
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
-            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$handler->getEndpoint()->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$endpoint->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // If data contains error dont execute following code and create response
@@ -260,30 +247,8 @@ class HandlerService
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
-            // The we want to do  translations on the outgoing response
-            $transRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+            $handler && $data = $this->handleDataAfterEAV($data, $handler);
 
-            $data = $this->translationService->parse($data, true, $translations);
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Then we want to do to mapping on the outgoing response
-            $skeleton = $handler->getSkeletonOut();
-            if (!$skeleton || empty($skeleton)) {
-                $skeleton = $data;
-            }
-
-            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Lets see if we need te use a template
-            if ($handler->getTemplatetype() && $handler->getTemplate()) {
-                $data = $this->renderTemplate($handler, $data);
-            }
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
@@ -445,7 +410,8 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        (!isset($typeValue) || $typeValue === '*/*') && $typeValue = 'application/json';
+        (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
+
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
@@ -484,4 +450,60 @@ class HandlerService
                 throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
     }
+
+    private function handleDataBeforeEAV(array $data, Handler $handler): array
+    {
+        // Then we want to do the mapping in the incomming request
+        $skeleton = $handler->getSkeletonIn();
+        if (!$skeleton || empty($skeleton)) {
+            $skeleton = $data;
+        }
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // The we want to do translations on the incomming request
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+        $data = $this->translationService->parse($data, true, $translations);
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        return $data;
+    }
+
+    private function handleDataAfterEAV(array $data, Handler $handler): array
+    {
+
+        // The we want to do  translations on the outgoing response
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+
+        $data = $this->translationService->parse($data, true, $translations);
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // Then we want to do to mapping on the outgoing response
+        $skeleton = $handler->getSkeletonOut();
+        if (!$skeleton || empty($skeleton)) {
+            $skeleton = $data;
+        }
+
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // Lets see if we need te use a template
+        if ($handler->getTemplatetype() && $handler->getTemplate()) {
+            $data = $this->renderTemplate($handler, $data);
+        }
+
+        return $data;
+    }
+
+
 }
