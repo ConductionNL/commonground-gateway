@@ -2,10 +2,8 @@
 
 namespace App\Service\Validation\Rules;
 
-use Exception;
 use Respect\Validation\Rules\AbstractRule;
 use Respect\Validation\Validatable;
-use Respect\Validation\Validator;
 
 final class Base64Extension extends AbstractRule
 {
@@ -37,9 +35,11 @@ final class Base64Extension extends AbstractRule
             if ($this->mimeToExt($mime_type) != $extension) {
                 $this->setExtension($extension);
                 $this->setMimeType($mime_type);
+
                 return false;
             }
         }
+
         return true;
     }
 

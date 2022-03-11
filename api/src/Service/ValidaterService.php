@@ -153,8 +153,10 @@ class ValidaterService
      * Returns an AllOf Rule with all conditional Rules for the given Attribute.
      *
      * @param Attribute $attribute
-     * @return Rules\AllOf
+     *
      * @throws ComponentException
+     *
+     * @return Rules\AllOf
      */
     private function getConditionalsRule(Attribute $attribute): Rules\AllOf
     {
