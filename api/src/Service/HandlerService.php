@@ -85,6 +85,9 @@ class HandlerService
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach ($endpoint->getHandlers() as $handler) {
+            // Check if handler should be used for this method
+            if (!in_array('*',  $handler->getMethods()) && !in_array($this->request->getMethod(), $handler->getMethods())) continue;
+
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
 
@@ -95,9 +98,7 @@ class HandlerService
             }
         }
 
-        return $this->handleHandler(null, $endpoint);
-
-        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName() . ' and method: ' . $this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**
