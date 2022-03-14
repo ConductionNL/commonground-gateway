@@ -40,7 +40,7 @@ class ObjectEntityService
     }
 
     /**
-     * Add services for using the handleObject function todo: temp fix untill we no longer use these services here
+     * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
      */
     public function addServices(ValidationService $validationService, EavService $eavService): ObjectEntityService
     {
@@ -49,6 +49,7 @@ class ObjectEntityService
         // because we use an old way to create, update and get ObjectEntities there.
         $this->validationService = $validationService;
         $this->eavService = $eavService;
+
         return $this;
     }
 
