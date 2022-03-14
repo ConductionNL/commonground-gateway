@@ -237,10 +237,8 @@ class ConvertToGatewayService
 
         // Set application for this object
         if ($this->session->get('application')) {
-            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')->getId()->toString()]);
-            if (!empty($application)) {
-                $object->setApplication($application); // Default application (can be changed after this if needed)
-            }
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $object->setApplication(!empty($application) ? $application : null); // Default application (can be changed after this if needed)
         }
 
         // Set organization (& application) for this object

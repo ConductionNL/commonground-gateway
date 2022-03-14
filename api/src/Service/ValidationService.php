@@ -469,7 +469,8 @@ class ValidationService
                     $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                    $subObject->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $subObject->setApplication(!empty($application) ? $application : null);
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
                     $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
@@ -907,7 +908,8 @@ class ValidationService
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
-                    $subObject->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $subObject->setApplication(!empty($application) ? $application : null);
                 } else {
                     $subObject = $valueObject->getValue();
                 }
@@ -1621,7 +1623,8 @@ class ValidationService
                     $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
-                    $objectEntity->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $objectEntity->setApplication(!empty($application) ? $application : null);
                 }
                 if ($objectEntity->getEntity()->getFunction() === 'organization') {
                     $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
