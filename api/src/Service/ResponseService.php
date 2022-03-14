@@ -13,6 +13,7 @@ use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -392,8 +393,8 @@ class ResponseService
         $requestLog->setFile(null); // todo
         $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
 
-        if ($this->session->has('application') && $this->session->get('application') instanceof Application) {
-            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')->getId()]);
+        if ($this->session->has('application') && Uuid::isValid($this->session->get('application'))) {
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
         } else {
             $application = null;
         }

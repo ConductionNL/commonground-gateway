@@ -187,7 +187,8 @@ class EavService
             $object->setEntity($entity);
             // if entity->function == 'organization', organization for this ObjectEntity will be changed later in handleMutation
             $object->setOrganization($this->session->get('activeOrganization'));
-            $object->setApplication($this->session->get('application'));
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $object->setApplication(!empty($application) ? $application : null);
 
             return $this->objectEntityService->handleOwner($object);
         }
@@ -374,14 +375,14 @@ class EavService
         // TODO: use a sql query instead of array_filter for finding the correct application
         //        $application = $this->em->getRepository('App:Application')->findByDomain($host);
         //        if (!empty($application)) {
-        //            $this->session->set('application', $application);
+        //            $this->session->set('application', $application->getId()->toString());
         //        }
         $applications = $this->em->getRepository('App:Application')->findAll();
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
         }));
         if (count($applications) > 0) {
-            $this->session->set('application', $applications[0]);
+            $this->session->set('application', $applications[0]->getId()->toString());
         } else {
             //            var_dump('no application found');
             if ($host == 'localhost') {
@@ -394,7 +395,7 @@ class EavService
                 $localhostApplication->setOrganization('localhostOrganization');
                 $this->em->persist($localhostApplication);
                 $this->em->flush();
-                $this->session->set('application', $localhostApplication);
+                $this->session->set('application', $localhostApplication->getId()->toString());
             //                var_dump('Created Localhost Application');
             } else {
                 $this->session->set('application', null);
@@ -409,7 +410,8 @@ class EavService
         }
 
         if (!$this->session->get('activeOrganization') && $this->session->get('application')) {
-            $this->session->set('activeOrganization', $this->session->get('application')->getOrganization());
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $this->session->set('activeOrganization', !empty($application) ? $application->getOrganization() : null);
         }
         if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
             $this->session->set('organizations', [$this->session->get('activeOrganization')]);
