@@ -76,19 +76,19 @@ class LogService
             $callLog->setSession($this->session->getId());
 
             if ($this->session->get('endpoint')) {
-                $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')->getId()->toString()]);
+                $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
             }
             $callLog->setEndpoint(!empty($endpoint) ? $endpoint : null);
             if ($this->session->get('entity')) {
-                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')->getId()->toString()]);
+                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')]);
             }
             $callLog->setEntity(!empty($entity) ? $entity : null);
             if ($this->session->get('source')) {
-                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->session->get('source')->getId()->toString()]);
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->session->get('source')]);
             }
             $callLog->setGateway(!empty($source) ? $source : null);
             if ($this->session->get('handler')) {
-                $handler = $this->entityManager->getRepository('App:Handler')->findOneBy(['id' => $this->session->get('handler')->getId()]);
+                $handler = $this->entityManager->getRepository('App:Handler')->findOneBy(['id' => $this->session->get('handler')]);
             }
             $callLog->setHandler(!empty($handler) ? $handler : null);
 

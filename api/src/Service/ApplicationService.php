@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Entity\Application;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ApplicationService
@@ -67,6 +69,8 @@ class ApplicationService
                 'path'    => $public ?? $host ?? 'Header',
                 'data'    => $data ?? null,
             ];
+            // todo: maybe just throw a gatewayException?
+//            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
 
             return $result;
         }

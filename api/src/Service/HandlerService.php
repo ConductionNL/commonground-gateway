@@ -87,7 +87,7 @@ class HandlerService
     public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
-        $session->set('endpoint', $endpoint);
+        $session->set('endpoint', $endpoint->getId()->toString());
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -96,7 +96,7 @@ class HandlerService
             /* @todo acctualy check for json logic */
 
             if (true) {
-                $session->set('handler', $handler);
+                $session->set('handler', $handler->getId());
 
                 return $this->handleHandler($handler, $endpoint);
             }
@@ -142,42 +142,13 @@ class HandlerService
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
 
         //todo: -start- old code...
-        //TODO: old code for application creation, used for old way of creating ObjectEntity, needed for getObject function
-
-        // Get the application by searching for an application with a domain that matches the host of this request
-        $host = $this->request->headers->get('host');
-//        var_dump($host);
-        $applications = $this->entityManager->getRepository('App:Application')->findAll();
-        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
-            return in_array($host, $application->getDomains());
-        }));
-        if (count($applications) > 0) {
-//            var_dump(count($applications));
-            $this->session->set('application', $applications[0]);
-        } else {
-            //            var_dump('no application found');
-            if (str_contains($host, 'localhost')) {
-                $localhostApplication = new Application();
-                $localhostApplication->setName('localhost');
-                $localhostApplication->setDescription('localhost application');
-                $localhostApplication->setDomains([$host]);
-                $localhostApplication->setPublic('');
-                $localhostApplication->setSecret('');
-                $localhostApplication->setOrganization('localhostOrganization');
-                $this->entityManager->persist($localhostApplication);
-                $this->entityManager->flush();
-                $this->session->set('application', $localhostApplication);
-//                var_dump('Created Localhost Application');
-            } else {
-                $this->session->set('application', null);
-
-                throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
-            }
-        }
 
         //TODO: old code for getting an Entity and Object
         $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
-        $this->session->set('entity', $entity);
+        $this->session->set('entity', $entity->getId()->toString());
+        if ($entity->getGateway()) {
+            $this->session->set('source', $entity->getGateway()->getId()->toString());
+        }
         $id = $this->request->attributes->get('id');
         if (isset($id) || $method == 'POST') {
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
