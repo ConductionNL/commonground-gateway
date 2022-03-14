@@ -38,8 +38,9 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     private SessionInterface $session;
     private EntityManagerInterface $em;
     private FunctionService $functionService;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session, EntityManagerInterface $em, FunctionService $functionService)
+    public function __construct(ParameterBagInterface $parameterBag, CommonGroundService $commonGroundService, SessionInterface $session, EntityManagerInterface $em, FunctionService $functionService, EntityManagerInterface $entityManager)
     {
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
@@ -47,6 +48,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $this->session = $session;
         $this->em = $em;
         $this->functionService = $functionService;
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -213,8 +215,11 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             return $organizations[0];
         }
         // If we still have no organization, get the organization from the application
-        if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
-            return $this->session->get('application')->getOrganization();
+        if ($this->session->get('application')) {
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            if (!empty($application) && $application->getOrganization()) {
+                return $application->getOrganization();
+            }
         }
 
         return null;
