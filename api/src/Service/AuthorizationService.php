@@ -79,7 +79,7 @@ class AuthorizationService
         }
 
         // Get the ANONYMOUS userGroup
-        $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], [], false, ['name' => 'ANONYMOUS'])['hydra:member'];
+        $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
             foreach ($groups[0]['scopes'] as $scope) {
