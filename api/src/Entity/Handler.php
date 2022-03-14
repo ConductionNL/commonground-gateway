@@ -71,6 +71,13 @@ class Handler
     private ?string $description;
 
     /**
+     * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE"}, multiple=true)
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array")
+     */
+    private $methods = [];
+
+    /**
      * @var int The order of how the JSON conditions will be tested.
      *
      * @Assert\NotNull
@@ -356,6 +363,18 @@ class Handler
     public function setEntity(?Entity $entity): self
     {
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    public function getMethods(): ?array
+    {
+        return $this->methods;
+    }
+
+    public function setMethods(array $methods): self
+    {
+        $this->methods = $methods;
 
         return $this;
     }
