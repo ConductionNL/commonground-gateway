@@ -29,6 +29,6 @@ class CallIdSubscriber implements EventSubscriberInterface
 
     public function OnFirstEvent(RequestEvent $event)
     {
-        !$this->session->get('callId') && $this->session->set('callId', Uuid::uuid4()->toString());
+        $this->session->set('callId', Uuid::uuid4()->toString());
     }
 }
