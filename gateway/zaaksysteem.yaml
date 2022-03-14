@@ -671,6 +671,7 @@ App\Entity\Attribute:
 App\Entity\Handler:
     notificationHandler:
         name: Notification handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         mappingIn:
@@ -690,6 +691,7 @@ App\Entity\Handler:
     
     caseHandler:
         name: Case handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoint: "@caseEndpoint"
@@ -697,6 +699,7 @@ App\Entity\Handler:
 
     caseTypeHandler:
         name: Case Type handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoint: "@caseTypeEndpoint"
@@ -704,6 +707,7 @@ App\Entity\Handler:
         
     zakenHandler:
         name: zaken handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoint: '@zakenEndpoint'

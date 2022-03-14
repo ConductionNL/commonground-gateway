@@ -193,6 +193,7 @@ App\Entity\Attribute:
 App\Entity\Handler:
     weatherHandler:
         name: Weather handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         mappingIn:
@@ -221,6 +222,7 @@ App\Entity\Handler:
         
     peopleHandler:
         name: People handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoint: "@peopleEndpoint"
@@ -228,6 +230,7 @@ App\Entity\Handler:
         
     emailHandler:
         name: Email handler
+        methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoint: "@emailEndpoint"
