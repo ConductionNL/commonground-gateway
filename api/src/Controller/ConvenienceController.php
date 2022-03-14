@@ -33,10 +33,12 @@ class ConvenienceController extends AbstractController
     switch ($type) {
       case 'redoc':
 
-        // Get and check url from query or body
+        // Check url as query 
         $request->query->get('url') && $url = $request->query->get('url');
         !isset($url) && $request->getContent() && $body = json_decode($request->getContent(), true);
         if (!isset($url) && !isset($body)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+        
+        // Check url in body
         !isset($url) && isset($body['url']) && $url = $body['url'];
         if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
 
@@ -63,6 +65,9 @@ class ConvenienceController extends AbstractController
     );
   }
 
+  /**
+   * This function reads redoc and parses it into doctrine objects
+   */
   private function persistRedoc(array $redoc)
   {
 
@@ -122,15 +127,10 @@ class ConvenienceController extends AbstractController
       // Check reference to schema object (Entity)
       foreach ($path as $key => $response) {
         if ($key !== 'post') continue;
-        if (
-          isset($response['requestBody']) &&  isset($response['requestBody']['content']) && 
-          isset($response['requestBody']['content']['application/json']) &&
-          isset($response['requestBody']['content']['application/json']['schema']) && 
-          isset($response['requestBody']['content']['application/json']['schema']['$ref'])
-        ) {
+        if (isset($response['requestBody']['content']['application/json']['schema']['$ref'])) {
           $entityNameToJoin = $response['requestBody']['content']['application/json']['schema']['$ref'];
           $entityNameToJoin = substr($entityNameToJoin, strrpos($entityNameToJoin, '/') + 1);;
-           break;
+          break;
         }
       }
 
