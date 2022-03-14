@@ -8,6 +8,7 @@ use Respect\Validation\Rules\AbstractRule;
 
 final class JsonLogic extends AbstractRule
 {
+    //todo getter setter
     /**
      * @var mixed
      */
@@ -44,10 +45,10 @@ final class JsonLogic extends AbstractRule
     /*
      * examples of how to use this Rule:
      *
-     * With $jsonLogic as a string, in this case $input should be equal to "apples"
+     * With $jsonLogic as a string, in this example $input should be equal to "apples"
      * new App\Service\Validation\Rules\JsonLogic('{"==":["apples", "{{input}}"]}');
      *
-     * With $jsonLogic as an array, in this case $input should be an array that has the key "int" with the value 12
+     * With $jsonLogic as an array, in this example $input should be an array that has the key "int" with the value 12
      * new App\Service\Validation\Rules\JsonLogic(["==" => [ ["var" => "int"], 12 ]);
      * Input like this wil result in true:
      * {

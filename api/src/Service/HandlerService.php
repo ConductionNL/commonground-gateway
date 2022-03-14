@@ -2,18 +2,15 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
-use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -26,8 +23,8 @@ class HandlerService
     private LogService $logService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
-    private SessionInterface $session;
     private FormIOService $formIOService;
+    private SubscriberService $subscriberService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -59,8 +56,8 @@ class HandlerService
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
-        SessionInterface $session,
-        FormIOService $formIOService
+        FormIOService $formIOService,
+        SubscriberService $subscriberService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -72,9 +69,9 @@ class HandlerService
         $this->logService = $logService;
         $this->templating = $twig;
         $this->templateService = $templateService;
-        $this->objectEntityService = $objectEntityService;
-        $this->session = $session;
+        $this->objectEntityService = $objectEntityService->addServices($validationService, $eavService); // todo: temp fix untill we no longer need these services here
         $this->formIOService = $formIOService;
+        $this->subscriberService = $subscriberService;
     }
 
     /**
@@ -83,7 +80,7 @@ class HandlerService
     public function handleEndpoint(Endpoint $endpoint): Response
     {
         $session = new Session();
-        $session->set('endpoint', $endpoint);
+        $session->set('endpoint', $endpoint->getId()->toString());
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -92,11 +89,13 @@ class HandlerService
             /* @todo acctualy check for json logic */
 
             if (true) {
-                $session->set('handler', $handler);
+                $session->set('handler', $handler->getId());
 
-                return $this->handleHandler($handler);
+                return $this->handleHandler($handler, $endpoint);
             }
         }
+
+        return $this->handleHandler(null, $endpoint);
 
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
@@ -107,7 +106,7 @@ class HandlerService
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
-    public function handleHandler(Handler $handler): Response
+    public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
     {
         $method = $this->request->getMethod();
 
@@ -120,167 +119,39 @@ class HandlerService
             );
         }
 
-        // Only do mapping and translation -in for calls with body
+        // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-
-            // To start it al off we need the data from the incomming request
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
                 throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
             }
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Then we want to do the mapping in the incomming request
-            $skeleton = $handler->getSkeletonIn();
-            if (!$skeleton || empty($skeleton)) {
-                $skeleton = $data;
-            }
-            $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // The we want to do translations on the incomming request
-            $transRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-            $data = $this->translationService->parse($data, true, $translations);
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
         }
 
-        //todo: -start- old code...
-        //TODO: old code for application creation, used for old way of creating ObjectEntity, needed for getObject function
+        // Update current Log
+        isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
 
-        // Get the application by searching for an application with a domain that matches the host of this request
-        $host = $this->request->headers->get('host');
-//        var_dump($host);
-        $applications = $this->entityManager->getRepository('App:Application')->findAll();
-        $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
-            return in_array($host, $application->getDomains());
-        }));
-        if (count($applications) > 0) {
-//            var_dump(count($applications));
-            $this->session->set('application', $applications[0]);
-        } else {
-            //            var_dump('no application found');
-            if (str_contains($host, 'localhost')) {
-                $localhostApplication = new Application();
-                $localhostApplication->setName('localhost');
-                $localhostApplication->setDescription('localhost application');
-                $localhostApplication->setDomains([$host]);
-                $localhostApplication->setPublic('');
-                $localhostApplication->setSecret('');
-                $localhostApplication->setOrganization('localhostOrganization');
-                $this->entityManager->persist($localhostApplication);
-                $this->entityManager->flush();
-                $this->session->set('application', $localhostApplication);
-//                var_dump('Created Localhost Application');
-            } else {
-                $this->session->set('application', null);
+        // Only do mapping and translation -in for calls with body
+        in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
 
-                throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
-            }
-        }
-
-        //TODO: old code for getting an Entity and Object
-        $entity = $this->eavService->getEntity($this->request->attributes->get('entity'));
-        $id = $this->request->attributes->get('id');
-        if (isset($id) || $method == 'POST') {
-            $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
-        }
-        if ($method == 'GET') {
-            // Lets allow for filtering specific fields
-            $fields = $this->eavService->getRequestFields($this->request);
-            //TODO: old code for getting an ObjectEntity
-            if (isset($object)) {
-                $data = $this->eavService->handleGet($object, $fields);
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-                }
-            } else {
-                $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
-            }
-        } else {
-            //todo: -end- old code...
-
-            // eav new way
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
-        }
+        // eav new way
+        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
-            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$handler->getEndpoint()->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$endpoint->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-            //todo: -start- old code...
-
-            //TODO: old code for creating or updating an ObjectEntity
-            if ($method == 'POST' || $method == 'PUT') {
-                $this->validationService->setRequest($this->request);
-                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-                $this->validationService->removeObjectsOnPut = []; // to be sure
-                $object = $this->validationService->validateEntity($object, $data);
-                $this->entityManager->persist($object);
-                $this->entityManager->flush();
-                $data['id'] = $object->getId()->toString();
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-                }
-            }
-            //todo: -end- old code...
+            // Check if we need to trigger subscribers for this entity
+            $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
 
             // Update current Log
             $this->logService->saveLog($this->request, null, json_encode($data));
 
-            // The we want to do  translations on the outgoing response
-            $transRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-
-            if (isset($data['result'])) {
-                $data['result'] = $this->translationService->parse($data['result'], true, $translations);
-            } else {
-                $data = $this->translationService->parse($data, true, $translations);
-            }
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Then we want to do to mapping on the outgoing response
-            $skeleton = $handler->getSkeletonOut();
-            if (!$skeleton || empty($skeleton)) {
-                isset($data['result']) ? $skeleton = $data['result'] : $skeleton = $data;
-            }
-            if (isset($data['result'])) {
-                $data['result'] = $this->translationService->dotHydrator($skeleton, $data['result'], $handler->getMappingOut());
-            } elseif (isset($data)) {
-                $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
-            }
-
-            // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
-
-            // Lets see if we need te use a template
-            if ($handler->getTemplatetype() && $handler->getTemplate()) {
-                $data = $this->renderTemplate($handler, $data);
-            }
-
-            // @todo should be done better
-            // If data is string it could be a document/template
-            if (is_string($data)) {
-                $result = $data;
-                $data = [];
-                $data['result'] = $result;
-            }
+            $handler && $data = $this->handleDataAfterEAV($data, $handler);
         }
         // Update current Log
         $this->logService->saveLog($this->request, null, json_encode($data));
@@ -363,9 +234,6 @@ class HandlerService
 
         $acceptType = $this->getRequestType('accept');
 
-        // Result directly given to data because data[type] or [message] is not being used and this saves a lot of extra checks
-        isset($data['result']) && $data = $data['result'];
-
         // Lets fill in some options
         $options = [];
         switch ($acceptType) {
@@ -388,7 +256,7 @@ class HandlerService
                 if (isset($data) && !is_string($data)) {
                     $data = json_encode($data);
                 }
-                isset($data['result']) ? $document->setContent($data['result']) : $document->setContent($data);
+                $document->setContent($data);
                 $result = $this->templateService->renderPdf($document);
                 break;
         }
@@ -445,6 +313,8 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
+        (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
+
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
@@ -482,5 +352,59 @@ class HandlerService
             default:
                 throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
+    }
+
+    private function handleDataBeforeEAV(array $data, Handler $handler): array
+    {
+        // Then we want to do the mapping in the incomming request
+        $skeleton = $handler->getSkeletonIn();
+        if (!$skeleton || empty($skeleton)) {
+            $skeleton = $data;
+        }
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // The we want to do translations on the incomming request
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+        $data = $this->translationService->parse($data, true, $translations);
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        return $data;
+    }
+
+    private function handleDataAfterEAV(array $data, Handler $handler): array
+    {
+
+        // The we want to do  translations on the outgoing response
+        $transRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+
+        $data = $this->translationService->parse($data, true, $translations);
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // Then we want to do to mapping on the outgoing response
+        $skeleton = $handler->getSkeletonOut();
+        if (!$skeleton || empty($skeleton)) {
+            $skeleton = $data;
+        }
+
+        $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+
+        // Update current Log
+        $this->logService->saveLog($this->request, null, json_encode($data));
+
+        // Lets see if we need te use a template
+        if ($handler->getTemplatetype() && $handler->getTemplate()) {
+            $data = $this->renderTemplate($handler, $data);
+        }
+
+        return $data;
     }
 }

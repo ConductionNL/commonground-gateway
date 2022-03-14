@@ -4,9 +4,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Application;
 use App\Service\AuthenticationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -25,11 +27,13 @@ class UserController extends AbstractController
 {
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager)
     {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -100,8 +104,11 @@ class UserController extends AbstractController
             return $organizations[0];
         }
         // If we still have no organization, get the organization from the application
-        if ($this->session->get('application') && $this->session->get('application')->getOrganization()) {
-            return $this->session->get('application')->getOrganization();
+        if ($this->session->get('application')) {
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            if (!empty($application) && $application->getOrganization()) {
+                return $application->getOrganization();
+            }
         }
 
         return null;

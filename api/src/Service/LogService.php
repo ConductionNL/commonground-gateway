@@ -25,20 +25,23 @@ class LogService
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request  $request  The request to fill this Log with.
-     * @param Response $response The response to fill this Log with.
-     * @param string   $content  The content to fill this Log with if there is no response.
+     * @param Request       $request   The request to fill this Log with.
+     * @param Response|null $response  The response to fill this Log with.
+     * @param string|null   $content   The content to fill this Log with if there is no response.
+     * @param bool|null     $finalSave
+     * @param string        $type
      *
      * @return Log
      */
-    public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null): Log
+    public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null, string $type = 'in'): Log
     {
         $logRepo = $this->entityManager->getRepository('App:Log');
-        $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId')]);
+
+        $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), 'type' => $type]) : $existingLog = null;
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
-        $callLog->setType('in');
+        $callLog->setType($type);
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
         $callLog->setRequestQuery($request->query->all() ?? null);
@@ -65,25 +68,49 @@ class LogService
         $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
         $callLog->setResponseTime(intval($time * 1000));
 
+        $callLog->setCreatedAt(new \DateTime());
+
         if ($this->session) {
             // add before removing
             $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
 
-            $callLog->setEndpoint($this->session->get('endpoint') ? $this->session->get('endpoint') : null);
-            $callLog->setEntity($this->session->get('entity') ? $this->session->get('entity') : null);
-            $callLog->setGateway($this->session->get('source') ? $this->session->get('source') : null);
-            $callLog->setHandler($this->session->get('handler') ? $this->session->get('handler') : null);
+            if ($this->session->get('endpoint')) {
+                $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+            }
+            $callLog->setEndpoint(!empty($endpoint) ? $endpoint : null);
+            if ($this->session->get('entity')) {
+                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')]);
+            }
+            $callLog->setEntity(!empty($entity) ? $entity : null);
+            if ($this->session->get('source')) {
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->session->get('source')]);
+            }
+            $callLog->setGateway(!empty($source) ? $source : null);
+            if ($this->session->get('handler')) {
+                $handler = $this->entityManager->getRepository('App:Handler')->findOneBy(['id' => $this->session->get('handler')]);
+            }
+            $callLog->setHandler(!empty($handler) ? $handler : null);
 
             // remove before setting the session values
-            if ($finalSave === true) {
-                $this->session->remove('callId');
-                $this->session->remove('endpoint');
-                $this->session->remove('entity');
-                $this->session->remove('source');
-                $this->session->remove('handler');
-            }
-            $callLog->setSessionValues($this->session->all());
+//            if ($finalSave === true) {
+//                $this->session->remove('callId');
+//                $this->session->remove('endpoint');
+//                $this->session->remove('entity');
+//                $this->session->remove('source');
+//                $this->session->remove('handler');
+//            }
+
+            // Set session values without relations we already know
+            // $sessionValues = $this->session->all();
+            // unset($sessionValues['endpoint']);
+            // unset($sessionValues['source']);
+            // unset($sessionValues['entity']);
+            // unset($sessionValues['endpoint']);
+            // unset($sessionValues['handler']);
+            // unset($sessionValues['application']);
+            // unset($sessionValues['applications']);
+            // $callLog->setSessionValues($sessionValues);
         }
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
@@ -91,7 +118,19 @@ class LogService
         return $callLog;
     }
 
-    private function getStatusWithCode(int $statusCode): ?string
+    public function makeRequest(): Request
+    {
+        return new Request(
+            $_GET,
+            $_POST,
+            [],
+            $_COOKIE,
+            $_FILES,
+            $_SERVER
+        );
+    }
+
+    public function getStatusWithCode(int $statusCode): ?string
     {
         $reflectionClass = new ReflectionClass(Response::class);
         $constants = $reflectionClass->getConstants();

@@ -1263,6 +1263,9 @@ class Attribute
         $validations['maxFileSize'] = $this->getMaxFileSize();
         $validations['minFileSize'] = $this->getMinFileSize();
         $validations['fileTypes'] = $this->getFileTypes();
+        $validations['cascade'] = $this->getCascade();
+        $validations['immutable'] = $this->getImmutable();
+        $validations['unsetable'] = $this->getUnsetable();
 
         return $validations;
     }
@@ -1344,6 +1347,15 @@ class Attribute
         }
         if (array_key_exists('multiple', $validations)) {
             $this->setMultiple($validations['multiple']);
+        }
+        if (array_key_exists('cascade', $validations)) {
+            $this->setCascade($validations['cascade']);
+        }
+        if (array_key_exists('immutable', $validations)) {
+            $this->setImmutable($validations['immutable']);
+        }
+        if (array_key_exists('unsetable', $validations)) {
+            $this->setUnsetable($validations['unsetable']);
         }
 
         return $this;

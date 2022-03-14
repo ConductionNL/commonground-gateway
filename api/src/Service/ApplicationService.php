@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Entity\Application;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ApplicationService
@@ -26,7 +28,10 @@ class ApplicationService
     public function getApplication()
     {
         if ($application = $this->session->get('application')) {
-            return $application;
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            if (!empty($application)) {
+                return $application;
+            }
         }
 
         // get publickey
@@ -35,7 +40,7 @@ class ApplicationService
         // get host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
 
-        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application);
+        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
         if (!isset($application)) {
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
@@ -67,11 +72,13 @@ class ApplicationService
                 'path'    => $public ?? $host ?? 'Header',
                 'data'    => $data ?? null,
             ];
+            // todo: maybe just throw a gatewayException?
+//            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
 
             return $result;
         }
 
-        $this->session->set('application', $application);
+        $this->session->set('application', $application->getId()->toString());
 
         return $application;
     }
@@ -95,7 +102,7 @@ class ApplicationService
         $this->entityManager->persist($application);
         $this->entityManager->flush();
 
-        $this->session->set('application', $application);
+        $this->session->set('application', $application->getId()->toString());
 
         return $application;
     }

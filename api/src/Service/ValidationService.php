@@ -2,11 +2,9 @@
 
 namespace App\Service;
 
-use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\Response;
 use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\File;
-use App\Entity\GatewayResponseLog;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -25,6 +23,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -47,6 +46,7 @@ class ValidationService
     private TranslationService $translationService;
     private ParameterBagInterface $parameterBag;
     private FunctionService $functionService;
+    private LogService $logService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -59,7 +59,8 @@ class ValidationService
         ObjectEntityService $objectEntityService,
         TranslationService $translationService,
         ParameterBagInterface $parameterBag,
-        FunctionService $functionService
+        FunctionService $functionService,
+        LogService $logService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -72,6 +73,7 @@ class ValidationService
         $this->translationService = $translationService;
         $this->parameterBag = $parameterBag;
         $this->functionService = $functionService;
+        $this->logService = $logService;
     }
 
     /**
@@ -467,7 +469,8 @@ class ValidationService
                     $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $subObject->setOrganization($this->session->get('activeOrganization'));
-                    $subObject->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $subObject->setApplication(!empty($application) ? $application : null);
                 }
                 if ($subObject->getEntity()->getFunction() === 'organization') {
                     $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
@@ -905,7 +908,8 @@ class ValidationService
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
-                    $subObject->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $subObject->setApplication(!empty($application) ? $application : null);
                 } else {
                     $subObject = $valueObject->getValue();
                 }
@@ -1572,16 +1576,16 @@ class ValidationService
                     break;
             }
         }
+        // log hier
+        $logPost = !is_string($post) ? json_encode($post) : $post;
+        $this->logService->saveLog($this->logService->makeRequest(), null, $logPost, null, 'out');
+
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method, $setOrganization) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
-                    $gatewayResponseLog = new GatewayResponseLog();
-                    $gatewayResponseLog->setObjectEntity($objectEntity);
-                    $gatewayResponseLog->setResponse($response);
-                    $this->em->persist($gatewayResponseLog);
                 }
-                // Lets use the correct responce type
+                // Lets use the correct response type
                 switch ($objectEntity->getEntity()->getGateway()->getType()) {
                     case 'json':
                         $result = json_decode($response->getBody()->getContents(), true);
@@ -1619,7 +1623,8 @@ class ValidationService
                     $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 } else {
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
-                    $objectEntity->setApplication($this->session->get('application'));
+                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                    $objectEntity->setApplication(!empty($application) ? $application : null);
                 }
                 if ($objectEntity->getEntity()->getFunction() === 'organization') {
                     $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
@@ -1640,6 +1645,10 @@ class ValidationService
                 // Notify notification component
                 $this->notify($objectEntity, $method);
 
+                $responseLog = new Response(json_encode($result), 201, []);
+                // log hier
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($result), null, 'out');
+
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);
                 //$item->expiresAt(new \DateTime('tomorrow'));
@@ -1647,16 +1656,6 @@ class ValidationService
             },
             // $onRejected
             function ($error) use ($objectEntity) {
-
-                /* @todo wat dachten we van een logging service? */
-                $gatewayResponseLog = new GatewayResponseLog();
-                $gatewayResponseLog->setGateway($objectEntity->getEntity()->getGateway());
-                //$gatewayResponseLog->setObjectEntity($objectEntity);
-                if ($error->getResponse()) {
-                    $gatewayResponseLog->setResponse($error->getResponse());
-                }
-                $this->em->persist($gatewayResponseLog);
-                $this->em->flush();
 
                 /* @todo lelijke code */
                 if ($error->getResponse()) {
@@ -1671,8 +1670,15 @@ class ValidationService
                 } else {
                     $error_message = $error->getMessage();
                 }
+                // log hier
+                if ($error->getResponse() instanceof Response) {
+                    $responseLog = $error->getResponse();
+                } else {
+                    $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
+                }
+                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $error_message, null, 'out');
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /gateway_logs/'.$gatewayResponseLog->getId().') for a full error report');
+                $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'.$log->getId().') for a full error report');
             }
         );
 

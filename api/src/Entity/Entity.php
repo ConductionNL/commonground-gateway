@@ -240,6 +240,14 @@ class Entity
     private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
 
     /**
+     * @var array Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $itemConfig = [];
+
+    /**
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
@@ -249,11 +257,20 @@ class Entity
     private Collection $handlers;
 
     /**
+     * @var array|null The subscribers used for this entity.
+     *
+     * @MaxDepth(1)
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entity", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity")
+     */
+    private Collection $subscribers;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entityOut")
      * @MaxDepth(1)
      */
-    private $subscriber;
+    private ?Subscriber $subscriberOut;
 
     public function __construct()
     {
@@ -264,6 +281,7 @@ class Entity
         $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
+        $this->subscribers = new ArrayCollection();
     }
 
     public function export()
@@ -688,6 +706,18 @@ class Entity
         return $this;
     }
 
+    public function getItemConfig(): ?array
+    {
+        return $this->itemConfig;
+    }
+
+    public function setItemConfig(?array $itemConfig): self
+    {
+        $this->itemConfig = $itemConfig;
+
+        return $this;
+    }
+
     /**
      * @return Collection|Soap[]
      */
@@ -760,24 +790,54 @@ class Entity
         return $this;
     }
 
-    public function getSubscriber(): ?Subscriber
+    /**
+     * @return Collection|Subscriber[]
+     */
+    public function getSubscribers(): Collection
     {
-        return $this->subscriber;
+        return $this->subscribers;
     }
 
-    public function setSubscriber(?Subscriber $subscriber): self
+    public function addSubscribers(Subscriber $subscriber): self
     {
-        // unset the owning side of the relation if necessary
-        if ($subscriber === null && $this->subscriber !== null) {
-            $this->subscriber->setEntity(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriber !== null && $subscriber->getEntity() !== $this) {
+        if (!$this->subscribers->contains($subscriber)) {
+            $this->subscribers[] = $subscriber;
             $subscriber->setEntity($this);
         }
 
-        $this->subscriber = $subscriber;
+        return $this;
+    }
+
+    public function removeSubscribers(Subscriber $subscriber): self
+    {
+        if ($this->subscribers->removeElement($subscriber)) {
+            // set the owning side to null (unless already changed)
+            if ($subscriber->getEntity() === $this) {
+                $subscriber->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getSubscriberOut(): ?Subscriber
+    {
+        return $this->subscriberOut;
+    }
+
+    public function setSubscriberOut(?Subscriber $subscriberOut): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($subscriberOut === null && $this->subscriberOut !== null) {
+            $this->subscriberOut->setEntityOut(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($subscriberOut !== null && $subscriberOut->getEntityOut() !== $this) {
+            $subscriberOut->setEntityOut($this);
+        }
+
+        $this->subscriberOut = $subscriberOut;
 
         return $this;
     }

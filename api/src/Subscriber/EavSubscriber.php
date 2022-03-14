@@ -4,6 +4,7 @@ namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Service\AuthorizationService;
+use App\Service\ConvertToGatewayService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
@@ -21,14 +22,16 @@ class EavSubscriber implements EventSubscriberInterface
     private EavService $eavService;
     private AuthorizationService $authorizationService;
     private SerializerService $serializerService;
+    private ConvertToGatewayService $convertToGatewayService;
 
-    public function __construct(EntityManagerInterface $entityManager, CommonGroundService $commonGroundService, EavService $eavService, AuthorizationService $authorizationService, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $entityManager, CommonGroundService $commonGroundService, EavService $eavService, AuthorizationService $authorizationService, SerializerInterface $serializer, ConvertToGatewayService $convertToGatewayService)
     {
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
         $this->eavService = $eavService;
         $this->authorizationService = $authorizationService;
         $this->serializerService = new SerializerService($serializer);
+        $this->convertToGatewayService = $convertToGatewayService;
     }
 
     public static function getSubscribedEvents()
@@ -43,6 +46,10 @@ class EavSubscriber implements EventSubscriberInterface
         $route = $event->getRequest()->attributes->get('_route');
         $resource = $event->getControllerResult();
 
+        if ($route == 'api_object_entities_get_sync_item') {
+            $this->convertToGatewayService->syncObjectEntity($event->getRequest()->attributes->get('id'));
+        }
+
         // Make sure we only triggen when needed
         if (!in_array($route, [
             'api_object_entities_post_eav_objects_collection',
@@ -53,12 +60,12 @@ class EavSubscriber implements EventSubscriberInterface
         ])) {
             return;
         }
-        $response = $this->eavService->handleRequest($event->getRequest());
+        $response = $this->eavService->handleRequest($event->getRequest()); // todo duplicate code
 
         $entityName = $event->getRequest()->attributes->get('entity');
 
         try {
-            $response = $this->eavService->handleRequest($event->getRequest(), $entityName);
+            $response = $this->eavService->handleRequest($event->getRequest(), $entityName); // todo duplicate code
         } catch (AccessDeniedException $exception) {
             $contentType = $event->getRequest()->headers->get('Accept', $event->getRequest()->headers->get('accept', 'application/ld+json'));
             if ($contentType == '*/*') {

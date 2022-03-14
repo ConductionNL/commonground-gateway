@@ -69,19 +69,20 @@ class FormIOService
 
         $formIOArray['display'] = 'form';
         $formIOArray['page'] = 0;
+        $formIOArray['entity'] = $entity->getName();
 
         return $formIOArray;
     }
 
     private function getAttributeInputType($attr): string
     {
-        $type = 'text';
+        // Default as textfield
+        $type = 'textfield';
 
         switch ($attr->getType()) {
-        case 'string':
         case 'date':
-        case 'date-time':
-          $type = 'textfield';
+        case 'datetime':
+          $type = 'datetime';
           break;
         case 'integer':
         case 'float':

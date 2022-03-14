@@ -11,6 +11,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
@@ -18,6 +19,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/subscribers/{id}"},
  *      "put"={"path"="/admin/subscribers/{id}"},
@@ -55,7 +58,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private ?string $name;
 
     /**
      * @Assert\Type("string")
@@ -63,16 +66,31 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $description;
+    private ?string $description;
 
     /**
+     * @var string The method that triggers this subscriber.
+     *
      * @Assert\Type("string")
      * @Assert\Choice({"GET", "POST", "PUT", "PATCH"})
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, options={"default": "POST"})
      */
-    private $method = 'POST';
+    private string $method = 'POST';
+
+    /**
+     * @var string The type of this subscriber. externSource will result in a call outside the gateway and internGateway will result in a new object inside the gateway.
+     *
+     * @example string
+     *
+     * @Assert\NotBlank
+     * @Assert\Length(max = 255)
+     * @Assert\Choice({"externSource", "internGateway"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $type = 'externSource';
 
     /**
      * @Assert\Type("integer")
@@ -80,7 +98,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
-    private $runOrder = 0;
+    private int $runOrder = 0;
 
     /**
      * @Assert\Type("string")
@@ -89,7 +107,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
-    private $conditions;
+    private ?string $conditions;
 
     /**
      * @Assert\Type("bool")
@@ -97,7 +115,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", options={"default": true})
      */
-    private $asynchronous = true;
+    private bool $asynchronous = true;
 
     /**
      * @Assert\Type("bool")
@@ -105,7 +123,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     /**
      * @Assert\Type("array")
@@ -113,7 +131,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $headers = [];
+    private array $headers = [];
 
     /**
      * @Assert\Type("array")
@@ -121,7 +139,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $queryParameters = [];
+    private array $queryParameters = [];
 
     /**
      * @Assert\Type("array")
@@ -129,7 +147,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsIn = [];
+    private array $translationsIn = [];
 
     /**
      * @Assert\Type("array")
@@ -137,7 +155,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $translationsOut = [];
+    private array $translationsOut = [];
 
     /**
      * @Assert\Type("array")
@@ -145,7 +163,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $mappingIn = [];
+    private array $mappingIn = [];
 
     /**
      * @Assert\Type("array")
@@ -153,28 +171,59 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="json", nullable=true)
      */
-    private $mappingOut = [];
+    private array $mappingOut = [];
 
     /**
+     * @Assert\Type("array")
+     *
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="subscriber", cascade={"persist", "remove"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $skeletonIn = [];
+
+    /**
+     * @Assert\Type("array")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $skeletonOut = [];
+
+    /**
+     * @var Entity|null The entity that triggers this Subscriber.
+     *
      * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="subscribers")
      */
-    private $entity;
+    private ?Entity $entity = null;
 
     /**
+     * @var Entity|null The entity for which a new object is created when this subscriber is triggered. (if type is internGateway)
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="subscriberOut", cascade={"persist", "remove"})
+     */
+    private ?Entity $entityOut = null;
+
+    /**
+     * @var Gateway|null The gateway for the output of this Subscriber. (if type is externSource)
+     *
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?gateway $gateway;
 
     /**
+     * @var Endpoint|null An endpoint for the output of this Subscriber. (?)
+     *
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $endpoint;
+    private ?endpoint $endpoint;
 
     public function getId()
     {
@@ -289,6 +338,18 @@ class Subscriber
         return $this;
     }
 
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
     public function getTranslationsIn(): ?array
     {
         return $this->translationsIn;
@@ -337,6 +398,30 @@ class Subscriber
         return $this;
     }
 
+    public function getSkeletonIn(): ?array
+    {
+        return $this->skeletonIn;
+    }
+
+    public function setSkeletonIn(?array $skeletonIn): self
+    {
+        $this->skeletonIn = $skeletonIn;
+
+        return $this;
+    }
+
+    public function getSkeletonOut(): ?array
+    {
+        return $this->skeletonOut;
+    }
+
+    public function setSkeletonOut(?array $skeletonOut): self
+    {
+        $this->skeletonOut = $skeletonOut;
+
+        return $this;
+    }
+
     public function getEntity(): ?Entity
     {
         return $this->entity;
@@ -345,6 +430,18 @@ class Subscriber
     public function setEntity(?Entity $entity): self
     {
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    public function getEntityOut(): ?Entity
+    {
+        return $this->entityOut;
+    }
+
+    public function setEntityOut(?Entity $entityOut): self
+    {
+        $this->entityOut = $entityOut;
 
         return $this;
     }

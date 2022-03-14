@@ -137,7 +137,7 @@ class Endpoint
      * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="endpoint", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private $subscriber;
+    private ?Subscriber $subscriber;
 
     public function __construct()
     {
