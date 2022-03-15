@@ -13,6 +13,7 @@ use App\Entity\Entity;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Handler;
 
 
 class ConvenienceController extends AbstractController
@@ -26,10 +27,16 @@ class ConvenienceController extends AbstractController
   }
 
   /**
-   * @Route("/admin/load/{type}", name="dynamic_route_load_type")
+   * @Route("/admin/load/{collectionId}", name="dynamic_route_load_type")
    */
-  public function loadAction(Request $request, string $type): Response
+  public function loadAction(Request $request, string $type, $collectionId): Response
   {
+    // // Get CollectionEntity to retrieve OAS from
+    // $collectionRepo = $this->entityManager->getRepsitory('App:CollectionEntity');
+    // $collection = $collectionRepo->find($collectionId);
+    // $url = $collection->getUrl();
+
+
     switch ($type) {
       case 'redoc':
 
@@ -49,10 +56,10 @@ class ConvenienceController extends AbstractController
 
         try {
           // Persist yaml to objects
-          $this->persistRedoc($redoc);
+           $this->parseRedoc($redoc);
         } catch (\Exception $e) {
           $errMessage = $this->serializer->serialize([
-            'message' => $e
+            'message' => $e->getMessage()
           ], 'json');
         }
         break;
@@ -68,11 +75,17 @@ class ConvenienceController extends AbstractController
   /**
    * This function reads redoc and parses it into doctrine objects
    */
-  private function persistRedoc(array $redoc)
+  private function parseRedoc(array $redoc)
   {
+
+    // $counter = 0;
 
     // Persist Entities and Attributes
     foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
+
+      // $counter = $counter + 1;
+      // if ($counter === 10) break; 
+
       // Continue if we have no properties
       if (!isset($entityInfo['properties'])) continue;
 
@@ -80,9 +93,13 @@ class ConvenienceController extends AbstractController
       $newEntity = new Entity();
       $newEntity->setName($entityName);
 
+      // var_dump('Entity name: ' . $entityName);
+      // var_dump('______________________________');
+
+      // Persist entity 
       $this->entityManager->persist($newEntity);
 
-      // Loop through properties and create Attribute(s)
+      // Loop through properties and create Attributes
       foreach ($entityInfo['properties'] as $propertyName => $property) {
         $newAttribute = new Attribute();
         $newAttribute->setName($propertyName);
@@ -110,21 +127,80 @@ class ConvenienceController extends AbstractController
       }
     }
 
+    // Flush entities
     $this->entityManager->flush();
 
     // Persist Endpoints
+    // $counter = 0;
+    $iteratedEndpoints = [];
     foreach ($redoc['paths'] as $pathName => $path) {
-      $newEndpoint = new Endpoint();
+      // $counter = $counter + 1;
+      // if ($counter === 10) break; 
 
       $pathName[0] === '/' && $pathName = substr($pathName, 1);
+      $pathName = strtok($pathName, '/');
 
-      $newEndpoint->setName($pathName);
-      $newEndpoint->setPath($pathName);
+      // Continue with methods from last iteration if same pathname
+      end($iteratedEndpoints) !== $pathName && $methods = [];
+
+      // $pathName === 'resultaten' && var_dump('before added methods');
+      // $pathName === 'resultaten' &&  var_dump($methods);
+      
+      // Add methods for Handler
+      foreach ($path as $method => $actualPath) {
+
+        // $pathName === 'resultaten' && var_dump('method');
+        // $pathName === 'resultaten' &&  var_dump($method);
+        !in_array($method, $methods) && in_array($method, ['get', 'post', 'patch', 'put', 'delete']) &&  $methods[] = $method;
+      }
+      // $pathName === 'resultaten' && var_dump('after added methods');
+      // $pathName === 'resultaten' && var_dump($methods);
+
+      // If we already iterated this pathname update the handler for its methods and continue
+      if (in_array($pathName, $iteratedEndpoints)){
+          $handlerRepo = $this->entityManager->getRepository('App:Handler');
+          $handler = $handlerRepo->findOneByName($pathName . ' Handler');
+
+          if (isset($handler)) {
+            $pathName === 'resultaten' && var_dump(array_unique(array_merge($handler->getMethods(), $methods), SORT_REGULAR));
+              $newMethods = [];
+              foreach (array_unique(array_merge($handler->getMethods(), $methods), SORT_REGULAR) as $meth) {
+                $newMethods[] = $meth;
+              }
+              $methods = $newMethods;
+              $handler->setMethods($methods);
+              $this->entityManager->persist($handler);
+              unset($handler);
+          }
+
+        continue;
+      }
+
+      // Add pathName to iteratedEndpoints
+      $iteratedEndpoints[] = $pathName;
+
+      // Search for exisiting Endpoint with this path and check if this is no subpath
+      unset($existingEndpoint);
+      $endpointRepo = $this->entityManager->getRepository('App:Endpoint');
+      $existingEndpoint = $endpointRepo->findOneByPath($pathName);
+
+      // var_dump('Existing endpoint for path: ' . $pathName);
+      // isset($existingEndpoint[0]) ? var_dump($existingEndpoint[0]->getName()) : var_dump('no endpoint found for: ' . $pathName);
+      // var_dump('______________________________');
+      
+      // If we dont have a existing Endpoint create a new Endpoint
+      isset($existingEndpoint) ? $endpoint = $existingEndpoint : $endpoint = new Endpoint(); 
+
+      if (!isset($existingEndpoint)) {
+          $endpoint->setName($pathName);
+          $endpoint->setPath($pathName);
+      }
+
 
       // Set description from first method description
-      (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $newEndpoint->setDescription($path[array_key_first($path)]['description']);
+      (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $endpoint->setDescription($path[array_key_first($path)]['description']);
 
-      // Check reference to schema object (Entity)
+      // Check reference to schema object to find Entity
       foreach ($path as $key => $response) {
         if ($key !== 'post') continue;
         if (isset($response['requestBody']['content']['application/json']['schema']['$ref'])) {
@@ -135,15 +211,15 @@ class ConvenienceController extends AbstractController
       }
 
       // Check if we can find a entity with this name to link 
+      unset($entity);
       if (isset($entityNameToJoin)) {
         $entityRepo = $this->entityManager->getRepository('App:Entity');
         $entity = $entityRepo->findOneByName($entityNameToJoin);
+        // var_dump('Found entity: ' . $entityNameToJoin . ' to link to endpoint:');
+        // isset($entity) ? var_dump($entity->getName()) : var_dump('no entity found for: ' . $entityNameToJoin);
+        // var_dump('______________________________');
 
         if (isset($entity)) {
-
-        // Endpoint has no relation to entity yet
-        // $newEndpoint->setEntity($entity);
-
           $entity->setRoute('/api/' . $pathName);
           $entity->setEndpoint($pathName);
     
@@ -151,7 +227,29 @@ class ConvenienceController extends AbstractController
         }
       }
 
-      $this->entityManager->persist($newEndpoint);
+      // Create Handler
+      unset($handler);
+      !isset($existingEndpoint) ? $handler = new Handler() : isset($existingEndpoint) && isset($existingEndpoint->getHandlers()[0]) && $handler = $existingEndpoint->getHandlers()[0];
+
+      if (isset($handler)) {
+          $handler->setName($pathName . ' Handler');
+          // $pathName === 'resultaten' && var_dump('Methods before setting');
+          // $pathName === 'resultaten' &&  var_dump($methods);
+          $handler->setMethods($methods);
+          $handler->setSequence(0);
+          $handler->setConditions('{}');
+
+          isset($entity) && $handler->setEntity($entity);
+
+          $endpoint->addHandler($handler);
+
+          $this->entityManager->persist($handler);
+      }
+
+      // Add handler with this method
+
+
+      $this->entityManager->persist($endpoint);
     }
 
     $this->entityManager->flush();
