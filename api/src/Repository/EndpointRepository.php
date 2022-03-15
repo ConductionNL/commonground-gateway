@@ -19,6 +19,21 @@ class EndpointRepository extends ServiceEntityRepository
         parent::__construct($registry, Endpoint::class);
     }
 
+    /**
+     * @return Endpoint Returns a Endpoint object
+     */
+    public function findOneByPartOfPath(string $path)
+    {
+      return $this->createQueryBuilder('e')
+          ->andWhere('e.path = :path')
+          ->setParameter('path', $path)
+          ->setMaxResults(1)
+          ->getQuery()
+          ->getResult()
+      ;
+    }
+
+
     // /**
     //  * @return Endpoint[] Returns an array of Endpoint objects
     //  */
