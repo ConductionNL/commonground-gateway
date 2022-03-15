@@ -22,7 +22,8 @@ class ObjectEntityService
      * A function we want to call when doing a post or put, to set the owner of an ObjectEntity, if it hasn't one already.
      *
      * @param ObjectEntity $result
-     * @param string|null $owner
+     * @param string|null  $owner
+     *
      * @return ObjectEntity|array
      */
     public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
