@@ -162,6 +162,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             } catch (\Exception $exception) {
                 throw new AuthenticationException('Invalid User Uri');
             }
+            $this->session->set('apiKeyApplication', $application);
         }
 
         if (!$user) {

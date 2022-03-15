@@ -427,6 +427,9 @@ class EavService
         }));
         if (count($applications) > 0) {
             $this->session->set('application', $applications[0]);
+        } elseif ($this->session->get('apiKeyApplication')) {
+            // If an api-key is used for authentication we already know which application is used
+            $this->session->set('application', $this->session->get('apiKeyApplication'));
         } else {
             //            var_dump('no application found');
             if ($host == 'localhost') {
