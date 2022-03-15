@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
@@ -14,7 +13,6 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
@@ -22,7 +20,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-
 
 /**
  * This entity holds the information about a Logs.
@@ -183,15 +180,15 @@ class CollectionEntity
         }
 
         $data = [
-            'name'                => $this->getName(),
-            'description'         => $this->getDescription(),
-            'source'             => $source,
-            'sourceType'           => $this->getSourceType(),
-            'sourceBranch'           => $this->getSourceBranch(),
-            'syncedAt'              => $this->getSyncedAt(),
+            'name'                    => $this->getName(),
+            'description'             => $this->getDescription(),
+            'source'                  => $source,
+            'sourceType'              => $this->getSourceType(),
+            'sourceBranch'            => $this->getSourceBranch(),
+            'syncedAt'                => $this->getSyncedAt(),
             'applications'            => $this->getApplications(),
-            'endpoints'            => $this->getEndpoints(),
-            'entities'     => $this->getEntities(),
+            'endpoints'               => $this->getEndpoints(),
+            'entities'                => $this->getEntities(),
         ];
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
