@@ -139,11 +139,21 @@ class Endpoint
      */
     private ?Subscriber $subscriber;
 
+    /**
+     * @var ?Collection The collections of this Endpoint
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="endpoints")
+     */
+    private ?Collection $collections;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
+        $this->collections = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -326,4 +336,32 @@ class Endpoint
 
         return $this;
     }
+
+    /**
+     * @return Collection|CollectionEntity[]
+     */
+    public function getCollections(): Collection
+    {
+        return $this->collections;
+    }
+
+    public function addCollection(CollectionEntity $collection): self
+    {
+        if (!$this->collections->contains($collection)) {
+            $this->collections[] = $collection;
+            $collection->addEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCollection(CollectionEntity $collection): self
+    {
+        if ($this->collections->removeElement($collection)) {
+            $collection->removeEndpoint($this);
+        }
+
+        return $this;
+    }
+
 }
