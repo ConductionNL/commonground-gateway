@@ -6,7 +6,7 @@ The web Gateway is designed as a feature-rich solution to quickly developing Pro
 
 Sources form the beating heart of the Gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web Gateway.
 
-[Read more about sources](./features/MOD_sources.md)
+[Read more about sources](./features/sources.md)
 
 ## Authentication
 
@@ -140,7 +140,7 @@ So what does that mean for EAV mapping? Well, simply put, our objects become ent
 
 Entities represent objects that communicate to underlaying sources. They require a **source** and an **endpoint** on that source to send the object. You may ignore this and 'store' your objects within the Gateway to mock API's in development environments, but it's not recommended for production environments.
 
-[Read more about sources](./features/MOD_object_types.md)
+[Read more about object types](./features/object_types.md)
 
 ### Attribute
 
