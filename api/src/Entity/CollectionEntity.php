@@ -22,7 +22,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about a Logs.
+ * This entity holds the information about a Collections.
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
