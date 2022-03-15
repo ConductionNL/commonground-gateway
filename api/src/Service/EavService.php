@@ -466,11 +466,12 @@ class EavService
         // Lets create an object
         if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
             // Check if @owner is present in the body and if so unset it.
+            $owner = 'owner';
             if (array_key_exists('@owner', $body)) {
                 $owner = $body['@owner'];
                 unset($body['@owner']);
             }
-            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity, $owner ?? 'owner');
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity, $owner); // note: $owner is allowed to be null!
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
