@@ -260,7 +260,7 @@ class Endpoint
     {
         if (!$this->handlers->contains($handler)) {
             $this->handlers[] = $handler;
-            $handler->setObject($this);
+            $handler->setEndpoint($this);
         }
 
         return $this;
@@ -270,8 +270,8 @@ class Endpoint
     {
         if ($this->handlers->removeElement($handler)) {
             // set the owning side to null (unless already changed)
-            if ($handler->getObject() === $this) {
-                $handler->setObject(null);
+            if ($handler->getEndpoint() === $this) {
+                $handler->setEndpoint(null);
             }
         }
 
