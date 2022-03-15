@@ -272,6 +272,15 @@ class Entity
      */
     private ?Subscriber $subscriberOut;
 
+    /**
+     * @var ?Collection The collections of this Entity
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     */
+    private ?Collection $collections;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -282,6 +291,7 @@ class Entity
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
+        $this->collections = new ArrayCollection();
     }
 
     public function export()
@@ -838,6 +848,33 @@ class Entity
         }
 
         $this->subscriberOut = $subscriberOut;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CollectionEntity[]
+     */
+    public function getCollections(): Collection
+    {
+        return $this->collections;
+    }
+
+    public function addCollection(CollectionEntity $collection): self
+    {
+        if (!$this->collections->contains($collection)) {
+            $this->collections[] = $collection;
+            $collection->addEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCollection(CollectionEntity $collection): self
+    {
+        if ($this->collections->removeElement($collection)) {
+            $collection->removeEntity($this);
+        }
 
         return $this;
     }
