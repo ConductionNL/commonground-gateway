@@ -875,5 +875,4 @@ class Gateway
 
         return $this;
     }
-
 }
