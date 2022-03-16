@@ -152,7 +152,7 @@ class CollectionEntity
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $updatedAt;
+    private ?DateTimeInterface $dateModified;
 
     /**
      * @var ?Datetime The moment this Collection was created
@@ -161,7 +161,7 @@ class CollectionEntity
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $createdAt;
+    private ?DateTimeInterface $dateCreated;
 
     public function __construct()
     {
@@ -350,26 +350,26 @@ class CollectionEntity
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getDateModified(): ?\DateTimeInterface
     {
-        return $this->updatedAt;
+        return $this->dateModified;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
+    public function setDateModified(?\DateTimeInterface $dateModified): self
     {
-        $this->updatedAt = $updatedAt;
+        $this->dateModified = $dateModified;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getDateCreated(): ?\DateTimeInterface
     {
-        return $this->createdAt;
+        return $this->dateCreated;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): self
+    public function setDateCreated(?\DateTimeInterface $dateCreated): self
     {
-        $this->createdAt = $createdAt;
+        $this->dateCreated = $dateCreated;
 
         return $this;
     }
