@@ -265,8 +265,7 @@ class ConvenienceController extends AbstractController
 
       // If we have set attribute.entity and attribute.object, persist attribute
       $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
-      
-      // $newAttribute->setEntity()
+    
     }
  
     // Execute sql to database
