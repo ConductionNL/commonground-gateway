@@ -171,6 +171,25 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $location;
+
+    /**
+     * @var string The location where the OAS can be loaded from
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string $locationOAS;
     /**
      * @var string The type of this gatewat
      *
@@ -548,6 +567,18 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getLocationOAS(): ?string
+    {
+        return $this->locationOAS;
+    }
+
+    public function setLocationOAS(?string $locationOAS): self
+    {
+        $this->locationOAS = $locationOAS;
 
         return $this;
     }
