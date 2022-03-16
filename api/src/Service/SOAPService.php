@@ -1670,6 +1670,8 @@ class SOAPService
             return '0268';
         } elseif(strpos($this->parameterBag->get('app_url'), 'maastricht') !== false) {
             return '0935';
+        } elseif(strpos($this->parameterBag->get('app_url'), 'demo') !== false) {
+            return '1904';
         } else {
             return '0268';
         }
