@@ -85,9 +85,9 @@ class CollectionEntity
      * @var ?Gateway The source (url) of this Collection
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections")
      */
     private ?Gateway $source;
 
