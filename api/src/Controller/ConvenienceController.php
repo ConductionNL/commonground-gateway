@@ -29,47 +29,54 @@ class ConvenienceController extends AbstractController
   /**
    * @Route("/admin/load/{collectionId}", name="dynamic_route_load_type")
    */
-  public function loadAction(Request $request, string $type, $collectionId): Response
+  public function loadAction(Request $request, string $collectionId): Response
   {
-    // // Get CollectionEntity to retrieve OAS from
-    // $collectionRepo = $this->entityManager->getRepsitory('App:CollectionEntity');
-    // $collection = $collectionRepo->find($collectionId);
-    // $url = $collection->getUrl();
+      // Get CollectionEntity to retrieve OAS from
+      $collectionRepo = $this->entityManager->getRepository('App:CollectionEntity');
+      $collection = $collectionRepo->find($collectionId);
 
+      // Check collection, if not found throw error
+      if (!isset($collection)) return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+       
+      // Check collection->source->locationOAS and set url
+      $collection->getSource() !== null && $collection->getSource()->getLocationOAS() !== null && $url = $collection->getSource()->getLocationOAS();
 
-    switch ($type) {
-      case 'redoc':
+      // Check url, if not set throw error
+      if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No location OAS found for given collection'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+    
+      // // Check url as query 
+      // $request->query->get('url') && $url = $request->query->get('url');
+      // !isset($url) && $request->getContent() && $body = json_decode($request->getContent(), true);
+      // if (!isset($url) && !isset($body)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+      
+      // // Check url in body
+      // !isset($url) && isset($body['url']) && $url = $body['url'];
+      // if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
 
-        // Check url as query 
-        $request->query->get('url') && $url = $request->query->get('url');
-        !isset($url) && $request->getContent() && $body = json_decode($request->getContent(), true);
-        if (!isset($url) && !isset($body)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
-        
-        // Check url in body
-        !isset($url) && isset($body['url']) && $url = $body['url'];
-        if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
+      // Send GET to fetch redoc
+      $client = new Client();
+      $response = $client->get($url);
+      $redoc = Yaml::parse($response->getBody()->getContents());
 
-        // Send GET to fetch redoc
-        $client = new Client();
-        $response = $client->get($url);
-        $redoc = Yaml::parse($response->getBody()->getContents());
+      try {
+        // Persist yaml to objects
+        $this->parseRedoc($redoc);
+      } catch (\Exception $e) {
+        $errMessage = $this->serializer->serialize([
+          'message' => $e->getMessage()
+        ], 'json');
+      }
 
-        try {
-          // Persist yaml to objects
-           $this->parseRedoc($redoc);
-        } catch (\Exception $e) {
-          $errMessage = $this->serializer->serialize([
-            'message' => $e->getMessage()
-          ], 'json');
-        }
-        break;
-    }
+      // Set synced at
+      $collection->setSyncedAt(new \DateTime('now'));
+      $this->entityManager->persist($collection);
+      $this->entityManager->flush();
 
-    return new Response(
-      isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
-      isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
-      ['content-type' => 'json']
-    );
+      return new Response(
+        isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
+        isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
+        ['content-type' => 'json']
+      );
   }
 
   /**
@@ -77,8 +84,14 @@ class ConvenienceController extends AbstractController
    */
   private function parseRedoc(array $redoc)
   {
+    $entityRepo = $this->entityManager->getRepository('App:Entity');
+    $handlerRepo = $this->entityManager->getRepository('App:Handler');
+    $endpointRepo = $this->entityManager->getRepository('App:Endpoint');
 
     // $counter = 0;
+
+    // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
+    $attributesToSetLaterAsObject = [];
 
     // Persist Entities and Attributes
     foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
@@ -93,20 +106,33 @@ class ConvenienceController extends AbstractController
       $newEntity = new Entity();
       $newEntity->setName($entityName);
 
-      // var_dump('Entity name: ' . $entityName);
-      // var_dump('______________________________');
-
       // Persist entity 
       $this->entityManager->persist($newEntity);
 
       // Loop through properties and create Attributes
       foreach ($entityInfo['properties'] as $propertyName => $property) {
+
+        // @TODO set link to object if attribute is object (what if seeked object is not yet created?) and property['$ref'] is set
+        if (isset($property['$ref'])) {
+          $attrToSetLater = [];
+          $attrToSetLater['name'] = $propertyName;
+          $attrToSetLater['parentEntityId'] = $newEntity->getId();
+          $attrToSetLater['entityNameToLinkTo'] = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
+          $attributesToSetLaterAsObject[] = $attrToSetLater;
+          
+          // Continue to next iteration as this attribute will be saved later.
+          continue;
+        }
+
         $newAttribute = new Attribute();
         $newAttribute->setName($propertyName);
+
         (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
         isset($property['description']) && $newAttribute->setDescription($property['description']);
         isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
-        isset($property['format']) && $newAttribute->setFormat($property['format']);
+        // If format == date-time set type: datetime
+        isset($property['format']) && $property['format'] === 'date-time' && $newAttribute->setType('datetime');
+        isset($property['format']) && $property['format'] !== 'date-time' && $newAttribute->setFormat($property['format']);
         isset($property['readyOnly']) && $newAttribute->setReadOnly($property['readOnly']);
         isset($property['maxLength']) && $newAttribute->setMaxLength($property['maxLength']);
         isset($property['minLength']) && $newAttribute->setMinLength($property['minLength']);
@@ -114,11 +140,7 @@ class ConvenienceController extends AbstractController
         isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
         isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
         isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
-
-        // @TODO set link to object if attribute is object (what if seeked object is not yet created?)
-        // if ($property['type'] === 'object') {
-
-        // }
+        isset($property['readOnly']) && $newAttribute->setPattern($property['readOnly']);
 
         $newAttribute->setEntity($newEntity);
 
@@ -142,27 +164,17 @@ class ConvenienceController extends AbstractController
 
       // Continue with methods from last iteration if same pathname
       end($iteratedEndpoints) !== $pathName && $methods = [];
-
-      // $pathName === 'resultaten' && var_dump('before added methods');
-      // $pathName === 'resultaten' &&  var_dump($methods);
       
       // Add methods for Handler
       foreach ($path as $method => $actualPath) {
-
-        // $pathName === 'resultaten' && var_dump('method');
-        // $pathName === 'resultaten' &&  var_dump($method);
         !in_array($method, $methods) && in_array($method, ['get', 'post', 'patch', 'put', 'delete']) &&  $methods[] = $method;
       }
-      // $pathName === 'resultaten' && var_dump('after added methods');
-      // $pathName === 'resultaten' && var_dump($methods);
 
       // If we already iterated this pathname update the handler for its methods and continue
       if (in_array($pathName, $iteratedEndpoints)){
-          $handlerRepo = $this->entityManager->getRepository('App:Handler');
           $handler = $handlerRepo->findOneByName($pathName . ' Handler');
 
           if (isset($handler)) {
-            $pathName === 'resultaten' && var_dump(array_unique(array_merge($handler->getMethods(), $methods), SORT_REGULAR));
               $newMethods = [];
               foreach (array_unique(array_merge($handler->getMethods(), $methods), SORT_REGULAR) as $meth) {
                 $newMethods[] = $meth;
@@ -181,13 +193,7 @@ class ConvenienceController extends AbstractController
 
       // Search for exisiting Endpoint with this path and check if this is no subpath
       unset($existingEndpoint);
-      $endpointRepo = $this->entityManager->getRepository('App:Endpoint');
       $existingEndpoint = $endpointRepo->findOneByPath($pathName);
-
-      // var_dump('Existing endpoint for path: ' . $pathName);
-      // isset($existingEndpoint[0]) ? var_dump($existingEndpoint[0]->getName()) : var_dump('no endpoint found for: ' . $pathName);
-      // var_dump('______________________________');
-      
       // If we dont have a existing Endpoint create a new Endpoint
       isset($existingEndpoint) ? $endpoint = $existingEndpoint : $endpoint = new Endpoint(); 
 
@@ -213,12 +219,8 @@ class ConvenienceController extends AbstractController
       // Check if we can find a entity with this name to link 
       unset($entity);
       if (isset($entityNameToJoin)) {
-        $entityRepo = $this->entityManager->getRepository('App:Entity');
         $entity = $entityRepo->findOneByName($entityNameToJoin);
-        // var_dump('Found entity: ' . $entityNameToJoin . ' to link to endpoint:');
-        // isset($entity) ? var_dump($entity->getName()) : var_dump('no entity found for: ' . $entityNameToJoin);
-        // var_dump('______________________________');
-
+        
         if (isset($entity)) {
           $entity->setRoute('/api/' . $pathName);
           $entity->setEndpoint($pathName);
@@ -233,8 +235,6 @@ class ConvenienceController extends AbstractController
 
       if (isset($handler)) {
           $handler->setName($pathName . ' Handler');
-          // $pathName === 'resultaten' && var_dump('Methods before setting');
-          // $pathName === 'resultaten' &&  var_dump($methods);
           $handler->setMethods($methods);
           $handler->setSequence(0);
           $handler->setConditions('{}');
@@ -252,6 +252,24 @@ class ConvenienceController extends AbstractController
       $this->entityManager->persist($endpoint);
     }
 
+    // Execute sql to database
+    $this->entityManager->flush();
+
+    foreach ($attributesToSetLaterAsObject as $attribute) {
+      $newAttribute = new Attribute();
+      $parentEntity = $entityRepo->find($attribute['parentEntityId']);
+      isset($parentEntity) && $newAttribute->setEntity($parentEntity);
+
+      $entityToLinkTo = $entityRepo->findByName($attribute['entityNameToLinkTo']);
+      isset($entityToLinkTo) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo);
+
+      // If we have set attribute.entity and attribute.object, persist attribute
+      $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
+      
+      // $newAttribute->setEntity()
+    }
+ 
+    // Execute sql to database
     $this->entityManager->flush();
 
   }
