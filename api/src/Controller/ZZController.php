@@ -19,10 +19,11 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ZZController extends AbstractController
 {
     /**
-     * @Route("/api/{entity}", name="dynamic_route_entity")
+     * @Route("/api/{endpoint}", name="dynamic_route_entity")
      * @Route("/api/{entity}/{id}", name="dynamic_route_collection")
      */
     public function dynamicAction(
+        ?string $endpoint,
         ?string $entity,
         ?string $id,
         Request $request,
@@ -44,7 +45,7 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Let determine an endpoint (new way)
-        if ($endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $entity])) {
+        if (isset($endpoint) && $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $endpoint])) {
             // Try handler proces and catch exceptions
             try {
                 return $handlerService->handleEndpoint($endpoint);
