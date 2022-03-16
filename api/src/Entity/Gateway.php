@@ -492,10 +492,18 @@ class Gateway
      */
     private ?Subscriber $subscriber;
 
+    /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
+     */
+    private ?Collection $collections;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+        $this->collections = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -865,6 +873,36 @@ class Gateway
         }
 
         $this->subscriber = $subscriber;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CollectionEntity[]
+     */
+    public function getCollections(): Collection
+    {
+        return $this->collections;
+    }
+
+    public function addCollection(CollectionEntity $collection): self
+    {
+        if (!$this->collections->contains($collection)) {
+            $this->collections[] = $collection;
+            $collection->setSource($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCollection(CollectionEntity $collection): self
+    {
+        if ($this->collections->removeElement($collection)) {
+            // set the owning side to null (unless already changed)
+            if ($collection->getSource() === $this) {
+                $collection->setSource(null);
+            }
+        }
 
         return $this;
     }
