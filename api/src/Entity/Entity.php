@@ -16,7 +16,6 @@ use EasyRdf\Literal\Boolean;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use Respect\Validation\Rules\Lowercase;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -402,12 +401,12 @@ class Entity
         // $firstChar = strtolower($name[0]); // get first char because we dont want to set a _ before first capital
         // $name = substr($name, 1); // subtract first character
         // $name = preg_replace('/(?<!\ )[A-Z]/', '_$0', $name); // change upper chars to lower and put a _ in front of it
-        // $name = $firstChar . strtolower($name); // combine strings 
+        // $name = $firstChar . strtolower($name); // combine strings
 
         // Old (example: ObjectEntity would become objectentity)
         // $name = trim($name); //removes whitespace at begin and ending
         // $name = preg_replace('/\s+/', '_', $name); // replaces other whitespaces with _
-        // $name = $firstChar . strtolower($name); // combine strings 
+        // $name = $firstChar . strtolower($name); // combine strings
 
         $this->name = $name;
 

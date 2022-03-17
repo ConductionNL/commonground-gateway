@@ -432,7 +432,7 @@ class ValidaterService
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
             case null:
-            // For now..  
+            // For now..
             case 'uri':
                 // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();

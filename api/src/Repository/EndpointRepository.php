@@ -24,15 +24,13 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findOneByPartOfPath(string $path)
     {
-      return $this->createQueryBuilder('e')
+        return $this->createQueryBuilder('e')
           ->andWhere('e.path = :path')
           ->setParameter('path', $path)
           ->setMaxResults(1)
           ->getQuery()
-          ->getResult()
-      ;
+          ->getResult();
     }
-
 
     // /**
     //  * @return Endpoint[] Returns an array of Endpoint objects
