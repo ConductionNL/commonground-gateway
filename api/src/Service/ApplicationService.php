@@ -31,7 +31,7 @@ class ApplicationService
             var_dump(1);
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             if (!empty($application)) {
-                var_dump(2); 
+                var_dump(2);
                 return $application;
             }
         } elseif ($this->session->get('apiKeyApplication')) {
@@ -49,15 +49,21 @@ class ApplicationService
         var_dump($host);
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
+        if ($application) {
+            var_dump('found application with public');
+            var_dump($application->getName());
+        }
         if (!isset($application)) {
+            var_dump(31);
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
+            var_dump(count($applications));
             foreach ($applications as $app) {
                 var_dump($app->getName());
                 var_dump($app->getDomains());
                 $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
                 if (isset($application)) {
-                    var_dump(35);
+                    var_dump(32);
                     break;
                 }
             }
