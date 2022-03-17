@@ -22,7 +22,7 @@ import authorizationImage from '../images/undraw_two_factor_authentication_namy.
 
 const IndexPage = ({location}) => (
   <Layout>
-    <SEO title="Commonground Gateway"/>
+    <SEO />
     <Background backgroundColor="#4376FC">
       <Container>
         <Navigation as="nav" location={location}/>
@@ -38,17 +38,13 @@ const IndexPage = ({location}) => (
     </Background>
 
     <Container>
-      <Section id="over-demodam">
+      <Section id="common-ground-gateway">
         <Flex>
           <Box>
-            <h2>Inleiding</h2>
-            <p>
-              Een Micro Service architectuur (zo als commonground) bestaat uit een groot aantal losse API’s en
-              registers. Deze één voor één integreren in een voorkant is een tijdrovende en bijna ondoenlijke klus.
-              Daarvoor is de common ground gateway ontwikkeld, deze koppelt gemakkelijk meerdere api’s aan elkaar vast
-              tot één restfull api die meteen implementeerbaar. Zo fungeerde de gateway als schakel tussen te frontend
-              en backend, waarmee het minder complex en sneller wordt om met (Common Ground) componenten een applicatie
-              te ontwikkelen.
+            <h2>Common Ground Gateway</h2>
+            <p>Een micro-service architectuur (zoals Common Ground) bestaat uit een groot aantal losse API’s en registers. Deze één voor één integreren in een voorkant is een tijdrovende en bijna ondoenlijke klus.
+               Exact daarvoor is Conductor ontwikkeld, deze koppelt gemakkelijk meerdere API’s aan elkaar vast tot één RESTful API die meteen implementeerbaar is. Zo functioneert Conductor als schakel tussen de frontend en backend,
+                waarmee het minder complex en sneller wordt om aan de hand van (Common Ground) componenten een applicatie te ontwikkelen. 
             </p>
           </Box>
         </Flex>
@@ -65,13 +61,11 @@ const IndexPage = ({location}) => (
           </Box> */}
           <Box width={5 / 5}>
             <h2>Standaard rijk uitgevoerd</h2>
-            <p>De commonground gateway bind api’s niet alleen aan elkaar vast maar voorziet ook in specifieke
-              oplossingen voor het ecosysteem, zo kan hij objecten uit meerdere register als één object aan de ui
-              leveren en ook bij het opslaan hiervan de gegevens weer over de verschillende API’s verdelen. Daarnaast
-              kan de Gateway objecten verrijken, cashen en verwerkingen in het verwerkingen register vastleggen.
-              Uiteraard worden standaard common ground componenten zoals autorisaties, notificaties en zgw volledig
-              ondersteund. Hierdoor hoeft dit soort logica niet meer zelf de worden ontwikkeld en blijft de frontend ook
-              echt de frontend</p>
+            <p>Conductor bindt API’s niet alleen aan elkaar vast, maar voorziet ook in specifieke oplossingen voor het ecosysteem. Het kan objecten uit meerdere API’s 
+              als één object aan de UI leveren en bij het opslaan hiervan ook de gegevens weer over de verschillende API’s verdelen. Daarnaast kan Conductor objecten verrijken, cachen en verwerkingen in een verwerkingen register vastleggen. Uiteraard worden standaard Common Ground componenten, zoals autorisaties, 
+              notificaties en ZGW volledig ondersteund. Hierdoor hoeft dit soort logica niet meer zelf te worden ontwikkeld en blijft de frontend ook echt de 
+              frontend.
+              </p>
           </Box>
         </Flex>
       </Section>
@@ -80,11 +74,10 @@ const IndexPage = ({location}) => (
         <Flex>
           <Box width={5 / 5}>
             <h2>Standaard veilig</h2>
-            <p>De commonground gateway ondersteund zonder externe afhankelijkheden DigiD, eHerkening, OpenId Connect en
-              ADFS. Alternatief kan er ook gebruik worden gemaakt van kubernetes oplossingen zo als keycloak of
-              commerciële oplossingen zoals Auth0. De gateway is zowel gepetest als aan een TPM audit onderworpen en
-              levert met haar standaard ondersteuning voor PKI certificaten (zowel browser als machine tot machine) een
-              veilige, stabiel en betrouwbaar platform voor applicatie ontwikkeling.
+            <p>Conductor ondersteunt zonder extra componenten DigiD, eHerkenning, OpenID Connect en ADFS. Als alternatief kan er ook gebruik worden gemaakt van
+               Kubernetes oplossingen, zoals Keycloak of commerciële oplossingen, zoals Auth0. Conductor is zowel gepentest als aan een TPM audit onderworpen en
+                levert met haar standaard ondersteuning voor PKI-certificaten (zowel browser als machine tot machine) een veilig, stabiel en betrouwbaar platform 
+                voor applicatieontwikkeling.
             </p>
           </Box>
           {/* <Box width={2 / 5}>
@@ -96,87 +89,49 @@ const IndexPage = ({location}) => (
       <Section>
         <Flex>
           {/* <Box width={2 / 5}>
-            <ResponsiveImage src={casesImage} alt="Illustratie van persoon en document"/>
+            <ResponsiveImage src={casesImage} alt="Illustratie van pefrsoon en document"/>
           </Box> */}
           <Box width={5 / 5}>
             <h2>Standaard sneller</h2>
-            <p>Niet alleen is de gateway technisch sneller door slim gebruik van cashing, asynchrone bevragingen en
-              andere
-              aspecten van het common ground ecosysteem zo als linked data. Het is ook specifiek ontworpen voor sneller
-              ontwikkelen, het kan snel en simpel locaal worden gedraaid en is in staat volledige API’s (zoals ZGW te
-              mocken) hiermee kan een developer meteen aan de slag. De standaard uitgebreide functionaliteit zorg er
-              voor
-              dat developers zich niet langer zorgen hoeven te maken over aspecten zoals verwerkingen of DigiD maar zich
-              volledig kunnen richten op de frontend. </p>
+            <p>Niet alleen is de Conductor technisch sneller door slim gebruik van caching, asynchrone bevragingen en andere aspecten van het Common Ground ecosysteem,
+               zoals linked data. Het is ook specifiek ontworpen voor sneller ontwikkelen, het kan snel en simpel lokaal worden gedraaid en is in staat volledige API’s
+                (zoals ZGW) te mocken, hiermee kan een developer meteen aan de slag. De standaard uitgebreide functionaliteit zorgt ervoor dat developers zich niet
+                 langer zorgen hoeven te maken over aspecten, zoals verwerkingen of DigiD, maar zich volledig kunnen richten op de frontend. </p>
           </Box>
         </Flex>
       </Section>
 
-      <Section>
-        <Flex>
-          <Box width={5 / 5}>
-            <h2>Standaard in Standaarden</h2>
-            <p>De common ground gateway is specifiek ontworpen met het ondersteunen van common ground applicaties in
-              gedachte. De straightforward en simpele restful api is gemakkelijk te integreren in React of Angular
-              applicaties zoals NL Design System en werkt goed samen met verschillende Ajax libraries (zoals restufll
-              react). Deze ondersteuning gaat verder dan standaard lees verkeer en ondersteund bijvoorbeeld ook het
-              realtime bijwerken van gegevens in de UI aan de hand van polling of webhooks.
-            </p>
-          </Box>
-          {/* <Box width={2 / 5}>
-            <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
-          </Box> */}
-        </Flex>
-      </Section>
+<Section>
+  <Flex>
+    <Box width={5 / 5}>
+      <h2>Standaard in Standaarden</h2>
+      <p>Conductor is specifiek ontworpen met het ondersteunen van Common Ground applicaties in gedachten. De straightforward en simpele RESTful API is
+         gemakkelijk te integreren in React of Angular applicaties, zoals NL Design System en werkt goed samen met verschillende AJAX libraries (zoals 
+         RESTful React). Deze ondersteuning gaat verder dan standaard lees verkeer en ondersteunt bijvoorbeeld ook het realtime bijwerken van gegevens 
+         in de UI aan de hand van polling of webhooks.
+      </p>
+    </Box>
+    {/* <Box width={2 / 5}>
+      <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
+    </Box> */}
+  </Flex>
+</Section>
 
-      <Section>
-        <Flex>
-          <Box width={5 / 5}>
-            <h2>Al met al, de commonground gateway, uw nieuwe standaard</h2>
-            <p>Naast dat het ontwikkelen met (Common Ground) componenten door de Gateway een stuk eenvoudiger, lost het
-              ook aan de technische kant een aantal problemen op.
-              Omdat het functioneert als een tussenschakel zorgt dat de snelheid van de applicatie wordt verbeterd,
-              omdat het intensieve proces die de frontend normaal draagt, wordt verheven naar de Gateway.
-            </p>
-            <p>
-              Daarnaast is er meer flexibiliteit met betrekking tot de business logic, omdat binnen de Gateway extra
-              property’s opgeslagen kunnen worden.
-              Tot slot worden applicaties veiliger vanwege het eigen autorisatie mechanisme in de Gateway, waardoor een
-              vaste key van een component niet meer in de frontend wordt verwerkt.
-            </p>
-            <p>
-              Met de Gateway worden de haken en ogen die momenteel nog zitten aan het werken volgens de Common Ground
-              principes opgelost. Complexe en tijdrovende koppelingen worden eenvoudiger en de veiligheid, snelheid en
-              flexibiliteit van applicaties worden verbeterd.
-            </p>
-            <p>
-              De Gateway is een component die in het vijflagen-model van Common Ground zit. De gateway is ontwikkeld en heeft drie voordelen: veiligheid, snelheid, flexibiliteit.
-            </p>
-            <p>
-              De Gateway zorgt voor snelheid, omdat deze functioneert hier als een tussenschakel.
-              De frontend hoeft niet meer verschillende componenten te bevragen en doet dit nu via de Gateway. Hierdoor intensieve proces die de frontend normaal draagt verheven naar de Gateway.
-            </p>
-            <p>
-              Ook wordt door het eigen autorisatie mechanisme van de Gateway veiligheid gegarandeerd.
-              Sommige componenten maken gebruik van een vaste key, hierdoor ontstaat de mogelijkheid om in bezit te komen van deze key, waarmee API’s specifiek bevraagd kunnen worden, wat natuurlijk niet veilig is.
-            </p>
-            <p>
-              De Gateway gebruikt een eigen autorisatie mechanisme, waardoor de key, die gebruikt worden bij een componenten niet in de frontend wordt verwerkt.
-            </p>
-            <p>
-              Daarnaast zorgt de Gateway voor meer flexibiliteit met betrekking tot de business logic.
-              Stel er wordt gebruik gemaakt van een contactpersoon component. Dit component is zo ontwikkeld dat het alleen de naam, leeftijd en telefoonnummer opslaat voor het object persoon.
-              Maar in de specifieke webapplicatie waar dit contact component wordt gebruikt wordt om nog meer informatie gevraagd voor het object persoon, namelijk naam, leeftijd, telefoonnummer, email en adres.
-            </p>
-            <p>
-              De extra property’s; e-mail en adres moeten nu dus ergens worden opgeslagen. Het contact component doet dit niet, omdat deze niet is ontwikkeld om deze informatie op te slaan op de backend.
-              De Gateway is ontwikkeld dat het hier de mogelijkheid geeft om extra property’s op te slaan in een EAV-object. De extra property’s worden hierbij opgeslagen in de Gateway.
-              In feite zorgt de Gateway ervoor dat, voor welk object dan ook, er een mogelijkheid is om extra property’s op te slaan, wat zorgt voor flexibiliteit, wanneer een component niet overeenkomt met de business logic.
-            </p>
-            {/*<ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>*/}
-          </Box>
-        </Flex>
-      </Section>
+<Section>
+  <Flex>
+    <Box width={5 / 5}>
+      <h2>Zowel los als in samenhang</h2>
+      <p>Op dit moment is Conductor alleen al losse container beschikbaar, bij de ontwikkeling is er echter bewust gekozen voor het hergebruik van bekende PHP 
+        libraries. Hierdoor is het mogelijk om conductor ook als onderdeel (plug-in) van een WordPress, Drupal of Joomla installatie te draaien. We streven er 
+        naar om Conductor 2022 als integreerbare oplossing aan te bieden.
+      </p>
+    </Box>
+    {/* <Box width={2 / 5}>
+      <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
+    </Box> */}
+  </Flex>
+</Section>
+
 
     </Container>
 
