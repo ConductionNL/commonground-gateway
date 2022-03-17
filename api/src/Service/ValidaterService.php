@@ -468,7 +468,8 @@ class ValidaterService
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
             $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
             // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
-            if (empty($config) || in_array($validation, $ignoredValidations)) {
+            // @TODO do something with validation pattern
+            if (empty($config) || in_array($validation, $ignoredValidations) || $validation === 'pattern') {
                 continue;
             }
             $validationRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
