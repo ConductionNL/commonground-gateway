@@ -28,11 +28,14 @@ class ApplicationService
     public function getApplication()
     {
         if ($application = $this->session->get('application')) {
+            var_dump(1);
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             if (!empty($application)) {
+                var_dump(2);
                 return $application;
             }
         } elseif ($this->session->get('apiKeyApplication')) {
+            var_dump(3);
             // If an api-key is used for authentication we already know which application is used
             return $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
         }
@@ -50,14 +53,17 @@ class ApplicationService
             foreach ($applications as $app) {
                 $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
                 if (isset($application)) {
+                    var_dump(35);
                     break;
                 }
             }
         }
-
+        var_dump(4);
         if (!$application && str_contains($host, 'localhost')) {
+            var_dump(5);
             $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
         } elseif (!$application) {
+            var_dump(6);
             $this->session->set('application', null);
 
             // Set message
@@ -80,6 +86,7 @@ class ApplicationService
 
             return $result;
         }
+        var_dump(7);
 
         $this->session->set('application', $application->getId()->toString());
 
