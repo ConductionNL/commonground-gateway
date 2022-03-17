@@ -68,6 +68,10 @@ class FunctionService
     {
         if ($organizationType == 'taalhuis') {
             $objectEntity->setOrganization($uri);
+
+            //TODO: This makes the first next api-call after this veeeeryyyy sloooooooowwww.
+            // We should keep track of the $objectEntities of Entity=organization that got changed or are related to the organization that got changed,
+            // so we can remove only those organizations from the cache...
             $this->cache->invalidateTags(['organization']);
         }
 
