@@ -560,7 +560,7 @@ class Gateway
 
         return $this;
     }
-    
+
     public function getAuthorizationHeader(): ?string
     {
         return $this->authorizationHeader;

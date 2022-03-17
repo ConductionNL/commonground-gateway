@@ -87,12 +87,14 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-              $methods = [];
-              foreach($handler->getMethods() as $method) {
-                $methods[] = strtoupper($method);
-              }
+                $methods = [];
+                foreach ($handler->getMethods() as $method) {
+                    $methods[] = strtoupper($method);
+                }
             }
-            if (!in_array('*',  $methods) && !in_array($this->request->getMethod(), $methods)) continue;
+            if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
+                continue;
+            }
 
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
@@ -104,7 +106,7 @@ class HandlerService
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName() . ' and method: ' . $this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**

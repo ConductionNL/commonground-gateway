@@ -444,7 +444,7 @@ class Attribute
 
     /**
      * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
-     * 
+     *
      * @example ^[1-9][0-9]{9}$
      *
      * @Groups({"read", "write"})
