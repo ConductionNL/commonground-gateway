@@ -265,7 +265,7 @@ class ConvenienceController extends AbstractController
             $this->entityManager->persist($endpoint);
         }
 
-        // Execute sql to database
+        // Execute sql to database tst
         $this->entityManager->flush();
 
         foreach ($attributesToSetLaterAsObject as $attribute) {
