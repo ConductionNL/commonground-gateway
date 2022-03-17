@@ -32,6 +32,9 @@ class ApplicationService
             if (!empty($application)) {
                 return $application;
             }
+        } elseif ($this->session->get('apiKeyApplication')) {
+            // If an api-key is used for authentication we already know which application is used
+            return $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
         }
 
         // get publickey
