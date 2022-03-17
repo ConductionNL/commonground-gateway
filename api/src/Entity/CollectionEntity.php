@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
@@ -80,6 +81,24 @@ class CollectionEntity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $description;
+    /**
+     * @var string The location where the OAS can be loaded from
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string $locationOAS;
 
     /**
      * @var ?Gateway The source (url) of this Collection
@@ -229,6 +248,19 @@ class CollectionEntity
 
         return $this;
     }
+
+    public function getLocationOAS(): ?string
+    {
+        return $this->locationOAS;
+    }
+
+    public function setLocationOAS(?string $locationOAS): self
+    {
+        $this->locationOAS = $locationOAS;
+
+        return $this;
+    }
+
 
     public function getSource(): ?Gateway
     {
