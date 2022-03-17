@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\Yaml\Yaml;
+use App\Entity\CollectionEntity;
 use App\Entity\Entity;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
@@ -39,7 +40,7 @@ class ConvenienceController extends AbstractController
       if (!isset($collection)) return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
        
       // Check collection->source->locationOAS and set url
-      $collection->getSource() !== null && $collection->getSource()->getLocationOAS() !== null && $url = $collection->getSource()->getLocationOAS();
+      $collection->getLocationOAS() !== null && $url = $collection->getLocationOAS();
 
       // Check url, if not set throw error
       if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No location OAS found for given collection'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
@@ -60,11 +61,13 @@ class ConvenienceController extends AbstractController
 
       try {
         // Persist yaml to objects
-        $this->parseRedoc($redoc);
+        $this->parseRedoc($redoc, $collection);
       } catch (\Exception $e) {
-        $errMessage = $this->serializer->serialize([
-          'message' => $e->getMessage()
-        ], 'json');
+        return new Response(
+            $this->serializer->serialize(['message' => $e->getMessage()], 'json'),
+            Response::HTTP_BAD_REQUEST,
+            ['content-type' => 'json']
+        );
       }
 
       // Set synced at
@@ -73,8 +76,8 @@ class ConvenienceController extends AbstractController
       $this->entityManager->flush();
 
       return new Response(
-        isset($errMessage) ? $errMessage : $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
-        isset($errMessage) ? Response::HTTP_BAD_REQUEST : Response::HTTP_OK,
+        $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $url], 'json'),
+        Response::HTTP_OK,
         ['content-type' => 'json']
       );
   }
@@ -82,7 +85,7 @@ class ConvenienceController extends AbstractController
   /**
    * This function reads redoc and parses it into doctrine objects
    */
-  private function parseRedoc(array $redoc)
+  private function parseRedoc(array $redoc, CollectionEntity $collection)
   {
     $entityRepo = $this->entityManager->getRepository('App:Entity');
     $handlerRepo = $this->entityManager->getRepository('App:Handler');
@@ -105,6 +108,8 @@ class ConvenienceController extends AbstractController
       // Create Entity with entityName
       $newEntity = new Entity();
       $newEntity->setName($entityName);
+      $newEntity->addCollection($collection);
+      $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
 
       // Persist entity 
       $this->entityManager->persist($newEntity);
@@ -114,6 +119,8 @@ class ConvenienceController extends AbstractController
 
         // @TODO set link to object if attribute is object (what if seeked object is not yet created?) and property['$ref'] is set
         if (isset($property['$ref'])) {
+
+
           $attrToSetLater = [];
           $attrToSetLater['name'] = $propertyName;
           $attrToSetLater['parentEntityId'] = $newEntity->getId();
@@ -139,7 +146,8 @@ class ConvenienceController extends AbstractController
         isset($property['enum']) && $newAttribute->setEnum($property['enum']);
         isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
         isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
-        isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
+        // @TODO do something with pattern
+        // isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
         isset($property['readOnly']) && $newAttribute->setPattern($property['readOnly']);
 
         $newAttribute->setEntity($newEntity);
@@ -196,6 +204,8 @@ class ConvenienceController extends AbstractController
       $existingEndpoint = $endpointRepo->findOneByPath($pathName);
       // If we dont have a existing Endpoint create a new Endpoint
       isset($existingEndpoint) ? $endpoint = $existingEndpoint : $endpoint = new Endpoint(); 
+
+      $endpoint->addCollection($collection);
 
       if (!isset($existingEndpoint)) {
           $endpoint->setName($pathName);
@@ -257,17 +267,17 @@ class ConvenienceController extends AbstractController
 
     foreach ($attributesToSetLaterAsObject as $attribute) {
       $newAttribute = new Attribute();
+      $newAttribute->setName($attribute['name']);
       $parentEntity = $entityRepo->find($attribute['parentEntityId']);
       isset($parentEntity) && $newAttribute->setEntity($parentEntity);
 
       $entityToLinkTo = $entityRepo->findByName($attribute['entityNameToLinkTo']);
-      isset($entityToLinkTo) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo);
+      isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
 
       // If we have set attribute.entity and attribute.object, persist attribute
       $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
     
     }
- 
     // Execute sql to database
     $this->entityManager->flush();
 
