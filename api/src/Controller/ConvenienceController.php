@@ -170,6 +170,9 @@ class ConvenienceController extends AbstractController
             // $counter = $counter + 1;
             // if ($counter === 10) break;
 
+            // Skip endpoints with subpaths
+            if (strpos($pathName, '/', strpos($pathName, '/') + 1) !== false) continue; 
+
             $pathName[0] === '/' && $pathName = substr($pathName, 1);
             $pathName = strtok($pathName, '/');
 
