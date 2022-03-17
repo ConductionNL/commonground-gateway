@@ -31,7 +31,7 @@ class ApplicationService
             var_dump(1);
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             if (!empty($application)) {
-                var_dump(2);
+                var_dump(2); 
                 return $application;
             }
         } elseif ($this->session->get('apiKeyApplication')) {
