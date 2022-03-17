@@ -42,15 +42,19 @@ class ApplicationService
 
         // get publickey
         $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
+        var_dump($public);
 
         // get host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
+        var_dump($host);
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
         if (!isset($application)) {
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
+                var_dump($app->getName());
+                var_dump($app->getDomains());
                 $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
                 if (isset($application)) {
                     var_dump(35);
@@ -59,32 +63,34 @@ class ApplicationService
             }
         }
         var_dump(4);
-        if (!$application && str_contains($host, 'localhost')) {
-            var_dump(5);
-            $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
-        } elseif (!$application) {
-            var_dump(6);
-            $this->session->set('application', null);
+        if (!$application) {
+            if (str_contains($host, 'localhost')) {
+                var_dump(5);
+                $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
+            } else {
+                var_dump(6);
+                $this->session->set('application', null);
 
-            // Set message
-            $public && $message = 'No application found with public '.$public;
-            $host && $message = 'No application found with host '.$host;
-            !$public && !$host && $message = 'No host or application given';
+                // Set message
+                $public && $message = 'No application found with public '.$public;
+                $host && $message = 'No application found with host '.$host;
+                !$public && !$host && $message = 'No host or application given';
 
-            // Set data
-            $public && $data = ['public' => $public];
-            $host && $data = ['host' => $host];
+                // Set data
+                $public && $data = ['public' => $public];
+                $host && $data = ['host' => $host];
 
-            $result = [
-                'message' => $message,
-                'type'    => 'Forbidden',
-                'path'    => $public ?? $host ?? 'Header',
-                'data'    => $data ?? null,
-            ];
-            // todo: maybe just throw a gatewayException?
+                $result = [
+                    'message' => $message,
+                    'type'    => 'Forbidden',
+                    'path'    => $public ?? $host ?? 'Header',
+                    'data'    => $data ?? null,
+                ];
+                // todo: maybe just throw a gatewayException?
 //            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
 
-            return $result;
+                return $result;
+            }
         }
         var_dump(7);
 
