@@ -54,7 +54,7 @@ class ApplicationService
 
         if (!$application && str_contains($host, 'localhost')) {
             $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
-        } else {
+        } elseif (!$application) {
             $this->session->set('application', null);
 
             // Set message
