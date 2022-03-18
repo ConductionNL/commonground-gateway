@@ -32,6 +32,9 @@ class ApplicationService
             if (!empty($application)) {
                 return $application;
             }
+        } elseif ($this->session->get('apiKeyApplication')) {
+            // If an api-key is used for authentication we already know which application is used
+            return $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
         }
 
         // get publickey
@@ -41,7 +44,7 @@ class ApplicationService
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
-        if (!isset($application)) {
+        if (!$application) {
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
@@ -51,31 +54,32 @@ class ApplicationService
                 }
             }
         }
+        if (!$application) {
+            if (str_contains($host, 'localhost')) {
+                $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
+            } else {
+                $this->session->set('application', null);
 
-        if (!$application && str_contains($host, 'localhost')) {
-            $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
-        } else {
-            $this->session->set('application', null);
+                // Set message
+                $public && $message = 'No application found with public '.$public;
+                $host && $message = 'No application found with host '.$host;
+                !$public && !$host && $message = 'No host or application given';
 
-            // Set message
-            $public && $message = 'No application found with public '.$public;
-            $host && $message = 'No application found with host '.$host;
-            !$public && !$host && $message = 'No host or application given';
+                // Set data
+                $public && $data = ['public' => $public];
+                $host && $data = ['host' => $host];
 
-            // Set data
-            $public && $data = ['public' => $public];
-            $host && $data = ['host' => $host];
-
-            $result = [
-                'message' => $message,
-                'type'    => 'Forbidden',
-                'path'    => $public ?? $host ?? 'Header',
-                'data'    => $data ?? null,
-            ];
-            // todo: maybe just throw a gatewayException?
+                $result = [
+                    'message' => $message,
+                    'type'    => 'Forbidden',
+                    'path'    => $public ?? $host ?? 'Header',
+                    'data'    => $data ?? null,
+                ];
+                // todo: maybe just throw a gatewayException?
 //            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
 
-            return $result;
+                return $result;
+            }
         }
 
         $this->session->set('application', $application->getId()->toString());
