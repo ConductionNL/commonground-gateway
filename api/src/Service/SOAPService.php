@@ -812,7 +812,7 @@ class SOAPService
             false,
             'POST'
         );
-        if ($result->getStatusCode() != 201 || $result->getStatusCode() != 200)
+        if ($result->getStatusCode() != 201 && $result->getStatusCode() != 200)
         {
             return $xmlEncoder->encode($this->getFo02Message(), 'xml');
         } else {
