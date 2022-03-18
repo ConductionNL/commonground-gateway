@@ -812,7 +812,8 @@ class SOAPService
             false,
             'POST'
         );
-        if ($result->getStatusCode() != 201) {
+        if ($result->getStatusCode() != 201 || $result->getStatusCode() != 200)
+        {
             return $xmlEncoder->encode($this->getFo02Message(), 'xml');
         } else {
             $item->set("{$message["$caseNamespace:object"]["$caseNamespace:isRelevantVoor"]["$caseNamespace:gerelateerde"]["$caseNamespace:identificatie"]}.".json_decode($result->getBody()->getContents(), true)['id']);
