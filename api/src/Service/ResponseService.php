@@ -65,49 +65,51 @@ class ResponseService
         }
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
-        if ($level > 3) {
+        if ($level > 2) {
             return [
                 '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId(),
             ];
         }
 
-        // Lets start with the external results
-        if (!empty($result->getExternalResult())) {
-            $response = array_merge($response, $result->getExternalResult());
-        } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
-            $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
-        } elseif ($this->commonGroundService->isResource($result->getUri())) {
-            $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
-        }
+        if ($result->getEntity()->getGateway() && $result->getEntity()->getEndpoint()) {
+            // Lets start with the external results
+            if (!empty($result->getExternalResult())) {
+                $response = array_merge($response, $result->getExternalResult());
+            } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
+                $response = array_merge($response, $this->commonGroundService->getResource($result->getExternalResult()));
+            } elseif ($this->commonGroundService->isResource($result->getUri())) {
+                $response = array_merge($response, $this->commonGroundService->getResource($result->getUri()));
+            }
 
-        // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
-        if (!is_null($result->getEntity()->getAvailableProperties())) {
-            $response = array_filter($response, function ($propertyName) use ($result) {
-                return in_array($propertyName, $result->getEntity()->getAvailableProperties());
-            }, ARRAY_FILTER_USE_KEY);
+            // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
+            if (!is_null($result->getEntity()->getAvailableProperties())) {
+                $response = array_filter($response, function ($propertyName) use ($result) {
+                    return in_array($propertyName, $result->getEntity()->getAvailableProperties());
+                }, ARRAY_FILTER_USE_KEY);
+            }
+
+            // Lets make sure we don't return stuf thats not in our field list
+            // @todo make array filter instead of loop
+            // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
+            foreach ($response as $key => $value) {
+                if (is_array($fields) && !array_key_exists($key, $fields)) {
+                    unset($response[$key]);
+                }
+
+                // Make sure we filter out properties we are not allowed to see
+                $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
+                if (!empty($attribute)) {
+                    try {
+                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                    } catch (AccessDeniedException $exception) {
+                        unset($response[$key]);
+                    }
+                }
+            }
         }
 
         // Let overwrite the id with the gateway id
         $response['id'] = $result->getId();
-
-        // Lets make sure we don't return stuf thats not in our field list
-        // @todo make array filter instead of loop
-        // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
-        foreach ($response as $key => $value) {
-            if (is_array($fields) && !array_key_exists($key, $fields)) {
-                unset($response[$key]);
-            }
-
-            // Make sure we filter out properties we are not allowed to see
-            $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if (!empty($attribute)) {
-                try {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
-                } catch (AccessDeniedException $exception) {
-                    unset($response[$key]);
-                }
-            }
-        }
 
         // Let get the internal results
         // Old $MaxDepth;
@@ -177,29 +179,32 @@ class ResponseService
 
         $entity = $result->getEntity();
         foreach ($entity->getAttributes() as $attribute) {
+            // Only render the attributes that are used && don't render attributes that are writeOnly
+            if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
+                || $attribute->getWriteOnly()
+            ) {
+                continue;
+            }
+
+            // Lets deal with fields filtering
+            if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
+                continue;
+            }
+
+            // Check if user is allowed to see this
             try {
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
             } catch (AccessDeniedException $exception) {
                 continue;
             }
 
+            // Lets deal with subfields filtering
             $subfields = false;
-
-            // Lets deal with fields filtering
-            if (is_array($fields) and !array_key_exists($attribute->getName(), $fields)) {
-                continue;
-            } elseif (is_array($fields) and array_key_exists($attribute->getName(), $fields)) {
+            if (is_array($fields) and array_key_exists($attribute->getName(), $fields)) {
                 $subfields = $fields[$attribute->getName()];
             }
             if (!$subfields) {
                 $subfields = $fields;
-            }
-
-            // Only render the attributes that are used && don't render attributes that are writeOnly
-            if ((!is_null($entity->getUsedProperties()) && !in_array($attribute->getName(), $entity->getUsedProperties()))
-                || $attribute->getWriteOnly()
-            ) {
-                continue;
             }
 
             $valueObject = $result->getValueByAttribute($attribute);

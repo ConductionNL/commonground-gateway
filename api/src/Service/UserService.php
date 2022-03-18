@@ -22,11 +22,11 @@ class UserService
         $this->responseService = $responseService;
     }
 
-    public function getObject(string $uri): array
+    public function getObject(string $uri, $fields = null): array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if ($object instanceof ObjectEntity) {
-            return $this->responseService->renderResult($object, null);
+            return $this->responseService->renderResult($object, $fields);
         }
 
         return [];
@@ -83,11 +83,19 @@ class UserService
         }
         if (!$user->getOrganization()) {
             return [];
-        } elseif (!($organization = $this->getObject($user->getOrganization()))) {
-            try {
-                $organization = $this->commonGroundService->getResource($user->getOrganization());
-            } catch (ClientException $exception) {
-                return [];
+        } else {
+            $organizationFields = [
+                'name'               => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
+                'parentOrganization' => [
+                    'name' => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
+                ],
+            ];
+            if (!($organization = $this->getObject($user->getOrganization(), $organizationFields))) {
+                try {
+                    $organization = $this->commonGroundService->getResource($user->getOrganization());
+                } catch (ClientException $exception) {
+                    return [];
+                }
             }
         }
 

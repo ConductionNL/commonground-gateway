@@ -69,10 +69,19 @@ class FunctionService
         if ($organizationType == 'taalhuis') {
             $objectEntity->setOrganization($uri);
 
-            //TODO: This makes the first next api-call after this veeeeryyyy sloooooooowwww.
-            // We should keep track of the $objectEntities of Entity=organization that got changed or are related to the organization that got changed,
-            // so we can remove only those organizations from the cache...
-            $this->cache->invalidateTags(['organization']);
+            // Invalidate all changed & related organizations from cache
+            if ($organization = $this->isResource($uri)) {
+                $tags = ['organization_'.md5($uri)];
+                if (count($organization['subOrganizations']) > 0) {
+                    foreach ($organization['subOrganizations'] as $subOrganization) {
+                        $tags[] = 'organization_'.md5($subOrganization['@id']);
+                    }
+                }
+                if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null) {
+                    $tags[] = 'organization_'.md5($organization['parentOrganization']['@id']);
+                }
+                $this->cache->invalidateTags($tags);
+            }
         }
 
         return $objectEntity;
@@ -116,7 +125,7 @@ class FunctionService
 
         if ($organization = $this->isResource($url)) {
             $item->set($organization);
-            $item->tag('organization');
+            $item->tag('organization_'.md5("$url"));
 
             $this->cache->save($item);
 
