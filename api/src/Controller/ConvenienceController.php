@@ -193,10 +193,14 @@ class ConvenienceController extends AbstractController
         foreach ($redoc['paths'] as $pathName => $path) {
             if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
 
-            // Skip endpoints with subpaths
-            if (strpos($pathName, '/', strpos($pathName, '/') + 1) !== false) {
-                continue;
-            }
+                foreach ($path as $methodName => $method) {
+                    $newEndpoint = new Endpoint();
+                    $newEndpoint->addCollection($collection);
+                    $newEndpoint->setName($pathName . ' ' . $methodName);
+                    isset($method['description']) && $newEndpoint->setDescription($method['description']);
+                    $newEndpoint->setPath($pathName);
+                    $newEndpoint->setMethod($methodName);
+                    isset($method['tags']) && $newEndpoint->setTags($method['tags']);
 
                     // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
                     $newEndpoint->setOperationType($this->createEndpointsProperties($redoc, $pathName, $newEndpoint));
