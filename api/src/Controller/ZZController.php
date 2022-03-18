@@ -24,6 +24,9 @@ class ZZController extends AbstractController
      */
     public function dynamicAction(
         ?string $endpoint,
+        // ?string $identifier,
+        // ?string $secondEndpoint,
+        // ?string $secondIdentifier,
         ?string $entity,
         ?string $id,
         Request $request,
@@ -34,6 +37,8 @@ class ZZController extends AbstractController
         SerializerInterface $serializer,
         LogService $logService
     ): Response {
+
+
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
         if ($document instanceof Document && $id) {
@@ -43,6 +48,13 @@ class ZZController extends AbstractController
             return $validationService->dutchPC4ToJson();
         }
         // End of hacky tacky
+        // $fullEndpoint = '';
+        // isset($endpoint) && $fullEndpoint . '/' . $endpoint;
+        // isset($identifier) && $fullEndpoint . '/' . $identifier;
+        // isset($secondEndpoint) && $fullEndpoint . '/' . $secondEndpoint;
+        // isset($secondIdentifier) && $fullEndpoint . '/' . $secondIdentifier;
+
+        // var_dump($fullEndpoint);die;
 
         // Let determine an endpoint (new way)
         if (isset($endpoint) && $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $endpoint])) {
