@@ -32,7 +32,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-plausible`,
       options: {
-        domain: `demodam.org`,
+        domain: `conductor-gateway.app`,
         },
     },
     `gatsby-plugin-sharp`,

@@ -6,8 +6,8 @@ const Payoff = () => (
   <StyledContainer>
     <StyledIntro>
       <StyledTextContainer>
-        <StyledHeading>Commonground Gateway</StyledHeading>
-        <StyledParagraph>De commonground gateway integreerd meerdere API’s tot één (ajax-first) rest-api die meteen in een Angular of React front end kan worden geïntegreerd.</StyledParagraph>
+        <StyledParagraph>Conductor integreert meerdere API’s tot één (AJAX-first) rest-API die meteen in een Angular, React of Vue frontend kan worden geïntegreerd. 
+</StyledParagraph>
 
       </StyledTextContainer>
     </StyledIntro>

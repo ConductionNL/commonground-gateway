@@ -6,6 +6,12 @@
       "partiallyActive": true
     },
     {
+      "title": "Docs",
+      "link": "https://docs.conductor-gateway.app/en/latest/getting_started/",
+      "partiallyActive": false,
+      "target": "__blank"
+    },
+    {
       "title": "Contact",
       "link": "/contact",
       "partiallyActive": false
@@ -16,6 +22,12 @@
       "title": "Installation",
       "link": "/en/installatie",
       "partiallyActive": true
+    },
+    {
+      "title": "Docs",
+      "link": "https://docs.conductor-gateway.app/en/latest/getting_started/",
+      "partiallyActive": false,
+      "target": "__blank"
     },
     {
       "title": "Contact",

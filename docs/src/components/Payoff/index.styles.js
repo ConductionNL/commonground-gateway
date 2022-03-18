@@ -10,8 +10,8 @@ export const StyledContainer = styled.div`
     grid-template-columns: 100%;
   `}
 
-  margin-top: ${(p) => p.theme.tokens.spacing10};
-  margin-bottom: ${(p) => p.theme.tokens.spacing10};
+  margin-top: 40px;
+  margin-bottom: 40px;
 `
 
 export const StyledTextContainer = styled.div`
@@ -33,7 +33,7 @@ export const StyledImage = styled.div`
 
 export const StyledHeading = styled.h1`
   color: white;
-  font-size: 44px;
+  font-size: 34px;
   font-weight: ${(p) => p.theme.tokens.fontWeightBold};
 `
 
