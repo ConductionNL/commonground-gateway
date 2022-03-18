@@ -19,6 +19,7 @@ use Exception;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,6 +44,7 @@ class EavService
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
     private FunctionService $functionService;
+    public CacheInterface $cache;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -57,7 +59,8 @@ class EavService
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
         TranslationService $translationService,
-        FunctionService $functionService
+        FunctionService $functionService,
+        CacheInterface $cache
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -72,6 +75,7 @@ class EavService
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
         $this->functionService = $functionService;
+        $this->cache = $cache;
     }
 
     /**
@@ -206,6 +210,8 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
+        $this->cache->invalidateTags(['grantedScopes']);
+
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
