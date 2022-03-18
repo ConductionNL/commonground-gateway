@@ -7,6 +7,7 @@ use App\Entity\CollectionEntity;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\Handler;
+use App\Entity\Property;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -94,16 +95,37 @@ class ConvenienceController extends AbstractController
         $handlerRepo = $this->entityManager->getRepository('App:Handler');
         $endpointRepo = $this->entityManager->getRepository('App:Endpoint');
 
-        // $counter = 0;
+        // Persist Entities and Attributes
+        // $attributesToSetLaterAsObject = $this->persistSchemasAsEntities($redoc, $collection);
 
+        // Persist Endpoints and its Properties
+        $this->persistPathsAsEndpoints($redoc, $collection);
+
+        // foreach ($attributesToSetLaterAsObject as $attribute) {
+        //     $newAttribute = new Attribute();
+        //     $newAttribute->setName($attribute['name']);
+        //     $parentEntity = $entityRepo->find($attribute['parentEntityId']);
+        //     isset($parentEntity) && $newAttribute->setEntity($parentEntity);
+
+        //     $entityToLinkTo = $entityRepo->findByName($attribute['entityNameToLinkTo']);
+        //     isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
+
+        //     // If we have set attribute.entity and attribute.object, persist attribute
+        //     $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
+        // }
+
+        // // Execute sql to database
+        // $this->entityManager->flush();
+    }
+
+    /**
+     * This function reads redoc and persists it into Entity objects.
+     */
+    private function persistSchemasAsEntities(array $redoc, CollectionEntity $collection): array
+    {
         // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
         $attributesToSetLaterAsObject = [];
-
-        // Persist Entities and Attributes
         foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
-
-      // $counter = $counter + 1;
-            // if ($counter === 10) break;
 
             // Continue if we have no properties
             if (!isset($entityInfo['properties'])) {
@@ -122,7 +144,7 @@ class ConvenienceController extends AbstractController
             // Loop through properties and create Attributes
             foreach ($entityInfo['properties'] as $propertyName => $property) {
 
-        // @TODO set link to object if attribute is object (what if seeked object is not yet created?) and property['$ref'] is set
+                // @TODO set link to object if attribute is object (what if seeked object is not yet created?) and property['$ref'] is set
                 if (isset($property['$ref'])) {
                     $attrToSetLater = [];
                     $attrToSetLater['name'] = $propertyName;
@@ -159,131 +181,140 @@ class ConvenienceController extends AbstractController
                 $this->entityManager->persist($newAttribute);
             }
         }
-
-        // Flush entities
         $this->entityManager->flush();
+        return $attributesToSetLaterAsObject;
+    }
 
-        // Persist Endpoints
-        // $counter = 0;
-        $iteratedEndpoints = [];
+    /**
+     * This function reads redoc and persists it into Endpoints objects.
+     */
+    private function persistPathsAsEndpoints(array $redoc, CollectionEntity $collection): void
+    {
         foreach ($redoc['paths'] as $pathName => $path) {
-            // $counter = $counter + 1;
-            // if ($counter === 10) break;
+            if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
 
-            // Skip endpoints with subpaths
-            if (strpos($pathName, '/', strpos($pathName, '/') + 1) !== false) continue; 
+                foreach ($path as $methodName => $method) {
+                    $newEndpoint = new Endpoint();
+                    $newEndpoint->addCollection($collection);
+                    $newEndpoint->setName($pathName . ' ' . $methodName);
+                    isset($method['description']) && $newEndpoint->setDescription($method['description']);
+                    $newEndpoint->setPath($pathName);
+                    $newEndpoint->setMethod($methodName);
+                    isset($method['tags']) && $newEndpoint->setTags($method['tags']);
 
-            $pathName[0] === '/' && $pathName = substr($pathName, 1);
-            $pathName = strtok($pathName, '/');
+                    // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
+                    $newEndpoint->setOperationType($this->createEndpointsProperties($redoc, $pathName, $newEndpoint));
 
-            // Continue with methods from last iteration if same pathname
-            end($iteratedEndpoints) !== $pathName && $methods = [];
-
-            // Add methods for Handler
-            foreach ($path as $method => $actualPath) {
-                !in_array($method, $methods) && in_array($method, ['get', 'post', 'patch', 'put', 'delete']) && $methods[] = $method;
-            }
-
-            // If we already iterated this pathname update the handler for its methods and continue
-            if (in_array($pathName, $iteratedEndpoints)) {
-                $handler = $handlerRepo->findOneByName($pathName.' Handler');
-
-                if (isset($handler)) {
-                    $newMethods = [];
-                    foreach (array_unique(array_merge($handler->getMethods(), $methods), SORT_REGULAR) as $meth) {
-                        $newMethods[] = $meth;
-                    }
-                    $methods = $newMethods;
-                    $handler->setMethods($methods);
-                    $this->entityManager->persist($handler);
-                    unset($handler);
+                    $this->entityManager->persist($newEndpoint);
                 }
 
-                continue;
-            }
+                // Find entity by tag
+                // if (isset($path['tags'][0])) {
+                //   $entity = $entityRepo->findOneByName(trim($path['tags'][0], ' '));
 
-            // Add pathName to iteratedEndpoints
-            $iteratedEndpoints[] = $pathName;
+                  // if (isset($entity)) {
+                  //     $entity->setRoute('/api'.$pathName);
+                  //     $entity->setEndpoint($pathName);
 
-            // Search for exisiting Endpoint with this path and check if this is no subpath
-            unset($existingEndpoint);
-            $existingEndpoint = $endpointRepo->findOneByPath($pathName);
-            // If we dont have a existing Endpoint create a new Endpoint
-            isset($existingEndpoint) ? $endpoint = $existingEndpoint : $endpoint = new Endpoint();
+                  //     $this->entityManager->persist($entity);
+                  // }
+                // }
 
-            $endpoint->addCollection($collection);
+                // // Check if we can find a entity with this name to link
+                // unset($entity);
+                // if (isset($entityNameToJoin)) {
+                //     $entity = $entityRepo->findOneByName($entityNameToJoin);
 
-            if (!isset($existingEndpoint)) {
-                $endpoint->setName($pathName);
-                $endpoint->setPath($pathName);
-            }
+                //     if (isset($entity)) {
+                //         $entity->setRoute('/api/'.$pathName);
+                //         $entity->setEndpoint($pathName);
 
-            // Set description from first method description
-            (isset($path[array_key_first($path)]) && isset($path[array_key_first($path)]['description'])) && $endpoint->setDescription($path[array_key_first($path)]['description']);
+                //         $this->entityManager->persist($entity);
+                //     }
+                // }
 
-            // Check reference to schema object to find Entity
-            foreach ($path as $key => $response) {
-                if ($key !== 'post') {
-                    continue;
-                }
-                if (isset($response['requestBody']['content']['application/json']['schema']['$ref'])) {
-                    $entityNameToJoin = $response['requestBody']['content']['application/json']['schema']['$ref'];
-                    $entityNameToJoin = substr($entityNameToJoin, strrpos($entityNameToJoin, '/') + 1);
-                    break;
-                }
-            }
+                // Create Handler
+                // unset($handler);
+                // !isset($existingEndpoint) ? $handler = new Handler() : isset($existingEndpoint) && isset($existingEndpoint->getHandlers()[0]) && $handler = $existingEndpoint->getHandlers()[0];
 
-            // Check if we can find a entity with this name to link
-            unset($entity);
-            if (isset($entityNameToJoin)) {
-                $entity = $entityRepo->findOneByName($entityNameToJoin);
+                // if (isset($handler)) {
+                //     $handler->setName($pathName.' Handler');
+                //     $handler->setMethods(["*"]);
+                //     $handler->setSequence(0);
+                //     $handler->setConditions('{}');
 
-                if (isset($entity)) {
-                    $entity->setRoute('/api/'.$pathName);
-                    $entity->setEndpoint($pathName);
+                //     isset($entity) && $handler->setEntity($entity);
 
-                    $this->entityManager->persist($entity);
-                }
-            }
+                //     $newEndpoint->addHandler($handler);
 
-            // Create Handler
-            unset($handler);
-            !isset($existingEndpoint) ? $handler = new Handler() : isset($existingEndpoint) && isset($existingEndpoint->getHandlers()[0]) && $handler = $existingEndpoint->getHandlers()[0];
+                    // $this->entityManager->persist($handler);
+                // }
 
-            if (isset($handler)) {
-                $handler->setName($pathName.' Handler');
-                $handler->setMethods($methods);
-                $handler->setSequence(0);
-                $handler->setConditions('{}');
+                // Add handler with this method
 
-                isset($entity) && $handler->setEntity($entity);
-
-                $endpoint->addHandler($handler);
-
-                $this->entityManager->persist($handler);
-            }
-
-            // Add handler with this method
-
-            $this->entityManager->persist($endpoint);
         }
 
-        // Execute sql to database tst
-        $this->entityManager->flush();
-
-        foreach ($attributesToSetLaterAsObject as $attribute) {
-            $newAttribute = new Attribute();
-            $newAttribute->setName($attribute['name']);
-            $parentEntity = $entityRepo->find($attribute['parentEntityId']);
-            isset($parentEntity) && $newAttribute->setEntity($parentEntity);
-
-            $entityToLinkTo = $entityRepo->findByName($attribute['entityNameToLinkTo']);
-            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
-
-            // If we have set attribute.entity and attribute.object, persist attribute
-            $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
-        }
         // Execute sql to database
         $this->entityManager->flush();
+    }
+
+
+    /**
+     * This function reads redoc and persists it into Properties of an Endpoint.
+     * 
+     * @return string Endpoint.operationType based on if the last Property is a identifier or not.
+     */
+    private function createEndpointsProperties(array $redoc, string $pathName, Endpoint $newEndpoint): string
+    {
+        // Check for subpaths and variables
+        $partsOfPath = array_filter(explode('/', $pathName));
+        $endpointOperationType = 'collection';
+        $createdProperties = 0;
+        foreach ($partsOfPath as $property) {
+            // If we have a variable in a path (thats not id or uuid) search for parameter and create Property
+            if ($property !== '{id}' && $property !== '{uuid}' && $property[0] === '{') {
+                $endpointOperationType = 'item';
+
+                // Remove {} from property
+                $property = trim($property, '{');
+                $property = trim($property, '}');
+
+                // Check if property exist as parameter in the OAS
+                if (isset($redoc['components']['parameters'][$property])) {
+                    $oasParameter = $redoc['components']['parameters'][$property];
+
+                    // Search if Property already exists
+                    $propertyRepo = $this->entityManager->getRepository('App:Property');
+                    $propertyToPersist = $propertyRepo->findOneBy([
+                        'name' => $oasParameter['name']
+                    ]);
+
+                    // Create new Property if we haven't found one
+                    if (!isset($propertyToPersist)) {
+                        $propertyToPersist = new Property();
+                        $propertyToPersist->setName($oasParameter['name']);
+                        isset($oasParameter['description']) && $propertyToPersist->setDescription($oasParameter['description']);
+                        isset($oasParameter['required']) && $propertyToPersist->setRequired($oasParameter['required']);
+                        $propertyToPersist->setInType($oasParameter['in']);
+                        $propertyToPersist->setSchemaArray($oasParameter['schema']);
+
+                        $propertyToPersist->setPathOrder($newEndpoint->getProperties()->count() + $createdProperties);
+                    }
+
+                    // Set Endpoint and persist Property
+                    $propertyToPersist->setEndpoint($newEndpoint);
+                    $this->entityManager->persist($propertyToPersist);
+
+                    // Created properties + 1 for property.pathOrder
+                    $createdProperties++;
+                }
+            } elseif ($property === '{id}' || $property === '{uuid}') {
+                $endpointOperationType = 'item';
+            } else {
+                $endpointOperationType = 'collection';
+            }
+        }
+
+        return $endpointOperationType;
     }
 }
