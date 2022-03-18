@@ -44,7 +44,7 @@ class ApplicationService
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
 
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
-        if (!isset($application)) {
+        if (!$application) {
             // @todo Create and use query in ApplicationRepository
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
