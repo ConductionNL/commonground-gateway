@@ -78,6 +78,23 @@ class Endpoint
      */
     private ?string $description = null;
 
+    /**
+     * @var string|null The method of this Endpoint.
+     *
+     * @Assert\Choice({"get", "post", "put", "patch", "delete"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $method = "get";
+
+    /**
+     * @var string|null The (OAS) tag of this Endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $tag;
+
     // @TODO remove totally?
     // /**
     //  * @var string The type of this Endpoint.
@@ -148,12 +165,46 @@ class Endpoint
      */
     private ?Collection $collections;
 
+    /**
+     * @var ?string The operation type calls must be that are requested through this Endpoint
+     *
+     * @Assert\Choice({"item", "collection"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string  $operationType;
+
+    /**
+     * @var ?array (OAS) tags to identify this Endpoint
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $tags = [];
+
+    /**
+     * @var ?string Array of the path if this Endpoint has parameters and/or subpaths
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $pathArray = [];
+
+    /**
+     * @var Collection|null Properties of this Endpoint
+     *
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Property::class, mappedBy="endpoint")
+     */
+    private ?Collection $properties;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->properties = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -188,6 +239,30 @@ class Endpoint
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getMethod(): ?string
+    {
+        return $this->method;
+    }
+
+    public function setMethod(?string $method): self
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?string $tag): self
+    {
+        $this->tag = $tag;
 
         return $this;
     }
@@ -359,6 +434,72 @@ class Endpoint
     {
         if ($this->collections->removeElement($collection)) {
             $collection->removeEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function getOperationType(): ?string
+    {
+        return $this->operationType;
+    }
+
+    public function setOperationType(string $operationType): self
+    {
+        $this->operationType = $operationType;
+
+        return $this;
+    }
+
+    public function getTags(): ?array
+    {
+        return $this->tags;
+    }
+
+    public function setTags(?array $tags): self
+    {
+        $this->tags = $tags;
+
+        return $this;
+    }
+
+    public function getPathArray(): ?array
+    {
+        return $this->pathArray;
+    }
+
+    public function setPathArray(?array $pathArray): self
+    {
+        $this->pathArray = $pathArray;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Property[]
+     */
+    public function getProperties(): Collection
+    {
+        return $this->properties;
+    }
+
+    public function addProperty(Property $property): self
+    {
+        if (!$this->properties->contains($property)) {
+            $this->properties[] = $property;
+            $property->setEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProperty(Property $property): self
+    {
+        if ($this->properties->removeElement($property)) {
+            // set the owning side to null (unless already changed)
+            if ($property->getEndpoint() === $this) {
+                $property->setEndpoint(null);
+            }
         }
 
         return $this;
