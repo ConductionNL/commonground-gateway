@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionClass;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -20,7 +21,7 @@ class PubliccodeService
         ParameterBagInterface $params
     ) {
         $this->params = $params;
-        $this->github =  new Client(['base_uri' => 'https://api.github.com/', 'headers'=>['Authorization'=>'Bearer '.$this->params->get('github_key')]]);
+        $this->github =  $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers'=>['Authorization'=>'Bearer '.$this->params->get('github_key')]]) : null;
     }
 
     /**
@@ -31,6 +32,9 @@ class PubliccodeService
      */
     public function discoverGithub(): string
     {
+        if (!$this->github) {
+            throw new BadRequestException('github_key missing in .env');
+        }
         $query = [
             'page' => 1,
             'per_page'=> 100,
