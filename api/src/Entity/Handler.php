@@ -5,6 +5,8 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -176,16 +178,6 @@ class Handler
     private ?string $template;
 
     /**
-     * @var Endpoint The endpoint of this Handler.
-     *
-     * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="handlers")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private Endpoint $endpoint;
-
-    /**
      * @var Entity The entity of this Handler.
      *
      * @MaxDepth(1)
@@ -193,6 +185,20 @@ class Handler
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
     private ?Entity $entity = null;
+
+    /**
+     * @var Collection|null The entity of this Handler.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers")
+     */
+    private ?Collection $endpoints;
+
+    public function __construct()
+    {
+        $this->endpoints = new ArrayCollection();
+    }
 
     public function getId()
     {
@@ -342,19 +348,7 @@ class Handler
 
         return $this;
     }
-
-    public function getEndpoint(): ?Endpoint
-    {
-        return $this->endpoint;
-    }
-
-    public function setEndpoint(?Endpoint $endpoint): self
-    {
-        $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
+    
     public function getEntity(): ?Entity
     {
         return $this->entity;
@@ -375,6 +369,30 @@ class Handler
     public function setMethods(array $methods): self
     {
         $this->methods = $methods;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        $this->endpoints->removeElement($endpoint);
 
         return $this;
     }

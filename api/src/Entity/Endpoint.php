@@ -79,15 +79,6 @@ class Endpoint
     private ?string $description = null;
 
     /**
-     * @var string|null The method of this Endpoint.
-     *
-     * @Assert\Choice({"get", "post", "put", "patch", "delete"})
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private ?string $method = "get";
-
-    /**
      * @var string|null The (OAS) tag of this Endpoint.
      *
      * @Groups({"read", "write"})
@@ -133,14 +124,14 @@ class Endpoint
      */
     private array $loggingConfig = ['headers' => ['authorization']];
 
-    /**
-     * @var array|null The handlers used for this entity.
-     *
-     * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="endpoint", orphanRemoval=true)
-     */
-    private Collection $handlers;
+    // /**
+    //  * @var array|null The handlers used for this entity.
+    //  *
+    //  * @MaxDepth(1)
+    //  * @Groups({"read", "write"})
+    //  * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="endpoint", orphanRemoval=true)
+    //  */
+    // private Collection $handlers;
 
     /**
      * @Groups({"read", "write"})
@@ -193,10 +184,20 @@ class Endpoint
     /**
      * @var Collection|null Properties of this Endpoint
      *
+     * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\OneToMany(targetEntity=Property::class, mappedBy="endpoint")
      */
     private ?Collection $properties;
+
+    /**
+     * @var Collection|null Handlers of this Endpoint
+     * 
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")
+     */
+    private ?Collection $handlers;
 
     public function __construct()
     {
@@ -239,18 +240,6 @@ class Endpoint
     public function setDescription(?string $description): self
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getMethod(): ?string
-    {
-        return $this->method;
-    }
-
-    public function setMethod(?string $method): self
-    {
-        $this->method = $method;
 
         return $this;
     }
@@ -329,36 +318,6 @@ class Endpoint
     public function setLoggingConfig(array $loggingConfig): self
     {
         $this->loggingConfig = $loggingConfig;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Handler[]
-     */
-    public function getHandlers(): Collection
-    {
-        return $this->handlers;
-    }
-
-    public function addHandler(Handler $handler): self
-    {
-        if (!$this->handlers->contains($handler)) {
-            $this->handlers[] = $handler;
-            $handler->setEndpoint($this);
-        }
-
-        return $this;
-    }
-
-    public function removeHandler(Handler $handler): self
-    {
-        if ($this->handlers->removeElement($handler)) {
-            // set the owning side to null (unless already changed)
-            if ($handler->getEndpoint() === $this) {
-                $handler->setEndpoint(null);
-            }
-        }
 
         return $this;
     }
@@ -500,6 +459,33 @@ class Endpoint
             if ($property->getEndpoint() === $this) {
                 $property->setEndpoint(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->addEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            $handler->removeEndpoint($this);
         }
 
         return $this;
