@@ -4,10 +4,14 @@ App\Entity\Application:
     application:
         name: main application
         secret: 5fbffbf5-412a-41bc-82bf-3b41d71246ea
-        resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/c47300be-aa23-4c90-bee5-dd1d11b5bdb7
+        resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/9efe2681-fc35-40e0-9afa-da7c394e987b
         domains:
             - backend-bisc-dev.commonground.nu
         organization: https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951
+    smpApplication:
+        name: SMP application
+        secret: 3c2ca9b2-9886-48bc-8ff9-98fd2cfa6774
+        resource: https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/cf15134b-bc8b-4170-9263-b424339f31bb
 App\Entity\Gateway:
     edu_api:
         name: educatie component

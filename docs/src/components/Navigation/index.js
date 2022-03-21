@@ -55,7 +55,7 @@ const Navigation = ({ location }) => {
         {/*</StyledListItem>*/}
         {menu[langKey].map((item, i) => (
           <StyledListItem key={i}>
-            <Link to={item.link} activeClassName="active" partiallyActive={item.partiallyActive}>{item.title}</Link>
+            <Link to={item.link} activeClassName="active" target={item.target ?? null} partiallyActive={item.partiallyActive}>{item.title}</Link>
           </StyledListItem>
         ))}
         <StyledListItem>
@@ -66,9 +66,9 @@ const Navigation = ({ location }) => {
           {/*  <SlackLogo width="26px" />*/}
           {/*</a>*/}
         </StyledListItem>
-        <StyledListItem>
+        {/* <StyledListItem>
           <LanguageSelector languages={languageSelector} />
-        </StyledListItem>
+        </StyledListItem> */}
       </StyledList>
     </StyledNav>
   )

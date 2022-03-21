@@ -153,8 +153,7 @@ class UserController extends AbstractController
     {
         if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)
-                && array_key_exists('parentOrganization', $organization)) {
+                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
                 $organizations[] = $organization['parentOrganization']['@id'];
                 $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
             }

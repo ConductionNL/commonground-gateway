@@ -123,8 +123,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)
-                && array_key_exists('parentOrganization', $organization)) {
+                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
                 $organizations[] = $organization['parentOrganization']['@id'];
                 $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
             }
@@ -158,10 +157,11 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             }
 
             try {
-                $user = $this->commonGroundService->getResource($application->getResource());
+                $user = $this->commonGroundService->getResource($application->getResource(), [], false);
             } catch (\Exception $exception) {
                 throw new AuthenticationException('Invalid User Uri');
             }
+            $this->session->set('apiKeyApplication', $application);
         }
 
         if (!$user) {

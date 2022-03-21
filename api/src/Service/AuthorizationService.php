@@ -79,7 +79,7 @@ class AuthorizationService
         }
 
         // Get the ANONYMOUS userGroup
-        $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'])['hydra:member'];
+        $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
             foreach ($groups[0]['scopes'] as $scope) {
@@ -112,18 +112,29 @@ class AuthorizationService
 
     public function checkAuthorization(array $scopes): void
     {
-        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-        $this->session->set('anonymous', false);
-
         if (!$this->parameterBag->get('app_auth')) {
             return;
-        } elseif ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
-            $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
-        } else {
-            $grantedScopes = $this->getScopesForAnonymous();
+        }
 
+        // First check if we have these scopes in cache (this gets removed from cache everytime we start a new api call, see eavService ->handleRequest)
+        $item = $this->cache->getItem('grantedScopes');
+        if ($item->isHit()) {
+            $grantedScopes = $item->get();
+        } else {
             // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-            $this->session->set('anonymous', true);
+            $this->session->set('anonymous', false);
+
+            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+                $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
+            } else {
+                $grantedScopes = $this->getScopesForAnonymous();
+
+                // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
+                $this->session->set('anonymous', true);
+            }
+            $item->set($grantedScopes);
+            $item->tag('grantedScopes');
+            $this->cache->save($item);
         }
         if (in_array($scopes['base_scope'], $grantedScopes)
             || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))

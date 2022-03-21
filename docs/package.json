@@ -1,5 +1,5 @@
 {
-  "name": "@demodam/demodam.org",
+  "name": "@conductor/conductor-gateway.app",
   "private": true,
   "version": "0.0.1",
   "dependencies": {

@@ -19,6 +19,7 @@ use Exception;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,6 +44,7 @@ class EavService
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
     private FunctionService $functionService;
+    public CacheInterface $cache;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -57,7 +59,8 @@ class EavService
         ResponseService $responseService,
         ParameterBagInterface $parameterBag,
         TranslationService $translationService,
-        FunctionService $functionService
+        FunctionService $functionService,
+        CacheInterface $cache
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -72,6 +75,7 @@ class EavService
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
         $this->functionService = $functionService;
+        $this->cache = $cache;
     }
 
     /**
@@ -137,7 +141,7 @@ class EavService
      *
      * @return ObjectEntity|array|null
      */
-    public function getObject(?string $id, string $method, Entity $entity)
+    public function getObject(?string $id, string $method, Entity $entity, ?string $owner = 'owner')
     {
         if ($id) {
             // make sure $id is actually an uuid
@@ -165,7 +169,7 @@ class EavService
                     }
                 }
             }
-            if ($object instanceof ObjectEntity && $entity != $object->getEntity()) {
+            if ($object instanceof ObjectEntity && $entity !== $object->getEntity()) {
                 return [
                     'message' => "There is a mismatch between the provided ({$entity->getName()}) entity and the entity already attached to the object ({$object->getEntity()->getName()})",
                     'type'    => 'Bad Request',
@@ -178,7 +182,7 @@ class EavService
             }
 
             if ($method == 'POST' || $method == 'PUT') {
-                return $this->objectEntityService->handleOwner($object);
+                return $this->objectEntityService->handleOwner($object, $owner);
             }
 
             return $object;
@@ -189,7 +193,7 @@ class EavService
             $object->setOrganization($this->session->get('activeOrganization'));
             $object->setApplication($this->session->get('application'));
 
-            return $this->objectEntityService->handleOwner($object);
+            return $this->objectEntityService->handleOwner($object, $owner);
         }
 
         return null;
@@ -206,6 +210,8 @@ class EavService
      */
     public function handleRequest(Request $request): Response
     {
+        $this->cache->invalidateTags(['grantedScopes']);
+
         // Lets get our base stuff
         $requestBase = $this->getRequestBase($request);
         $contentType = $this->getRequestContentType($request, $requestBase['extension']);
@@ -427,6 +433,9 @@ class EavService
         }));
         if (count($applications) > 0) {
             $this->session->set('application', $applications[0]);
+        } elseif ($this->session->get('apiKeyApplication')) {
+            // If an api-key is used for authentication we already know which application is used
+            $this->session->set('application', $this->session->get('apiKeyApplication'));
         } else {
             //            var_dump('no application found');
             if ($host == 'localhost') {
@@ -465,7 +474,13 @@ class EavService
 
         // Lets create an object
         if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
-            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
+            // Check if @owner is present in the body and if so unset it.
+            $owner = 'owner';
+            if (array_key_exists('@owner', $body)) {
+                $owner = $body['@owner'];
+                unset($body['@owner']);
+            }
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity, $owner); // note: $owner is allowed to be null!
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
