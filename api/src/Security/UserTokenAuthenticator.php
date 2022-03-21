@@ -125,8 +125,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         if ($organization = $functionService->getOrganizationFromCache($organization)) {
             if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)
-                && array_key_exists('parentOrganization', $organization)) {
+                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
                 $organizations[] = $organization['parentOrganization']['@id'];
                 $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
             }
@@ -160,10 +159,11 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             }
 
             try {
-                $user = $this->commonGroundService->getResource($application->getResource());
+                $user = $this->commonGroundService->getResource($application->getResource(), [], false);
             } catch (\Exception $exception) {
                 throw new AuthenticationException('Invalid User Uri');
             }
+            $this->session->set('apiKeyApplication', $application->getId->toString());
         }
 
         if (!$user) {
@@ -240,12 +240,13 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         $data = [
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
+            'exception' => $exception->getMessage()
 
             // or to translate this message
             // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
         ];
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
     /**

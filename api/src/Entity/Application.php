@@ -157,11 +157,21 @@ class Application
      */
     private $endpoints;
 
+    /**
+     * @var ?Collection The collections of this Application
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="applications")
+     */
+    private ?Collection $collections;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
+        $this->collections = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -340,6 +350,33 @@ class Application
     public function removeEndpoint(Endpoint $endpoint): self
     {
         $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CollectionEntity[]
+     */
+    public function getCollections(): Collection
+    {
+        return $this->collections;
+    }
+
+    public function addCollection(CollectionEntity $collection): self
+    {
+        if (!$this->collections->contains($collection)) {
+            $this->collections[] = $collection;
+            $collection->addApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCollection(CollectionEntity $collection): self
+    {
+        if ($this->collections->removeElement($collection)) {
+            $collection->removeApplication($this);
+        }
 
         return $this;
     }

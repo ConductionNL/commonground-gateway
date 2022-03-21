@@ -7,6 +7,7 @@ use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -25,6 +26,7 @@ class AuthorizationService
     private CommonGroundService $commonGroundService;
     private Security $security;
     private SessionInterface $session;
+    private CacheInterface $cache;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -33,17 +35,20 @@ class AuthorizationService
         ParameterBagInterface $parameterBag,
         CommonGroundService $commonGroundService,
         Security $security,
-        SessionInterface $session
+        SessionInterface $session,
+        CacheInterface $cache
     ) {
         $this->authorizationChecker = new AuthorizationChecker($tokenStorage, $authenticationManager, $accessDecisionManager);
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->security = $security;
         $this->session = $session;
+        $this->cache = $cache;
     }
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
+        $scopes['admin_scope'] = $method.'.admin';
         if ($entity) {
             $scopes['base_scope'] = $method.'.'.$entity->getName();
             if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
@@ -96,18 +101,29 @@ class AuthorizationService
 
     public function checkAuthorization(array $scopes): void
     {
-        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-        $this->session->set('anonymous', false);
-
         if (!$this->parameterBag->get('app_auth')) {
             return;
-        } elseif ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
-            $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
-        } else {
-            $grantedScopes = $this->getScopesForAnonymous();
+        }
 
+        // First check if we have these scopes in cache (this gets removed from cache everytime we start a new api call, see eavService ->handleRequest)
+        $item = $this->cache->getItem('grantedScopes');
+        if ($item->isHit()) {
+            $grantedScopes = $item->get();
+        } else {
             // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
-            $this->session->set('anonymous', true);
+            $this->session->set('anonymous', false);
+
+            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+                $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
+            } else {
+                $grantedScopes = $this->getScopesForAnonymous();
+
+                // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
+                $this->session->set('anonymous', true);
+            }
+            $item->set($grantedScopes);
+            $item->tag('grantedScopes');
+            $this->cache->save($item);
         }
         if (in_array($scopes['base_scope'], $grantedScopes)
             || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
