@@ -15,7 +15,7 @@ class PubliccodeService
         ParameterBagInterface $params
     ) {
         $this->params = $params;
-        $this->github =  $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers'=>['Authorization'=>'Bearer '.$this->params->get('github_key')]]) : null;
+        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers'=>['Authorization'=>'Bearer '.$this->params->get('github_key')]]) : null;
     }
 
     /**
