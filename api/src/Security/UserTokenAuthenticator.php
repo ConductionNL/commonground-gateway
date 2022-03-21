@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -147,7 +148,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
             if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
-                throw new AuthenticationException('The provided token refers to an invalid session');
+                throw new AuthenticationException('The provided token refers to an invalid session', Response::HTTP_UNAUTHORIZED);
             }
         } elseif (array_key_exists('apiKey', $credentials)) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
@@ -235,12 +236,13 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         $data = [
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
+            'exception' => $exception->getMessage()
 
             // or to translate this message
             // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
         ];
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
     /**
