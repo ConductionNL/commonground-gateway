@@ -5,7 +5,7 @@ namespace App\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Symfony\Component\HttpFoundation\Response;
 
 class PubliccodeService
 {
@@ -28,7 +28,11 @@ class PubliccodeService
     public function discoverGithub(): string
     {
         if (!$this->github) {
-            throw new BadRequestException('github_key missing in .env');
+            return new Response(
+                'Missing github_key in env',
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
         }
         $query = [
             'page'    => 1,
