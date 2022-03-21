@@ -241,12 +241,13 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         $data = [
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
+            'exception' => $exception->getMessage()
 
             // or to translate this message
             // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
         ];
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
     /**
