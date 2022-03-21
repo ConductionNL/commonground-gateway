@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Twig\Environment;
 
 class HandlerService
@@ -25,6 +26,7 @@ class HandlerService
     private ObjectEntityService $objectEntityService;
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
+    private CacheInterface $cache;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -57,7 +59,8 @@ class HandlerService
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
         FormIOService $formIOService,
-        SubscriberService $subscriberService
+        SubscriberService $subscriberService,
+        CacheInterface $cache
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -72,6 +75,7 @@ class HandlerService
         $this->objectEntityService = $objectEntityService->addServices($validationService, $eavService); // todo: temp fix untill we no longer need these services here
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
+        $this->cache = $cache;
     }
 
     /**
@@ -79,6 +83,8 @@ class HandlerService
      */
     public function handleEndpoint(Endpoint $endpoint): Response
     {
+        $this->cache->invalidateTags(['grantedScopes']);
+
         $session = new Session();
         $session->set('endpoint', $endpoint->getId()->toString());
 
