@@ -46,4 +46,13 @@ class PubliccodeService
 
         return $response->getBody()->getContents();
     }
+
+    // Lets get the content of a public github file
+    public function getGithubRepositoryContent(string $code): string
+    {
+        // Get repository on github -> via url
+        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$code);
+
+        return $response->getBody()->getContents();
+    }
 }

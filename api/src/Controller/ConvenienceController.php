@@ -33,4 +33,14 @@ class ConvenienceController extends AbstractController
     {
         return new Response($this->publiccodeService->discoverGithub());
     }
+
+    /**
+     * @Route("/admin/publiccode/github/{id}", name="dynamic_route_load_type")
+     *
+     * @throws GuzzleException
+     */
+    public function getGithubRepository(string $id): Response
+    {
+        return new Response($this->publiccodeService->getGithubRepositoryContent($id));
+    }
 }
