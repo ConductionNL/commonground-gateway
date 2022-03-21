@@ -148,7 +148,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
             if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
-                throw new AuthenticationException('The provided token refers to an invalid session', Response::HTTP_UNAUTHORIZED);
+                throw new AuthenticationException('The provided token refers to an invalid session');
             }
         } elseif (array_key_exists('apiKey', $credentials)) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
