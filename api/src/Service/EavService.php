@@ -44,7 +44,7 @@ class EavService
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
     private FunctionService $functionService;
-    public CacheInterface $cache;
+    private CacheInterface $cache;
 
     public function __construct(
         EntityManagerInterface $em,
