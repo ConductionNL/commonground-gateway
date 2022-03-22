@@ -141,7 +141,7 @@ class PubliccodeService
         return $result;
     }
 
-    public function getRepoPath($repository)
+    public function getRepoPath($repository): string
     {
         $parse = parse_url($repository['html_url']);
         $path = $parse['path'];
