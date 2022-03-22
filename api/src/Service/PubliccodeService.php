@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\CollectionEntity;
 use Doctrine\ORM\EntityManagerInterface;
-use EasyRdf\Literal\Date;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -87,7 +86,7 @@ class PubliccodeService
 
         // Lets look for an publiccode.yaml / yml
         $publiccode = $this->getGithubFileContent($repository, 'publiccode.yml');
-        if(!$publiccode){
+        if (!$publiccode) {
             $publiccode = $this->getGithubFileContent($repository, 'publiccode.yaml');
         }
 
@@ -123,20 +122,19 @@ class PubliccodeService
     public function getGithubFileContent($repository, $file)
     {
         $path = $this->getRepoPath($repository);
-        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/'.$path.'/'. $repository['default_branch'] .'/', 'http_errors' => false]);
+        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/'.$path.'/'.$repository['default_branch'].'/', 'http_errors' => false]);
 
         $response = $client->get($file);
 
         // Let's see if we can get the file
-        if($response->getStatusCode() == 200){
-            $result = strval ($response->getBody());
-        }
-        else{
+        if ($response->getStatusCode() == 200) {
+            $result = strval($response->getBody());
+        } else {
             return false;
         }
 
         // Lets grab symbolic links
-        if(!substr_compare($result, $file, -strlen($file), strlen($file))){
+        if (!substr_compare($result, $file, -strlen($file), strlen($file))) {
             return $this->getGithubFileContent($repository, $result);
         }
 
@@ -147,7 +145,7 @@ class PubliccodeService
     {
         $parse = parse_url($repository['html_url']);
         $path = $parse['path'];
-        $path = str_replace(['.git'], "",$path);
+        $path = str_replace(['.git'], '', $path);
 
         return rtrim($path, '/');
     }
