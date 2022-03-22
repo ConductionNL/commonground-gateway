@@ -19,14 +19,17 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ZZController extends AbstractController
 {
     /**
-     * @Route("/api/{endpoint}", name="dynamic_route_entity")
+     * @Route("/api/{path}", name="dynamic_route_entity")
+     * @Route("/api/{path}/{identifier}")
+     * @Route("/api/{path}/{identifier}/{subPath}")
+     * @Route("/api/{path}/{identifier}/{subPath}/{identifier2}")
      * @Route("/api/{entity}/{id}", name="dynamic_route_collection")
      */
     public function dynamicAction(
-        ?string $endpoint,
-        // ?string $identifier,
-        // ?string $secondEndpoint,
-        // ?string $secondIdentifier,
+        ?string $path,
+        ?string $identifier,
+        ?string $subPath,
+        ?string $identifier2,
         ?string $entity,
         ?string $id,
         Request $request,
@@ -48,16 +51,17 @@ class ZZController extends AbstractController
             return $validationService->dutchPC4ToJson();
         }
         // End of hacky tacky
-        // $fullEndpoint = '';
-        // isset($endpoint) && $fullEndpoint . '/' . $endpoint;
-        // isset($identifier) && $fullEndpoint . '/' . $identifier;
-        // isset($secondEndpoint) && $fullEndpoint . '/' . $secondEndpoint;
-        // isset($secondIdentifier) && $fullEndpoint . '/' . $secondIdentifier;
 
-        // var_dump($fullEndpoint);die;
+        $fullEndpoint = '';
+        isset($path) && $fullEndpoint  .= '/' . $path;
+        isset($identifier) && $fullEndpoint .= '/{identifier}';
+        isset($subPath) && $fullEndpoint .= '/' . $subPath;
+        isset($identifier2) && $fullEndpoint .= '/{identifier2}';
+
+        $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $fullEndpoint]);
 
         // Let determine an endpoint (new way)
-        if (isset($endpoint) && $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $endpoint])) {
+        if (isset($path) && $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $path])) {
             // Try handler proces and catch exceptions
             try {
                 return $handlerService->handleEndpoint($endpoint);
