@@ -58,22 +58,21 @@ class OasParserService
         // Create Handlers between the Entities and Endpoints
         // var_dump($objectsToCreateLater['handlers']);
         foreach ($objectsToCreateLater['handlers'] as $entityName => $handler) {
+            if (!isset($handler['endpoints']) || !isset($handler['entity'])) continue;
             $newHandler = new Handler();
             $newHandler->setName($entityName . ' handler');
             $newHandler->setSequence(0);
             $newHandler->setConditions('{}');
             isset($handler['methods']) && $newHandler->setMethods($handler['methods']);
             $newHandler->setEntity($handler['entity']);
-            if (isset($handler['endpoints'])) {
-                foreach ($handler['endpoints'] as $endpoint) {
-                    $newHandler->addEndpoint($endpoint);
-                }
+            foreach ($handler['endpoints'] as $endpoint) {
+                $newHandler->addEndpoint($endpoint);
             }
 
             $this->entityManager->persist($newHandler);
         }
 
-        // // Execute sql to database
+        // Execute sql to database
         $this->entityManager->flush();
     }
 
@@ -86,7 +85,7 @@ class OasParserService
         $attributesToSetLaterAsObject = [];
         $handlersToSetLaterAsObject = [];
         foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
-          if ($entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHalBasis'  && $entityName !== 'IngeschrevenPersoon') continue;
+          // if ($entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHalBasis'  && $entityName !== 'IngeschrevenPersoon') continue;
 
             // Create Entity with entityName
             $newEntity = new Entity();
@@ -172,23 +171,37 @@ class OasParserService
     private function persistPathsAsEndpoints(array $redoc, CollectionEntity $collection, array $handlersToCreateLater): array
     {
         foreach ($redoc['paths'] as $pathName => $path) {
-            if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
+            // if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
 
             foreach ($path as $methodName => $method) {
                 $newEndpoint = new Endpoint();
                 $newEndpoint->addCollection($collection);
                 $newEndpoint->setName($pathName . ' ' . $methodName);
-                isset($method['description']) && $newEndpoint->setDescription($method['description']);
                 $newEndpoint->setPath($pathName);
+                isset($method['description']) && $newEndpoint->setDescription($method['description']);
                 isset($method['tags']) && $newEndpoint->setTags($method['tags']);
 
                 // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
-                $newEndpoint->setOperationType($this->createEndpointsProperties($redoc, $pathName, $newEndpoint));
+                $createdPropertiesInfo = $this->createEndpointsProperties($redoc, $pathName, $newEndpoint);
+                $newEndpoint->setOperationType($createdPropertiesInfo['operationType']);
 
                 $this->entityManager->persist($newEndpoint);
 
                 foreach ($method['responses'] as $response) {
                     foreach ($response['content'] as $content) {
+
+                        // Use json definition
+                        if (isset($response['content']['application/json'])) {
+                            $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1); 
+                            if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
+                                $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
+                                !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
+                                !in_array($method, $handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'][] = $methodName;
+                            }
+                            break;
+                        }
+
+                        // Else use first definition found
                         if (isset($content['schema']['$ref'])) {
                             $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1); 
                             if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
@@ -216,12 +229,13 @@ class OasParserService
      * 
      * @return string Endpoint.operationType based on if the last Property is a identifier or not.
      */
-    private function createEndpointsProperties(array $redoc, string $pathName, Endpoint $newEndpoint): string
+    private function createEndpointsProperties(array $redoc, string $pathName, Endpoint $newEndpoint): array
     {
         // Check for subpaths and variables
         $partsOfPath = array_filter(explode('/', $pathName));
         $endpointOperationType = 'collection';
-        $createdProperties = 0;
+        $createdPropertiesCount = 0;
+        $createdProperties = [];
         foreach ($partsOfPath as $property) {
             // If we have a variable in a path (thats not id or uuid) search for parameter and create Property
             if ($property !== '{id}' && $property !== '{uuid}' && $property[0] === '{') {
@@ -250,7 +264,12 @@ class OasParserService
                         $propertyToPersist->setInType($oasParameter['in']);
                         $propertyToPersist->setSchemaArray($oasParameter['schema']);
 
-                        $propertyToPersist->setPathOrder($newEndpoint->getProperties()->count() + $createdProperties);
+                        // Set pathOrder
+                        $pathPropertiesCount = 0;
+                        foreach ($newEndpoint->getProperties() as $property) {
+                            $property->getInType() === 'path' && $pathPropertiesCount++;
+                        }
+                        $propertyToPersist->setPathOrder($pathPropertiesCount + $createdPropertiesCount);
                     }
 
                     // Set Endpoint and persist Property
@@ -258,7 +277,7 @@ class OasParserService
                     $this->entityManager->persist($propertyToPersist);
 
                     // Created properties + 1 for property.pathOrder
-                    $createdProperties++;
+                    $createdPropertiesCount++;
                 }
             } elseif ($property === '{id}' || $property === '{uuid}') {
                 $endpointOperationType = 'item';
@@ -267,7 +286,7 @@ class OasParserService
             }
         }
 
-        return $endpointOperationType;
+        return ['operationType' => $endpointOperationType, 'createdProperties' => $createdProperties];
     }
 
 
