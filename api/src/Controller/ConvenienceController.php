@@ -44,6 +44,11 @@ class ConvenienceController extends AbstractController
             return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
+        // Check if not loaded/synced before
+        if ($collection->getSyncedAt() !== null) {
+            return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
         // Check collection->source->locationOAS and set url
         $collection->getLocationOAS() !== null && $url = $collection->getLocationOAS();
 
@@ -51,15 +56,6 @@ class ConvenienceController extends AbstractController
         if (!isset($url)) {
             return new Response($this->serializer->serialize(['message' => 'No location OAS found for given collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
-
-        // // Check url as query
-        // $request->query->get('url') && $url = $request->query->get('url');
-        // !isset($url) && $request->getContent() && $body = json_decode($request->getContent(), true);
-        // if (!isset($url) && !isset($body)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
-
-        // // Check url in body
-        // !isset($url) && isset($body['url']) && $url = $body['url'];
-        // if (!isset($url)) return new Response($this->serializer->serialize(['message' => 'No url given in query or body'], 'json'), Response::HTTP_BAD_REQUEST ,['content-type' => 'json']);
 
         // Send GET to fetch redoc
         $client = new Client();
