@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
@@ -82,14 +83,24 @@ class CollectionEntity
     private ?string $description;
 
     /**
-     * @var ?Gateway The source (url) of this Collection
+     * @var ?Gateway|string The source of this Collection
      *
      * @Groups({"read","write"})
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections")
      */
-    private ?Gateway $source;
+    private $source;
+
+    /**
+     * @var ?string The url of this Collection
+     *
+     * @Assert\Type("string")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $sourceUrl;
 
     /**
      * @var ?string The source type of this Collection
@@ -109,6 +120,25 @@ class CollectionEntity
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $sourceBranch;
+
+    /**
+     * @var ?string The location where the OAS can be loaded from
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string $locationOAS;
 
     /**
      * @var ?DateTimeInterface The moment this Collection was synced
@@ -242,6 +272,18 @@ class CollectionEntity
         return $this;
     }
 
+    public function getSourceUrl(): ?string
+    {
+        return $this->sourceUrl;
+    }
+
+    public function setSourceUrl(string $sourceUrl): self
+    {
+        $this->sourceUrl = $sourceUrl;
+
+        return $this;
+    }
+
     public function getSourceType(): ?string
     {
         return $this->sourceType;
@@ -262,6 +304,18 @@ class CollectionEntity
     public function setSourceBranch(?string $sourceBranch): self
     {
         $this->sourceBranch = $sourceBranch;
+
+        return $this;
+    }
+
+    public function getLocationOAS(): ?string
+    {
+        return $this->locationOAS;
+    }
+
+    public function setLocationOAS(?string $locationOAS): self
+    {
+        $this->locationOAS = $locationOAS;
 
         return $this;
     }

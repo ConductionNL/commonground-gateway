@@ -35,12 +35,22 @@ class ConvenienceController extends AbstractController
     }
 
     /**
-     * @Route("/admin/publiccode/github/{id}", name="dynamic_route_load_type")
+     * @Route("/admin/publiccode/github/{id}")
      *
      * @throws GuzzleException
      */
     public function getGithubRepository(string $id): Response
     {
         return new Response($this->publiccodeService->getGithubRepositoryContent($id));
+    }
+
+    /**
+     * @Route("/admin/publiccode/github/install/{id}")
+     *
+     * @throws GuzzleException
+     */
+    public function installRepository(string $id): Response
+    {
+        return new Response(json_encode($this->publiccodeService->createCollection($id)));
     }
 }
