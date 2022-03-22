@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
