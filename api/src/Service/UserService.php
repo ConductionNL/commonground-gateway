@@ -85,9 +85,9 @@ class UserService
             return [];
         } else {
             $organizationFields = [
-                "name" => true, "type" => true, "addresses" => true, "emails" => true, "telephones" => true,
-                "parentOrganization" => [
-                    "name" => true, "type" => true, "addresses" => true, "emails" => true, "telephones" => true,
+                'name'               => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
+                'parentOrganization' => [
+                    'name' => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
                 ],
             ];
             if (!($organization = $this->getObject($user->getOrganization(), $organizationFields))) {
