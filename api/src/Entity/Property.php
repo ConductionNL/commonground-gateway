@@ -103,7 +103,7 @@ class Property
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $pathOrder = 0;
+    private ?int $pathOrder;
 
     /**
      * @var Endpoint|null Endpoint of this Property
