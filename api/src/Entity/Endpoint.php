@@ -107,14 +107,14 @@ class Endpoint
     // private string $type;
 
     /**
-     * @var string The path of this Endpoint.
+     * @var array|null The path of this Endpoint.
      *
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="array")
      */
-    private string $path;
+    private ?array $path;
 
     /**
      * @MaxDepth(1)
@@ -288,12 +288,12 @@ class Endpoint
     //     return $this;
     // }
 
-    public function getPath(): ?string
+    public function getPath(): ?array
     {
         return $this->path;
     }
 
-    public function setPath(string $path): self
+    public function setPath(array $path): self
     {
         $this->path = $path;
 
