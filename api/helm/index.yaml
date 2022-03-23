@@ -3,7 +3,26 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.8416437+01:00"
+    created: "2022-03-23T10:29:24.353278038+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 10.9.5
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 15.3.2
+    description: A Helm chart for Kubernetes
+    digest: f562da7744a44b335afdb6e027c3ac9795fa2eb8d8338e4836c11ac5e435a68d
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-0.1.6.tgz
+    version: 0.1.6
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-23T10:29:24.343473393+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -22,7 +41,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.8338744+01:00"
+    created: "2022-03-23T10:29:24.333417011+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -41,7 +60,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.8241434+01:00"
+    created: "2022-03-23T10:29:24.323451393+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -60,7 +79,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.8151434+01:00"
+    created: "2022-03-23T10:29:24.31448842+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -79,7 +98,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.8036421+01:00"
+    created: "2022-03-23T10:29:24.299136139+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -98,7 +117,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2021-12-13T17:24:35.7941439+01:00"
+    created: "2022-03-23T10:29:24.285821655+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -120,12 +139,13 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2021-12-13T17:24:35.8466436+01:00"
+    created: "2022-03-23T10:29:24.360168298+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       version: 1.x.x
-    description: Chart for PostgreSQL, an object-relational database management system (ORDBMS) with an emphasis on extensibility and on standards-compliance.
+    description: Chart for PostgreSQL, an object-relational database management system
+      (ORDBMS) with an emphasis on extensibility and on standards-compliance.
     digest: 871e4726cd44dddc531dc9bcdbd4fb6e7da875fbe0c6ec347bfcda33acc2d246
     home: https://github.com/bitnami/charts/tree/master/bitnami/postgresql
     icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-220x234.png
@@ -153,14 +173,16 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2021-12-13T17:24:35.8511433+01:00"
+    created: "2022-03-23T10:29:24.367495925+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
       version: 1.x.x
-    description: Open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.
+    description: Open source, advanced key-value store. It is often referred to as
+      a data structure server since keys can contain strings, hashes, lists, sets
+      and sorted sets.
     digest: f8fa3b0bdaecf7f9aa1669b027c5452f7efaab21c10b0dbcf7148e17c54ac5b7
     home: https://github.com/bitnami/charts/tree/master/bitnami/redis
     icon: https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png
@@ -180,4 +202,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2021-12-13T17:24:35.7541431+01:00"
+generated: "2022-03-23T10:29:24.273366096+01:00"
