@@ -213,6 +213,11 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
             {{- end }}
+            - name: GITHUB_KEY
+                valueFrom:
+                secretKeyRef:
+                    key: githubKey
+                    name: {{ include "commonground-gateway.fullname" . }}
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
         - name: {{ include "commonground-gateway.fullname" . }}-nginx
