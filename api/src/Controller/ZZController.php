@@ -72,6 +72,20 @@ class ZZController extends AbstractController
       
         // Let determine an endpoint (new way)
         if (isset($matchedEndpoint)) {
+            
+            // Create array for filtering (in progress, should be moved to the correct service)
+            $filterArray = [];
+            $fullPathArray = array_values(array_filter(explode('/', $fullPath)));
+            foreach ($matchedEndpoint->getPath() as $key => $pathPart) {
+                if (substr($pathPart, 0)[0] == '{') {
+                    $variable = str_replace('{', '', $pathPart);
+                    $variable = str_replace('}', '', $variable);
+                    $filterArray[$variable] = $fullPathArray[$key];
+                }    
+            }
+            var_dump($filterArray);die;
+
+
             // Try handler proces and catch exceptions
             try {
                 return $handlerService->handleEndpoint($matchedEndpoint);
