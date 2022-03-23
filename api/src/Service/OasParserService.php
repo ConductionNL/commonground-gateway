@@ -199,14 +199,18 @@ class OasParserService
                 $newEndpoint = new Endpoint();
                 $newEndpoint->addCollection($collection);
                 $newEndpoint->setName($pathName . ' ' . $methodName);
-                $newEndpoint->setPath($pathName);
+                $pathParts = explode('/', $pathName);
+                $pathArray = [];
+                foreach ($pathParts as $key => $part) {
+                    $pathArray[$key] = $part;
+                }
+                $newEndpoint->setPath(array_values(array_filter($pathArray)));
                 isset($method['description']) && $newEndpoint->setDescription($method['description']);
                 isset($method['tags']) && $newEndpoint->setTags($method['tags']);
 
                 // Set pathRegex
-                $explodedPathParts = explode('/', $pathName);
                 $pathRegex = '#^(';
-                foreach ($explodedPathParts as $part) {
+                foreach ($pathParts as $part) {
                     if (empty($part)) continue;
                     substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : $pathRegex .= '/' . $part;
                 } 
