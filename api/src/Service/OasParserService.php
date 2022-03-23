@@ -41,6 +41,7 @@ class OasParserService
 
         // Create Attributes that are references to other Entities
         foreach ($objectsToCreateLater['attributes'] as $attribute) {
+
             $newAttribute = new Attribute();
             $newAttribute->setName($attribute['name']);
             $parentEntity = $this->entityRepo->find($attribute['parentEntityId']);
@@ -56,14 +57,16 @@ class OasParserService
         $this->entityManager->flush();
         
         // Create Handlers between the Entities and Endpoints
-        // var_dump($objectsToCreateLater['handlers']);
         foreach ($objectsToCreateLater['handlers'] as $entityName => $handler) {
+
+            // If we dont have endpoints or entity continue foreach
             if (!isset($handler['endpoints']) || !isset($handler['entity'])) continue;
+
             $newHandler = new Handler();
             $newHandler->setName($entityName . ' handler');
             $newHandler->setSequence(0);
             $newHandler->setConditions('{}');
-            isset($handler['methods']) && $newHandler->setMethods($handler['methods']);
+            isset($handler['methods']) && $newHandler->setMethods(array_unique($handler['methods']));
             $newHandler->setEntity($handler['entity']);
             foreach ($handler['endpoints'] as $endpoint) {
                 $newHandler->addEndpoint($endpoint);
@@ -84,8 +87,23 @@ class OasParserService
         // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
         $attributesToSetLaterAsObject = [];
         $handlersToSetLaterAsObject = [];
+
+        // To prevent duplicated Entities
+        $entitiesAlreadyIterated = [];
+
         foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
           // if ($entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHalBasis'  && $entityName !== 'IngeschrevenPersoon') continue;
+
+            // If this schema is not a valid Entity to persist continue foreach
+            if ((!isset($entityInfo['type']) && !isset($entityInfo['allOf'])) || (isset($entityInfo['type']) && $entityInfo['type'] !== 'object')) continue;
+
+            // Check for json schema instead of Hal
+            $replaceHalInfo = $this->replaceHalWithJsonEntity($entityName, $redoc);
+            isset($replaceHalInfo['entityName']) && $entityName = $replaceHalInfo['entityName'];
+            isset($replaceHalInfo['entityInfo']) && $entityInfo = $replaceHalInfo['entityInfo'];
+
+            // If schema is already iterated continue foreach 
+            if (in_array($entityName, $entitiesAlreadyIterated)) continue;
 
             // Create Entity with entityName
             $newEntity = new Entity();
@@ -110,7 +128,9 @@ class OasParserService
                 foreach ($entityInfo['properties'] as $propertyName => $property) {
                     $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
                 }
-            }    
+            }
+            
+            $entitiesAlreadyIterated[] = $entityName;
         }
 
         $this->entityManager->flush();
@@ -144,6 +164,7 @@ class OasParserService
         (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
         isset($property['description']) && $newAttribute->setDescription($property['description']);
         isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
+
         // If format == date-time set type: datetime
         isset($property['format']) && $property['format'] === 'date-time' && $newAttribute->setType('datetime');
         isset($property['format']) && $property['format'] !== 'date-time' && $newAttribute->setFormat($property['format']);
@@ -153,6 +174,7 @@ class OasParserService
         isset($property['enum']) && $newAttribute->setEnum($property['enum']);
         isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
         isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
+
         // @TODO do something with pattern
         // isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
         isset($property['readOnly']) && $newAttribute->setPattern($property['readOnly']);
@@ -181,8 +203,20 @@ class OasParserService
                 isset($method['description']) && $newEndpoint->setDescription($method['description']);
                 isset($method['tags']) && $newEndpoint->setTags($method['tags']);
 
+                // Set pathRegex
+                $explodedPathParts = explode('/', $pathName);
+                $pathRegex = '#^(';
+                foreach ($explodedPathParts as $part) {
+                    if (empty($part)) continue;
+                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : $pathRegex .= '/' . $part;
+                } 
+                $pathRegex .= ')$#';
+                $newEndpoint->setPathRegex($pathRegex);
+
+
                 // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
                 $createdPropertiesInfo = $this->createEndpointsProperties($redoc, $pathName, $newEndpoint);
+                
                 $newEndpoint->setOperationType($createdPropertiesInfo['operationType']);
 
                 $this->entityManager->persist($newEndpoint);
@@ -204,6 +238,12 @@ class OasParserService
                         // Else use first definition found
                         if (isset($content['schema']['$ref'])) {
                             $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1); 
+
+                            // Replace Hal schema with normal schema
+                            $replaceHalInfo = $this->replaceHalWithJsonEntity($entityNameToLinkTo, $redoc);
+                            isset($replaceHalInfo['entityName']) && $entityNameToLinkTo = $replaceHalInfo['entityName'];
+
+
                             if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
                                 $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
                                 !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
@@ -234,8 +274,10 @@ class OasParserService
         // Check for subpaths and variables
         $partsOfPath = array_filter(explode('/', $pathName));
         $endpointOperationType = 'collection';
+
         $createdPropertiesCount = 0;
         $createdProperties = [];
+
         foreach ($partsOfPath as $property) {
             // If we have a variable in a path (thats not id or uuid) search for parameter and create Property
             if ($property !== '{id}' && $property !== '{uuid}' && $property[0] === '{') {
@@ -287,6 +329,24 @@ class OasParserService
         }
 
         return ['operationType' => $endpointOperationType, 'createdProperties' => $createdProperties];
+    }
+
+    private function replaceHalWithJsonEntity($entityName, $redoc) 
+    {
+        // If string contains Hal search for the schema without Hal 
+        if (str_contains($entityName, 'Hal')) {
+            $entityNameWithoutHal = substr($entityName, 0, strpos($entityName, "Hal"));
+
+          
+            // If schema without Hal is found make that the current iteration   
+            if (isset($redoc['components']['schemas'][$entityNameWithoutHal])) {
+                $entityInfo = $redoc['components']['schemas'][$entityNameWithoutHal];
+                $entityName = $entityNameWithoutHal;
+                return ['entityName' => $entityName, 'entityInfo' => $entityInfo];
+            }
+
+        }
+      return [];
     }
 
 
