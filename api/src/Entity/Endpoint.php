@@ -79,6 +79,14 @@ class Endpoint
     private ?string $description = null;
 
     /**
+     * @var string|null A regex description of this path.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $pathRegex = null;
+
+    /**
      * @var string|null The (OAS) tag of this Endpoint.
      *
      * @Groups({"read", "write"})
@@ -240,6 +248,18 @@ class Endpoint
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getPathRegex(): ?string
+    {
+        return $this->pathRegex;
+    }
+
+    public function setPathRegex(?string $pathRegex): self
+    {
+        $this->pathRegex = $pathRegex;
 
         return $this;
     }
