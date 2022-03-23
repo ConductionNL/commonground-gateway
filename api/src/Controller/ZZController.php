@@ -20,16 +20,16 @@ class ZZController extends AbstractController
 {
     /**
      * @Route("/api/{path}", name="dynamic_route_entity")
-     * @Route("/api/{path}/{identifier}")
-     * @Route("/api/{path}/{identifier}/{subPath}")
-     * @Route("/api/{path}/{identifier}/{subPath}/{identifier2}")
+     * @Route("/api/{path}/{subPath2}")
+     * @Route("/api/{path}/{subPath2}/{subPath3}")
+     * @Route("/api/{path}/{subPath2}/{subPath3}/{subPath4}")
      * @Route("/api/{entity}/{id}", name="dynamic_route_collection")
      */
     public function dynamicAction(
         ?string $path,
-        ?string $identifier,
-        ?string $subPath,
-        ?string $identifier2,
+        ?string $subPath2,
+        ?string $subPath3,
+        ?string $subPath4,
         ?string $entity,
         ?string $id,
         Request $request,
@@ -52,19 +52,29 @@ class ZZController extends AbstractController
         }
         // End of hacky tacky
 
-        $fullEndpoint = '';
-        isset($path) && $fullEndpoint  .= '/' . $path;
-        isset($identifier) && $fullEndpoint .= '/{identifier}';
-        isset($subPath) && $fullEndpoint .= '/' . $subPath;
-        isset($identifier2) && $fullEndpoint .= '/{identifier2}';
+        // Get full path
+        // @TODO wont work with more than 4 subpaths
+        $fullPath = '';
+        isset($path) && $fullPath  .= '/' . $path;
+        isset($subPath2) && $fullPath .= '/' . $subPath2;
+        isset($subPath3) && $fullPath .= '/' . $subPath3;
+        isset($subPath4) && $fullPath .= '/' . $subPath4;
+      
+        $allEndpoints = $this->getDoctrine()->getRepository("App:Endpoint")->findAll();
 
-        $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $fullEndpoint]);
-
+        // Match path to regex of Endpoints
+        foreach ($allEndpoints as $endpoint) {
+            if ($endpoint->getPathRegex() !== null && preg_match($endpoint->getPathRegex(), $fullPath)) {
+                $matchedEndpoint = $endpoint;
+                break;
+            }    
+        }
+      
         // Let determine an endpoint (new way)
-        if (isset($path) && $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findOneBy(['path' => $path])) {
+        if (isset($matchedEndpoint)) {
             // Try handler proces and catch exceptions
             try {
-                return $handlerService->handleEndpoint($endpoint);
+                return $handlerService->handleEndpoint($matchedEndpoint);
             } catch (GatewayException $gatewayException) {
                 $options = $gatewayException->getOptions();
                 $acceptType = $handlerService->getRequestType('accept');
