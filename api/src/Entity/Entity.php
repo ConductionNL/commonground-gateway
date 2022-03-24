@@ -120,7 +120,7 @@ class Entity
      *
      * @example organization
      *
-     * @Assert\Choice({"organization", "user", "userGroup"})
+     * @Assert\Choice({"organization", "user", "userGroup", "log", "verwerking"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */

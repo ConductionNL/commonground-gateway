@@ -189,8 +189,10 @@ class ObjectEntityService
 
                     if ($this->session->get('endpoint')) {
                         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                        if ($endpoint->getOperationType() === "item" && count($data['results']) == 1) { // todo: && $data['total'] == 1
+                        if ($endpoint->getOperationType() === "item" && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                             $data = $data['results'][0];
+                        } elseif ($endpoint->getOperationType() === "item") {
+                            throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
                         }
                     }
                 }
