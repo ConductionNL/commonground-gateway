@@ -8,4 +8,4 @@ App\Entity\CollectionEntity:
         name: BRP collection 
         sourceType: github
         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/master/specificatie/openapi.yaml
-        
+        testDataLocation: https://raw.githubusercontent.com/ConductionNL/brp_publiccode/main/data/brp.yml
