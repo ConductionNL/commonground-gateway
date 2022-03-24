@@ -1,92 +1,115 @@
-# App\Entity\Endpoint:
-#     weerEndpoint:
-#         name: Weer endpoint
-#         description: endpoint voor dingen rondom weer
-#         path: weer
-        
-#     peopleEndpoint:
-#         name: People endpoint
-#         description: endpoint voor dingen rondom contactgegevens
-#         path: people
-        
-#     emailEndpoint:
-#         name: Email endpoint
-#         description: endpoint voor dingen rondom emails
-#         path: emails
+App\Entity\Endpoint:
+    weerEndpointGet:
+        name: Weer endpoint get collection
+        description: endpoint voor dingen rondom weer
+        path: ['weer']
+        pathRegex: '#^(/weer)$#'
+        operationType: collection
+       
+    weerEndpointGetItem: 
+        name: Weer endpoint get item
+        description: endpoint voor dingen rondom weer
+        path: ['weer', '{id}']
+        pathRegex: '#^(/weer/[^/]*)$#'
+        operationType: item
 
-# App\Entity\Entity:
-#     weekWeather:
-#         route: "/api/weer"
-#         name: weer
-#         description: Dit endpoint behandeld weer.
-#         endpoint: "weer"
-        
-#     # This does not work with bisc.yaml
-#     person:
-#         route: "/api/people"
-#         name: persons
-#         description: Dit endpoint behandeld contactgegevens.
-#         endpoint: "people"
-        
-#     email:
-#         route: "/api/emails"
-#         name: email
-#         description: Dit endpoint behandeld emails.
-#         endpoint: "emails"
+    weerEndpointPost:
+        name: Weer endpoint post
+        description: endpoint voor dingen rondom weer
+        path: ['weer']
+        pathRegex: '#^(/weer)$#'
+        operationType: collection
 
-# App\Entity\Attribute:
-#     # weekWeather Attributes
-#     weekWeather_monday:
-#         name: monday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_tuesday:
-#         name: tuesday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_wednesday:
-#         name: wednesday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_thursday:
-#         name: thursday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_friday:
-#         name: friday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_saturday:
-#         name: saturday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
-#     weekWeather_sunday:
-#         name: sunday
-#         description: Weather of this day.
-#         type: string
-#         maxLength: 255
-#         required: true
-#         entity: "@weekWeather"
+    weerEndpointPut:
+        name: Weer endpoint put
+        description: endpoint voor dingen rondom weer
+        path: ['weer', '{id}']
+        pathRegex: '#^(/weer/[^/]*)$#'
+        operationType: item
+
         
-#     # person Attributes
+    # peopleEndpoint:
+    #     name: People endpoint
+    #     description: endpoint voor dingen rondom contactgegevens
+    #     path: people
+        
+    # emailEndpoint:
+    #     name: Email endpoint
+    #     description: endpoint voor dingen rondom emails
+    #     path: emails
+
+App\Entity\Entity:
+    weekWeather:
+        route: "/api/weer"
+        name: weer
+        description: Dit endpoint behandeld weer.
+        
+    # This does not work with bisc.yaml
+    # person:
+    #     route: "/api/people"
+    #     name: persons
+    #     description: Dit endpoint behandeld contactgegevens.
+    #     endpoint: "people"
+        
+    # email:
+    #     route: "/api/emails"
+    #     name: email
+    #     description: Dit endpoint behandeld emails.
+    #     endpoint: "emails"
+
+App\Entity\Attribute:
+    # weekWeather Attributes
+    weekWeather_monday:
+        name: monday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_tuesday:
+        name: tuesday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_wednesday:
+        name: wednesday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_thursday:
+        name: thursday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_friday:
+        name: friday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_saturday:
+        name: saturday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+    weekWeather_sunday:
+        name: sunday
+        description: Weather of this day.
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@weekWeather"
+        
+    # person Attributes
 #     person_givenName:
 #         name: givenName
 #         type: string
@@ -174,7 +197,7 @@
 #         entity: '@person'
 #         unsetable: true
         
-#     # email Attributes
+    # email Attributes
 #     email_name:
 #         name: name
 #         type: string
@@ -190,93 +213,93 @@
 # #        mustBeUnique: true #todo:
 #         entity: "@email"
 
-# App\Entity\Handler:
-#     weatherHandler:
-#         name: Weather handler
-#         methods: ["*"]
-#         sequence: 0
-#         conditions: "{}"
-#         mappingIn:
-#             monday: maandag
-#             tuesday: dinsdag
-#             wednesday: woensdag
-#             thursday: donderdag
-#             friday: vrijdag
-#             saturday: weekend.zaterdag
-#             sunday: weekend.zondag
-#         translationsIn: ["weatherTable1"]
-#         translationsOut: ["weatherTable2"]
-#         mappingOut:
-#             montag: monday
-#             dienstag: tuesday
-#             mittwoch: wednesday
-#             donnerstag: thursday 
-#             freitag: friday 
-#             wochenende.samstag: saturday
-#             wochenende.sonntag: sunday
-#         endpoint: "@weerEndpoint"
-#         entity: "@weekWeather"
-#         # Denormalizer throws error trying denormalize template (set with api call for now)
-#         # template: "<html><body><h1>Test</h1></body></html>"
-#         # templateType: twig
+App\Entity\Handler:
+    weatherHandler:
+        name: Weather handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        mappingIn:
+            monday: maandag
+            tuesday: dinsdag
+            wednesday: woensdag
+            thursday: donderdag
+            friday: vrijdag
+            saturday: weekend.zaterdag
+            sunday: weekend.zondag
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
+        mappingOut:
+            montag: monday
+            dienstag: tuesday
+            mittwoch: wednesday
+            donnerstag: thursday 
+            freitag: friday 
+            wochenende.samstag: saturday
+            wochenende.sonntag: sunday
+        endpoints: ["@weerEndpointGet", "@weerEndpointGetItem", "@weerEndpointPost", "@weerEndpointPut"]
+        entity: "@weekWeather"
+        # Denormalizer throws error trying denormalize template (set with api call for now)
+        # template: "<html><body><h1>Test</h1></body></html>"
+        # templateType: twig
         
-#     peopleHandler:
-#         name: People handler
-#         methods: ["*"]
-#         sequence: 0
-#         conditions: "{}"
-#         endpoint: "@peopleEndpoint"
-#         entity: "@person"
+    # peopleHandler:
+    #     name: People handler
+    #     methods: ["*"]
+    #     sequence: 0
+    #     conditions: "{}"
+    #     endpoint: "@peopleEndpoint"
+    #     entity: "@person"
         
-#     emailHandler:
-#         name: Email handler
-#         methods: ["*"]
-#         sequence: 0
-#         conditions: "{}"
-#         endpoint: "@emailEndpoint"
-#         entity: "@email"
+    # emailHandler:
+    #     name: Email handler
+    #     methods: ["*"]
+    #     sequence: 0
+    #     conditions: "{}"
+    #     endpoint: "@emailEndpoint"
+    #     entity: "@email"
 
-# App\Entity\Translation:
-#     regenTranslation:
-#         translationTable: weatherTable1
-#         translateFrom: zonnig
-#         translateTo: regen
-#         language: nl
-#     rainTranslation:
-#         translationTable: weatherTable2
-#         translateFrom: regen
-#         translateTo: sturm
-#         language: de
+App\Entity\Translation:
+    regenTranslation:
+        translationTable: weatherTable1
+        translateFrom: zonnig
+        translateTo: regen
+        language: nl
+    rainTranslation:
+        translationTable: weatherTable2
+        translateFrom: regen
+        translateTo: sturm
+        language: de
 
-# App\Entity\Subscriber:
-#     weerSubscriber:
-#         name: Weer subscriber 
-#         runOrder: 0
-#         conditions: "{}" 
-#         method: POST
-#         headers: 
-#             accept: application/json
-#         queryParameters: 
-#             param: value
-#         mappingIn:
-#             monday: maandag
-#             tuesday: dinsdag
-#             wednesday: woensdag
-#             thursday: donderdag
-#             friday: vrijdag
-#             saturday: weekend.zaterdag
-#             sunday: weekend.zondag
-#         translationsIn: ["weatherTable1"]
-#         translationsOut: ["weatherTable2"]
-#         mappingOut:
-#             montag: monday
-#             dienstag: tuesday
-#             mittwoch: wednesday
-#             donnerstag: thursday 
-#             freitag: friday 
-#             wochenende.samstag: saturday
-#             wochenende.sonntag: sunday
-#         endpoint: "@weerEndpoint"
+App\Entity\Subscriber:
+    weerSubscriber:
+        name: Weer subscriber 
+        runOrder: 0
+        conditions: "{}" 
+        method: POST
+        headers: 
+            accept: application/json
+        queryParameters: 
+            param: value
+        mappingIn:
+            monday: maandag
+            tuesday: dinsdag
+            wednesday: woensdag
+            thursday: donderdag
+            friday: vrijdag
+            saturday: weekend.zaterdag
+            sunday: weekend.zondag
+        translationsIn: ["weatherTable1"]
+        translationsOut: ["weatherTable2"]
+        mappingOut:
+            montag: monday
+            dienstag: tuesday
+            mittwoch: wednesday
+            donnerstag: thursday 
+            freitag: friday 
+            wochenende.samstag: saturday
+            wochenende.sonntag: sunday
+        endpoint: "@weerEndpoint"
 
 # App\Entity\CollectionEntity:
 #     zakenapiCollection:
