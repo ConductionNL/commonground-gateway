@@ -93,7 +93,7 @@ class ParseDataService
         foreach ($schema as $properties) {
             $object = $this->eavService->getObject(null, 'POST', $entity);
             $object = $this->validationService->validateEntity($object, $properties['properties']);
-            var_dump($object->getAllErrors());
+            var_dump($object->getAllErrors()); // TODO: REMOVE VAR DUMP!!!
             $this->entityManager->persist($object);
             $result[] = $object;
         }
