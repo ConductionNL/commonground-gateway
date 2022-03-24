@@ -87,13 +87,6 @@ class TranslationService
         $destination = $destination->all();
         $destination = $this->encodeArrayKeys($destination, '&#2E', '.');
 
-        // Empty values will be unset // todo: NO . let's not do this? we want to show all properties in the response, even if they are empty
-        foreach ($destination as $key => $property) {
-            if (empty($property)) {
-                unset($destination[$key]);
-            }
-        }
-
         return $destination;
     }
 
