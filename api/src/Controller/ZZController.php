@@ -47,8 +47,6 @@ class ZZController extends AbstractController
         // We should look at a better search moddel in sql
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
-        $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
-
         // Match path to regex of Endpoints
         foreach ($allEndpoints as $currentEndpoint) {
             if ($currentEndpoint->getPathRegex() !== null && preg_match($currentEndpoint->getPathRegex(), $path)) {
