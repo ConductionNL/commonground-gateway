@@ -401,7 +401,7 @@ class ResponseService
             $endpoint = new Endpoint();
             $endpoint->setName('TempRequestLogEndpointWIP');
 //            $endpoint->setType('gateway-endpoint');
-            $endpoint->setPath('not a real endpoint');
+//            $endpoint->setPath('not a real endpoint');
             $endpoint->setDescription('This is a endpoint added to use the default loggingConfig of endpoints');
             $this->em->persist($endpoint);
             $this->em->flush();
