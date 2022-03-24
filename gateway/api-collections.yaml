@@ -1,0 +1,16 @@
+App\Entity\CollectionEntity:
+    bagCollection:
+        name: BAG collection
+        sourceType: github
+        locationOAS: "https://raw.githubusercontent.com/lvbag/BAG-API/master/Technische%20specificatie/Archief/Yaml's/BAG%20API%20Individuele%20Bevragingen/resolved/individuelebevragingen/v2/openapi.yaml"
+
+    brpCollection:
+        name: BRP collection 
+        sourceType: github
+        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/master/specificatie/openapi.yaml
+        
+    handelsRegisterCollection:
+        name: Handels Register collection 
+        sourceType: github
+        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/openapi.yaml
+        

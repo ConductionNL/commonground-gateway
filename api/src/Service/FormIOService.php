@@ -37,6 +37,8 @@ class FormIOService
             $component['defaultValue'] = $attr->getDefaultValue() ?? '';
             $component['placeholder'] = $attr->getExample() ?? '';
             $component['unique'] = $attr->getMustBeUnique() ?? '';
+            $attr->getReadOnly() !== null && $component['disabled'] = true;
+            $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'].+' (read only)';
 
             $component['validate'] = [
                 'required'      => $attr->getRequired() ?? false,
@@ -46,6 +48,9 @@ class FormIOService
                 'custom'        => '',
                 'customPrivate' => false,
             ];
+
+            // Default required to false when readoOnly is true
+            $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['validate']['required'] = false;
 
             $component['type'] = $this->getAttributeInputType($attr);
 

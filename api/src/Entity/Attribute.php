@@ -42,7 +42,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "entity.id": "exact"
+ *     "entity.id": "exact",
+ *     "name": "exact"
  * })
  */
 class Attribute
@@ -97,7 +98,7 @@ class Attribute
      * @example string
      *
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"countryCode","bsn","url","uuid","email","phone","json","dutch_pc4"})
+     * @Assert\Choice({"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -441,6 +442,16 @@ class Attribute
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $example;
+
+    /**
+     * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
+     *
+     * @example ^[1-9][0-9]{9}$
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $pattern;
 
     /**
      * @var bool Whether or not this property has been deprecated and wil be removed in the future
@@ -1064,6 +1075,18 @@ class Attribute
         return $this;
     }
 
+    public function getPattern(): ?string
+    {
+        return $this->pattern;
+    }
+
+    public function setPattern(?string $pattern): self
+    {
+        $this->pattern = $pattern;
+
+        return $this;
+    }
+
     public function getNullable(): ?bool
     {
         return $this->nullable;
@@ -1213,6 +1236,7 @@ class Attribute
         //TODO: this list of validations is not complete!
         $validations = [];
         $validations['multipleOf'] = $this->getMultipleOf();
+        $validations['pattern'] = $this->getPattern();
         $validations['maximum'] = $this->getMaximum();
         $validations['exclusiveMaximum'] = $this->getExclusiveMaximum();
         $validations['minimum'] = $this->getMinimum();

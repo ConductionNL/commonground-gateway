@@ -78,6 +78,22 @@ class Endpoint
      */
     private ?string $description = null;
 
+    /**
+     * @var string|null A regex description of this path.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $pathRegex = null;
+
+    /**
+     * @var string|null The (OAS) tag of this Endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $tag;
+
     // @TODO remove totally?
     // /**
     //  * @var string The type of this Endpoint.
@@ -91,14 +107,14 @@ class Endpoint
     // private string $type;
 
     /**
-     * @var string The path of this Endpoint.
+     * @var array|null The path of this Endpoint.
      *
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="array")
      */
-    private string $path;
+    private ?array $path;
 
     /**
      * @MaxDepth(1)
@@ -115,15 +131,6 @@ class Endpoint
      * @ORM\Column(type="array", nullable=true)
      */
     private array $loggingConfig = ['headers' => ['authorization']];
-
-    /**
-     * @var array|null The handlers used for this entity.
-     *
-     * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="endpoint", orphanRemoval=true)
-     */
-    private Collection $handlers;
 
     /**
      * @Groups({"read", "write"})
@@ -148,12 +155,56 @@ class Endpoint
      */
     private ?Collection $collections;
 
+    /**
+     * @var ?string The operation type calls must be that are requested through this Endpoint
+     *
+     * @Assert\Choice({"item", "collection"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string  $operationType;
+
+    /**
+     * @var ?array (OAS) tags to identify this Endpoint
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $tags = [];
+
+    /**
+     * @var ?string Array of the path if this Endpoint has parameters and/or subpaths
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $pathArray = [];
+
+    /**
+     * @var Collection|null Properties of this Endpoint
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Property::class, mappedBy="endpoint")
+     */
+    private ?Collection $properties;
+
+    /**
+     * @var Collection|null Handlers of this Endpoint
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")
+     */
+    private ?Collection $handlers;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->properties = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -192,6 +243,30 @@ class Endpoint
         return $this;
     }
 
+    public function getPathRegex(): ?string
+    {
+        return $this->pathRegex;
+    }
+
+    public function setPathRegex(?string $pathRegex): self
+    {
+        $this->pathRegex = $pathRegex;
+
+        return $this;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?string $tag): self
+    {
+        $this->tag = $tag;
+
+        return $this;
+    }
+
     // public function getType(): ?string
     // {
     //     return $this->type;
@@ -204,12 +279,12 @@ class Endpoint
     //     return $this;
     // }
 
-    public function getPath(): ?string
+    public function getPath(): ?array
     {
         return $this->path;
     }
 
-    public function setPath(string $path): self
+    public function setPath(array $path): self
     {
         $this->path = $path;
 
@@ -254,36 +329,6 @@ class Endpoint
     public function setLoggingConfig(array $loggingConfig): self
     {
         $this->loggingConfig = $loggingConfig;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Handler[]
-     */
-    public function getHandlers(): Collection
-    {
-        return $this->handlers;
-    }
-
-    public function addHandler(Handler $handler): self
-    {
-        if (!$this->handlers->contains($handler)) {
-            $this->handlers[] = $handler;
-            $handler->setObject($this);
-        }
-
-        return $this;
-    }
-
-    public function removeHandler(Handler $handler): self
-    {
-        if ($this->handlers->removeElement($handler)) {
-            // set the owning side to null (unless already changed)
-            if ($handler->getObject() === $this) {
-                $handler->setObject(null);
-            }
-        }
 
         return $this;
     }
@@ -359,6 +404,99 @@ class Endpoint
     {
         if ($this->collections->removeElement($collection)) {
             $collection->removeEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function getOperationType(): ?string
+    {
+        return $this->operationType;
+    }
+
+    public function setOperationType(string $operationType): self
+    {
+        $this->operationType = $operationType;
+
+        return $this;
+    }
+
+    public function getTags(): ?array
+    {
+        return $this->tags;
+    }
+
+    public function setTags(?array $tags): self
+    {
+        $this->tags = $tags;
+
+        return $this;
+    }
+
+    public function getPathArray(): ?array
+    {
+        return $this->pathArray;
+    }
+
+    public function setPathArray(?array $pathArray): self
+    {
+        $this->pathArray = $pathArray;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Property[]
+     */
+    public function getProperties(): Collection
+    {
+        return $this->properties;
+    }
+
+    public function addProperty(Property $property): self
+    {
+        if (!$this->properties->contains($property)) {
+            $this->properties[] = $property;
+            $property->setEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProperty(Property $property): self
+    {
+        if ($this->properties->removeElement($property)) {
+            // set the owning side to null (unless already changed)
+            if ($property->getEndpoint() === $this) {
+                $property->setEndpoint(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Handler[]
+     */
+    public function getHandlers(): Collection
+    {
+        return $this->handlers;
+    }
+
+    public function addHandler(Handler $handler): self
+    {
+        if (!$this->handlers->contains($handler)) {
+            $this->handlers[] = $handler;
+            $handler->addEndpoint($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHandler(Handler $handler): self
+    {
+        if ($this->handlers->removeElement($handler)) {
+            $handler->removeEndpoint($this);
         }
 
         return $this;

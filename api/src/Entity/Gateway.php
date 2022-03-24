@@ -171,6 +171,7 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $location;
+
     /**
      * @var string The type of this gatewat
      *

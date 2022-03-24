@@ -81,16 +81,28 @@ class HandlerService
     /**
      * This function sets the endpoint in the session and executes handleHandler with its found Handler.
      */
-    public function handleEndpoint(Endpoint $endpoint): Response
+    public function handleEndpoint(Endpoint $endpoint, array $parameters): Response
     {
         $this->cache->invalidateTags(['grantedScopes']);
 
         $session = new Session();
         $session->set('endpoint', $endpoint->getId()->toString());
+        $session->set('parameters', $parameters);
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         foreach ($endpoint->getHandlers() as $handler) {
+            // Check if handler should be used for this method
+            if ($handler->getMethods() !== null) {
+                $methods = [];
+                foreach ($handler->getMethods() as $method) {
+                    $methods[] = strtoupper($method);
+                }
+            }
+            if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
+                continue;
+            }
+
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
 
@@ -101,9 +113,7 @@ class HandlerService
             }
         }
 
-        return $this->handleHandler(null, $endpoint);
-
-        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     /**

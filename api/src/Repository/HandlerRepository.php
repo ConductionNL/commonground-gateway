@@ -19,6 +19,19 @@ class HandlerRepository extends ServiceEntityRepository
         parent::__construct($registry, Handler::class);
     }
 
+    public function findOneByName(string $name): ?Handler
+    {
+        $qb = $this->createQueryBuilder('h')
+            ->where('h.name = :name')
+            ->setParameter('name', $name);
+
+        $query = $qb->getQuery();
+
+        $handler = $query->setMaxResults(1)->getOneOrNullResult();
+
+        return $handler;
+    }
+
     // /**
     //  * @return Handler[] Returns an array of Handler objects
     //  */

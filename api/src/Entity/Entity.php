@@ -42,7 +42,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "type": "exact"
+ *     "name": "exact"
  * })
  */
 class Entity
@@ -120,7 +120,7 @@ class Entity
      *
      * @example organization
      *
-     * @Assert\Choice({"organization", "user", "userGroup"})
+     * @Assert\Choice({"organization", "user", "userGroup", "log", "verwerking"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string")
      */
@@ -395,10 +395,18 @@ class Entity
 
     public function setName(string $name): self
     {
+        // New (example: ObjectEntity will become object_entity)
         // lets make sure this name is slugable
-        $name = trim($name); //removes whitespace at begin and ending
-        $name = preg_replace('/\s+/', '_', $name); // replaces other whitespaces with _
-        $name = strtolower($name);
+        // $name = trim($name); //removes whitespace at begin and ending
+        // $firstChar = strtolower($name[0]); // get first char because we dont want to set a _ before first capital
+        // $name = substr($name, 1); // subtract first character
+        // $name = preg_replace('/(?<!\ )[A-Z]/', '_$0', $name); // change upper chars to lower and put a _ in front of it
+        // $name = $firstChar . strtolower($name); // combine strings
+
+        // Old (example: ObjectEntity would become objectentity)
+        // $name = trim($name); //removes whitespace at begin and ending
+        // $name = preg_replace('/\s+/', '_', $name); // replaces other whitespaces with _
+        // $name = $firstChar . strtolower($name); // combine strings
 
         $this->name = $name;
 

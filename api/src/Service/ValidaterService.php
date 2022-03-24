@@ -432,6 +432,8 @@ class ValidaterService
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
             case null:
+            // For now..
+            case 'uri':
                 // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();
             default:
@@ -466,7 +468,8 @@ class ValidaterService
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
             $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
             // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
-            if (empty($config) || in_array($validation, $ignoredValidations)) {
+            // @TODO do something with validation pattern
+            if (empty($config) || in_array($validation, $ignoredValidations) || $validation === 'pattern') {
                 continue;
             }
             $validationRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
