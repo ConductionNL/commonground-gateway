@@ -31,7 +31,7 @@ class ConvenienceController extends AbstractController
      */
     public function getRepositories(): Response
     {
-        return new Response($this->publiccodeService->discoverGithub());
+        return new Response($this->publiccodeService->discoverGithub(), 200, ['content-type' => 'json']);
     }
 
     /**
@@ -41,7 +41,7 @@ class ConvenienceController extends AbstractController
      */
     public function getGithubRepository(string $id): Response
     {
-        return new Response($this->publiccodeService->getGithubRepositoryContent($id));
+        return new Response($this->publiccodeService->getGithubRepositoryContent($id), 200, ['content-type' => 'json']);
     }
 
     /**
@@ -51,6 +51,6 @@ class ConvenienceController extends AbstractController
      */
     public function installRepository(string $id): Response
     {
-        return new Response(json_encode($this->publiccodeService->createCollection($id)));
+        return new Response(json_encode($this->publiccodeService->createCollection($id)), 200, ['content-type' => 'json']);
     }
 }
