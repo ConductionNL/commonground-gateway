@@ -34,13 +34,13 @@ class ZZController extends AbstractController
 
         // Below is hacky tacky
         // @todo refactor
-        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
-        if ($document instanceof Document && $id) {
-            return $documentService->handleDocument($document, $id);
-        }
-        if ($entity == 'postalCodes') {
-            return $validationService->dutchPC4ToJson();
-        }
+//        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
+//        if ($document instanceof Document && $id) {
+//            return $documentService->handleDocument($document, $id);
+//        }
+//        if ($entity == 'postalCodes') {
+//            return $validationService->dutchPC4ToJson();
+//        }
         // End of hacky tacky
 
         // Get full path
