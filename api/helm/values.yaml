@@ -16,6 +16,7 @@ config:
   version: V1.0
   debug: 0
   cache: true
+  githubKey: ''
 
 security:
   authEnabled: true

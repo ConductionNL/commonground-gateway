@@ -2,15 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\Attribute;
 use App\Entity\CollectionEntity;
-use App\Entity\Endpoint;
-use App\Entity\Entity;
-use App\Entity\Handler;
-use App\Entity\Property;
 use App\Service\OasParserService;
+use App\Service\ParseDataService;
+use App\Service\PubliccodeService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,14 +18,24 @@ use Symfony\Component\Yaml\Yaml;
 
 class ConvenienceController extends AbstractController
 {
+    private PubliccodeService $publiccodeService;
+    private EntityManagerInterface $entityManager;
+    private OasParserService $oasParser;
+    private SerializerInterface $serializer;
+    private ParseDataService $dataService;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         SerializerInterface $serializer,
-        OasParserService $oasParser
+        OasParserService $oasParser,
+        PubliccodeService $publiccodeService,
+        ParseDataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = $oasParser;
+        $this->publiccodeService = $publiccodeService;
+        $this->dataService = $dataService;
     }
 
     /**
@@ -63,10 +71,10 @@ class ConvenienceController extends AbstractController
         $redoc = Yaml::parse($response->getBody()->getContents());
 
         // try {
-            // Persist yaml to objects
-            $this->oasParser->parseRedoc($redoc, $collection);
+        // Persist yaml to objects
+        $this->oasParser->parseRedoc($redoc, $collection);
         // } catch (\Exception $e) {
-            // return new Response(
+        // return new Response(
         //         $this->serializer->serialize(['message' => $e->getMessage()], 'json'),
         //         Response::HTTP_BAD_REQUEST,
         //         ['content-type' => 'json']
@@ -77,11 +85,43 @@ class ConvenienceController extends AbstractController
         $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
+        $this->entityManager->clear();
+        $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
 
         return new Response(
             $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$url], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
+    }
+
+    /**
+     * @Route("/admin/publiccode")
+     *
+     * @throws GuzzleException
+     */
+    public function getRepositories(): Response
+    {
+        return new Response($this->publiccodeService->discoverGithub(), 200, ['content-type' => 'json']);
+    }
+
+    /**
+     * @Route("/admin/publiccode/github/{id}")
+     *
+     * @throws GuzzleException
+     */
+    public function getGithubRepository(string $id): Response
+    {
+        return new Response($this->publiccodeService->getGithubRepositoryContent($id), 200, ['content-type' => 'json']);
+    }
+
+    /**
+     * @Route("/admin/publiccode/github/install/{id}")
+     *
+     * @throws GuzzleException
+     */
+    public function installRepository(string $id): Response
+    {
+        return new Response(json_encode($this->publiccodeService->createCollection($id)), 200, ['content-type' => 'json']);
     }
 }

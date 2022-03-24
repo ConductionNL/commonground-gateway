@@ -63,6 +63,7 @@ parameters:
   env(APP_EHERKENNING_LOCATION): "https://zuid-drecht.nl/eherkenning"
   env(BADGES): ""
   env(DIGID_ARTIFACT_URL): ""
+  env(GITHUB_KEY): ""
 
   env(APP_MODE): "digispoof"
 
@@ -109,6 +110,7 @@ parameters:
   idin_secret: "%env(IDIN_SECRET)%"
   badges: "%env(BADGES)%"
   digid_artifact_url: "%env(DIGID_ARTIFACT_URL)%"
+  github_key: "%env(GITHUB_KEY)%"
 
   app_certificate: "%env(APP_CERT)%"
   app_ssl_key: "%env(APP_KEY)%"

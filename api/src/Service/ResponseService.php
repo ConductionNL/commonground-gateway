@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
@@ -401,7 +400,7 @@ class ResponseService
             $endpoint = new Endpoint();
             $endpoint->setName('TempRequestLogEndpointWIP');
 //            $endpoint->setType('gateway-endpoint');
-            $endpoint->setPath('not a real endpoint');
+//            $endpoint->setPath('not a real endpoint');
             $endpoint->setDescription('This is a endpoint added to use the default loggingConfig of endpoints');
             $this->em->persist($endpoint);
             $this->em->flush();

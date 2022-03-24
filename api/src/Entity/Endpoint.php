@@ -132,15 +132,6 @@ class Endpoint
      */
     private array $loggingConfig = ['headers' => ['authorization']];
 
-    // /**
-    //  * @var array|null The handlers used for this entity.
-    //  *
-    //  * @MaxDepth(1)
-    //  * @Groups({"read", "write"})
-    //  * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="endpoint", orphanRemoval=true)
-    //  */
-    // private Collection $handlers;
-
     /**
      * @Groups({"read", "write"})
      * @MaxDepth(1)
@@ -200,7 +191,7 @@ class Endpoint
 
     /**
      * @var Collection|null Handlers of this Endpoint
-     * 
+     *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")
