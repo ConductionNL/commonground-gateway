@@ -884,7 +884,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(string $entityName, Request $request, $fields, $extension): array
+    public function handleSearch(string $entityName, Request $request, $fields, $extension, $filters = null): array
     {
         $query = $request->query->all();
         unset($query['limit']);
@@ -939,6 +939,11 @@ class EavService
                 ];
             }
         }
+
+        if ($filters) {
+            $query = array_merge($query, $filters);
+        }
+
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
 

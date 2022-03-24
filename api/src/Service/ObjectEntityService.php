@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
@@ -173,7 +174,27 @@ class ObjectEntityService
                         $data['error'] = $object;
                     }
                 } else {
-                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false);
+                    if ($parameters = $this->session->get('parameters')) {
+                        if (array_key_exists('path', $parameters)) {
+                            foreach ($parameters['path'] as $key => $part) {
+                                if ($key[0] === '{' && $key[strlen($key)-1] === '}') {
+                                    $key = substr($key, 1, -1);
+                                    $filters[$key] = $part;
+                                }
+                            }
+                        }
+                    }
+//                    var_dump($filters);
+                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+
+                    if ($this->session->get('endpoint')) {
+                        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+                        if ($endpoint->getOperationType() === "item" && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
+                            $data = $data['results'][0];
+                        } elseif ($endpoint->getOperationType() === "item") {
+                            throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                        }
+                    }
                 }
 
                 //todo: -end- old code...

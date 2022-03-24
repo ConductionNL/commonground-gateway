@@ -44,12 +44,13 @@ class OasParserService
 
             $newAttribute = new Attribute();
             $newAttribute->setName($attribute['name']);
+            $newAttribute->setSearchable(true);
             $parentEntity = $this->entityRepo->find($attribute['parentEntityId']);
             isset($parentEntity) && $newAttribute->setEntity($parentEntity);
             $newAttribute->setCascade(true);
 
             $entityToLinkTo = $this->entityRepo->findByName($attribute['entityNameToLinkTo']);
-            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
+            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]) && $newAttribute->setCascade(true);
 
             // If we have set attribute.entity and attribute.object, persist attribute
             $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
@@ -162,6 +163,9 @@ class OasParserService
         $newAttribute = new Attribute();
         $newAttribute->setName($propertyName);
 
+        // Default to true for now
+        $newAttribute->setSearchable(true);
+
         (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
         isset($property['description']) && $newAttribute->setDescription($property['description']);
         isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
@@ -211,9 +215,9 @@ class OasParserService
 
                 // Set pathRegex
                 $pathRegex = '#^(';
-                foreach ($pathParts as $part) {
+                foreach ($pathParts as $key => $part) {
                     if (empty($part)) continue;
-                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : $pathRegex .= '/' . $part;
+                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
                 }
                 $pathRegex .= ')$#';
                 $newEndpoint->setPathRegex($pathRegex);
