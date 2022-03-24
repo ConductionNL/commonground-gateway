@@ -140,32 +140,13 @@ class CollectionEntity
     private ?string $sourceBranch;
 
     /**
-     * @var ?string The location where the OAS can be loaded from
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
-     *         }
-     *     }
-     * )
-     * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private ?string $locationOAS;
-
-    /**
      * @var ?string The location where the test data set can be found
      *
      * @Assert\Length(
      *      max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $testDataLocation;
 
@@ -345,18 +326,6 @@ class CollectionEntity
     public function setSourceBranch(?string $sourceBranch): self
     {
         $this->sourceBranch = $sourceBranch;
-
-        return $this;
-    }
-
-    public function getLocationOAS(): ?string
-    {
-        return $this->locationOAS;
-    }
-
-    public function setLocationOAS(?string $locationOAS): self
-    {
-        $this->locationOAS = $locationOAS;
 
         return $this;
     }

@@ -46,6 +46,7 @@ class OasParserService
             $newAttribute->setName($attribute['name']);
             $parentEntity = $this->entityRepo->find($attribute['parentEntityId']);
             isset($parentEntity) && $newAttribute->setEntity($parentEntity);
+            $newAttribute->setCascade(true);
 
             $entityToLinkTo = $this->entityRepo->findByName($attribute['entityNameToLinkTo']);
             isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
@@ -55,7 +56,7 @@ class OasParserService
         }
 
         $this->entityManager->flush();
-        
+
         // Create Handlers between the Entities and Endpoints
         foreach ($objectsToCreateLater['handlers'] as $entityName => $handler) {
 
@@ -102,7 +103,7 @@ class OasParserService
             isset($replaceHalInfo['entityName']) && $entityName = $replaceHalInfo['entityName'];
             isset($replaceHalInfo['entityInfo']) && $entityInfo = $replaceHalInfo['entityInfo'];
 
-            // If schema is already iterated continue foreach 
+            // If schema is already iterated continue foreach
             if (in_array($entityName, $entitiesAlreadyIterated)) continue;
 
             // Create Entity with entityName
@@ -114,7 +115,7 @@ class OasParserService
             // Persist entity
             $this->entityManager->persist($newEntity);
 
-            $handlersToSetLaterAsObject[$entityName]['entity'] = $newEntity; 
+            $handlersToSetLaterAsObject[$entityName]['entity'] = $newEntity;
 
             // Loop through allOf and create Attributes
             if (isset($entityInfo['allOf'])) {
@@ -129,7 +130,7 @@ class OasParserService
                     $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
                 }
             }
-            
+
             $entitiesAlreadyIterated[] = $entityName;
         }
 
@@ -213,14 +214,14 @@ class OasParserService
                 foreach ($pathParts as $part) {
                     if (empty($part)) continue;
                     substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : $pathRegex .= '/' . $part;
-                } 
+                }
                 $pathRegex .= ')$#';
                 $newEndpoint->setPathRegex($pathRegex);
 
 
                 // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
                 $createdPropertiesInfo = $this->createEndpointsProperties($redoc, $pathName, $newEndpoint);
-                
+
                 $newEndpoint->setOperationType($createdPropertiesInfo['operationType']);
 
                 $this->entityManager->persist($newEndpoint);
@@ -230,7 +231,7 @@ class OasParserService
 
                         // Use json definition
                         if (isset($response['content']['application/json'])) {
-                            $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1); 
+                            $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1);
                             if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
                                 $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
                                 !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
@@ -241,7 +242,7 @@ class OasParserService
 
                         // Else use first definition found
                         if (isset($content['schema']['$ref'])) {
-                            $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1); 
+                            $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
 
                             // Replace Hal schema with normal schema
                             $replaceHalInfo = $this->replaceHalWithJsonEntity($entityNameToLinkTo, $redoc);
@@ -258,7 +259,7 @@ class OasParserService
                     }
                     break;
                 }
-            } 
+            }
         }
 
         // Execute sql to database
@@ -270,7 +271,7 @@ class OasParserService
 
     /**
      * This function reads redoc and persists it into Properties of an Endpoint.
-     * 
+     *
      * @return string Endpoint.operationType based on if the last Property is a identifier or not.
      */
     private function createEndpointsProperties(array $redoc, string $pathName, Endpoint $newEndpoint): array
@@ -335,14 +336,14 @@ class OasParserService
         return ['operationType' => $endpointOperationType, 'createdProperties' => $createdProperties];
     }
 
-    private function replaceHalWithJsonEntity($entityName, $redoc) 
+    private function replaceHalWithJsonEntity($entityName, $redoc)
     {
-        // If string contains Hal search for the schema without Hal 
+        // If string contains Hal search for the schema without Hal
         if (str_contains($entityName, 'Hal')) {
             $entityNameWithoutHal = substr($entityName, 0, strpos($entityName, "Hal"));
 
-          
-            // If schema without Hal is found make that the current iteration   
+
+            // If schema without Hal is found make that the current iteration
             if (isset($redoc['components']['schemas'][$entityNameWithoutHal])) {
                 $entityInfo = $redoc['components']['schemas'][$entityNameWithoutHal];
                 $entityName = $entityNameWithoutHal;

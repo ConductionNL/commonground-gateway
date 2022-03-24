@@ -93,7 +93,7 @@ class ConvenienceController extends AbstractController
         $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
-
+        $this->entityManager->clear();
         $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
 
         return new Response(
@@ -104,7 +104,7 @@ class ConvenienceController extends AbstractController
     }
 
         /**
-     * @Route("/admin/publiccode", name="dynamic_route_load_type")
+     * @Route("/admin/publiccode")
      *
      * @throws GuzzleException
      */

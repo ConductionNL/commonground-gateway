@@ -91,11 +91,8 @@ class ParseDataService
     public function createObjects(Entity $entity, array $schema): array
     {
         $result = [];
-        var_dump($schema);
         foreach($schema as $properties){
-            var_dump('hello my friend!');
             $object = $this->eavService->getObject(null, 'POST', $entity);
-            var_dump($properties['properties']);
             $object = $this->validationService->validateEntity($object, $properties['properties']);
             var_dump($object->getAllErrors());
             $this->entityManager->persist($object);
@@ -135,10 +132,6 @@ class ParseDataService
         $results = $this->parseData($data, $collection);
 
         $this->entityManager->flush();
-
-        foreach($results as $result){
-            var_dump($result->getId()->toString());
-        }
         return true;
     }
 }
