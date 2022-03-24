@@ -348,7 +348,7 @@ class Handler
 
         return $this;
     }
-    
+
     public function getEntity(): ?Entity
     {
         return $this->entity;

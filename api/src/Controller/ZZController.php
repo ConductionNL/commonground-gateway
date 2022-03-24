@@ -32,7 +32,6 @@ class ZZController extends AbstractController
         LogService $logService
     ): Response {
 
-
         // Below is hacky tacky
         // @todo refactor
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
@@ -47,6 +46,8 @@ class ZZController extends AbstractController
         // Get full path
         // We should look at a better search moddel in sql
         $allEndpoints = $this->getDoctrine()->getRepository("App:Endpoint")->findAll();
+
+        $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
         // Match path to regex of Endpoints
         foreach ($allEndpoints as $currentEndpoint) {

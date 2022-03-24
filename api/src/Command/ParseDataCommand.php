@@ -4,7 +4,6 @@
 
 namespace App\Command;
 
-use App\Service\OasParserService;
 use App\Service\ParseDataService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -48,8 +47,9 @@ class ParseDataCommand extends Command
 
         // return this if there was no problem running the command
         // (it's equivalent to returning int(0))
-        if($this->dataService->loadData($input->getArgument('url'), $input->getArgument('oas')))
+        if ($this->dataService->loadData($input->getArgument('url'), $input->getArgument('oas'))) {
             return Command::SUCCESS;
+        }
 
         // or return this if some error happened during the execution
         // (it's equivalent to returning int(1))
