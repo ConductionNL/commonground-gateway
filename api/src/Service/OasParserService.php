@@ -33,31 +33,15 @@ class OasParserService
     public function parseRedoc(array $redoc, CollectionEntity $collection)
     {
         // Persist Entities and Attributes
-        $objectsToCreateLater = $this->persistSchemasAsEntities($redoc, $collection);
+        $handlersToSetLaterAsObject = $this->persistSchemasAsEntities($redoc, $collection);
 
         // Persist Endpoints and its Properties
-        $objectsToCreateLater['handlers'] = $this->persistPathsAsEndpoints($redoc, $collection, $objectsToCreateLater['handlers']);
-
-        // Create Attributes that are references to other Entities
-        foreach ($objectsToCreateLater['attributes'] as $attribute) {
-            $newAttribute = new Attribute();
-            $newAttribute->setName($attribute['name']);
-            $newAttribute->setSearchable(true);
-            $parentEntity = $this->entityRepo->find($attribute['parentEntityId']);
-            isset($parentEntity) && $newAttribute->setEntity($parentEntity);
-            $newAttribute->setCascade(true);
-
-            $entityToLinkTo = $this->entityRepo->findByName($attribute['entityNameToLinkTo']);
-            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]) && $newAttribute->setCascade(true);
-
-            // If we have set attribute.entity and attribute.object, persist attribute
-            $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
-        }
+        $handlersToSetLaterAsObject = $this->persistPathsAsEndpoints($redoc, $collection, $handlersToSetLaterAsObject);
 
         $this->entityManager->flush();
 
         // Create Handlers between the Entities and Endpoints
-        foreach ($objectsToCreateLater['handlers'] as $entityName => $handler) {
+        foreach ($handlersToSetLaterAsObject as $entityName => $handler) {
 
             // If we dont have endpoints or entity continue foreach
             if (!isset($handler['endpoints']) || !isset($handler['entity'])) {
@@ -81,18 +65,67 @@ class OasParserService
         $this->entityManager->flush();
     }
 
+    private function isAssociative(array $array): bool
+    {
+        if (array() === $array) return false;
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
+
+    private function processAllOf(array $allOf, Entity $entity, CollectionEntity $collection, array &$handlersToSetLaterAsObject, array $oas)
+    {
+        $properties = [];
+        if($this->isAssociative($allOf)){
+            $properties = $allOf;
+        } else {
+            foreach($allOf as $set){
+                if(isset($set['$ref'])){
+                    $schema = $this->getDataFromRef($oas, explode('/', $set['$ref']));
+                    $properties = array_merge($schema['properties'], $properties);
+                } else {
+                    $properties = array_merge($set['properties'], $properties);
+                }
+            }
+        }
+        foreach ($properties as $propertyName => $property) {
+            $this->createAttribute($property, $propertyName, $entity, $handlersToSetLaterAsObject, $oas, $collection);
+        }
+    }
+
+    private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection, array $oas, array &$handlersToSetLaterAsObject): Entity
+    {
+        $newEntity = new Entity();
+        $newEntity->setName($name);
+        $newEntity->addCollection($collection);
+        $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
+
+        $this->entityManager->persist($newEntity);
+
+        $handlersToSetLaterAsObject[$name]['entity'] = $newEntity;
+
+        // Loop through allOf and create Attributes
+        if (isset($schema['allOf'])) {
+            $this->processAllOf($schema['allOf'], $newEntity, $collection, $handlersToSetLaterAsObject, $oas);
+        }
+
+        // Loop through properties and create Attributes
+        if (isset($schema['properties'])) {
+            foreach ($schema['properties'] as $propertyName => $property) {
+                $this->createAttribute($property, $propertyName, $newEntity, $handlersToSetLaterAsObject, $oas, $collection);
+            }
+        }
+
+        return $newEntity;
+    }
+
     /**
      * This function reads redoc and persists it into Entity objects.
      */
     private function persistSchemasAsEntities(array $redoc, CollectionEntity $collection): array
     {
         // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
-        $attributesToSetLaterAsObject = [];
         $handlersToSetLaterAsObject = [];
 
-        // To prevent duplicated Entities
-        $entitiesAlreadyIterated = [];
-
+//        var_dump(array_keys($redoc['components']['schemas']));
         foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
             // if ($entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHalBasis'  && $entityName !== 'IngeschrevenPersoon') continue;
 
@@ -107,94 +140,116 @@ class OasParserService
             isset($replaceHalInfo['entityInfo']) && $entityInfo = $replaceHalInfo['entityInfo'];
 
             // If schema is already iterated continue foreach
-            if (in_array($entityName, $entitiesAlreadyIterated)) {
-                continue;
-            }
 
-            // Create Entity with entityName
-            $newEntity = new Entity();
-            $newEntity->setName($entityName);
-            $newEntity->addCollection($collection);
-            $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
-
-            // Persist entity
-            $this->entityManager->persist($newEntity);
-
-            $handlersToSetLaterAsObject[$entityName]['entity'] = $newEntity;
-
-            // Loop through allOf and create Attributes
-            if (isset($entityInfo['allOf'])) {
-                foreach ($entityInfo['allOf'] as $propertyName => $property) {
-                    $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
-                }
-            }
-
-            // Loop through properties and create Attributes
-            if (isset($entityInfo['properties'])) {
-                foreach ($entityInfo['properties'] as $propertyName => $property) {
-                    $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
-                }
-            }
-
-            $entitiesAlreadyIterated[] = $entityName;
+            $entities[] = $this->getEntity($entityName, $entityInfo, $collection, $redoc, $handlersToSetLaterAsObject);
         }
 
         $this->entityManager->flush();
+        return $handlersToSetLaterAsObject;
+    }
 
-        return ['attributes' => $attributesToSetLaterAsObject, 'handlers' => $handlersToSetLaterAsObject];
+    private function getDataFromRef(array $oas, array $ref): array
+    {
+        $data = $oas;
+        try{
+            foreach($ref as $location){
+                if($location && $location !== '#')
+                    $data = $data[$location];
+            }
+        } catch (\Exception $exception){
+            var_dump(array_keys($oas['components']['schemas']));
+            throw $exception;
+        }
+
+        return $data;
+    }
+
+    private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity, array $oas, array &$handlersToSetLaterAsObject): Entity
+    {
+        foreach($collectionEntity->getEntities() as $entity){
+            if($entity->getName() == $name) {
+                return $entity;
+            }
+        }
+
+        return $this->persistEntityFromSchema($name, $schema, $collectionEntity, $oas, $handlersToSetLaterAsObject);
+    }
+
+    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity): Attribute
+    {
+        $newAttribute = new Attribute();
+        $newAttribute->setName($propertyName);
+        $newAttribute->setEntity($parentEntity);
+        $newAttribute->setCascade(true);
+
+        $newAttribute->setObject($targetEntity);
+
+        return $newAttribute;
+    }
+
+    private function createFlatAttribute(string $propertyName, array $schema, Entity $parentEntity): Attribute
+    {
+        $attribute = new Attribute();
+        $attribute->setName($propertyName);
+
+        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $attribute->setRequired(true);
+        isset($schema['description']) && $attribute->setDescription($schema['description']);
+        isset($schema['type']) ? $attribute->setType($schema['type']) : $attribute->setType('string');
+
+        // If format == date-time set type: datetime
+        isset($schema['format']) && $schema['format'] === 'date-time' && $attribute->setType('datetime');
+        isset($schema['format']) && $schema['format'] !== 'date-time' && $attribute->setFormat($schema['format']);
+        isset($schema['readyOnly']) && $attribute->setReadOnly($schema['readOnly']);
+        isset($schema['maxLength']) && $attribute->setMaxLength($schema['maxLength']);
+        isset($schema['minLength']) && $attribute->setMinLength($schema['minLength']);
+        isset($schema['enum']) && $attribute->setEnum($schema['enum']);
+        isset($schema['maximum']) && $attribute->setMaximum($schema['maximum']);
+        isset($schema['minimum']) && $attribute->setMinimum($schema['minimum']);
+
+        // @TODO do something with pattern
+        // isset($property['pattern']) && $attribute->setPattern($property['pattern']);
+        isset($schema['readOnly']) && $attribute->setPattern($schema['readOnly']);
+
+        $attribute->setEntity($parentEntity);
+
+        return $attribute;
     }
 
     /**
      * This function creates a Attribute from a OAS property.
      */
-    private function createAttribute(array $property, string $propertyName, Entity $newEntity, array $attributesToSetLaterAsObject): array
+    private function createAttribute(array $property, string $propertyName, Entity $newEntity, array &$handlersToSetLaterAsObject, array &$oas, CollectionEntity $collectionEntity): ?Attribute
     {
         // Check reference to other object
         if (isset($property['$ref'])) {
-            $attrToSetLater = [];
-            $attrToSetLater['entityNameToLinkTo'] = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
-            if (is_numeric($propertyName)) {
-                $attrToSetLater['name'] = lcfirst($attrToSetLater['entityNameToLinkTo']);
-            } else {
-                $attrToSetLater['name'] = $propertyName;
-            }
-            $attrToSetLater['parentEntityId'] = $newEntity->getId();
-            $attributesToSetLaterAsObject[] = $attrToSetLater;
+            if(strpos($property['$ref'], 'https://') !== false){
+                $targetEntity = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
+                $dataOas = Yaml::parse(file_get_contents($property['$ref']));
+                $ref = explode('#', $property['$ref'])[1];
 
-            // Continue to next iteration as this attribute will be saved later.
-            return $attributesToSetLaterAsObject;
+            } else {
+                $targetEntity = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
+                $ref = $property['$ref'];
+                $dataOas = $oas;
+            }
+            $ref = explode('/', $ref);
+            $property = $this->getDataFromRef($dataOas, $ref);
+        }
+        if(!isset($targetEntity)) {
+            $targetEntity = $newEntity->getName().$propertyName.'Entity';
         }
 
-        $newAttribute = new Attribute();
-        $newAttribute->setName($propertyName);
-
-        // Default to true for now
-        $newAttribute->setSearchable(true);
-
-        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
-        isset($property['description']) && $newAttribute->setDescription($property['description']);
-        isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
-
-        // If format == date-time set type: datetime
-        isset($property['format']) && $property['format'] === 'date-time' && $newAttribute->setType('datetime');
-        isset($property['format']) && $property['format'] !== 'date-time' && $newAttribute->setFormat($property['format']);
-        isset($property['readyOnly']) && $newAttribute->setReadOnly($property['readOnly']);
-        isset($property['maxLength']) && $newAttribute->setMaxLength($property['maxLength']);
-        isset($property['minLength']) && $newAttribute->setMinLength($property['minLength']);
-        isset($property['enum']) && $newAttribute->setEnum($property['enum']);
-        isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
-        isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
-
-        // @TODO do something with pattern
-        // isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
-        isset($property['readOnly']) && $newAttribute->setPattern($property['readOnly']);
-
-        $newAttribute->setEntity($newEntity);
+        if(!isset($property['type']) || $property['type'] == 'object'){
+            $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity, $oas, $handlersToSetLaterAsObject);
+            $attribute = $this->createObjectAttribute($propertyName, $newEntity, $targetEntity);
+        } else {
+            $attribute = $this->createFlatAttribute($propertyName, $property, $newEntity);
+        }
 
         // Persist attribute
-        $this->entityManager->persist($newAttribute);
+        $this->entityManager->persist($attribute);
 
-        return $attributesToSetLaterAsObject;
+        return $attribute;
     }
 
     /**

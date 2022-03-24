@@ -68,7 +68,8 @@ class ConvenienceController extends AbstractController
         // Send GET to fetch redoc
         $client = new Client();
         $response = $client->get($url);
-        $redoc = Yaml::parse($response->getBody()->getContents());
+        $body = $response->getBody()->getContents();
+        $redoc = Yaml::parse($body);
 
         // try {
         // Persist yaml to objects
