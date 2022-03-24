@@ -9,6 +9,7 @@ use App\Entity\Entity;
 use App\Entity\Handler;
 use App\Entity\Property;
 use App\Service\OasParserService;
+use App\Service\ParseDataService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,36 +19,32 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Yaml;
 use App\Service\PubliccodeService;
-use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class ConvenienceController extends AbstractController
 {
+    private PubliccodeService $publiccodeService;
+    private EntityManagerInterface $entityManager;
+    private OasParserService $oasParser;
+    private SerializerInterface $serializer;
+    private ParseDataService $dataService;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         SerializerInterface $serializer,
-        OasParserService $oasParser
+        OasParserService $oasParser,
+        PubliccodeService $publiccodeService,
+        ParseDataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = $oasParser;
-    }
-    
-        private PubliccodeService $publiccodeService;
-
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        SerializerInterface $serializer,
-        PubliccodeService $publiccodeService
-    ) {
-        $this->entityManager = $entityManager;
-        $this->serializer = $serializer;
         $this->publiccodeService = $publiccodeService;
+        $this->dataService = $dataService;
     }
+
+
+
 
     /**
      * @Route("/admin/load/{collectionId}", name="dynamic_route_load_type")
@@ -97,13 +94,15 @@ class ConvenienceController extends AbstractController
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
+        $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
+
         return new Response(
             $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$url], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
     }
-    
+
         /**
      * @Route("/admin/publiccode", name="dynamic_route_load_type")
      *
