@@ -179,6 +179,8 @@ class ObjectEntityService
                                 if ($key[0] === '{' && $key[strlen($key) - 1] === '}') {
                                     $key = substr($key, 1, -1);
                                     $filters[$key] = $part;
+                                } else {
+                                    //todo
                                 }
                             }
                         }
