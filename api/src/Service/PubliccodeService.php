@@ -109,6 +109,7 @@ class PubliccodeService
         $collection->setSourceUrl($repository['html_url']);
         $collection->setSourceBranch($repository['default_branch']);
         $collection->setLocationOAS($publiccode['description']['en']['apiDocumentation']);
+        isset($publiccode['description']['en']['testDataLocation']) && $collection->setTestDataLocation($publiccode['description']['en']['testDataLocation']);
         $collection->setDateModified(new \DateTime());
         $collection->setDateCreated(new \DateTime());
 

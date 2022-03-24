@@ -141,6 +141,17 @@ class CollectionEntity
     private ?string $locationOAS;
 
     /**
+     * @var ?string The location where the test data set can be found
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string $testDataLocation;
+
+    /**
      * @var ?DateTimeInterface The moment this Collection was synced
      *
      * @Groups({"read", "write"})
@@ -316,6 +327,18 @@ class CollectionEntity
     public function setLocationOAS(?string $locationOAS): self
     {
         $this->locationOAS = $locationOAS;
+
+        return $this;
+    }
+
+    public function getTestDataLocation(): ?string
+    {
+        return $this->testDataLocation;
+    }
+
+    public function setTestDataLocation(?string $testDataLocation): self
+    {
+        $this->testDataLocation = $testDataLocation;
 
         return $this;
     }
