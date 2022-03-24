@@ -3,28 +3,28 @@ App\Entity\Endpoint:
         name: Weer endpoint get collection
         description: endpoint voor dingen rondom weer
         path: ['weer']
-        pathRegex: "#^(/weer)$#"
+        # pathRegex: "#^(/weer)$#"
         operationType: collection
        
     weerEndpointGetItem: 
         name: Weer endpoint get item
         description: endpoint voor dingen rondom weer
         path: ['weer', '{id}']
-        pathRegex: "#^(/weer/[^/]*)$#"
+        # pathRegex: "#^(/weer/[^/]*)$#"
         operationType: item
 
     weerEndpointPost:
         name: Weer endpoint post
         description: endpoint voor dingen rondom weer
         path: ['weer']
-        pathRegex: "#^(/weer)$#"
+        # pathRegex: "#^(/weer)$#"
         operationType: collection
 
     weerEndpointPut:
         name: Weer endpoint put
         description: endpoint voor dingen rondom weer
         path: ['weer', '{id}']
-        pathRegex: "#^(/weer/[^/]*)$#"
+        # pathRegex: "#^(/weer/[^/]*)$#"
         operationType: item
 
         
