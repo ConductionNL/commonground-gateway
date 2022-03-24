@@ -8,9 +8,19 @@ App\Entity\CollectionEntity:
         name: BRP collection 
         sourceType: github
         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/master/specificatie/openapi.yaml
+        testDataLocation: https://raw.githubusercontent.com/ConductionNL/brp_publiccode/main/data/brp.yml
         
     handelsRegisterCollection:
         name: Handels Register collection 
         sourceType: github
         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/openapi.yaml
         
+    loggingVerwerkingReadCollection:
+        name: Logging Verwerking read collection
+        sourceType: github
+        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/_content/api-read/oas-specification/logging-verwerkingen-api/openapi.yaml
+        
+    loggingVerwerkingWriteCollection:
+        name: Logging Verwerking write collection
+        sourceType: github
+        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/_content/api-write/oas-specification/logging-verwerkingen-api/openapi.yaml
