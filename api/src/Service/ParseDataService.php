@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\CollectionEntity;
 use App\Entity\Entity;
-use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
@@ -32,11 +31,12 @@ class ParseDataService
     {
         $result = '';
 
-        foreach(self::SUPPORTED_FILE_TYPES as $type){
-            if(strpos($dataFile, $type) !== 0){
+        foreach (self::SUPPORTED_FILE_TYPES as $type) {
+            if (strpos($dataFile, $type) !== 0) {
                 return $type;
             }
         }
+
         return $result;
     }
 
@@ -44,7 +44,7 @@ class ParseDataService
     {
         $result = '';
 
-        switch ($response->getHeader('Content-Type')){
+        switch ($response->getHeader('Content-Type')) {
             case 'application/json':
                 return 'json';
             case 'text/x-yaml':
@@ -59,7 +59,7 @@ class ParseDataService
 
         $result = $this->getFiletypeOnExtension($dataFile);
 
-        if(!$result) {
+        if (!$result) {
             throw new \Exception('Format not supported');
         }
 
@@ -75,7 +75,7 @@ class ParseDataService
     {
         $result = [];
         $response = $this->client->get($dataFile);
-        switch($this->decideFormat($response, $dataFile)){
+        switch ($this->decideFormat($response, $dataFile)) {
             case 'yml':
             case 'yaml':
                 $result = $this->parseYamlFile($response->getBody()->getContents());
@@ -84,14 +84,13 @@ class ParseDataService
                 throw new \Exception('Format not supported');
         }
 
-
         return $result;
     }
 
     public function createObjects(Entity $entity, array $schema): array
     {
         $result = [];
-        foreach($schema as $properties){
+        foreach ($schema as $properties) {
             $object = $this->eavService->getObject(null, 'POST', $entity);
             $object = $this->validationService->validateEntity($object, $properties['properties']);
             var_dump($object->getAllErrors());
@@ -105,8 +104,8 @@ class ParseDataService
     public function parseData(array $data, CollectionEntity $collectionEntity): array
     {
         $result = [];
-        foreach($collectionEntity->getEntities() as $entity){
-            if(array_key_exists($entity->getName(), $data['schemas'])){
+        foreach ($collectionEntity->getEntities() as $entity) {
+            if (array_key_exists($entity->getName(), $data['schemas'])) {
                 $result = array_merge($result, $this->createObjects($entity, $data['schemas'][$entity->getName()]));
             }
         }
@@ -117,7 +116,7 @@ class ParseDataService
     public function loadData(string $dataFile, string $oas): bool
     {
         $data = $this->findData($dataFile);
-        if($data['collection'] !== $oas){
+        if ($data['collection'] !== $oas) {
             throw new \Exception('OAS locations don\'t match');
         }
         $mockRequest = new Request();
@@ -125,13 +124,14 @@ class ParseDataService
 
         $this->validationService->setRequest($mockRequest);
 
-        $collection = $this->entityManager->getRepository("App:CollectionEntity")->findOneBy(["locationOAS" => $oas]);
-        if(!$collection instanceof CollectionEntity){
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['locationOAS' => $oas]);
+        if (!$collection instanceof CollectionEntity) {
             throw new \Exception('Collection not found');
         }
         $results = $this->parseData($data, $collection);
 
         $this->entityManager->flush();
+
         return true;
     }
 }

@@ -2,24 +2,19 @@
 
 namespace App\Controller;
 
-use App\Entity\Attribute;
 use App\Entity\CollectionEntity;
-use App\Entity\Endpoint;
-use App\Entity\Entity;
-use App\Entity\Handler;
-use App\Entity\Property;
 use App\Service\OasParserService;
 use App\Service\ParseDataService;
+use App\Service\PubliccodeService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Yaml;
-use App\Service\PubliccodeService;
-use GuzzleHttp\Exception\GuzzleException;
 
 class ConvenienceController extends AbstractController
 {
@@ -42,9 +37,6 @@ class ConvenienceController extends AbstractController
         $this->publiccodeService = $publiccodeService;
         $this->dataService = $dataService;
     }
-
-
-
 
     /**
      * @Route("/admin/load/{collectionId}", name="dynamic_route_load_type")
@@ -79,10 +71,10 @@ class ConvenienceController extends AbstractController
         $redoc = Yaml::parse($response->getBody()->getContents());
 
         // try {
-            // Persist yaml to objects
-            $this->oasParser->parseRedoc($redoc, $collection);
+        // Persist yaml to objects
+        $this->oasParser->parseRedoc($redoc, $collection);
         // } catch (\Exception $e) {
-            // return new Response(
+        // return new Response(
         //         $this->serializer->serialize(['message' => $e->getMessage()], 'json'),
         //         Response::HTTP_BAD_REQUEST,
         //         ['content-type' => 'json']
@@ -103,7 +95,7 @@ class ConvenienceController extends AbstractController
         );
     }
 
-        /**
+    /**
      * @Route("/admin/publiccode")
      *
      * @throws GuzzleException

@@ -200,7 +200,7 @@ class Endpoint
 
     /**
      * @var Collection|null Handlers of this Endpoint
-     * 
+     *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")

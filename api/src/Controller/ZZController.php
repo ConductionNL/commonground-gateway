@@ -41,7 +41,6 @@ class ZZController extends AbstractController
         LogService $logService
     ): Response {
 
-
         // Below is hacky tacky
         $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
         if ($document instanceof Document && $id) {
@@ -55,24 +54,24 @@ class ZZController extends AbstractController
         // Get full path
         // @TODO wont work with more than 4 subpaths
         $fullPath = '';
-        isset($path) && $fullPath  .= '/' . $path;
-        isset($subPath2) && $fullPath .= '/' . $subPath2;
-        isset($subPath3) && $fullPath .= '/' . $subPath3;
-        isset($subPath4) && $fullPath .= '/' . $subPath4;
-      
-        $allEndpoints = $this->getDoctrine()->getRepository("App:Endpoint")->findAll();
+        isset($path) && $fullPath .= '/'.$path;
+        isset($subPath2) && $fullPath .= '/'.$subPath2;
+        isset($subPath3) && $fullPath .= '/'.$subPath3;
+        isset($subPath4) && $fullPath .= '/'.$subPath4;
+
+        $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
         // Match path to regex of Endpoints
         foreach ($allEndpoints as $endpoint) {
             if ($endpoint->getPathRegex() !== null && preg_match($endpoint->getPathRegex(), $fullPath)) {
                 $matchedEndpoint = $endpoint;
                 break;
-            }    
+            }
         }
-      
+
         // Let determine an endpoint (new way)
         if (isset($matchedEndpoint)) {
-            
+
             // Create array for filtering (in progress, should be moved to the correct service)
             $filterArray = [];
             $fullPathArray = array_values(array_filter(explode('/', $fullPath)));
@@ -81,10 +80,10 @@ class ZZController extends AbstractController
                     $variable = str_replace('{', '', $pathPart);
                     $variable = str_replace('}', '', $variable);
                     $filterArray[$variable] = $fullPathArray[$key];
-                }    
+                }
             }
-            var_dump($filterArray);die;
-
+            var_dump($filterArray);
+            exit;
 
             // Try handler proces and catch exceptions
             try {
