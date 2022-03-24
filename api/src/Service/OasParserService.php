@@ -220,11 +220,11 @@ class OasParserService
 
                 // Set pathRegex
                 $pathRegex = '#^(';
-                foreach ($pathParts as $part) {
+                foreach ($pathParts as $key => $part) {
                     if (empty($part)) {
                         continue;
                     }
-                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : $pathRegex .= '/'.$part;
+                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
                 }
                 $pathRegex .= ')$#';
                 $newEndpoint->setPathRegex($pathRegex);
