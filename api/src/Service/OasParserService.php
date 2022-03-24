@@ -48,8 +48,8 @@ class OasParserService
             isset($parentEntity) && $newAttribute->setEntity($parentEntity);
 
             $entityToLinkTo = $this->entityRepo->findByName($attribute['entityNameToLinkTo']);
-            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]);
-
+            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]) && $newAttribute->setCascade(true);
+            
             // If we have set attribute.entity and attribute.object, persist attribute
             $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
         }
