@@ -61,23 +61,24 @@ class ZZController extends AbstractController
         // Let create the variable
 
         // Create array for filtering (in progress, should be moved to the correct service)
-        $variables = [];
+        $parameters = ['path'=>[],'query'=>[],'post'=>[]];
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
             // Let move path parts that are defined as variables to the filter array
             if (array_key_exists($key, $pathArray)) {
-                $variables[$pathPart] = $pathArray[$key];
+                $parameters['path'][$pathPart] = $pathArray[$key];
             }
         }
 
         // Lets add the query parameters to the variables
-        $variables = array_merge_recursive($variables, $request->query->all()) ;
+        $parameters['query'] = $request->query->all();
+
         // Lets get all the post variables
-        $variables = array_merge_recursive($variables, $request->request->all()) ;
+        $parameters['post'] = $request->request->all();
 
         // Try handler proces and catch exceptions
         try {
-            return $handlerService->handleEndpoint($endpoint, $variables);
+            return $handlerService->handleEndpoint($endpoint, $parameters);
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $acceptType = $handlerService->getRequestType('accept');
