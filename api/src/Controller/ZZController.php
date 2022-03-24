@@ -56,6 +56,14 @@ class ZZController extends AbstractController
         }
 
         // @todo exit here if we do not have an endpoint
+        if (!isset($endpoint)) {
+            $acceptType = $handlerService->getRequestType('accept');
+            $response = new Response(
+                $serializer->serialize(['message' =>  'Could not find an endpoint with this path', 'data' => $path, 'path' => $path], $acceptType),
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => $acceptType]
+            );
+        }
 
         // Let create the variable
 
