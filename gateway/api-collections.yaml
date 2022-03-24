@@ -9,8 +9,8 @@ App\Entity\CollectionEntity:
         sourceType: github
         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/master/specificatie/openapi.yaml
         
-    kvkCollection:
-        name: KVK collection 
+    handelsRegisterCollection:
+        name: Handels Register collection 
         sourceType: github
         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/openapi.yaml
         
