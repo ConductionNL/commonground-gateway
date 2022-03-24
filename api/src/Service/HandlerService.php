@@ -81,7 +81,7 @@ class HandlerService
     /**
      * This function sets the endpoint in the session and executes handleHandler with its found Handler.
      */
-    public function handleEndpoint(Endpoint $endpoint, Array $parameters ): Response
+    public function handleEndpoint(Endpoint $endpoint, array $parameters): Response
     {
         $this->cache->invalidateTags(['grantedScopes']);
 

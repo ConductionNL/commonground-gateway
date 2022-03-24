@@ -45,7 +45,7 @@ class ZZController extends AbstractController
 
         // Get full path
         // We should look at a better search moddel in sql
-        $allEndpoints = $this->getDoctrine()->getRepository("App:Endpoint")->findAll();
+        $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
@@ -62,7 +62,7 @@ class ZZController extends AbstractController
         // Let create the variable
 
         // Create array for filtering (in progress, should be moved to the correct service)
-        $parameters = ['path'=>[],'query'=>[],'post'=>[]];
+        $parameters = ['path'=>[], 'query'=>[], 'post'=>[]];
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
             // Let move path parts that are defined as variables to the filter array
