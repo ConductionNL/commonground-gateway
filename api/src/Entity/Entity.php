@@ -266,7 +266,7 @@ class Entity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="entityOut")
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut")
      * @MaxDepth(1)
      */
     private ?Subscriber $subscriberOut;
@@ -290,6 +290,7 @@ class Entity
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
+        $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
     }
 
@@ -829,9 +830,34 @@ class Entity
         return $this;
     }
 
-    public function getSubscriberOut(): ?Subscriber
+    /**
+     * @return Collection|Subscriber[]
+     */
+    public function getSubscriberOut(): Collection
     {
         return $this->subscriberOut;
+    }
+
+    public function addSubscriberOut(Subscriber $subscriberOut): self
+    {
+        if (!$this->subscriberOut->contains($subscriberOut)) {
+            $this->subscriberOut[] = $subscriberOut;
+            $subscriberOut->setEntityOut($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubscriberOut(Subscriber $subscriberOut): self
+    {
+        if ($this->subscriberOut->removeElement($subscriberOut)) {
+            // set the owning side to null (unless already changed)
+            if ($subscriberOut->getEntityOut() === $this) {
+                $subscriberOut->setEntityOut(null);
+            }
+        }
+
+        return $this;
     }
 
     public function setSubscriberOut(?Subscriber $subscriberOut): self
