@@ -113,8 +113,12 @@ class ParseDataService
         return $result;
     }
 
-    public function loadData(string $dataFile, string $oas): bool
+    public function loadData(?string $dataFile, string $oas): bool
     {
+        if (empty($dataFile)) {
+            return false;
+        }
+
         $data = $this->findData($dataFile);
         if ($data['collection'] !== $oas) {
             throw new \Exception('OAS locations don\'t match');
