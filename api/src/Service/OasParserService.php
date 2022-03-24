@@ -206,6 +206,10 @@ class OasParserService
             // if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
 
             foreach ($path as $methodName => $method) {
+                if (!isset($method['responses'])) {
+                    continue;
+                }
+
                 $newEndpoint = new Endpoint();
                 $newEndpoint->addCollection($collection);
                 $newEndpoint->setName($pathName.' '.$methodName);
@@ -237,11 +241,18 @@ class OasParserService
                 $this->entityManager->persist($newEndpoint);
 
                 foreach ($method['responses'] as $response) {
+                    if (!isset($response['content'])) {
+                        continue;
+                    }
                     foreach ($response['content'] as $content) {
 
                         // Use json definition
                         if (isset($response['content']['application/json'])) {
-                            $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1);
+                            if (isset($response['content']['application/json']['schema']['$ref'])) {
+                                $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1);
+                            } else {
+                                $entityNameToLinkTo = substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1);
+                            }
                             if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
                                 $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
                                 !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
