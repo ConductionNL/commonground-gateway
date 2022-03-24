@@ -7,6 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -14,7 +15,6 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Twig\Environment;
 
 class HandlerService

@@ -73,6 +73,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
+      - GITHUB_KEY=${GITHUB_KEY}
     ports:
       - "82:80"
 
