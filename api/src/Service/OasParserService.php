@@ -274,6 +274,7 @@ class OasParserService
                 $newEndpoint = new Endpoint();
                 $newEndpoint->addCollection($collection);
                 $newEndpoint->setName($pathName.' '.$methodName);
+                $newEndpoint->setMethod($methodName);
                 $pathParts = explode('/', $pathName);
                 $pathArray = [];
                 foreach ($pathParts as $key => $part) {
