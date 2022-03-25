@@ -87,6 +87,14 @@ class Endpoint
     private ?string $pathRegex = null;
 
     /**
+     * @var string|null The method.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $method = null;
+
+    /**
      * @var string|null The (OAS) tag of this Endpoint.
      *
      * @Groups({"read", "write"})
@@ -227,6 +235,18 @@ class Endpoint
     public function setName(?string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getMethod(): ?string
+    {
+        return $this->method;
+    }
+
+    public function setMethod(?string $method): self
+    {
+        $this->method = $method;
 
         return $this;
     }
