@@ -76,10 +76,9 @@ class Contract
      * @var string The User as uuid that has to sign this Contract
      * 
      * @Assert\NotNull
-     * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=36)
+     * @ORM\Column(type="string", length=255)
      */
     private string $user;
 
