@@ -3,10 +3,13 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Contract;
 use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +29,8 @@ class AuthorizationService
     private CommonGroundService $commonGroundService;
     private Security $security;
     private SessionInterface $session;
-    public CacheInterface $cache;
+    private CacheInterface $cache;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -36,7 +40,8 @@ class AuthorizationService
         CommonGroundService $commonGroundService,
         Security $security,
         SessionInterface $session,
-        CacheInterface $cache
+        CacheInterface $cache,
+        EntityManagerInterface $entityManager
     ) {
         $this->authorizationChecker = new AuthorizationChecker($tokenStorage, $authenticationManager, $accessDecisionManager);
         $this->parameterBag = $parameterBag;
@@ -44,6 +49,7 @@ class AuthorizationService
         $this->security = $security;
         $this->session = $session;
         $this->cache = $cache;
+        $this->entityManager = $entityManager;
     }
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
@@ -111,6 +117,19 @@ class AuthorizationService
         return $scopes;
     }
 
+    private function getContractScopes(): array
+    {
+        $parameters = $this->session->get('parameters');
+        if (array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
+            $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
+            if (!empty($contract)) {
+                return $contract->getGrants();
+            }
+        }
+
+        return [];
+    }
+
     public function checkAuthorization(array $scopes): void
     {
         if (!$this->parameterBag->get('app_auth')) {
@@ -133,6 +152,10 @@ class AuthorizationService
                 // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
                 $this->session->set('anonymous', true);
             }
+
+            $contractScopes = $this->getContractScopes();
+            $grantedScopes = array_merge($grantedScopes, $contractScopes);
+
             $item->set($grantedScopes);
             $item->tag('grantedScopes');
             $this->cache->save($item);
