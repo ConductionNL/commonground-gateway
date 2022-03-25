@@ -47,6 +47,7 @@ class ValidationService
     private ParameterBagInterface $parameterBag;
     private FunctionService $functionService;
     private LogService $logService;
+    private bool $ignoreErrors;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -74,6 +75,7 @@ class ValidationService
         $this->parameterBag = $parameterBag;
         $this->functionService = $functionService;
         $this->logService = $logService;
+        $this->ignoreErrors = false;
     }
 
     /**
@@ -82,6 +84,11 @@ class ValidationService
     public function setRequest(Request $request)
     {
         $this->request = $request;
+    }
+
+    public function setIgnoreErrors(bool $ignoreErrors): void
+    {
+        $this->ignoreErrors = $ignoreErrors;
     }
 
     /**
@@ -234,6 +241,7 @@ class ValidationService
 
         // Check if value is null, and if so, check if attribute has a defaultValue and else if it is nullable
         if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+            var_dump($attribute->getName()."is null");
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
@@ -272,7 +280,7 @@ class ValidationService
 
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
-        if (!$objectEntity->getHasErrors() && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
+        if ((!$objectEntity->getHasErrors() || $this->ignoreErrors) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
             $objectEntity->getValueByAttribute($attribute)->setValue($value);
         }
 
