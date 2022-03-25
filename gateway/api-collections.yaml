@@ -4,7 +4,7 @@ App\Entity\Application:
             - gateway.common-ground.dev
         name: main application
         organization: http://contactcatalogus.gateway.svc.cluster.local/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
-        resource: http://contactcatalogus.gateway.svc.cluster.local/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        resource: https://gateway.common-ground.dev/api/v2/uc/users/59c57bf3-ab30-4aa2-9d89-a81d8105253f
         secret: c3fbb3a8-9f94-4679-b204-31e80d853d68
 
 App\Entity\CollectionEntity:

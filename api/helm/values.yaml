@@ -37,6 +37,7 @@ security:
     enabled: false
     certificate: ''
     privatekey: ''
+    artifactUrl: ''
     idp:
       metadata: ''
       singleSignOnUrl: ''

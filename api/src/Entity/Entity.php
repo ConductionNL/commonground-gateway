@@ -120,7 +120,7 @@ class Entity
      *
      * @example organization
      *
-     * @Assert\Choice({"noFunction","organization", "user", "userGroup", "verwerkingLog"})
+     * @Assert\Choice({"noFunction","organization", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", options={"default":"noFunction"})
      */
