@@ -67,18 +67,21 @@ class OasParserService
 
     private function isAssociative(array $array): bool
     {
-        if (array() === $array) return false;
+        if ([] === $array) {
+            return false;
+        }
+
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
     private function processAllOf(array $allOf, Entity $entity, CollectionEntity $collection, array &$handlersToSetLaterAsObject, array $oas)
     {
         $properties = [];
-        if($this->isAssociative($allOf)){
+        if ($this->isAssociative($allOf)) {
             $properties = $allOf;
         } else {
-            foreach($allOf as $set){
-                if(isset($set['$ref'])){
+            foreach ($allOf as $set) {
+                if (isset($set['$ref'])) {
                     $schema = $this->getDataFromRef($oas, explode('/', $set['$ref']));
                     $properties = array_merge($schema['properties'], $properties);
                 } else {
@@ -145,19 +148,23 @@ class OasParserService
         }
 
         $this->entityManager->flush();
+
         return $handlersToSetLaterAsObject;
     }
 
     private function getDataFromRef(array $oas, array $ref): array
     {
         $data = $oas;
-        try{
-            foreach($ref as $location){
-                if($location && $location !== '#')
+
+        try {
+            foreach ($ref as $location) {
+                if ($location && $location !== '#') {
                     $data = $data[$location];
+                }
             }
-        } catch (\Exception $exception){
+        } catch (\Exception $exception) {
             var_dump(array_keys($oas['components']['schemas']));
+
             throw $exception;
         }
 
@@ -166,8 +173,8 @@ class OasParserService
 
     private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity, array $oas, array &$handlersToSetLaterAsObject): Entity
     {
-        foreach($collectionEntity->getEntities() as $entity){
-            if($entity->getName() == $name) {
+        foreach ($collectionEntity->getEntities() as $entity) {
+            if ($entity->getName() == $name) {
                 return $entity;
             }
         }
@@ -222,11 +229,10 @@ class OasParserService
     {
         // Check reference to other object
         if (isset($property['$ref'])) {
-            if(strpos($property['$ref'], 'https://') !== false){
+            if (strpos($property['$ref'], 'https://') !== false) {
                 $targetEntity = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
                 $dataOas = Yaml::parse(file_get_contents($property['$ref']));
                 $ref = explode('#', $property['$ref'])[1];
-
             } else {
                 $targetEntity = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
                 $ref = $property['$ref'];
@@ -235,11 +241,11 @@ class OasParserService
             $ref = explode('/', $ref);
             $property = $this->getDataFromRef($dataOas, $ref);
         }
-        if(!isset($targetEntity)) {
+        if (!isset($targetEntity)) {
             $targetEntity = $newEntity->getName().$propertyName.'Entity';
         }
 
-        if(!isset($property['type']) || $property['type'] == 'object'){
+        if (!isset($property['type']) || $property['type'] == 'object') {
             $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity, $oas, $handlersToSetLaterAsObject);
             $attribute = $this->createObjectAttribute($propertyName, $newEntity, $targetEntity);
         } else {
@@ -283,7 +289,7 @@ class OasParserService
                     if (empty($part)) {
                         continue;
                     }
-                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
+                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
                 }
                 $pathRegex .= ')$#';
                 $newEndpoint->setPathRegex($pathRegex);
