@@ -167,9 +167,11 @@ class Application
     private ?Collection $collections;
 
     /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=Contract::class, mappedBy="application")
      */
-    private $contracts;
+    private ?Collection $contracts;
 
     public function __construct()
     {

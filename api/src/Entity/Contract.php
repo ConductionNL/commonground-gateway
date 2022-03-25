@@ -94,6 +94,13 @@ class Contract
     private array $grants = [];
 
     /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Purpose::class, mappedBy="contract")
+     */
+    private ?Collection $purposes;
+
+    /**
      * @var DateTimeInterface|null The date the User signed this Contract
      * 
      * @Assert\DateTime
@@ -112,6 +119,11 @@ class Contract
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $appSignedDate;
+
+    public function __construct()
+    {
+        $this->purposes = new ArrayCollection();
+    }
 
     public function getId()
     {
@@ -174,6 +186,36 @@ class Contract
     public function setAppSignedDate(?\DateTimeInterface $appSignedDate): self
     {
         $this->appSignedDate = $appSignedDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Purpose[]
+     */
+    public function getPurposes(): Collection
+    {
+        return $this->purposes;
+    }
+
+    public function addPurpose(Purpose $purpose): self
+    {
+        if (!$this->purposes->contains($purpose)) {
+            $this->purposes[] = $purpose;
+            $purpose->setContract($this);
+        }
+
+        return $this;
+    }
+
+    public function removePurpose(Purpose $purpose): self
+    {
+        if ($this->purposes->removeElement($purpose)) {
+            // set the owning side to null (unless already changed)
+            if ($purpose->getContract() === $this) {
+                $purpose->setContract(null);
+            }
+        }
 
         return $this;
     }
