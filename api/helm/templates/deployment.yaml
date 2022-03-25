@@ -182,12 +182,22 @@ spec:
             - name: SAML_IDP_CERT
               value: '/var/run/idp/idp.crt'
             {{- end }}
+            - name: GITHUB_KEY
+              valueFrom:
+                secretKeyRef:
+                    key: githubKey
+                    name: {{ include "commonground-gateway.fullname" . }}
             {{- if .Values.security.digid.enabled }}
             - name: DIGID_METADATA_LOCATION
               valueFrom:
-                  secretKeyRef:
-                      key: digid-metadata-location
-                      name: {{ include "commonground-gateway.fullname" . }}
+                secretKeyRef:
+                  key: digid-metadata-location
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: DIGID_ARTIFACT_URL
+              valueFrom:
+                secretKeyRef:
+                  key: digid-artifact-url
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: DIGID_SIGN_ON_URL
               valueFrom:
                   secretKeyRef:
@@ -213,11 +223,7 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
             {{- end }}
-            - name: GITHUB_KEY
-                valueFrom:
-                secretKeyRef:
-                    key: githubKey
-                    name: {{ include "commonground-gateway.fullname" . }}
+
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
         - name: {{ include "commonground-gateway.fullname" . }}-nginx
