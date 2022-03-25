@@ -86,6 +86,9 @@ class ZZController extends AbstractController
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
 
+        // Lets get all the headers
+        $parameters['headers'] = $request->headers->all();
+
         // Try handler proces and catch exceptions
         try {
             return $handlerService->handleEndpoint($endpoint, $parameters);
