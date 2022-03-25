@@ -78,9 +78,9 @@ class Contract
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=36)
      */
-    private string $user;
+    private string $signingUser;
 
     /**
      * @var array The scopes this Contract is about
@@ -139,14 +139,14 @@ class Contract
         return $this;
     }
 
-    public function getUser(): ?string
+    public function getSigningUser(): ?string
     {
-        return $this->user;
+        return $this->signingUser;
     }
 
-    public function setUser(string $user): self
+    public function setSigningUser(string $signingUser): self
     {
-        $this->user = $user;
+        $this->signingUser = $signingUser;
 
         return $this;
     }
