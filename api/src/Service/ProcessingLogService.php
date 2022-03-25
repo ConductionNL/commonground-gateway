@@ -10,6 +10,7 @@ use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class ProcessingLogService
 {
@@ -17,17 +18,20 @@ class ProcessingLogService
     private SessionInterface $session;
     private EavService $eavService;
     private ValidationService $validationService;
+    private TokenStorageInterface $tokenStorage;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         SessionInterface $session,
         EavService $eavService,
-        ValidationService $validationService
+        ValidationService $validationService,
+        TokenStorageInterface $tokenStorage
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->eavService = $eavService;
         $this->validationService = $validationService;
+        $this->tokenStorage = $tokenStorage;
     }
 
     /**
@@ -72,6 +76,8 @@ class ProcessingLogService
 //            var_dump($object->getId()->toString());
         }
 
+        $user = $this->tokenStorage->getToken()->getUser();
+
         $processingLog = [
             "actieNaam" => "placeholder",
             "handelingNaam" => "placeholder",
@@ -81,7 +87,7 @@ class ProcessingLogService
             "verwerkingsactiviteitUrl" => "placeholder",
             "vertrouwelijkheid" => "normaal",
             "bewaartermijn" => "P10Y",
-            "uitvoerder" => "placeholder",
+            "uitvoerder" => $user->getUserIdentifier(),
             "systeem" => "placeholder",
             "gebruiker" => isset($object) && $object->getOwner() ? $object->getOwner() : null,
             "gegevensbron" => isset($object) && $object->getEntity()->getGateway() ? $object->getEntity()->getGateway()->getName() : null,
@@ -94,7 +100,7 @@ class ProcessingLogService
             "verwerkteObjecten" => [
                 [
                     "objecttype" => isset($object) && $object->getEntity() ? $object->getEntity()->getName() : null,
-                    "soortObjectId" => "placeholder",
+                    "soortObjectId" => isset($object) && $object->getEntity() ? $object->getEntity()->getId() : null,
                     "objectId" => isset($object) ? $object->getId()->toString() : null,
                     "betrokkenheid" => "placeholder",
                 ]
