@@ -120,7 +120,7 @@ class AuthorizationService
     private function getContractScopes(): array
     {
         $parameters = $this->session->get('parameters');
-        if (array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
+        if (!empty($parameters) && array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
             $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
             if (!empty($contract)) {
                 return $contract->getGrants();
