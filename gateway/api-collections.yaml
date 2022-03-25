@@ -1,3 +1,12 @@
+App\Entity\Application:
+    application:
+        domains:
+            - gateway.common-ground.dev
+        name: main application
+        organization: http://contactcatalogus.gateway.svc.cluster.local/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        resource: http://contactcatalogus.gateway.svc.cluster.local/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        secret: c3fbb3a8-9f94-4679-b204-31e80d853d68
+
 App\Entity\CollectionEntity:
     bagCollection:
         name: BAG collection
