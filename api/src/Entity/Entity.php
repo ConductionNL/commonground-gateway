@@ -120,11 +120,11 @@ class Entity
      *
      * @example organization
      *
-     * @Assert\Choice({"organization", "user", "userGroup", "log", "verwerking"})
+     * @Assert\Choice({"noFunction","organization", "user", "userGroup", "verwerkingLog"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", options={"default":"noFunction"})
      */
-    private $function = 'string';
+    private string $function = 'noFunction';
 
     /**
      * wheter or not the properties of the original object are automaticly include.

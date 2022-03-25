@@ -26,7 +26,7 @@ class AuthorizationService
     private CommonGroundService $commonGroundService;
     private Security $security;
     private SessionInterface $session;
-    private CacheInterface $cache;
+    public CacheInterface $cache;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -73,6 +73,13 @@ class AuthorizationService
 
     public function getScopesForAnonymous(): array
     {
+        // First check if we have these scopes in cache (this gets removed from cache when a userGroup with name ANONYMOUS is changed, see FunctionService)
+        $item = $this->cache->getItem('anonymousScopes');
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
+        // Get the ANONYMOUS userGroup
         $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
@@ -81,6 +88,11 @@ class AuthorizationService
             }
         }
         if (count($scopes) > 0) {
+            // Save in cache
+            $item->set($scopes);
+            $item->tag('anonymousScopes');
+            $this->cache->save($item);
+
             return $scopes;
         } else {
             throw new AuthenticationException('Authentication Required');

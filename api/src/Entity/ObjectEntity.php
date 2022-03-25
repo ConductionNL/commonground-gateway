@@ -31,10 +31,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/object_entities/{id}"},
- *      "get_sync"={
- *          "method"="GET",
- *          "path"="/admin/object_entities/{id}/sync"
- *      },
  *      "put"={"path"="/admin/object_entities/{id}"},
  *      "delete"={"path"="/admin/object_entities/{id}"}
  *  },
@@ -648,7 +644,15 @@ class ObjectEntity
             foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
                 if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
-                    continue;
+                    $explodedConditionValue = explode('.', $conditionValue);
+                    $getValue = $value->getValue() instanceof ObjectEntity ? $value->getValue()->getExternalId() : $value->getValue();
+                    if (!$value->getAttribute()->getDefaultValue()
+                        || ($value->getAttribute()->getDefaultValue() !== $getValue)
+                        || end($explodedConditionValue) != 'noDefaultValue') {
+                        continue;
+                    } else {
+                        $conditionValue = implode('.', array_slice($explodedConditionValue, 0, -1));
+                    }
                 }
                 // so lets see if we should have a value
                 //var_dump($conditionProperty);
@@ -704,13 +708,20 @@ class ObjectEntity
     {
         $array = [];
         $array['id'] = (string) $this->getId();
-        foreach ($this->getObjectValues() as $value) {
-            if (!$value->getObjects()->isEmpty() && $level < 5) {
-                foreach ($value->getObjects() as $object) {
-                    $array[$value->getAttribute()->getName()] = $object->toArray($level + 1);
+        foreach ($this->getEntity()->getAttributes() as $attribute) {
+            $valueObject = $this->getValueByAttribute($attribute);
+            if ($attribute->getType() == 'object') {
+                if ($valueObject->getValue() == null) {
+                    $array[$attribute->getName()] = null;
+                } elseif (!$attribute->getMultiple() && $level < 5) {
+                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1);
+                } elseif ($level < 5) {
+                    foreach ($valueObject->getObjects() as $object) {
+                        $array[$attribute->getName()][] = $object->toArray($level + 1); // getValue will return a single ObjectEntity
+                    }
                 }
             } else {
-                $array[$value->getAttribute()->getName()] = $value->getValue();
+                $array[$attribute->getName()] = $valueObject->getValue();
             }
         }
 
@@ -741,7 +752,10 @@ class ObjectEntity
 
     public function removeSubresourceOf(Value $subresourceOf): self
     {
-        $this->subresourceOf->removeElement($subresourceOf);
+        if ($this->subresourceOf->contains($subresourceOf)) {
+            // SubresourceOf will be removed from this ObjectEntity in this function;
+            $subresourceOf->removeObject($this);
+        }
 
         return $this;
     }

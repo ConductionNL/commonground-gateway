@@ -38,6 +38,9 @@ class ValidationService
     public $postPromiseUris = [];
     public $putPromiseUris = [];
     public $createdObjects = [];
+    public $removeObjectsOnPut = [];
+    public $removeObjectsNotMultiple = [];
+    public $notifications = [];
     private ?Request $request = null;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
@@ -120,6 +123,13 @@ class ValidationService
                     unset($post[$attribute->getName()]);
                 }
                 continue;
+            } // Do not post 'unsetable' attributes!
+            elseif ($this->request->getMethod() == 'POST' && $attribute->getUnsetable()) {
+                if (key_exists($attribute->getName(), $post)) {
+                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: ['.$attribute->getEntity()->getName().']');
+                    unset($post[$attribute->getName()]);
+                }
+                continue;
             }
 
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
@@ -171,7 +181,14 @@ class ValidationService
                 }
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } elseif ($attribute->getNullable() === false) {
-                $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                if ($this->request->getMethod() == 'PUT') {
+                    $value = $objectEntity->getValueByAttribute($attribute)->getValue();
+                    if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
+                        $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                    }
+                } elseif ($this->request->getMethod() == 'POST') {
+                    $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
+                }
             } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
@@ -198,7 +215,10 @@ class ValidationService
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
                 // Notify notification component
-                $this->notify($objectEntity, $this->request->getMethod()); //TODO: temp solution for problem in todo below
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method'       => $this->request->getMethod(),
+                ];
             }
         }
 
@@ -237,7 +257,19 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $objectEntity->getValueByAttribute($attribute)->setValue([]);
+                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                if ($attribute->getType() == 'object') {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object...
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                    $valueObject->getObjects()->clear();
+                } else {
+                    $valueObject->setValue([]);
+                }
             } else {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
             }
@@ -294,10 +326,14 @@ class ValidationService
     {
         $values = $attribute->getAttributeValues()->filter(function (Value $valueObject) use ($value) {
             switch ($valueObject->getAttribute()->getType()) {
-                    //TODO:
-                    //                case 'object':
-                    //                    return $valueObject->getObjects() == $value;
+                //TODO:
+                //                case 'object':
+                //                    return $valueObject->getObjects() == $value;
                 case 'string':
+                    if (!$valueObject->getAttribute()->getCaseSensitive()) {
+                        return strtolower($valueObject->getStringValue()) == strtolower($value);
+                    }
+
                     return $valueObject->getStringValue() == $value;
                 case 'number':
                     return $valueObject->getNumberValue() == $value;
@@ -316,7 +352,8 @@ class ValidationService
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
-            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: '.$value.'.');
+            $strValue = $attribute->getCaseSensitive() ? $value : strtolower($value);
+            $objectEntity->addError($attribute->getName(), 'Must be unique, there already exists an object with this value: '.$strValue.'.');
         }
 
         return $objectEntity;
@@ -455,7 +492,6 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
-//                    var_dump('1 '.$subObject->getEntity()->getName());
                 }
 
                 $subObject = $this->validateEntity($subObject, $object);
@@ -472,19 +508,48 @@ class ValidationService
                     $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
                     $subObject->setApplication(!empty($application) ? $application : null);
                 }
-                if ($subObject->getEntity()->getFunction() === 'organization') {
-                    $subObject = $this->functionService->createOrganization($subObject, $subObject->getUri(), array_key_exists('type', $object) ? $object['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
-                }
+                $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
+                    'method'           => $this->request->getMethod(),
+                    'uri'              => $subObject->getUri(),
+                    'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
+                    'userGroupName'    => array_key_exists('name', $object) ? $object['name'] : null,
+                ]);
 
                 // object toevoegen
                 $saveSubObjects->add($subObject);
             }
-            // If we are doing a put, we want to actually clear all objects connected to this valueObject before (re-)adding (/removing) them
-            if ($this->request->getMethod() == 'PUT') {
+            // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
+            if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+                foreach ($valueObject->getObjects() as $object) {
+                    // If we are not re-adding this object...
+                    if (!$saveSubObjects->contains($object)) {
+                        $this->removeObjectsOnPut[] = [
+                            'valueObject' => $valueObject,
+                            'object'      => $object,
+                        ];
+                    }
+                }
                 $valueObject->getObjects()->clear();
             }
             // Actually add the objects to the valueObject
             foreach ($saveSubObjects as $saveSubObject) {
+                // If we have inversedBy on this attribute
+                if ($attribute->getInversedBy()) {
+                    $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
+                    if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                        // If inversedBy attribute is not multiple it should only have one object connected to it
+                        if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                            // Remove old objects
+                            foreach ($inversedByValue->getObjects() as $object) {
+                                // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                                $this->removeObjectsNotMultiple[] = [
+                                    'valueObject' => $inversedByValue,
+                                    'object'      => $object,
+                                ];
+                            }
+                        }
+                    }
+                }
                 $valueObject->addObject($saveSubObject);
             }
         } elseif ($attribute->getType() == 'file') {
@@ -891,6 +956,23 @@ class ValidationService
                     }
 
                     // Object toevoegen
+                    // If we have inversedBy on this attribute
+                    if ($attribute->getInversedBy()) {
+                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                            // If inversedBy attribute is not multiple it should only have one object connected to it
+                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                                // Remove old objects
+                                foreach ($inversedByValue->getObjects() as $object) {
+                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                                    $this->removeObjectsNotMultiple[] = [
+                                        'valueObject' => $inversedByValue,
+                                        'object'      => $object,
+                                    ];
+                                }
+                            }
+                        }
+                    }
                     $valueObject->getObjects()->clear(); // We start with a default object
                     $valueObject->addObject($subObject);
                     break;
@@ -901,7 +983,6 @@ class ValidationService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
-//                    var_dump('2 '.$subObject->getEntity()->getName());
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->em->persist($subObject);
                         $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
@@ -918,6 +999,7 @@ class ValidationService
 
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
+                    // TODO: clear objects, add to removeObjectsNotMultiple if needed and use add object ipv setValue
                     $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
                 }
                 break;
@@ -1030,8 +1112,8 @@ class ValidationService
             $objectEntity->addError($attribute->getName().$key.'.base64', 'Expects a file with on of these mime types: ['.implode(', ', $attribute->getFileTypes()).'], none of these equal extension '.$fileArray['extension'].'. ('.$fileArray['name'].')');
         }
         // Validate if mime type and extension match
-        if ($this->mimeToExt($fileArray['mimeType']) != $fileArray['extension']) {
-            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.$fileArray['extension'].') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
+        if ($this->mimeToExt($fileArray['mimeType']) != strtolower($fileArray['extension'])) {
+            $objectEntity->addError($attribute->getName().$key.'.base64', 'Extension ('.strtolower($fileArray['extension']).') does not match the mime type ('.$fileArray['mimeType'].' -> '.$this->mimeToExt($fileArray['mimeType']).'). ('.$shortBase64String.')');
         }
 
         if ($fileArray['name']) {
@@ -1626,9 +1708,10 @@ class ValidationService
                     $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
                     $objectEntity->setApplication(!empty($application) ? $application : null);
                 }
-                if ($objectEntity->getEntity()->getFunction() === 'organization') {
-                    $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
-                }
+                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+                    'method' => $method,
+                    'uri'    => $objectEntity->getUri(),
+                ]);
                 if (isset($setOrganization)) {
                     $objectEntity->setOrganization($setOrganization);
                 }
@@ -1642,12 +1725,15 @@ class ValidationService
                 }
                 $objectEntity->setExternalResult($result);
 
-                // Notify notification component
-                $this->notify($objectEntity, $method);
-
                 $responseLog = new Response(json_encode($result), 201, []);
                 // log hier
                 $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($result), null, 'out');
+
+                // Notify notification component
+                $this->notifications[] = [
+                    'objectEntity' => $objectEntity,
+                    'method'       => $method,
+                ];
 
                 // Lets stuff this into the cache for speed reasons
                 $item->set($result);

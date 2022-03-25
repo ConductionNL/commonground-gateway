@@ -176,7 +176,7 @@ class ObjectEntityService
                     if ($parameters = $this->session->get('parameters')) {
                         if (array_key_exists('path', $parameters)) {
                             foreach ($parameters['path'] as $key => $part) {
-                                if ($key[0] === '{' && $key[strlen($key) - 1] === '}') {
+                                if ($key[0] === '{' && $key[strlen($key) - 1] === '}' && $part !== null) {
                                     $key = substr($key, 1, -1);
                                     $filters[$key] = $part;
                                 } else {

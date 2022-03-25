@@ -63,6 +63,7 @@ class ZZController extends AbstractController
                 Response::HTTP_BAD_REQUEST,
                 ['content-type' => $acceptType]
             );
+            return $response->prepare($request);
         }
 
         // Let create the variable
