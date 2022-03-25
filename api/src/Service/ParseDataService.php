@@ -115,6 +115,7 @@ class ParseDataService
 
     public function loadData(?string $dataFile, string $oas): bool
     {
+        $this->validationService->setIgnoreErrors(true);
         if (empty($dataFile)) {
             return false;
         }
