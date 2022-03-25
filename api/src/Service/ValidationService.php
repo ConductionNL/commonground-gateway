@@ -1703,9 +1703,6 @@ class ValidationService
                     $objectEntity->setOrganization($this->session->get('activeOrganization'));
                     $objectEntity->setApplication($this->session->get('application'));
                 }
-                if ($objectEntity->getEntity()->getFunction() === 'organization') {
-                    $objectEntity = $this->functionService->createOrganization($objectEntity, $objectEntity->getUri(), $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue());
-                }
                 $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
                     'method' => $method,
                     'uri'    => $objectEntity->getUri(),
