@@ -67,6 +67,10 @@ class ProcessingLogService
 //            var_dump(empty($entity));
             return null;
         }
+        if ($this->session->get('object')) {
+            $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => $this->session->get('object')]);
+//            var_dump($object->getId()->toString());
+        }
 
         $processingLog = [
             "actieNaam" => "placeholder",
@@ -79,19 +83,19 @@ class ProcessingLogService
             "bewaartermijn" => "P10Y",
             "uitvoerder" => "placeholder",
             "systeem" => "placeholder",
-            "gebruiker" => "placeholder",
-            "gegevensbron" => "placeholder",
+            "gebruiker" => isset($object) && $object->getOwner() ? $object->getOwner() : null,
+            "gegevensbron" => isset($object) && $object->getEntity()->getGateway() ? $object->getEntity()->getGateway()->getName() : null,
             "soortAfnemerId" => "placeholder",
             "afnemerId" => "placeholder",
             "verwerkingsactiviteitIdAfnemer" => "placeholder",
             "verwerkingsactiviteitUrlAfnemer" => "placeholder",
             "verwerkingIdAfnemer" => "placeholder",
-            "tijdstip" => "2024-04-05T14:35:42+01:00",
+            "tijdstip" => isset($object) && $object->getDateCreated() ? $object->getDateCreated()->format('Y-m-dTH:i:s') : null,
             "verwerkteObjecten" => [
                 [
-                    "objecttype" => "placeholder",
+                    "objecttype" => isset($object) && $object->getEntity() ? $object->getEntity()->getName() : null,
                     "soortObjectId" => "placeholder",
-                    "objectId" => "placeholder",
+                    "objectId" => isset($object) ? $object->getId()->toString() : null,
                     "betrokkenheid" => "placeholder",
                 ]
             ],
