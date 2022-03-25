@@ -83,7 +83,7 @@ class Purpose
      * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Contract::class, inversedBy="purposes")
      */
-    private Contract $contract;
+    private ?Contract $contract;
 
     public function getId(): UuidInterface
     {

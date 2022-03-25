@@ -103,7 +103,6 @@ class Contract
     /**
      * @var DateTimeInterface|null The date the User signed this Contract
      * 
-     * @Assert\DateTime
      * 
      * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
@@ -113,7 +112,6 @@ class Contract
     /**
      * @var DateTimeInterface|null The date the Application signed this Contract
      * 
-     * @Assert\DateTime
      * 
      * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
