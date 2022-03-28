@@ -223,7 +223,7 @@ class Attribute
     private $minLength;
 
     /**
-     * @var string *Can only be used in combination with type array* The maximum array length
+     * @var int *Can only be used in combination with type array* The maximum array length
      *
      * @example 2
      *
@@ -231,10 +231,10 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxItems;
+    private ?int $maxItems;
 
     /**
-     * @var string *Can only be used in combination with type array* The minimum array length
+     * @var int *Can only be used in combination with type array* The minimum array length
      *
      * @example 2
      *
@@ -242,7 +242,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minItems;
+    private ?int $minItems;
 
     /**
      * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
