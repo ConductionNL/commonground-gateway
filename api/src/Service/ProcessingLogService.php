@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
+// todo: maybe move all of this to the FunctionService?
 class ProcessingLogService
 {
     private EntityManagerInterface $entityManager;
