@@ -3,12 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Entity;
-use App\Entity\Log;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
-use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -79,31 +76,31 @@ class ProcessingLogService
         $user = $this->tokenStorage->getToken()->getUser();
 
         $processingLog = [
-            "actieNaam" => "placeholder",
-            "handelingNaam" => "placeholder",
-            "verwerkingNaam" => "placeholder",
-            "verwerkingId" => "placeholder",
-            "verwerkingsactiviteitId" => "placeholder",
-            "verwerkingsactiviteitUrl" => "placeholder",
-            "vertrouwelijkheid" => "normaal",
-            "bewaartermijn" => "P10Y",
-            "uitvoerder" => $user->getUserIdentifier(),
-            "systeem" => "placeholder",
-            "gebruiker" => isset($object) && $object->getOwner() ? $object->getOwner() : null,
-            "gegevensbron" => isset($object) && $object->getEntity()->getGateway() ? $object->getEntity()->getGateway()->getName() : null,
-            "soortAfnemerId" => "placeholder",
-            "afnemerId" => "placeholder",
-            "verwerkingsactiviteitIdAfnemer" => "placeholder",
-            "verwerkingsactiviteitUrlAfnemer" => "placeholder",
-            "verwerkingIdAfnemer" => "placeholder",
-            "tijdstip" => isset($object) && $object->getDateCreated() ? $object->getDateCreated()->format('Y-m-dTH:i:s') : null,
-            "verwerkteObjecten" => [
+            'actieNaam'                       => 'placeholder',
+            'handelingNaam'                   => 'placeholder',
+            'verwerkingNaam'                  => 'placeholder',
+            'verwerkingId'                    => 'placeholder',
+            'verwerkingsactiviteitId'         => 'placeholder',
+            'verwerkingsactiviteitUrl'        => 'placeholder',
+            'vertrouwelijkheid'               => 'normaal',
+            'bewaartermijn'                   => 'P10Y',
+            'uitvoerder'                      => $user->getUserIdentifier(),
+            'systeem'                         => 'placeholder',
+            'gebruiker'                       => isset($object) && $object->getOwner() ? $object->getOwner() : null,
+            'gegevensbron'                    => isset($object) && $object->getEntity()->getGateway() ? $object->getEntity()->getGateway()->getName() : null,
+            'soortAfnemerId'                  => 'placeholder',
+            'afnemerId'                       => 'placeholder',
+            'verwerkingsactiviteitIdAfnemer'  => 'placeholder',
+            'verwerkingsactiviteitUrlAfnemer' => 'placeholder',
+            'verwerkingIdAfnemer'             => 'placeholder',
+            'tijdstip'                        => isset($object) && $object->getDateCreated() ? $object->getDateCreated()->format('Y-m-dTH:i:s') : null,
+            'verwerkteObjecten'               => [
                 [
-                    "objecttype" => isset($object) && $object->getEntity() ? $object->getEntity()->getName() : null,
-                    "soortObjectId" => isset($object) && $object->getEntity() ? $object->getEntity()->getId() : null,
-                    "objectId" => isset($object) ? $object->getId()->toString() : null,
-                    "betrokkenheid" => "placeholder",
-                ]
+                    'objecttype'    => isset($object) && $object->getEntity() ? $object->getEntity()->getName() : null,
+                    'soortObjectId' => isset($object) && $object->getEntity() ? $object->getEntity()->getId() : null,
+                    'objectId'      => isset($object) ? $object->getId()->toString() : null,
+                    'betrokkenheid' => 'placeholder',
+                ],
             ],
         ];
 

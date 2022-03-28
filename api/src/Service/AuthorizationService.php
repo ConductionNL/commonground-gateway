@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
-use App\Entity\Contract;
 use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;

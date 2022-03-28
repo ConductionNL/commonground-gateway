@@ -2,14 +2,13 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\ContractRepository;
 use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiProperty;
+use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Repository\ContractRepository;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -47,25 +46,25 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Contract
 {
-  /**
-   * @var UuidInterface The UUID identifier of this Entity.
-   *
-   * @example e2984465-190a-4562-829e-a8cca81aa35d
-   *
-   * @Assert\Uuid
-   * @Groups({"read","read_secure"})
-   * @ORM\Id
-   * @ORM\Column(type="uuid", unique=true)
-   * @ORM\GeneratedValue(strategy="CUSTOM")
-   * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
-   */
-  private UuidInterface $id;
+    /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
+     * @ORM\Id
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
+     */
+    private UuidInterface $id;
 
     /**
      * @var Application The Application that has to sign this Contract
-     * 
+     *
      * @Assert\NotNull
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="contracts")
      * @ORM\JoinColumn(nullable=false)
@@ -74,7 +73,7 @@ class Contract
 
     /**
      * @var string The User as uuid that has to sign this Contract
-     * 
+     *
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
@@ -84,9 +83,9 @@ class Contract
 
     /**
      * @var array The scopes this Contract is about
-     * 
+     *
      * @Assert\NotBlank
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
@@ -101,8 +100,8 @@ class Contract
 
     /**
      * @var DateTimeInterface|null The date the User signed this Contract
-     * 
-     * 
+     *
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
@@ -110,8 +109,8 @@ class Contract
 
     /**
      * @var DateTimeInterface|null The date the Application signed this Contract
-     * 
-     * 
+     *
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
