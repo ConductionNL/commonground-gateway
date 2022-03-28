@@ -1327,9 +1327,9 @@ App\Entity\Attribute:
     # TODO: ?
     #        requiredIf:
     #            type: EDUCATION
-    education_endDate:
-        name: endDate
-        type: datetime
+    education_yearsFollowed: # changed (datetime) education_endDate to this
+        name: yearsFollowed
+        type: integer
         entity: "@education"
     # TODO: ?
     #        requiredIf:
