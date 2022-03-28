@@ -223,7 +223,7 @@ class Attribute
     private $minLength;
 
     /**
-     * @var int *Can only be used in combination with type array* The maximum array length
+     * @var ?int *Can only be used in combination with type array* The maximum array length
      *
      * @example 2
      *
@@ -234,7 +234,7 @@ class Attribute
     private ?int $maxItems;
 
     /**
-     * @var int *Can only be used in combination with type array* The minimum array length
+     * @var ?int *Can only be used in combination with type array* The minimum array length
      *
      * @example 2
      *
@@ -895,7 +895,7 @@ class Attribute
         return $this->minItems;
     }
 
-    public function setMinItems(int $minItems): self
+    public function setMinItems(?int $minItems): self
     {
         $this->minItems = $minItems;
 
