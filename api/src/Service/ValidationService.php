@@ -492,6 +492,7 @@ class ValidationService
                     $this->createdObjects[] = $subObject;
                 }
 
+                $subObject->setSubresourceIndex($key);
                 $subObject = $this->validateEntity($subObject, $object);
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
@@ -1469,7 +1470,9 @@ class ValidationService
         if (in_array($format, $allowedValidations)) {
             if ($format == 'dutch_pc4') {
                 //validate dutch_pc4
-                $this->validateDutchPC4($value);
+                if (!$this->validateDutchPC4($value)) {
+                    $objectEntity->addError($attribute->getName(), 'This is not a valid Dutch postalCode');
+                }
             } else {
                 try {
                     Validator::$format()->check($value);

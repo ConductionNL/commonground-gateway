@@ -164,6 +164,16 @@ class ObjectEntity
     private $subresourceOf;
 
     /**
+     * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
+     * Used for showing correct index in error messages.
+     *
+     * @var int|null
+     *
+     * @Groups({"read", "write"})
+     */
+    private ?int $subresourceIndex = null;
+
+    /**
      * @var Datetime The moment this request was created
      *
      * @Groups({"read"})
@@ -390,12 +400,13 @@ class ObjectEntity
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $key => $subResource) {
-                if ($value->getAttribute()->getMultiple()) {
-                    $key = '['.$key.']';
-                } else {
-                    $key = '';
-                }
                 if (!$maxDepth->contains($subResource)) {
+                    if ($value->getAttribute()->getMultiple()) {
+                        $key = $subResource->getSubresourceIndex() ?? $key;
+                        $key = '['.$key.']';
+                    } else {
+                        $key = '';
+                    }
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
                         $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
@@ -768,6 +779,18 @@ class ObjectEntity
     public function setDateCreated(DateTimeInterface $dateCreated): self
     {
         $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getSubresourceIndex(): ?int
+    {
+        return $this->subresourceIndex;
+    }
+
+    public function setSubresourceIndex(?int $subresourceIndex): self
+    {
+        $this->subresourceIndex = $subresourceIndex;
 
         return $this;
     }
