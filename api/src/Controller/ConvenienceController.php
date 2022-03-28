@@ -73,7 +73,7 @@ class ConvenienceController extends AbstractController
 
         // try {
         // Persist yaml to objects
-        $this->oasParser->parseRedoc($redoc, $collection);
+        $this->oasParser->parseOas($redoc, $collection);
         // } catch (\Exception $e) {
         // return new Response(
         //         $this->serializer->serialize(['message' => $e->getMessage()], 'json'),
