@@ -16,10 +16,8 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Entity\Contract;
 
 /**
- *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
@@ -42,7 +40,7 @@ use App\Entity\Contract;
  */
 class Purpose
 {
-     /**
+    /**
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
@@ -53,7 +51,7 @@ class Purpose
      */
     private $id;
 
-     /**
+    /**
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
@@ -66,7 +64,7 @@ class Purpose
      */
     private string $name;
 
-      /**
+    /**
      * @var ?string The description of this Entity
      *
      * @Gedmo\Versioned
