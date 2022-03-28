@@ -269,7 +269,7 @@ class Entity
      * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut")
      * @MaxDepth(1)
      */
-    private ?Subscriber $subscriberOut;
+    private Collection $subscriberOut;
 
     /**
      * @var ?Collection The collections of this Entity
