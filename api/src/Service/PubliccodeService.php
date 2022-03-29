@@ -39,8 +39,6 @@ class PubliccodeService
     public function getGithubOwnerInfo(array $item, bool $ownerRepos): array
     {
         $ownerRepos ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']['login'])) : $repos = null;
-        $publiccode = $this->findPubliccode($item);
-        $publiccode !== null ? $avatars = $this->getGithubOwnerLogos($publiccode, $item) : $avatars = null;
 
         return [
             'id'                => $item['owner']['id'],
@@ -48,7 +46,7 @@ class PubliccodeService
             'login'             => $item['owner']['login'] ?? null,
             'html_url'          => $item['owner']['html_url'] ?? null,
             'organizations_url' => $item['owner']['organizations_url'] ?? null,
-            'avatars'           => $avatars ?? null,
+            'avatar_url'           => $item['owner']['avatar_url'] ?? null,
             'repos'             => $repos,
         ];
     }
@@ -74,29 +72,6 @@ class PubliccodeService
             'private'     => $item['private'],
             'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item, $ownerRepos) : null,
         ];
-    }
-
-    /**
-     * This function gets all the github owner details.
-     *
-     * @param array $publiccode the publiccode from a repository
-     * @param array $repository a github repository
-     *
-     * @return array
-     */
-    public function getGithubOwnerLogos(array $publiccode, array $repository): array
-    {
-        $avatars = [];
-
-        if (!empty($publiccode['logo']) && filter_var($publiccode['logo'], FILTER_VALIDATE_URL) === false) {
-            $avatars['logo'] = $this->handleUrl($publiccode['logo'], $repository['name'], $repository['owner']['login']);
-        }
-
-        if (!empty($publiccode['monochromeLogo']) && filter_var($publiccode['monochromeLogo'], FILTER_VALIDATE_URL) === false) {
-            $avatars['monochromeLogo'] = $this->handleUrl($publiccode['monochromeLogo'], $repository['name'], $repository['owner']['login']);
-        }
-
-        return $avatars;
     }
 
     /**
