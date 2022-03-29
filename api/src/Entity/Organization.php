@@ -8,6 +8,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -213,7 +215,7 @@ class Organization
      * @ORM\OneToMany(targetEntity="App\Entity\Person", mappedBy="organization", cascade={"persist"})
      * @MaxDepth(1)
      */
-    private $persons;
+    private $people;
 
 //    /**
 //     * @var ContactList Contact list of this organisation
@@ -264,7 +266,7 @@ class Organization
     {
         $this->telephones = new ArrayCollection();
         $this->addresses = new ArrayCollection();
-        $this->persons = new ArrayCollection();
+        $this->people = new ArrayCollection();
 //        $this->contactLists = new ArrayCollection();
         $this->emails = new ArrayCollection();
 //        $this->socials = new ArrayCollection();
@@ -493,15 +495,15 @@ class Organization
     /**
      * @return Collection|Person[]
      */
-    public function getPersons()
+    public function getPeople()
     {
-        return $this->persons;
+        return $this->people;
     }
 
     public function addPerson(Person $person): self
     {
-        if (!$this->persons->contains($person)) {
-            $this->persons[] = $person;
+        if (!$this->people->contains($person)) {
+            $this->people[] = $person;
             $person->setOrganization($this);
         }
 
@@ -510,8 +512,8 @@ class Organization
 
     public function removePerson(Person $person): self
     {
-        if ($this->persons->contains($person)) {
-            $this->persons->removeElement($person);
+        if ($this->people->contains($person)) {
+            $this->people->removeElement($person);
             // set the owning side to null (unless already changed)
             if ($person->getOrganization() === $this) {
                 $person->setOrganization(null);
@@ -561,24 +563,24 @@ class Organization
         return $this;
     }
 
-    public function getDateCreated(): ?\DateTimeInterface
+    public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
     }
 
-    public function setDateCreated(\DateTimeInterface $dateCreated): self
+    public function setDateCreated(DateTimeInterface $dateCreated): self
     {
         $this->dateCreated = $dateCreated;
 
         return $this;
     }
 
-    public function getDateModified(): ?\DateTimeInterface
+    public function getDateModified(): ?DateTimeInterface
     {
         return $this->dateModified;
     }
 
-    public function setDateModified(\DateTimeInterface $dateModified): self
+    public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
 

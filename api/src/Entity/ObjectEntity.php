@@ -168,7 +168,13 @@ class ObjectEntity
     private $subresourceOf;
 
     /**
-     * @var Datetime The moment this request was created
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
+     */
+    private Collection $requestLogs;
+
+    /**
+     * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
@@ -177,19 +183,13 @@ class ObjectEntity
     private $dateCreated;
 
     /**
-     * @var Datetime The moment this request last Modified
+     * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
 
     public function __construct()
     {
@@ -746,30 +746,6 @@ class ObjectEntity
         return $this;
     }
 
-    public function getDateCreated(): ?DateTimeInterface
-    {
-        return $this->dateCreated;
-    }
-
-    public function setDateCreated(DateTimeInterface $dateCreated): self
-    {
-        $this->dateCreated = $dateCreated;
-
-        return $this;
-    }
-
-    public function getDateModified(): ?DateTimeInterface
-    {
-        return $this->dateModified;
-    }
-
-    public function setDateModified(DateTimeInterface $dateModified): self
-    {
-        $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
     /**
      * @return Collection|RequestLog[]
      */
@@ -796,6 +772,30 @@ class ObjectEntity
                 $requestLog->setObjectEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }
