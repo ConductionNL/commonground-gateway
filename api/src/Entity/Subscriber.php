@@ -98,7 +98,7 @@ class Subscriber
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
-    private int $runOrder = 0;
+    private ?int $runOrder = 0;
 
     /**
      * @Assert\Type("string")
