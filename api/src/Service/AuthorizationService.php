@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
+use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -111,7 +112,35 @@ class AuthorizationService
         return $scopes;
     }
 
-    public function checkAuthorization(array $scopes): void
+    private function checkValueScopes(array $grantedScopes, ?Entity $entity, ?Attribute $attribute, ?ObjectEntity $object, $value = null): array
+    {
+        //todo: if $value & $attribute are given, match it with the scope for $attribute->getName()
+        //todo: if $object & $entity are given, make sure $object->getEntity() matches $entity
+        //todo: if no $value is given, but $object & $attribute are given, get value from the $object using $object->getValueByAttribute($attribute)
+        //todo: cache this somehow? or a part of it
+
+        //todo: first draft, needs some improvements to deal with $entity and $object, see above todo's ^
+        foreach ($grantedScopes as $grantedScope) {
+            $grantedScope = explode("=", $grantedScope);
+            if (count($grantedScope) == 2) {
+                $hasValueScopes = true;
+                $scopeValues = explode(',', $grantedScope[1]);
+                if (in_array($value, $scopeValues)) {
+                    $matchValueScopes = true;
+                    continue;
+                }
+                break;
+            }
+        }
+
+        return [
+            'hasValueScopes' => $hasValueScopes ?? false,
+            'matchValueScopes' => $matchValueScopes ?? false,
+            'shouldMatchValues' => $scopeValues ?? null
+        ];
+    }
+
+    public function checkAuthorization(array $scopes, ?Entity $entity, ?Attribute $attribute, ?ObjectEntity $object, $value = null): void
     {
         if (!$this->parameterBag->get('app_auth')) {
             return;
@@ -139,6 +168,18 @@ class AuthorizationService
         }
         if (in_array($scopes['admin_scope'], $grantedScopes)) {
             return;
+        }
+        $checkValueScopes = $this->checkValueScopes($grantedScopes, $entity, $attribute, $object, $value);
+        if ($checkValueScopes['hasValueScopes']) {
+            //todo: turn this into a function? something like handleValueScopesResult() ?
+            if ($checkValueScopes['matchValueScopes']) {
+                return;
+            } else {
+                $shouldMatchValues = count($checkValueScopes['shouldMatchValues']) > 1 ? 'one of ' : '';
+                $shouldMatchValues = $shouldMatchValues.'['.implode(', ', $checkValueScopes['shouldMatchValues']).']';
+                // todo: handle different exceptions based on $scopes array, see if statement(s) below this.
+                throw new AccessDeniedException("Insufficient Access, because of scope {$scopes['sub_scope']} a value set to {$shouldMatchValues} is required");
+            }
         }
         if (in_array($scopes['base_scope'], $grantedScopes)
             || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
