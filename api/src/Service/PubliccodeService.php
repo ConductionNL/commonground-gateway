@@ -39,6 +39,7 @@ class PubliccodeService
     public function getGithubOwnerInfo(array $item, bool $ownerRepos): array
     {
         $ownerRepos ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']['login'])) : $repos = null;
+        $publiccode = $this->findPubliccode($item);
 
         return [
             'id'                => $item['owner']['id'],
@@ -46,7 +47,8 @@ class PubliccodeService
             'login'             => $item['owner']['login'] ?? null,
             'html_url'          => $item['owner']['html_url'] ?? null,
             'organizations_url' => $item['owner']['organizations_url'] ?? null,
-            'avatar_url'           => $item['owner']['avatar_url'] ?? null,
+            'avatar_url'        => $item['owner']['avatar_url'] ?? null,
+            'publiccode'        => $publiccode,
             'repos'             => $repos,
         ];
     }
