@@ -1,0 +1,11 @@
+App\Entity\Organization:
+    defaultOrganization:
+        name: default organization
+        description: the default organization
+        emails:
+            - '@defaultOrganization_email'
+        
+App\Entity\Email:
+    defaultOrganization_email:
+        name: email for default organization
+        email: default@test.com
