@@ -313,9 +313,9 @@ class AuthorizationService
         }
 
         return [
-            'hasValueScopes' => $hasValueScopes ?? false, // true if there is at least one scope with an = value
-            'matchValueScopes' => $matchValueScopes ?? false, // true if the given value for the attribute with a scope with = value matches the required value
-            'shouldMatchValues' => $scopeValues ?? null // the value(s) that should be matched because of the = value scope (used for error message)
+            'hasValueScopes' => $hasValueScopes ?? false, // true if there is at least one grantedScope with a = value
+            'matchValueScopes' => $matchValueScopes ?? false, // true if the given value for this grantedScope with = value matches the required value
+            'shouldMatchValues' => $scopeValues ?? null // the value(s) that should be matched because of the = value grantedScope (used for error message)
         ];
     }
 
