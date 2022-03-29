@@ -12,6 +12,7 @@ namespace App\Security;
 use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
+use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -36,8 +37,9 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private TokenStorageInterface $tokenStorage;
     private SessionInterface $session;
     private AuthenticationService $authenticationService;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
@@ -45,6 +47,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
         $this->authenticationService = $authenticationService;
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -91,7 +94,11 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
+            if ($this->commonGroundService->getComponent('cc')) {
+                $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
+            } else {
+                $person = $this->entityManager->getRepository("App:Person")->find($id);
+            }
         }
 
         return new AuthenticationUser(
