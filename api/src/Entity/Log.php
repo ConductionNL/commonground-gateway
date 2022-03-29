@@ -239,16 +239,6 @@ class Log
      */
     private $responseTime;
 
-    //todo: why was this even created (pun intended)? use dateCreated instead...
-    /**
-     * @var Datetime The moment this log was created
-     *
-     * @Groups({"read"})
-     * @Gedmo\Timestampable(on="create")
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $createdAt;
-
     /**
      * @var string The route name of this Log.
      *
@@ -507,18 +497,6 @@ class Log
     public function setResponseTime(int $responseTime): self
     {
         $this->responseTime = $responseTime;
-
-        return $this;
-    }
-
-    public function getCreatedAt(): ?\DateTimeInterface
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
-    {
-        $this->createdAt = $createdAt;
 
         return $this;
     }

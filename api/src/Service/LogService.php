@@ -68,8 +68,6 @@ class LogService
         $time = microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'];
         $callLog->setResponseTime(intval($time * 1000));
 
-        $callLog->setCreatedAt(new \DateTime());
-
         if ($this->session) {
             // add before removing
             $callLog->setCallId($this->session->get('callId'));
