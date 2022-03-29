@@ -8,6 +8,8 @@ use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,6 +49,14 @@ class AuthorizationService
         $this->cache = $cache;
     }
 
+    /**
+     * @TODO
+     *
+     * @param string $method
+     * @param Attribute|null $attribute
+     * @param Entity|null $entity
+     * @return array
+     */
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
         $scopes['admin_scope'] = $method.'.admin';
@@ -72,6 +82,115 @@ class AuthorizationService
         return $scopes;
     }
 
+    /**
+     * @TODO
+     *
+     * @param array $info
+     * @return array
+     */
+    private function handleInfoArray(array $info): array
+    {
+        return [
+            'method' => $info['method'] ?? 'GET',
+            'entity' => $info['entity'] ?? null,
+            'attribute' => $info['attribute'] ?? null,
+            'objectEntity' => $info['objectEntity'] ?? null,
+            'value' => $info['value'] ?? null,
+        ];
+    }
+
+    /**
+     * @TODO
+     *
+     * @param array $scopes
+     * @param array|null $info can contain the following keys: method, entity, attribute, objectEntity & value
+     * @return void
+     * @throws CacheException|InvalidArgumentException
+     */
+    public function checkAuthorization(array $scopes, ?array $info = []): void
+    {
+        if (!$this->parameterBag->get('app_auth')) {
+            return;
+        }
+
+        $grantedScopes = $this->getGrantedScopes();
+
+        if (in_array($scopes['admin_scope'], $grantedScopes)) {
+            return;
+        }
+
+        if ($this->handleValueScopes($scopes, $grantedScopes, $this->handleInfoArray($info))
+            || in_array($scopes['base_scope'], $grantedScopes)
+            || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
+            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))) {
+            return;
+        }
+        if (array_key_exists('sub_scopes', $scopes)) {
+            $subScopes = '['.implode(', ', $scopes['sub_scopes']).']';
+
+            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or one of {$subScopes} is required");
+        } elseif (array_key_exists('sub_scope', $scopes)) {
+            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} is required");
+        }
+
+        throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
+    }
+
+    /**
+     * @TODO
+     *
+     * @return array|string[]
+     * @throws CacheException|InvalidArgumentException
+     */
+    private function getGrantedScopes(): array
+    {
+        // First check if we have these scopes in cache (this gets removed from cache everytime we start a new api call, see eavService ->handleRequest)
+        $item = $this->cache->getItem('grantedScopes');
+
+        if ($item->isHit()) {
+            $grantedScopes = $item->get();
+        } else {
+            $this->session->set('anonymous', false);
+
+            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+                $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
+            } else {
+                $grantedScopes = $this->getScopesForAnonymous();
+
+                $this->session->set('anonymous', true);
+            }
+            $item->set($grantedScopes);
+            $item->tag('grantedScopes');
+            $this->cache->save($item);
+        }
+
+        return $grantedScopes;
+    }
+
+    /**
+     * @TODO
+     *
+     * @param array $roles
+     * @return string[]
+     */
+    public function getScopesFromRoles(array $roles): array
+    {
+        $scopes = ['POST.organizations.type=taalhuis', 'GET.organizations.type=taalhuis']; //todo: for testing, remove
+        foreach ($roles as $role) {
+            if (strpos($role, 'scope') !== null) {
+                $scopes[] = substr($role, strlen('ROLE_scope.'));
+            }
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @TODO
+     *
+     * @return array
+     * @throws CacheException|InvalidArgumentException
+     */
     public function getScopesForAnonymous(): array
     {
         // First check if we have these scopes in cache (this gets removed from cache when a userGroup with name ANONYMOUS is changed, see FunctionService)
@@ -100,20 +219,57 @@ class AuthorizationService
         }
     }
 
-    public function getScopesFromRoles(array $roles): array
+    /**
+     * @TODO
+     *
+     * @param array $scopes
+     * @param array $grantedScopes
+     * @param array $info
+     * @return bool
+     */
+    private function handleValueScopes(array $scopes, array $grantedScopes, array $info): bool
     {
-        $scopes = ['POST.organizations.type=taalhuis', 'GET.organizations.type=taalhuis'];
-        foreach ($roles as $role) {
-            if (strpos($role, 'scope') !== null) {
-                $scopes[] = substr($role, strlen('ROLE_scope.'));
+        $checkValueScopes = $this->checkValueScopes($grantedScopes, $info);
+        if ($checkValueScopes['hasValueScopes']) {
+            //todo: turn this into a function? something like handleValueScopesResult() ?
+            if ($checkValueScopes['matchValueScopes']) {
+                return true;
+            } else {
+                $shouldMatchValues = count($checkValueScopes['shouldMatchValues']) > 1 ? 'one of ' : '';
+                $shouldMatchValues = $shouldMatchValues.'['.implode(', ', $checkValueScopes['shouldMatchValues']).']';
+                // todo: handle different exceptions based on $scopes array, see other throw AccessDeniedException in if statement(s) below this.
+                $scope = $scopes['base_scope'];
+                if (array_key_exists('sub_scope', $scopes)) {
+                    $scope = $scopes['sub_scope'];
+                }
+                if (array_key_exists('sub_scopes', $scopes)) {
+                    $scope = '['.implode(', ', $scopes['sub_scopes']).']';
+                }
+                //todo: get correct scope name for error message from $grantedScopes
+                //todo: $grantedScopes has POST.organizations.type=taalhuis
+                //todo: $scopes only has POST.organizations.type
+                //todo: what if we don't have an info['attribute']?
+                throw new AccessDeniedException("Insufficient Access, because of scope {$scope}, {$info['attribute']->getName()} set to {$shouldMatchValues} is required");
             }
         }
-
-        return $scopes;
+        return false;
     }
 
-    private function checkValueScopes(array $grantedScopes, string $method, ?Entity $entity, ?Attribute $attribute, ?ObjectEntity $object, $value): array
+    /**
+     * @TODO
+     *
+     * @param array $grantedScopes
+     * @param array $info
+     * @return array
+     */
+    private function checkValueScopes(array $grantedScopes, array $info): array
     {
+        $method = $info['method'];
+        $entity = $info['entity'];
+        $attribute = $info['attribute'];
+        $object = $info['objectEntity'];
+        $value = $info['value'];
+
         //todo: if $object & $entity are given, make sure $object->getEntity() matches $entity
         //todo: cache this somehow? or a part of it
 
@@ -128,7 +284,7 @@ class AuthorizationService
             if (empty($entity) && !empty($attribute)) {
                 $entity = $attribute->getEntity();
             }
-            $base_scope = $method.'.'.$entity->getName();
+            $base_scope = $info['method'].'.'.$entity->getName();
             $sub_scope = null;
             if (!empty($attribute)) {
                 $sub_scope = $base_scope.'.'.$attribute->getName();
@@ -163,71 +319,14 @@ class AuthorizationService
         ];
     }
 
-    public function checkAuthorization(array $scopes, string $method = 'GET', ?Entity $entity = null, ?Attribute $attribute = null, ?ObjectEntity $object = null, $value = null): void
-    {
-        if (!$this->parameterBag->get('app_auth')) {
-            return;
-        }
-
-        // First check if we have these scopes in cache (this gets removed from cache everytime we start a new api call, see eavService ->handleRequest)
-        $item = $this->cache->getItem('grantedScopes');
-        if ($item->isHit()) {
-            $grantedScopes = $item->get();
-        } else {
-            $this->session->set('anonymous', false);
-
-            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
-                $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
-            } else {
-                $grantedScopes = $this->getScopesForAnonymous();
-
-                $this->session->set('anonymous', true);
-            }
-            $item->set($grantedScopes);
-            $item->tag('grantedScopes');
-            $this->cache->save($item);
-        }
-        if (in_array($scopes['admin_scope'], $grantedScopes)) {
-            return;
-        }
-        $checkValueScopes = $this->checkValueScopes($grantedScopes, $method, $entity, $attribute, $object, $value);
-        if ($checkValueScopes['hasValueScopes']) {
-            //todo: turn this into a function? something like handleValueScopesResult() ?
-            if ($checkValueScopes['matchValueScopes']) {
-                return;
-            } else {
-                $shouldMatchValues = count($checkValueScopes['shouldMatchValues']) > 1 ? 'one of ' : '';
-                $shouldMatchValues = $shouldMatchValues.'['.implode(', ', $checkValueScopes['shouldMatchValues']).']';
-                // todo: handle different exceptions based on $scopes array, see other throw AccessDeniedException in if statement(s) below this.
-                $scope = $scopes['base_scope'];
-                if (array_key_exists('sub_scope', $scopes)) {
-                    $scope = $scopes['sub_scope'];
-                }
-                if (array_key_exists('sub_scopes', $scopes)) {
-                    $scope = '['.implode(', ', $scopes['sub_scopes']).']';
-                }
-                //todo: get correct scope name for error message from $grantedScopes
-                //todo: $grantedScopes has POST.organizations.type=taalhuis
-                //todo: $scopes only has POST.organizations.type
-                throw new AccessDeniedException("Insufficient Access, because of scope {$scope}, {$attribute->getName()} set to {$shouldMatchValues} is required");
-            }
-        }
-        if (in_array($scopes['base_scope'], $grantedScopes)
-            || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
-            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))) {
-            return;
-        }
-        if (array_key_exists('sub_scopes', $scopes)) {
-            $subScopes = '['.implode(', ', $scopes['sub_scopes']).']';
-
-            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or one of {$subScopes} is required");
-        } elseif (array_key_exists('sub_scope', $scopes)) {
-            throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} or {$scopes['sub_scope']} is required");
-        }
-
-        throw new AccessDeniedException("Insufficient Access, scope {$scopes['base_scope']} is required");
-    }
-
+    /**
+     * @TODO
+     *
+     * @param string $contentType
+     * @param SerializerService $serializerService
+     * @param AccessDeniedException $exception
+     * @return Response
+     */
     public function serializeAccessDeniedException(string $contentType, SerializerService $serializerService, AccessDeniedException $exception): Response
     {
         return new Response(
