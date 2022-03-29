@@ -97,7 +97,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
             if ($this->commonGroundService->getComponent('cc')) {
                 $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
             } else {
-                $person = $this->entityManager->getRepository("App:Person")->find($id);
+                $person = $this->entityManager->getRepository('App:Person')->find($id);
             }
         }
 
