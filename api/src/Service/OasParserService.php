@@ -11,6 +11,8 @@ use App\Entity\Handler;
 use App\Entity\Property;
 use App\Repository\EntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -19,6 +21,7 @@ use Symfony\Component\Yaml\Yaml;
 class OasParserService
 {
     private EntityManagerInterface $entityManager;
+    private Client $client;
 
     private array $handlersToCreate;
     private array $oas;
@@ -29,6 +32,7 @@ class OasParserService
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
+        $this->client = new Client([]);
 
         $this->handlersToCreate = [];
         $this->oas = [];
@@ -37,8 +41,8 @@ class OasParserService
     /**
      * Checks if an array is associative
      *
-     * @param array $array  The array to check
-     * @return bool         Whether or not the array is associative
+     * @param   array $array    The array to check
+     * @return  bool            Whether or not the array is associative
      */
     private function isAssociative(array $array): bool
     {
@@ -49,8 +53,48 @@ class OasParserService
     }
 
     /**
-     * @param array $response
-     * @return string|null
+     * Checks the type of data the response contains, and parses it accordingly into an array
+     *
+     * @param   Response    $response   The response of the request made to find the data
+     * @param   string      $url        The url the request was made to
+     * @return  array                   The resulting OpenAPI Specification as array
+     */
+    private function getDataFromResponse(Response $response, string $url): array
+    {
+        if($response->hasHeader('Content-Type')){
+            switch($response->getHeader('Content-Type'))
+            {
+                case 'application/json':
+                    return json_decode($response->getBody()->getContents(), true);
+                case 'application/x-yaml':
+                    return Yaml::parse($response->getBody()->getContents());
+            }
+        }
+        if(strpos($url, '.json') !== false) {
+            return json_decode($response->getBody()->getContents(), true);
+        } else {
+            return Yaml::parse($response->getBody()->getContents());
+        }
+
+    }
+
+    /**
+     * Retrieves an external OpenAPI Specification
+     *
+     * @param   string $url The URL of the external OAS
+     * @return  array       The parsed OAS
+     */
+    private function getExternalOAS(string $url): array
+    {
+        $response = $this->client->get($url);
+        return $this->getDataFromResponse($response, $url);
+    }
+
+    /**
+     * Parse the content description of a response for which no application/json version exists
+     *
+     * @param   array   $response   The response defined in the OAS
+     * @return  string|null         The entity the content belongs to
      */
     private function parseFirstContent(array $response): ?string
     {
@@ -64,6 +108,14 @@ class OasParserService
         return null;
     }
 
+    /**
+     * Creates an endpoint property
+     *
+     * @param   array       $oasParameter           The parameter in the OAS that has to be made into a property
+     * @param   Endpoint    $endpoint               The endpoint the property belongs to
+     * @param   int         $createdPropertiesCount The number of properties created until this moment
+     * @return  Property                            The resulting property
+     */
     private function createProperty(array $oasParameter, Endpoint $endpoint, int $createdPropertiesCount): Property
     {
         $propertyObject = new Property();
@@ -84,9 +136,10 @@ class OasParserService
 
     /**
      * Sets the schema of a flat Attribute
-     * @param array $schema         The defining schema
-     * @param Attribute $attribute  The attribute to set the schema for
-     * @return Attribute            The resulting attribute with resulting schema
+     *
+     * @param   array       $schema     The defining schema
+     * @param   Attribute   $attribute  The attribute to set the schema for
+     * @return  Attribute               The resulting attribute with resulting schema
      */
     private function setSchemaForAttribute(array $schema, Attribute $attribute): Attribute
     {
@@ -112,9 +165,9 @@ class OasParserService
     /**
      * Gets the schema for an object from an internal reference
      *
-     * @param string $ref   The reference to find
-     * @param array $data   The oas to find the reference in
-     * @return array        The schema found
+     * @param   string   $ref   The reference to find
+     * @param   array    $data  The oas to find the reference in
+     * @return  array           The schema found
      */
     private function getSchemaFromReferencedLocation(string $ref, array $data): array
     {
@@ -128,10 +181,12 @@ class OasParserService
     }
 
     /**
-     * @param array $response
-     * @param array $method
-     * @param string $methodName
-     * @param Endpoint $endpoint
+     * Parses content for responses in the OpenAPI Specification
+     *
+     * @param array     $response   The response the content relates to
+     * @param array     $method     The HTTP method of the response
+     * @param string    $methodName The name of the HTTP method of the response
+     * @param Endpoint  $endpoint   The endpoint the response relates to
      */
     private function parseContent(array $response, array $method, string $methodName, Endpoint $endpoint): void
     {
@@ -150,10 +205,12 @@ class OasParserService
     }
 
     /**
-     * @param string $property
-     * @param Endpoint $endpoint
-     * @param int $createdPropertiesCount
-     * @return Property|null
+     * Creates an special type of property for an endpoint
+     *
+     * @param   string      $property               The name of the property
+     * @param   Endpoint    $endpoint               The endpoint the property belongs to
+     * @param   int         $createdPropertiesCount The properties created until this point
+     * @return  Property|null                       The created property
      */
     private function createSpecialProperty(string $property, Endpoint $endpoint, int &$createdPropertiesCount): ?Property
     {
@@ -175,12 +232,14 @@ class OasParserService
 
     /**
      * Creates a 'flat' Attribute (being not an object) from an OAS property
-     * @param string $propertyName  The name of the property
-     * @param array $schema         The definition of the property
-     * @param Entity $parentEntity  The entity the attribute belongs to
-     * @return Attribute            The resulting attribute
+     *
+     * @param   string  $propertyName   The name of the property
+     * @param   array   $schema         The definition of the property
+     * @param   Entity  $parentEntity   The entity the attribute belongs to
+     * @param   bool    $multiple       Whether the attribute should allow for multiple values (i.e. is an array of values)
+     * @return  Attribute               The resulting attribute
      */
-    private function createFlatAttribute(string $propertyName, array $schema, Entity $parentEntity): Attribute
+    private function createFlatAttribute(string $propertyName, array $schema, Entity $parentEntity, bool $multiple = false): Attribute
     {
         $attribute = new Attribute();
         $attribute->setName($propertyName);
@@ -189,23 +248,55 @@ class OasParserService
         isset($schema['description']) && $attribute->setDescription($schema['description']);
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
+        $attribute->setMultiple($multiple);
         $attribute->setEntity($parentEntity);
 
         return $attribute;
     }
 
     /**
-     * @param string $propertyName
-     * @param Entity $parentEntity
-     * @param Entity $targetEntity
-     * @return Attribute
+     * Creates an 'array' Attribute (either an array of objects, a free-form array of an array of defined types) from an OAS property
+     *
+     * @param   string              $propertyName   The name of the property
+     * @param   array               $schema         The schema of the property
+     * @param   Entity              $parentEntity   The entity the attribute relates to
+     * @param   CollectionEntity    $collection     The collection any created entity should relate to
+     * @return  Attribute                           The resulting Attribute
+     * @throws  \Exception                          Thrown when getEntity throws an exception
      */
-    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity): Attribute
+    private function createArrayAttribute(string $propertyName, array $schema, Entity $parentEntity, CollectionEntity $collection): Attribute
+    {
+        if(isset($schema['items']) && isset($schema['items']['ref'])){
+            $itemSchema = $this->getSchemaFromRef($schema['items']['ref'], $targetEntity);
+        } elseif (isset($schema['items'])) {
+            $itemSchema = $schema['items'];
+        } else {
+            return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
+        }
+
+        if($itemSchema['type'] == 'object') {
+            return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
+        } else {
+            return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
+        }
+    }
+
+    /**
+     * Creates an attribute referencing another entity
+     *
+     * @param   string  $propertyName   The name of the attribute
+     * @param   Entity  $parentEntity   The entity the attribute is in
+     * @param   Entity  $targetEntity   The entity the attribute references
+     * @param   bool    $multiple       Whether the attribute should allow for multiple values (i.e. is an array of values)
+     * @return  Attribute               The resulting attribute
+     */
+    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity, bool $multiple = false): Attribute
     {
         $newAttribute = new Attribute();
         $newAttribute->setName($propertyName);
         $newAttribute->setEntity($parentEntity);
         $newAttribute->setCascade(true);
+        $newAttribute->setMultiple($multiple);
 
         $newAttribute->setObject($targetEntity);
 
@@ -213,18 +304,17 @@ class OasParserService
     }
 
     /**
+     * Gets a schema from a reference in the OAS specification, be it internal or external
      *
-     *
-     * @param string $ref
-     * @param string|null $targetEntity
-     * @return array
+     * @param   string $ref                 The reference in the original OAS specification
+     * @param   string|null $targetEntity   The name of the referenced entity
+     * @return  array                       The resulting schema
      */
     private function getSchemaFromRef(string $ref, ?string &$targetEntity = ''): array
     {
         if (strpos($ref, 'https://') !== false || strpos($ref, 'http://') !== false) {
             $targetEntity = substr($ref, strrpos($ref, '/') + 1);
-            //@TODO: Guzzle dit, also allow JSON
-            $data = Yaml::parse(file_get_contents($ref));
+            $data = $this->getExternalOAS($ref);
             $ref = explode('#', $ref)[1];
         } else {
             $targetEntity = substr($ref, strrpos($ref, '/') + 1);
@@ -233,9 +323,11 @@ class OasParserService
         return $this->getSchemaFromReferencedLocation($ref, $data);
     }
     /**
-     * @param array $method
-     * @param string $methodName
-     * @param Endpoint $endpoint
+     * Parses responses from the OAS
+     *
+     * @param   array       $method     The schema that contains the responses
+     * @param   string      $methodName The name of the method
+     * @param   Endpoint    $endpoint   The endpoint the response relates to
      */
     private function parseResponses(array $method, string $methodName, Endpoint $endpoint): void
     {
@@ -251,11 +343,11 @@ class OasParserService
     /**
      * This function reads OpenAPI Specification and persists it into Properties of an Endpoint.
      *
-     * @param array $path
-     * @param Endpoint $newEndpoint
-     * @return array
+     * @param   array       $path           The exploded path of the endpoint
+     * @param   Endpoint    $endpoint       The endpoint the path relates to
+     * @return  array                       The resulting endpoint properties
      */
-    private function createEndpointsProperties(array $path, Endpoint $newEndpoint): array
+    private function createEndpointsProperties(array $path, Endpoint $endpoint): array
     {
         $endpointOperationType = 'collection';
         $createdPropertiesCount = 0;
@@ -264,9 +356,8 @@ class OasParserService
             if ($property !== '{id}' && $property !== '{uuid}' && $property[0] === '{') {
                 $endpointOperationType = 'item';
                 // Remove {} from property
-                $property = trim($property, '{');
-                $property = trim($property, '}');
-                $createdProperty = $this->createSpecialProperty($property, $newEndpoint, $createdPropertiesCount);
+                $property = trim($property, '{}');
+                $createdProperty = $this->createSpecialProperty($property, $endpoint, $createdPropertiesCount);
                 $createdProperty ? $createdProperties[] = $createdProperty : null;
             } elseif ($property === '{id}' || $property === '{uuid}') {
                 $endpointOperationType = 'item';
@@ -278,9 +369,11 @@ class OasParserService
     }
 
     /**
-     * @param array $path
-     * @param array $method
-     * @return string
+     * Decide the regex of a path property
+     *
+     * @param   array   $path   The exploded path of the endpoint
+     * @param   array   $method The method of the endpoint
+     * @return  string          The resulting regex
      */
     private function getPathRegex(array $path, array $method): string
     {
@@ -298,39 +391,40 @@ class OasParserService
 
     /**
      * This function creates a Attribute from an OAS property.
-     * @param array $property The definition of the property
-     * @param string $propertyName The name of the property
-     * @param Entity $newEntity The entity the attribute belongs to
-     * @param CollectionEntity $collectionEntity The collection the entities that are parsed belong to (for recursion)
-     * @return Attribute|null                       The resulting attribute
-     * @throws \Exception Thrown when the attribute cannot be parsed
+     *
+     * @param   array               $property           The definition of the property
+     * @param   string              $propertyName       The name of the property
+     * @param   Entity              $entity             The entity the attribute belongs to
+     * @param   CollectionEntity    $collectionEntity   The collection the entities that are parsed belong to (for recursion)
+     * @return  Attribute|null                          The resulting attribute
+     * @throws  \Exception                              Thrown when the attribute cannot be parsed
      */
-    private function createAttribute(array $property, string $propertyName, Entity $newEntity, CollectionEntity $collectionEntity): ?Attribute
+    private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
-        // Check reference to other object
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
-        }
-        if (!isset($targetEntity)) {
-            $targetEntity = $newEntity->getName().$propertyName.'Entity';
+        } else {
+            $targetEntity = $entity->getName().$propertyName.'Entity';
         }
 
         if (!isset($property['type']) || $property['type'] == 'object') {
             $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity);
-            $attribute = $this->createObjectAttribute($propertyName, $newEntity, $targetEntity);
+            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity);
+        } elseif ($property['type'] == 'array') {
+            $attribute = $this->createArrayAttribute($propertyName, $property, $entity, $targetEntity, $collectionEntity);
         } else {
-            $attribute = $this->createFlatAttribute($propertyName, $property, $newEntity);
+            $attribute = $this->createFlatAttribute($propertyName, $property, $entity);
         }
         $this->entityManager->persist($attribute);
-
         return $attribute;
     }
 
     /**
-     * @param array $allOf
-     * @param Entity $entity
-     * @param CollectionEntity $collection
-     * @throws \Exception
+     * Processes allOf specifications
+     * @param   array               $allOf      The specification of the allOf object
+     * @param   Entity              $entity     The entity the allOf references
+     * @param   CollectionEntity    $collection The collection the entities belong to
+     * @throws  \Exception                      Throws when the schema can not be decided
      */
     private function processAllOf(array $allOf, Entity $entity, CollectionEntity $collection)
     {
@@ -353,11 +447,13 @@ class OasParserService
     }
 
     /**
-     * @param string $path
-     * @param string $methodName
-     * @param array $method
-     * @param CollectionEntity $collection
-     * @return Endpoint
+     * Creates an endpoint object from the OAS specification
+     *
+     * @param   string              $path           The path of the endpoint
+     * @param   string              $methodName     The HTTP method of the endpoint
+     * @param   array               $method         The HTTP method schema of the endpoint
+     * @param   CollectionEntity    $collection     The collection the endpoint relates to
+     * @return  Endpoint                            The resulting endpoint
      */
     private function createEndpoint(string $path, string $methodName, array $method, CollectionEntity $collection): Endpoint
     {
@@ -380,11 +476,13 @@ class OasParserService
     }
 
     /**
-     * @param string $name
-     * @param array $schema
-     * @param CollectionEntity $collection
-     * @return Entity
-     * @throws \Exception
+     * Creates an entity from a schema
+     *
+     * @param   string              $name       The name of the entity
+     * @param   array               $schema     The schema of the entity
+     * @param   CollectionEntity    $collection The collection the entity belongs to
+     * @return  Entity                          The resulting entity
+     * @throws  \Exception                      Thrown if an allOf or an attribute cannot be parsed
      */
     private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection): Entity
     {
@@ -413,10 +511,12 @@ class OasParserService
     }
 
     /**
-     * @param array|Endpoint[] $endpoints
-     * @param Entity $entity
-     * @param array $methods
-     * @return Handler
+     * Creates a handler for an endpoint
+     *
+     * @param   array|Endpoint[]    $endpoints  The endpoint the handler relates to
+     * @param   Entity              $entity     The entity the handler relates to
+     * @param   array               $methods    The methods the handler should allow
+     * @return  Handler                         The resulting handler
      */
     private function createHandler(array $endpoints, Entity $entity, array $methods = []): Handler
     {
@@ -436,10 +536,12 @@ class OasParserService
     }
 
     /**
-     * @param string $path
-     * @param array $methods
-     * @param CollectionEntity $collectionEntity
-     * @return array
+     * Creates endpoints for a path
+     *
+     * @param   string              $path               The path the endpoints belong to
+     * @param   array               $methods            The methods the path should accept
+     * @param   CollectionEntity    $collectionEntity   The collection the endpoints should belong to
+     * @return  Endpoint[]                              The resulting endpoints
      */
     private function createEndpointsPerPath(string $path, array $methods, CollectionEntity $collectionEntity): array
     {
@@ -457,11 +559,11 @@ class OasParserService
     /**
      * Gets an entity for an object. First checks if the entity has already been made in the collection, otherwise the entity is recursively made
      *
-     * @param string $name The name of the object
-     * @param array $schema The schema of the object
-     * @param CollectionEntity $collectionEntity The collection the object belongs to
-     * @return Entity
-     * @throws \Exception
+     * @param   string              $name               The name of the object
+     * @param   array               $schema             The schema of the object
+     * @param   CollectionEntity    $collectionEntity   The collection the object belongs to
+     * @return  Entity                                  The resulting entity
+     * @throws \Exception                               Thrown if the entity cannot be made
      */
     private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity): Entity
     {
@@ -477,7 +579,7 @@ class OasParserService
     /**
      * Replaces an HAL entity by a normal JSON entity
      *
-     * @param string $entityName The entity to replace
+     * @param   string  $entityName The entity to replace
      * @return  array               The correct entity
      */
     private function replaceHalWithJsonEntity(string $entityName): array
@@ -501,7 +603,7 @@ class OasParserService
     /**
      * Creates handlers from the handlersToCreate global variable
      *
-     * @return array The created handlers
+     * @return Handler[] The created handlers
      */
     private function createHandlers(): array
     {
@@ -521,7 +623,7 @@ class OasParserService
      * This function reads OpenAPI Specification and persists it into Endpoints objects
      *
      * @param CollectionEntity $collection  The collection that the endpoints have to be in
-     * @return array                        The endpoints for the collection
+     * @return Endpoint[]                   The endpoints for the collection
      */
     private function persistPathsAsEndpoints(CollectionEntity $collection): array
     {
@@ -538,9 +640,9 @@ class OasParserService
     /**
      * This function reads redoc and persists it into Entity objects.
      *
-     * @param CollectionEntity $collection
-     * @return array
-     * @throws \Exception
+     * @param   CollectionEntity    $collection The collection the entities should belong to
+     * @return  Entity[]                        The resulting entities
+     * @throws  \Exception                      Thrown if entities cannot be created
      */
     private function persistSchemasAsEntities(CollectionEntity $collection): array
     {
@@ -567,9 +669,9 @@ class OasParserService
     /**
      * This function reads OpenAPI Specification files and parses it into doctrine objects.
      *
-     * @param array $oas The OpenAPI Specification of the collection
-     * @param CollectionEntity $collection The collection the oas should be parsed into
-     * @throws \Exception
+     * @param   array               $oas        The OpenAPI Specification of the collection
+     * @param   CollectionEntity    $collection The collection the oas should be parsed into
+     * @throws  \Exception                      Thrown if an object cannot be made
      */
     public function parseOas(array $oas, CollectionEntity $collection)
     {
