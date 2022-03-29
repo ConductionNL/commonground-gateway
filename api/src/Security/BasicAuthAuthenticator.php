@@ -98,8 +98,8 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $person = $this->entityManager->getRepository("App:Person")->find($id);
-            if (!empty($person) || $person instanceof Person ) {
+            $person = $this->entityManager->getRepository('App:Person')->find($id);
+            if (!empty($person) || $person instanceof Person) {
                 $serialized = $this->serializer->serialize($person, 'jsonld');
                 $person = json_decode($serialized, true);
             } elseif ($this->commonGroundService->getComponent('cc')) {

@@ -9,7 +9,6 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -72,8 +71,8 @@ class UserService
         } elseif ($user->getPerson()) {
             try {
                 $id = substr($user->getPerson(), strrpos($user->getPerson(), '/') + 1);
-                $person = $this->entityManager->getRepository("App:Person")->find($id);
-                if (!empty($person) || $person instanceof Person ) {
+                $person = $this->entityManager->getRepository('App:Person')->find($id);
+                if (!empty($person) || $person instanceof Person) {
                     $serialized = $this->serializer->serialize($person, 'jsonld');
                     $person = json_decode($serialized, true);
                 } elseif ($this->commonGroundService->getComponent('cc')) {
@@ -108,8 +107,8 @@ class UserService
             if (!($organization = $this->getObject($user->getOrganization(), $organizationFields))) {
                 try {
                     $id = substr($user->getOrganization(), strrpos($user->getOrganization(), '/') + 1);
-                    $organization = $this->entityManager->getRepository("App:Organization")->find($id);
-                    if (!empty($organization) || $organization instanceof Organization ) {
+                    $organization = $this->entityManager->getRepository('App:Organization')->find($id);
+                    if (!empty($organization) || $organization instanceof Organization) {
                         $serialized = $this->serializer->serialize($organization, 'jsonld');
                         $organization = json_decode($serialized, true);
                     } elseif ($this->commonGroundService->getComponent('cc')) {
