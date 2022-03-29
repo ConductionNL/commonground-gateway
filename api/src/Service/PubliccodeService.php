@@ -73,7 +73,30 @@ class PubliccodeService
             'html_url'    => $item['html_url'],
             'private'     => $item['private'],
             'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item, $ownerRepos) : null,
+            'forks'       => $this->requestFromUrl($item['forks_url']),
+            'tags'        => $this->requestFromUrl($item['tags_url']),
+            'languages'   => $this->requestFromUrl($item['languages_url']),
+            'downloads'   => $this->requestFromUrl($item['downloads_url']),
+            'releases'    => $this->requestFromUrl($item['releases_url']),
+            'labels'      => $this->requestFromUrl($item['labels_url']),
+            'subscribers' => $this->requestFromUrl($item['subscribers_url']),
         ];
+    }
+
+    /**
+     * This function gets the content of the given url
+     *
+     * @param string $url
+     * @return string|null
+     * @throws GuzzleException
+     */
+    public function requestFromUrl(string $url): ?string
+    {
+        if ($response = $this->github->request('GET', $url)) {
+            return $response->getBody()->getContents();
+        }
+
+        return null;
     }
 
     /**
