@@ -1096,7 +1096,7 @@ class SOAPService
             $result['preferences'] = $this->getPersonDetail($key, $datum, $result['preferences'], ['naam']);
         }
 
-        return array_values(array_filter($result);
+        return array_values(array_filter($result));
     }
 
 
