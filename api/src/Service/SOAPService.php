@@ -1073,7 +1073,7 @@ class SOAPService
                 break;
             }
         }
-        return $array;
+        return array_values(array_filter($array));
     }
 
     private function getWitnesses(array $data): array
@@ -1096,7 +1096,7 @@ class SOAPService
             $result['preferences'] = $this->getPersonDetail($key, $datum, $result['preferences'], ['naam']);
         }
 
-        return array_values(array_filter($result));
+        return $result;
     }
 
 
