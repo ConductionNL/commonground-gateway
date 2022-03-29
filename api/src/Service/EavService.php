@@ -181,10 +181,6 @@ class EavService
                 ];
             }
 
-            if ($method == 'POST' || $method == 'PUT') {
-                return $this->objectEntityService->handleOwner($object, $owner);
-            }
-
             return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
@@ -193,7 +189,7 @@ class EavService
             $object->setOrganization($this->session->get('activeOrganization'));
             $object->setApplication($this->session->get('application'));
 
-            return $this->objectEntityService->handleOwner($object, $owner);
+            return $object;
         }
 
         return null;
@@ -474,13 +470,7 @@ class EavService
 
         // Lets create an object
         if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
-            // Check if @owner is present in the body and if so unset it.
-            $owner = 'owner';
-            if (array_key_exists('@owner', $body)) {
-                $owner = $body['@owner'];
-                unset($body['@owner']);
-            }
-            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity, $owner); // note: $owner is allowed to be null!
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
@@ -859,6 +849,14 @@ class EavService
             ];
         }
 
+        // Check if @owner is present in the body and if so unset it.
+        // note: $owner is allowed to be null!
+        $owner = 'owner';
+        if (array_key_exists('@owner', $body)) {
+            $owner = $body['@owner'];
+            unset($body['@owner']);
+        }
+
         // Validation stap
         $this->validationService->setRequest($request);
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
@@ -927,6 +925,7 @@ class EavService
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
             $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         }
+        $this->objectEntityService->handleOwner($object, $owner); // note: $owner is allowed to be null!
         $this->em->persist($object);
         $this->em->flush();
 
