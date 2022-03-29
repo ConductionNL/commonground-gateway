@@ -278,7 +278,7 @@ class Organization
         return $this->id;
     }
 
-    public function setId(Uuid $id): self
+    public function setId(string $id): self
     {
         $this->id = $id;
 
