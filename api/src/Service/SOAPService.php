@@ -1069,11 +1069,13 @@ class SOAPService
                     $date = new \DateTime($value);
                     $value = $date > new DateTime() ? (int) $date->modify('-100 years')->format('Ymd') : (int) $date->format('Ymd');
                 }
-                $array[substr($key, strlen($valueType))-1][$this->translateValueType($valueType)] = $value;
+                if($value) {
+                    $array[substr($key, strlen($valueType))-1][$this->translateValueType($valueType)] = $value;
+                }
                 break;
             }
         }
-        return array_values(array_filter($array));
+        return $array;
     }
 
     private function getWitnesses(array $data): array
