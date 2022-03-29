@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\CollectionEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,120 +19,115 @@ class PubliccodeService
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params
-    ) {
+        ParameterBagInterface  $params
+    )
+    {
         $this->entityManager = $entityManager;
         $this->params = $params;
-        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers'=>['Authorization'=>'Bearer '.$this->params->get('github_key')]]) : null;
+        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer ' . $this->params->get('github_key')]]) : null;
     }
 
     /**
-     * This function is searching for repositories containing a publiccode.yaml file.
+     * This function gets the github owner details
      *
+     * @param array $item a repository from github with a publicclode.yaml file
+     * @param bool $ownerRepos for setting the repos of the owner
+     * @return array
      * @throws GuzzleException
-     *
-     * @return string
      */
-    public function discoverGithub(): string
+    public function getGithubOwnerInfo(array $item, bool $ownerRepos): array
     {
-        if (!$this->github) {
-            return new Response(
-                'Missing github_key in env',
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
-        }
-        $query = [
-            'page'    => 1,
-            'per_page'=> 100,
-            'order'   => 'desc',
-            'sort'    => 'author-date',
-            'q'       => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called public code based in the repo root
+        $ownerRepos ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']["login"])) : $repos = null;
+        $publiccode = $this->findPubliccode($item);
+        $publiccode !== null ? $avatars = $this->getGithubOwnerLogos($publiccode, $item) : $avatars = null;
+
+        return [
+            "id" => $item['owner']["id"],
+            "type" => $item['owner']["type"],
+            "login" => $item['owner']["login"] ?? null,
+            "html_url" => $item['owner']["html_url"] ?? null,
+            "organizations_url" => $item['owner']["organizations_url"] ?? null,
+            "avatars" => $avatars ?? null,
+            "repos" => $repos
         ];
-
-        $response = $this->github->request('GET', '/search/code', ['query' => $query]);
-
-        return $response->getBody()->getContents();
     }
 
-    // Lets get the content of a public github file
-    public function getGithubRepositoryContent(string $id): string
+    /**
+     * This function gets all the github repository details
+     *
+     * @param array $item a repository from github with a publicclode.yaml file
+     * @param bool|false $ownerRepos
+     * @return array
+     * @throws GuzzleException
+     */
+    public function getGithubRepositoryInfo(array $item, bool $ownerRepos): array
     {
-        if (!$this->github) {
-            return new Response(
-                'Missing github_key in env',
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
-        }
-        // Get repository on github -> via repo id
-        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
-
-        return $response->getBody()->getContents();
+       return [
+            "id" => $item["id"],
+            "name" => $item["name"],
+            "full_name" => $item["full_name"],
+            "description" => $item["description"],
+            "html_url" => $item["html_url"],
+            "private" => $item["private"],
+            'owner' => $item['owner']["type"] === 'Organization' ? $this->getGithubOwnerInfo($item, $ownerRepos) : null
+        ];
     }
 
-    // creates a collection entity
-    public function createCollection(string $id)
+    /**
+     * This function gets all the github owner details
+     *
+     * @param array $publiccode the publiccode from a repository
+     * @param array $repository a github repository
+     * @return array
+     */
+    public function getGithubOwnerLogos(array $publiccode, array $repository): array
     {
-        if (!$this->github) {
-            return new Response(
-                'Missing github_key in env',
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
+        $avatars = [];
+
+        if (!empty($publiccode['logo']) && filter_var($publiccode['logo'], FILTER_VALIDATE_URL) === false) {
+            $avatars['logo'] = $this->handleUrl($publiccode['logo'], $repository["name"], $repository['owner']["login"]);
         }
 
-        // Get repository on github -> via id
-        $repository = json_decode($this->getGithubRepositoryContent($id), true);
-
-        // Lets look for an publiccode.yaml / yml
-        $publiccode = $this->getGithubFileContent($repository, 'publiccode.yml');
-        if (!$publiccode) {
-            $publiccode = $this->getGithubFileContent($repository, 'publiccode.yaml');
+        if (!empty($publiccode['monochromeLogo']) && filter_var($publiccode['monochromeLogo'], FILTER_VALIDATE_URL) === false) {
+            $avatars['monochromeLogo'] = $this->handleUrl($publiccode['monochromeLogo'], $repository["name"], $repository['owner']["login"]);
         }
 
-        // Lets parse the public code yaml/yml
-        try {
-            $publiccode = Yaml::parse($publiccode);
-        } catch (ParseException $exception) {
-            return new Response(
-                $exception,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
-        }
-
-        $collection = new CollectionEntity();
-
-        $collection->setName($repository['name']);
-        $collection->setDescription($repository['description']);
-        $collection->setSourceType('url');
-        $collection->setSourceUrl($repository['html_url']);
-        $collection->setSourceBranch($repository['default_branch']);
-        $collection->setLocationOAS($publiccode['description']['en']['apiDocumentation']);
-        isset($publiccode['description']['en']['testDataLocation']) && $collection->setTestDataLocation($publiccode['description']['en']['testDataLocation']);
-        $collection->setDateModified(new \DateTime());
-        $collection->setDateCreated(new \DateTime());
-
-        $this->entityManager->persist($collection);
-        $this->entityManager->flush();
-
-        return $collection;
+        return $avatars;
     }
 
-    // Let's get the content of a public github file
-    public function getGithubFileContent($repository, $file)
+    /**
+     * This function gets all the repositories of the owner
+     *
+     * @param string $owner the name of the owner of a repository
+     * @return string|false
+     * @throws GuzzleException
+     */
+    public function getGithubOwnerRepositories(string $owner): ?string
     {
-        $path = $this->getRepoPath($repository);
-        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/'.$path.'/'.$repository['default_branch'].'/', 'http_errors' => false]);
+        if ($response = $this->github->request('GET', '/orgs/' . $owner . "/repos")) {
+            return $response->getBody()->getContents();
+        }
+        return null;
+    }
 
+    /**
+     * This function gets the content of a github file
+     *
+     * @param array $repository a github repository
+     * @param string $file the file that we want to search
+     * @return string|null
+     * @throws GuzzleException
+     */
+    public function getGithubFileContent(array $repository, string $file): ?string
+    {
+        $path = $this->getRepoPath($repository['html_url']);
+        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/' . $path . '/main/', 'http_errors' => false]);
         $response = $client->get($file);
 
-        // Let's see if we can get the file
         if ($response->getStatusCode() == 200) {
             $result = strval($response->getBody());
         } else {
-            return false;
+            return null;
         }
 
         // Lets grab symbolic links
@@ -142,12 +138,177 @@ class PubliccodeService
         return $result;
     }
 
-    public function getRepoPath($repository): string
+
+    /**
+     * This function finds a publiccode yaml file in a repository
+     *
+     * @param array $repository a github repository
+     * @return array|null
+     * @throws GuzzleException
+     */
+    public function findPubliccode(array $repository): ?array
     {
-        $parse = parse_url($repository['html_url']);
+        $publiccode = $this->getGithubFileContent($repository, 'publiccode.yml');
+        if (!$publiccode) {
+            $publiccode = $this->getGithubFileContent($repository, 'publiccode.yaml');
+        }
+
+        // Lets parse the public code yaml/yml
+        try {
+            $publiccode ? $publiccode = Yaml::parse($publiccode) : $publiccode = null;
+        } catch (ParseException $exception) {
+            return null;
+        }
+
+        return $publiccode;
+    }
+
+    /**
+     * This function gets the path of a github repository
+     *
+     * @param string $html_url a github repository html_url
+     * @return string
+     */
+    public function getRepoPath(string $html_url): string
+    {
+        $parse = parse_url($html_url);
         $path = $parse['path'];
         $path = str_replace(['.git'], '', $path);
 
         return rtrim($path, '/');
+    }
+
+    /**
+     * This function handles the given url
+     *
+     * @param string $url the url from the publiccode yaml file
+     * @param string $repoName the name of the repository
+     * @param string $owner the name of the owner of a repository
+     * @return string
+     */
+    public function handleUrl(string $url, string $repoName, string $owner): string
+    {
+        if (strpos($url, "://") === false && substr($url, 0, 1) != "/") $url = "http://" . $url;
+        $parsedUrl = parse_url($url);
+
+        if (empty($parsedUrl['host'])) {
+            $url = "github.com/$owner/$repoName/raw/master/" . $url;
+        } elseif (!empty($parsedUrl['host']) && strpos($parsedUrl['host'], 'github') == false) {
+            $url = "github.com/$owner/$repoName/raw/master/" . $url;
+        }
+
+        $parsedUrl = parse_url($url);
+        if (empty($parsedUrl['scheme'])) {
+            $url = 'https://' . $url;
+        }
+
+        return $url;
+    }
+
+    /**
+     * This function check if the github key is provided
+     *
+     * @return Response|null
+     */
+    public function checkGithubKey(): ?Response
+    {
+        if (!$this->github) {
+            return new Response(
+                'Missing github_key in env',
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
+        }
+        return null;
+    }
+
+    /**
+     * This function gets the content of a specific repository
+     *
+     * @param string $id
+     * @return array|null
+     * @throws GuzzleException
+     */
+    public function getGithubRepositoryContent(string $id): ?array
+    {
+        $this->checkGithubKey();
+        $response = $this->github->request('GET', 'https://api.github.com/repositories/' . $id);
+        return $this->getGithubRepositoryInfo(json_decode($response->getBody()->getContents(), true), true);
+    }
+
+    /**
+     * This function creates a Collection from a github repository
+     *
+     * @param string $id id of the github repository
+     * @return CollectionEntity
+     * @throws GuzzleException
+     */
+    public function createCollection(string $id): CollectionEntity
+    {
+        $this->checkGithubKey();
+        $response = $this->github->request('GET', 'https://api.github.com/repositories/' . $id);
+        $repository = json_decode($response->getBody()->getContents(), true);
+        $publiccode = $this->findPubliccode($repository);
+
+        $collection = new CollectionEntity();
+        $collection->setName($repository['name']);
+        $collection->setDescription($repository['description']);
+        $collection->setSourceType('url');
+        $collection->setSourceUrl($repository['html_url']);
+        $collection->setSourceBranch($repository['default_branch']);
+        $collection->setLocationOAS($publiccode ? $publiccode['description']['en']['apiDocumentation'] : null);
+        isset($publiccode['description']['en']['testDataLocation']) && $collection->setTestDataLocation($publiccode['description']['en']['testDataLocation']);
+
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush();
+
+        return $collection;
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @return ?string|Response
+     * @throws GuzzleException
+     */
+    public function discoverGithub(): string
+    {
+        $this->checkGithubKey();
+
+        $query = [
+            'page' => 1,
+            'per_page' => 100,
+            'order' => 'desc',
+            'sort' => 'author-date',
+            'q' => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called public code based in the repo root
+        ];
+
+        try {
+            $response = $this->github->request('GET', '/search/code', ['query' => $query]);
+        } catch (ClientException $exception) {
+            return new Response(
+                $exception,
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
+        }
+
+        $response = json_decode($response->getBody()->getContents(), true);
+        $pages = ceil($response['total_count'] / 100);
+
+        $results["repositories"] = [];
+        while ($query['page'] <= $pages) {
+            foreach ($response['items'] as $item) {
+                array_push($results["repositories"], $this->getGithubRepositoryInfo($item['repository'], false));
+            }
+
+            // Up the page number
+            $query['page']++;
+
+            // Let avoid over asking the git api
+            sleep(1);
+        }
+
+        return json_encode($results);
     }
 }

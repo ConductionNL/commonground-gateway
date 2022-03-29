@@ -112,7 +112,7 @@ class ConvenienceController extends AbstractController
      */
     public function getGithubRepository(string $id): Response
     {
-        return new Response($this->publiccodeService->getGithubRepositoryContent($id), 200, ['content-type' => 'json']);
+        return new Response(json_encode($this->publiccodeService->getGithubRepositoryContent($id)), 200, ['content-type' => 'json']);
     }
 
     /**
