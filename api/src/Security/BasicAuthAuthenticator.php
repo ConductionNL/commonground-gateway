@@ -9,6 +9,7 @@
 
 namespace App\Security;
 
+use App\Entity\Person;
 use App\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
@@ -28,6 +29,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 {
@@ -38,8 +40,9 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private SessionInterface $session;
     private AuthenticationService $authenticationService;
     private EntityManagerInterface $entityManager;
+    private SerializerInterface $serializer;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, SerializerInterface $serializer)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
@@ -48,6 +51,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         $this->tokenStorage = $tokenStorage;
         $this->authenticationService = $authenticationService;
         $this->entityManager = $entityManager;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -98,6 +102,12 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
                 $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
             } else {
                 $person = $this->entityManager->getRepository("App:Person")->find($id);
+                if (!empty($person) || $person instanceof Person ) {
+                    $serialized = $this->serializer->serialize($person, 'jsonld');
+                    $person = json_decode($serialized, true);
+                } else {
+                    $person = []; // todo?
+                }
             }
         }
 

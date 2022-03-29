@@ -3,23 +3,29 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
+use App\Entity\Organization;
+use App\Entity\Person;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class UserService
 {
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private ResponseService $responseService;
+    private SerializerInterface $serializer;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, ResponseService $responseService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, ResponseService $responseService, SerializerInterface $serializer)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->responseService = $responseService;
+        $this->serializer = $serializer;
     }
 
     public function getObject(string $uri, $fields = null): array
@@ -65,8 +71,19 @@ class UserService
             return $person;
         } elseif ($user->getPerson()) {
             try {
-                $person = $this->commonGroundService->getResource($user->getPerson());
-            } catch (ClientException $exception) {
+                if ($this->commonGroundService->getComponent('cc')) {
+                    $person = $this->commonGroundService->getResource($user->getPerson());
+                } else {
+                    $id = substr($user->getPerson(), strrpos($user->getPerson(), '/') + 1);
+                    $person = $this->entityManager->getRepository("App:Person")->find($id);
+                    if (empty($person) || !$person instanceof Person ) {
+                        throw new Exception();
+                    } else {
+                        $serialized = $this->serializer->serialize($person, 'jsonld');
+                        $person = json_decode($serialized, true);
+                    }
+                }
+            } catch (Exception $exception) {
                 $person = $this->getUserObjectEntity($user->getUsername());
             }
         } else {
@@ -92,8 +109,19 @@ class UserService
             ];
             if (!($organization = $this->getObject($user->getOrganization(), $organizationFields))) {
                 try {
-                    $organization = $this->commonGroundService->getResource($user->getOrganization());
-                } catch (ClientException $exception) {
+                    if ($this->commonGroundService->getComponent('cc')) {
+                        $organization = $this->commonGroundService->getResource($user->getOrganization());
+                    } else {
+                        $id = substr($user->getOrganization(), strrpos($user->getOrganization(), '/') + 1);
+                        $organization = $this->entityManager->getRepository("App:Organization")->find($id);
+                        if (empty($organization) || !$organization instanceof Organization ) {
+                            throw new Exception();
+                        } else {
+                            $serialized = $this->serializer->serialize($organization, 'jsonld');
+                            $organization = json_decode($serialized, true);
+                        }
+                    }
+                } catch (Exception $exception) {
                     return [];
                 }
             }
