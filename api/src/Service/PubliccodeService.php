@@ -29,8 +29,8 @@ class PubliccodeService
     /**
      * This function gets the github owner details.
      *
-     * @param array $item       a repository from github with a publicclode.yaml file
-     * @param bool|false  $detail for setting the repos of the owner
+     * @param array      $item   a repository from github with a publicclode.yaml file
+     * @param bool|false $detail for setting the repos of the owner
      *
      * @throws GuzzleException
      *
@@ -56,7 +56,7 @@ class PubliccodeService
     /**
      * This function gets all the github repository details.
      *
-     * @param array      $item       a repository from github with a publicclode.yaml file
+     * @param array      $item   a repository from github with a publicclode.yaml file
      * @param bool|false $detail
      *
      * @throws GuzzleException
@@ -84,9 +84,9 @@ class PubliccodeService
     }
 
     /**
-     * This function gets the content of the given url
+     * This function gets the content of the given url.
      *
-     * @param string $url
+     * @param string      $url
      * @param string|null $path
      *
      * @throws GuzzleException
