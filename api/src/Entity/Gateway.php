@@ -469,23 +469,24 @@ class Gateway
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="gateway", cascade={"persist", "remove"})
-     * @MaxDepth(1)
-     */
-    private ?Subscriber $subscriber;
-
-    /**
-     * @Groups({"read", "write"})
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
      */
     private ?Collection $collections;
+
+    /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="gateway")
+     */
+    private ?Collection $subscribers;
 
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->subscribers = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -825,28 +826,6 @@ class Gateway
         return $this;
     }
 
-    public function getSubscriber(): ?Subscriber
-    {
-        return $this->subscriber;
-    }
-
-    public function setSubscriber(?Subscriber $subscriber): self
-    {
-        // unset the owning side of the relation if necessary
-        if ($subscriber === null && $this->subscriber !== null) {
-            $this->subscriber->setGateway(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriber !== null && $subscriber->getGateway() !== $this) {
-            $subscriber->setGateway($this);
-        }
-
-        $this->subscriber = $subscriber;
-
-        return $this;
-    }
-
     /**
      * @return Collection|CollectionEntity[]
      */
@@ -871,6 +850,36 @@ class Gateway
             // set the owning side to null (unless already changed)
             if ($collection->getSource() === $this) {
                 $collection->setSource(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Subscriber[]
+     */
+    public function getSubscribers(): Collection
+    {
+        return $this->subscribers;
+    }
+
+    public function addSubscriber(Subscriber $subscriber): self
+    {
+        if (!$this->subscribers->contains($subscriber)) {
+            $this->subscribers[] = $subscriber;
+            $subscriber->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubscriber(Subscriber $subscriber): self
+    {
+        if ($this->subscribers->removeElement($subscriber)) {
+            // set the owning side to null (unless already changed)
+            if ($subscriber->getGateway() === $this) {
+                $subscriber->setGateway(null);
             }
         }
 

@@ -208,22 +208,22 @@ class Subscriber
     private ?Entity $entityOut = null;
 
     /**
-     * @var Gateway|null The gateway for the output of this Subscriber. (if type is externSource)
-     *
-     * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Gateway::class, inversedBy="subscriber", cascade={"persist", "remove"})
-     * @MaxDepth(1)
-     */
-    private ?gateway $gateway;
-
-    /**
      * @var Endpoint|null An endpoint for the output of this Subscriber. (?)
      *
      * @Groups({"read", "write"})
      * @ORM\OneToOne(targetEntity=Endpoint::class, inversedBy="subscriber", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private ?endpoint $endpoint;
+    private ?Endpoint $endpoint;
+
+    /**
+     * @var ?Gateway The Gateway of this Subscriber
+     *
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="subscribers")
+     * @MaxDepth(1)
+     */
+    private ?Gateway $gateway;
 
     public function getId()
     {
@@ -446,18 +446,6 @@ class Subscriber
         return $this;
     }
 
-    public function getGateway(): ?Gateway
-    {
-        return $this->gateway;
-    }
-
-    public function setGateway(?Gateway $gateway): self
-    {
-        $this->gateway = $gateway;
-
-        return $this;
-    }
-
     public function getEndpoint(): ?Endpoint
     {
         return $this->endpoint;
@@ -466,6 +454,18 @@ class Subscriber
     public function setEndpoint(?Endpoint $endpoint): self
     {
         $this->endpoint = $endpoint;
+
+        return $this;
+    }
+
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
 
         return $this;
     }
