@@ -76,6 +76,80 @@ class FormIOService
         $formIOArray['page'] = 0;
         $formIOArray['entity'] = $entity->getName();
 
+        // Advanced configuration
+        $formIOArray['components'][] = [
+            'title'         => 'Advanced configuration',
+            'theme'         => 'default',
+            'collapsible'   => true,
+            'key'           => 'advancedConfiguration',
+            'type'          => 'panel',
+            'label'         => 'Panel',
+            'breadcrumb'    => 'default',
+            'labelPosition' => 'top',
+            'validateOn'    => 'change',
+            'components'    => [
+                [
+                    'label'         => 'Uri',
+                    'labelPosition' => 'top',
+                    'widget'        => [
+                        'type' => 'input',
+                    ],
+                    'validateOn' => 'change',
+                    'key'        => 'uri',
+                    'type'       => 'textfield',
+                    'inputType'  => 'text',
+                ],
+                [
+                    'label'         => 'External ID',
+                    'labelPosition' => 'top',
+                    'widget'        => [
+                        'type' => 'input',
+                    ],
+                    'validateOn' => 'change',
+                    'key'        => 'externalId',
+                    'type'       => 'textfield',
+                    'inputType'  => 'text',
+
+                ],
+                [
+                    'label'         => 'Application',
+                    'labelPosition' => 'top',
+                    'widget'        => [
+                        'type' => 'input',
+                    ],
+                    'validateOn' => 'change',
+                    'key'        => 'application',
+                    'type'       => 'textfield',
+                    'inputType'  => 'text',
+
+                ],
+                [
+                    'label'         => 'Organization',
+                    'labelPosition' => 'top',
+                    'widget'        => [
+                        'type' => 'input',
+                    ],
+                    'validateOn' => 'change',
+                    'key'        => 'organization',
+                    'type'       => 'textfield',
+                    'inputType'  => 'text',
+
+                ],
+                [
+                    'label'         => 'Owner',
+                    'labelPosition' => 'top',
+                    'widget'        => [
+                        'type' => 'input',
+                    ],
+                    'validateOn' => 'change',
+                    'key'        => 'owner',
+                    'type'       => 'textfield',
+                    'inputType'  => 'text',
+
+                ],
+            ],
+        ];
+
         return $formIOArray;
     }
 
@@ -85,34 +159,34 @@ class FormIOService
         $type = 'textfield';
 
         switch ($attr->getType()) {
-        case 'date':
-        case 'datetime':
-          $type = 'datetime';
-          break;
-        case 'integer':
-        case 'float':
-        case 'number':
-          $type = 'number';
-          break;
-        case 'boolean':
-          $type = 'checkbox';
-          break;
-        case 'file':
-          $type = 'file';
-          break;
-      }
+      case 'date':
+      case 'datetime':
+        $type = 'datetime';
+        break;
+      case 'integer':
+      case 'float':
+      case 'number':
+        $type = 'number';
+        break;
+      case 'boolean':
+        $type = 'checkbox';
+        break;
+      case 'file':
+        $type = 'file';
+        break;
+    }
 
         switch ($attr->getFormat()) {
-        case 'email':
-          $type = 'email';
-          break;
-        case 'phone':
-          $type = 'tel';
-          break;
-        case 'url':
-          $type = 'url';
-          break;
-      }
+      case 'email':
+        $type = 'email';
+        break;
+      case 'phone':
+        $type = 'tel';
+        break;
+      case 'url':
+        $type = 'url';
+        break;
+    }
 
         return $type;
     }
