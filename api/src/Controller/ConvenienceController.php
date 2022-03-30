@@ -124,9 +124,9 @@ class ConvenienceController extends AbstractController
     {
         return new Response(
             $this->serializer->serialize(
-          ['message' => 'Repository: '.$id.' successfully created into a '.'Collection with id: '.$this->publiccodeService->createCollection($id)],
-          'json'
-      ),
+                ['message' => 'Repository: '.$id.' successfully created into a '.'Collection with id: '.$this->publiccodeService->createCollection($id)],
+                'json'
+            ),
             200,
             ['content-type' => 'json']
         );
