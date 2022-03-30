@@ -30,16 +30,16 @@ class PubliccodeService
      * This function gets the github owner details.
      *
      * @param array $item       a repository from github with a publicclode.yaml file
-     * @param bool  $ownerRepos for setting the repos of the owner
+     * @param bool|false  $detail for setting the repos of the owner
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    public function getGithubOwnerInfo(array $item, bool $ownerRepos): array
+    public function getGithubOwnerInfo(array $item, bool $detail): array
     {
-        $ownerRepos ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']['login'])) : $repos = null;
-        $publiccode = $this->findPubliccode($item);
+        $detail ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']['login'])) : $repos = null;
+        $detail ? $publiccode = $this->findPubliccode($item) : $publiccode = null;
 
         return [
             'id'                => $item['owner']['id'],
@@ -57,13 +57,13 @@ class PubliccodeService
      * This function gets all the github repository details.
      *
      * @param array      $item       a repository from github with a publicclode.yaml file
-     * @param bool|false $ownerRepos
+     * @param bool|false $detail
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    public function getGithubRepositoryInfo(array $item, bool $ownerRepos): array
+    public function getGithubRepositoryInfo(array $item, bool $detail): array
     {
         return [
             'id'          => $item['id'],
@@ -72,14 +72,14 @@ class PubliccodeService
             'description' => $item['description'],
             'html_url'    => $item['html_url'],
             'private'     => $item['private'],
-            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item, $ownerRepos) : null,
+            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item, $detail) : null,
             'forks'       => $this->requestFromUrl($item['forks_url']),
             'tags'        => $this->requestFromUrl($item['tags_url']),
             'languages'   => $this->requestFromUrl($item['languages_url']),
-            'downloads'   => $this->requestFromUrl($item['downloads_url']),
-            'releases'    => $this->requestFromUrl($item['releases_url']),
-            'labels'      => $this->requestFromUrl($item['labels_url']),
-            'subscribers' => $this->requestFromUrl($item['subscribers_url']),
+            'downloads'   => $detail ? $this->requestFromUrl($item['downloads_url']) : null,
+            'releases'    => $detail ? $this->requestFromUrl($item['releases_url'], '{/id}') : null,
+            'labels'      => $detail ? $this->requestFromUrl($item['labels_url'], '{/name}') : null,
+            'subscribers' => $detail ? $this->requestFromUrl($item['subscribers_url']) : null,
         ];
     }
 
@@ -87,13 +87,21 @@ class PubliccodeService
      * This function gets the content of the given url
      *
      * @param string $url
-     * @return string|null
+     * @param string|null $path
+     *
      * @throws GuzzleException
+     *
+     * @return array|null
      */
-    public function requestFromUrl(string $url): ?string
+    public function requestFromUrl(string $url, ?string $path = null): ?array
     {
+        if ($path !== null) {
+            $parse = parse_url($url);
+            $url = str_replace([$path], '', $parse['path']);
+        }
+
         if ($response = $this->github->request('GET', $url)) {
-            return $response->getBody()->getContents();
+            return json_decode($response->getBody()->getContents(), true);
         }
 
         return null;
@@ -139,7 +147,6 @@ class PubliccodeService
             return null;
         }
 
-        // Lets grab symbolic links
         if (!substr_compare($result, $file, -strlen($file), strlen($file))) {
             return $this->getGithubFileContent($repository, $result);
         }
@@ -183,40 +190,9 @@ class PubliccodeService
     public function getRepoPath(string $html_url): string
     {
         $parse = parse_url($html_url);
-        $path = $parse['path'];
-        $path = str_replace(['.git'], '', $path);
+        $path = str_replace(['.git'], '', $parse['path']);
 
         return rtrim($path, '/');
-    }
-
-    /**
-     * This function handles the given url.
-     *
-     * @param string $url      the url from the publiccode yaml file
-     * @param string $repoName the name of the repository
-     * @param string $owner    the name of the owner of a repository
-     *
-     * @return string
-     */
-    public function handleUrl(string $url, string $repoName, string $owner): string
-    {
-        if (strpos($url, '://') === false && substr($url, 0, 1) != '/') {
-            $url = 'http://'.$url;
-        }
-        $parsedUrl = parse_url($url);
-
-        if (empty($parsedUrl['host'])) {
-            $url = "github.com/$owner/$repoName/raw/master/".$url;
-        } elseif (!empty($parsedUrl['host']) && strpos($parsedUrl['host'], 'github') == false) {
-            $url = "github.com/$owner/$repoName/raw/master/".$url;
-        }
-
-        $parsedUrl = parse_url($url);
-        if (empty($parsedUrl['scheme'])) {
-            $url = 'https://'.$url;
-        }
-
-        return $url;
     }
 
     /**
@@ -323,10 +299,7 @@ class PubliccodeService
                 array_push($results['repositories'], $this->getGithubRepositoryInfo($item['repository'], false));
             }
 
-            // Up the page number
             $query['page']++;
-
-            // Let avoid over asking the git api
             sleep(1);
         }
 
