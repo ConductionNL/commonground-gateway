@@ -267,15 +267,15 @@ class OasParserService
      */
     private function createArrayAttribute(string $propertyName, array $schema, Entity $parentEntity, CollectionEntity $collection): Attribute
     {
-        if(isset($schema['items']) && isset($schema['items']['ref'])){
-            $itemSchema = $this->getSchemaFromRef($schema['items']['ref'], $targetEntity);
+        if(isset($schema['items']) && isset($schema['items']['$ref'])){
+            $itemSchema = $this->getSchemaFromRef($schema['items']['$ref'], $targetEntity);
         } elseif (isset($schema['items'])) {
             $itemSchema = $schema['items'];
         } else {
             return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
         }
+        if(isset($itemSchema['type']) && $itemSchema['type'] == 'object') {
 
-        if($itemSchema['type'] == 'object') {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
@@ -313,12 +313,11 @@ class OasParserService
      */
     private function getSchemaFromRef(string $ref, ?string &$targetEntity = ''): array
     {
+        $targetEntity = substr($ref, strrpos($ref, '/') + 1);
         if (strpos($ref, 'https://') !== false || strpos($ref, 'http://') !== false) {
-            $targetEntity = substr($ref, strrpos($ref, '/') + 1);
             $data = $this->getExternalOAS($ref);
             $ref = explode('#', $ref)[1];
         } else {
-            $targetEntity = substr($ref, strrpos($ref, '/') + 1);
             $data = $this->oas;
         }
         return $this->getSchemaFromReferencedLocation($ref, $data);
@@ -412,7 +411,7 @@ class OasParserService
             $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity);
             $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity);
         } elseif ($property['type'] == 'array') {
-            $attribute = $this->createArrayAttribute($propertyName, $property, $entity, $targetEntity, $collectionEntity);
+            $attribute = $this->createArrayAttribute($propertyName, $property, $entity, $collectionEntity);
         } else {
             $attribute = $this->createFlatAttribute($propertyName, $property, $entity);
         }
@@ -435,7 +434,7 @@ class OasParserService
         } else {
             foreach ($allOf as $set) {
                 if (isset($set['$ref'])) {
-                    $schema = $this->getSchemaFromRef(explode('/', $set['$ref']));
+                    $schema = $this->getSchemaFromRef($set['$ref']);
                     $properties = array_merge($schema['properties'], $properties);
                 } else {
                     $properties = array_merge($set['properties'], $properties);
@@ -549,11 +548,14 @@ class OasParserService
         $endpoints = [];
         foreach($methods as $name => $schema)
         {
-            if (!isset($method['responses'])) {
+            if (!isset($schema['responses'])) {
                 continue;
             }
             $endpoints[] = $this->createEndpoint($path, $name, $schema, $collectionEntity);
         }
+        var_dump($path);
+
+        var_dump(count($endpoints));
         return $endpoints;
     }
 
@@ -630,9 +632,8 @@ class OasParserService
     {
         $endpoints = [];
         foreach ($this->oas['paths'] as $pathName => $path) {
-            array_merge($endpoints, $this->createEndpointsPerPath($pathName, $path, $collection));
+            $endpoints = array_merge($endpoints, $this->createEndpointsPerPath($pathName, $path, $collection));
         }
-
         $this->entityManager->flush();
 
         return $endpoints;
@@ -670,7 +671,6 @@ class OasParserService
     /**
      * This function reads OpenAPI Specification files and parses it into doctrine objects.
      *
-     * @param   array               $oas        The OpenAPI Specification of the collection
      * @param   CollectionEntity    $collection The collection the oas should be parsed into
      * @throws  Exception                      Thrown if an object cannot be made
      */
@@ -684,7 +684,6 @@ class OasParserService
         // Create Handlers between the Entities and Endpoints
         $handlers = $this->createHandlers();
         $this->entityManager->flush();
-
         // Set synced at
         $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
@@ -692,7 +691,6 @@ class OasParserService
         $this->entityManager->clear();
         $this->oas = [];
         $this->handlersToCreate = [];
-
         return $collection;
     }
 }

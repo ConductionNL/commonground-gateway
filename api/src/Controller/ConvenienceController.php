@@ -50,7 +50,7 @@ class ConvenienceController extends AbstractController
             return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() !== null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
-        } elseif ($collection->getLocationOAS()) {
+        } elseif (!$collection->getLocationOAS()) {
             return new Response($this->serializer->serialize(['message' => 'No location OAS found for given collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
