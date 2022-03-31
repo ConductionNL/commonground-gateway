@@ -11,6 +11,7 @@ use App\Entity\Handler;
 use App\Entity\Property;
 use App\Repository\EntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\Yaml\Yaml;
@@ -205,7 +206,7 @@ class OasParserService
     }
 
     /**
-     * Creates an special type of property for an endpoint
+     * Creates a special type of property for an endpoint
      *
      * @param   string      $property               The name of the property
      * @param   Endpoint    $endpoint               The endpoint the property belongs to
@@ -262,7 +263,7 @@ class OasParserService
      * @param   Entity              $parentEntity   The entity the attribute relates to
      * @param   CollectionEntity    $collection     The collection any created entity should relate to
      * @return  Attribute                           The resulting Attribute
-     * @throws  \Exception                          Thrown when getEntity throws an exception
+     * @throws  Exception                          Thrown when getEntity throws an exception
      */
     private function createArrayAttribute(string $propertyName, array $schema, Entity $parentEntity, CollectionEntity $collection): Attribute
     {
@@ -390,14 +391,14 @@ class OasParserService
     }
 
     /**
-     * This function creates a Attribute from an OAS property.
+     * This function creates an Attribute from an OAS property.
      *
      * @param   array               $property           The definition of the property
      * @param   string              $propertyName       The name of the property
      * @param   Entity              $entity             The entity the attribute belongs to
      * @param   CollectionEntity    $collectionEntity   The collection the entities that are parsed belong to (for recursion)
      * @return  Attribute|null                          The resulting attribute
-     * @throws  \Exception                              Thrown when the attribute cannot be parsed
+     * @throws  Exception                              Thrown when the attribute cannot be parsed
      */
     private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
@@ -424,7 +425,7 @@ class OasParserService
      * @param   array               $allOf      The specification of the allOf object
      * @param   Entity              $entity     The entity the allOf references
      * @param   CollectionEntity    $collection The collection the entities belong to
-     * @throws  \Exception                      Throws when the schema can not be decided
+     * @throws  Exception                      Throws when the schema can not be decided
      */
     private function processAllOf(array $allOf, Entity $entity, CollectionEntity $collection)
     {
@@ -482,7 +483,7 @@ class OasParserService
      * @param   array               $schema     The schema of the entity
      * @param   CollectionEntity    $collection The collection the entity belongs to
      * @return  Entity                          The resulting entity
-     * @throws  \Exception                      Thrown if an allOf or an attribute cannot be parsed
+     * @throws  Exception                      Thrown if an allOf or an attribute cannot be parsed
      */
     private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection): Entity
     {
@@ -563,7 +564,7 @@ class OasParserService
      * @param   array               $schema             The schema of the object
      * @param   CollectionEntity    $collectionEntity   The collection the object belongs to
      * @return  Entity                                  The resulting entity
-     * @throws \Exception                               Thrown if the entity cannot be made
+     * @throws  Exception                               Thrown if the entity cannot be made
      */
     private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity): Entity
     {
@@ -580,7 +581,7 @@ class OasParserService
      * Replaces an HAL entity by a normal JSON entity
      *
      * @param   string  $entityName The entity to replace
-     * @return  array               The correct entity
+     * @return  array               The correct object schema
      */
     private function replaceHalWithJsonEntity(string $entityName): array
     {
@@ -642,7 +643,7 @@ class OasParserService
      *
      * @param   CollectionEntity    $collection The collection the entities should belong to
      * @return  Entity[]                        The resulting entities
-     * @throws  \Exception                      Thrown if entities cannot be created
+     * @throws  Exception                      Thrown if entities cannot be created
      */
     private function persistSchemasAsEntities(CollectionEntity $collection): array
     {
@@ -671,13 +672,13 @@ class OasParserService
      *
      * @param   array               $oas        The OpenAPI Specification of the collection
      * @param   CollectionEntity    $collection The collection the oas should be parsed into
-     * @throws  \Exception                      Thrown if an object cannot be made
+     * @throws  Exception                      Thrown if an object cannot be made
      */
     public function parseOas(array $oas, CollectionEntity $collection)
     {
         $this->oas = $oas;
         // Persist Entities and Attributes
-        $entities = $this->persistSchemasAsEntities($oas, $collection);
+        $entities = $this->persistSchemasAsEntities($collection);
 
         // Persist Endpoints and its Properties
         $endpoints = $this->persistPathsAsEndpoints($collection);
