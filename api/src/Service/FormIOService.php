@@ -57,30 +57,12 @@ class FormIOService
             $formIOArray['components'][] = $component;
         }
 
-        // Submit button
-        $formIOArray['components'][] = [
-            'type'             => 'button',
-            'theme'            => 'primary',
-            'disableOnInvalid' => true,
-            'action'           => 'submit',
-            'rightIcon'        => '',
-            'leftIcon'         => '',
-            'size'             => 'md',
-            'key'              => 'submit',
-            'tableView'        => false,
-            'label'            => 'Submit',
-            'input'            => 'true',
-        ];
-
-        $formIOArray['display'] = 'form';
-        $formIOArray['page'] = 0;
-        $formIOArray['entity'] = $entity->getName();
-
         // Advanced configuration
         $formIOArray['components'][] = [
             'title'         => 'Advanced configuration',
             'theme'         => 'default',
             'collapsible'   => true,
+            'collapsed'     => true,
             'key'           => 'advancedConfiguration',
             'type'          => 'panel',
             'label'         => 'Panel',
@@ -149,6 +131,25 @@ class FormIOService
                 ],
             ],
         ];
+
+        // Submit button
+        $formIOArray['components'][] = [
+            'type'             => 'button',
+            'theme'            => 'primary',
+            'disableOnInvalid' => true,
+            'action'           => 'submit',
+            'rightIcon'        => '',
+            'leftIcon'         => '',
+            'size'             => 'md',
+            'key'              => 'submit',
+            'tableView'        => false,
+            'label'            => 'Submit',
+            'input'            => 'true',
+        ];
+
+        $formIOArray['display'] = 'form';
+        $formIOArray['page'] = 0;
+        $formIOArray['entity'] = $entity->getName();
 
         return $formIOArray;
     }
