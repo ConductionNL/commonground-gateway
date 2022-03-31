@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Organization;
 use App\Entity\Person;
@@ -17,21 +18,49 @@ class UserService
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private ResponseService $responseService;
-    private SerializerInterface $serializer;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, ResponseService $responseService, SerializerInterface $serializer)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, ResponseService $responseService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->responseService = $responseService;
-        $this->serializer = $serializer;
     }
 
-    public function getObject(string $uri, $fields = null): array
+    public function getObjectByUri(string $uri, ?array $fields = null): array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if ($object instanceof ObjectEntity) {
             return $this->responseService->renderResult($object, $fields);
+        }
+
+        return [];
+    }
+
+    public function getObject(Entity $entity, string $id, ?array $fields = null): array
+    {
+        $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
+        if ($object instanceof ObjectEntity) {
+            return $this->responseService->renderResult($object, $fields);
+        }
+
+        return [];
+    }
+
+    public function getPersonObject(string $id, ?array $fields = null): array
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']);
+        if ($entity instanceof Entity) {
+            return $this->getObject($entity, $id, $fields);
+        }
+
+        return [];
+    }
+
+    public function getOrganizationObject(string $id, ?array $fields = null): array
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'organization']);
+        if ($entity instanceof Entity) {
+            return $this->getObject($entity, $id, $fields);
         }
 
         return [];
@@ -66,16 +95,14 @@ class UserService
 
             return [];
         }
-        if ($user->getPerson() && $person = $this->getObject($user->getPerson())) {
+        if ($user->getPerson() && $person = $this->getObjectByUri($user->getPerson())) {
             return $person;
         } elseif ($user->getPerson()) {
             try {
                 $id = substr($user->getPerson(), strrpos($user->getPerson(), '/') + 1);
-                $person = $this->entityManager->getRepository('App:Person')->find($id);
-                if (!empty($person) || $person instanceof Person) {
-                    $serialized = $this->serializer->serialize($person, 'jsonld');
-                    $person = json_decode($serialized, true);
-                } elseif ($this->commonGroundService->getComponent('cc')) {
+                $person = $this->getPersonObject($id);
+
+                if (empty($person) && $this->commonGroundService->getComponent('cc')) {
                     $person = $this->commonGroundService->getResource($user->getPerson());
                 } else {
                     throw new Exception();
@@ -104,14 +131,12 @@ class UserService
                     'name' => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
                 ],
             ];
-            if (!($organization = $this->getObject($user->getOrganization(), $organizationFields))) {
+            if (!($organization = $this->getObjectByUri($user->getOrganization(), $organizationFields))) {
                 try {
                     $id = substr($user->getOrganization(), strrpos($user->getOrganization(), '/') + 1);
-                    $organization = $this->entityManager->getRepository('App:Organization')->find($id);
-                    if (!empty($organization) || $organization instanceof Organization) {
-                        $serialized = $this->serializer->serialize($organization, 'jsonld');
-                        $organization = json_decode($serialized, true);
-                    } elseif ($this->commonGroundService->getComponent('cc')) {
+                    $organization = $this->getOrganizationObject($id);
+
+                    if (empty($organization) && $this->commonGroundService->getComponent('cc')) {
                         $organization = $this->commonGroundService->getResource($user->getOrganization());
                     } else {
                         throw new Exception();

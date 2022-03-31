@@ -37,11 +37,11 @@ class LoginController extends AbstractController
      * @Route("/me")
      * @Route("api/users/me", methods={"get"})
      */
-    public function MeAction(Request $request, CommonGroundService $commonGroundService, ResponseService $responseService, SerializerInterface $serializer)
+    public function MeAction(Request $request, CommonGroundService $commonGroundService, ResponseService $responseService)
     {
         $this->cache->invalidateTags(['grantedScopes']);
 
-        $userService = new UserService($commonGroundService, $this->entityManager, $responseService, $serializer);
+        $userService = new UserService($commonGroundService, $this->entityManager, $responseService);
         if ($this->getUser()) {
             $result = [
                 'id'         => $this->getUser()->getUserIdentifier(),

@@ -1,59 +1,541 @@
-App\Entity\Organization:
-    defaultOrganization:
-#        id: <\Ramsey\Uuid\Uuid::fromString('a1c8e0b6-2f78-480d-a9fb-9792142f4761')>
-        id: a1c8e0b6-2f78-480d-a9fb-9792142f4761
-        name: default organization
-        description: the default organization
-        emails:
-            - '@defaultOrganization_email'
-        telephones:
-            - '@defaultOrganization_telephone'
-        addresses:
-            - '@defaultOrganization_address'
-
-App\Entity\Person:
-    defaultPerson:
-#        id: <\Ramsey\Uuid\Uuid::fromString('d2a24edf-6ced-40a2-8e7c-56803f4ce3f5')>
-        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
-        givenName: John
-        additionalName: Allen
-        familyName: Doe
-        emails:
-            - '@defaultPerson_email'
-        telephones:
-            - '@defaultPerson_telephone'
-        addresses:
-            - '@defaultPerson_address'
+# Entities
+App\Entity\Entity:
+    # Organization Entity
+    organization:
+        function: "organization"
+        route: "/api/organizations"
+        name: organization
+        description: Entity Organisation exists of an id, a name, a description, a kvk number, one or more telephones, one or more addresses, one or more emails and one or more persons.
         
-App\Entity\Email:
-    defaultOrganization_email:
-        name: email for default organization
-        email: default-organization@test.com
+    # Person Entity
+    person:
+        function: "person"
+        route: "/api/people"
+        name: person
+        description: Entity Person exists of an id, a givenName, a additionalName, a familyName, one or more telephones, one or more addresses, one or more emails and one or more organisations.
         
-    defaultPerson_email:
-        name: email for default person
-        email: default-person@test.com
-
-App\Entity\Address:
-    defaultOrganization_address:
-        name: address for default organization
-        street: somestreet
-        houseNumber: 42
-        postalCode: 6996
-        locality: Utrecht
-        
-    defaultPerson_address:
-        name: address for default person
-        street: someotherstreet
-        houseNumber: 666
-        postalCode: 1234
-        locality: Amsterdam
-
-App\Entity\Telephone:
-    defaultOrganization_telephone:
-        name: telephone for default organization
-        telephone: 0612345678
+    #Email Entity
+    email:
+        route: "/api/emails"
+        name: email
+        description: Entity Email exists of an id, a name, an email, one or more people and one or more organisations.
     
-    defaultPerson_telephone:
-        name: telephone for default person
-        telephone: 0687654321
+    #Telefoon Entity
+    telephone:
+        route: "/api/telephones"
+        name: telephone
+        description: Entity Telephone exists of an id, a name and a telephone, one or more people and one or more organisations.
+    
+    #Address Entity
+    address:
+        route: "/api/addresses"
+        name: address
+        description: Entity Address exists of an id, a name, a bagnummeraanduiding, a street, a houseNumber, a houseNumberSufix, a postalCode, a region, a locality and country, one or more people and one or more organisations.
+
+
+# Attributes
+App\Entity\Attribute:
+    # Organization Attributes
+    organization_name:
+        name: name
+        description: What is the name of the organization.
+        type: string
+        required: true
+        maxLength: 255
+        entity: "@organization"
+        searchable: true
+    organization_type:
+        name: type
+        description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
+        type: string
+        required: true
+        entity: "@organization"
+        searchable: true
+    organization_parentOrganization:
+        name: parentOrganization
+        description: The larger organization that this organization is a subOrganization of.
+        type: object
+        required: true
+        entity: "@organization"
+        object: "@organization"
+        persistToGateway: true
+        searchable: true
+        immutable: true
+    organization_addresses:
+        name: addresses
+        description: Where is the organization located?
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    organization_telephone:
+        name: telephones
+        description: The telephone number of the organization.
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    organization_email:
+        name: emails
+        description: The email address of the organization.
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@email"
+        cascade: true
+        cascadeDelete: true
+        
+    # Person Attributes
+    person_givenName:
+        name: givenName
+        type: string
+        maxLength: 255
+        required: true;
+        entity: "@person"
+    person_additionalName:
+        name: additionalName
+        type: string
+        maxLength: 255
+        entity: "@person"
+    person_familyName:
+        name: familyName
+        type: string
+        maxLength: 255
+        entity: "@person"
+        required: true
+    person_birthday:
+        name: birthday
+        type: date
+        entity: "@person"
+    person_birthplace:
+        name: birthplace
+        type: object
+        entity: "@person"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    person_country:
+        name: country
+        type: string
+        format: countryCode
+        maxLength: 255
+        entity: "@person"
+    person_gender:
+        name: gender
+        type: string
+        enum: ["Male", "Female", "X"]
+        entity: "@person"
+    person_maritalStatus:
+        name: maritalStatus
+        type: string
+        enum: ["MARRIED_PARTNER", "SINGLE", "DIVORCED", "WIDOW"]
+        entity: "@person"
+        persistToGateway: true
+    person_primaryLanguage:
+        name: primaryLanguage
+        type: string
+        maxLength: 255
+        entity: "@person"
+    person_speakingLanguages:
+        name: speakingLanguages
+        type: string
+        maxLength: 255
+        entity: "@person"
+    person_contactPreference:
+        name: contactPreference
+        type: string
+        entity: "@person"
+    person_addresses:
+        name: addresses
+        type: object
+        multiple: true
+        entity: "@person"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    person_telephones:
+        name: telephones
+        type: object
+        multiple: true
+        entity: "@person"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    person_emails:
+        name: emails
+        type: object
+        mustBeUnique: true
+        multiple: true
+        entity: "@person"
+        object: "@email"
+        cascade: true
+        cascadeDelete: true
+    
+    # Email Attributes
+    email_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@email"
+    email_email:
+        name: email
+        type: string
+        maxLength: 255
+        required: true
+        format: email
+        mustBeUnique: true
+        entity: "@email"
+
+    #Telephone Attributes
+    telephone_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@telephone"
+    telephone_telephone:
+        name: telephone
+        type: string
+        maxLength: 255
+        required: true
+        format: phone
+        entity: "@telephone"
+
+    # Address Attributes
+    address_name:
+        name: name
+        type: string
+        maxLength: 255
+        entity: "@address"
+    address_street:
+        name: street
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@address"
+    address_houseNumber:
+        name: houseNumber
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@address"
+    address_houseNumberSuffix:
+        name: houseNumberSuffix
+        type: string
+        maxLength: 255
+        entity: "@address"
+    address_postalCode:
+        name: postalCode
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@address"
+    address_locality:
+        name: locality
+        type: string
+        maxLength: 255
+        required: true
+        entity: "@address"
+    address_country:
+        name: country
+        type: string
+        format: countryCode
+        maxLength: 255
+        entity: "@address"
+        
+
+# Endpoints        
+App\Entity\Endpoint:
+    # Organization Endpoints
+    organizationEndpointGet:
+        name: Organization endpoint get collection
+        description: endpoint for organizations
+        path: ['organizations']
+        pathRegex: "organizations"
+        operationType: collection
+    
+    organizationEndpointPost:
+        name: Organization endpoint post
+        description: endpoint for organizations
+        path: ['organizations']
+        pathRegex: "organizations"
+        operationType: collection
+
+    organizationEndpointGetItem:
+        name: Organization endpoint get item
+        description: endpoint for organizations
+        path: ['organizations', '{id}']
+#        pathRegex: "#^(organizations/[^/]*)$#"
+        operationType: item
+
+    organizationEndpointPut:
+        name: Organization endpoint put
+        description: endpoint for organizations
+        path: ['organizations', '{id}']
+#        pathRegex: "#^(organizations/[^/]*)$#"
+        operationType: item
+    
+    organizationEndpointDelete:
+        name: Organization endpoint delete
+        description: endpoint for organizations
+        path: ['organizations', '{id}']
+#        pathRegex: "#^(organizations/[^/]*)$#"
+        operationType: item
+            
+    # Person Endpoints
+    personEndpointGet:
+        name: Person endpoint get collection
+        description: endpoint for people
+        path: [ 'people' ]
+        pathRegex: "people"
+        operationType: collection
+
+    personEndpointPost:
+        name: Person endpoint post
+        description: endpoint for people
+        path: [ 'people' ]
+        pathRegex: "people"
+        operationType: collection
+
+    personEndpointGetItem:
+        name: Person endpoint get item
+        description: endpoint for people
+        path: [ 'people', '{id}' ]
+#        pathRegex: "#^(people/[^/]*)$#"
+        operationType: item
+
+    personEndpointPut:
+        name: Person endpoint put
+        description: endpoint for people
+        path: [ 'people', '{id}' ]
+#        pathRegex: "#^(people/[^/]*)$#"
+        operationType: item
+
+    personEndpointDelete:
+        name: Person endpoint delete
+        description: endpoint for people
+        path: [ 'people', '{id}' ]
+#        pathRegex: "#^(people/[^/]*)$#"
+        operationType: item
+        
+    # Email Endpoints
+    emailEndpointGet:
+        name: Email endpoint get collection
+        description: endpoint for emails
+        path: [ 'emails' ]
+        pathRegex: "emails"
+        operationType: collection
+
+    emailEndpointPost:
+        name: Email endpoint post
+        description: endpoint for emails
+        path: [ 'emails' ]
+        pathRegex: "emails"
+        operationType: collection
+
+    emailEndpointGetItem:
+        name: Email endpoint get item
+        description: endpoint for emails
+        path: [ 'emails', '{id}' ]
+        #        pathRegex: "#^(emails/[^/]*)$#"
+        operationType: item
+
+    emailEndpointPut:
+        name: Email endpoint put
+        description: endpoint for emails
+        path: [ 'emails', '{id}' ]
+        #        pathRegex: "#^(emails/[^/]*)$#"
+        operationType: item
+
+    emailEndpointDelete:
+        name: Email endpoint delete
+        description: endpoint for emails
+        path: [ 'emails', '{id}' ]
+        #        pathRegex: "#^(emails/[^/]*)$#"
+        operationType: item
+        
+    # Telephone Endpoints
+    telephoneEndpointGet:
+        name: Telephone endpoint get collection
+        description: endpoint for telephones
+        path: [ 'telephones' ]
+        pathRegex: "telephones"
+        operationType: collection
+
+    telephoneEndpointPost:
+        name: Telephone endpoint post
+        description: endpoint for telephones
+        path: [ 'telephones' ]
+        pathRegex: "telephones"
+        operationType: collection
+
+    telephoneEndpointGetItem:
+        name: Telephone endpoint get item
+        description: endpoint for telephones
+        path: [ 'telephones', '{id}' ]
+        #        pathRegex: "#^(telephones/[^/]*)$#"
+        operationType: item
+
+    telephoneEndpointPut:
+        name: Telephone endpoint put
+        description: endpoint for telephones
+        path: [ 'telephones', '{id}' ]
+        #        pathRegex: "#^(telephones/[^/]*)$#"
+        operationType: item
+
+    telephoneEndpointDelete:
+        name: Telephone endpoint delete
+        description: endpoint for telephones
+        path: [ 'telephones', '{id}' ]
+        #        pathRegex: "#^(telephones/[^/]*)$#"
+        operationType: item
+        
+    # Address Endpoints
+    addressEndpointGet:
+        name: Address endpoint get collection
+        description: endpoint for addresses
+        path: [ 'addresses' ]
+        pathRegex: "addresses"
+        operationType: collection
+
+    addressEndpointPost:
+        name: Address endpoint post
+        description: endpoint for addresses
+        path: [ 'addresses' ]
+        pathRegex: "addresses"
+        operationType: collection
+
+    addressEndpointGetItem:
+        name: Address endpoint get item
+        description: endpoint for addresses
+        path: [ 'addresses', '{id}' ]
+        #        pathRegex: "#^(addresses/[^/]*)$#"
+        operationType: item
+
+    addressEndpointPut:
+        name: Address endpoint put
+        description: endpoint for addresses
+        path: [ 'addresses', '{id}' ]
+        #        pathRegex: "#^(addresses/[^/]*)$#"
+        operationType: item
+
+    addressEndpointDelete:
+        name: Address endpoint delete
+        description: endpoint for addresses
+        path: [ 'addresses', '{id}' ]
+        #        pathRegex: "#^(addresses/[^/]*)$#"
+        operationType: item
+
+
+# Handlers
+App\Entity\Handler:
+    # Organization Handler
+    organizationHandler:
+        name: Organization handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@organizationEndpointGet", "@organizationEndpointPost", "@organizationEndpointGetItem", "@organizationEndpointPut", "@organizationEndpointDelete"]
+        entity: "@organization"
+        
+    # Person Handler
+    personHandler:
+        name: Person handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@personEndpointGet", "@personEndpointPost", "@personEndpointGetItem", "@personEndpointPut", "@personEndpointDelete"]
+        entity: "@person"
+        
+    # Email Handler
+    emailHandler:
+        name: Email handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@emailEndpointGet", "@emailEndpointPost", "@emailEndpointGetItem", "@emailEndpointPut", "@emailEndpointDelete"]
+        entity: "@email"
+        
+    # Telephone Handler
+    telephoneHandler:
+        name: Telephone handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@telephoneEndpointGet", "@telephoneEndpointPost", "@telephoneEndpointGetItem", "@telephoneEndpointPut", "@telephoneEndpointDelete"]
+        entity: "@telephone"
+        
+    # Address Handler
+    addressHandler:
+        name: Address handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@addressEndpointGet", "@addressEndpointPost", "@addressEndpointGetItem", "@addressEndpointPut", "@addressEndpointDelete"]
+        entity: "@address"
+
+
+
+# todo: turn these into ObjectEntities
+#App\Entity\Organization:
+#    defaultOrganization:
+##        id: <\Ramsey\Uuid\Uuid::fromString('a1c8e0b6-2f78-480d-a9fb-9792142f4761')>
+#        id: a1c8e0b6-2f78-480d-a9fb-9792142f4761
+#        name: default organization
+#        description: the default organization
+#        emails:
+#            - '@defaultOrganization_email'
+#        telephones:
+#            - '@defaultOrganization_telephone'
+#        addresses:
+#            - '@defaultOrganization_address'
+#
+#App\Entity\Person:
+#    defaultPerson:
+##        id: <\Ramsey\Uuid\Uuid::fromString('d2a24edf-6ced-40a2-8e7c-56803f4ce3f5')>
+#        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
+#        givenName: John
+#        additionalName: Allen
+#        familyName: Doe
+#        emails:
+#            - '@defaultPerson_email'
+#        telephones:
+#            - '@defaultPerson_telephone'
+#        addresses:
+#            - '@defaultPerson_address'
+#        
+#App\Entity\Email:
+#    defaultOrganization_email:
+#        name: email for default organization
+#        email: default-organization@test.com
+#        
+#    defaultPerson_email:
+#        name: email for default person
+#        email: default-person@test.com
+#
+#App\Entity\Address:
+#    defaultOrganization_address:
+#        name: address for default organization
+#        street: somestreet
+#        houseNumber: 42
+#        postalCode: 6996
+#        locality: Utrecht
+#        
+#    defaultPerson_address:
+#        name: address for default person
+#        street: someotherstreet
+#        houseNumber: 666
+#        postalCode: 1234
+#        locality: Amsterdam
+#
+#App\Entity\Telephone:
+#    defaultOrganization_telephone:
+#        name: telephone for default organization
+#        telephone: 0612345678
+#    
+#    defaultPerson_telephone:
+#        name: telephone for default person
+#        telephone: 0687654321

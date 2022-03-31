@@ -9,8 +9,11 @@
 
 namespace App\Security;
 
+use App\Entity\Entity;
+use App\Entity\ObjectEntity;
 use App\Entity\Person;
 use App\Service\AuthenticationService;
+use App\Service\ResponseService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,8 +44,9 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private AuthenticationService $authenticationService;
     private EntityManagerInterface $entityManager;
     private SerializerInterface $serializer;
+    private ResponseService $responseService;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, SerializerInterface $serializer)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, SerializerInterface $serializer, ResponseService $responseService)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
@@ -52,6 +56,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         $this->authenticationService = $authenticationService;
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
+        $this->responseService = $responseService;
     }
 
     /**
@@ -98,11 +103,15 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $person = $this->entityManager->getRepository('App:Person')->find($id);
-            if (!empty($person) || $person instanceof Person) {
-                $serialized = $this->serializer->serialize($person, 'jsonld');
-                $person = json_decode($serialized, true);
-            } elseif ($this->commonGroundService->getComponent('cc')) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']);
+            if ($entity instanceof Entity) {
+                $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
+                if ($object instanceof ObjectEntity) {
+                    $person = $this->responseService->renderResult($object, null);
+                }
+            }
+
+            if (!isset($person) && $this->commonGroundService->getComponent('cc')) {
                 $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
             } else {
                 $person = []; // todo?
