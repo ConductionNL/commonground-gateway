@@ -674,23 +674,25 @@ class OasParserService
      * @param   CollectionEntity    $collection The collection the oas should be parsed into
      * @throws  Exception                      Thrown if an object cannot be made
      */
-    public function parseOas(array $oas, CollectionEntity $collection)
+    public function parseOas(CollectionEntity $collection): CollectionEntity
     {
-        $this->oas = $oas;
-        // Persist Entities and Attributes
+        $this->oas = $this->getExternalOAS($collection->getLocationOAS());
         $entities = $this->persistSchemasAsEntities($collection);
-
-        // Persist Endpoints and its Properties
         $endpoints = $this->persistPathsAsEndpoints($collection);
-
         $this->entityManager->flush();
 
         // Create Handlers between the Entities and Endpoints
         $handlers = $this->createHandlers();
-
-        // Execute sql to database
         $this->entityManager->flush();
+
+        // Set synced at
+        $collection->setSyncedAt(new \DateTime('now'));
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
         $this->oas = [];
         $this->handlersToCreate = [];
+
+        return $collection;
     }
 }
