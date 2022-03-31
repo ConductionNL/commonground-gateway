@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Entity;
 use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
@@ -23,6 +24,7 @@ class ObjectEntityService
     private ?EavService $eavService;
     private EntityManagerInterface $entityManager;
     private CommonGroundService $commonGroundService;
+    private ResponseService $responseService;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -32,7 +34,8 @@ class ObjectEntityService
         ValidaterService $validaterService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
-        CommonGroundService $commonGroundService
+        CommonGroundService $commonGroundService,
+        ResponseService $responseService
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -42,6 +45,7 @@ class ObjectEntityService
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
+        $this->responseService = $responseService;
     }
 
     /**
@@ -107,6 +111,68 @@ class ObjectEntityService
         }
 
         return false;
+    }
+
+    public function getObjectByUri(string $uri, ?array $fields = null): array
+    {
+        $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
+        if ($object instanceof ObjectEntity) {
+            return $this->responseService->renderResult($object, $fields);
+        }
+
+        return [];
+    }
+
+    public function getObject(Entity $entity, string $id, ?array $fields = null): array
+    {
+        $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
+        if ($object instanceof ObjectEntity) {
+            return $this->responseService->renderResult($object, $fields);
+        }
+
+        return [];
+    }
+
+    public function getPersonObject(string $id, ?array $fields = null): array
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']); // todo cache this?
+        if ($entity instanceof Entity) {
+            return $this->getObject($entity, $id, $fields);
+        }
+
+        return [];
+    }
+
+    public function getOrganizationObject(string $id, ?array $fields = null): array
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'organization']); // todo cache this?
+        if ($entity instanceof Entity) {
+            return $this->getObject($entity, $id, $fields);
+        }
+
+        return [];
+    }
+
+    public function getUserObjectEntity(string $username): array
+    {
+        // Because inversedBy wil not set the UC->user->person when creating a person with a user in the gateway.
+        // We need to do this in order to find the person of this user:
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'users']);
+
+        if ($entity == null) {
+            return [];
+        }
+
+        $objects = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['username' => $username]);
+        if (count($objects) == 1) {
+            $user = $this->responseService->renderResult($objects[0], null);
+            // This: will be false if a user has no rights to do get on a person object
+            if (isset($user['person'])) {
+                return $user['person'];
+            }
+        }
+
+        return [];
     }
 
     /**

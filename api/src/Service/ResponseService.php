@@ -25,18 +25,29 @@ class ResponseService
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private AuthorizationService $authorizationService;
-    private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, TokenStorageInterface $tokenStorage)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
-        $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
+    }
+
+    // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
+    private function checkOwner(ObjectEntity $result): bool
+    {
+        // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -218,7 +229,7 @@ class ResponseService
             if ($attribute->getType() == 'object') {
                 try {
                     // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                    if (!$this->objectEntityService->checkOwner($result)) {
+                    if (!$this->checkOwner($result)) {
                         $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
                     }
                     $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $flat, $level);

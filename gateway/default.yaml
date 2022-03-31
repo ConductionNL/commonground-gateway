@@ -235,7 +235,6 @@ App\Entity\Attribute:
         name: emails
         description: emails of this person
         type: object
-        mustBeUnique: true
         multiple: true
         entity: "@person"
         object: "@email"
@@ -279,7 +278,6 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         format: email
-        mustBeUnique: true
         entity: "@email"
 
     #Telephone Attributes
@@ -338,6 +336,13 @@ App\Entity\Attribute:
         maxLength: 255
         entity: "@address"
 
+# Parameters for endpoint regex
+parameters:
+    organizationItemRegex: "#^(organizations/[^/]*)$#"
+    personItemRegex: "#^(people/[^/]*)$#"
+    emailItemRegex: "#^(emails/[^/]*)$#"
+    telephoneItemRegex: "#^(telephones/[^/]*)$#"
+    addressItemRegex: "#^(addresses/[^/]*)$#"
 
 # Endpoints        
 App\Entity\Endpoint:
@@ -346,35 +351,35 @@ App\Entity\Endpoint:
         name: Organization endpoint get collection
         description: endpoint for organizations
         path: ['organizations']
-        pathRegex: "organizations"
+        pathRegex: "#^(organizations)$#"
         operationType: collection
 
     organizationEndpointPost:
         name: Organization endpoint post
         description: endpoint for organizations
         path: ['organizations']
-        pathRegex: "organizations"
+        pathRegex: "#^(organizations)$#"
         operationType: collection
 
     organizationEndpointGetItem:
         name: Organization endpoint get item
         description: endpoint for organizations
         path: ['organizations', '{id}']
-#        pathRegex: "#^(organizations/[^/]*)$#"
+        pathRegex: <{organizationItemRegex}>
         operationType: item
 
     organizationEndpointPut:
         name: Organization endpoint put
         description: endpoint for organizations
         path: ['organizations', '{id}']
-#        pathRegex: "#^(organizations/[^/]*)$#"
+        pathRegex: <{organizationItemRegex}>
         operationType: item
 
     organizationEndpointDelete:
         name: Organization endpoint delete
         description: endpoint for organizations
         path: ['organizations', '{id}']
-#        pathRegex: "#^(organizations/[^/]*)$#"
+        pathRegex: <{organizationItemRegex}>
         operationType: item
 
     # Person Endpoints
@@ -382,35 +387,35 @@ App\Entity\Endpoint:
         name: Person endpoint get collection
         description: endpoint for people
         path: [ 'people' ]
-        pathRegex: "people"
+        pathRegex: "#^(people)$#"
         operationType: collection
 
     personEndpointPost:
         name: Person endpoint post
         description: endpoint for people
         path: [ 'people' ]
-        pathRegex: "people"
+        pathRegex: "#^(people)$#"
         operationType: collection
 
     personEndpointGetItem:
         name: Person endpoint get item
         description: endpoint for people
         path: [ 'people', '{id}' ]
-#        pathRegex: "#^(people/[^/]*)$#"
+        pathRegex: <{personItemRegex}>
         operationType: item
 
     personEndpointPut:
         name: Person endpoint put
         description: endpoint for people
         path: [ 'people', '{id}' ]
-#        pathRegex: "#^(people/[^/]*)$#"
+        pathRegex: <{personItemRegex}>
         operationType: item
 
     personEndpointDelete:
         name: Person endpoint delete
         description: endpoint for people
         path: [ 'people', '{id}' ]
-#        pathRegex: "#^(people/[^/]*)$#"
+        pathRegex: <{personItemRegex}>
         operationType: item
 
     # Email Endpoints
@@ -418,35 +423,35 @@ App\Entity\Endpoint:
         name: Email endpoint get collection
         description: endpoint for emails
         path: [ 'emails' ]
-        pathRegex: "emails"
+        pathRegex: "#^(emails)$#"
         operationType: collection
 
     emailEndpointPost:
         name: Email endpoint post
         description: endpoint for emails
         path: [ 'emails' ]
-        pathRegex: "emails"
+        pathRegex: "#^(emails)$#"
         operationType: collection
 
     emailEndpointGetItem:
         name: Email endpoint get item
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
-        #        pathRegex: "#^(emails/[^/]*)$#"
+        pathRegex: <{emailItemRegex}>
         operationType: item
 
     emailEndpointPut:
         name: Email endpoint put
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
-        #        pathRegex: "#^(emails/[^/]*)$#"
+        pathRegex: <{emailItemRegex}>
         operationType: item
 
     emailEndpointDelete:
         name: Email endpoint delete
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
-        #        pathRegex: "#^(emails/[^/]*)$#"
+        pathRegex: <{emailItemRegex}>
         operationType: item
 
     # Telephone Endpoints
@@ -454,35 +459,35 @@ App\Entity\Endpoint:
         name: Telephone endpoint get collection
         description: endpoint for telephones
         path: [ 'telephones' ]
-        pathRegex: "telephones"
+        pathRegex: "#^(telephones)$#"
         operationType: collection
 
     telephoneEndpointPost:
         name: Telephone endpoint post
         description: endpoint for telephones
         path: [ 'telephones' ]
-        pathRegex: "telephones"
+        pathRegex: "#^(telephones)$#"
         operationType: collection
 
     telephoneEndpointGetItem:
         name: Telephone endpoint get item
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
-        #        pathRegex: "#^(telephones/[^/]*)$#"
+        pathRegex: <{telephoneItemRegex}>
         operationType: item
 
     telephoneEndpointPut:
         name: Telephone endpoint put
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
-        #        pathRegex: "#^(telephones/[^/]*)$#"
+        pathRegex: <{telephoneItemRegex}>
         operationType: item
 
     telephoneEndpointDelete:
         name: Telephone endpoint delete
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
-        #        pathRegex: "#^(telephones/[^/]*)$#"
+        pathRegex: <{telephoneItemRegex}>
         operationType: item
 
     # Address Endpoints
@@ -490,35 +495,35 @@ App\Entity\Endpoint:
         name: Address endpoint get collection
         description: endpoint for addresses
         path: [ 'addresses' ]
-        pathRegex: "addresses"
+        pathRegex: "#^(addresses)$#"
         operationType: collection
 
     addressEndpointPost:
         name: Address endpoint post
         description: endpoint for addresses
         path: [ 'addresses' ]
-        pathRegex: "addresses"
+        pathRegex: "#^(addresses)$#"
         operationType: collection
 
     addressEndpointGetItem:
         name: Address endpoint get item
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
-        #        pathRegex: "#^(addresses/[^/]*)$#"
+        pathRegex: <{addressItemRegex}>
         operationType: item
 
     addressEndpointPut:
         name: Address endpoint put
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
-        #        pathRegex: "#^(addresses/[^/]*)$#"
+        pathRegex: <{addressItemRegex}>
         operationType: item
 
     addressEndpointDelete:
         name: Address endpoint delete
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
-        #        pathRegex: "#^(addresses/[^/]*)$#"
+        pathRegex: <{addressItemRegex}>
         operationType: item
 
 
@@ -570,8 +575,56 @@ App\Entity\Handler:
         entity: "@address"
 
 
+# ------ Fixtures ------
 
-# todo: turn these into ObjectEntities
+# ObjectEntities
+App\Entity\ObjectEntity:
+    # Default organization
+    defaultOrganization:
+        id: a1c8e0b6-2f78-480d-a9fb-9792142f4761
+#        uri: "http://localhost/api/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+        entity: "@organization"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#        application: "uuid"
+    
+    # Default person
+    defaultPerson:
+        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
+#        uri: "http://localhost/api/people/d2a24edf-6ced-40a2-8e7c-56803f4ce3f5"
+        entity: "@person"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#        application: "uuid"
+
+# Values
+App\Entity\Value:
+    # Default organization Values
+    defaultOrganization_name:
+        attribute: "@organization_name"
+        stringValue: default organization
+        objectEntity: "@defaultOrganization"
+        
+    defaultOrganization_description:
+        attribute: "@organization_description"
+        stringValue: the default organization
+        objectEntity: "@defaultOrganization"
+        
+    # Default person Values
+    defaultPerson_givenName:
+        attribute: "@person_givenName"
+        stringValue: John
+        objectEntity: "@defaultPerson"
+    
+    defaultPerson_additionalName:
+        attribute: "@person_additionalName"
+        stringValue: Allen
+        objectEntity: "@defaultPerson"
+        
+    defaultPerson_familyName:
+        attribute: "@person_familyName"
+        stringValue: Doe
+        objectEntity: "@defaultPerson"
+
+# todo: turn these into ObjectEntities ^^^
 #App\Entity\Organization:
 #    defaultOrganization:
 ##        id: <\Ramsey\Uuid\Uuid::fromString('a1c8e0b6-2f78-480d-a9fb-9792142f4761')>

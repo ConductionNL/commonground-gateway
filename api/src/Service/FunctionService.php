@@ -8,13 +8,15 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class FunctionService
 {
-    public CacheInterface $cache;
-    public CommonGroundService $commonGroundService;
+    private CacheInterface $cache;
+    private CommonGroundService $commonGroundService;
+    private ObjectEntityService $objectEntityService;
 
-    public function __construct(CacheInterface $cache, CommonGroundService $commonGroundService)
+    public function __construct(CacheInterface $cache, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
     {
         $this->cache = $cache;
         $this->commonGroundService = $commonGroundService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -32,8 +34,14 @@ class FunctionService
         if ($organizationType == 'taalhuis') {
             $objectEntity->setOrganization($uri);
 
+            $id = substr($uri, strrpos($uri, '/') + 1);
+            if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+                if (!$organization = $this->objectEntityService->getObjectByUri($uri)) {
+                    $organization = $this->isResource($uri);
+                }
+            }
             // Invalidate all changed & related organizations from cache
-            if ($organization = $this->isResource($uri)) {
+            if (!empty($organization)) {
                 $tags = ['organization_'.md5($uri)];
                 if (count($organization['subOrganizations']) > 0) {
                     foreach ($organization['subOrganizations'] as $subOrganization) {
@@ -69,7 +77,13 @@ class FunctionService
             return $item->get();
         }
 
-        if ($organization = $this->isResource($url)) {
+        $id = substr($url, strrpos($url, '/') + 1);
+        if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+            if (!$organization = $this->objectEntityService->getObjectByUri($url)) {
+                $organization = $this->isResource($url);
+            }
+        }
+        if (!empty($organization)) {
             $item->set($organization);
             $item->tag('organization_'.md5("$url"));
 

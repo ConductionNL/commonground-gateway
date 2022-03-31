@@ -13,6 +13,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Person;
 use App\Service\AuthenticationService;
+use App\Service\ObjectEntityService;
 use App\Service\ResponseService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
@@ -39,24 +40,20 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private $params;
     private $commonGroundService;
     private $router;
-    private TokenStorageInterface $tokenStorage;
-    private SessionInterface $session;
     private AuthenticationService $authenticationService;
     private EntityManagerInterface $entityManager;
-    private SerializerInterface $serializer;
     private ResponseService $responseService;
+    private ObjectEntityService $objectEntityService;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, SerializerInterface $serializer, ResponseService $responseService)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, ResponseService $responseService, ObjectEntityService $objectEntityService)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
         $this->router = $router;
-        $this->session = $session;
-        $this->tokenStorage = $tokenStorage;
         $this->authenticationService = $authenticationService;
         $this->entityManager = $entityManager;
-        $this->serializer = $serializer;
         $this->responseService = $responseService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -103,15 +100,9 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']);
-            if ($entity instanceof Entity) {
-                $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
-                if ($object instanceof ObjectEntity) {
-                    $person = $this->responseService->renderResult($object, null);
-                }
-            }
+            $person = $this->objectEntityService->getPersonObject($id);
 
-            if (!isset($person) && $this->commonGroundService->getComponent('cc')) {
+            if (empty($person) && $this->commonGroundService->getComponent('cc')) {
                 $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
             } else {
                 $person = []; // todo?
