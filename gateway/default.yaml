@@ -1,3 +1,10 @@
+## Collections
+#App\Entity\CollectionEntity:
+#    contactCatalogusCollection:
+#        name: ContactCatalogus collection
+#        sourceType: github
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
+
 # Entities
 App\Entity\Entity:
     # Organization Entity
@@ -6,26 +13,26 @@ App\Entity\Entity:
         route: "/api/organizations"
         name: organization
         description: Entity Organisation exists of an id, a name, a description, a kvk number, one or more telephones, one or more addresses, one or more emails and one or more persons.
-        
+
     # Person Entity
     person:
         function: "person"
         route: "/api/people"
         name: person
         description: Entity Person exists of an id, a givenName, a additionalName, a familyName, one or more telephones, one or more addresses, one or more emails and one or more organisations.
-        
+
     #Email Entity
     email:
         route: "/api/emails"
         name: email
         description: Entity Email exists of an id, a name, an email, one or more people and one or more organisations.
-    
+
     #Telefoon Entity
     telephone:
         route: "/api/telephones"
         name: telephone
         description: Entity Telephone exists of an id, a name and a telephone, one or more people and one or more organisations.
-    
+
     #Address Entity
     address:
         route: "/api/addresses"
@@ -38,12 +45,30 @@ App\Entity\Attribute:
     # Organization Attributes
     organization_name:
         name: name
-        description: What is the name of the organization.
+        description: The name of this organization.
         type: string
         required: true
         maxLength: 255
         entity: "@organization"
         searchable: true
+    organization_description:
+        name: description
+        description: The description of this organization.
+        type: string
+        maxLength: 255
+        entity: "@organization"
+    organization_coc:
+        name: coc
+        description: The Chamber Of Comerce number of this organization.
+        type: string
+        maxLength: 15
+        entity: "@organization"
+    organization_vatID:
+        name: vatID
+        description: Value added tax id of this organisation (btw)
+        type: string
+        maxLength: 15
+        entity: "@organization"
     organization_type:
         name: type
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
@@ -55,12 +80,20 @@ App\Entity\Attribute:
         name: parentOrganization
         description: The larger organization that this organization is a subOrganization of.
         type: object
-        required: true
         entity: "@organization"
         object: "@organization"
-        persistToGateway: true
+        cascade: true
         searchable: true
-        immutable: true
+#        immutable: true # todo BISC
+        inversedBy: "@organization_subOrganizations"
+    organization_subOrganizations:
+        name: subOrganizations
+        description: The sub-organizations of which this organization is the parent organization.
+        type: object
+        entity: "@organization"
+        object: "@organization"
+        cascade: true
+        inversedBy: "@organization_parentOrganization"
     organization_addresses:
         name: addresses
         description: Where is the organization located?
@@ -72,7 +105,7 @@ App\Entity\Attribute:
         cascadeDelete: true
     organization_telephone:
         name: telephones
-        description: The telephone number of the organization.
+        description: The telephone number of this organization.
         type: object
         multiple: true
         entity: "@organization"
@@ -81,92 +114,126 @@ App\Entity\Attribute:
         cascadeDelete: true
     organization_email:
         name: emails
-        description: The email address of the organization.
+        description: The email address of this organization.
         type: object
         multiple: true
         entity: "@organization"
         object: "@email"
         cascade: true
         cascadeDelete: true
-        
+    organization_people:
+        name: people
+        description: The people of this organization.
+        type: object
+        multiple: true
+        entity: "@organization"
+        object: "@person"
+        cascade: true
+        inversedBy: "@person_organization"
+
     # Person Attributes
+    person_name:
+        name: name
+        description: The full name of a person consisting of given and fammily name
+        type: string
+#        readOnly: true # todo ???
+        entity: "@person"
+    person_formalName:
+        name: formalName
+        description: The full name of a person consisting of fammily and given name
+        type: string
+#        readOnly: true # todo ???
+        entity: "@person"
     person_givenName:
         name: givenName
+        description: Given name of this person
         type: string
         maxLength: 255
         required: true;
         entity: "@person"
     person_additionalName:
         name: additionalName
+        description: Additional name of this person
         type: string
         maxLength: 255
         entity: "@person"
     person_familyName:
         name: familyName
+        description: Family name of this person
         type: string
         maxLength: 255
         entity: "@person"
         required: true
     person_birthday:
         name: birthday
+        description: Date of birth of this person
         type: date
+        entity: "@person"
+    person_taxID:
+        name: taxID
+        description: TIN, CIF, NIF or BSN
+        type: string
+        maxLength: 255
+        entity: "@person"
+    person_aboutMe:
+        name: aboutMe
+        description: Information about this person
+        type: string
+        maxLength: 255
         entity: "@person"
     person_birthplace:
         name: birthplace
+        description: Birthplace of this person (an Address)
         type: object
         entity: "@person"
         object: "@address"
         cascade: true
         cascadeDelete: true
-    person_country:
-        name: country
-        type: string
-        format: countryCode
-        maxLength: 255
-        entity: "@person"
     person_gender:
         name: gender
+        description: The gender of this person. **Male**, **Female**, **X**
         type: string
         enum: ["Male", "Female", "X"]
         entity: "@person"
     person_maritalStatus:
         name: maritalStatus
+        description: The marital status of this person. **MARRIED_PARTNER**, **SINGLE**, **DIVORCED**, **WIDOW**
         type: string
         enum: ["MARRIED_PARTNER", "SINGLE", "DIVORCED", "WIDOW"]
         entity: "@person"
-        persistToGateway: true
     person_primaryLanguage:
         name: primaryLanguage
+        description: The primary language of this person.
         type: string
         maxLength: 255
         entity: "@person"
     person_speakingLanguages:
         name: speakingLanguages
+        description: The speaking languages of this person.
         type: string
         maxLength: 255
         entity: "@person"
     person_contactPreference:
         name: contactPreference
+        description: The contact preference of this person.
         type: string
         entity: "@person"
-    person_addresses:
-        name: addresses
-        type: object
-        multiple: true
+    person_personalPhoto:
+        name: personalPhoto
+        description: A photo of this person (base64 file)
+        type: file
+        fileTypes: 
+            [
+                "image/png",
+                "image/x-png",
+                "image/jpeg",
+                "image/pjpeg",
+                "image/svg+xml"
+            ]
         entity: "@person"
-        object: "@address"
-        cascade: true
-        cascadeDelete: true
-    person_telephones:
-        name: telephones
-        type: object
-        multiple: true
-        entity: "@person"
-        object: "@telephone"
-        cascade: true
-        cascadeDelete: true
     person_emails:
         name: emails
+        description: emails of this person
         type: object
         mustBeUnique: true
         multiple: true
@@ -174,7 +241,32 @@ App\Entity\Attribute:
         object: "@email"
         cascade: true
         cascadeDelete: true
-    
+    person_telephones:
+        name: telephones
+        description: telephones of this person
+        type: object
+        multiple: true
+        entity: "@person"
+        object: "@telephone"
+        cascade: true
+        cascadeDelete: true
+    person_addresses:
+        name: addresses
+        description: addresses of this person
+        type: object
+        multiple: true
+        entity: "@person"
+        object: "@address"
+        cascade: true
+        cascadeDelete: true
+    person_organization:
+        name: addresses
+        description: organization of this person
+        type: object
+        entity: "@person"
+        object: "@organization"
+        inversedBy: "@organization_people"
+
     # Email Attributes
     email_name:
         name: name
@@ -245,7 +337,7 @@ App\Entity\Attribute:
         format: countryCode
         maxLength: 255
         entity: "@address"
-        
+
 
 # Endpoints        
 App\Entity\Endpoint:
@@ -256,7 +348,7 @@ App\Entity\Endpoint:
         path: ['organizations']
         pathRegex: "organizations"
         operationType: collection
-    
+
     organizationEndpointPost:
         name: Organization endpoint post
         description: endpoint for organizations
@@ -277,14 +369,14 @@ App\Entity\Endpoint:
         path: ['organizations', '{id}']
 #        pathRegex: "#^(organizations/[^/]*)$#"
         operationType: item
-    
+
     organizationEndpointDelete:
         name: Organization endpoint delete
         description: endpoint for organizations
         path: ['organizations', '{id}']
 #        pathRegex: "#^(organizations/[^/]*)$#"
         operationType: item
-            
+
     # Person Endpoints
     personEndpointGet:
         name: Person endpoint get collection
@@ -320,7 +412,7 @@ App\Entity\Endpoint:
         path: [ 'people', '{id}' ]
 #        pathRegex: "#^(people/[^/]*)$#"
         operationType: item
-        
+
     # Email Endpoints
     emailEndpointGet:
         name: Email endpoint get collection
@@ -356,7 +448,7 @@ App\Entity\Endpoint:
         path: [ 'emails', '{id}' ]
         #        pathRegex: "#^(emails/[^/]*)$#"
         operationType: item
-        
+
     # Telephone Endpoints
     telephoneEndpointGet:
         name: Telephone endpoint get collection
@@ -392,7 +484,7 @@ App\Entity\Endpoint:
         path: [ 'telephones', '{id}' ]
         #        pathRegex: "#^(telephones/[^/]*)$#"
         operationType: item
-        
+
     # Address Endpoints
     addressEndpointGet:
         name: Address endpoint get collection
@@ -440,7 +532,7 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: ["@organizationEndpointGet", "@organizationEndpointPost", "@organizationEndpointGetItem", "@organizationEndpointPut", "@organizationEndpointDelete"]
         entity: "@organization"
-        
+
     # Person Handler
     personHandler:
         name: Person handler
@@ -449,7 +541,7 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: ["@personEndpointGet", "@personEndpointPost", "@personEndpointGetItem", "@personEndpointPut", "@personEndpointDelete"]
         entity: "@person"
-        
+
     # Email Handler
     emailHandler:
         name: Email handler
@@ -458,7 +550,7 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: ["@emailEndpointGet", "@emailEndpointPost", "@emailEndpointGetItem", "@emailEndpointPut", "@emailEndpointDelete"]
         entity: "@email"
-        
+
     # Telephone Handler
     telephoneHandler:
         name: Telephone handler
@@ -467,7 +559,7 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: ["@telephoneEndpointGet", "@telephoneEndpointPost", "@telephoneEndpointGetItem", "@telephoneEndpointPut", "@telephoneEndpointDelete"]
         entity: "@telephone"
-        
+
     # Address Handler
     addressHandler:
         name: Address handler
