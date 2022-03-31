@@ -82,7 +82,7 @@ class CollectionEntity
      */
     private ?string $description;
     /**
-     * @var string The location where the OAS can be loaded from
+     * @var ?string The location where the OAS can be loaded from
      *
      * @Assert\Length(
      *      max = 255
@@ -96,7 +96,7 @@ class CollectionEntity
      *     }
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $locationOAS;
 

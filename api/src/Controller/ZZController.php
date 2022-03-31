@@ -34,15 +34,15 @@ class ZZController extends AbstractController
         ProcessingLogService $processingLogService
     ): Response {
 
-        // Below is hacky tacky
+    // Below is hacky tacky
         // @todo refactor
-//        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
-//        if ($document instanceof Document && $id) {
-//            return $documentService->handleDocument($document, $id);
-//        }
-//        if ($entity == 'postalCodes') {
-//            return $validationService->dutchPC4ToJson();
-//        }
+        //        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
+        //        if ($document instanceof Document && $id) {
+        //            return $documentService->handleDocument($document, $id);
+        //        }
+        //        if ($entity == 'postalCodes') {
+        //            return $validationService->dutchPC4ToJson();
+        //        }
         // End of hacky tacky
 
         // Get full path
@@ -60,7 +60,9 @@ class ZZController extends AbstractController
         // @todo exit here if we do not have an endpoint
         if (!isset($endpoint)) {
             $acceptType = $handlerService->getRequestType('accept');
-            $response = new Response(
+            $acceptType === 'form.io' && $acceptType = 'json';
+
+            return new Response(
                 $serializer->serialize(['message' =>  'Could not find an endpoint with this path', 'data' => $path, 'path' => $path], $acceptType),
                 Response::HTTP_BAD_REQUEST,
                 ['content-type' => $acceptType]
@@ -72,7 +74,7 @@ class ZZController extends AbstractController
         // Let create the variable
 
         // Create array for filtering (in progress, should be moved to the correct service)
-        $parameters = ['path'=>[], 'query'=>[], 'post'=>[]];
+        $parameters = ['path' => [], 'query' => [], 'post' => []];
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
             // Let move path parts that are defined as variables to the filter array
