@@ -147,7 +147,6 @@ class TemplateService
             default:
                 /* @todo throw error */
                 return $content;
-                break;
         }
     }
 }

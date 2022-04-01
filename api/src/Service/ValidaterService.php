@@ -22,6 +22,7 @@ class ValidaterService
 {
     public CacheInterface $cache;
     private string $method;
+    private array $maxDepth; // todo: find a better way to do this?
 
     public function __construct(
         CacheInterface $cache
@@ -47,6 +48,9 @@ class ValidaterService
      */
     public function validateData(array $data, Entity $entity, string $method)
     {
+        // Reset Max Depth check, todo: find a better way to do this?
+        $this->maxDepth = [];
+
         // We could use a different function to set the $method, but this way we can only validate data if we also have a method.
         if (!in_array($method, ['POST', 'PUT', 'PATCH'])) {
             throw new GatewayException(
@@ -84,6 +88,12 @@ class ValidaterService
      */
     private function getEntityValidator(Entity $entity): Validator
     {
+        // Max Depth, todo: find a better way to do this? something like depth level instead of this...
+        if (in_array($entity->getId()->toString(), $this->maxDepth)) {
+            return new Validator(); // todo: make it so that if we reach max depth we throw an error if input is provided.
+        }
+        $this->maxDepth[] = $entity->getId()->toString();
+
         // Try and get a validator for this Entity(+method) from cache.
         $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
@@ -386,7 +396,7 @@ class ValidaterService
             $objectValidator->addRule(
                 new Rules\When(
                     new Rules\ArrayType(), // IF
-                    $this->getEntityValidator($attribute->getObject()), // TRUE // TODO: max depth... ?
+                    $this->getEntityValidator($attribute->getObject()), // TRUE
                     new Rules\AlwaysValid() // FALSE
                 )
             );
@@ -466,7 +476,7 @@ class ValidaterService
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
-            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable', 'defaultValue'];
             // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
             // @TODO do something with validation pattern
             if (empty($config) || in_array($validation, $ignoredValidations) || $validation === 'pattern') {

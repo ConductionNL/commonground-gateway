@@ -8,10 +8,13 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -20,6 +23,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/soaps/{id}"},
  *      "put"={"path"="/admin/soaps/{id}"},
@@ -57,6 +62,7 @@ class Soap
     /**
      * The internal name of this soap call.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
     private $name;
@@ -64,6 +70,7 @@ class Soap
     /**
      * A short description of this soap call.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private $description;
@@ -71,6 +78,7 @@ class Soap
     /**
      * The message type of this soap translation.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
     private $type;
@@ -94,6 +102,7 @@ class Soap
     /**
      * An XML descriping the request that we want to recieve.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private $request;
@@ -101,6 +110,7 @@ class Soap
     /**
      * An array build of request that we want to recieve.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
     private $requestSkeleton = [];
@@ -108,6 +118,7 @@ class Soap
     /**
      * An array containing an request to entity translation in dot notation e.g. contact.firstname => person.name.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $requestHydration = [];
@@ -115,6 +126,7 @@ class Soap
     /**
      * An XML descriping the response that we want t0 send.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
     private $response;
@@ -122,6 +134,7 @@ class Soap
     /**
      * An array build of response that  we want to send.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
     private $responseSkeleton = [];
@@ -129,6 +142,7 @@ class Soap
     /**
      * An array containing an entity to response transaltion in dot notation e.g. person.name => contact.firstname.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $responseHydration = [];
@@ -136,9 +150,28 @@ class Soap
     /**
      * A string to define the caseType of StUF Lk01 messages.
      *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $zaaktype;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    /**
+     * @var Datetime The moment this resource last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateModified;
 
     public function export(): ?array
     {
@@ -326,6 +359,30 @@ class Soap
     public function setZaaktype(?string $zaaktype): self
     {
         $this->zaaktype = $zaaktype;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

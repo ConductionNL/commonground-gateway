@@ -95,7 +95,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
     {
         if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (count($organization['subOrganizations']) > 0) {
+            if (!empty($organization['subOrganizations']) && count($organization['subOrganizations']) > 0) {
                 foreach ($organization['subOrganizations'] as $subOrganization) {
                     if (!in_array($subOrganization['@id'], $organizations)) {
                         $organizations[] = $subOrganization['@id'];

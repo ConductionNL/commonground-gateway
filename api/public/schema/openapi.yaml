@@ -38944,13 +38944,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -38967,7 +38967,7 @@ components:
           nullable: true
         route:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -38992,17 +38992,17 @@ components:
           nullable: true
         content:
           maxLength: 2555
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -39028,14 +39028,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -39111,13 +39111,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -39134,7 +39134,7 @@ components:
           nullable: true
         route:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -39159,17 +39159,17 @@ components:
           nullable: true
         content:
           maxLength: 2555
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -39195,14 +39195,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -39265,18 +39265,18 @@ components:
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -39338,18 +39338,18 @@ components:
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -44037,13 +44037,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -44060,7 +44060,7 @@ components:
           nullable: true
         route:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -44085,17 +44085,17 @@ components:
           nullable: true
         content:
           maxLength: 2555
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -44121,14 +44121,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -44204,13 +44204,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -44227,7 +44227,7 @@ components:
           nullable: true
         route:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -44252,17 +44252,17 @@ components:
           nullable: true
         content:
           maxLength: 2555
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -44288,14 +44288,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -44358,18 +44358,18 @@ components:
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -44431,18 +44431,18 @@ components:
           nullable: true
         session:
           maxLength: 255
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -47060,13 +47060,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -47080,7 +47080,7 @@ components:
           type: string
           nullable: true
         route:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -47100,15 +47100,15 @@ components:
           type: string
           nullable: true
         content:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -47132,14 +47132,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -47196,13 +47196,13 @@ components:
           type: string
           nullable: true
         dataElements:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
           nullable: true
         dataSubjects:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: array
           items:
             type: string
@@ -47216,7 +47216,7 @@ components:
           type: string
           nullable: true
         route:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         endpoint:
@@ -47236,15 +47236,15 @@ components:
           type: string
           nullable: true
         content:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         ip:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         session:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
         headers:
           description: 'The headers supplied by client'
@@ -47268,14 +47268,14 @@ components:
           type: boolean
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -47329,12 +47329,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcGroup-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47410,12 +47410,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcGroup:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47485,18 +47485,18 @@ components:
           type: string
           nullable: true
         session:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -47543,18 +47543,18 @@ components:
           type: string
           nullable: true
         session:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           externalDocs:
             url: 'http://schema.org/DateTime'
           type: string
@@ -47596,12 +47596,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcOffer-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47658,12 +47658,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcOffer:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47750,12 +47750,12 @@ components:
             -
               $ref: '#/components/schemas/GatewayPdcGroup-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47864,12 +47864,12 @@ components:
             -
               $ref: '#/components/schemas/GatewayPdcGroup:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -47995,12 +47995,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcCustomerType-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -48199,12 +48199,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcCustomerType:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49004,12 +49004,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcProduct-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49060,12 +49060,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcProduct:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49119,12 +49119,12 @@ components:
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49183,12 +49183,12 @@ components:
           type: string
           nullable: true
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49258,12 +49258,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcOffer-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
@@ -49346,12 +49346,12 @@ components:
           items:
             $ref: '#/components/schemas/GatewayPdcOffer:jsonld-read'
         dateCreated:
-          description: 'The moment this request was created'
+          description: 'The moment this resource was created'
           type: string
           format: date-time
           nullable: true
         dateModified:
-          description: 'The moment this request last Modified'
+          description: 'The moment this resource was last Modified'
           type: string
           format: date-time
           nullable: true
