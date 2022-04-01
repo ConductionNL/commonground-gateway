@@ -11,10 +11,8 @@ namespace App\Security;
 
 use App\Service\AuthenticationService;
 use App\Service\ObjectEntityService;
-use App\Service\ResponseService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
-use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
