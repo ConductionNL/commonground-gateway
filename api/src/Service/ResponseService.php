@@ -25,18 +25,29 @@ class ResponseService
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private AuthorizationService $authorizationService;
-    private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private TokenStorageInterface $tokenStorage;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, ObjectEntityService $objectEntityService, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, TokenStorageInterface $tokenStorage)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
-        $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
+    }
+
+    // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
+    private function checkOwner(ObjectEntity $result): bool
+    {
+        // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
+        $user = $this->tokenStorage->getToken()->getUser();
+
+        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -52,7 +63,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    public function renderResult(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
+    public function renderResult(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
         if (
@@ -98,7 +109,7 @@ class ResponseService
 
                 // Make sure we filter out properties we are not allowed to see
                 $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-                if (!empty($attribute)) {
+                if (!$skipAuthCheck && !empty($attribute)) {
                     try {
                         $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
                     } catch (AccessDeniedException $exception) {
@@ -114,7 +125,7 @@ class ResponseService
         // Let get the internal results
         // Old $MaxDepth;
 //        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
-        $response = array_merge($response, $this->renderValues($result, $fields, $flat, $level));
+        $response = array_merge($response, $this->renderValues($result, $fields, $skipAuthCheck, $flat, $level));
 
         // Lets sort the result alphabeticly
 
@@ -177,7 +188,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    private function renderValues(ObjectEntity $result, $fields, bool $flat = false, int $level = 0): array
+    private function renderValues(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -200,7 +211,9 @@ class ResponseService
 
             // Check if user is allowed to see this
             try {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                if (!$skipAuthCheck) {
+                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                }
             } catch (AccessDeniedException $exception) {
                 continue;
             }
@@ -218,10 +231,10 @@ class ResponseService
             if ($attribute->getType() == 'object') {
                 try {
                     // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                    if (!$this->objectEntityService->checkOwner($result)) {
+                    if (!$skipAuthCheck && !$this->checkOwner($result)) {
                         $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
                     }
-                    $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $flat, $level);
+                    $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $skipAuthCheck, $flat, $level);
 
                     // Old $MaxDepth;
 //                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
@@ -286,7 +299,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
-    private function renderObjects(Value $value, $fields, bool $flat = false, int $level = 0): ?array
+    private function renderObjects(Value $value, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 
@@ -296,7 +309,7 @@ class ResponseService
 
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
-            return $this->renderResult($value->getValue(), $fields, $flat, $level);
+            return $this->renderResult($value->getValue(), $fields, $skipAuthCheck, $flat, $level);
 
             // Old $MaxDepth;
 //            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
@@ -315,7 +328,7 @@ class ResponseService
         $objects = $value->getValue();
         $objectsArray = [];
         foreach ($objects as $object) {
-            $objectsArray[] = $this->renderResult($object, $fields, $flat, $level);
+            $objectsArray[] = $this->renderResult($object, $fields, $skipAuthCheck, $flat, $level);
 
             // Old $MaxDepth;
 //            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)

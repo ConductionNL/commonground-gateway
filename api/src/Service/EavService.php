@@ -988,9 +988,7 @@ class EavService
 
         $results = [];
         foreach ($objects as $object) {
-            // Old $MaxDepth in renderResult
-//            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
-            $results[] = $this->responseService->renderResult($object, $fields, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, false, $flat);
         }
 
         // If we need a flattend responce we are al done

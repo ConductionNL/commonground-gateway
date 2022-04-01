@@ -3,7 +3,7 @@ App\Entity\Group:
         description: the admin group
         id: 2809c0d7-fecf-41da-8dbf-3d09af0d025c
         name: admin
-        organization: http://contactcatalogus.gateway.svc.cluster.local/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        organization: http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
         scopes:
             - '@admin_create'
             - '@admin_read'
