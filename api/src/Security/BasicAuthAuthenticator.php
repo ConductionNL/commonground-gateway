@@ -10,6 +10,7 @@
 namespace App\Security;
 
 use App\Service\AuthenticationService;
+use App\Service\ObjectEntityService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use GuzzleHttp\Exception\ClientException;
@@ -18,10 +19,8 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -33,18 +32,16 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private $params;
     private $commonGroundService;
     private $router;
-    private TokenStorageInterface $tokenStorage;
-    private SessionInterface $session;
     private AuthenticationService $authenticationService;
+    private ObjectEntityService $objectEntityService;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, SessionInterface $session, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, AuthenticationService $authenticationService, ObjectEntityService $objectEntityService)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
         $this->router = $router;
-        $this->session = $session;
-        $this->tokenStorage = $tokenStorage;
         $this->authenticationService = $authenticationService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -91,7 +88,13 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
+            $person = $this->objectEntityService->getPersonObject($id);
+
+            if (empty($person) && $this->commonGroundService->getComponent('cc')) {
+                $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
+            } else {
+                $person = [];
+            }
         }
 
         return new AuthenticationUser(

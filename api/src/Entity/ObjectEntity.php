@@ -168,7 +168,13 @@ class ObjectEntity
     private $subresourceOf;
 
     /**
-     * @var Datetime The moment this request was created
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
+     */
+    private Collection $requestLogs;
+
+    /**
+     * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
@@ -177,7 +183,7 @@ class ObjectEntity
     private $dateCreated;
 
     /**
-     * @var Datetime The moment this request last Modified
+     * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="update")
@@ -185,24 +191,12 @@ class ObjectEntity
      */
     private $dateModified;
 
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
     public function __construct()
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
-
-        //TODO: better way of defaulting dateCreated & dateModified with orm?
-        // (options CURRENT_TIMESTAMP or 0 does not work)
-        $now = new DateTime();
-        $this->setDateCreated($now);
-        $this->setDateModified($now);
     }
 
     public function getId(): ?UuidInterface
@@ -210,7 +204,7 @@ class ObjectEntity
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
         $this->id = $id;
 
@@ -370,7 +364,7 @@ class ObjectEntity
         if (array_key_exists($attributeName, $errors) and !is_array($errors[$attributeName])) {
             $errors[$attributeName] = [$errors[$attributeName]];
         }
-        //TODO: check if error is already in array?
+        // Check if error is already in array?
         if (array_key_exists($attributeName, $errors)) {
             $errors[$attributeName][] = $error;
         } else {
@@ -746,30 +740,6 @@ class ObjectEntity
         return $this;
     }
 
-    public function getDateCreated(): ?DateTimeInterface
-    {
-        return $this->dateCreated;
-    }
-
-    public function setDateCreated(DateTimeInterface $dateCreated): self
-    {
-        $this->dateCreated = $dateCreated;
-
-        return $this;
-    }
-
-    public function getDateModified(): ?DateTimeInterface
-    {
-        return $this->dateModified;
-    }
-
-    public function setDateModified(DateTimeInterface $dateModified): self
-    {
-        $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
     /**
      * @return Collection|RequestLog[]
      */
@@ -796,6 +766,30 @@ class ObjectEntity
                 $requestLog->setObjectEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

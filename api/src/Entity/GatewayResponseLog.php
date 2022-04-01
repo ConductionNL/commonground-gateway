@@ -151,7 +151,7 @@ class GatewayResponseLog
     private $serverError;
 
     /**
-     * @var Datetime The moment this request was created
+     * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
@@ -159,13 +159,14 @@ class GatewayResponseLog
      */
     private $dateCreated;
 
-    public function __construct()
-    {
-        //TODO: better way of defaulting dateCreated & dateModified with orm?
-        // (options CURRENT_TIMESTAMP or 0 does not work)
-        $now = new DateTime();
-        $this->setDateCreated($now);
-    }
+    /**
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateModified;
 
     public function getId(): ?UuidInterface
     {
@@ -377,6 +378,18 @@ class GatewayResponseLog
     public function setDateCreated(DateTimeInterface $dateCreated): self
     {
         $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

@@ -295,6 +295,9 @@ class ConvertToGatewayService
      */
     private function notify(ObjectEntity $objectEntity, string $method)
     {
+        if (!$this->commonGroundService->getComponent('nrc')) {
+            return;
+        }
         $topic = $objectEntity->getEntity()->getName();
         switch ($method) {
             case 'POST':
