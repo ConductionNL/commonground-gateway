@@ -100,7 +100,7 @@ class ResponseService
                 $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
                 if (!empty($attribute)) {
                     try {
-                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $response[$key]]);
                     } catch (AccessDeniedException $exception) {
                         unset($response[$key]);
                     }
@@ -193,7 +193,7 @@ class ResponseService
 
             // Check if user is allowed to see this
             try {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                $this->authorizationService->checkAuthorization(['attribute' => $attribute]);
             } catch (AccessDeniedException $exception) {
                 continue;
             }
@@ -212,7 +212,7 @@ class ResponseService
                 try {
                     // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
                     if (!$this->objectEntityService->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                        $this->authorizationService->checkAuthorization(['attribute' => $attribute]);
                     }
                     $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $flat, $level);
 

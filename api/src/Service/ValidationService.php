@@ -242,11 +242,9 @@ class ValidationService
     {
         try {
             if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute), [
+                $this->authorizationService->checkAuthorization([
                     'method' => $objectEntity->getUri() ? 'PUT' : 'POST',
-                    'entity' => $objectEntity->getEntity(),
                     'attribute' => $attribute,
-                    'object' => $objectEntity,
                     'value' => $value
                 ]);
             }

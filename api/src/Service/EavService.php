@@ -495,14 +495,22 @@ class EavService
         if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+                $this->authorizationService->checkAuthorization([
+                    'method' => $request->getMethod(),
+                    'entity' => $entity,
+                    'object' => $object ?? null
+                ]);
             } catch (AccessDeniedException $e) {
-                $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
                     'message' => $e->getMessage(),
                     'type'    => 'Forbidden',
                     'path'    => $entity->getName(),
                     'data'    => [],
+                ];
+                return [
+                    'result'       => $result,
+                    'responseType' => Response::HTTP_FORBIDDEN,
+                    'object'       => $object ?? null,
                 ];
             }
         }
