@@ -1,4 +1,7 @@
-## Collections
+# ContactCatalogus Entities, Attributes, Endpoints, Handlers & (fixtures:) ObjectEntities + Values
+# todo: Collection could and maybe should replace everything but Fixtures (check other todo's and defaultValues first)
+
+# Collections
 #App\Entity\CollectionEntity:
 #    contactCatalogusCollection:
 #        name: ContactCatalogus collection
