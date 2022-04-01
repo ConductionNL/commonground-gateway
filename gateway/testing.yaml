@@ -30,6 +30,13 @@ App\Entity\Endpoint:
         path: ['weer', '{id}']
         pathRegex: <{weerItemRegex}>
         operationType: item
+        
+    weerEndpointDelete:
+        name: Weer endpoint delete
+        description: endpoint voor dingen rondom weer
+        path: ['weer', '{id}']
+        pathRegex: <{weerItemRegex}>
+        operationType: item
 
 
     # peopleEndpoint:
@@ -48,7 +55,7 @@ App\Entity\Entity:
         name: weer
         description: Dit endpoint behandeld weer.
 
-    # This does not work with bisc.yaml
+    # todo: This does not work with bisc.yaml or default.yaml
     # person:
     #     route: "/api/people"
     #     name: persons
