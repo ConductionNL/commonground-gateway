@@ -209,7 +209,7 @@ class ObjectEntityService
         // Check ID
         array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
 
-        if (isset($id) || $method == 'POST') {;
+        if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
         }

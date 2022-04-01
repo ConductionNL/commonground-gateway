@@ -9,9 +9,6 @@
 
 namespace App\Security;
 
-use App\Entity\Entity;
-use App\Entity\ObjectEntity;
-use App\Entity\Person;
 use App\Service\AuthenticationService;
 use App\Service\ObjectEntityService;
 use App\Service\ResponseService;
@@ -24,16 +21,13 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 {
