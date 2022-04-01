@@ -135,7 +135,7 @@ class ObjectEntityService
 
     public function getPersonObject(string $id, ?array $fields = null): array
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']); // todo cache this?
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'person']);
         if ($entity instanceof Entity) {
             return $this->getObject($entity, $id, $fields);
         }
@@ -145,7 +145,7 @@ class ObjectEntityService
 
     public function getOrganizationObject(string $id, ?array $fields = null): array
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'organization']); // todo cache this?
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function'=>'organization']);
         if ($entity instanceof Entity) {
             return $this->getObject($entity, $id, $fields);
         }

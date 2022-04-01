@@ -99,7 +99,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
             if (empty($person) && $this->commonGroundService->getComponent('cc')) {
                 $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
             } else {
-                $person = []; // todo?
+                $person = [];
             }
         }
 

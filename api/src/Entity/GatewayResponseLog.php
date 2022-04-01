@@ -168,14 +168,6 @@ class GatewayResponseLog
      */
     private $dateModified;
 
-    public function __construct()
-    {
-        //TODO: better way of defaulting dateCreated & dateModified with orm?
-        // (options CURRENT_TIMESTAMP or 0 does not work)
-        $now = new DateTime();
-        $this->setDateCreated($now);
-    }
-
     public function getId(): ?UuidInterface
     {
         return $this->id;

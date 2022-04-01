@@ -55,7 +55,7 @@ class ZZController extends AbstractController
             }
         }
 
-        // @todo exit here if we do not have an endpoint
+        // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
             $acceptType = $handlerService->getRequestType('accept');
             $response = new Response(

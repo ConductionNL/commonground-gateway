@@ -197,12 +197,6 @@ class ObjectEntity
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
-
-        //TODO: better way of defaulting dateCreated & dateModified with orm?
-        // (options CURRENT_TIMESTAMP or 0 does not work)
-        $now = new DateTime();
-        $this->setDateCreated($now);
-        $this->setDateModified($now);
     }
 
     public function getId(): ?UuidInterface
@@ -370,7 +364,7 @@ class ObjectEntity
         if (array_key_exists($attributeName, $errors) and !is_array($errors[$attributeName])) {
             $errors[$attributeName] = [$errors[$attributeName]];
         }
-        //TODO: check if error is already in array?
+        // Check if error is already in array?
         if (array_key_exists($attributeName, $errors)) {
             $errors[$attributeName][] = $error;
         } else {
