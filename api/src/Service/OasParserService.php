@@ -102,7 +102,8 @@ class OasParserService
         foreach ($response['content'] as $content) {
             if (isset($content['schema']['$ref'])){
                 $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
-                isset($replaceHalInfo['entityName']) && $entityNameToLinkTo = $this->replaceHalWithJsonEntity($entityNameToLinkTo);
+                isset($this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName']) ? $entityNameToLinkTo = $this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName'] : null;
+                var_dump($entityNameToLinkTo);
                 return $entityNameToLinkTo;
             }
         }
@@ -198,6 +199,7 @@ class OasParserService
         } else {
             $entityNameToLinkTo = $this->parseFirstContent($response);
         }
+
         if (isset($this->handlersToCreate[$entityNameToLinkTo])) {
             $this->handlersToCreate[$entityNameToLinkTo]['endpoints'][] = $endpoint;
             !isset($this->handlersToCreate[$entityNameToLinkTo]['methods']) && $this->handlersToCreate[$entityNameToLinkTo]['methods'] = [];
@@ -524,7 +526,7 @@ class OasParserService
         $handler->setName("{$entity->getName()} handler");
         $handler->setSequence(0);
         $handler->setConditions('{}');
-        isset($handler['methods']) &&$handler->setMethods($methods);
+        $methods && $handler->setMethods($methods);
         $handler->setEntity($entity);
 
         foreach($endpoints as $endpoint){
@@ -553,9 +555,6 @@ class OasParserService
             }
             $endpoints[] = $this->createEndpoint($path, $name, $schema, $collectionEntity);
         }
-        var_dump($path);
-
-        var_dump(count($endpoints));
         return $endpoints;
     }
 
@@ -595,7 +594,6 @@ class OasParserService
             if (isset($this->oas['components']['schemas'][$entityNameWithoutHal])) {
                 $entityInfo = $this->oas['components']['schemas'][$entityNameWithoutHal];
                 $entityName = $entityNameWithoutHal;
-
                 return ['entityName' => $entityName, 'entityInfo' => $entityInfo];
             }
         }
@@ -613,10 +611,10 @@ class OasParserService
         $handlers = [];
 
         foreach($this->handlersToCreate as $handlerToCreate){
-            if (!isset($handler['endpoints']) || !isset($handler['entity'])) {
+            if (!isset($handlerToCreate['endpoints']) || !isset($handlerToCreate['entity'])) {
                 continue;
             }
-            $handlers[] = $this->createHandler($handlerToCreate['endpoints'], $handlerToCreate['entity'], $handlerToCreate['method']);
+            $handlers[] = $this->createHandler($handlerToCreate['endpoints'], $handlerToCreate['entity'], $handlerToCreate['methods'] ?: []);
         }
 
         return $handlers;

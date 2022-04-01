@@ -181,6 +181,7 @@ class ParseDataService
      */
     public function loadData(?string $dataFile, string $oas): bool
     {
+        $this->bridgeValidationService();
         if (empty($dataFile)) {
             return false;
         }
@@ -188,13 +189,11 @@ class ParseDataService
         if ($data['collection'] !== $oas) {
             throw new Exception('OAS locations don\'t match');
         }
-
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['locationOAS' => $oas]);
         if (!$collection instanceof CollectionEntity) {
             throw new Exception('Collection not found');
         }
         $results = $this->parseData($data, $collection);
-
         $this->entityManager->flush();
         return true;
     }
