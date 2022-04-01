@@ -35,18 +35,14 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
     private $commonGroundService;
     private $router;
     private AuthenticationService $authenticationService;
-    private EntityManagerInterface $entityManager;
-    private ResponseService $responseService;
     private ObjectEntityService $objectEntityService;
 
-    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, AuthenticationService $authenticationService, EntityManagerInterface $entityManager, ResponseService $responseService, ObjectEntityService $objectEntityService)
+    public function __construct(ParameterBagInterface $params, CommonGroundService $commonGroundService, RouterInterface $router, AuthenticationService $authenticationService, ObjectEntityService $objectEntityService)
     {
         $this->params = $params;
         $this->commonGroundService = $commonGroundService;
         $this->router = $router;
         $this->authenticationService = $authenticationService;
-        $this->entityManager = $entityManager;
-        $this->responseService = $responseService;
         $this->objectEntityService = $objectEntityService;
     }
 
