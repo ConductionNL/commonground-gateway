@@ -476,7 +476,7 @@ class ValidaterService
         foreach ($attribute->getValidations() as $validation => $config) {
             // if we have no config or validation config == false continue without adding a new Rule.
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
-            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable'];
+            $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable', 'defaultValue'];
             // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
             // @TODO do something with validation pattern
             if (empty($config) || in_array($validation, $ignoredValidations) || $validation === 'pattern') {

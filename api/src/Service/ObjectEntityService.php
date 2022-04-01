@@ -117,7 +117,7 @@ class ObjectEntityService
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if ($object instanceof ObjectEntity) {
-            return $this->responseService->renderResult($object, $fields);
+            return $this->responseService->renderResult($object, $fields, true);
         }
 
         return [];
@@ -127,7 +127,7 @@ class ObjectEntityService
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
         if ($object instanceof ObjectEntity) {
-            return $this->responseService->renderResult($object, $fields);
+            return $this->responseService->renderResult($object, $fields, true);
         }
 
         return [];
@@ -153,7 +153,7 @@ class ObjectEntityService
         return [];
     }
 
-    public function getUserObjectEntity(string $username): array
+    public function getUserObjectEntity(string $username, ?array $fields = null): array
     {
         // Because inversedBy wil not set the UC->user->person when creating a person with a user in the gateway.
         // We need to do this in order to find the person of this user:
@@ -165,7 +165,7 @@ class ObjectEntityService
 
         $objects = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['username' => $username]);
         if (count($objects) == 1) {
-            $user = $this->responseService->renderResult($objects[0], null);
+            $user = $this->responseService->renderResult($objects[0], $fields, true);
             // This: will be false if a user has no rights to do get on a person object
             if (isset($user['person'])) {
                 return $user['person'];
@@ -209,7 +209,7 @@ class ObjectEntityService
         // Check ID
         array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
 
-        if (isset($id) || $method == 'POST') {
+        if (isset($id) || $method == 'POST') {;
             // todo: re-used old code for getting an objectEntity
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
         }

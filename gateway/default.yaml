@@ -86,6 +86,7 @@ App\Entity\Attribute:
         searchable: true
 #        immutable: true # todo BISC
         inversedBy: "@organization_subOrganizations"
+        defaultValue: "a1c8e0b6-2f78-480d-a9fb-9792142f4761"
     organization_subOrganizations:
         name: subOrganizations
         description: The sub-organizations of which this organization is the parent organization.
@@ -103,7 +104,7 @@ App\Entity\Attribute:
         object: "@address"
         cascade: true
         cascadeDelete: true
-    organization_telephone:
+    organization_telephones:
         name: telephones
         description: The telephone number of this organization.
         type: object
@@ -112,7 +113,7 @@ App\Entity\Attribute:
         object: "@telephone"
         cascade: true
         cascadeDelete: true
-    organization_email:
+    organization_emails:
         name: emails
         description: The email address of this organization.
         type: object
@@ -584,16 +585,60 @@ App\Entity\ObjectEntity:
         id: a1c8e0b6-2f78-480d-a9fb-9792142f4761
 #        uri: "http://localhost/api/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
         entity: "@organization"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
 #        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        
+    # Default organization email
+    defaultOrganization_email:
+        entity: "@email"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        
+    # Default organization telephone
+    defaultOrganization_telephone:
+        entity: "@telephone"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        
+    # Default organization address
+    defaultOrganization_address:
+        entity: "@address"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
     
     # Default person
     defaultPerson:
         id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
 #        uri: "http://localhost/api/people/d2a24edf-6ced-40a2-8e7c-56803f4ce3f5"
         entity: "@person"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
 #        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+        
+    # Default organization email
+    defaultPerson_email:
+        entity: "@email"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+    
+    # Default organization telephone
+    defaultPerson_telephone:
+        entity: "@telephone"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+    
+    # Default organization address
+    defaultPerson_address:
+        entity: "@address"
+        organization: "http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
 
 # Values
 App\Entity\Value:
@@ -607,6 +652,69 @@ App\Entity\Value:
         attribute: "@organization_description"
         stringValue: the default organization
         objectEntity: "@defaultOrganization"
+        
+    defaultOrganization_emails:
+        attribute: "@organization_emails"
+        objects: ["@defaultOrganization_email"]
+        objectEntity: "@defaultOrganization"
+        
+    defaultOrganization_telephones:
+        attribute: "@organization_telephones"
+        objects: ["@defaultOrganization_telephone"]
+        objectEntity: "@defaultOrganization"
+        
+    defaultOrganization_addresses:
+        attribute: "@organization_addresses"
+        objects: ["@defaultOrganization_address"]
+        objectEntity: "@defaultOrganization"
+        
+    # Default organization email Values
+    defaultOrganization_email_name:
+        attribute: "@email_name"
+        stringValue: email for default organization
+        objectEntity: "@defaultOrganization_email"
+    
+    defaultOrganization_email_email:
+        attribute: "@email_email"
+        stringValue: default-organization@test.com
+        objectEntity: "@defaultOrganization_email"
+        
+    # Default organization telephone Values
+    defaultOrganization_telephone_name:
+        attribute: "@telephone_name"
+        stringValue: telephone for default organization
+        objectEntity: "@defaultOrganization_telephone"
+    
+    defaultOrganization_telephone_telephone:
+        attribute: "@telephone_telephone"
+        stringValue: 0612345678
+        objectEntity: "@defaultOrganization_telephone"
+        
+    # Default organization address Values
+    defaultOrganization_address_name:
+        attribute: "@address_name"
+        stringValue: address for default organization
+        objectEntity: "@defaultOrganization_address"
+    
+    defaultOrganization_address_street:
+        attribute: "@address_street"
+        stringValue: somestreet
+        objectEntity: "@defaultOrganization_address"
+        
+    defaultOrganization_address_houseNumber:
+        attribute: "@address_houseNumber"
+        stringValue: 42
+        objectEntity: "@defaultOrganization_address"
+        
+    defaultOrganization_address_postalCode:
+        attribute: "@address_postalCode"
+        stringValue: 6996
+        objectEntity: "@defaultOrganization_address"
+        
+    defaultOrganization_address_locality:
+        attribute: "@address_locality"
+        stringValue: Utrecht
+        objectEntity: "@defaultOrganization_address"
         
     # Default person Values
     defaultPerson_givenName:
@@ -623,64 +731,66 @@ App\Entity\Value:
         attribute: "@person_familyName"
         stringValue: Doe
         objectEntity: "@defaultPerson"
+        
+    defaultPerson_emails:
+        attribute: "@person_emails"
+        objects: ["@defaultPerson_email"]
+        objectEntity: "@defaultPerson"
+    
+    defaultPerson_telephones:
+        attribute: "@person_telephones"
+        objects: ["@defaultPerson_telephone"]
+        objectEntity: "@defaultPerson"
+    
+    defaultPerson_addresses:
+        attribute: "@person_addresses"
+        objects: ["@defaultPerson_address"]
+        objectEntity: "@defaultPerson"
+        
+    # Default person email Values
+    defaultPerson_email_name:
+        attribute: "@email_name"
+        stringValue: email for default person
+        objectEntity: "@defaultPerson_email"
 
-# todo: turn these into ObjectEntities ^^^
-#App\Entity\Organization:
-#    defaultOrganization:
-##        id: <\Ramsey\Uuid\Uuid::fromString('a1c8e0b6-2f78-480d-a9fb-9792142f4761')>
-#        id: a1c8e0b6-2f78-480d-a9fb-9792142f4761
-#        name: default organization
-#        description: the default organization
-#        emails:
-#            - '@defaultOrganization_email'
-#        telephones:
-#            - '@defaultOrganization_telephone'
-#        addresses:
-#            - '@defaultOrganization_address'
-#
-#App\Entity\Person:
-#    defaultPerson:
-##        id: <\Ramsey\Uuid\Uuid::fromString('d2a24edf-6ced-40a2-8e7c-56803f4ce3f5')>
-#        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
-#        givenName: John
-#        additionalName: Allen
-#        familyName: Doe
-#        emails:
-#            - '@defaultPerson_email'
-#        telephones:
-#            - '@defaultPerson_telephone'
-#        addresses:
-#            - '@defaultPerson_address'
-#        
-#App\Entity\Email:
-#    defaultOrganization_email:
-#        name: email for default organization
-#        email: default-organization@test.com
-#        
-#    defaultPerson_email:
-#        name: email for default person
-#        email: default-person@test.com
-#
-#App\Entity\Address:
-#    defaultOrganization_address:
-#        name: address for default organization
-#        street: somestreet
-#        houseNumber: 42
-#        postalCode: 6996
-#        locality: Utrecht
-#        
-#    defaultPerson_address:
-#        name: address for default person
-#        street: someotherstreet
-#        houseNumber: 666
-#        postalCode: 1234
-#        locality: Amsterdam
-#
-#App\Entity\Telephone:
-#    defaultOrganization_telephone:
-#        name: telephone for default organization
-#        telephone: 0612345678
-#    
-#    defaultPerson_telephone:
-#        name: telephone for default person
-#        telephone: 0687654321
+    defaultPerson_email_email:
+        attribute: "@email_email"
+        stringValue: default-person@test.com
+        objectEntity: "@defaultPerson_email"
+
+    # Default person telephone Values
+    defaultPerson_telephone_name:
+        attribute: "@telephone_name"
+        stringValue: telephone for default person
+        objectEntity: "@defaultPerson_telephone"
+
+    defaultPerson_telephone_telephone:
+        attribute: "@telephone_telephone"
+        stringValue: 0687654321
+        objectEntity: "@defaultPerson_telephone"
+
+    # Default person address Values
+    defaultPerson_address_name:
+        attribute: "@address_name"
+        stringValue: address for default person
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_street:
+        attribute: "@address_street"
+        stringValue: someotherstreet
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_houseNumber:
+        attribute: "@address_houseNumber"
+        stringValue: 666
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_postalCode:
+        attribute: "@address_postalCode"
+        stringValue: 1234
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_locality:
+        attribute: "@address_locality"
+        stringValue: Amsterdam
+        objectEntity: "@defaultPerson_address"
