@@ -9,7 +9,6 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Yaml\Yaml;
 
 class ParseDataService
@@ -26,8 +25,8 @@ class ParseDataService
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param ValidationService $validationService
-     * @param EavService $eavService
+     * @param ValidationService      $validationService
+     * @param EavService             $eavService
      */
     public function __construct(EntityManagerInterface $entityManager, ValidationService $validationService, EavService $eavService)
     {
@@ -38,10 +37,11 @@ class ParseDataService
     }
 
     /**
-     * Parses a filename to get the extension
+     * Parses a filename to get the extension.
      *
-     * @param   string  $dataFile   The filename to parse
-     * @return  string              The extension of the filename
+     * @param string $dataFile The filename to parse
+     *
+     * @return string The extension of the filename
      */
     private function getFiletypeOnExtension(string $dataFile): string
     {
@@ -57,11 +57,14 @@ class ParseDataService
     }
 
     /**
-     * Tries to decipher what kind of data is in the body of a response
-     * @param   Response    $response   The response from downloading the external data file
-     * @param   string      $dataFile   The filename of the external data file, used if the filetype cannot be decided from the header
-     * @return  string                  The file type in extension style
-     * @throws  Exception               Thrown if format is not supported
+     * Tries to decipher what kind of data is in the body of a response.
+     *
+     * @param Response $response The response from downloading the external data file
+     * @param string   $dataFile The filename of the external data file, used if the filetype cannot be decided from the header
+     *
+     * @throws Exception Thrown if format is not supported
+     *
+     * @return string The file type in extension style
      */
     private function decideFormat(Response $response, string $dataFile): string
     {
@@ -92,11 +95,13 @@ class ParseDataService
     }
 
     /**
-     * Downloads the datafile and parses it into the format expected by the parser
+     * Downloads the datafile and parses it into the format expected by the parser.
      *
-     * @param   string      $dataFile   The location of the file to parse
-     * @return  array                   The data in the data format for the parser
-     * @throws  Exception               Thrown if the format of the datafile is not yet supported
+     * @param string $dataFile The location of the file to parse
+     *
+     * @throws Exception Thrown if the format of the datafile is not yet supported
+     *
+     * @return array The data in the data format for the parser
      */
     public function findData(string $dataFile): array
     {
@@ -118,12 +123,14 @@ class ParseDataService
     }
 
     /**
-     * Creates objects related to an entity
+     * Creates objects related to an entity.
      *
-     * @param   Entity  $entity The entity the objects should relate to
-     * @param   array   $schema The data in the object
-     * @return  array           The resulting objects
-     * @throws  Exception
+     * @param Entity $entity The entity the objects should relate to
+     * @param array  $schema The data in the object
+     *
+     * @throws Exception
+     *
+     * @return array The resulting objects
      */
     public function createObjects(Entity $entity, array $schema): array
     {
@@ -140,12 +147,14 @@ class ParseDataService
     }
 
     /**
-     * Loads objects into the database that relate to an entity
+     * Loads objects into the database that relate to an entity.
      *
-     * @param   array               $data               The data to load
-     * @param   CollectionEntity    $collectionEntity   The collectionEntity the entities should be found in
-     * @return  array                                   The resulting objects
-     * @throws  Exception                               Thrown if objects cannot be created
+     * @param array            $data             The data to load
+     * @param CollectionEntity $collectionEntity The collectionEntity the entities should be found in
+     *
+     * @throws Exception Thrown if objects cannot be created
+     *
+     * @return array The resulting objects
      */
     public function parseData(array $data, CollectionEntity $collectionEntity): array
     {
@@ -160,9 +169,9 @@ class ParseDataService
     }
 
     /**
-     * Bridges some functionality in the validationService that cannot be deduced
+     * Bridges some functionality in the validationService that cannot be deduced.
      *
-     * @return  void
+     * @return void
      */
     private function bridgeValidationService(): void
     {
@@ -173,11 +182,14 @@ class ParseDataService
     }
 
     /**
-     * Loads data from a specified location
-     * @param   string|null     $dataFile   The location of the datafile
-     * @param   string          $oas        The OpenAPI Specification the datafile relates to
-     * @return  bool                        Whether or not the datafile has been loaded
-     * @throws  Exception                   Thrown if OAS locations don't match or no collection is available in the database for the specified oas
+     * Loads data from a specified location.
+     *
+     * @param string|null $dataFile The location of the datafile
+     * @param string      $oas      The OpenAPI Specification the datafile relates to
+     *
+     * @throws Exception Thrown if OAS locations don't match or no collection is available in the database for the specified oas
+     *
+     * @return bool Whether or not the datafile has been loaded
      */
     public function loadData(?string $dataFile, string $oas): bool
     {
@@ -195,6 +207,7 @@ class ParseDataService
         }
         $results = $this->parseData($data, $collection);
         $this->entityManager->flush();
+
         return true;
     }
 }
