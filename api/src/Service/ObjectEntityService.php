@@ -212,6 +212,9 @@ class ObjectEntityService
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
             $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+            if ($object instanceof ObjectEntity) {
+                $this->session->set('object', $object->getId()->toString());
+            }
         }
 
         // throw error if get/put/patch/delete and no id
@@ -242,7 +245,7 @@ class ObjectEntityService
                     if ($parameters = $this->session->get('parameters')) {
                         if (array_key_exists('path', $parameters)) {
                             foreach ($parameters['path'] as $key => $part) {
-                                if ($key[0] === '{' && $key[strlen($key) - 1] === '}') {
+                                if ($key[0] === '{' && $key[strlen($key) - 1] === '}' && $part !== null) {
                                     $key = substr($key, 1, -1);
                                     $filters[$key] = $part;
                                 } else {
@@ -258,6 +261,9 @@ class ObjectEntityService
                         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
                         if ($endpoint->getOperationType() === 'item' && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                             $data = $data['results'][0];
+                            if (isset($data['id']) && Uuid::isValid($data['id'])) {
+                                $this->session->set('object', $data['id']);
+                            }
                         } elseif ($endpoint->getOperationType() === 'item') {
                             throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
                         }

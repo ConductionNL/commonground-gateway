@@ -10,330 +10,376 @@ use App\Entity\Gateway;
 use App\Entity\Handler;
 use App\Entity\Property;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
 use Symfony\Component\Yaml\Yaml;
 
-/*
- * This servers takes an external oas document and turns that into an gateway + eav structure
+/**
+ * This service takes an external OpenAPI v3 specification and turns that into a gateway + eav structure.
  */
 class OasParserService
 {
     private EntityManagerInterface $entityManager;
+    private Client $client;
 
+    private array $handlersToCreate;
+    private array $oas;
+
+    /**
+     * @param EntityManagerInterface $entityManager
+     */
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
-        $this->entityRepo = $this->entityManager->getRepository('App:Entity');
-        $this->handlerRepo = $this->entityManager->getRepository('App:Handler');
-        $this->endpointRepo = $this->entityManager->getRepository('App:Endpoint');
+        $this->client = new Client([]);
+
+        $this->handlersToCreate = [];
+        $this->oas = [];
     }
 
     /**
-     * This function reads redoc and parses it into doctrine objects.
+     * Checks if an array is associative.
+     *
+     * @param array $array The array to check
+     *
+     * @return bool Whether or not the array is associative
      */
-    public function parseRedoc(array $redoc, CollectionEntity $collection)
+    private function isAssociative(array $array): bool
     {
-        // Persist Entities and Attributes
-        $objectsToCreateLater = $this->persistSchemasAsEntities($redoc, $collection);
-
-        // Persist Endpoints and its Properties
-        $objectsToCreateLater['handlers'] = $this->persistPathsAsEndpoints($redoc, $collection, $objectsToCreateLater['handlers']);
-
-        // Create Attributes that are references to other Entities
-        foreach ($objectsToCreateLater['attributes'] as $attribute) {
-            $newAttribute = new Attribute();
-            $newAttribute->setName($attribute['name']);
-            $newAttribute->setSearchable(true);
-            $parentEntity = $this->entityRepo->find($attribute['parentEntityId']);
-            isset($parentEntity) && $newAttribute->setEntity($parentEntity);
-            $newAttribute->setCascade(true);
-
-            $entityToLinkTo = $this->entityRepo->findByName($attribute['entityNameToLinkTo']);
-            isset($entityToLinkTo[0]) && $newAttribute->setType('object') && $newAttribute->setObject($entityToLinkTo[0]) && $newAttribute->setCascade(true);
-
-            // If we have set attribute.entity and attribute.object, persist attribute
-            $newAttribute->getObject() !== null && $newAttribute->getEntity() !== null && $this->entityManager->persist($newAttribute);
+        if ([] === $array) {
+            return false;
         }
 
-        $this->entityManager->flush();
-
-        // Create Handlers between the Entities and Endpoints
-        foreach ($objectsToCreateLater['handlers'] as $entityName => $handler) {
-
-            // If we dont have endpoints or entity continue foreach
-            if (!isset($handler['endpoints']) || !isset($handler['entity'])) {
-                continue;
-            }
-
-            $newHandler = new Handler();
-            $newHandler->setName($entityName.' handler');
-            $newHandler->setSequence(0);
-            $newHandler->setConditions('{}');
-            isset($handler['methods']) && $newHandler->setMethods(array_unique($handler['methods']));
-            $newHandler->setEntity($handler['entity']);
-            foreach ($handler['endpoints'] as $endpoint) {
-                $newHandler->addEndpoint($endpoint);
-            }
-
-            $this->entityManager->persist($newHandler);
-        }
-
-        // Execute sql to database
-        $this->entityManager->flush();
+        return array_keys($array) !== range(0, count($array) - 1);
     }
 
     /**
-     * This function reads redoc and persists it into Entity objects.
+     * Checks the type of data the response contains, and parses it accordingly into an array.
+     *
+     * @param Response $response The response of the request made to find the data
+     * @param string   $url      The url the request was made to
+     *
+     * @return array The resulting OpenAPI Specification as array
      */
-    private function persistSchemasAsEntities(array $redoc, CollectionEntity $collection): array
+    private function getDataFromResponse(Response $response, string $url): array
     {
-        // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
-        $attributesToSetLaterAsObject = [];
-        $handlersToSetLaterAsObject = [];
-
-        // To prevent duplicated Entities
-        $entitiesAlreadyIterated = [];
-
-        foreach ($redoc['components']['schemas'] as $entityName => $entityInfo) {
-            // if ($entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHal' && $entityName !== 'IngeschrevenPersoonHalBasis'  && $entityName !== 'IngeschrevenPersoon') continue;
-
-            // If this schema is not a valid Entity to persist continue foreach
-            if ((!isset($entityInfo['type']) && !isset($entityInfo['allOf'])) || (isset($entityInfo['type']) && $entityInfo['type'] !== 'object')) {
-                continue;
+        if ($response->hasHeader('Content-Type')) {
+            switch ($response->getHeader('Content-Type')) {
+                case 'application/json':
+                    return json_decode($response->getBody()->getContents(), true);
+                case 'application/x-yaml':
+                    return Yaml::parse($response->getBody()->getContents());
             }
-
-            // Check for json schema instead of Hal
-            $replaceHalInfo = $this->replaceHalWithJsonEntity($entityName, $redoc);
-            isset($replaceHalInfo['entityName']) && $entityName = $replaceHalInfo['entityName'];
-            isset($replaceHalInfo['entityInfo']) && $entityInfo = $replaceHalInfo['entityInfo'];
-
-            // If schema is already iterated continue foreach
-            if (in_array($entityName, $entitiesAlreadyIterated)) {
-                continue;
-            }
-
-            // Create Entity with entityName
-            $newEntity = new Entity();
-            $newEntity->setName($entityName);
-            $newEntity->addCollection($collection);
-            $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
-
-            // Persist entity
-            $this->entityManager->persist($newEntity);
-
-            $handlersToSetLaterAsObject[$entityName]['entity'] = $newEntity;
-
-            // Loop through allOf and create Attributes
-            if (isset($entityInfo['allOf'])) {
-                foreach ($entityInfo['allOf'] as $propertyName => $property) {
-                    $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
-                }
-            }
-
-            // Loop through properties and create Attributes
-            if (isset($entityInfo['properties'])) {
-                foreach ($entityInfo['properties'] as $propertyName => $property) {
-                    $attributesToSetLaterAsObject = $this->createAttribute($property, $propertyName, $newEntity, $attributesToSetLaterAsObject);
-                }
-            }
-
-            $entitiesAlreadyIterated[] = $entityName;
         }
-
-        $this->entityManager->flush();
-
-        return ['attributes' => $attributesToSetLaterAsObject, 'handlers' => $handlersToSetLaterAsObject];
+        if (strpos($url, '.json') !== false) {
+            return json_decode($response->getBody()->getContents(), true);
+        } else {
+            return Yaml::parse($response->getBody()->getContents());
+        }
     }
 
     /**
-     * This function creates a Attribute from a OAS property.
+     * Retrieves an external OpenAPI Specification.
+     *
+     * @param string $url The URL of the external OAS
+     *
+     * @return array The parsed OAS
      */
-    private function createAttribute(array $property, string $propertyName, Entity $newEntity, array $attributesToSetLaterAsObject): array
+    private function getExternalOAS(string $url): array
     {
-        // Check reference to other object
-        if (isset($property['$ref'])) {
-            $attrToSetLater = [];
-            $attrToSetLater['entityNameToLinkTo'] = substr($property['$ref'], strrpos($property['$ref'], '/') + 1);
-            if (is_numeric($propertyName)) {
-                $attrToSetLater['name'] = lcfirst($attrToSetLater['entityNameToLinkTo']);
-            } else {
-                $attrToSetLater['name'] = $propertyName;
-            }
-            $attrToSetLater['parentEntityId'] = $newEntity->getId();
-            $attributesToSetLaterAsObject[] = $attrToSetLater;
+        $response = $this->client->get($url);
 
-            // Continue to next iteration as this attribute will be saved later.
-            return $attributesToSetLaterAsObject;
+        return $this->getDataFromResponse($response, $url);
+    }
+
+    /**
+     * Parse the content description of a response for which no application/json version exists.
+     *
+     * @param array $response The response defined in the OAS
+     *
+     * @return string|null The entity the content belongs to
+     */
+    private function parseFirstContent(array $response): ?string
+    {
+        foreach ($response['content'] as $content) {
+            if (isset($content['schema']['$ref'])) {
+                $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
+                isset($this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName']) ? $entityNameToLinkTo = $this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName'] : null;
+                var_dump($entityNameToLinkTo);
+
+                return $entityNameToLinkTo;
+            }
         }
 
-        $newAttribute = new Attribute();
-        $newAttribute->setName($propertyName);
+        return null;
+    }
 
-        // Default to true for now
-        $newAttribute->setSearchable(true);
+    /**
+     * Creates an endpoint property.
+     *
+     * @param array    $oasParameter           The parameter in the OAS that has to be made into a property
+     * @param Endpoint $endpoint               The endpoint the property belongs to
+     * @param int      $createdPropertiesCount The number of properties created until this moment
+     *
+     * @return Property The resulting property
+     */
+    private function createProperty(array $oasParameter, Endpoint $endpoint, int $createdPropertiesCount): Property
+    {
+        $propertyObject = new Property();
+        $propertyObject->setName($oasParameter['name']);
+        isset($oasParameter['description']) && $propertyObject->setDescription($oasParameter['description']);
+        isset($oasParameter['required']) && $propertyObject->setRequired($oasParameter['required']);
+        $propertyObject->setInType($oasParameter['in']);
+        $propertyObject->setSchemaArray($oasParameter['schema']);
 
-        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $newAttribute->setRequired(true);
-        isset($property['description']) && $newAttribute->setDescription($property['description']);
-        isset($property['type']) ? $newAttribute->setType($property['type']) : $newAttribute->setType('string');
+        $pathPropertiesCount = 0;
+        foreach ($endpoint->getProperties() as $property) {
+            $property->getInType() === 'path' && $pathPropertiesCount++;
+        }
+        $propertyObject->setPathOrder($pathPropertiesCount + $createdPropertiesCount);
+
+        return $propertyObject;
+    }
+
+    /**
+     * Sets the schema of a flat Attribute.
+     *
+     * @param array     $schema    The defining schema
+     * @param Attribute $attribute The attribute to set the schema for
+     *
+     * @return Attribute The resulting attribute with resulting schema
+     */
+    private function setSchemaForAttribute(array $schema, Attribute $attribute): Attribute
+    {
+        isset($schema['type']) ? $attribute->setType($schema['type']) : $attribute->setType('string');
 
         // If format == date-time set type: datetime
-        isset($property['format']) && $property['format'] === 'date-time' && $newAttribute->setType('datetime');
-        isset($property['format']) && $property['format'] !== 'date-time' && $newAttribute->setFormat($property['format']);
-        isset($property['readyOnly']) && $newAttribute->setReadOnly($property['readOnly']);
-        isset($property['maxLength']) && $newAttribute->setMaxLength($property['maxLength']);
-        isset($property['minLength']) && $newAttribute->setMinLength($property['minLength']);
-        isset($property['enum']) && $newAttribute->setEnum($property['enum']);
-        isset($property['maximum']) && $newAttribute->setMaximum($property['maximum']);
-        isset($property['minimum']) && $newAttribute->setMinimum($property['minimum']);
+        isset($schema['format']) && $schema['format'] === 'date-time' && $attribute->setType('datetime');
+        isset($schema['format']) && $schema['format'] !== 'date-time' && $attribute->setFormat($schema['format']);
+        isset($schema['readyOnly']) && $attribute->setReadOnly($schema['readOnly']);
+        isset($schema['maxLength']) && $attribute->setMaxLength($schema['maxLength']);
+        isset($schema['minLength']) && $attribute->setMinLength($schema['minLength']);
+        isset($schema['enum']) && $attribute->setEnum($schema['enum']);
+        isset($schema['maximum']) && $attribute->setMaximum($schema['maximum']);
+        isset($schema['minimum']) && $attribute->setMinimum($schema['minimum']);
 
         // @TODO do something with pattern
-        // isset($property['pattern']) && $newAttribute->setPattern($property['pattern']);
-        isset($property['readOnly']) && $newAttribute->setPattern($property['readOnly']);
+        // isset($property['pattern']) && $attribute->setPattern($property['pattern']);
+        isset($schema['readOnly']) && $attribute->setPattern($schema['readOnly']);
 
-        $newAttribute->setEntity($newEntity);
-
-        // Persist attribute
-        $this->entityManager->persist($newAttribute);
-
-        return $attributesToSetLaterAsObject;
+        return $attribute;
     }
 
     /**
-     * This function reads redoc and persists it into Endpoints objects.
+     * Gets the schema for an object from an internal reference.
+     *
+     * @param string $ref  The reference to find
+     * @param array  $data The oas to find the reference in
+     *
+     * @return array The schema found
      */
-    private function persistPathsAsEndpoints(array $redoc, CollectionEntity $collection, array $handlersToCreateLater): array
+    private function getSchemaFromReferencedLocation(string $ref, array $data): array
     {
-        foreach ($redoc['paths'] as $pathName => $path) {
-            // if ($pathName !== '/ingeschrevenpersonen/{burgerservicenummer}') continue;
-
-            foreach ($path as $methodName => $method) {
-                $newEndpoint = new Endpoint();
-                $newEndpoint->addCollection($collection);
-                $newEndpoint->setName($pathName.' '.$methodName);
-                $pathParts = explode('/', $pathName);
-                $pathArray = [];
-                foreach ($pathParts as $key => $part) {
-                    $pathArray[$key] = $part;
-                }
-                $newEndpoint->setPath(array_values(array_filter($pathArray)));
-                isset($method['description']) && $newEndpoint->setDescription($method['description']);
-                isset($method['tags']) && $newEndpoint->setTags($method['tags']);
-
-                // Set pathRegex
-                $pathRegex = '#^(';
-                foreach ($pathParts as $key => $part) {
-                    if (empty($part)) {
-                        continue;
-                    }
-                    substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
-                }
-                $pathRegex .= ')$#';
-                $newEndpoint->setPathRegex($pathRegex);
-
-                // Checks pathName if there are Properties that need to be created and sets Endpoint.operationType
-                $createdPropertiesInfo = $this->createEndpointsProperties($redoc, $pathName, $newEndpoint);
-
-                $newEndpoint->setOperationType($createdPropertiesInfo['operationType']);
-
-                $this->entityManager->persist($newEndpoint);
-
-                foreach ($method['responses'] as $response) {
-                    foreach ($response['content'] as $content) {
-
-                        // Use json definition
-                        if (isset($response['content']['application/json'])) {
-                            $entityNameToLinkTo = substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1);
-                            if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
-                                $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
-                                !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
-                                !in_array($method, $handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'][] = $methodName;
-                            }
-                            break;
-                        }
-
-                        // Else use first definition found
-                        if (isset($content['schema']['$ref'])) {
-                            $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
-
-                            // Replace Hal schema with normal schema
-                            $replaceHalInfo = $this->replaceHalWithJsonEntity($entityNameToLinkTo, $redoc);
-                            isset($replaceHalInfo['entityName']) && $entityNameToLinkTo = $replaceHalInfo['entityName'];
-
-                            if (isset($handlersToCreateLater[$entityNameToLinkTo])) {
-                                $handlersToCreateLater[$entityNameToLinkTo]['endpoints'][] = $newEndpoint;
-                                !isset($handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'] = [];
-                                !in_array($method, $handlersToCreateLater[$entityNameToLinkTo]['methods']) && $handlersToCreateLater[$entityNameToLinkTo]['methods'][] = $methodName;
-                            }
-                        }
-                        break;
-                    }
-                    break;
-                }
+        $ref = explode('/', $ref);
+        foreach ($ref as $location) {
+            if ($location && $location !== '#') {
+                $data = $data[$location];
             }
         }
 
-        // Execute sql to database
-        $this->entityManager->flush();
-
-        return $handlersToCreateLater;
+        return $data;
     }
 
     /**
-     * This function reads redoc and persists it into Properties of an Endpoint.
+     * Parses content for responses in the OpenAPI Specification.
      *
-     * @return string Endpoint.operationType based on if the last Property is a identifier or not.
+     * @param array    $response   The response the content relates to
+     * @param array    $method     The HTTP method of the response
+     * @param string   $methodName The name of the HTTP method of the response
+     * @param Endpoint $endpoint   The endpoint the response relates to
      */
-    private function createEndpointsProperties(array $redoc, string $pathName, Endpoint $newEndpoint): array
+    private function parseContent(array $response, array $method, string $methodName, Endpoint $endpoint): void
     {
-        // Check for subpaths and variables
-        $partsOfPath = array_filter(explode('/', $pathName));
-        $endpointOperationType = 'collection';
+        if (isset($response['content']['application/json'])) {
+            $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) :
+                substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1);
+        } else {
+            $entityNameToLinkTo = $this->parseFirstContent($response);
+        }
 
+        if (isset($this->handlersToCreate[$entityNameToLinkTo])) {
+            $this->handlersToCreate[$entityNameToLinkTo]['endpoints'][] = $endpoint;
+            !isset($this->handlersToCreate[$entityNameToLinkTo]['methods']) && $this->handlersToCreate[$entityNameToLinkTo]['methods'] = [];
+            !in_array($method, $this->handlersToCreate[$entityNameToLinkTo]['methods']) && $this->handlersToCreate[$entityNameToLinkTo]['methods'][] = $methodName;
+        }
+    }
+
+    /**
+     * Creates a special type of property for an endpoint.
+     *
+     * @param string   $property               The name of the property
+     * @param Endpoint $endpoint               The endpoint the property belongs to
+     * @param int      $createdPropertiesCount The properties created until this point
+     *
+     * @return Property|null The created property
+     */
+    private function createSpecialProperty(string $property, Endpoint $endpoint, int &$createdPropertiesCount): ?Property
+    {
+        // Check if property exist as parameter in the OAS
+        if (isset($this->oas['components']['parameters'][$property])) {
+            $oasParameter = $this->oas['components']['parameters'][$property];
+
+            $propertyRepo = $this->entityManager->getRepository('App:Property');
+            $propertyObject = $propertyRepo->findOneBy(['name' => $oasParameter['name']]) ? $propertyRepo->findOneBy(['name' => $oasParameter['name']]) : $this->createProperty($oasParameter, $endpoint, $createdPropertiesCount);
+
+            // Set Endpoint and persist Property
+            $propertyObject->setEndpoint($endpoint);
+            $this->entityManager->persist($propertyObject);
+            $createdPropertiesCount++;
+
+            return $propertyObject;
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a 'flat' Attribute (being not an object) from an OAS property.
+     *
+     * @param string $propertyName The name of the property
+     * @param array  $schema       The definition of the property
+     * @param Entity $parentEntity The entity the attribute belongs to
+     * @param bool   $multiple     Whether the attribute should allow for multiple values (i.e. is an array of values)
+     *
+     * @return Attribute The resulting attribute
+     */
+    private function createFlatAttribute(string $propertyName, array $schema, Entity $parentEntity, bool $multiple = false): Attribute
+    {
+        $attribute = new Attribute();
+        $attribute->setName($propertyName);
+
+        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $attribute->setRequired(true);
+        isset($schema['description']) && $attribute->setDescription($schema['description']);
+
+        $attribute = $this->setSchemaForAttribute($schema, $attribute);
+        $attribute->setMultiple($multiple);
+        $attribute->setEntity($parentEntity);
+
+        return $attribute;
+    }
+
+    /**
+     * Creates an 'array' Attribute (either an array of objects, a free-form array of an array of defined types) from an OAS property.
+     *
+     * @param string           $propertyName The name of the property
+     * @param array            $schema       The schema of the property
+     * @param Entity           $parentEntity The entity the attribute relates to
+     * @param CollectionEntity $collection   The collection any created entity should relate to
+     *
+     * @throws Exception Thrown when getEntity throws an exception
+     *
+     * @return Attribute The resulting Attribute
+     */
+    private function createArrayAttribute(string $propertyName, array $schema, Entity $parentEntity, CollectionEntity $collection): Attribute
+    {
+        if (isset($schema['items']) && isset($schema['items']['$ref'])) {
+            $itemSchema = $this->getSchemaFromRef($schema['items']['$ref'], $targetEntity);
+        } elseif (isset($schema['items'])) {
+            $itemSchema = $schema['items'];
+        } else {
+            return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
+        }
+        if (isset($itemSchema['type']) && $itemSchema['type'] == 'object') {
+            return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
+        } else {
+            return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
+        }
+    }
+
+    /**
+     * Creates an attribute referencing another entity.
+     *
+     * @param string $propertyName The name of the attribute
+     * @param Entity $parentEntity The entity the attribute is in
+     * @param Entity $targetEntity The entity the attribute references
+     * @param bool   $multiple     Whether the attribute should allow for multiple values (i.e. is an array of values)
+     *
+     * @return Attribute The resulting attribute
+     */
+    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity, bool $multiple = false): Attribute
+    {
+        $newAttribute = new Attribute();
+        $newAttribute->setName($propertyName);
+        $newAttribute->setEntity($parentEntity);
+        $newAttribute->setCascade(true);
+        $newAttribute->setMultiple($multiple);
+
+        $newAttribute->setObject($targetEntity);
+
+        return $newAttribute;
+    }
+
+    /**
+     * Gets a schema from a reference in the OAS specification, be it internal or external.
+     *
+     * @param string      $ref          The reference in the original OAS specification
+     * @param string|null $targetEntity The name of the referenced entity
+     *
+     * @return array The resulting schema
+     */
+    private function getSchemaFromRef(string $ref, ?string &$targetEntity = ''): array
+    {
+        $targetEntity = substr($ref, strrpos($ref, '/') + 1);
+        if (strpos($ref, 'https://') !== false || strpos($ref, 'http://') !== false) {
+            $data = $this->getExternalOAS($ref);
+            $ref = explode('#', $ref)[1];
+        } else {
+            $data = $this->oas;
+        }
+
+        return $this->getSchemaFromReferencedLocation($ref, $data);
+    }
+
+    /**
+     * Parses responses from the OAS.
+     *
+     * @param array    $method     The schema that contains the responses
+     * @param string   $methodName The name of the method
+     * @param Endpoint $endpoint   The endpoint the response relates to
+     */
+    private function parseResponses(array $method, string $methodName, Endpoint $endpoint): void
+    {
+        foreach ($method['responses'] as $response) {
+            if (!isset($response['content'])) {
+                continue;
+            }
+            $this->parseContent($response, $method, $methodName, $endpoint);
+            break;
+        }
+    }
+
+    /**
+     * This function reads OpenAPI Specification and persists it into Properties of an Endpoint.
+     *
+     * @param array    $path     The exploded path of the endpoint
+     * @param Endpoint $endpoint The endpoint the path relates to
+     *
+     * @return array The resulting endpoint properties
+     */
+    private function createEndpointsProperties(array $path, Endpoint $endpoint): array
+    {
+        $endpointOperationType = 'collection';
         $createdPropertiesCount = 0;
         $createdProperties = [];
-
-        foreach ($partsOfPath as $property) {
-            // If we have a variable in a path (thats not id or uuid) search for parameter and create Property
+        foreach ($path as $property) {
             if ($property !== '{id}' && $property !== '{uuid}' && $property[0] === '{') {
                 $endpointOperationType = 'item';
-
                 // Remove {} from property
-                $property = trim($property, '{');
-                $property = trim($property, '}');
-
-                // Check if property exist as parameter in the OAS
-                if (isset($redoc['components']['parameters'][$property])) {
-                    $oasParameter = $redoc['components']['parameters'][$property];
-
-                    // Search if Property already exists
-                    $propertyRepo = $this->entityManager->getRepository('App:Property');
-                    $propertyToPersist = $propertyRepo->findOneBy([
-                        'name' => $oasParameter['name'],
-                    ]);
-
-                    // Create new Property if we haven't found one
-                    if (!isset($propertyToPersist)) {
-                        $propertyToPersist = new Property();
-                        $propertyToPersist->setName($oasParameter['name']);
-                        isset($oasParameter['description']) && $propertyToPersist->setDescription($oasParameter['description']);
-                        isset($oasParameter['required']) && $propertyToPersist->setRequired($oasParameter['required']);
-                        $propertyToPersist->setInType($oasParameter['in']);
-                        $propertyToPersist->setSchemaArray($oasParameter['schema']);
-
-                        // Set pathOrder
-                        $pathPropertiesCount = 0;
-                        foreach ($newEndpoint->getProperties() as $property) {
-                            $property->getInType() === 'path' && $pathPropertiesCount++;
-                        }
-                        $propertyToPersist->setPathOrder($pathPropertiesCount + $createdPropertiesCount);
-                    }
-
-                    // Set Endpoint and persist Property
-                    $propertyToPersist->setEndpoint($newEndpoint);
-                    $this->entityManager->persist($propertyToPersist);
-
-                    // Created properties + 1 for property.pathOrder
-                    $createdPropertiesCount++;
-                }
+                $property = trim($property, '{}');
+                $createdProperty = $this->createSpecialProperty($property, $endpoint, $createdPropertiesCount);
+                $createdProperty ? $createdProperties[] = $createdProperty : null;
             } elseif ($property === '{id}' || $property === '{uuid}') {
                 $endpointOperationType = 'item';
             } else {
@@ -344,15 +390,243 @@ class OasParserService
         return ['operationType' => $endpointOperationType, 'createdProperties' => $createdProperties];
     }
 
-    private function replaceHalWithJsonEntity($entityName, $redoc)
+    /**
+     * Decide the regex of a path property.
+     *
+     * @param array $path   The exploded path of the endpoint
+     * @param array $method The method of the endpoint
+     *
+     * @return string The resulting regex
+     */
+    private function getPathRegex(array $path, array $method): string
+    {
+        $pathRegex = '#^(';
+        foreach ($path as $key => $part) {
+            if (empty($part)) {
+                continue;
+            }
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+        }
+        $pathRegex .= ')$#';
+
+        return $pathRegex;
+    }
+
+    /**
+     * This function creates an Attribute from an OAS property.
+     *
+     * @param array            $property         The definition of the property
+     * @param string           $propertyName     The name of the property
+     * @param Entity           $entity           The entity the attribute belongs to
+     * @param CollectionEntity $collectionEntity The collection the entities that are parsed belong to (for recursion)
+     *
+     * @throws Exception Thrown when the attribute cannot be parsed
+     *
+     * @return Attribute|null The resulting attribute
+     */
+    private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
+    {
+        if (isset($property['$ref'])) {
+            $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
+        } else {
+            $targetEntity = $entity->getName().$propertyName.'Entity';
+        }
+
+        if (!isset($property['type']) || $property['type'] == 'object') {
+            $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity);
+            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity);
+        } elseif ($property['type'] == 'array') {
+            $attribute = $this->createArrayAttribute($propertyName, $property, $entity, $collectionEntity);
+        } else {
+            $attribute = $this->createFlatAttribute($propertyName, $property, $entity);
+        }
+        $this->entityManager->persist($attribute);
+
+        return $attribute;
+    }
+
+    /**
+     * Processes allOf specifications.
+     *
+     * @param array            $allOf      The specification of the allOf object
+     * @param Entity           $entity     The entity the allOf references
+     * @param CollectionEntity $collection The collection the entities belong to
+     *
+     * @throws Exception Throws when the schema can not be decided
+     */
+    private function processAllOf(array $allOf, Entity $entity, CollectionEntity $collection)
+    {
+        $properties = [];
+        if ($this->isAssociative($allOf)) {
+            $properties = $allOf;
+        } else {
+            foreach ($allOf as $set) {
+                if (isset($set['$ref'])) {
+                    $schema = $this->getSchemaFromRef($set['$ref']);
+                    $properties = array_merge($schema['properties'], $properties);
+                } else {
+                    $properties = array_merge($set['properties'], $properties);
+                }
+            }
+        }
+        foreach ($properties as $propertyName => $property) {
+            $this->createAttribute($property, $propertyName, $entity, $collection);
+        }
+    }
+
+    /**
+     * Creates an endpoint object from the OAS specification.
+     *
+     * @param string           $path       The path of the endpoint
+     * @param string           $methodName The HTTP method of the endpoint
+     * @param array            $method     The HTTP method schema of the endpoint
+     * @param CollectionEntity $collection The collection the endpoint relates to
+     *
+     * @return Endpoint The resulting endpoint
+     */
+    private function createEndpoint(string $path, string $methodName, array $method, CollectionEntity $collection): Endpoint
+    {
+        $pathArray = array_values(array_filter(explode('/', $path)));
+        $endpoint = new Endpoint();
+        $endpoint->addCollection($collection);
+        $endpoint->setName($path.' '.$methodName);
+        $endpoint->setMethod($methodName);
+        $endpoint->setPath($pathArray);
+
+        isset($method['description']) && $endpoint->setDescription($method['description']);
+        isset($method['tags']) && $endpoint->setTags($method['tags']);
+        $endpoint->setPathRegex($this->getPathRegex($pathArray, $method));
+        $endpoint->setOperationType($this->createEndpointsProperties($pathArray, $endpoint)['operationType']);
+        $this->entityManager->persist($endpoint);
+
+        $this->parseResponses($method, $methodName, $endpoint);
+
+        return $endpoint;
+    }
+
+    /**
+     * Creates an entity from a schema.
+     *
+     * @param string           $name       The name of the entity
+     * @param array            $schema     The schema of the entity
+     * @param CollectionEntity $collection The collection the entity belongs to
+     *
+     * @throws Exception Thrown if an allOf or an attribute cannot be parsed
+     *
+     * @return Entity The resulting entity
+     */
+    private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection): Entity
+    {
+        $newEntity = new Entity();
+        $newEntity->setName($name);
+        $newEntity->addCollection($collection);
+        $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
+
+        $this->entityManager->persist($newEntity);
+
+        $this->handlersToCreate[$name]['entity'] = $newEntity;
+
+        // Loop through allOf and create Attributes
+        if (isset($schema['allOf'])) {
+            $this->processAllOf($schema['allOf'], $newEntity, $collection);
+        }
+
+        // Loop through properties and create Attributes
+        if (isset($schema['properties'])) {
+            foreach ($schema['properties'] as $propertyName => $property) {
+                $attribute = $this->createAttribute($property, $propertyName, $newEntity, $collection);
+            }
+        }
+
+        return $newEntity;
+    }
+
+    /**
+     * Creates a handler for an endpoint.
+     *
+     * @param array|Endpoint[] $endpoints The endpoint the handler relates to
+     * @param Entity           $entity    The entity the handler relates to
+     * @param array            $methods   The methods the handler should allow
+     *
+     * @return Handler The resulting handler
+     */
+    private function createHandler(array $endpoints, Entity $entity, array $methods = []): Handler
+    {
+        $handler = new Handler();
+        $handler->setName("{$entity->getName()} handler");
+        $handler->setSequence(0);
+        $handler->setConditions('{}');
+        $methods && $handler->setMethods($methods);
+        $handler->setEntity($entity);
+
+        foreach ($endpoints as $endpoint) {
+            $handler->addEndpoint($endpoint);
+        }
+        $this->entityManager->persist($handler);
+
+        return $handler;
+    }
+
+    /**
+     * Creates endpoints for a path.
+     *
+     * @param string           $path             The path the endpoints belong to
+     * @param array            $methods          The methods the path should accept
+     * @param CollectionEntity $collectionEntity The collection the endpoints should belong to
+     *
+     * @return Endpoint[] The resulting endpoints
+     */
+    private function createEndpointsPerPath(string $path, array $methods, CollectionEntity $collectionEntity): array
+    {
+        $endpoints = [];
+        foreach ($methods as $name => $schema) {
+            if (!isset($schema['responses'])) {
+                continue;
+            }
+            $endpoints[] = $this->createEndpoint($path, $name, $schema, $collectionEntity);
+        }
+
+        return $endpoints;
+    }
+
+    /**
+     * Gets an entity for an object. First checks if the entity has already been made in the collection, otherwise the entity is recursively made.
+     *
+     * @param string           $name             The name of the object
+     * @param array            $schema           The schema of the object
+     * @param CollectionEntity $collectionEntity The collection the object belongs to
+     *
+     * @throws Exception Thrown if the entity cannot be made
+     *
+     * @return Entity The resulting entity
+     */
+    private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity): Entity
+    {
+        foreach ($collectionEntity->getEntities() as $entity) {
+            if ($entity->getName() == $name) {
+                return $entity;
+            }
+        }
+
+        return $this->persistEntityFromSchema($name, $schema, $collectionEntity);
+    }
+
+    /**
+     * Replaces an HAL entity by a normal JSON entity.
+     *
+     * @param string $entityName The entity to replace
+     *
+     * @return array The correct object schema
+     */
+    private function replaceHalWithJsonEntity(string $entityName): array
     {
         // If string contains Hal search for the schema without Hal
         if (str_contains($entityName, 'Hal')) {
             $entityNameWithoutHal = substr($entityName, 0, strpos($entityName, 'Hal'));
 
             // If schema without Hal is found make that the current iteration
-            if (isset($redoc['components']['schemas'][$entityNameWithoutHal])) {
-                $entityInfo = $redoc['components']['schemas'][$entityNameWithoutHal];
+            if (isset($this->oas['components']['schemas'][$entityNameWithoutHal])) {
+                $entityInfo = $this->oas['components']['schemas'][$entityNameWithoutHal];
                 $entityName = $entityNameWithoutHal;
 
                 return ['entityName' => $entityName, 'entityInfo' => $entityInfo];
@@ -362,138 +636,99 @@ class OasParserService
         return [];
     }
 
-    // public function getOAS(string $url): array
-    // {
-    //     $oas = [];
+    /**
+     * Creates handlers from the handlersToCreate global variable.
+     *
+     * @return Handler[] The created handlers
+     */
+    private function createHandlers(): array
+    {
+        $handlers = [];
 
-    //     // @todo validate on url
-    //     $pathinfo = parse_url($url);
-    //     $extension = explode('.', $pathinfo['path']);
-    //     $extension = end($extension);
-    //     $pathinfo['extension'] = $extension;
+        foreach ($this->handlersToCreate as $handlerToCreate) {
+            if (!isset($handlerToCreate['endpoints']) || !isset($handlerToCreate['entity'])) {
+                continue;
+            }
+            $handlers[] = $this->createHandler($handlerToCreate['endpoints'], $handlerToCreate['entity'], $handlerToCreate['methods'] ?: []);
+        }
 
-    //     // file_get_contents(
-    //     $file = file_get_contents($url);
+        return $handlers;
+    }
 
-    //     switch ($pathinfo['extension']) {
-    //         case 'yaml':
-    //             $oas = Yaml::parse($file);
-    //             break;
-    //         case 'json':
-    //             $oas = json_decode($file, true);
-    //             break;
-    //         default:
-    //             $oas = json_decode($file, true);
-    //            // @todo throw error
-    //     }
+    /**
+     * This function reads OpenAPI Specification and persists it into Endpoints objects.
+     *
+     * @param CollectionEntity $collection The collection that the endpoints have to be in
+     *
+     * @return Endpoint[] The endpoints for the collection
+     */
+    private function persistPathsAsEndpoints(CollectionEntity $collection): array
+    {
+        $endpoints = [];
+        foreach ($this->oas['paths'] as $pathName => $path) {
+            $endpoints = array_merge($endpoints, $this->createEndpointsPerPath($pathName, $path, $collection));
+        }
+        $this->entityManager->flush();
 
-    //     // Do we have servers?
-    //     if (array_key_exists('servers', $oas)) {
-    //         foreach ($oas['servers'] as $server) {
-    //             $source = new Gateway();
-    //             $source->setName($server['description']);
-    //             $source->setLocation($server['url']);
-    //             $source->setAuth('none');
-    //             $this->em->persist($source);
-    //         }
-    //     }
+        return $endpoints;
+    }
 
-    //     // Do we have schemse?
-    //     $schemas = [];
-    //     $attributeDependencies = [];
-    //     if (array_key_exists('components', $oas) && array_key_exists('schemas', $oas['components'])) {
-    //         foreach ($oas['components']['schemas'] as $schemaName => $schema) {
-    //             $entity = new Entity();
-    //             $entity->setName($schemaName);
-    //             if (array_key_exists('description', $schema)) {
-    //                 $entity->setDescription($schema['description']);
-    //             }
-    //             // Handle properties
-    //             foreach ($schema['properties'] as $propertyName => $property) {
-    //                 $attribute = new Attribute();
-    //                 $attribute->setEntity($entity);
-    //                 $attribute->setName($propertyName);
-    //                 // Catching arrays
-    //                 if (array_key_exists('type', $property) && $property['type'] == 'array' && is_array($property['items']) && count($property['items']) == 1) {
-    //                     $attribute->setMultiple(true);
-    //                     $property = $property['items']; // @todo this is wierd
-    //                     //var_dump($property['items']);
-    //                     //var_dump(array_values($property['items'])[0]);
-    //                 }
-    //                 if (array_key_exists('type', $property)) {
-    //                     $attribute->setType($property['type']);
-    //                 }
-    //                 if (array_key_exists('format', $property)) {
-    //                     $attribute->setFormat($property['format']);
-    //                 }
-    //                 if (array_key_exists('description', $property)) {
-    //                     $attribute->setDescription($property['description']);
-    //                 }
-    //                 if (array_key_exists('enum', $property)) {
-    //                     $attribute->setEnum($property['enum']);
-    //                 }
-    //                 if (array_key_exists('maxLength', $property)) {
-    //                     $attribute->setMaxLength((int) $property['maxLength']);
-    //                 }
-    //                 if (array_key_exists('minLength', $property)) {
-    //                     $attribute->setMinLength((int) $property['minLength']);
-    //                 }
-    //                 //if(array_key_exists('pattern',$property)){ $attribute->setPatern($property['pattern']);} /* @todo hey een oas spec die we niet ondersteunen .... */
-    //                 if (array_key_exists('example', $property)) {
-    //                     $attribute->setExample($property['example']);
-    //                 }
-    //                 if (array_key_exists('uniqueItems', $property)) {
-    //                     $attribute->setUniqueItems($property['uniqueItems']);
-    //                 }
+    /**
+     * This function reads redoc and persists it into Entity objects.
+     *
+     * @param CollectionEntity $collection The collection the entities should belong to
+     *
+     * @throws Exception Thrown if entities cannot be created
+     *
+     * @return Entity[] The resulting entities
+     */
+    private function persistSchemasAsEntities(CollectionEntity $collection): array
+    {
+        // These attributes can only be set when entities are flushed, otherwise they cant find eachother, so these will be persisted at the end of the code
+        foreach ($this->oas['components']['schemas'] as $entityName => $entityInfo) {
+            // If this schema is not a valid Entity to persist continue foreach
+            if ((!isset($entityInfo['type']) && !isset($entityInfo['allOf'])) || (isset($entityInfo['type']) && $entityInfo['type'] !== 'object')) {
+                continue;
+            }
+            // Check for json schema instead of Hal
+            $replaceHalInfo = $this->replaceHalWithJsonEntity($entityName);
+            isset($replaceHalInfo['entityName']) && $entityName = $replaceHalInfo['entityName'];
+            isset($replaceHalInfo['entityInfo']) && $entityInfo = $replaceHalInfo['entityInfo'];
 
-    //                 // Handling required
-    //                 if (array_key_exists('required', $schema) && in_array($propertyName, $schema['required'])) {
-    //                     $attribute->setRequired(true);
-    //                 }
+            // If schema is already iterated continue foreach
 
-    //                 // Handling external references is a bit more complicated since we can only set the when all the objects are created
-    //                 if (array_key_exists('$ref', $property)) {
-    //                     $attribute->setRef($property['$ref']);
-    //                     $attributeDependencies[] = $attribute;
-    //                 }// this is a bit more complicaties;
-    //                 $entity->addAttribute($attribute);
-    //                 $this->em->persist($attribute);
-    //             }
-    //             // Handle Gateway
-    //             if ($source) {
-    //                 $entity->setGateway($source);
-    //             }
+            $entities[] = $this->getEntity($entityName, $entityInfo, $collection);
+        }
+        $this->entityManager->flush();
 
-    //             // Build an array for interlinking schema's
-    //             $schemas['#/components/schemas/'.$schemaName] = $entity;
-    //             $this->em->persist($entity);
-    //         }
+        return $entities;
+    }
 
-    //         foreach ($attributeDependencies as $attribute) {
-    //             $attribute->setObject($schemas[$attribute->getRef()]);
-    //             $attribute->setType('object');
-    //             $this->em->persist($attribute);
-    //         }
-    //     } else {
-    //         // @throw error
-    //     }
+    /**
+     * This function reads OpenAPI Specification files and parses it into doctrine objects.
+     *
+     * @param CollectionEntity $collection The collection the oas should be parsed into
+     *
+     * @throws Exception Thrown if an object cannot be made
+     */
+    public function parseOas(CollectionEntity $collection): CollectionEntity
+    {
+        $this->oas = $this->getExternalOAS($collection->getLocationOAS());
+        $entities = $this->persistSchemasAsEntities($collection);
+        $endpoints = $this->persistPathsAsEndpoints($collection);
+        $this->entityManager->flush();
 
-    //     // Do we have paths?
-    //     if (array_key_exists('paths', $oas)) {
-    //         // Lets grap the paths
-    //         foreach ($oas['paths'] as $path => $info) {
-    //             // Let just grap the post for now
-    //             if (array_key_exists('post', $info)) {
-    //                 $schema = $info['post']['requestBody']['content']['application/json']['schema']['$ref'];
-    //                 $schemas[$schema]->setEndpoint($path);
-    //             }
-    //         }
-    //     } else {
-    //         // @todo throw error
-    //     }
+        // Create Handlers between the Entities and Endpoints
+        $handlers = $this->createHandlers();
+        $this->entityManager->flush();
+        // Set synced at
+        $collection->setSyncedAt(new \DateTime('now'));
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+        $this->oas = [];
+        $this->handlersToCreate = [];
 
-    //     $this->em->flush();
-
-    //     return $oas;
-    // }
+        return $collection;
+    }
 }

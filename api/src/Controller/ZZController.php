@@ -8,6 +8,7 @@ use App\Service\DocumentService;
 use App\Service\EavService;
 use App\Service\HandlerService;
 use App\Service\LogService;
+use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +30,8 @@ class ZZController extends AbstractController
         ValidationService $validationService,
         HandlerService $handlerService,
         SerializerInterface $serializer,
-        LogService $logService
+        LogService $logService,
+        ProcessingLogService $processingLogService
     ): Response {
 
     // Below is hacky tacky
@@ -49,7 +51,7 @@ class ZZController extends AbstractController
 
         // Match path to regex of Endpoints
         foreach ($allEndpoints as $currentEndpoint) {
-            if ($currentEndpoint->getPathRegex() !== null && preg_match($currentEndpoint->getPathRegex(), $path)) {
+            if ($currentEndpoint->getPathRegex() !== null && preg_match($currentEndpoint->getPathRegex(), $path) && strtolower($request->getMethod()) === strtolower($currentEndpoint->getMethod())) {
                 $endpoint = $currentEndpoint;
                 break;
             }
@@ -65,6 +67,8 @@ class ZZController extends AbstractController
                 Response::HTTP_BAD_REQUEST,
                 ['content-type' => $acceptType]
             );
+
+            return $response->prepare($request);
         }
 
         // Let create the variable
@@ -84,6 +88,9 @@ class ZZController extends AbstractController
 
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
+
+        // Lets get all the headers
+        $parameters['headers'] = $request->headers->all();
 
         // Try handler proces and catch exceptions
         try {
@@ -107,6 +114,7 @@ class ZZController extends AbstractController
                 );
             }
             $logService->saveLog($request, $response);
+            $processingLogService->saveProcessingLog();
 
             return $response->prepare($request);
         }

@@ -7,6 +7,8 @@ use App\Entity\Entity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +29,7 @@ class AuthorizationService
     private Security $security;
     private SessionInterface $session;
     private CacheInterface $cache;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -36,7 +39,8 @@ class AuthorizationService
         CommonGroundService $commonGroundService,
         Security $security,
         SessionInterface $session,
-        CacheInterface $cache
+        CacheInterface $cache,
+        EntityManagerInterface $entityManager
     ) {
         $this->authorizationChecker = new AuthorizationChecker($tokenStorage, $authenticationManager, $accessDecisionManager);
         $this->parameterBag = $parameterBag;
@@ -44,6 +48,7 @@ class AuthorizationService
         $this->security = $security;
         $this->session = $session;
         $this->cache = $cache;
+        $this->entityManager = $entityManager;
     }
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
@@ -73,6 +78,13 @@ class AuthorizationService
 
     public function getScopesForAnonymous(): array
     {
+        // First check if we have these scopes in cache (this gets removed from cache when a userGroup with name ANONYMOUS is changed, see FunctionService)
+        $item = $this->cache->getItem('anonymousScopes');
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
+        // Get the ANONYMOUS userGroup
         $groups = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'groups'], ['name' => 'ANONYMOUS'], false)['hydra:member'];
         $scopes = [];
         if (count($groups) == 1) {
@@ -81,6 +93,11 @@ class AuthorizationService
             }
         }
         if (count($scopes) > 0) {
+            // Save in cache
+            $item->set($scopes);
+            $item->tag('anonymousScopes');
+            $this->cache->save($item);
+
             return $scopes;
         } else {
             throw new AuthenticationException('Authentication Required');
@@ -97,6 +114,19 @@ class AuthorizationService
         }
 
         return $scopes;
+    }
+
+    private function getContractScopes(): array
+    {
+        $parameters = $this->session->get('parameters');
+        if (!empty($parameters) && array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
+            $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
+            if (!empty($contract)) {
+                return $contract->getGrants();
+            }
+        }
+
+        return [];
     }
 
     public function checkAuthorization(array $scopes): void
@@ -121,6 +151,10 @@ class AuthorizationService
                 // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen for an anonymous user!
                 $this->session->set('anonymous', true);
             }
+
+            $contractScopes = $this->getContractScopes();
+            $grantedScopes = array_merge($grantedScopes, $contractScopes);
+
             $item->set($grantedScopes);
             $item->tag('grantedScopes');
             $this->cache->save($item);

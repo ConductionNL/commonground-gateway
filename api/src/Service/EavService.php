@@ -385,6 +385,9 @@ class EavService
         }));
         if (count($applications) > 0) {
             $this->session->set('application', $applications[0]->getId()->toString());
+        } elseif ($this->session->get('apiKeyApplication')) {
+            // If an api-key is used for authentication we already know which application is used
+            $this->session->set('application', $this->session->get('apiKeyApplication'));
         } else {
             //            var_dump('no application found');
             if ($host == 'localhost') {
@@ -813,10 +816,9 @@ class EavService
 
         // Validation stap
         $this->validationService->setRequest($request);
-//        if ($request->getMethod() == 'POST') {
-//            var_dump($object->getEntity()->getName());
-//        }
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
+        $this->validationService->removeObjectsNotMultiple = []; // to be sure
+        $this->validationService->notifications = []; // to be sure
         $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
@@ -848,6 +850,33 @@ class EavService
             return $errorsResponse;
         }
 
+        // Remove relations for inversedBy objects that are not multiple (example-> POST organization.postalCodes: ["postalCodeUuid"] when the used postalCode already has a postalCode.organization connected, we are disconnecting the old connection here)
+        foreach ($this->validationService->removeObjectsNotMultiple as $removeObjectNotMultiple) {
+            $removeObjectNotMultiple['object']->removeSubresourceOf($removeObjectNotMultiple['valueObject']);
+        }
+        $this->em->flush();
+
+        // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
+        if ($request->getMethod() == 'PUT') {
+            foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {
+                $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
+                // If the object has no other 'parent' connections, if the attribute of the value must be unique...
+                // Example: Entity "Organization" has Attribute "organization_postalCodes" (array of postalCodes objects) that mustBeUnique
+                if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0 && $removeObjectOnPut['valueObject']->getAttribute()->getMustBeUnique()) {
+                    // ...and if the object of the attribute has a value that must be unique
+                    // Example: Entity "postalCode" has Attribute "code" (integer) that mustBeUnique
+                    foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
+                        if ($attribute->getMustBeUnique()) {
+                            // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
+                            $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
+                            break;
+                        }
+                    }
+                }
+            }
+            $this->em->flush();
+        }
+
         // Saving the data
         $this->em->persist($object);
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
@@ -856,6 +885,11 @@ class EavService
         $this->objectEntityService->handleOwner($object, $owner); // note: $owner is allowed to be null!
         $this->em->persist($object);
         $this->em->flush();
+
+        // Send notifications
+        foreach ($this->validationService->notifications as $notification) {
+            $this->validationService->notify($notification['objectEntity'], $notification['method']);
+        }
 
         return $this->responseService->renderResult($object, $fields);
     }
@@ -1048,10 +1082,11 @@ class EavService
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
         }
-        $this->validationService->notify($object, 'DELETE');
 
         $this->em->remove($object);
         $this->em->flush();
+
+        $this->validationService->notify($object, 'DELETE');
 
         return [];
     }
@@ -1074,9 +1109,10 @@ class EavService
      *
      * @return void
      */
-    private function handleDeleteObjectOnError(ObjectEntity $createdObject, ?ObjectEntity $motherObject = null)
+    private function handleDeleteObjectOnError(ObjectEntity $createdObject)
     {
-        //TODO: DO NOT TOUCH! This will only delete emails from the gateway when an error is thrown. should delete all created ObjectEntities...
+        $this->em->clear();
+        //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
 //        var_dump($createdObject->getUri());
 //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
 //            try {
@@ -1090,14 +1126,16 @@ class EavService
 //        var_dump('Delete: '.$createdObject->getEntity()->getName());
 //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
         foreach ($createdObject->getObjectValues() as $value) {
-            $this->deleteSubobjects($value, $motherObject);
+            if ($value->getAttribute()->getType() == 'object') {
+                foreach ($value->getObjects() as $object) {
+                    $object->removeSubresourceOf($value);
+                }
+            }
 
             try {
-                if ($createdObject->getEntity()->getName() == 'email') {
-                    $this->em->remove($value);
-                    $this->em->flush();
-//                    var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
-                }
+                $this->em->remove($value);
+                $this->em->flush();
+//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
             } catch (Exception $exception) {
 //                var_dump($exception->getMessage());
 //                var_dump($value->getId()->toString());
@@ -1108,28 +1146,11 @@ class EavService
         }
 
         try {
-            if ($createdObject->getEntity()->getName() == 'email') {
-                $this->em->remove($createdObject);
-                $this->em->flush();
-//                var_dump('Deleted: '.$createdObject->getEntity()->getName());
-            }
+            $this->em->remove($createdObject);
+            $this->em->flush();
+//            var_dump('Deleted: '.$createdObject->getEntity()->getName());
         } catch (Exception $exception) {
 //            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
-        }
-    }
-
-    /**
-     * @param Value             $value
-     * @param ObjectEntity|null $motherObject
-     *
-     * @return void
-     */
-    private function deleteSubobjects(Value $value, ?ObjectEntity $motherObject = null)
-    {
-        foreach ($value->getObjects() as $object) {
-            if ($object && (!$motherObject || $object->getId() !== $motherObject->getId())) {
-                $this->handleDeleteObjectOnError($object, $value->getObjectEntity());
-            }
         }
     }
 

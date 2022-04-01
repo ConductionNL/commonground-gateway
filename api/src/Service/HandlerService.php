@@ -22,6 +22,7 @@ class HandlerService
     private EntityManagerInterface $entityManager;
     private TranslationService $translationService;
     private LogService $logService;
+    private ProcessingLogService $processingLogService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
     private FormIOService $formIOService;
@@ -55,6 +56,7 @@ class HandlerService
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
+        ProcessingLogService $processingLogService,
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
@@ -70,6 +72,7 @@ class HandlerService
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
+        $this->processingLogService = $processingLogService;
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService->addServices($validationService, $eavService); // todo: temp fix untill we no longer need these services here
@@ -177,6 +180,7 @@ class HandlerService
 
         // Final update Log
         $this->logService->saveLog($this->request, $response, null, true);
+        $this->processingLogService->saveProcessingLog();
 
         return $response;
     }
