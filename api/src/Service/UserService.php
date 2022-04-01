@@ -2,14 +2,10 @@
 
 namespace App\Service;
 
-use App\Entity\Entity;
-use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class UserService
 {
@@ -38,7 +34,8 @@ class UserService
 
                 if (empty($person) && $this->commonGroundService->getComponent('cc')) {
                     $person = $this->commonGroundService->getResource($user->getPerson());
-                } else {
+                }
+                if (empty($person)) {
                     throw new Exception();
                 }
             } catch (Exception $exception) {
@@ -72,7 +69,8 @@ class UserService
 
                     if (empty($organization) && $this->commonGroundService->getComponent('cc')) {
                         $organization = $this->commonGroundService->getResource($user->getOrganization());
-                    } else {
+                    }
+                    if (empty($organization)) {
                         throw new Exception();
                     }
                 } catch (Exception $exception) {

@@ -4,7 +4,7 @@
 
 namespace App\Controller;
 
-use App\Service\ResponseService;
+use App\Service\ObjectEntityService;
 use App\Service\UserService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,8 +13,6 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\User\User;
-use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class LoginController.
@@ -37,11 +35,11 @@ class LoginController extends AbstractController
      * @Route("/me")
      * @Route("api/users/me", methods={"get"})
      */
-    public function MeAction(Request $request, CommonGroundService $commonGroundService, ResponseService $responseService)
+    public function MeAction(Request $request, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
     {
         $this->cache->invalidateTags(['grantedScopes']);
 
-        $userService = new UserService($commonGroundService, $this->entityManager, $responseService);
+        $userService = new UserService($commonGroundService, $objectEntityService);
         if ($this->getUser()) {
             $result = [
                 'id'         => $this->getUser()->getUserIdentifier(),
