@@ -104,7 +104,6 @@ class ResponseService
                             $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $response[$key]]);
                         }
                     } catch (AccessDeniedException $exception) {
-                        var_dump('1: '.$exception->getMessage());
                         unset($response[$key]);
                     }
                 }
@@ -200,7 +199,6 @@ class ResponseService
                     $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
                 }
             } catch (AccessDeniedException $exception) {
-                var_dump('2: '.$exception->getMessage());
                 continue;
             }
 
@@ -306,7 +304,6 @@ class ResponseService
 //
 //                return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
             } catch (AccessDeniedException $exception) {
-                var_dump('3: '.$exception->getMessage());
                 return null;
             }
         }
@@ -335,7 +332,6 @@ class ResponseService
 //            }
 //            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
             } catch (AccessDeniedException $exception) {
-                var_dump('4: '.$exception->getMessage());
                 continue;
             }
         }

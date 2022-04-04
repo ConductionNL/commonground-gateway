@@ -498,6 +498,7 @@ class ValidationService
 
                 $subObject->setSubresourceIndex($key);
                 $subObject = $this->validateEntity($subObject, $object);
+                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
@@ -996,6 +997,7 @@ class ValidationService
                     $subObject = $valueObject->getValue();
                 }
                 $subObject = $this->validateEntity($subObject, $value);
+                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
                 $this->em->persist($subObject);
 
                 // If no errors we can push it into our object

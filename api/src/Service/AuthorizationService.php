@@ -275,7 +275,6 @@ class AuthorizationService
     {
         //todo: cache this function somehow? or a part of it ?
         //todo: split up this function into multiple other functions, try to remove duplicate code!
-        //todo: remove var_dumps
 
         $method = $info['method'];
         $entity = $info['entity'];

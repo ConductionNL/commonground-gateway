@@ -933,6 +933,7 @@ class EavService
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
             $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         }
+        // Do handleOwner after all CheckAuthorization function calls
         $this->objectEntityService->handleOwner($object, $owner); // note: $owner is allowed to be null!
         $this->em->persist($object);
         $this->em->flush();
