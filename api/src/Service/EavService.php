@@ -1072,7 +1072,7 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
-        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
+        // TODO: Auth check if we are allowed to delete this is already done before this function, but we still need to do auth check for subresources
 //        try {
 //            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
 //                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));

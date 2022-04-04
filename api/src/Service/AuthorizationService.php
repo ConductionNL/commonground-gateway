@@ -189,7 +189,7 @@ class AuthorizationService
     private function getScopesFromRoles(array $roles): array
     {
         //todo: for testing, remove;
-        $scopes = ['POST.organizations.type=taalhuis', 'PUT.organizations.type=taalhuis', 'DELETE.organizations.type=taalhuis', 'GET.organizations.type=taalhuis'];
+        $scopes = ['POST.organizations.type=taalhuis,team', 'PUT.organizations.type=taalhuis', 'DELETE.organizations.type=taalhuis', 'GET.organizations.type=taalhuis'];
 
         foreach ($roles as $role) {
             if (strpos($role, 'scope') !== null) {
@@ -273,7 +273,6 @@ class AuthorizationService
      */
     private function checkValueScopes(array $grantedScopes, array $info): array
     {
-        //todo: test what happens if we do an api-call on a resource with a subresource that isn't allowed to be changed because of a value scope
         //todo: cache this function somehow? or a part of it ?
         //todo: split up this function into multiple other functions, try to remove duplicate code!
         //todo: remove var_dumps
@@ -397,7 +396,7 @@ class AuthorizationService
                     }
                     $failedScope = $grantedScope;
                     $failedValue = $value;
-                    break; // todo: what if we have multiple (different) scopes with an = value
+                    break;
                 }
             }
         }

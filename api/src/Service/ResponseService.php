@@ -100,7 +100,9 @@ class ResponseService
                 $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
                 if (!empty($attribute)) {
                     try {
-                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $response[$key]]);
+                        if (!$this->objectEntityService->checkOwner($result)) {
+                            $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $response[$key]]);
+                        }
                     } catch (AccessDeniedException $exception) {
                         var_dump('1: '.$exception->getMessage());
                         unset($response[$key]);
@@ -194,7 +196,9 @@ class ResponseService
 
             // Check if user is allowed to see this
             try {
-                $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+                if (!$this->objectEntityService->checkOwner($result)) {
+                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+                }
             } catch (AccessDeniedException $exception) {
                 var_dump('2: '.$exception->getMessage());
                 continue;
