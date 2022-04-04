@@ -284,7 +284,7 @@ class AuthorizationService
         $value = $info['value'];
 
         // We need at least a value or an object for this to work
-        if (empty($object) && empty($value)) { //todo: $method !== GET ??? remove it? here for get Collection calls
+        if (empty($object) && empty($value)) { //$method !== GET makes sure we don't throw this error on get Collection calls
             return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('no object & no value'), $method !== "GET");
         }
 
@@ -305,7 +305,8 @@ class AuthorizationService
 
         // If no $value is given, but $object & $attribute are given, get $value from the $object using the $attribute
         if (empty($value) && !empty($object) && !empty($attribute) &&
-            !in_array($attribute->getType(), ['object', 'file', 'array']) // todo: what about $attribute->getMultiple() ?
+            !in_array($attribute->getType(), ['object', 'file', 'array']) &&
+            !$attribute->getMultiple()
         ) {
             $value = $object->getValueByAttribute($attribute)->getValue();
         }
@@ -314,8 +315,6 @@ class AuthorizationService
         if (!empty($attribute) && !empty($value)) {
             // Get the sub scope for the given Attribute we are going to check
             $sub_scope = $base_scope.'.'.$attribute->getName();
-//            var_dump($attribute->getName().' : ');
-//            var_dump($value);
 
             // Loop through all scopes the user has
             foreach ($grantedScopes as $grantedScope) {
@@ -324,13 +323,10 @@ class AuthorizationService
 
                 // If count grantedScope == 2, the user has a scope with a = value check. If so, make sure the scope we are checking matches this scope (the part before the =)
                 if (count($grantedScopeExploded) == 2 && $grantedScopeExploded[0] == $sub_scope) {
-                    $hasValueScopes = true;
+                    $hasValueScopes = true; // At this point we have a = value scope, and we are sure the given input ($info) matches this scope.
                     $scopeValues = explode(',', $grantedScopeExploded[1]);
-//                    var_dump('ScopeValues: ');
-//                    var_dump($scopeValues);
                     // Compare value with scope
                     if (in_array($value, $scopeValues)) {
-//                        var_dump('match');
                         $matchValueScopes = true;
                         continue;
                     }
@@ -343,7 +339,7 @@ class AuthorizationService
         // Else we are checking for multiple scopes of an Entity, if we also have an object, continue... (never continue if we have an Attribute!)
         elseif (!empty($entity) && !empty($object) && empty($attribute)) {
             if ($method === "POST") {
-                // see message;
+                // Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point
                 return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point'));
             }
 
@@ -365,10 +361,13 @@ class AuthorizationService
                     // Get the attribute name out of the scope
                     $attributeName = end($grantedScopeName);
                     // Find the attribute with the $entity and $attributeName
-//                    var_dump('Found attribute name: '.$attributeName);
                     $scopeAttribute = $this->entityManager->getRepository('App:Attribute')->findOneBy(['entity' => $entity, 'name' => $attributeName]);
-                    if (empty($scopeAttribute)) {
+                    if (empty($scopeAttribute) ||
+                        in_array($scopeAttribute->getType(), ['object', 'file', 'array']) ||
+                        $scopeAttribute->getMultiple()
+                    ) {
                         // If we don't find an Attribute for that Entity with the attribute name, continue
+                        // If the attribute will return a value we can not compare to a string, continue
                         continue;
                     } else {
                         // Get the sub scope for the given Attribute we are going to check
@@ -378,19 +377,17 @@ class AuthorizationService
                             continue;
                         }
 
-                        // Get the value from Object for the attribute of this scope
-                        $value = $object->getValueByAttribute($scopeAttribute)->getValue(); // todo: make sure we get a 'valid' value we can compare later
-//                        var_dump('value: '.$value);
+                        // Get the value from the Object with the attribute of this scope
+                        $value = $object->getValueByAttribute($scopeAttribute)->getValue();
+
+                        //todo, what to do if a $value is empty?
                     }
 
-                    $hasValueScopes = true;
+                    $hasValueScopes = true; // At this point we have a = value scope, and we are sure the given input ($info) matches this scope.
 
                     $scopeValues = explode(',', $grantedScopeExploded[1]);
-//                    var_dump('ScopeValues: ');
-//                    var_dump($scopeValues);
                     // Compare value with allowed values from the scope
                     if (in_array($value, $scopeValues)) {
-//                        var_dump('match');
                         $matchValueScopes = true;
                         continue;
                     }
@@ -434,11 +431,11 @@ class AuthorizationService
     /**
      * @TODO
      *
-     * @param string $message
-     * @param array|null $scopeValues
-     * @param null $failedValue
-     * @param string|null $failedScope
-     * @param Attribute|null $attribute
+     * @param string $message An error message, default = 'Something went wrong'.
+     * @param array|null $scopeValues The values that are allowed by the $failedScope.
+     * @param null $failedValue The value that did not match the $scopeValues.
+     * @param string|null $failedScope The scope that the user failed to 'match'.
+     * @param Attribute|null $attribute The attribute of the scope that the user failed to 'match' $failedScope.
      * @return array
      */
     private function checkValueScopesErrorReturn(string $message = 'Something went wrong', array $scopeValues = null, $failedValue = null, string $failedScope = null, ?Attribute $attribute = null): array
