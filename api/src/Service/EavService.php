@@ -1034,6 +1034,13 @@ class EavService
 
         $results = [];
         foreach ($objects as $object) {
+            // todo: we should filter out objects on sql level, not after sql, this is in the way of pagination...
+            try {
+                $this->authorizationService->checkAuthorization(['entity' => $entity, 'object' => $object]);
+            } catch (AccessDeniedException $exception) {
+                $total = $total - 1;
+                continue;
+            }
             // Old $MaxDepth in renderResult
 //            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
             $results[] = $this->responseService->renderResult($object, $fields, $flat);
