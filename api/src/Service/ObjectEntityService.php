@@ -241,6 +241,7 @@ class ObjectEntityService
             } else {
                 $data['error'] = $object;
             }
+            //todo: -end- old code...
         } else {
             if ($parameters = $this->session->get('parameters')) {
                 if (array_key_exists('path', $parameters)) {
@@ -269,8 +270,6 @@ class ObjectEntityService
                 }
             }
         }
-
-        //todo: -end- old code...
 
         break;
       case 'POST':
