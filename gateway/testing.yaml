@@ -9,6 +9,7 @@ App\Entity\Endpoint:
         description: endpoint voor dingen rondom weer
         path: ['weer']
         pathRegex: "#^(weer)$#"
+        method: GET
         operationType: collection
 
     weerEndpointGetItem: 
@@ -16,6 +17,7 @@ App\Entity\Endpoint:
         description: endpoint voor dingen rondom weer
         path: ['weer', '{id}']
         pathRegex: <{weerItemRegex}>
+        method: GET
         operationType: item
 
     weerEndpointPost:
@@ -23,6 +25,7 @@ App\Entity\Endpoint:
         description: endpoint voor dingen rondom weer
         path: ['weer']
         pathRegex: "#^(weer)$#"
+        method: POST
         operationType: collection
 
     weerEndpointPut:
@@ -30,6 +33,7 @@ App\Entity\Endpoint:
         description: endpoint voor dingen rondom weer
         path: ['weer', '{id}']
         pathRegex: <{weerItemRegex}>
+        method: PUT
         operationType: item
         
     weerEndpointDelete:
@@ -37,6 +41,7 @@ App\Entity\Endpoint:
         description: endpoint voor dingen rondom weer
         path: ['weer', '{id}']
         pathRegex: <{weerItemRegex}>
+        method: DELETE
         operationType: item
 
     weekendEndpointGet:

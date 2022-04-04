@@ -7,14 +7,12 @@ use App\Service\OasParserService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeService;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Yaml\Yaml;
 
 class ConvenienceController extends AbstractController
 {
@@ -27,13 +25,12 @@ class ConvenienceController extends AbstractController
     public function __construct(
         EntityManagerInterface $entityManager,
         SerializerInterface $serializer,
-        OasParserService $oasParser,
         PubliccodeService $publiccodeService,
         ParseDataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
-        $this->oasParser = $oasParser;
+        $this->oasParser = new OasParserService($entityManager);
         $this->publiccodeService = $publiccodeService;
         $this->dataService = $dataService;
     }
@@ -44,52 +41,23 @@ class ConvenienceController extends AbstractController
     public function loadAction(Request $request, string $collectionId): Response
     {
         // Get CollectionEntity to retrieve OAS from
-        $collectionRepo = $this->entityManager->getRepository('App:CollectionEntity');
-        $collection = $collectionRepo->find($collectionId);
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
 
-        // Check collection, if not found throw error
-        if (!isset($collection)) {
+        // Check if collection is egligible to load
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
             return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
-        }
-
-        // Check if not loaded/synced before
-        if ($collection->getSyncedAt() !== null) {
+        } elseif ($collection->getSyncedAt() !== null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
-        }
-
-        // Check collection->source->locationOAS and set url
-        $collection->getLocationOAS() !== null && $url = $collection->getLocationOAS();
-
-        // Check url, if not set throw error
-        if (!isset($url)) {
+        } elseif (!$collection->getLocationOAS()) {
             return new Response($this->serializer->serialize(['message' => 'No location OAS found for given collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
-        // Send GET to fetch redoc
-        $client = new Client();
-        $response = $client->get($url);
-        $redoc = Yaml::parse($response->getBody()->getContents());
-
-        // try {
-        // Persist yaml to objects
-        $this->oasParser->parseRedoc($redoc, $collection);
-        // } catch (\Exception $e) {
-        // return new Response(
-        //         $this->serializer->serialize(['message' => $e->getMessage()], 'json'),
-        //         Response::HTTP_BAD_REQUEST,
-        //         ['content-type' => 'json']
-        //     );
-        // }
-
-        // Set synced at
-        $collection->setSyncedAt(new \DateTime('now'));
-        $this->entityManager->persist($collection);
-        $this->entityManager->flush();
-        $this->entityManager->clear();
-        $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
+        // Persist OAS to objects and load data if the user has asked for that
+        $collection = $this->oasParser->parseOas($collection);
+        $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$url], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );

@@ -151,6 +151,14 @@ class CollectionEntity
     private ?string $testDataLocation;
 
     /**
+     * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="boolean")
+     */
+    private bool $loadTestData = false;
+
+    /**
      * @var ?DateTimeInterface The moment this Collection was synced
      *
      * @Groups({"read", "write"})
@@ -338,6 +346,18 @@ class CollectionEntity
     public function setTestDataLocation(?string $testDataLocation): self
     {
         $this->testDataLocation = $testDataLocation;
+
+        return $this;
+    }
+
+    public function getLoadTestData(): bool
+    {
+        return $this->loadTestData;
+    }
+
+    public function setLoadTestData(bool $loadTestData): self
+    {
+        $this->loadTestData = $loadTestData;
 
         return $this;
     }

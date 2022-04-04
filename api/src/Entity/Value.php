@@ -291,9 +291,12 @@ class Value
 
         // TODO: see https://conduction.atlassian.net/browse/CON-2030
         // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
-        //Handle inversed by
-        if ($this->getAttribute()->getInversedBy() and !$object->getValueByAttribute($this->getAttribute()->getInversedBy())->getObjects()->contains($this->getObjectEntity())) {
-            $object->getValueByAttribute($this->getAttribute()->getInversedBy())->addObject($this->getObjectEntity());
+        // Handle inversed by
+        if ($this->getAttribute()->getInversedBy()) {
+            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+                $inversedByValue->addObject($this->getObjectEntity());
+            }
         }
 
         return $this;
@@ -301,10 +304,20 @@ class Value
 
     public function removeObject(ObjectEntity $object): self
     {
-        if ($this->objects->removeElement($object)) {
-            // set the owning side to null (unless already changed)
-            if ($object->getSubresourceOf()->contains($this)) {
-                $object->getSubresourceOf()->removeElement($this);
+        // handle subresources
+        if ($object->getSubresourceOf()->contains($this)) {
+            $object->getSubresourceOf()->removeElement($this);
+        }
+        // let remove this
+        if ($this->objects->contains($object)) {
+            $this->objects->removeElement($object);
+        }
+
+        // Remove inversed by
+        if ($this->getAttribute()->getInversedBy()) {
+            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+                $inversedByValue->removeObject($this->getObjectEntity());
             }
         }
 

@@ -169,6 +169,13 @@ class Application
     private ?Collection $collections;
 
     /**
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Contract::class, mappedBy="application")
+     */
+    private ?Collection $contracts;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -192,6 +199,7 @@ class Application
         $this->objectEntities = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->contracts = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -396,6 +404,36 @@ class Application
     {
         if ($this->collections->removeElement($collection)) {
             $collection->removeApplication($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Contract[]
+     */
+    public function getContracts(): Collection
+    {
+        return $this->contracts;
+    }
+
+    public function addContract(Contract $contract): self
+    {
+        if (!$this->contracts->contains($contract)) {
+            $this->contracts[] = $contract;
+            $contract->setApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContract(Contract $contract): self
+    {
+        if ($this->contracts->removeElement($contract)) {
+            // set the owning side to null (unless already changed)
+            if ($contract->getApplication() === $this) {
+                $contract->setApplication(null);
+            }
         }
 
         return $this;
