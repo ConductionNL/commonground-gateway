@@ -63,7 +63,7 @@ class ZZController extends AbstractController
             $acceptType === 'form.io' && $acceptType = 'json';
 
             return new Response(
-                $serializer->serialize(['message' =>  'Could not find an endpoint with this path', 'data' => $path, 'path' => $path], $acceptType),
+                $serializer->serialize(['message' =>  'Could not find an Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),
                 Response::HTTP_BAD_REQUEST,
                 ['content-type' => $acceptType]
             );
