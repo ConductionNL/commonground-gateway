@@ -251,14 +251,16 @@ class AuthorizationService
             if ($checkValueScopes['matchValueScopes']) {
                 return true;
             } else {
+                $message = $checkValueScopes['error']['message'] ?? '';
+                $scope = $checkValueScopes['error']['failedScope'] ?? '';
+                $attributeName = $info['attribute'] ? $info['attribute']->getName() : ($checkValueScopes['error']['attribute'] ? $checkValueScopes['error']['attribute']->getName() : '');
                 $shouldMatchValues = '';
                 if ($checkValueScopes['error']['shouldMatchValues']) {
                     $shouldMatchValues = count($checkValueScopes['error']['shouldMatchValues']) > 1 ? 'one of ' : '';
                     $shouldMatchValues = $shouldMatchValues.'['.implode(', ', $checkValueScopes['error']['shouldMatchValues']).']';
                 }
-                $scope = $checkValueScopes['error']['failedScope'];
-                $str = $info['attribute'] ? $info['attribute']->getName() : ($checkValueScopes['error']['attribute'] ? $checkValueScopes['error']['attribute']->getName() : '');
-                throw new AccessDeniedException("{$checkValueScopes['error']['message']}, because of scope {$scope}. {$str} set to {$shouldMatchValues} is required. [{$checkValueScopes['error']['failedValue']}] is not allowed.");
+                $failedValue = $checkValueScopes['error']['failedValue'] ?? '';
+                throw new AccessDeniedException("{$message}, because of scope {$scope}. {$attributeName} set to {$shouldMatchValues} is required. [{$failedValue}] is not allowed.");
             }
         }
         return false;
