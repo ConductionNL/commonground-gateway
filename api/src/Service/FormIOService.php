@@ -89,6 +89,25 @@ class FormIOService
   }
 
   /**
+   * Creates disabled textfield component for ID's
+   *
+   * @param string $id             The ID to set
+   * @param string $preSetKey      The pre set key that will be used as key for that input
+   *
+   * @return array Formio textfield component
+   */
+  private function createIDComponent(string $id, string $preSetKey = null): array
+  {
+    return [
+      'key' => $preSetKey ?? 'id',
+      'defaultValue' => $id,
+      'label' => 'ID',
+      'disabled' => true,
+      'type'          => 'textfield',
+    ];
+  }
+
+  /**
    * Extends pre set key used for the input name/key to cluster nested Attributes.
    *
    * @param ?string $preSetKey The key to extend
@@ -151,7 +170,13 @@ class FormIOService
     ];
 
     $accordionComponent['components'] = [];
-    // dump($object);
+
+
+    if (isset($defaultValue['id'])) {
+      $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey . '[id]');
+    }
+
+    // Add attributes from this object as sub components
     foreach ($object->getAttributes() as $objectAttr) {
       isset($defaultValue[$objectAttr->getName()]) ? $defaultValueToPass = $defaultValue[$objectAttr->getName()] : $defaultValueToPass = null;
       $accordionComponent['components'][] = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass);
@@ -193,7 +218,7 @@ class FormIOService
     $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
 
     $component = $this->basicComponent;
-    $component['label'] = $attr->getName();
+    $component['label'] = $attr->getName() . ($attr->getRequired() ? '*' : '');
     $component['key'] = $preSetKey ?? $attr->getName();
     $component['multiple'] = $attr->getMultiple();
     $component['defaultValue'] = $attr->getDefaultValue() ?? $defaultValue;
@@ -232,13 +257,20 @@ class FormIOService
     isset($object) && $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($object['id']);
 
     $formIOArray['components'] = [];
+
+    // If we have a id set it as disabled component
+    isset($object) &&
+      $formIOArray['components'][] = $this->createIDComponent($object['id']);
+
     // All attributes as inputs
     foreach ($entity->getAttributes() as $attr) {
+      var_dump($attr->getName());
       // if ($attr->getName() !== 'monday') continue;
       isset($object[$attr->getName()]) ? $defaultValue = $object[$attr->getName()] : $defaultValue = null;
       $formIOArray['components'][] = $this->createAttribute($attr, null, $defaultValue);
     }
 
+    // Add advanced configuration
     $formIOArray['components'][] = [
       'title'         => 'Advanced configuration',
       'theme'         => 'default',
@@ -292,6 +324,8 @@ class FormIOService
         ],
       ],
     ];
+
+    // Add submit button
     $formIOArray['components'][] = $this->submitButtonComponent;
 
     $formIOArray['display'] = 'form';
