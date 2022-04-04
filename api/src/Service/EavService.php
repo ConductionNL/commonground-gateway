@@ -190,6 +190,9 @@ class EavService
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
 
+            // @TODO Persist might not be needed here. Added now for the ObjectEntityService line 216 that sets this object into session with ID
+            $this->em->persist($object);
+
             return $object;
         }
 
@@ -227,19 +230,19 @@ class EavService
             //@todo support xml messages
             $body = json_decode($request->getContent(), true);
         }
-//        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
-//        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
-//            // get other input values from form-data and put it in $body ($request->get('name'))
-//            $body = $this->handleFormDataBody($request, $entity);
-//
-//            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
-//            if (array_key_exists('result', $formDataResult)) {
-//                $result = $formDataResult['result'];
-//                $responseType = Response::HTTP_BAD_REQUEST;
-//            } else {
-//                $object = $formDataResult;
-//            }
-//        }
+        //        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
+        //        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {
+        //            // get other input values from form-data and put it in $body ($request->get('name'))
+        //            $body = $this->handleFormDataBody($request, $entity);
+        //
+        //            $formDataResult = $this->handleFormDataFiles($request, $entity, $object);
+        //            if (array_key_exists('result', $formDataResult)) {
+        //                $result = $formDataResult['result'];
+        //                $responseType = Response::HTTP_BAD_REQUEST;
+        //            } else {
+        //                $object = $formDataResult;
+        //            }
+        //        }
 
         if (!isset($resultConfig['result'])) {
             $resultConfig = $this->generateResult($request, $entity, $requestBase, $body);
@@ -247,21 +250,21 @@ class EavService
 
         $options = [];
         switch ($contentType) {
-            case 'text/csv':
-                $options = [
-                    CsvEncoder::ENCLOSURE_KEY   => '"',
-                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
-                ];
+      case 'text/csv':
+        $options = [
+            CsvEncoder::ENCLOSURE_KEY   => '"',
+            CsvEncoder::ESCAPE_CHAR_KEY => '+',
+        ];
 
-                // Lets allow _mapping tot take place
-                /* @todo remove the old fields support */
-                /* @todo make this universal */
-                if ($mapping = $request->query->get('_mapping')) {
-                    foreach ($resultConfig['result'] as $key =>  $result) {
-                        $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-                    }
-                }
+        // Lets allow _mapping tot take place
+        /* @todo remove the old fields support */
+        /* @todo make this universal */
+        if ($mapping = $request->query->get('_mapping')) {
+            foreach ($resultConfig['result'] as $key =>  $result) {
+                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+            }
         }
+    }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
@@ -282,54 +285,54 @@ class EavService
         }
 
         /*
-        if ($contentType === 'text/csv') {
-            $replacements = [
-                '/student\.person.givenName/'                        => 'Voornaam',
-                '/student\.person.additionalName/'                   => 'Tussenvoegsel',
-                '/student\.person.familyName/'                       => 'Achternaam',
-                '/student\.person.emails\..\.email/'                 => 'E-mail adres',
-                '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
-                '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
-                '/participations\.provider\.id/'                     => 'ID aanbieder',
-                '/participations\.provider\.name/'                   => 'Aanbieder',
-                '/participations/'                                   => 'Deelnames',
-                '/learningResults\..\.id/'                           => 'ID leervraag',
-                '/learningResults\..\.verb/'                         => 'Werkwoord',
-                '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
-                '/learningResults\..\.subject/'                      => 'Onderwerp',
-                '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
-                '/learningResults\..\.application/'                  => 'Toepassing',
-                '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
-                '/learningResults\..\.level/'                        => 'Niveau',
-                '/learningResults\..\.participation/'                => 'Deelname',
-                '/learningResults\..\.testResult/'                   => 'Test Resultaat',
-                '/agreements/'                                       => 'Overeenkomsten',
-                '/desiredOffer/'                                     => 'Gewenst aanbod',
-                '/advisedOffer/'                                     => 'Geadviseerd aanbod',
-                '/offerDifference/'                                  => 'Aanbod verschil',
-                '/person\.givenName/'                                => 'Voornaam',
-                '/person\.additionalName/'                           => 'Tussenvoegsel',
-                '/person\.familyName/'                               => 'Achternaam',
-                '/person\.emails\..\.email/'                         => 'E-mail adres',
-                '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
-                '/intake\.date/'                                     => 'Aanmaakdatum',
-                '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
-                '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
-                '/intake\.referringOrganization/'                    => 'Verwijzer',
-                '/intake\.foundViaOther/'                            => 'Via (anders)',
-                '/intake\.foundVia/'                                 => 'Via',
-                '/roles/'                                            => 'Rollen',
-                '/student\.id/'                                      => 'ID deelnemer',
-                '/description/'                                      => 'Beschrijving',
-                '/motivation/'                                       => 'Leervraag',
-                '/languageHouse\.name/'                              => 'Naam taalhuis',
-            ];
+            if ($contentType === 'text/csv') {
+                $replacements = [
+                    '/student\.person.givenName/'                        => 'Voornaam',
+                    '/student\.person.additionalName/'                   => 'Tussenvoegsel',
+                    '/student\.person.familyName/'                       => 'Achternaam',
+                    '/student\.person.emails\..\.email/'                 => 'E-mail adres',
+                    '/student.person.telephones\..\.telephone/'          => 'Telefoonnummer',
+                    '/student\.intake\.dutchNTLevel/'                    => 'NT1/NT2',
+                    '/participations\.provider\.id/'                     => 'ID aanbieder',
+                    '/participations\.provider\.name/'                   => 'Aanbieder',
+                    '/participations/'                                   => 'Deelnames',
+                    '/learningResults\..\.id/'                           => 'ID leervraag',
+                    '/learningResults\..\.verb/'                         => 'Werkwoord',
+                    '/learningResults\..\.subjectOther/'                 => 'Onderwerp (anders)',
+                    '/learningResults\..\.subject/'                      => 'Onderwerp',
+                    '/learningResults\..\.applicationOther/'             => 'Toepasing (anders)',
+                    '/learningResults\..\.application/'                  => 'Toepassing',
+                    '/learningResults\..\.levelOther/'                   => 'Niveau (anders)',
+                    '/learningResults\..\.level/'                        => 'Niveau',
+                    '/learningResults\..\.participation/'                => 'Deelname',
+                    '/learningResults\..\.testResult/'                   => 'Test Resultaat',
+                    '/agreements/'                                       => 'Overeenkomsten',
+                    '/desiredOffer/'                                     => 'Gewenst aanbod',
+                    '/advisedOffer/'                                     => 'Geadviseerd aanbod',
+                    '/offerDifference/'                                  => 'Aanbod verschil',
+                    '/person\.givenName/'                                => 'Voornaam',
+                    '/person\.additionalName/'                           => 'Tussenvoegsel',
+                    '/person\.familyName/'                               => 'Achternaam',
+                    '/person\.emails\..\.email/'                         => 'E-mail adres',
+                    '/person.telephones\..\.telephone/'                  => 'Telefoonnummer',
+                    '/intake\.date/'                                     => 'Aanmaakdatum',
+                    '/intake\.referringOrganizationEmail/'               => 'Verwijzer Email',
+                    '/intake\.referringOrganizationOther/'               => 'Verwijzer Telefoon',
+                    '/intake\.referringOrganization/'                    => 'Verwijzer',
+                    '/intake\.foundViaOther/'                            => 'Via (anders)',
+                    '/intake\.foundVia/'                                 => 'Via',
+                    '/roles/'                                            => 'Rollen',
+                    '/student\.id/'                                      => 'ID deelnemer',
+                    '/description/'                                      => 'Beschrijving',
+                    '/motivation/'                                       => 'Leervraag',
+                    '/languageHouse\.name/'                              => 'Naam taalhuis',
+                ];
 
-            foreach ($replacements as $key => $value) {
-                $result = preg_replace($key, $value, $result);
+                foreach ($replacements as $key => $value) {
+                    $result = preg_replace($key, $value, $result);
+                }
             }
-        }
-        */
+            */
 
         // Let return the shizle
         $response = new Response(
@@ -704,35 +707,35 @@ class EavService
         // Lets setup a switchy kinda thingy to handle the input
         // Its an enity endpoint
         switch ($request->getMethod()) {
-            case 'GET':
-                $result = $this->handleGet($info['object'], $info['fields']);
-                $responseType = Response::HTTP_OK;
-                break;
-            case 'PUT':
-                // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
-                $responseType = Response::HTTP_OK;
-                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-                    $responseType = Response::HTTP_FORBIDDEN;
-                }
-                break;
-            case 'DELETE':
-                $result = $this->handleDelete($info['object']);
-                $responseType = Response::HTTP_NO_CONTENT;
-                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-                    $responseType = Response::HTTP_FORBIDDEN;
-                }
-                break;
-            default:
-                $result = [
-                    'message' => 'This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE',
-                    'type'    => 'Bad Request',
-                    'path'    => $info['path'],
-                    'data'    => ['method' => $request->getMethod()],
-                ];
-                $responseType = Response::HTTP_BAD_REQUEST;
-                break;
+      case 'GET':
+        $result = $this->handleGet($info['object'], $info['fields']);
+        $responseType = Response::HTTP_OK;
+        break;
+      case 'PUT':
+        // Transfer the variable to the service
+        $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
+        $responseType = Response::HTTP_OK;
+        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+            $responseType = Response::HTTP_FORBIDDEN;
         }
+        break;
+      case 'DELETE':
+        $result = $this->handleDelete($info['object']);
+        $responseType = Response::HTTP_NO_CONTENT;
+        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+            $responseType = Response::HTTP_FORBIDDEN;
+        }
+        break;
+      default:
+        $result = [
+            'message' => 'This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE',
+            'type'    => 'Bad Request',
+            'path'    => $info['path'],
+            'data'    => ['method' => $request->getMethod()],
+        ];
+        $responseType = Response::HTTP_BAD_REQUEST;
+        break;
+    }
 
         return [
             'result'       => $result ?? null,
@@ -754,28 +757,28 @@ class EavService
     {
         // its a collection endpoint
         switch ($request->getMethod()) {
-            case 'GET':
-                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
-                $responseType = Response::HTTP_OK;
-                break;
-            case 'POST':
-                // Transfer the variable to the service
-                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
-                $responseType = Response::HTTP_CREATED;
-                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-                    $responseType = Response::HTTP_FORBIDDEN;
-                }
-                break;
-            default:
-                $result = [
-                    'message' => 'This method is not allowed on this endpoint, allowed methods are GET and POST',
-                    'type'    => 'Bad Request',
-                    'path'    => $info['path'],
-                    'data'    => ['method' => $request->getMethod()],
-                ];
-                $responseType = Response::HTTP_BAD_REQUEST;
-                break;
+      case 'GET':
+        $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
+        $responseType = Response::HTTP_OK;
+        break;
+      case 'POST':
+        // Transfer the variable to the service
+        $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
+        $responseType = Response::HTTP_CREATED;
+        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+            $responseType = Response::HTTP_FORBIDDEN;
         }
+        break;
+      default:
+        $result = [
+            'message' => 'This method is not allowed on this endpoint, allowed methods are GET and POST',
+            'type'    => 'Bad Request',
+            'path'    => $info['path'],
+            'data'    => ['method' => $request->getMethod()],
+        ];
+        $responseType = Response::HTTP_BAD_REQUEST;
+        break;
+    }
 
         return [
             'result'       => $result ?? null,
@@ -818,8 +821,8 @@ class EavService
         $this->validationService->setRequest($request);
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
         $this->validationService->removeObjectsNotMultiple = []; // to be sure
-        $this->validationService->notifications = []; // to be sure
-        $object = $this->validationService->validateEntity($object, $body);
+    $this->validationService->notifications = []; // to be sure
+    $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
         if ($object->getHasErrors()) {
@@ -840,9 +843,9 @@ class EavService
         }
 
         // Check optional conditional logic
-        $object->checkConditionlLogic(); // Old way of checking condition logic
+    $object->checkConditionlLogic(); // Old way of checking condition logic
 
-        // Afther guzzle has cleared we need to again check for errors
+    // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
             $this->handleDeleteOnError();
@@ -868,8 +871,8 @@ class EavService
                     foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
                         if ($attribute->getMustBeUnique()) {
                             // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
-                            $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
-                            break;
+              $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
+              break;
                         }
                     }
                 }
@@ -1018,15 +1021,15 @@ class EavService
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
         // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
-//        try {
-//            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-//                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-//            }
-//        } catch (AccessDeniedException $e) {
-//            $objectEntity->addError($attribute->getName(), $e->getMessage());
-//
-//            return $objectEntity;
-//        }
+        //        try {
+        //            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
+        //                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+        //            }
+        //        } catch (AccessDeniedException $e) {
+        //            $objectEntity->addError($attribute->getName(), $e->getMessage());
+        //
+        //            return $objectEntity;
+        //        }
 
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
@@ -1041,7 +1044,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
-//                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+                //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
             }
 
             return [
@@ -1113,18 +1116,18 @@ class EavService
     {
         $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
-//        var_dump($createdObject->getUri());
-//        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
-//            try {
-//                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
-//                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
-//                $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
-//            } catch (\Throwable $e) {
-//                $resource = null;
-//            }
-//        }
-//        var_dump('Delete: '.$createdObject->getEntity()->getName());
-//        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
+        //        var_dump($createdObject->getUri());
+        //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+        //            try {
+        //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
+        //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
+        //                $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
+        //            } catch (\Throwable $e) {
+        //                $resource = null;
+        //            }
+        //        }
+        //        var_dump('Delete: '.$createdObject->getEntity()->getName());
+        //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
         foreach ($createdObject->getObjectValues() as $value) {
             if ($value->getAttribute()->getType() == 'object') {
                 foreach ($value->getObjects() as $object) {
@@ -1135,12 +1138,12 @@ class EavService
             try {
                 $this->em->remove($value);
                 $this->em->flush();
-//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
+                //                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
             } catch (Exception $exception) {
-//                var_dump($exception->getMessage());
-//                var_dump($value->getId()->toString());
-//                var_dump($value->getValue());
-//                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName().' GAAT MIS');
+                //                var_dump($exception->getMessage());
+                //                var_dump($value->getId()->toString());
+                //                var_dump($value->getValue());
+                //                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName().' GAAT MIS');
                 continue;
             }
         }
@@ -1148,9 +1151,9 @@ class EavService
         try {
             $this->em->remove($createdObject);
             $this->em->flush();
-//            var_dump('Deleted: '.$createdObject->getEntity()->getName());
+            //            var_dump('Deleted: '.$createdObject->getEntity()->getName());
         } catch (Exception $exception) {
-//            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
+            //            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
         }
     }
 
