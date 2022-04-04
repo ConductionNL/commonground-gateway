@@ -156,24 +156,8 @@ class HandlerService
     // eav new way
     // dont get collection if accept type is formio
     if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $endpoint->getOperationType() === 'item')) || $this->getRequestType('accept') !== 'form.io') {
-      // $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+      $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
     }
-
-    // Dummy data
-    $rP = $this->request->attributes->get('_route_params');
-    $data = [
-      'id' => explode('/', $rP['path'])[1],
-      'weekend' => [
-        'id' => 'test',
-        'saturday' =>  'test',
-        'sunday' => 'test'
-      ],
-      'monday' => 'tset',
-      'tuesday' => 'test',
-      'wednesday' => 'tes',
-      'thursday' => 'test',
-      'friday' => 'tset'
-    ];
 
     // Form.io components array
     if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
