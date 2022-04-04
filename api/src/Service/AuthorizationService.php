@@ -317,6 +317,7 @@ class AuthorizationService
             // Get the sub scope for the given Attribute we are going to check
             $sub_scope = $base_scope.'.'.$attribute->getName();
 
+            // todo: make this foreach a function, same function as other foreach withh duplicate code
             // Loop through all scopes the user has
             foreach ($grantedScopes as $grantedScope) {
                 // example: POST.organizations.type=taalhuis,team
@@ -344,6 +345,7 @@ class AuthorizationService
                 return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point'));
             }
 
+            // todo: make this foreach a function, same function as other foreach withh duplicate code
             // Find scopes with = value check
             // Loop through all scopes the user has
             foreach ($grantedScopes as $grantedScope) {
@@ -385,7 +387,6 @@ class AuthorizationService
                     }
 
                     $hasValueScopes = true; // At this point we have a = value scope, and we are sure the given input ($info) matches this scope.
-
                     $scopeValues = explode(',', $grantedScopeExploded[1]);
                     // Compare value with allowed values from the scope
                     if (in_array($value, $scopeValues)) {
