@@ -54,12 +54,12 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Returns an $info array with the correct keys for other functions that want to use this $info array. Tries to find values using these same keys in the $info array input, if not found a default value will be set for that key.
      *
-     * @param array $info
+     * @param array $info An array that can contain the following "keys"(=>Default): "method"=>"GET", "entity"=>null, "attribute"=>null, "object"=>null & "value"=>null.
      * @return array
      */
-    private function handleInfoArray(array $info): array
+    private function getValidInfoArray(array $info): array
     {
         return [
             'method' => $info['method'] ?? 'GET',
@@ -71,19 +71,19 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Checks if a user is allowed to view or edit a resource (Entity) or a property of a resource (Attribute). This is done by getting the scopes (/roles) from the user and comparing these scopes with the data from the $info array input.
      *
-     * @param array|null $info Can contain the following "keys"(=>Default): "method"=>"GET", "entity"=>null, "attribute"=>null, "object"=>null & "value"=>null. Should at least contain Entity or Attribute, else the check only passes if the user has admin scopes. Should also contain an Object or a Value in order to check for 'valueScopes'.
+     * @param array $info Can contain the following "keys"(=>Default): "method"=>"GET", "entity"=>null, "attribute"=>null, "object"=>null & "value"=>null. Should always, at least contain Entity or Attribute, else the check only passes if the user has admin scopes. Can also contain an Object (with Entity or Attribute) OR a Value (with Attribute) in order to check for 'valueScopes'.
      * @return void
      * @throws AccessDeniedException
      */
-    public function checkAuthorization(array $info = []): void
+    public function checkAuthorization(array $info): void
     {
         if (!$this->parameterBag->get('app_auth')) {
             return;
         }
 
-        $info = $this->handleInfoArray($info);
+        $info = $this->getValidInfoArray($info);
         $requiredScopes = $this->getRequiredScopes($info);
         try {
             $grantedScopes = $this->getGrantedScopes();
@@ -113,10 +113,10 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Gets the scopes required for viewing or editing a resource (Entity) or a property of a resource (Attribute).
      *
-     * @param array $info
-     * @return array
+     * @param array $info Can contain the following "keys": "method", "entity", "attribute". Should contain Method and either Entity or Attribute.
+     * @return array The scopes required to {method} the given Entity or Attribute.
      */
     private function getRequiredScopes(array $info): array
     {
@@ -150,9 +150,9 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Gets the scopes of the current user. This can also be no user, in that case we try to find anonymous scopes.
      *
-     * @return array|string[]
+     * @return array|string[] The scopes granted to the current user.
      * @throws CacheException|InvalidArgumentException
      */
     private function getGrantedScopes(): array
@@ -181,15 +181,14 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Gets the scopes of the current user, using the given $roles array with all the roles this user has.
      *
-     * @param array $roles
-     * @return string[]
+     * @param array $roles An array with all the roles of a user.
+     * @return string[] The scopes that match the given roles.
      */
     private function getScopesFromRoles(array $roles): array
     {
-        //todo: for testing, remove;
-        $scopes = ['POST.organizations.type=taalhuis,team', 'PUT.organizations.type=taalhuis', 'DELETE.organizations.type=taalhuis', 'GET.organizations.type=taalhuis'];
+        $scopes = [];
 
         foreach ($roles as $role) {
             if (strpos($role, 'scope') !== null) {
@@ -201,9 +200,9 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Gets the scopes for when there is no user logged in: anonymous scopes.
      *
-     * @return array
+     * @return array The scopes of an anonymous user.
      * @throws CacheException|InvalidArgumentException
      */
     private function getScopesForAnonymous(): array
@@ -235,11 +234,12 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * This function calls and handles the result of the checkValueScopes() function (= Checks if the user has scopes with =value and if so, check if the user is allowed to view or edit a resource (Entity) or property of a resource (Attribute) because of these scopes).
+     * This function might throw an AccessDeniedException as result.
      *
-     * @param array $grantedScopes
-     * @param array $info
-     * @return bool
+     * @param array $grantedScopes The scopes granted to the current user.
+     * @param array $info Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
+     * @return bool True if the current user is granted one or more 'valueScopes' AND the user is allowed to view or edit the given Entity or Attribute in combination with the given Object or Value. If the user is not allowed to view or edit an AccessDeniedException will be thrown. False if there are no 'valueScopes' found.
      */
     private function handleValueScopes(array $grantedScopes, array $info): bool
     {
@@ -267,161 +267,14 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Returns an array with the default context for the return array of the checkValueScopes() & loopGrantedScopes() functions.
      *
-     * @param array $grantedScopes
-     * @param array $info
-     * @return array
+     * @param array $errorArray See and use the checkValueScopesReturnError() function.
+     * @param bool $hasValueScopes True if there is at least one grantedScope with a = value.
+     * @param bool $matchValueScopes True if the given Object or Value match the required value(s) of the 'valueScopes' (grantedScope(s) with = value) for the given Entity or Attribute.
+     * @return array An array with the expected return context for the checkValueScopes() & loopGrantedScopes() functions.
      */
-    private function checkValueScopes(array $grantedScopes, array $info): array
-    {
-        //todo: cache this function somehow? or a part of it ?
-        //todo: split up this function into multiple other functions, try to remove duplicate code!
-
-        $method = $info['method'];
-        $entity = $info['entity'];
-        $attribute = $info['attribute'];
-        $object = $info['object'];
-        $value = $info['value'];
-
-        // We need at least a value or an object for this to work
-        if (empty($object) && empty($value)) { //$method !== GET makes sure we don't throw this error on get Collection calls
-            return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('no object & no value'), $method !== "GET");
-        }
-
-        // And we always need at least an Entity from somewhere
-        if (empty($entity)) {
-            if (empty($attribute)) {
-                if (empty($object)) {
-                    return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('no entity, attribute or object'), true);
-                }
-                $entity = $object->getEntity();
-            } else {
-                $entity = $attribute->getEntity();
-            }
-        }
-
-        // Get the base scope for the given Entity and/or Attribute we are going to check
-        $base_scope = $info['method'].'.'.$entity->getName();
-
-        // If no $value is given, but $object & $attribute are given, get $value from the $object using the $attribute
-        if (empty($value) && !empty($object) && !empty($attribute) &&
-            !in_array($attribute->getType(), ['object', 'file', 'array']) &&
-            !$attribute->getMultiple()
-        ) {
-            $value = $object->getValueByAttribute($attribute)->getValue();
-        }
-
-        // If we have an Attribute and a Value we are checking for a single scope
-        if (!empty($attribute) && !empty($value)) {
-            // Get the sub scope for the given Attribute we are going to check
-            $sub_scope = $base_scope.'.'.$attribute->getName();
-
-            // todo: make this foreach a function, same function as other foreach withh duplicate code
-            // Loop through all scopes the user has
-            foreach ($grantedScopes as $grantedScope) {
-                // example: POST.organizations.type=taalhuis,team
-                $grantedScopeExploded = explode("=", $grantedScope);
-
-                // If count grantedScope == 2, the user has a scope with a = value check. If so, make sure the scope we are checking matches this scope (the part before the =)
-                if (count($grantedScopeExploded) == 2 && $grantedScopeExploded[0] == $sub_scope) {
-                    $hasValueScopes = true; // At this point we have a = value scope, and we are sure the given input ($info) matches this scope.
-                    $scopeValues = explode(',', $grantedScopeExploded[1]);
-                    // Compare value with scope
-                    if (in_array($value, $scopeValues)) {
-                        $matchValueScopes = true;
-                        continue;
-                    }
-                    $failedScope = $grantedScope;
-                    $failedValue = $value;
-                    break;
-                }
-            }
-        }
-        // Else we are checking for multiple scopes of an Entity, if we also have an object, continue... (never continue if we have an Attribute!)
-        elseif (!empty($entity) && !empty($object) && empty($attribute)) {
-            if ($method === "POST") {
-                // Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point
-                return $this->checkValueScopesReturn($this->checkValueScopesErrorReturn('Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point'));
-            }
-
-            // todo: make this foreach a function, same function as other foreach withh duplicate code
-            // Find scopes with = value check
-            // Loop through all scopes the user has
-            foreach ($grantedScopes as $grantedScope) {
-                // example: POST.organizations.type=taalhuis,team
-                $grantedScopeExploded = explode("=", $grantedScope);
-
-                // If count grantedScope == 2, the user has a scope with a = value check.
-                if (count($grantedScopeExploded) == 2) {
-                    // Get info out of the scope
-                    $grantedScopeName = explode(".", $grantedScopeExploded[0]);
-                    $grantedScopeMethod = $grantedScopeName[0];
-                    // Make sure we only check scopes with the correct method
-                    if ($grantedScopeMethod !== $method) {
-                        continue;
-                    }
-                    // Get the attribute name out of the scope
-                    $attributeName = end($grantedScopeName);
-                    // Find the attribute with the $entity and $attributeName
-                    $scopeAttribute = $this->entityManager->getRepository('App:Attribute')->findOneBy(['entity' => $entity, 'name' => $attributeName]);
-                    if (empty($scopeAttribute) ||
-                        in_array($scopeAttribute->getType(), ['object', 'file', 'array']) ||
-                        $scopeAttribute->getMultiple()
-                    ) {
-                        // If we don't find an Attribute for that Entity with the attribute name, continue
-                        // If the attribute will return a value we can not compare to a string, continue
-                        continue;
-                    } else {
-                        // Get the sub scope for the given Attribute we are going to check
-                        $sub_scope = $base_scope.'.'.$scopeAttribute->getName();
-                        if ($grantedScopeExploded[0] != $sub_scope) {
-                            // Make sure the scope we are checking matches this scope (the part before the =)
-                            continue;
-                        }
-
-                        // Get the value from the Object with the attribute of this scope
-                        $value = $object->getValueByAttribute($scopeAttribute)->getValue();
-
-                        //todo, what to do if a $value is empty?
-                    }
-
-                    $hasValueScopes = true; // At this point we have a = value scope, and we are sure the given input ($info) matches this scope.
-                    $scopeValues = explode(',', $grantedScopeExploded[1]);
-                    // Compare value with allowed values from the scope
-                    if (in_array($value, $scopeValues)) {
-                        $matchValueScopes = true;
-                        continue;
-                    }
-                    $failedScope = $grantedScope;
-                    $failedValue = $value;
-                    break;
-                }
-            }
-        }
-
-        return $this->checkValueScopesReturn(
-            $this->checkValueScopesErrorReturn(
-                'Insufficient Access',
-                $scopeValues ?? null,
-                $failedValue ?? null,
-                $failedScope ?? null,
-                $scopeAttribute ?? null
-            ),
-            $hasValueScopes ?? false,
-            $matchValueScopes ?? false
-        );
-    }
-
-    /**
-     * @TODO
-     *
-     * @param array $errorArray Use function checkValueScopesErrorReturn()
-     * @param bool $hasValueScopes True if there is at least one grantedScope with a = value
-     * @param bool $matchValueScopes True if the given value for this grantedScope with = value matches the required value
-     * @return array
-     */
-    private function checkValueScopesReturn(array $errorArray, bool $hasValueScopes = false, bool $matchValueScopes = false): array
+    private function checkValueScopesReturn(array $errorArray = [], bool $hasValueScopes = false, bool $matchValueScopes = false): array
     {
         return [
             'error' => $errorArray,
@@ -431,16 +284,16 @@ class AuthorizationService
     }
 
     /**
-     * @TODO
+     * Returns an array with the default context for the error array of the checkValueScopesReturn() function.
      *
      * @param string $message An error message, default = 'Something went wrong'.
      * @param array|null $scopeValues The values that are allowed by the $failedScope.
-     * @param null $failedValue The value that did not match the $scopeValues.
+     * @param null $failedValue The value that did not match one of the $scopeValues.
      * @param string|null $failedScope The scope that the user failed to 'match'.
      * @param Attribute|null $attribute The attribute of the scope that the user failed to 'match' $failedScope.
-     * @return array
+     * @return array An array with the expected return context for the error array of the checkValueScopesReturn() function.
      */
-    private function checkValueScopesErrorReturn(string $message = 'Something went wrong', array $scopeValues = null, $failedValue = null, string $failedScope = null, ?Attribute $attribute = null): array
+    private function checkValueScopesReturnError(string $message = 'Something went wrong', array $scopeValues = null, $failedValue = null, string $failedScope = null, ?Attribute $attribute = null): array
     {
         return [
             'message' => $message,
@@ -448,6 +301,215 @@ class AuthorizationService
             'failedValue' => $failedValue,
             'failedScope' => $failedScope,
             'attribute' => $attribute
+        ];
+    }
+
+    /**
+     * Makes sure if the given $info array has the correct data to continue checking 'valueScopes'. And if not, tries to fix this with the other given data in the $info array.
+     *
+     * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
+     * @return array The updated $info array or a checkValueScopesReturn() array containing an error message (also see checkValueScopesReturnError() function).
+     */
+    private function handleInfoArray(array $info): array
+    {
+        // We need at least a value or an object for the valueScopes check to work
+        if (empty($info['object']) && empty($info['value'])) { //$info['method'] !== GET makes sure we don't throw this error on get Collection calls
+            return $this->checkValueScopesReturn($this->checkValueScopesReturnError('checkValueScopes has no object & no value'), $info['method'] !== "GET");
+        }
+
+        // And we always need at least an Entity from somewhere
+        if (empty($info['entity'])) {
+            if (empty($info['attribute'])) {
+                if (empty($info['object'])) {
+                    return $this->checkValueScopesReturn($this->checkValueScopesReturnError('checkValueScopes has no entity (, attribute or object)'), true);
+                }
+                $info['entity'] = $info['object']->getEntity();
+            } else {
+                $info['entity'] = $info['attribute']->getEntity();
+            }
+        }
+
+        // If no Value is given, but Object & Attribute are given, get Value from the Object using the Attribute.
+        if (empty($info['value']) && !empty($info['object']) && !empty($info['attribute']) &&
+            !in_array($info['attribute']->getType(), ['object', 'file', 'array']) &&
+            !$info['attribute']->getMultiple()
+        ) {
+            $info['value'] = $info['object']->getValueByAttribute($info['attribute'])->getValue();
+        }
+
+        return $info;
+    }
+
+    /**
+     * Checks if the user has scopes with =value and if so, check if the user is allowed to view or edit a resource (Entity) or property of a resource (Attribute) because of these scopes.
+     *
+     * @param array $grantedScopes The scopes granted to the current user.
+     * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
+     * @return array An array generated with the checkValueScopesReturn() function.
+     */
+    private function checkValueScopes(array $grantedScopes, array $info): array
+    {
+        //todo: cache this function somehow? or parts of it (, or the functions used in this function)?
+
+        $info = $this->handleInfoArray($info);
+        if (array_key_exists('error', $info)) {
+            return $info;
+        }
+
+        // If we have an Attribute and a Value we are checking for a single scope
+        if (!empty($info['attribute']) && !empty($info['value'])) {
+            if ($info['method'] === "GET" || $info['method'] === "DELETE") {
+                $message = "Do not check for ValueScopes on Attribute & Value level when doing a GET or DELETE, because we can and should check for ValueScopes on Entity & Object level when doing a GET or DELETE";
+                return $this->checkValueScopesReturn($this->checkValueScopesReturnError($message)); // does not result in an AccessDeniedException, because hasValueScopes = false
+            }
+
+            // Loop through all scopes the user has to find and handle scopes with = value check
+            return $this->loopGrantedScopes($grantedScopes, $info);
+        }
+        // Else we are checking for multiple scopes of an Entity, if we also have an object, continue... (never continue if we have an Attribute!)
+        elseif (!empty($info['entity']) && !empty($info['object']) && empty($info['attribute'])) {
+            if ($info['method'] === "POST") {
+                $message = "Do not check for ValueScopes on Entity & Object level when doing a POST, because values of the Object are not set at this point";
+                return $this->checkValueScopesReturn($this->checkValueScopesReturnError($message)); // does not result in an AccessDeniedException, because hasValueScopes = false
+            }
+
+            // Loop through all scopes the user has to find and handle scopes with = value check
+            return $this->loopGrantedScopes($grantedScopes, $info);
+        }
+
+        return $this->checkValueScopesReturn();
+    }
+
+    /**
+     * Loop through all scopes the user has to find and handle scopes with = value check
+     *
+     * @param array $grantedScopes The scopes granted to the current user.
+     * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Entity, with an Object OR a Value and can contain an Attribute, used in order to check for and handle 'valueScopes'.
+     * @return array An array generated with the checkValueScopesReturn() function.
+     */
+    private function loopGrantedScopes(array $grantedScopes, array $info): array
+    {
+        foreach ($grantedScopes as $grantedScope) {
+            // example: POST.organizations.type=taalhuis,team
+            $result = $this->checkForValueScope($grantedScope, $info);
+            if (!empty($result)) {
+                $hasValueScopes = true;
+                if ($result['matchValueScopes']) {
+                    $matchValueScopes = true;
+                } else {
+                    return $this->checkValueScopesReturn(
+                        $this->checkValueScopesReturnError(
+                            'Insufficient Access',
+                            $result['scopeValues'],
+                            $result['failedValue'],
+                            $grantedScope,
+                            $result['scopeAttribute']
+                        ),
+                        true
+                    );
+                }
+            }
+        }
+
+        return $this->checkValueScopesReturn(
+            $this->checkValueScopesReturnError(),
+            $hasValueScopes ?? false,
+            $matchValueScopes ?? false
+        );
+    }
+
+    /**
+     * Checks if a given grantedScope of the current user is a = value (valueScope). And if so compares this scope with the given data in $info array to determine if the user is authorized or not.
+     *
+     * @param string $grantedScope A scope granted to the current user.
+     * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Entity, with an Object OR a Value and can contain an Attribute, used in order to check for and handle a 'valueScope'.
+     * @return array|null If this returns an array and not null: (hasValueScopes = true) we have a = value scope, and we are sure the given input ($info) Entity (+Object) or Attribute (+Value) matches this scope. If an array is returned it will always contain the bool matchValueScopes, if matchValueScopes == false this array will also contain the following keys: scopeValues, failedValue & scopeAttribute.
+     */
+    private function checkForValueScope(string $grantedScope, array $info): ?array
+    {
+        // example: POST.organizations.type=taalhuis,team
+        $grantedScopeExploded = explode("=", $grantedScope);
+
+        // If count grantedScope == 2, the user has a scope with a = value check.
+        if (count($grantedScopeExploded) == 2) {
+            // Get the sub_scope for the given Entity and/or Attribute we are going to check
+            $subScopeResult = $this->getSubScope($grantedScopeExploded, $info); // todo caching? if the result is always the same
+            if ($subScopeResult === null || $grantedScopeExploded[0] != $subScopeResult['sub_scope']) {
+                // If we didn't find a sub_scope or if the scope we are checking (the part before the =) doest not match this sub_scope
+                // Continue checking other $grantedScopes with foreach...
+                return null;
+            }
+            if (empty($info['value']) && $subScopeResult['scopeAttribute']) {
+                // Get the value from the Object with the attribute of this scope
+                $info['value'] = $info['object']->getValueByAttribute($subScopeResult['scopeAttribute'])->getValue();
+                //todo, what to do if a $info['value'] is empty?
+            }
+
+            $scopeValues = explode(',', $grantedScopeExploded[1]);
+
+            // Compare value with allowed values from the scope
+            if (in_array($info['value'], $scopeValues)) {
+                // Found an allowed value, continue checking other $grantedScopes with foreach...
+                return [ 'matchValueScopes' => true ];
+            }
+
+            // Not allowed value, break checking other $grantedScopes with foreach and return unauthorized.
+            return [
+                'matchValueScopes' => false,
+                'scopeValues' => $scopeValues,
+                'failedValue' => $info['value'],
+                'scopeAttribute' => $subScopeResult['scopeAttribute']
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a $sub_scope using the Entity and Attribute from the $info array, if Attribute is not present, use the $info array to find the $sub_scope and the $scopeAttribute and compare it with $grantedScopeExploded data.
+     *
+     * @param array $grantedScopeExploded A valueScope granted to the current user. But an array (Exploded string) version, containing the 2 parts of the scope left and right of the '='.
+     * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute". Should contain Method and Entity, can also contain an Attribute.
+     * @return array|null Null if $grantedScopeExploded data doesn't match the $info data or if data in $info array is incorrect. Will return an array with sub_scope & scopeAttribute (default=null) if successful.
+     */
+    private function getSubScope(array $grantedScopeExploded, array $info): ?array
+    {
+        // Get the base scope for the given Entity and/or Attribute we are going to check
+        $base_scope = $info['method'].'.'.$info['entity']->getName();
+
+        // If we have an Attribute
+        if ($info['attribute']) {
+            // Get the sub scope for the given Attribute we are going to check
+            $sub_scope = $base_scope.'.'.$info['attribute']->getName();
+        } else {
+            // Get info out of the scope
+            $grantedScopeName = explode(".", $grantedScopeExploded[0]);
+            $grantedScopeMethod = $grantedScopeName[0];
+            // Make sure we only check scopes with the correct method
+            if ($grantedScopeMethod !== $info['method']) {
+                return null;
+            }
+            // Get the attribute name out of the scope
+            $attributeName = end($grantedScopeName);
+
+            // Find the attribute with the $entity and $attributeName
+            $scopeAttribute = $this->entityManager->getRepository('App:Attribute')->findOneBy(['entity' => $info['entity'], 'name' => $attributeName]);
+            if (empty($scopeAttribute) ||
+                in_array($scopeAttribute->getType(), ['object', 'file', 'array']) ||
+                $scopeAttribute->getMultiple()
+            ) {
+                // If we don't find an Attribute for that Entity with the attribute name, continue
+                // If the attribute will return a value we can not compare to a string, continue
+                return null;
+            } else {
+                // Get the sub scope for the given Attribute we are going to check
+                $sub_scope = $base_scope . '.' . $scopeAttribute->getName();
+            }
+        }
+
+        return [
+            'sub_scope' => $sub_scope,
+            'scopeAttribute' => $scopeAttribute ?? null
         ];
     }
 
