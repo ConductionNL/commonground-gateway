@@ -48,6 +48,7 @@ class AuthorizationService
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
+        $scopes['admin_scope'] = $method.'.admin';
         if ($entity) {
             $scopes['base_scope'] = $method.'.'.$entity->getName();
             if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
@@ -135,6 +136,9 @@ class AuthorizationService
             $item->set($grantedScopes);
             $item->tag('grantedScopes');
             $this->cache->save($item);
+        }
+        if (in_array($scopes['admin_scope'], $grantedScopes)) {
+            return;
         }
         if (in_array($scopes['base_scope'], $grantedScopes)
             || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
