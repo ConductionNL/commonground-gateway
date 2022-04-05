@@ -106,8 +106,6 @@ class OasParserService
             if (isset($content['schema']['$ref'])) {
                 $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
                 isset($this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName']) ? $entityNameToLinkTo = $this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName'] : null;
-                var_dump($entityNameToLinkTo);
-
                 return $entityNameToLinkTo;
             }
         }
@@ -204,7 +202,10 @@ class OasParserService
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
                 substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) :
-                substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1);
+                (isset($response['content']['application/json']['schema']['properties']) ?
+                    substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
+                    substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
+                );
         } else {
             $entityNameToLinkTo = $this->parseFirstContent($response);
         }
