@@ -44,7 +44,7 @@ class PubliccodeService
     /**
      * This function gets the github owner details.
      *
-     * @param array      $item   a repository from github with a publicclode.yaml file
+     * @param array $item a repository from github with a publicclode.yaml file
      *
      * @throws GuzzleException
      *
@@ -67,7 +67,7 @@ class PubliccodeService
     /**
      * This function gets all the github repository details.
      *
-     * @param array      $item   a repository from github with a publicclode.yaml file
+     * @param array $item a repository from github with a publicclode.yaml file
      *
      * @throws GuzzleException
      *
@@ -86,7 +86,7 @@ class PubliccodeService
             'tags'        => $this->requestFromUrl($item['tags_url']),
             'languages'   => $this->requestFromUrl($item['languages_url']),
             'downloads'   => $this->requestFromUrl($item['downloads_url']),
-//            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
+            //            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
             'labels'      => $this->requestFromUrl($item['labels_url'], '{/name}'),
         ];
     }
