@@ -22,7 +22,7 @@ import authorizationImage from '../images/undraw_two_factor_authentication_namy.
 
 const IndexPage = ({location}) => (
   <Layout>
-    <SEO title="Conductor"/>
+    <SEO />
     <Background backgroundColor="#4376FC">
       <Container>
         <Navigation as="nav" location={location}/>
@@ -36,21 +36,13 @@ const IndexPage = ({location}) => (
         <Logos/>
       </Container>
     </Background>
+
     <Container>
-      <Section id="over-demodam">
+      <Section id="common-ground-gateway">
         <Flex>
           <Box>
-            <h2>Inleiding</h2>
-            <p>
-              Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam
-              rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt
-              explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-              consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui
-              dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora
-              incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum
-              exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem
-              vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui
-              dolorem eum fugiat quo voluptas nulla pariatur?
+            <h2>The Common Gateway</h2>
+            <p>A microservice architecture (such as Common Ground) consists of numerous APIs and /n registers. Integrating these one by one into a frontend is a time-consuming and almost impossible task. Due to this fact we developed the Common Gateway, it easily links multiple APIs into one RESTful API which can be implemented immediately. Because the Common Gateway functions as a link between the frontend and backend, it makes it less complex and faster to develop an application on the basis of (Common Ground) components.
             </p>
           </Box>
         </Flex>
@@ -66,13 +58,9 @@ const IndexPage = ({location}) => (
             <ResponsiveImage src={casesImage} alt="Illustratie van persoon en document"/>
           </Box>
           <Box width={3 / 5}>
-            <h2>Historie</h2>
-            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam
-              rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt
-              explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-              consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui
-              dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora
-              incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</p>
+            <h2>Richly implemented by default</h2>
+            <p>The Common Gateway not only links APIs together, it also provides specific solutions for the ecosystem. It can deliver objects from multiple APIs as a single object to the UI and, when storing the data, also redistribute the data across the different APIs. In addition, the Common Gateway can enrich objects, cache them and record processing in a processing registry. Of course, standard Common Ground components such as authorizations, notifications and ZGW are fully supported. This means that it is no longer necessary to develop this type of logic yourself, and that the frontend really remains the frontend.
+             </p>
           </Box>
         </Flex>
       </Section>
@@ -80,13 +68,8 @@ const IndexPage = ({location}) => (
       <Section>
         <Flex>
           <Box width={3 / 5}>
-            <h2>Wie</h2>
-            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam
-              rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt
-              explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-              consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui
-              dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora
-              incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
+            <h2>Secure by default</h2>
+            <p>The Common Gateway supports DigiD, eHerkenning, OpenID Connect and ADFS without additional components. Alternatively, it is possible to use Kubernetes solutions, such as Keycloak or commercial solutions, such as Auth0. The Common Gateway has been both pen-tested and TPM-audited and delivers with its standard support for PKI certificates (both browser and machine to machine) a secure, stable and reliable platform for application development.
             </p>
           </Box>
           <Box width={2 / 5}>
@@ -94,6 +77,47 @@ const IndexPage = ({location}) => (
           </Box>
         </Flex>
       </Section>
+
+      <Section>
+        <Flex>
+          <Box width={3 / 5}>
+            <h2>Faster by default</h2>
+            <p>Not only is the Common Gateway technically faster through smart use of caching, asynchronous queries, and other aspects of the Common Ground ecosystem such as linked data. It is also specifically designed for faster development, it can be run locally, quickly and simply, and is capable of mocking full APIs (such as ZGW), allowing a developer to start right away. The standard extensive functionality ensures that developers no longer have to worry about aspects such as processing or DigiD, but can fully focus on the frontend.
+            </p>
+          </Box>
+          <Box width={2 / 5}>
+            <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
+          </Box>
+        </Flex>
+      </Section>
+
+      <Section>
+        <Flex>
+          <Box width={3 / 5}>
+            <h2>Standard in Standards</h2>
+            <p>The Common Gateway was designed specifically with supporting Common Ground applications in mind. The straightforward and simple RESTful API is easy to integrate into React or Angular applications, such as NL Design System, and works well with various AJAX libraries (such as RESTful React). This support goes beyond standard read traffic and also supports, for example, real-time updating of data in the UI using polling or webhooks
+            </p>
+          </Box>
+          <Box width={2 / 5}>
+            <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
+          </Box>
+        </Flex>
+      </Section>
+
+      <Section>
+        <Flex>
+          <Box width={3 / 5}>
+            <h2>Both separate and in context</h2>
+            <p>At the moment, the Common Gateway is only available as a separate container. However, during development, a conscious choice was made to reuse known PHP libraries. This makes it possible to run the Common Gateway as part (plug-in) of a WordPress, Drupal or Joomla installation. We aim to offer the Common Gateway as an integrable solution in 2022.
+            </p>
+          </Box>
+          <Box width={2 / 5}>
+            <ResponsiveImage src={selectionImage} alt="Illustratie van documenten met checklist"/>
+          </Box>
+        </Flex>
+      </Section>
+
+
     </Container>
 
     {/*<Background backgroundColor="#202F3E">*/}
