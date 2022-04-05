@@ -989,7 +989,7 @@ class EavService
         $orderCheck = ['_dateCreated', '_dateModified'];
 //        $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
 
-        $order = null;
+        $order = [];
         if (array_key_exists('order', $query)) {
             $order = $query['order'];
             unset($query['order']);
