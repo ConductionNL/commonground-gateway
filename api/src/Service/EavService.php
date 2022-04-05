@@ -984,7 +984,38 @@ class EavService
         }
         unset($query['updateGatewayPool']);
 
+        // todo: add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
+        // Allowed order by
+        $orderCheck = ['_dateCreated', '_dateModified'];
+//        $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
+
+        $order = null;
+        if (array_key_exists('order', $query)) {
+            $order = $query['order'];
+            unset($query['order']);
+            if (count($order) > 1) {
+                $message = 'Only one order query param at the time is allowed.';
+            }
+            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
+                $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
+            }
+            if (!in_array(array_keys($order)[0], $orderCheck)) {
+                $orderCheckStr = implode(', ', $orderCheck);
+                $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
+            }
+            if (isset($message)) {
+                return [
+                    'message' => $message,
+                    'type'    => 'error',
+                    'path'    => $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0],
+                    'data'    => ['order' => $order],
+                ];
+            }
+        }
+
+        // Allowed filters
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
+
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
@@ -996,13 +1027,7 @@ class EavService
                 $param = '_'.ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
-                $filterCheckStr = '';
-                foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr.$filter;
-                    if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr.', ';
-                    }
-                }
+                $filterCheckStr = implode(', ', $filterCheck);
 
                 if (is_array($value)) {
                     $value = end($value);
@@ -1017,7 +1042,7 @@ class EavService
             }
         }
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
-        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
+        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
 
         // Lets see if we need to flatten te responce (for example csv use)
         $flat = false;
