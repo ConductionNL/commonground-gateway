@@ -130,13 +130,13 @@ class HandlerService
         $method = $this->request->getMethod();
 
         // Form.io components array
-        if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
-            return new Response(
-                $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
-                Response::HTTP_OK,
-                ['content-type' => 'json']
-            );
-        }
+        // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+        //   return new Response(
+        //     $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
+        //     Response::HTTP_OK,
+        //     ['content-type' => 'json']
+        //   );
+        // }
 
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
@@ -154,7 +154,19 @@ class HandlerService
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
 
         // eav new way
-        $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        // dont get collection if accept type is formio
+        if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $endpoint->getOperationType() === 'item')) || $this->getRequestType('accept') !== 'form.io') {
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        }
+
+        // Form.io components array
+        if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+            return new Response(
+                $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity(), $data ?? null), 'json'),
+                Response::HTTP_OK,
+                ['content-type' => 'json']
+            );
+        }
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
@@ -164,7 +176,7 @@ class HandlerService
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-            // Check if we need to trigger subscribers for this entity
+      // Check if we need to trigger subscribers for this entity
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
 
             // Update current Log
@@ -198,29 +210,29 @@ class HandlerService
         $content = $this->request->getContent();
         $contentType = $this->getRequestType('content-type');
         switch ($contentType) {
-            case 'json':
-            case 'jsonhal':
-            case 'jsonld':
-                return json_decode($content, true);
-            case 'xml':
-                // otherwise xml will throw its own error bypassing our exception handling
-                libxml_use_internal_errors(true);
-                // string to xml object, encode that to json then decode to array
-                $xml = simplexml_load_string($content);
-                // if xml is false get errors and throw exception
-                if ($xml === false) {
-                    $errors = 'Something went wrong decoding xml:';
-                    foreach (libxml_get_errors() as $e) {
-                        $errors .= ' '.$e->message;
-                    }
+      case 'json':
+      case 'jsonhal':
+      case 'jsonld':
+        return json_decode($content, true);
+      case 'xml':
+        // otherwise xml will throw its own error bypassing our exception handling
+        libxml_use_internal_errors(true);
+        // string to xml object, encode that to json then decode to array
+        $xml = simplexml_load_string($content);
+        // if xml is false get errors and throw exception
+        if ($xml === false) {
+            $errors = 'Something went wrong decoding xml:';
+            foreach (libxml_get_errors() as $e) {
+                $errors .= ' '.$e->message;
+            }
 
-                    throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
-                }
-
-                return json_decode(json_encode($xml), true);
-            default:
-                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+            throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
+
+        return json_decode(json_encode($xml), true);
+      default:
+        throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+    }
     }
 
     /**
@@ -231,55 +243,55 @@ class HandlerService
     public function createResponse(array $data): Response
     {
 
-        // We only end up here if there are no errors, so we only suply best case senario's
+    // We only end up here if there are no errors, so we only suply best case senario's
         switch ($this->request->getMethod()) {
-            case 'GET':
-                $status = Response::HTTP_OK;
-                break;
-            case 'POST':
-                $status = Response::HTTP_CREATED;
-                break;
-            case 'PUT':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'UPDATE':
-                $status = Response::HTTP_ACCEPTED;
-                break;
-            case 'DELETE':
-                $status = Response::HTTP_NO_CONTENT;
-                break;
-            default:
-                $status = Response::HTTP_OK;
-        }
+      case 'GET':
+        $status = Response::HTTP_OK;
+        break;
+      case 'POST':
+        $status = Response::HTTP_CREATED;
+        break;
+      case 'PUT':
+        $status = Response::HTTP_ACCEPTED;
+        break;
+      case 'UPDATE':
+        $status = Response::HTTP_ACCEPTED;
+        break;
+      case 'DELETE':
+        $status = Response::HTTP_NO_CONTENT;
+        break;
+      default:
+        $status = Response::HTTP_OK;
+    }
 
         $acceptType = $this->getRequestType('accept');
 
         // Lets fill in some options
         $options = [];
         switch ($acceptType) {
-            case 'text/csv':
-                // @todo do something with options?
-                $options = [
-                    CsvEncoder::ENCLOSURE_KEY   => '"',
-                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
-                ];
-                $data = $this->serializer->encode($data, 'csv');
+      case 'text/csv':
+        // @todo do something with options?
+        $options = [
+            CsvEncoder::ENCLOSURE_KEY   => '"',
+            CsvEncoder::ESCAPE_CHAR_KEY => '+',
+        ];
+        $data = $this->serializer->encode($data, 'csv');
 
-                break;
-            case 'pdf':
-                $document = new Document();
-                // @todo find better name for document
-                $document->setName('pdf');
-                $document->setDocumentType($acceptType);
-                $document->setType('pdf');
-                // If data is not a template json_encode it
-                if (isset($data) && !is_string($data)) {
-                    $data = json_encode($data);
-                }
-                $document->setContent($data);
-                $result = $this->templateService->renderPdf($document);
-                break;
+        break;
+      case 'pdf':
+        $document = new Document();
+        // @todo find better name for document
+        $document->setName('pdf');
+        $document->setDocumentType($acceptType);
+        $document->setType('pdf');
+        // If data is not a template json_encode it
+        if (isset($data) && !is_string($data)) {
+            $data = json_encode($data);
         }
+        $document->setContent($data);
+        $result = $this->templateService->renderPdf($document);
+        break;
+    }
 
         // Lets seriliaze the shizle (if no document and we have a result)
         try {
@@ -355,23 +367,23 @@ class HandlerService
 
         // We only end up here if there are no errors, so we only suply best case senario's
         switch (strtoupper($handler->getTemplateType())) {
-            case 'TWIG':
-                $document = $this->templating->createTemplate($handler->getTemplate());
+      case 'TWIG':
+        $document = $this->templating->createTemplate($handler->getTemplate());
 
-                return $document->render($variables);
-                break;
-            case 'MD':
-                return $handler->getTemplate();
-                break;
-            case 'RST':
-                return $handler->getTemplate();
-                break;
-            case 'HTML':
-                return $handler->getTemplate();
-                break;
-            default:
-                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
-        }
+        return $document->render($variables);
+        break;
+      case 'MD':
+        return $handler->getTemplate();
+        break;
+      case 'RST':
+        return $handler->getTemplate();
+        break;
+      case 'HTML':
+        return $handler->getTemplate();
+        break;
+      default:
+        throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+    }
     }
 
     private function handleDataBeforeEAV(array $data, Handler $handler): array
@@ -400,7 +412,7 @@ class HandlerService
     private function handleDataAfterEAV(array $data, Handler $handler): array
     {
 
-        // The we want to do  translations on the outgoing response
+    // The we want to do  translations on the outgoing response
         $transRepo = $this->entityManager->getRepository('App:Translation');
         $translations = $transRepo->getTranslations($handler->getTranslationsOut());
 
