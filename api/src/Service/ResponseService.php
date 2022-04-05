@@ -164,7 +164,7 @@ class ResponseService
      *
      * @param ObjectEntity $result
      * @param $fields
-//     * @param ArrayCollection|null $maxDepth
+     * //     * @param ArrayCollection|null $maxDepth
      * @param bool $flat
      * @param int  $level
      *
@@ -290,6 +290,7 @@ class ResponseService
                 if (!$this->objectEntityService->checkOwner($result)) {
                     $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
                 }
+
                 return $this->renderResult($value->getValue(), $fields, $flat, $level);
 
                 // Old $MaxDepth;

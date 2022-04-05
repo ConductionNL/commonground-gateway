@@ -498,7 +498,7 @@ class EavService
                 $this->authorizationService->checkAuthorization([
                     'method' => $request->getMethod(),
                     'entity' => $entity,
-                    'object' => $object ?? null
+                    'object' => $object ?? null,
                 ]);
             } catch (AccessDeniedException $e) {
                 $result = [
@@ -507,6 +507,7 @@ class EavService
                     'path'    => $entity->getName(),
                     'data'    => [],
                 ];
+
                 return [
                     'result'       => $result,
                     'responseType' => Response::HTTP_FORBIDDEN,
