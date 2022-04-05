@@ -996,11 +996,11 @@ class EavService
             if (count($order) > 1) {
                 $message = 'Only one order query param at the time is allowed.';
             }
-            if (!in_array(array_values($order)[0], ["desc", "asc"])) {
+            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
                 $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
             }
             if (!in_array(array_keys($order)[0], $orderCheck)) {
-                $orderCheckStr = implode(", ", $orderCheck);
+                $orderCheckStr = implode(', ', $orderCheck);
                 $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
             }
             if (isset($message)) {
@@ -1027,7 +1027,7 @@ class EavService
                 $param = '_'.ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
-                $filterCheckStr = implode(", ", $filterCheck);
+                $filterCheckStr = implode(', ', $filterCheck);
 
                 if (is_array($value)) {
                     $value = end($value);

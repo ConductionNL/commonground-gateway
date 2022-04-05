@@ -273,6 +273,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param $key
      * @param $value
      * @param string $prefix
+     *
      * @return QueryBuilder
      */
     private function getObjectEntityOrder(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
