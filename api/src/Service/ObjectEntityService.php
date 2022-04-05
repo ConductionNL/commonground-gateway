@@ -175,6 +175,26 @@ class ObjectEntityService
         return [];
     }
 
+    private function getFilterFromParameters(): array
+    {
+        if ($parameters = $this->session->get('parameters')) {
+            if (array_key_exists('path', $parameters)) {
+                foreach ($parameters['path'] as $key => $part) {
+                    if ($key[0] === '{' && $key[strlen($key) - 1] === '}' && $part !== null) {
+                        $key = substr($key, 1, -1);
+                        $filters[$key] = $part;
+
+                        return $filters;
+                    } else {
+                        // @todo
+                    }
+                }
+            }
+        }
+
+        return [];
+    }
+
     /**
      * A function to handle calls to eav.
      *
@@ -207,11 +227,12 @@ class ObjectEntityService
         }
 
         // Check ID
-        array_key_exists('id', ($routeParameters = $this->request->attributes->get('_route_params'))) && $id = $routeParameters['id'];
+        $filters = $this->getFilterFromParameters();
+        array_key_exists('id', ($filters)) && $id = $filters['id'];
 
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
-            $object = $this->eavService->getObject($this->request->attributes->get('id'), $method, $entity);
+            $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
             if ($object instanceof ObjectEntity) {
                 $this->session->set('object', $object->getId()->toString());
             }
@@ -243,19 +264,6 @@ class ObjectEntityService
             }
             //todo: -end- old code...
         } else {
-            if ($parameters = $this->session->get('parameters')) {
-                if (array_key_exists('path', $parameters)) {
-                    foreach ($parameters['path'] as $key => $part) {
-                        if ($key[0] === '{' && $key[strlen($key) - 1] === '}' && $part !== null) {
-                            $key = substr($key, 1, -1);
-                            $filters[$key] = $part;
-                        } else {
-                            //todo
-                        }
-                    }
-                }
-            }
-            //                    var_dump($filters);
             $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
 
             if ($this->session->get('endpoint')) {
