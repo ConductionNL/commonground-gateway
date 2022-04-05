@@ -1036,7 +1036,8 @@ class EavService
 
         $results = [];
         foreach ($objects as $object) {
-            // todo: we should filter out objects on sql level, not after sql, this is in the way of pagination...
+            // todo: we should filter out objects on sql level, not after sql, because this is in the way of pagination...
+            // todo: get valueScopes and convert them to filters see: https://conduction.atlassian.net/browse/TOP-61
             try {
                 $this->authorizationService->checkAuthorization(['entity' => $entity, 'object' => $object]);
             } catch (AccessDeniedException $exception) {
