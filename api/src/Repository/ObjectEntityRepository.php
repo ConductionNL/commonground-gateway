@@ -41,7 +41,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return ObjectEntity[] Returns an array of ObjectEntity objects
      */
-    public function findByEntity(Entity $entity, array $filters = [], array $order = null, int $offset = 0, int $limit = 25): array
+    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
         $query = $this->createQuery($entity, $filters, $order);
 
