@@ -5,15 +5,16 @@ namespace App\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class PackagesService
 {
     private Client $packagistList;
     private Client $packagistRepo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->packagistList = new Client(['base_uri' => 'https://packagist.org/', 'headers' => ['User-Agent' => 'info@conduction.nl']]);
         $this->packagistRepo = new Client(['base_uri' => 'https://repo.packagist.org/', 'headers' => ['User-Agent' => 'info@conduction.nl']]);
     }
@@ -23,19 +24,20 @@ class PackagesService
      *
      * @param Request $request
      *
-     * @return Response
-     *
      * @throws GuzzleException
+     *
+     * @return Response
      */
     public function getPackagistPackageContent(Request $request): Response
     {
         $name = $request->get('name');
         $response = $this->packagistRepo->request('GET', '/p2/'.$name.'.json');
+
         return new Response($response->getBody()->getContents(), 200, ['content-type'=>'json']);
     }
 
     /**
-     * This function is searching for packages containing the 'common-gateway' tag
+     * This function is searching for packages containing the 'common-gateway' tag.
      *
      * @throws GuzzleException
      *
