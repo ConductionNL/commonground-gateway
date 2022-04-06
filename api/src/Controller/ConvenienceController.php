@@ -4,11 +4,13 @@ namespace App\Controller;
 
 use App\Entity\CollectionEntity;
 use App\Service\OasParserService;
+use App\Service\PackagesService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -21,17 +23,19 @@ class ConvenienceController extends AbstractController
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
     private ParseDataService $dataService;
+    private PackagesService $packagesService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
+        ParameterBagInterface $params,
         SerializerInterface $serializer,
-        PubliccodeService $publiccodeService,
         ParseDataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = $publiccodeService;
+        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer);
+        $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
     }
 
@@ -91,5 +95,25 @@ class ConvenienceController extends AbstractController
     public function installRepository(string $id): Response
     {
         return $this->publiccodeService->createCollection($id);
+    }
+
+    /**
+     * @Route("/admin/packages")
+     *
+     * @throws GuzzleException
+     */
+    public function getPackages(): Response
+    {
+        return $this->packagesService->discoverPackagist();
+    }
+
+    /**
+     * @Route("/admin/packages/packagist")
+     *
+     * @throws GuzzleException
+     */
+    public function getPackagistPackage(Request $request): Response
+    {
+        return $this->packagesService->getPackagistPackageContent($request);
     }
 }
