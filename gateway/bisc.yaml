@@ -883,6 +883,10 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
         inversedBy: "@learningNeed_student"
+    student_referred:
+        name: referred
+        type: datetime
+        entity: "@student"
 
         # Employee Intake properties
     employeeIntake_targetGroupPreferences:
