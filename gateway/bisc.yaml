@@ -1542,12 +1542,14 @@ App\Entity\Attribute:
         defaultValue: "REFERRED"
         entity: "@participation"
         searchable: true
+#        unsetable: true // todo?
     participation_providerOption:
         name: providerOption
         type: string
         required: true
         enum: ["PROVIDER", "OTHER"]
         entity: "@participation"
+#        immutable: true // todo?
     participation_provider:
         name: provider
         type: object
