@@ -1316,13 +1316,17 @@ class SOAPService
 
             $wijzeBewoning = $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.WIJZE_BEWONING");
             if(in_array($wijzeBewoning, $permissionRequired)){
-                $data->set('liveIn', json_encode([
-                    'liveInApplicable'  => true,
-                    'consent'           => "PENDING",
-                    'consenter'         => ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")],
-                ]));
+                $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER") ?
+                    $data->set('liveIn', json_encode([
+                        'liveInApplicable'  => true,
+                        'consent'           => "PENDING",
+                        'consenter'         => ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")],
+                    ])): $data->set('liveIn', json_encode([
+                        'liveInApplicable'  => true,
+                        'consent'           => "NOT_APPLICABLE",
+                    ]));
                 $data->set('mainOccupant', json_encode([
-                    'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER"),
+                    'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER") ?? $this->getValue($extraElementen, 'inp.bsn'),
                 ]));
             } else {
                 $data->set('liveIn', json_encode([
