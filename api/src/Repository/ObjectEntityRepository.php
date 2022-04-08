@@ -34,16 +34,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param Entity $entity
-     * @param array  $filters
-     * @param int    $offset
-     * @param int    $limit
+     * @TODO
      *
-     * @return ObjectEntity[] Returns an array of ObjectEntity objects
+     * @param Entity $entity
+     * @param array $filters
+     * @param array $order
+     * @param int $offset
+     * @param int $limit
+     *
+     * @return array Returns an array of ObjectEntity objects
+     * @throws Exception
      */
     public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
         $query = $this->createQuery($entity, $filters, $order);
+        var_dump($query->getQuery()->getSQL());
 
         return $query
             // filters toevoegen
@@ -54,13 +59,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param Entity $entity
-     * @param array  $filters
+     * @TODO
      *
-     * @throws NoResultException
-     * @throws NonUniqueResultException
+     * @param Entity $entity
+     * @param array $filters
      *
      * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+     * @throws NoResultException|NonUniqueResultException
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
@@ -70,6 +75,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query->getQuery()->getSingleScalarResult();
     }
 
+    /**
+     * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]]
+     *
+     * @param array $key
+     * @param $value
+     * @param array $result
+     *
+     * @return array
+     */
     private function recursiveFilterSplit(array $key, $value, array $result): array
     {
         if (count($key) > 1) {
@@ -83,7 +97,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param $array
+     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into array with recursiveFilterSplit()
+     *
+     * @param array $array
+     * @param array $filterCheck
      *
      * @return array
      */
@@ -103,24 +120,50 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $result;
     }
 
+    /**
+     * @TODO
+     *
+     * @param array $filters
+     * @param QueryBuilder $query
+     * @param int $level
+     * @param string $prefix
+     * @param string $objectPrefix
+     *
+     * @return QueryBuilder
+     * @throws Exception
+     */
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
-            if (!(substr($key, 0, 1) == '_') && is_array($value)) {
-                $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
-                $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
-                $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
-                $query = $this->buildQuery(
-                    $value,
-                    $query,
-                    $level + 1,
-                    'subValue'.$key.$level,
-                    'subObjects'.$key.$level
-                );
-            } elseif (substr($key, 0, 1) == '_' || $key == 'id') {
+            var_dump($key);
+            if (substr($key, 0, 1) == '_' || $key == 'id') {
                 $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
+            } elseif (is_array($value)) {
+                if (array_key_exists('from', $value) || array_key_exists('till', $value)) {
+                    $query = $this->getDateTimeFilter($query, $key, $value, $objectPrefix); //todo this needs to be somewhere else so the prefix is correct
+                } else {
+                    $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
+                    $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
+                    $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
+                    $query = $this->buildQuery(
+                        $value,
+                        $query,
+                        $level + 1,
+                        'subValue'.$key.$level,
+                        'subObjects'.$key.$level
+                    );
+                }
             } else {
-                $query->andWhere("$prefix.stringValue = :$key")
+                var_dump($key);
+                try {
+                    // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
+                    $date = new DateTime($value);
+                    $value = $date->format('Y-m-d H:i:s');
+                } catch (Exception $exception) {
+                    //todo something
+                }
+                var_dump($value);
+                $query->andWhere("$prefix.stringValue = :$key") // todo: we should check for dateTimeValue here? instead of setting stringValue for datetimes and checking that way
                     ->setParameter($key, $value);
             }
         }
@@ -128,6 +171,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query;
     }
 
+    /**
+     * @TODO
+     *
+     * @param Entity $entity
+     * @param array $filters
+     * @param array $order
+     *
+     * @return QueryBuilder
+     * @throws Exception
+     */
     private function createQuery(Entity $entity, array $filters, array $order = []): QueryBuilder
     {
         $query = $this->createQueryBuilder('o')
@@ -209,14 +262,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * @TODO
+     *
      * @param QueryBuilder $query
      * @param $key
      * @param $value
      * @param string $prefix
      *
-     * @throws Exception
-     *
      * @return QueryBuilder
+     * @throws Exception
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -240,24 +294,26 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
                 break;
             case '_dateCreated':
-                if (array_key_exists('from', $value)) {
-                    $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
-                }
-                if (array_key_exists('till', $value)) {
-                    $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
-                }
+                $query = $this->getDateTimeFilter($query, 'dateCreated', $value, $prefix);
+//                if (array_key_exists('from', $value)) {
+//                    $date = new DateTime($value['from']);
+//                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
+//                }
+//                if (array_key_exists('till', $value)) {
+//                    $date = new DateTime($value['till']);
+//                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
+//                }
                 break;
             case '_dateModified':
-                if (array_key_exists('from', $value)) {
-                    $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
-                }
-                if (array_key_exists('till', $value)) {
-                    $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
-                }
+                $query = $this->getDateTimeFilter($query, 'dateModified', $value, $prefix);
+//                if (array_key_exists('from', $value)) {
+//                    $date = new DateTime($value['from']);
+//                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
+//                }
+//                if (array_key_exists('till', $value)) {
+//                    $date = new DateTime($value['till']);
+//                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
+//                }
                 break;
             default:
                 //todo: error?
@@ -269,6 +325,33 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * @TODO
+     *
+     * @param QueryBuilder $query
+     * @param $key
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     * @throws Exception
+     */
+    private function getDateTimeFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    {
+        if (array_key_exists('from', $value)) {
+            $date = new DateTime($value['from']);
+            $query->andWhere($prefix.'.'.$key.' >= :'.$key.'From')->setParameter($key.'From', $date->format('Y-m-d H:i:s'));
+        }
+        if (array_key_exists('till', $value)) {
+            $date = new DateTime($value['till']);
+            $query->andWhere($prefix.'.'.$key.' <= :'.$key.'Till')->setParameter($key.'Till', $date->format('Y-m-d H:i:s'));
+        }
+
+        return $query;
+    }
+
+    /**
+     * @TODO
+     *
      * @param QueryBuilder $query
      * @param $key
      * @param $value
@@ -293,10 +376,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query;
     }
 
+    //todo: remove?
     private function getAllValues(string $atribute, string $value): array
     {
     }
 
+    /**
+     * @TODO
+     *
+     * @param Entity $Entity
+     * @param string $prefix
+     * @param int $level
+     *
+     * @return array
+     */
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         // NOTE:
@@ -317,7 +410,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         foreach ($Entity->getAttributes() as $attribute) {
 //            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
-            if ($attribute->getType() == 'string') {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 5 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));

@@ -229,12 +229,18 @@ class Value
 
     public function getDateTimeValue(): ?DateTimeInterface
     {
+        // todo: this does not work; because we never persist or flush after?
+        if (empty($this->stringValue) && !empty($this->dateTimeValue)) {
+            $this->stringValue = $this->dateTimeValue->format("Y-m-d H:i:s");
+        }
+        var_dump($this->stringValue); //todo remove
         return $this->dateTimeValue;
     }
 
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
+        $this->stringValue = $dateTimeValue->format("Y-m-d H:i:s");
 
         return $this;
     }
