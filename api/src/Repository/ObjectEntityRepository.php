@@ -95,7 +95,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (substr($key, 0, 1) == '.') {
                 $key = '_'.ltrim($key, $key[0]);
             }
-            if (!(substr($key, 0, 1) == '_') && in_array($key, $filterCheck)) {
+            if (in_array($key, $filterCheck)) {
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
@@ -106,7 +106,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
-            if (is_array($value)) {
+            if (!(substr($key, 0, 1) == '_') && is_array($value)) {
                 $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
                 $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
                 $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
