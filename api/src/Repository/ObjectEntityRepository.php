@@ -156,6 +156,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             } else {
                 var_dump($key);
                 try {
+                    // todo: find a way to detect if we need to do this? instead of always trying it
                     // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
                     $date = new DateTime($value);
                     $value = $date->format('Y-m-d H:i:s');
@@ -163,7 +164,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     //todo something
                 }
                 var_dump($value);
-                $query->andWhere("$prefix.stringValue = :$key") // todo: we should check for dateTimeValue here? instead of setting stringValue for datetimes and checking that way
+                // todo: find a way to detect which value type we need to check?
+                $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key")
                     ->setParameter($key, $value);
             }
         }
