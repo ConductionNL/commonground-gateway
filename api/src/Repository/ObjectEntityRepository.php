@@ -41,9 +41,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return ObjectEntity[] Returns an array of ObjectEntity objects
      */
-    public function findByEntity(Entity $entity, array $filters = [], int $offset = 0, int $limit = 25): array
+    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
-        $query = $this->createQuery($entity, $filters);
+        $query = $this->createQuery($entity, $filters, $order);
 
         return $query
             // filters toevoegen
@@ -128,7 +128,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query;
     }
 
-    private function createQuery(Entity $entity, array $filters): QueryBuilder
+    private function createQuery(Entity $entity, array $filters, array $order = []): QueryBuilder
     {
         $query = $this->createQueryBuilder('o')
             ->andWhere('o.entity = :entity')
@@ -179,6 +179,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
         }
         */
+
+        if (!empty($order)) {
+            $query = $this->getObjectEntityOrder($query, array_keys($order)[0], array_values($order)[0]);
+        }
 
         return $query;
     }
@@ -258,6 +262,31 @@ class ObjectEntityRepository extends ServiceEntityRepository
             default:
                 //todo: error?
 //                var_dump('Not supported filter for ObjectEntity: '.$key);
+                break;
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param QueryBuilder $query
+     * @param $key
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function getObjectEntityOrder(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    {
+        switch ($key) {
+            case '_dateCreated':
+                $query->orderBy($prefix.'.dateCreated', $value);
+                break;
+            case '_dateModified':
+                $query->orderBy($prefix.'.dateModified', $value);
+                break;
+            default:
+                $query->orderBy($prefix.'.'.$key, $value);
                 break;
         }
 
