@@ -1322,12 +1322,16 @@ class SOAPService
                         'consent'           => "PENDING",
                         'consenter'         => ['bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")],
                     ])): $data->set('liveIn', json_encode([
-                        'liveInApplicable'  => false,
+                        'liveInApplicable'  => true,
                         'consent'           => "NOT_APPLICABLE",
                     ]));
-                !$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER") ?: $data->set('mainOccupant', json_encode([
-                    'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")
-                ]));
+                !$data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER") ?
+                    $data->set('mainOccupant', json_encode([
+                        'bsn' => $data->get('requesterBsn')
+                    ])) : 
+                    $data->set('mainOccupant', json_encode([
+                        'bsn' => $data->get("SOAP-ENV:Body.ns2:OntvangenIntakeNotificatie.Body.SIMXML.ELEMENTEN.BSN_HOOFDBEWONER")
+                    ]));
             } else {
                 $data->set('liveIn', json_encode([
                     'liveInApplicable'  => false,
