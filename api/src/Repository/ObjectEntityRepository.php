@@ -34,13 +34,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required.
      *
-     * @param Entity $entity
-     * @param array  $filters
-     * @param array  $order
-     * @param int    $offset
-     * @param int    $limit
+     * @param Entity $entity The Entity
+     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param array  $order An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param int    $offset Pagination, the first result. 'offset' of the returned ObjectEntities.
+     * @param int    $limit Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
      * @throws Exception
      *
@@ -59,10 +59,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity $entity
-     * @param array  $filters
+     * @param Entity $entity The Entity
+     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      *
      * @throws NoResultException|NonUniqueResultException
      *
@@ -83,7 +83,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param $value
      * @param array $result
      *
-     * @return array
+     * @return array The transformed array.
      */
     private function recursiveFilterSplit(array $key, $value, array $result): array
     {
@@ -98,12 +98,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into array with recursiveFilterSplit().
+     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      *
-     * @param array $array
-     * @param array $filterCheck
+     * @param array $array The array of query params / filters.
+     * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
-     * @return array
+     * @return array A 'clean' array. And transformed array.
      */
     private function cleanArray(array $array, array $filterCheck): array
     {
@@ -122,17 +122,91 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.
      *
-     * @param array        $filters
-     * @param QueryBuilder $query
-     * @param int          $level
-     * @param string       $prefix
-     * @param string       $objectPrefix
+     * @param Entity $entity The Entity.
+     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param array  $order An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
      * @throws Exception
      *
-     * @return QueryBuilder
+     * @return QueryBuilder The QueryBuilder.
+     */
+    private function createQuery(Entity $entity, array $filters = [], array $order = []): QueryBuilder
+    {
+        $query = $this->createQueryBuilder('o')
+            ->andWhere('o.entity = :entity')
+            ->setParameters(['entity' => $entity]);
+
+        if (!empty($filters)) {
+            $filterCheck = $this->getFilterParameters($entity);
+
+            $filters = $this->cleanArray($filters, $filterCheck);
+
+            $query->leftJoin('o.objectValues', 'value');
+            $this->buildQuery($filters, $query)->distinct();
+        }
+
+        //TODO: owner check
+//        $user = $this->tokenStorage->getToken()->getUser();
+//
+//        if (is_string($user)) {
+//            $user = null;
+//        } else {
+//            $user = $user->getUserIdentifier();
+//        }
+
+        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
+        if ($this->session->get('anonymous') === true && in_array($query->getParameter('type')->getValue(), ['taalhuis', 'team'])) {
+            return $query;
+        }
+
+        // TODO: owner
+        // Multitenancy, only show objects this user is allowed to see.
+        // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
+        $organizations = $this->session->get('organizations', []);
+        $parentOrganizations = [];
+        // Make sure we only check for parentOrganizations if inherited is true in the (ObjectEntity)->entity->inherited
+        if ($entity->getInherited()) {
+            $parentOrganizations = $this->session->get('parentOrganizations', []);
+        }
+
+        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
+        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
+            //    ->setParameter('userId', $userId)
+            ->setParameter('organizations', $organizations)
+            ->setParameter('parentOrganizations', $parentOrganizations);
+        /*
+        if (empty($this->session->get('organizations'))) {
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
+        } else {
+            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
+        }
+        */
+
+        if (!empty($order)) {
+            $orderCheck = $this->getOrderParameters($entity);
+
+            if (in_array(array_keys($order)[0], $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
+                $query = $this->getObjectEntityOrder($query, array_keys($order)[0], array_values($order)[0]);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case that filters are used in createQuery()
+     *
+     * @param array        $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param QueryBuilder $query The existing QueryBuilder.
+     * @param int          $level The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix The prefix of the value for the filter we are adding, default = 'value'.
+     * @param string       $objectPrefix The prefix of the objectEntity for the filter we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
@@ -181,107 +255,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Function that handles special filters starting with _ or the 'id' filter. Adds to an existing QueryBuilder.
      *
-     * @param Entity $entity
-     * @param array  $filters
-     * @param array  $order
-     *
-     * @throws Exception
-     *
-     * @return QueryBuilder
-     */
-    private function createQuery(Entity $entity, array $filters, array $order = []): QueryBuilder
-    {
-        $query = $this->createQueryBuilder('o')
-            ->andWhere('o.entity = :entity')
-            ->setParameters(['entity' => $entity]);
-
-        if (!empty($filters)) {
-            $filterCheck = $this->getFilterParameters($entity);
-
-            $filters = $this->cleanArray($filters, $filterCheck);
-
-            $query->leftJoin('o.objectValues', 'value');
-            $this->buildQuery($filters, $query)->distinct();
-        }
-
-        //TODO: owner check
-//        $user = $this->tokenStorage->getToken()->getUser();
-//
-//        if (is_string($user)) {
-//            $user = null;
-//        } else {
-//            $user = $user->getUserIdentifier();
-//        }
-
-        // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
-        if ($this->session->get('anonymous') === true && in_array($query->getParameter('type')->getValue(), ['taalhuis', 'team'])) {
-            return $query;
-        }
-
-        // TODO: owner
-        // Multitenancy, only show objects this user is allowed to see.
-        // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
-        $organizations = $this->session->get('organizations', []);
-        $parentOrganizations = [];
-        // Make sure we only check for parentOrganizations if inherited is true in the (ObjectEntity)->entity->inherited
-        if ($entity->getInherited()) {
-            $parentOrganizations = $this->session->get('parentOrganizations', []);
-        }
-
-        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
-        //    ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations)
-            ->setParameter('parentOrganizations', $parentOrganizations);
-        /*
-        if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
-        } else {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
-        }
-        */
-
-        if (!empty($order)) {
-            $query = $this->getObjectEntityOrder($query, array_keys($order)[0], array_values($order)[0]);
-        }
-
-        return $query;
-    }
-
-    //todo: typecast?
-    //todo: remove?
-    private function buildFilter(QueryBuilder $query, $filters, $prefix = 'o', $level = 0): QueryBuilder
-    {
-        $query->leftJoin($prefix.'.objectValues', $level.'.objectValues');
-        foreach ($filters as $key => $filter) {
-            if (!is_array($filter) && substr($key, 0, 1) != '_') {
-                $query->andWhere($level.'.objectValues'.'.stringValue = :'.$key)->setParameter($key, $filter);
-            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
-                // do magic
-                $query = $this->getObjectEntityFilter($query, $key, $filter, $prefix);
-            } elseif (is_array($filter)) {
-                $query = $this->buildFilter($query, $filters, $level++);
-            } else {
-                // how dit we end up here?
-            }
-        }
-
-        return $query;
-    }
-
-    /**
-     * @TODO
-     *
-     * @param QueryBuilder $query
+     * @param QueryBuilder $query The existing QueryBuilder.
      * @param $key
      * @param $value
      * @param string $prefix
      *
      * @throws Exception
      *
-     * @return QueryBuilder
+     * @return QueryBuilder The QueryBuilder.
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -320,16 +303,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Function that handles from and/or till dateTime filters. Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query
+     * @param QueryBuilder $query The existing QueryBuilder.
      * @param $key
      * @param $value
      * @param string $prefix
      *
      * @throws Exception
      *
-     * @return QueryBuilder
+     * @return QueryBuilder The QueryBuilder.
      */
     private function getDateTimeFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -350,14 +333,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Function that handles the order by filter. Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query
+     * @param QueryBuilder $query The existing QueryBuilder.
      * @param $key
      * @param $value
      * @param string $prefix
      *
-     * @return QueryBuilder
+     * @return QueryBuilder The QueryBuilder.
      */
     private function getObjectEntityOrder(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -376,19 +359,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $query;
     }
 
-    //todo: remove?
-    private function getAllValues(string $atribute, string $value): array
-    {
-    }
-
     /**
-     * @TODO
+     * Gets and returns an array with the allowed filters on an Entity (including its subEntities / sub-filters).
      *
      * @param Entity $Entity
      * @param string $prefix
      * @param int    $level
      *
-     * @return array
+     * @return array The array with allowed filters.
      */
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
@@ -398,29 +376,76 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // Filter id looks for ObjectEntity id and externalId
         // Filter _id looks specifically/only for ObjectEntity id
         // Filter _externalId looks specifically/only for ObjectEntity externalId
-        if ($level != 1) {
-            // For level 1 we should not allow filter id, because this is just a get Item call (not needed for a get collection)
-            // Maybe we should do the same for _id & _externalId if we allow to use _ filters on subresources?
-            $filters = [$prefix.'id'];
-        }
 
         // defaults
-        $filters = array_merge($filters ?? [], [
-            $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization', $prefix.'_application',
-            $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
-        ]);
+        $filters = [
+            $prefix.'id', $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization',
+            $prefix.'_application', $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
+        ];
 
         foreach ($Entity->getAttributes() as $attribute) {
 //            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
             if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
                 $filters[] = $prefix.$attribute->getName();
-            } elseif ($attribute->getObject() && $level < 5 && !str_contains($prefix, $attribute->getName().'.')) {
+            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
-            continue;
         }
 
         return $filters;
+    }
+
+    /**
+     * Gets and returns an array with the allowed sortable attributes on an Entity (including its subEntities).
+     *
+     * @param Entity $Entity
+     * @param string $prefix
+     * @param int    $level
+     *
+     * @return array The array with allowed attributes to sort by.
+     */
+    public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    {
+        // defaults
+        $sortable = ['_dateCreated', '_dateModified'];
+
+        // todo: add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
+        // todo: sortable?
+//        foreach ($Entity->getAttributes() as $attribute) {
+//            if (in_array($attribute->getType(), ['date', 'datetime']) && $attribute->getSortable()) {
+//                $sortable[] = $prefix.$attribute->getName();
+//            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+//                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+//            }
+//        }
+
+        return $sortable;
+    }
+
+    //todo: typecast?
+    //todo: remove?
+    private function buildFilter(QueryBuilder $query, $filters, $prefix = 'o', $level = 0): QueryBuilder
+    {
+        $query->leftJoin($prefix.'.objectValues', $level.'.objectValues');
+        foreach ($filters as $key => $filter) {
+            if (!is_array($filter) && substr($key, 0, 1) != '_') {
+                $query->andWhere($level.'.objectValues'.'.stringValue = :'.$key)->setParameter($key, $filter);
+            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
+                // do magic
+                $query = $this->getObjectEntityFilter($query, $key, $filter, $prefix);
+            } elseif (is_array($filter)) {
+                $query = $this->buildFilter($query, $filters, $level++);
+            } else {
+                // how dit we end up here?
+            }
+        }
+
+        return $query;
+    }
+
+    //todo: remove?
+    private function getAllValues(string $atribute, string $value): array
+    {
     }
 
     // Filter functie schrijven, checken op betaande atributen, zelf looping
