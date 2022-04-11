@@ -184,10 +184,15 @@ class Value
         return $this->integerValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     *
+     * @param int|null $integerValue
+     * @return $this
+     */
     public function setIntegerValue(?int $integerValue): self
     {
         $this->integerValue = $integerValue;
-        // This way we could filter on integerValues using the stringValue in the ObjectEntityRepository query:
         $this->stringValue = $integerValue !== null ? (string) $integerValue : null;
 
         return $this;
@@ -198,10 +203,15 @@ class Value
         return $this->numberValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     *
+     * @param float|null $numberValue
+     * @return $this
+     */
     public function setNumberValue(?float $numberValue): self
     {
         $this->numberValue = $numberValue;
-        // This way we could filter on numberValues using the stringValue in the ObjectEntityRepository query:
         $this->stringValue = $numberValue !== null ? (string) $numberValue : null;
 
         return $this;
@@ -212,10 +222,15 @@ class Value
         return $this->booleanValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     *
+     * @param bool|null $booleanValue
+     * @return $this
+     */
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
-        // This way we could filter on booleanValues using the stringValue in the ObjectEntityRepository query:
 //        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
         $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
@@ -239,10 +254,15 @@ class Value
         return $this->dateTimeValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     *
+     * @param DateTimeInterface|null $dateTimeValue
+     * @return $this
+     */
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
-        // This way we could filter on dateTimeValues using the stringValue in the ObjectEntityRepository query:
         $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format('Y-m-d H:i:s') : null;
 
         return $this;
