@@ -217,7 +217,7 @@ class Value
         $this->booleanValue = $booleanValue;
         // This way we could filter on booleanValues using the stringValue in the ObjectEntityRepository query:
 //        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
-        $this->stringValue = $booleanValue !== null ? ($booleanValue ? "true" : "false") : null;
+        $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
         return $this;
     }
@@ -243,7 +243,7 @@ class Value
     {
         $this->dateTimeValue = $dateTimeValue;
         // This way we could filter on dateTimeValues using the stringValue in the ObjectEntityRepository query:
-        $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format("Y-m-d H:i:s") : null;
+        $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format('Y-m-d H:i:s') : null;
 
         return $this;
     }
