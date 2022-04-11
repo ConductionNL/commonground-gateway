@@ -228,8 +228,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 );
             } else {
                 // Make sure we only check the values of the correct attribute
-                $query->leftJoin("$prefix.attribute", $prefix.'Attribute');
-                $query->andWhere($prefix."Attribute.name = :Key$key")
+                $query->leftJoin("$prefix.attribute", $key.$prefix.'Attribute');
+                $query->andWhere($key.$prefix."Attribute.name = :Key$key")
                     ->setParameter("Key$key", $key);
 
                 // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
