@@ -37,13 +37,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @TODO
      *
      * @param Entity $entity
-     * @param array $filters
-     * @param array $order
-     * @param int $offset
-     * @param int $limit
+     * @param array  $filters
+     * @param array  $order
+     * @param int    $offset
+     * @param int    $limit
+     *
+     * @throws Exception
      *
      * @return array Returns an array of ObjectEntity objects
-     * @throws Exception
      */
     public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
@@ -61,10 +62,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @TODO
      *
      * @param Entity $entity
-     * @param array $filters
+     * @param array  $filters
+     *
+     * @throws NoResultException|NonUniqueResultException
      *
      * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
-     * @throws NoResultException|NonUniqueResultException
      */
     public function countByEntity(Entity $entity, array $filters = []): int
     {
@@ -75,7 +77,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]]
+     * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]].
      *
      * @param array $key
      * @param $value
@@ -96,7 +98,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into array with recursiveFilterSplit()
+     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into array with recursiveFilterSplit().
      *
      * @param array $array
      * @param array $filterCheck
@@ -122,14 +124,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * @TODO
      *
-     * @param array $filters
+     * @param array        $filters
      * @param QueryBuilder $query
-     * @param int $level
-     * @param string $prefix
-     * @param string $objectPrefix
+     * @param int          $level
+     * @param string       $prefix
+     * @param string       $objectPrefix
+     *
+     * @throws Exception
      *
      * @return QueryBuilder
-     * @throws Exception
      */
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
@@ -165,7 +168,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                         // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
                         $date = new DateTime($value);
                         $value = $date->format('Y-m-d H:i:s');
-                    } catch (Exception $exception) {}
+                    } catch (Exception $exception) {
+                    }
                     // todo: find a way to detect which value type we need to check? or just always use stringValue, as long as we always set the stringValue in Value.php
                     $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key") // Both values work, even if stringValue is not set and dateTimeValue is
                     ->setParameter($key, $value);
@@ -180,11 +184,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @TODO
      *
      * @param Entity $entity
-     * @param array $filters
-     * @param array $order
+     * @param array  $filters
+     * @param array  $order
+     *
+     * @throws Exception
      *
      * @return QueryBuilder
-     * @throws Exception
      */
     private function createQuery(Entity $entity, array $filters, array $order = []): QueryBuilder
     {
@@ -274,8 +279,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param $value
      * @param string $prefix
      *
-     * @return QueryBuilder
      * @throws Exception
+     *
+     * @return QueryBuilder
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -321,8 +327,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param $value
      * @param string $prefix
      *
-     * @return QueryBuilder
      * @throws Exception
+     *
+     * @return QueryBuilder
      */
     private function getDateTimeFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
@@ -379,7 +386,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity $Entity
      * @param string $prefix
-     * @param int $level
+     * @param int    $level
      *
      * @return array
      */
