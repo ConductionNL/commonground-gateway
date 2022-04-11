@@ -233,7 +233,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     ->setParameter("Key$key", $key);
 
                 // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
-                if (is_array($value) && array_key_exists('from', $value) || array_key_exists('till', $value)) {
+                if (is_array($value) && (array_key_exists('from', $value) || array_key_exists('till', $value))) {
                     $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
                 } else {
                     // Check te actual value (example: key = value)
