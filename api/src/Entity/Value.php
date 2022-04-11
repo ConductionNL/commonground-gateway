@@ -187,6 +187,8 @@ class Value
     public function setIntegerValue(?int $integerValue): self
     {
         $this->integerValue = $integerValue;
+        // This way we could filter on integerValues using the stringValue in the ObjectEntityRepository query:
+        $this->stringValue = $integerValue !== null ? (string) $integerValue : null;
 
         return $this;
     }
@@ -199,6 +201,8 @@ class Value
     public function setNumberValue(?float $numberValue): self
     {
         $this->numberValue = $numberValue;
+        // This way we could filter on numberValues using the stringValue in the ObjectEntityRepository query:
+        $this->stringValue = $numberValue !== null ? (string) $numberValue : null;
 
         return $this;
     }
@@ -211,6 +215,9 @@ class Value
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
+        // This way we could filter on booleanValues using the stringValue in the ObjectEntityRepository query:
+//        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
+        $this->stringValue = $booleanValue !== null ? ($booleanValue ? "true" : "false") : null;
 
         return $this;
     }
@@ -229,18 +236,14 @@ class Value
 
     public function getDateTimeValue(): ?DateTimeInterface
     {
-        // todo: this does not work; because we never persist or flush after?
-        if (empty($this->stringValue) && !empty($this->dateTimeValue)) {
-            $this->stringValue = $this->dateTimeValue->format("Y-m-d H:i:s");
-        }
-        var_dump($this->stringValue); //todo remove
         return $this->dateTimeValue;
     }
 
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
-        $this->stringValue = $dateTimeValue->format("Y-m-d H:i:s");
+        // This way we could filter on dateTimeValues using the stringValue in the ObjectEntityRepository query:
+        $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format("Y-m-d H:i:s") : null;
 
         return $this;
     }

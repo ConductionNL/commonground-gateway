@@ -48,7 +48,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
         $query = $this->createQuery($entity, $filters, $order);
-        var_dump($query->getQuery()->getSQL());
 
         return $query
             // filters toevoegen
@@ -135,38 +134,42 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
-            var_dump($key);
             if (substr($key, 0, 1) == '_' || $key == 'id') {
+                // If the filter starts with _ or == id we need to handle this filter differently
                 $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
-            } elseif (is_array($value)) {
-                if (array_key_exists('from', $value) || array_key_exists('till', $value)) {
-                    $query = $this->getDateTimeFilter($query, $key, $value, $objectPrefix); //todo this needs to be somewhere else so the prefix is correct
-                } else {
-                    $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
-                    $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
-                    $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
-                    $query = $this->buildQuery(
-                        $value,
-                        $query,
-                        $level + 1,
-                        'subValue'.$key.$level,
-                        'subObjects'.$key.$level
-                    );
-                }
+            } elseif (is_array($value) && !array_key_exists('from', $value) && !array_key_exists('till', $value)) {
+                // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
+                $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
+                $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
+                $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
+                $query = $this->buildQuery(
+                    $value,
+                    $query,
+                    $level + 1,
+                    'subValue'.$key.$level,
+                    'subObjects'.$key.$level
+                );
             } else {
-                var_dump($key);
-                try {
-                    // todo: find a way to detect if we need to do this? instead of always trying it
-                    // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
-                    $date = new DateTime($value);
-                    $value = $date->format('Y-m-d H:i:s');
-                } catch (Exception $exception) {
-                    //todo something
-                }
-                var_dump($value);
-                // todo: find a way to detect which value type we need to check?
-                $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key")
+                // Make sure we only check the values of the correct attribute
+                $query->leftJoin("$prefix.attribute", $prefix.'Attribute');
+                $query->andWhere($prefix."Attribute.name = :Key$key")
+                    ->setParameter("Key$key", $key);
+
+                // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
+                if (is_array($value) && array_key_exists('from', $value) || array_key_exists('till', $value)) {
+                    $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
+                } else {
+                    // Check te actual value (example: key = value)
+                    try {
+                        // todo: find a way to detect if we need to do this? instead of always trying it (or just always use stringValue?)
+                        // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
+                        $date = new DateTime($value);
+                        $value = $date->format('Y-m-d H:i:s');
+                    } catch (Exception $exception) {}
+                    // todo: find a way to detect which value type we need to check? or just always use stringValue, as long as we always set the stringValue in Value.php
+                    $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key") // Both values work, even if stringValue is not set and dateTimeValue is
                     ->setParameter($key, $value);
+                }
             }
         }
 
@@ -297,25 +300,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 break;
             case '_dateCreated':
                 $query = $this->getDateTimeFilter($query, 'dateCreated', $value, $prefix);
-//                if (array_key_exists('from', $value)) {
-//                    $date = new DateTime($value['from']);
-//                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
-//                }
-//                if (array_key_exists('till', $value)) {
-//                    $date = new DateTime($value['till']);
-//                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
-//                }
                 break;
             case '_dateModified':
                 $query = $this->getDateTimeFilter($query, 'dateModified', $value, $prefix);
-//                if (array_key_exists('from', $value)) {
-//                    $date = new DateTime($value['from']);
-//                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
-//                }
-//                if (array_key_exists('till', $value)) {
-//                    $date = new DateTime($value['till']);
-//                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
-//                }
                 break;
             default:
                 //todo: error?
@@ -339,13 +326,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getDateTimeFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
+        $prefixKey = 'dateTimeValue';
+        if (in_array($key, ['dateCreated', 'dateModified'])) {
+            $prefixKey = $key;
+        }
         if (array_key_exists('from', $value)) {
             $date = new DateTime($value['from']);
-            $query->andWhere($prefix.'.'.$key.' >= :'.$key.'From')->setParameter($key.'From', $date->format('Y-m-d H:i:s'));
+            $query->andWhere($prefix.'.'.$prefixKey.' >= :'.$key.'From')->setParameter($key.'From', $date->format('Y-m-d H:i:s'));
         }
         if (array_key_exists('till', $value)) {
             $date = new DateTime($value['till']);
-            $query->andWhere($prefix.'.'.$key.' <= :'.$key.'Till')->setParameter($key.'Till', $date->format('Y-m-d H:i:s'));
+            $query->andWhere($prefix.'.'.$prefixKey.' <= :'.$key.'Till')->setParameter($key.'Till', $date->format('Y-m-d H:i:s'));
         }
 
         return $query;
@@ -394,6 +385,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
+        //todo: we only check for the allowed keys/attributes to filter on, if this attribute is an dateTime (or date), we should also check if the value is an dateTime string?
+
         // NOTE:
         // Filter id looks for ObjectEntity id and externalId
         // Filter _id looks specifically/only for ObjectEntity id
