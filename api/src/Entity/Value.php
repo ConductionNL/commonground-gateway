@@ -50,6 +50,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "objectEntity.id": "exact"
  * })
  * @ApiFilter(ExistsFilter::class, properties={
+ *     "stringValue",
  *     "dateTimeValue",
  * })
  */
