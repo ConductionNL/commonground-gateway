@@ -1,6 +1,7 @@
 # Parameters for endpoint regex
 parameters:
     weerItemRegex: "#^(weer/[^/]*)$#"
+    weekendItemRegex: "#^(weer/[^/]*)$#"
 
 App\Entity\Endpoint:
     weerEndpointGet:
@@ -43,6 +44,19 @@ App\Entity\Endpoint:
         method: DELETE
         operationType: item
 
+    weekendEndpointGet:
+        name: Weekend GET collection
+        description: endpoint voor weekend
+        path: ['weekend']
+        pathRegex: "#^(weekend)$#"
+        operationType: collection
+
+    weekendEndpointGetItem:
+        name: Weekend GET item
+        description: endpoint voor dingen rondom weer
+        path: ['weekend', '{id}']
+        pathRegex: <{weekendItemRegex}>
+        operationType: item
 
     # peopleEndpoint:
     #     name: People endpoint
@@ -58,7 +72,11 @@ App\Entity\Entity:
     weekWeather:
         route: "/api/weer"
         name: weer
-        description: Dit endpoint behandeld weer.
+        description: Dit entity behandeld weer.
+
+    weekendEntity:
+        name: weekend
+        description: Dit entity behandeld weekend.
 
     # todo: This does not work with bisc.yaml or default.yaml
     # person:
@@ -111,20 +129,45 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         entity: "@weekWeather"
-    weekWeather_saturday:
+
+    weekWeather_weekend:
+        name: weekend
+        description: Weekend of this weer.
+        type: object
+        cascade: true
+        object: "@weekendEntity"
+        entity: "@weekWeather"
+
+    weekend_saturday:
         name: saturday
-        description: Weather of this day.
+        description: Saturday of this weekend.
         type: string
         maxLength: 255
-        required: true
-        entity: "@weekWeather"
-    weekWeather_sunday:
+        entity: "@weekendEntity"
+
+    weekend_sunday:
         name: sunday
-        description: Weather of this day.
+        description: Sunday of this weekend.
         type: string
         maxLength: 255
-        required: true
-        entity: "@weekWeather"
+        entity: "@weekendEntity"
+
+
+
+    # weekWeather_saturday:
+    #     name: saturday
+    #     description: Weather of this day.
+    #     type: string
+    #     maxLength: 255
+    #     required: true
+    #     entity: "@weekWeather"
+    # weekWeather_sunday:
+    #     name: sunday
+    #     description: Weather of this day.
+    #     type: string
+    #     maxLength: 255
+    #     required: true
+    #     entity: "@weekWeather"
 
     # person Attributes
 #     person_givenName:
@@ -259,6 +302,15 @@ App\Entity\Handler:
         # Denormalizer throws error trying denormalize template (set with api call for now)
         # template: "<html><body><h1>Test</h1></body></html>"
         # templateType: twig
+
+        
+    weekendHandler:
+        name: Weather handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@weekendEndpointGet", "@weekendEndpointGetItem"]
+        entity: "@weekendEntity"
 
     # peopleHandler:
     #     name: People handler

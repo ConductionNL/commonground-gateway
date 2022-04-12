@@ -7,9 +7,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -17,31 +19,39 @@ class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
     private ParameterBagInterface $params;
+    private ?Client $github;
+    private array $query;
+    private SerializerInterface $serializer;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params
+        ParameterBagInterface $params,
+        SerializerInterface $serializer
     ) {
         $this->entityManager = $entityManager;
         $this->params = $params;
+        $this->serializer = $serializer;
         $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->params->get('github_key')]]) : null;
+        $this->query = [
+            'page'     => 1,
+            'per_page' => 200,
+            'order'    => 'desc',
+            'sort'     => 'author-date',
+            'q'        => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
+        ];
     }
 
     /**
      * This function gets the github owner details.
      *
-     * @param array      $item   a repository from github with a publicclode.yaml file
-     * @param bool|false $detail if this is the call for getting one item
+     * @param array $item a repository from github with a publicclode.yaml file
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    public function getGithubOwnerInfo(array $item, bool $detail): array
+    public function getGithubOwnerInfo(array $item): array
     {
-        $detail ? $repos = json_decode($this->getGithubOwnerRepositories($item['owner']['login'])) : $repos = null;
-        $detail ? $publiccode = $this->findPubliccode($item) : $publiccode = null;
-
         return [
             'id'                => $item['owner']['id'],
             'type'              => $item['owner']['type'],
@@ -49,22 +59,21 @@ class PubliccodeService
             'html_url'          => $item['owner']['html_url'] ?? null,
             'organizations_url' => $item['owner']['organizations_url'] ?? null,
             'avatar_url'        => $item['owner']['avatar_url'] ?? null,
-            'publiccode'        => $publiccode,
-            'repos'             => $repos,
+            'publiccode'        => $this->findPubliccode($item),
+            'repos'             => json_decode($this->getGithubOwnerRepositories($item['owner']['login'])),
         ];
     }
 
     /**
      * This function gets all the github repository details.
      *
-     * @param array      $item   a repository from github with a publicclode.yaml file
-     * @param bool|false $detail if this is the call for getting one item
+     * @param array $item a repository from github with a publicclode.yaml file
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    public function getGithubRepositoryInfo(array $item, bool $detail): array
+    public function getGithubRepositoryInfo(array $item): array
     {
         return [
             'id'          => $item['id'],
@@ -73,14 +82,12 @@ class PubliccodeService
             'description' => $item['description'],
             'html_url'    => $item['html_url'],
             'private'     => $item['private'],
-            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item, $detail) : null,
-            'forks'       => $this->requestFromUrl($item['forks_url']),
+            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item) : null,
             'tags'        => $this->requestFromUrl($item['tags_url']),
             'languages'   => $this->requestFromUrl($item['languages_url']),
-            'downloads'   => $detail ? $this->requestFromUrl($item['downloads_url']) : null,
-            'releases'    => $detail ? $this->requestFromUrl($item['releases_url'], '{/id}') : null,
-            'labels'      => $detail ? $this->requestFromUrl($item['labels_url'], '{/name}') : null,
-            'subscribers' => $detail ? $this->requestFromUrl($item['subscribers_url']) : null,
+            'downloads'   => $this->requestFromUrl($item['downloads_url']),
+            //            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
+            'labels'      => $this->requestFromUrl($item['labels_url'], '{/name}'),
         ];
     }
 
@@ -221,14 +228,16 @@ class PubliccodeService
      *
      * @throws GuzzleException
      *
-     * @return array|null
+     * @return Response
      */
-    public function getGithubRepositoryContent(string $id): ?array
+    public function getGithubRepositoryContent(string $id): Response
     {
-        $this->checkGithubKey();
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
         $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
 
-        return $this->getGithubRepositoryInfo(json_decode($response->getBody()->getContents(), true), true);
+        return new Response(json_encode($this->getGithubRepositoryInfo(json_decode($response->getBody()->getContents(), true))), 200, ['content-type' => 'json']);
     }
 
     /**
@@ -238,11 +247,13 @@ class PubliccodeService
      *
      * @throws GuzzleException
      *
-     * @return string Uuid of created Collection
+     * @return Response Uuid of created Collection
      */
-    public function createCollection(string $id): string
+    public function createCollection(string $id): Response
     {
-        $this->checkGithubKey();
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
         $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
         $repository = json_decode($response->getBody()->getContents(), true);
         $publiccode = $this->findPubliccode($repository);
@@ -259,7 +270,14 @@ class PubliccodeService
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
-        return $collection->getId()->toString();
+        return new Response(
+            $this->serializer->serialize(
+                ['message' => 'Repository: '.$id.' successfully created into a '.'Collection with id: '.$collection->getId()->toString()],
+                'json'
+            ),
+            200,
+            ['content-type' => 'json']
+        );
     }
 
     /**
@@ -267,22 +285,16 @@ class PubliccodeService
      *
      * @throws GuzzleException
      *
-     * @return ?string|Response
+     * @return Response
      */
-    public function discoverGithub(): string
+    public function discoverGithub(): Response
     {
-        $this->checkGithubKey();
-
-        $query = [
-            'page'     => 1,
-            'per_page' => 100,
-            'order'    => 'desc',
-            'sort'     => 'author-date',
-            'q'        => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called public code based in the repo root
-        ];
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
 
         try {
-            $response = $this->github->request('GET', '/search/code', ['query' => $query]);
+            $response = $this->github->request('GET', '/search/code', ['query' => $this->query]);
         } catch (ClientException $exception) {
             return new Response(
                 $exception,
@@ -291,19 +303,6 @@ class PubliccodeService
             );
         }
 
-        $response = json_decode($response->getBody()->getContents(), true);
-        $pages = ceil($response['total_count'] / 100);
-
-        $results['repositories'] = [];
-        while ($query['page'] <= $pages) {
-            foreach ($response['items'] as $item) {
-                array_push($results['repositories'], $this->getGithubRepositoryInfo($item['repository'], false));
-            }
-
-            $query['page']++;
-            sleep(1);
-        }
-
-        return json_encode($results);
+        return new Response($response->getBody()->getContents(), 200, ['content-type'=>'json']);
     }
 }
