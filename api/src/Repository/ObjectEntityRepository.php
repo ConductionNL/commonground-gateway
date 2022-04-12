@@ -237,13 +237,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
                 } else {
                     // Check te actual value (example: key = value)
-                    try {
-                        // todo: find a way to detect if we need to do this? instead of always trying it (or just always use stringValue?)
-                        // If we are comparing a date Y-m-d $value to database value datetime, we need a string with format Y-m-d H:i:s
-                        $date = new DateTime($value);
-                        $value = $date->format('Y-m-d H:i:s');
-                    } catch (Exception $exception) {
-                    }
                     // todo: find a way to detect which value type we need to check? or just always use stringValue, as long as we always set the stringValue in Value.php
                     $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key") // Both values work, even if stringValue is not set and dateTimeValue is
                     ->setParameter($key, $value);
