@@ -154,7 +154,7 @@ class CollectionEntity
      * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
      * @Groups({"read","write"})
      *
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $loadTestData = false;
 
