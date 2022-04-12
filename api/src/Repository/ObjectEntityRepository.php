@@ -237,7 +237,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                     // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
                     $query->andWhere("$prefix.stringValue = :$key")
                     ->setParameter($key, $value);
-                } // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
+                } // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
                 elseif (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
                     $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
                 }
@@ -296,7 +296,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Function that handles from and/or till dateTime filters. Adds to an existing QueryBuilder.
+     * Function that handles after and/or before dateTime filters. Adds to an existing QueryBuilder.
      * @TODO: remove from & till as valid options, needed for 'old' gateway used by BISC. no longer after refactor!
      *
      * @param QueryBuilder $query The existing QueryBuilder.
