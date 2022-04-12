@@ -214,7 +214,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (substr($key, 0, 1) == '_' || $key == 'id') {
                 // If the filter starts with _ or == id we need to handle this filter differently
                 $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
-            } elseif (is_array($value) && !array_key_exists('from', $value) && !array_key_exists('till', $value)) {
+            } elseif (is_array($value) && empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
                 // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
                 $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
                 $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
@@ -232,14 +232,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query->andWhere($key.$prefix."Attribute.name = :Key$key")
                     ->setParameter("Key$key", $key);
 
-                // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
-                if (is_array($value) && (array_key_exists('from', $value) || array_key_exists('till', $value))) {
-                    $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
-                } else {
+                if (!is_array($value)) {
                     // Check te actual value (example: key = value)
-                    // todo: find a way to detect which value type we need to check? or just always use stringValue, as long as we always set the stringValue in Value.php
-                    $query->andWhere("$prefix.stringValue = :$key OR $prefix.dateTimeValue = :$key") // Both values work, even if stringValue is not set and dateTimeValue is
+                    // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
+                    $query->andWhere("$prefix.stringValue = :$key")
                     ->setParameter($key, $value);
+                } // Check if this is an dateTime from/till filter (example: endDate[from] = "2022-04-11 00:00:00")
+                elseif (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
+                    $query = $this->getDateTimeFilter($query, $key, $value, $prefix);
                 }
             }
         }
@@ -297,6 +297,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      * Function that handles from and/or till dateTime filters. Adds to an existing QueryBuilder.
+     * @TODO: remove from & till as valid options, needed for 'old' gateway used by BISC. no longer after refactor!
      *
      * @param QueryBuilder $query The existing QueryBuilder.
      * @param $key
@@ -313,13 +314,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (in_array($key, ['dateCreated', 'dateModified'])) {
             $prefixKey = $key;
         }
-        if (array_key_exists('from', $value)) {
-            $date = new DateTime($value['from']);
-            $query->andWhere($prefix.'.'.$prefixKey.' >= :'.$key.'From')->setParameter($key.'From', $date->format('Y-m-d H:i:s'));
+        // todo: remove from
+        if (!empty(array_intersect_key($value, array_flip(['from', 'after', 'strictly_after'])))) {
+            $after = array_key_exists('from', $value) ? 'from' : (array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after');
+            $date = new DateTime($value[$after]);
+            $operator = array_key_exists('strictly_after', $value) ? '>' : '>=';
+            $query->andWhere($prefix.'.'.$prefixKey.' '.$operator.' :'.$key.'After')->setParameter($key.'After', $date->format('Y-m-d H:i:s'));
         }
-        if (array_key_exists('till', $value)) {
-            $date = new DateTime($value['till']);
-            $query->andWhere($prefix.'.'.$prefixKey.' <= :'.$key.'Till')->setParameter($key.'Till', $date->format('Y-m-d H:i:s'));
+        // todo: remove till
+        if (!empty(array_intersect_key($value, array_flip(['till', 'before', 'strictly_before'])))) {
+            $before = array_key_exists('till', $value) ? 'till' : (array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before');
+            $date = new DateTime($value[$before]);
+            $operator = array_key_exists('strictly_before', $value) ? '<' : '<=';
+            $query->andWhere($prefix.'.'.$prefixKey.' '.$operator.' :'.$key.'Before')->setParameter($key.'Before', $date->format('Y-m-d H:i:s'));
         }
 
         return $query;
