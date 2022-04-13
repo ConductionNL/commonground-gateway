@@ -294,7 +294,7 @@ class OasParserService
         } else {
             return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
         }
-        if (isset($itemSchema['type']) && $itemSchema['type'] == 'object') {
+        if (isset($itemSchema['type']) && $itemSchema['type'] == 'object' && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
