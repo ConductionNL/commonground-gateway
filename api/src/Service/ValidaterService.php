@@ -145,14 +145,14 @@ class ValidaterService
             // If we need to check conditionals the $conditionals Rule above will do so in this When Rule below.
             $validator->addRule(
                 new Rules\When(
-            $conditionals, // IF (the $conditionals Rule does not return any exceptions)
+                    $conditionals, // IF (the $conditionals Rule does not return any exceptions)
           new Rules\Key(
               $attribute->getName(),
               $this->getAttributeValidator($attribute),
               $attribute->getValidations()['required'] === true // mandatory = required validation.
           ), // TRUE (continue with the 'normal' / other Attribute validations)
           $conditionals // FALSE (return exception message from $conditionals Rule)
-        )
+                )
             );
         }
 
@@ -284,10 +284,10 @@ class ValidaterService
         // If attribute type is correct continue validation of attribute format
         $attributeTypeValidator->addRule(
             new Rules\When(
-          $attTypeRule, // IF
+                $attTypeRule, // IF
         $this->getAttFormatValidator($attribute), // TRUE
         $attTypeRule // FALSE
-      )
+            )
         );
 
         return $attributeTypeValidator;
@@ -313,10 +313,10 @@ class ValidaterService
         // If attribute format is correct continue validation of other validationRules
         $attributeFormatValidator->addRule(
             new Rules\When(
-          $attFormatRule, // IF
+                $attFormatRule, // IF
         $this->getAttValidationRulesValidator($attribute), // TRUE
         $attFormatRule // FALSE
-      )
+            )
         );
 
         return $attributeFormatValidator;
@@ -395,10 +395,10 @@ class ValidaterService
             // If we are allowed to cascade and the input is an array, validate the input array for the Attribute->object Entity
             $objectValidator->addRule(
                 new Rules\When(
-            new Rules\ArrayType(), // IF
+                    new Rules\ArrayType(), // IF
           $this->getEntityValidator($attribute->getObject()), // TRUE
           new Rules\AlwaysValid() // FALSE
-        )
+                )
             );
         } else {
             // Uuid
