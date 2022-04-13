@@ -30,8 +30,8 @@ class ValidaterService
         $this->cache = $cache;
         Factory::setDefaultInstance(
             (new Factory())
-        ->withRuleNamespace('App\Service\Validation\Rules')
-        ->withExceptionNamespace('App\Service\Validation\Exceptions')
+            ->withRuleNamespace('App\Service\Validation\Rules')
+            ->withExceptionNamespace('App\Service\Validation\Exceptions')
         );
     }
 
@@ -97,7 +97,7 @@ class ValidaterService
         // Try and get a validator for this Entity(+method) from cache.
         $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
-            //            return $item->get(); // TODO: put this back so that we use caching
+//            return $item->get(); // TODO: put this back so that we use caching
         }
 
         // No Validator found in cache for this Entity(+method), so create a new Validator and cache that.
@@ -106,9 +106,9 @@ class ValidaterService
 
         $item->set($validator);
         $item->tag('entityValidator'); // Tag for all Entity Validators
-    $item->tag('entityValidator_'.$entity->getId()->toString()); // Tag for the Validators of this specific Entity.
+        $item->tag('entityValidator_'.$entity->getId()->toString()); // Tag for the Validators of this specific Entity.
 
-    $this->cache->save($item);
+        $this->cache->save($item);
 
         return $validator;
     }
@@ -146,12 +146,12 @@ class ValidaterService
             $validator->addRule(
                 new Rules\When(
                     $conditionals, // IF (the $conditionals Rule does not return any exceptions)
-          new Rules\Key(
-              $attribute->getName(),
-              $this->getAttributeValidator($attribute),
-              $attribute->getValidations()['required'] === true // mandatory = required validation.
-          ), // TRUE (continue with the 'normal' / other Attribute validations)
-          $conditionals // FALSE (return exception message from $conditionals Rule)
+                    new Rules\Key(
+                        $attribute->getName(),
+                        $this->getAttributeValidator($attribute),
+                        $attribute->getValidations()['required'] === true // mandatory = required validation.
+                    ), // TRUE (continue with the 'normal' / other Attribute validations)
+                    $conditionals // FALSE (return exception message from $conditionals Rule)
                 )
             );
         }
@@ -175,8 +175,8 @@ class ValidaterService
             // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must be present")
             $requiredIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF (the requiredIf JsonLogic finds a match / is true)
-        new Rules\Key($attribute->getName()), // TRUE (attribute is required)
-        new Rules\AlwaysValid() // FALSE
+                new Rules\Key($attribute->getName()), // TRUE (attribute is required)
+                new Rules\AlwaysValid() // FALSE
             );
         }
 
@@ -185,8 +185,8 @@ class ValidaterService
             // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must not be present")
             $forbiddenIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF (the requiredIf JsonLogic finds a match / is true)
-        new Rules\Not(new Rules\Key($attribute->getName())), // TRUE (attribute should not be present)
-        new Rules\AlwaysValid() // FALSE
+                new Rules\Not(new Rules\Key($attribute->getName())), // TRUE (attribute should not be present)
+                new Rules\AlwaysValid() // FALSE
             );
         }
 
@@ -285,8 +285,8 @@ class ValidaterService
         $attributeTypeValidator->addRule(
             new Rules\When(
                 $attTypeRule, // IF
-        $this->getAttFormatValidator($attribute), // TRUE
-        $attTypeRule // FALSE
+                $this->getAttFormatValidator($attribute), // TRUE
+                $attTypeRule // FALSE
             )
         );
 
@@ -314,8 +314,8 @@ class ValidaterService
         $attributeFormatValidator->addRule(
             new Rules\When(
                 $attFormatRule, // IF
-        $this->getAttValidationRulesValidator($attribute), // TRUE
-        $attFormatRule // FALSE
+                $this->getAttValidationRulesValidator($attribute), // TRUE
+                $attFormatRule // FALSE
             )
         );
 
@@ -334,41 +334,41 @@ class ValidaterService
     private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
     {
         switch ($attribute->getType()) {
-      case 'string':
-      case 'text':
-        return new Rules\StringType();
-      case 'integer':
-      case 'int':
-        return new Rules\IntType();
-      case 'float':
-        return new Rules\FloatType();
-      case 'number':
-        return new Rules\Number();
-      case 'date':
-        return new Rules\Date();
-      case 'datetime':
-        return new Rules\DateTime();
-      case 'array':
-        return new Rules\ArrayType();
-      case 'boolean':
-      case 'bool':
-        return new Rules\BoolType();
-      case 'file':
-        return new CustomRules\Base64File();
-      case 'object':
-        return $this->getObjectValidator($attribute);
-      default:
-        throw new GatewayException(
-            'Unknown attribute type.',
-            null,
-            null,
-            [
-                'data'         => $attribute->getType(),
-                'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST,
-            ]
-        );
-    }
+            case 'string':
+            case 'text':
+                return new Rules\StringType();
+            case 'integer':
+            case 'int':
+                return new Rules\IntType();
+            case 'float':
+                return new Rules\FloatType();
+            case 'number':
+                return new Rules\Number();
+            case 'date':
+                return new Rules\Date();
+            case 'datetime':
+                return new Rules\DateTime();
+            case 'array':
+                return new Rules\ArrayType();
+            case 'boolean':
+            case 'bool':
+                return new Rules\BoolType();
+            case 'file':
+                return new CustomRules\Base64File();
+            case 'object':
+                return $this->getObjectValidator($attribute);
+            default:
+                throw new GatewayException(
+                    'Unknown attribute type.',
+                    null,
+                    null,
+                    [
+                        'data'         => $attribute->getType(),
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
+                    ]
+                );
+        }
     }
 
     /**
@@ -396,8 +396,8 @@ class ValidaterService
             $objectValidator->addRule(
                 new Rules\When(
                     new Rules\ArrayType(), // IF
-          $this->getEntityValidator($attribute->getObject()), // TRUE
-          new Rules\AlwaysValid() // FALSE
+                    $this->getEntityValidator($attribute->getObject()), // TRUE
+                    new Rules\AlwaysValid() // FALSE
                 )
             );
         } else {
@@ -425,41 +425,41 @@ class ValidaterService
         $format = str_replace(['telephone'], ['phone'], $format);
 
         switch ($format) {
-      case 'date':
-        return new Rules\Date();
-      case 'countryCode':
-        return new Rules\CountryCode();
-      case 'bsn':
-        return new Rules\Bsn();
-      case 'url':
-        return new Rules\Url();
-      case 'uuid':
-        return new Rules\Uuid();
-      case 'email':
-        return new Rules\Email();
-      case 'phone':
-        return new Rules\Phone();
-      case 'json':
-        return new Rules\Json();
-      case 'dutch_pc4':
-        return new CustomRules\DutchPostalcode();
-      case null:
-        // For now..
-      case 'uri':
-        // If attribute has no format return alwaysValid
-        return new Rules\AlwaysValid();
-      default:
-        throw new GatewayException(
-            'Unknown attribute format.',
-            null,
-            null,
-            [
-                'data'         => $format,
-                'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST,
-            ]
-        );
-    }
+            case 'date':
+                return new Rules\Date();
+            case 'countryCode':
+                return new Rules\CountryCode();
+            case 'bsn':
+                return new Rules\Bsn();
+            case 'url':
+                return new Rules\Url();
+            case 'uuid':
+                return new Rules\Uuid();
+            case 'email':
+                return new Rules\Email();
+            case 'phone':
+                return new Rules\Phone();
+            case 'json':
+                return new Rules\Json();
+            case 'dutch_pc4':
+                return new CustomRules\DutchPostalcode();
+            case null:
+            // For now..
+            case 'uri':
+                // If attribute has no format return alwaysValid
+                return new Rules\AlwaysValid();
+            default:
+                throw new GatewayException(
+                    'Unknown attribute format.',
+                    null,
+                    null,
+                    [
+                        'data'         => $format,
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
+                    ]
+                );
+        }
     }
 
     /**
@@ -505,60 +505,60 @@ class ValidaterService
     {
         $validations = $attribute->getValidations();
         switch ($validation) {
-      case 'enum':
-        return new Rules\In($config);
-      case 'multipleOf':
-        return new Rules\Multiple($config);
-      case 'maximum':
-        return new Rules\Max($config);
-      case 'exclusiveMaximum':
-        return new Rules\LessThan($validations['maximum']);
-      case 'minimum':
-        return new Rules\Min($config);
-      case 'exclusiveMinimum':
-        return new Rules\GreaterThan($validations['minimum']);
-      case 'minLength':
-      case 'maxLength':
-        return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
-      case 'maxItems':
-      case 'minItems':
-        return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
-      case 'maxProperties':
-      case 'minProperties':
-        return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
-      case 'minDate':
-        return new Rules\Min(new DateTime($config));
-      case 'maxDate':
-        return new Rules\Max(new DateTime($config));
-      case 'maxFileSize':
-      case 'minFileSize':
-        return new Rules\Key(
-            'base64',
-            new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null),
-            true
-        );
-      case 'fileTypes':
-        return new Rules\Key(
-            'base64',
-            new CustomRules\Base64MimeTypes($config),
-            true
-        );
-      default:
-        // we should never end up here
-        if (is_array($config)) {
-            $config = http_build_query($config, '', ', ');
-        }
+            case 'enum':
+                return new Rules\In($config);
+            case 'multipleOf':
+                return new Rules\Multiple($config);
+            case 'maximum':
+                return new Rules\Max($config);
+            case 'exclusiveMaximum':
+                return new Rules\LessThan($validations['maximum']);
+            case 'minimum':
+                return new Rules\Min($config);
+            case 'exclusiveMinimum':
+                return new Rules\GreaterThan($validations['minimum']);
+            case 'minLength':
+            case 'maxLength':
+                return new Rules\Length($validations['minLength'] ?? null, $validations['maxLength'] ?? null);
+            case 'maxItems':
+            case 'minItems':
+                return new Rules\Length($validations['minItems'] ?? null, $validations['maxItems'] ?? null);
+            case 'maxProperties':
+            case 'minProperties':
+                return new Rules\Length($validations['minProperties'] ?? null, $validations['maxProperties'] ?? null);
+            case 'minDate':
+                return new Rules\Min(new DateTime($config));
+            case 'maxDate':
+                return new Rules\Max(new DateTime($config));
+            case 'maxFileSize':
+            case 'minFileSize':
+                return new Rules\Key(
+                    'base64',
+                    new CustomRules\Base64Size($validations['minFileSize'] ?? null, $validations['maxFileSize'] ?? null),
+                    true
+                );
+            case 'fileTypes':
+                return new Rules\Key(
+                    'base64',
+                    new CustomRules\Base64MimeTypes($config),
+                    true
+                );
+            default:
+                // we should never end up here
+                if (is_array($config)) {
+                    $config = http_build_query($config, '', ', ');
+                }
 
-        throw new GatewayException(
-            'Unknown validation.',
-            null,
-            null,
-            [
-                'data'         => $validation.' set to '.$config,
-                'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST,
-            ]
-        );
-    }
+                throw new GatewayException(
+                    'Unknown validation.',
+                    null,
+                    null,
+                    [
+                        'data'         => $validation.' set to '.$config,
+                        'path'         => $attribute->getEntity()->getName().'.'.$attribute->getName(),
+                        'responseType' => Response::HTTP_BAD_REQUEST,
+                    ]
+                );
+        }
     }
 }
