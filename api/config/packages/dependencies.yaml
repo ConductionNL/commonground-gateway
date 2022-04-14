@@ -4,3 +4,7 @@ parameters:
             auth: apikey
             location: http://user-component
             apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
+        brp:
+            auth: apikey
+            location: https://digispoof.common-ground.dev/api/v1/brp
+            apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
