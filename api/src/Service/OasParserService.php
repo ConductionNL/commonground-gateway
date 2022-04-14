@@ -66,11 +66,11 @@ class OasParserService
     {
         if ($response->hasHeader('Content-Type')) {
             switch ($response->getHeader('Content-Type')) {
-        case 'application/json':
-          return json_decode($response->getBody()->getContents(), true);
-        case 'application/x-yaml':
-          return Yaml::parse($response->getBody()->getContents());
-      }
+                case 'application/json':
+                    return json_decode($response->getBody()->getContents(), true);
+                case 'application/x-yaml':
+                    return Yaml::parse($response->getBody()->getContents());
+            }
         }
         if (strpos($url, '.json') !== false) {
             return json_decode($response->getBody()->getContents(), true);
@@ -244,11 +244,12 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-        substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (
-            isset($response['content']['application/json']['schema']['properties']) ?
-          substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
-          substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
-        );
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : 
+                (
+                    isset($response['content']['application/json']['schema']['properties']) ?
+                    substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
+                    substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
+                );
         } else {
             $entityNameToLinkTo = $this->parseFirstContent($response);
         }
