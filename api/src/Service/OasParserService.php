@@ -142,6 +142,48 @@ class OasParserService
     }
 
     /**
+     * Checks if type is a array of and returns the proper type as string.
+     *
+     * @param $type The data type
+     *
+     * @return string The data type
+     */
+    private function checkSchemaTypeAsArray($type): string
+    {
+        $dataTypes = ['string' => 'string', 'integer' => 'integer', 'number' => 'integer', 'text' => 'string'];
+        foreach ($dataTypes as $key => $dataType) {
+            if (in_array($key, $type)) {
+                $type = $dataType;
+                break;
+            }
+        }
+
+        return $type;
+    }
+
+    /**
+     * Sets the type of a Attribute.
+     *
+     * @param array     $schema    The defining schema
+     * @param Attribute $attribute The attribute to set the schema for
+     *
+     * @return Attribute The resulting attribute with resulting schema
+     */
+    private function setAttributeType(array $schema, Attribute $attribute): Attribute
+    {
+        if (isset($schema['type'])) {
+            if (is_array($schema['type'])) {
+                $schema['type'] = $this->checkSchemaTypeAsArray($schema['type']);
+            }
+            $attribute->setType($schema['type']);
+        } else {
+            $attribute->setType('string');
+        }
+
+        return $attribute;
+    }
+
+    /**
      * Sets the schema of a flat Attribute.
      *
      * @param array     $schema    The defining schema
@@ -151,7 +193,7 @@ class OasParserService
      */
     private function setSchemaForAttribute(array $schema, Attribute $attribute): Attribute
     {
-        isset($schema['type']) ? $attribute->setType($schema['type']) : $attribute->setType('string');
+        $attribute = $this->setAttributeType($schema, $attribute);
 
         // If format == date-time set type: datetime
         isset($schema['format']) && $schema['format'] === 'date-time' && $attribute->setType('datetime');
