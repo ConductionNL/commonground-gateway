@@ -55,7 +55,7 @@ class AuthorizationService
     {
         $scopes['admin_scope'] = $method.'.admin';
         if ($entity) {
-            $scopes['base_scope'] = $method.'.'.$entity->getName();
+            $scopes['base_scope'] = $method.'.'.strtolower($entity->getName());
             if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
                 $scopes['sub_scopes'] = [];
                 $scopes['sub_scopes'][] = $scopes['base_scope'].'.id';
@@ -65,12 +65,12 @@ class AuthorizationService
                     });
                 }
                 foreach ($attributes ?? $entity->getAttributes() as $attribute) {
-                    $scopes['sub_scopes'][] = $scopes['base_scope'].'.'.$attribute->getName();
+                    $scopes['sub_scopes'][] = $scopes['base_scope'].'.'.strtolower($attribute->getName());
                 }
             }
         } else {
-            $scopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
-            $scopes['sub_scope'] = $scopes['base_scope'].'.'.$attribute->getName();
+            $scopes['base_scope'] = $method.'.'.strtolower($attribute->getEntity()->getName());
+            $scopes['sub_scope'] = $scopes['base_scope'].'.'.strtolower($attribute->getName());
         }
 
         return $scopes;
@@ -80,7 +80,10 @@ class AuthorizationService
     {
         // First check if we have these scopes in cache (this gets removed from cache when a userGroup with name ANONYMOUS is changed, see FunctionService)
         $item = $this->cache->getItem('anonymousScopes');
-        if ($item->isHit()) {
+        $itemOrg = $this->cache->getItem('anonymousOrg');
+        if ($item->isHit() && $itemOrg->isHit()) {
+            $this->session->set('organizations', [$itemOrg->get()]);
+
             return $item->get();
         }
 
@@ -91,6 +94,10 @@ class AuthorizationService
             foreach ($groups[0]['scopes'] as $scope) {
                 $scopes[] = $scope['code'];
             }
+            $this->session->set('organizations', [$groups[0]['organization']]);
+            $itemOrg->set($groups[0]['organization']);
+            $itemOrg->tag('anonymousOrg');
+            $this->cache->save($itemOrg);
         }
         if (count($scopes) > 0) {
             // Save in cache
@@ -159,12 +166,14 @@ class AuthorizationService
             $item->tag('grantedScopes');
             $this->cache->save($item);
         }
+
         if (in_array($scopes['admin_scope'], $grantedScopes)) {
             return;
         }
         if (in_array($scopes['base_scope'], $grantedScopes)
             || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
-            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))) {
+            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))
+        ) {
             return;
         }
         if (array_key_exists('sub_scopes', $scopes)) {

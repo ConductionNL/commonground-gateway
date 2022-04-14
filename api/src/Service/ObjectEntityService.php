@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ObjectEntityService
 {
@@ -238,6 +239,15 @@ class ObjectEntityService
             }
         }
 
+        // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
+        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+            try {
+                //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
+                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($this->request->getMethod(), null, $entity));
+            } catch (AccessDeniedException $e) {
+                throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
+            }
+        }
         // throw error if get/put/patch/delete and no id
         // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && //throw error
 

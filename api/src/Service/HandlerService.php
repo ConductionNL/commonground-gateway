@@ -170,7 +170,7 @@ class HandlerService
 
         // @todo remove this when eav part works and catch this->objectEntityService->handleObject instead
         if (!isset($data)) {
-            throw new GatewayException('Could not fetch object(s) on endpoint: /'.$endpoint->getPath(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+            throw new GatewayException('Could not fetch object(s) on endpoint: /'.implode('/'.$endpoint->getPath()), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // If data contains error dont execute following code and create response
