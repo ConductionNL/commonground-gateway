@@ -192,10 +192,10 @@ class AuthorizationService
     {
         return new Response(
             $serializerService->serialize(
-          new ArrayCollection(['message' => $exception->getMessage()]),
-          $serializerService->getRenderType($contentType),
-          []
-      ),
+                new ArrayCollection(['message' => $exception->getMessage()]),
+                $serializerService->getRenderType($contentType),
+                []
+            ),
             $exception->getCode(),
             ['Content-Type' => $contentType]
         );
