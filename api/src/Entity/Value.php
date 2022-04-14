@@ -6,9 +6,9 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -206,9 +206,10 @@ class Value
     }
 
     /**
-     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
      *
      * @param int|null $integerValue
+     *
      * @return $this
      */
     public function setIntegerValue(?int $integerValue): self
@@ -225,9 +226,10 @@ class Value
     }
 
     /**
-     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
      *
      * @param float|null $numberValue
+     *
      * @return $this
      */
     public function setNumberValue(?float $numberValue): self
@@ -244,9 +246,10 @@ class Value
     }
 
     /**
-     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
      *
      * @param bool|null $booleanValue
+     *
      * @return $this
      */
     public function setBooleanValue(?bool $booleanValue): self
@@ -276,9 +279,10 @@ class Value
     }
 
     /**
-     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository)
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
      *
      * @param DateTimeInterface|null $dateTimeValue
+     *
      * @return $this
      */
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self

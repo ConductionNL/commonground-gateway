@@ -36,11 +36,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required.
      *
-     * @param Entity $entity The Entity
+     * @param Entity $entity  The Entity
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
-     * @param int    $offset Pagination, the first result. 'offset' of the returned ObjectEntities.
-     * @param int    $limit Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
+     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
+     * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
      * @throws Exception
      *
@@ -61,7 +61,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity $entity The Entity
+     * @param Entity $entity  The Entity
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      *
      * @throws NoResultException|NonUniqueResultException
@@ -100,7 +100,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      *
-     * @param array $array The array of query params / filters.
+     * @param array $array       The array of query params / filters.
      * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
      * @return array A 'clean' array. And transformed array.
@@ -124,9 +124,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.
      *
-     * @param Entity $entity The Entity.
+     * @param Entity $entity  The Entity.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
      * @throws Exception
      *
@@ -195,12 +195,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Expands a QueryBuilder in the case that filters are used in createQuery()
+     * Expands a QueryBuilder in the case that filters are used in createQuery().
      *
-     * @param array        $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param int          $level The depth level, if we are filtering on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the filter we are adding, default = 'value'.
+     * @param array        $filters      An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param int          $level        The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix       The prefix of the value for the filter we are adding, default = 'value'.
      * @param string       $objectPrefix The prefix of the objectEntity for the filter we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
      *
      * @throws Exception
@@ -301,6 +301,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      * Function that handles after and/or before dateTime filters. Adds to an existing QueryBuilder.
+     *
      * @TODO: remove from & till as valid options, needed for 'old' gateway used by BISC. no longer after refactor!
      *
      * @param QueryBuilder $query The existing QueryBuilder.
