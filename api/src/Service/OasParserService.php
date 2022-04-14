@@ -150,13 +150,11 @@ class OasParserService
      */
     private function checkSchemaTypeAsArray($type): string
     {
-        if (is_array($type)) {
-            $dataTypes = ['string' => 'string', 'integer' => 'integer', 'number' => 'integer', 'text' => 'string'];
-            foreach ($dataTypes as $key => $dataType) {
-                if (in_array($key, $type)) {
-                    $type = $dataType;
-                    break;
-                }
+        $dataTypes = ['string' => 'string', 'integer' => 'integer', 'number' => 'integer', 'text' => 'string'];
+        foreach ($dataTypes as $key => $dataType) {
+            if (in_array($key, $type)) {
+                $type = $dataType;
+                break;
             }
         }
 
@@ -174,7 +172,9 @@ class OasParserService
     private function setAttributeType(array $schema, Attribute $attribute): Attribute
     {
         if (isset($schema['type'])) {
-            $schema['type'] = $this->checkSchemaTypeAsArray($schema['type']);
+            if (is_array($schema['type'])) {
+                $schema['type'] = $this->checkSchemaTypeAsArray($schema['type']);
+            }
             $attribute->setType($schema['type']);
         } else {
             $attribute->setType('string');
