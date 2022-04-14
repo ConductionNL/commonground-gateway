@@ -170,11 +170,10 @@ class AuthorizationService
         if (in_array($scopes['admin_scope'], $grantedScopes)) {
             return;
         }
-        if (
-      in_array($scopes['base_scope'], $grantedScopes)
-      || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
-      || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))
-    ) {
+        if (in_array($scopes['base_scope'], $grantedScopes)
+            || (array_key_exists('sub_scope', $scopes) && in_array($scopes['sub_scope'], $grantedScopes))
+            || (array_key_exists('sub_scopes', $scopes) && array_intersect($scopes['sub_scopes'], $grantedScopes))
+        ) {
             return;
         }
         if (array_key_exists('sub_scopes', $scopes)) {
