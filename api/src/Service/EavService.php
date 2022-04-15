@@ -1050,6 +1050,9 @@ class EavService
                 ];
             }
         }
+
+        $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
+
         $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
         $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
 

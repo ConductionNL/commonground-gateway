@@ -533,6 +533,39 @@ class AuthorizationService
     }
 
     /**
+     * Gets all value scopes of the user and turns them into filters, this can be used so that the user only sees what he/she is allowed to see when doing a get collection call.
+     *
+     * @param Entity $entity
+     *
+     * @throws AccessDeniedException
+     *
+     * @return array
+     */
+    public function valueScopesToFilters(Entity $entity): array
+    {
+        try {
+            $grantedScopes = $this->getGrantedScopes();
+        } catch (InvalidArgumentException|CacheException $e) {
+            throw new AccessDeniedException('Something went wrong, please contact IT for help');
+        }
+
+        foreach ($grantedScopes as $grantedScope) {
+            // example: POST.organizations.type=taalhuis,team
+            $grantedScopeExploded = explode('=', $grantedScope);
+
+            // If count grantedScope == 2, the user has a scope with a = value check.
+            if (count($grantedScopeExploded) == 2) {
+                //todo
+            }
+        }
+
+        // todo: get all valueScopes from the user and filter out all of them relevant for the given Entity.
+        // todo: turn them into filters so the result only contains objects you are allowed to see.
+
+        return [];
+    }
+
+    /**
      * @TODO
      *
      * @param string                $contentType
