@@ -131,7 +131,7 @@ services:
       - NGINX_HOST=user-component-php
   
   user-component-php:
-    image: ghcr.io/conductionnl/user-component-php:latest
+    image: ghcr.io/conductionnl/user-component-php:dev
     depends_on:
       - user-component-postgres
     volumes:
