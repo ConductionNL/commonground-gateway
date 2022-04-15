@@ -984,10 +984,10 @@ class EavService
         }
         unset($query['updateGatewayPool']);
 
-        // todo: add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
         // Allowed order by
-        $orderCheck = ['_dateCreated', '_dateModified'];
-//        $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
+        $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
+        // todo: ^^^ add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
+        // todo: sortable?
 
         $order = [];
         if (array_key_exists('order', $query)) {
