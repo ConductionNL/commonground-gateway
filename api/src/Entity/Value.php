@@ -3,8 +3,10 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
@@ -25,13 +27,32 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @category Entity
  *
+ * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/values/{id}"},
+ *      "put"={"path"="/admin/values/{id}"},
+ *      "delete"={"path"="/admin/values/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/values"},
+ *      "post"={"path"="/admin/values"}
+ *  })
  * @ORM\Entity(repositoryClass="App\Repository\ValueRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "attribute.id": "exact",
+ *     "objectEntity.id": "exact"
+ * })
+ * @ApiFilter(ExistsFilter::class, properties={
+ *     "stringValue",
+ *     "dateTimeValue",
+ * })
  */
 class Value
 {
@@ -184,9 +205,17 @@ class Value
         return $this->integerValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param int|null $integerValue
+     *
+     * @return $this
+     */
     public function setIntegerValue(?int $integerValue): self
     {
         $this->integerValue = $integerValue;
+        $this->stringValue = $integerValue !== null ? (string) $integerValue : null;
 
         return $this;
     }
@@ -196,9 +225,17 @@ class Value
         return $this->numberValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param float|null $numberValue
+     *
+     * @return $this
+     */
     public function setNumberValue(?float $numberValue): self
     {
         $this->numberValue = $numberValue;
+        $this->stringValue = $numberValue !== null ? (string) $numberValue : null;
 
         return $this;
     }
@@ -208,9 +245,18 @@ class Value
         return $this->booleanValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param bool|null $booleanValue
+     *
+     * @return $this
+     */
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
+//        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
+        $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
         return $this;
     }
@@ -232,9 +278,17 @@ class Value
         return $this->dateTimeValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param DateTimeInterface|null $dateTimeValue
+     *
+     * @return $this
+     */
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
+        $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format('Y-m-d H:i:s') : null;
 
         return $this;
     }
