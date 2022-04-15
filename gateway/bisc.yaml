@@ -883,6 +883,10 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
         inversedBy: "@learningNeed_student"
+    student_referred:
+        name: referred
+        type: datetime
+        entity: "@student"
 
         # Employee Intake properties
     employeeIntake_targetGroupPreferences:
@@ -1542,12 +1546,14 @@ App\Entity\Attribute:
         defaultValue: "REFERRED"
         entity: "@participation"
         searchable: true
+#        unsetable: true // todo?
     participation_providerOption:
         name: providerOption
         type: string
         required: true
         enum: ["PROVIDER", "OTHER"]
         entity: "@participation"
+#        immutable: true // todo?
     participation_provider:
         name: provider
         type: object
