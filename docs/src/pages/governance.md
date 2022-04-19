@@ -1,7 +1,3 @@
----
-template: "default"
----
-
 # ONTWERP: Governance voor Demodam
 
 ## Doelen van Demodam
