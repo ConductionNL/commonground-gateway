@@ -6,11 +6,11 @@ const conduction = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAB1CAMAAA
 
 const DemodamLogo = (props) => (
 
- 
+
   // <img style={{background: 'white'}} src="https://www.utrecht.nl/typo3conf/ext/alternet_sitepackage/Resources/Public/Images/svg/wapen-utrecht-rood.svg" alt="Wapen van de Gemeente Utrecht"/>
   // <img src={conduction} height="60" alt="Logo Conduction" />
-  
-  <StyledHeading>Conductor</StyledHeading>
+
+  <StyledHeading>Common Gateway</StyledHeading>
 
 
 )
