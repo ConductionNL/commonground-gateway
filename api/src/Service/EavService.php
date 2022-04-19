@@ -1053,8 +1053,7 @@ class EavService
 
         $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
 
-        $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
-        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
+        $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
 
         // Lets see if we need to flatten te responce (for example csv use)
         $flat = false;
@@ -1063,15 +1062,7 @@ class EavService
         }
 
         $results = [];
-        foreach ($objects as $object) {
-            // todo: we should filter out objects on sql level, not after sql, because this is in the way of pagination...
-            // todo: get valueScopes and convert them to filters see: https://conduction.atlassian.net/browse/TOP-61
-            try {
-                $this->authorizationService->checkAuthorization(['entity' => $entity, 'object' => $object]);
-            } catch (AccessDeniedException $exception) {
-                $total = $total - 1;
-                continue;
-            }
+        foreach ($repositoryResult['objects'] as $object) {
             // Old $MaxDepth in renderResult
 //            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
             $results[] = $this->responseService->renderResult($object, $fields, $flat);
@@ -1084,9 +1075,9 @@ class EavService
 
         // If not lets make it pritty
         $results = ['results' => $results];
-        $results['total'] = $total;
+        $results['total'] = $repositoryResult['total'];
         $results['limit'] = $limit;
-        $results['pages'] = ceil($total / $limit);
+        $results['pages'] = ceil($repositoryResult['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
         $results['page'] = floor($offset / $limit) + 1;
         $results['start'] = $offset + 1;

@@ -453,7 +453,7 @@ class AuthorizationService
             // Get the sub_scope for the given Entity and/or Attribute we are going to check
             $subScopeResult = $this->getSubScope($grantedScopeExploded, $info); // todo caching? if the result is always the same
             if ($subScopeResult === null || $grantedScopeExploded[0] != $subScopeResult['sub_scope']) {
-                // If we didn't find a sub_scope or if the scope we are checking (the part before the =) doest not match this sub_scope
+                // If we didn't find a sub_scope or if the scope we are checking (the part before the =) does not match this sub_scope
                 // Continue checking other $grantedScopes with foreach...
                 return null;
             }
@@ -543,6 +543,8 @@ class AuthorizationService
      */
     public function valueScopesToFilters(Entity $entity): array
     {
+        $filters = [];
+
         try {
             $grantedScopes = $this->getGrantedScopes();
         } catch (InvalidArgumentException|CacheException $e) {
@@ -555,14 +557,20 @@ class AuthorizationService
 
             // If count grantedScope == 2, the user has a scope with a = value check.
             if (count($grantedScopeExploded) == 2) {
-                //todo
+                // Get the sub_scope for the given Entity we are going to check
+                $subScopeResult = $this->getSubScope($grantedScopeExploded, $this->getValidInfoArray(['entity' => $entity])); // todo caching? if the result is always the same
+                if ($subScopeResult === null || $grantedScopeExploded[0] != $subScopeResult['sub_scope']) {
+                    // If we didn't find a sub_scope or if the scope we are checking (the part before the =) does not match this sub_scope
+                    // Continue checking other $grantedScopes
+                    continue;
+                }
+
+                $scopeValues = explode(',', $grantedScopeExploded[1]);
+                $filters[$subScopeResult['scopeAttribute']->getName().'|valueScopeFilter'] = $scopeValues;
             }
         }
 
-        // todo: get all valueScopes from the user and filter out all of them relevant for the given Entity.
-        // todo: turn them into filters so the result only contains objects you are allowed to see.
-
-        return [];
+        return $filters;
     }
 
     /**
