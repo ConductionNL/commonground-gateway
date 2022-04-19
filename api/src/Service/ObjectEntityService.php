@@ -240,7 +240,7 @@ class ObjectEntityService
         }
 
         // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
-        if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
+        if ((!isset($object) || !$object->getUri()) || !$this->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($this->request->getMethod(), null, $entity));
@@ -252,126 +252,126 @@ class ObjectEntityService
         // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && //throw error
 
         switch ($method) {
-      case 'GET':
-        // get object
+            case 'GET':
+                // get object
 
-        // if id get single object
+                // if id get single object
 
-        //todo: -start- old code...
-        //TODO: old code for getting an ObjectEntity
+                //todo: -start- old code...
+                //TODO: old code for getting an ObjectEntity
 
-        // Lets allow for filtering specific fields
-        $fields = $this->eavService->getRequestFields($this->request);
-        if (isset($object)) {
-            if ($object instanceof ObjectEntity) {
-                $data = $this->eavService->handleGet($object, $fields);
+                // Lets allow for filtering specific fields
+                $fields = $this->eavService->getRequestFields($this->request);
+                if (isset($object)) {
+                    if ($object instanceof ObjectEntity) {
+                        $data = $this->eavService->handleGet($object, $fields);
+                        if ($object->getHasErrors()) {
+                            $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                        }
+                    } else {
+                        $data['error'] = $object;
+                    }
+                    //todo: -end- old code...
+                } else {
+                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+
+                    if ($this->session->get('endpoint')) {
+                        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+                        if ($endpoint->getOperationType() === 'item' && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
+                            $data = $data['results'][0];
+                            if (isset($data['id']) && Uuid::isValid($data['id'])) {
+                                $this->session->set('object', $data['id']);
+                            }
+                        } elseif ($endpoint->getOperationType() === 'item') {
+                            throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                        }
+                    }
+                }
+
+                break;
+            case 'POST':
+                // validate
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
+                    break;
+                }
+
+                // create object
+
+                // set owner and application
+
+                // set @id
+
+                // @todo: -start- old code...
+                // @TODO: old code for creating or updating an ObjectEntity
+
+                $this->validationService->setRequest($this->request);
+                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                //                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
+                $this->entityManager->persist($object);
+                $this->entityManager->flush();
+                $data['id'] = $object->getId()->toString();
                 if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
-            } else {
-                $data['error'] = $object;
-            }
-            //todo: -end- old code...
-        } else {
-            $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
 
-            if ($this->session->get('endpoint')) {
-                $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                if ($endpoint->getOperationType() === 'item' && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
-                    $data = $data['results'][0];
-                    if (isset($data['id']) && Uuid::isValid($data['id'])) {
-                        $this->session->set('object', $data['id']);
-                    }
-                } elseif ($endpoint->getOperationType() === 'item') {
-                    throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+                //todo: -end- old code...
+
+                break;
+            case 'PUT':
+            case 'PATCH':
+                // get object
+
+                // validate
+                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
+                    break;
                 }
-            }
+                // put object
+
+                // @todo: -start- old code...
+                // @TODO: old code for creating or updating an ObjectEntity
+
+                $this->validationService->setRequest($this->request);
+                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                //                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
+                $this->entityManager->persist($object);
+                $this->entityManager->flush();
+                $data['id'] = $object->getId()->toString();
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
+
+                //todo: -end- old code...
+
+                break;
+            case 'DELETE':
+                // get object
+
+                // delete object
+                break;
+            default:
+                // throw error
         }
-
-        break;
-      case 'POST':
-        // validate
-        if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
-            break;
-        }
-
-        // create object
-
-        // set owner and application
-
-        // set @id
-
-        // @todo: -start- old code...
-        // @TODO: old code for creating or updating an ObjectEntity
-
-        $this->validationService->setRequest($this->request);
-        //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-        //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-        //                $this->validationService->removeObjectsOnPut = []; // to be sure
-        $object = $this->validationService->validateEntity($object, $data);
-        if (!empty($this->validationService->promises)) {
-            Utils::settle($this->validationService->promises)->wait();
-
-            foreach ($this->validationService->promises as $promise) {
-                echo $promise->wait();
-            }
-        }
-        $this->entityManager->persist($object);
-        $this->entityManager->flush();
-        $data['id'] = $object->getId()->toString();
-        if ($object->getHasErrors()) {
-            $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-        }
-
-        //todo: -end- old code...
-
-        break;
-      case 'PUT':
-      case 'PATCH':
-        // get object
-
-        // validate
-        if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
-            break;
-        }
-        // put object
-
-        // @todo: -start- old code...
-        // @TODO: old code for creating or updating an ObjectEntity
-
-        $this->validationService->setRequest($this->request);
-        //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-        //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-        //                $this->validationService->removeObjectsOnPut = []; // to be sure
-        $object = $this->validationService->validateEntity($object, $data);
-        if (!empty($this->validationService->promises)) {
-            Utils::settle($this->validationService->promises)->wait();
-
-            foreach ($this->validationService->promises as $promise) {
-                echo $promise->wait();
-            }
-        }
-        $this->entityManager->persist($object);
-        $this->entityManager->flush();
-        $data['id'] = $object->getId()->toString();
-        if ($object->getHasErrors()) {
-            $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-        }
-
-        //todo: -end- old code...
-
-        break;
-      case 'DELETE':
-        // get object
-
-        // delete object
-        break;
-      default:
-        // throw error
-    }
 
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
