@@ -242,7 +242,11 @@ class ValidationService
     {
         try {
             if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+                $this->authorizationService->checkAuthorization([
+                    'method'    => $objectEntity->getUri() ? 'PUT' : 'POST',
+                    'attribute' => $attribute,
+                    'value'     => $value,
+                ]);
             }
         } catch (AccessDeniedException $e) {
             $objectEntity->addError($attribute->getName(), $e->getMessage());
@@ -494,6 +498,7 @@ class ValidationService
 
                 $subObject->setSubresourceIndex($key);
                 $subObject = $this->validateEntity($subObject, $object);
+                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
@@ -992,6 +997,7 @@ class ValidationService
                     $subObject = $valueObject->getValue();
                 }
                 $subObject = $this->validateEntity($subObject, $value);
+                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
                 $this->em->persist($subObject);
 
                 // If no errors we can push it into our object

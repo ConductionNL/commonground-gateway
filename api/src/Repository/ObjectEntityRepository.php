@@ -34,7 +34,30 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required.
+     * Does the same as findByEntity(), but also returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
+     *
+     * @param Entity $entity  The Entity
+     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
+     * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
+     *
+     * @throws NoResultException|NonUniqueResultException
+     *
+     * @return array With a key 'objects' containing the actual objects found and a key 'total' with an integer representing the total amount of results found.
+     */
+    public function findAndCountByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
+    {
+        $query = $this->createQuery($entity, $filters, $order);
+
+        return [
+            'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $query), // Use already generated $query
+            'total'   => $query->select($query->expr()->countDistinct('o'))->getQuery()->getSingleScalarResult(),
+        ];
+    }
+
+    /**
+     * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required. Always use getFilterParameters() to check for allowed filters before using this function!
      *
      * @param Entity $entity  The Entity
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
@@ -46,80 +69,35 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return array Returns an array of ObjectEntity objects
      */
-    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
+    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25, $query = null): array
     {
-        $query = $this->createQuery($entity, $filters, $order);
+        $query = $query ?? $this->createQuery($entity, $filters, $order);
 
         return $query
-            // filters toevoegen
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
     }
 
-    /**
-     * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
-     *
-     * @param Entity $entity  The Entity
-     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     *
-     * @throws NoResultException|NonUniqueResultException
-     *
-     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
-     */
-    public function countByEntity(Entity $entity, array $filters = []): int
-    {
-        $query = $this->createQuery($entity, $filters);
-        $query->select($query->expr()->countDistinct('o'));
-
-        return $query->getQuery()->getSingleScalarResult();
-    }
-
-    /**
-     * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]].
-     *
-     * @param array $key
-     * @param $value
-     * @param array $result
-     *
-     * @return array The transformed array.
-     */
-    private function recursiveFilterSplit(array $key, $value, array $result): array
-    {
-        if (count($key) > 1) {
-            $currentKey = array_shift($key);
-            $result[$currentKey] = $this->recursiveFilterSplit($key, $value, $result[$currentKey] ?? []);
-        } else {
-            $result[array_shift($key)] = $value;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
-     *
-     * @param array $array       The array of query params / filters.
-     * @param array $filterCheck The allowed filters. See: getFilterParameters().
-     *
-     * @return array A 'clean' array. And transformed array.
-     */
-    private function cleanArray(array $array, array $filterCheck): array
-    {
-        $result = [];
-        foreach ($array as $key=>$value) {
-            $key = str_replace(['_', '..'], ['.', '._'], $key);
-            if (substr($key, 0, 1) == '.') {
-                $key = '_'.ltrim($key, $key[0]);
-            }
-            if (in_array($key, $filterCheck)) {
-                $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
-            }
-        }
-
-        return $result;
-    }
+    // todo: see findAndCountByEntity() this function can be removed, but here in case we ever want to use this separately from findByEntity()
+//    /**
+//     * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
+//     *
+//     * @param Entity $entity  The Entity
+//     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+//     *
+//     * @throws NoResultException|NonUniqueResultException
+//     *
+//     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+//     */
+//    public function countByEntity(Entity $entity, array $filters = []): int
+//    {
+//        $query = $this->createQuery($entity, $filters);
+//        $query->select($query->expr()->countDistinct('o'));
+//
+//        return $query->getQuery()->getSingleScalarResult();
+//    }
 
     /**
      * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.
@@ -195,6 +173,91 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
+     *
+     * @param array $array       The array of query params / filters.
+     * @param array $filterCheck The allowed filters. See: getFilterParameters().
+     *
+     * @return array A 'clean' array. And transformed array.
+     */
+    private function cleanArray(array $array, array $filterCheck): array
+    {
+        $result = [];
+
+        // Handles valueScopeFilters. This will prevent duplicate filters and makes sure the user can not bypass authorization by using filters!
+        $array = $this->handleValueScopeFilters($array);
+
+        foreach ($array as $key => $value) {
+            $key = str_replace(['_', '..'], ['.', '._'], $key);
+            if (substr($key, 0, 1) == '.') {
+                $key = '_'.ltrim($key, $key[0]);
+            }
+            if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
+                $key = str_replace('|valueScopeFilter', '', $key);
+                $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check which filters should remain if user wants to filter on one of the valueScopeFilters. This will prevent duplicate filters and makes sure the user can not bypass authorization by using filters!
+     *
+     * @param array $array The input array.
+     *
+     * @return array The updated array.
+     */
+    private function handleValueScopeFilters(array $array): array
+    {
+        foreach ($array as $key => $value) {
+            if (str_ends_with($key, '|valueScopeFilter')) {
+                $key = str_replace('|valueScopeFilter', '', $key);
+                // If a filter is added because of scopes & the user wants to filter on the same $key, make sure we give prio to the user input,
+                // but only allow the filter if the value used as input is present in the valueScopesFilter values.
+                if (in_array($key, array_keys($array))) { //todo this does not yet work for $key (/valueScopes with) subresources: emails.email, because at this point they will have _ instead of . (emails_email)
+                    if (in_array($array[$key], $value)) {
+                        unset($array[$key.'|valueScopeFilter']);
+                        continue;
+                    }
+                    unset($array[$key]);
+                }
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]].
+     *
+     * @param array $key
+     * @param $value
+     * @param array $result
+     *
+     * @return array The transformed array.
+     */
+    private function recursiveFilterSplit(array $key, $value, array $result): array
+    {
+        if (count($key) > 1) {
+            $currentKey = array_shift($key);
+            $result[$currentKey] = $this->recursiveFilterSplit($key, $value, $result[$currentKey] ?? []);
+        } else {
+            $newKey = array_shift($key);
+            if (is_array($value)) {
+                $newKey = $newKey.'|arrayValue';
+                // todo: remove from & till after gateway refactor
+                if (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
+                    $newKey = $newKey.'|compareDateTime';
+                }
+            }
+            $result[$newKey] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
      * Expands a QueryBuilder in the case that filters are used in createQuery().
      *
      * @param array        $filters      An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
@@ -210,41 +273,18 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
-            $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
+            $filterKey = $this->clearFilterKey($key);
 
-            if (substr($key, 0, 1) == '_' || $key == 'id') {
+            $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['key']);
+
+            if (substr($filterKey['key'], 0, 1) == '_' || $filterKey['key'] == 'id') {
                 // If the filter starts with _ or == id we need to handle this filter differently
-                $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
-            } elseif (is_array($value) && empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
+                $query = $this->getObjectEntityFilter($query, $filterKey['key'], $value, $objectPrefix);
+            } elseif (is_array($value) && !$filterKey['arrayValue']) {
                 // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
-                $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
-                $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
-                $query = $this->buildQuery(
-                    $value,
-                    $query,
-                    $level + 1,
-                    'subValue'.$key.$level,
-                    'subObjects'.$key.$level
-                );
+                $query = $this->buildSubresourceQuery($query, $filterKey['key'], $value, $level, $prefix);
             } else {
-                // Make sure we only check the values of the correct attribute
-                $query->leftJoin("$prefix$key.attribute", $prefix.$key.'Attribute');
-                $query->andWhere($prefix.$key."Attribute.name = :Key$key")
-                    ->setParameter("Key$key", $key);
-
-                if (!is_array($value)) {
-                    // If a date value is given, make sure we transform it into a dateTime string
-                    if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
-                        $value = $value.' 00:00:00';
-                    }
-                    // Check te actual value (example: key = value)
-                    // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
-                    $query->andWhere("$prefix$key.stringValue = :$key")
-                    ->setParameter($key, $value);
-                } // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
-                elseif (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
-                    $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
-                }
+                $query = $this->buildFilterQuery($query, $filterKey, $value, $prefix);
             }
         }
 
@@ -252,12 +292,37 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Clears any |example strings from the $key and returns the cleared key and booleans instead.
+     *
+     * @param string $key The key
+     *
+     * @return array An array containing the clear key and arrayValue & compareDateTime boolean.
+     */
+    private function clearFilterKey(string $key): array
+    {
+        if (str_contains($key, '|arrayValue')) {
+            $arrayValue = true;
+            $key = str_replace('|arrayValue', '', $key);
+            if (str_ends_with($key, '|compareDateTime')) {
+                $compareDateTime = true;
+                $key = str_replace('|compareDateTime', '', $key);
+            }
+        }
+
+        return [
+            'key'             => $key,
+            'arrayValue'      => $arrayValue ?? false,
+            'compareDateTime' => $compareDateTime ?? false,
+        ];
+    }
+
+    /**
      * Function that handles special filters starting with _ or the 'id' filter. Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param $key
-     * @param $value
-     * @param string $prefix
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The key of the filter.
+     * @param array        $value  The value of the filter.
+     * @param string       $prefix The prefix of the value for the filter we are adding.
      *
      * @throws Exception
      *
@@ -294,6 +359,79 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 //todo: error?
 //                var_dump('Not supported filter for ObjectEntity: '.$key);
                 break;
+        }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case a filter for a subresource is used (example: subresource.key = something).
+     *
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The key of the filter.
+     * @param array        $value  The value of the filter.
+     * @param int          $level  The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix The prefix of the value for the filter we are adding.
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
+     */
+    private function buildSubresourceQuery(QueryBuilder $query, string $key, array $value, int $level, string $prefix): QueryBuilder
+    {
+        // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
+        $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
+        $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
+        $query = $this->buildQuery(
+            $value,
+            $query,
+            $level + 1,
+            'subValue'.$key.$level,
+            'subObjects'.$key.$level
+        );
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with the correct filters, using the given input and prefix.
+     *
+     * @param QueryBuilder $query     The existing QueryBuilder.
+     * @param array        $filterKey Array containing the key of the filter and some info about it, see clearFilterKey().
+     * @param string|array $value     The value of the filter.
+     * @param string       $prefix    The prefix of the value for the filter we are adding.
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
+     */
+    private function buildFilterQuery(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    {
+        $key = $filterKey['key'];
+
+        // Make sure we only check the values of the correct attribute
+        $query->leftJoin("$prefix$key.attribute", $prefix.$key.'Attribute');
+        $query->andWhere($prefix.$key."Attribute.name = :Key$key")
+            ->setParameter("Key$key", $key);
+
+        // Check if this filter has an array of values (example1: key = value,value2) (example2: key[a] = value, key[b] = value2)
+        if (is_array($value) && $filterKey['arrayValue']) {
+            // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
+            if ($filterKey['compareDateTime']) {
+                $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
+            } else {
+                $query->andWhere("$prefix$key.stringValue IN (:$key)")
+                    ->setParameter($key, $value);
+            }
+        } else {
+            // If a date value is given, make sure we transform it into a dateTime string
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
+                $value = $value.' 00:00:00';
+            }
+            // Check the actual value (example: key = value)
+            // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
+            $query->andWhere("$prefix$key.stringValue = :$key")
+                ->setParameter($key, $value);
         }
 
         return $query;
@@ -375,7 +513,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
-        //todo: we only check for the allowed keys/attributes to filter on, if this attribute is an dateTime (or date), we should also check if the value is an dateTime string?
+        //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
 
         // NOTE:
         // Filter id looks for ObjectEntity id and externalId
@@ -425,32 +563,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
 //        }
 
         return $sortable;
-    }
-
-    //todo: typecast?
-    //todo: remove?
-    private function buildFilter(QueryBuilder $query, $filters, $prefix = 'o', $level = 0): QueryBuilder
-    {
-        $query->leftJoin($prefix.'.objectValues', $level.'.objectValues');
-        foreach ($filters as $key => $filter) {
-            if (!is_array($filter) && substr($key, 0, 1) != '_') {
-                $query->andWhere($level.'.objectValues'.'.stringValue = :'.$key)->setParameter($key, $filter);
-            } elseif (!is_array($filter) && substr($key, 0, 1) == '_') {
-                // do magic
-                $query = $this->getObjectEntityFilter($query, $key, $filter, $prefix);
-            } elseif (is_array($filter)) {
-                $query = $this->buildFilter($query, $filters, $level++);
-            } else {
-                // how dit we end up here?
-            }
-        }
-
-        return $query;
-    }
-
-    //todo: remove?
-    private function getAllValues(string $atribute, string $value): array
-    {
     }
 
     // Filter functie schrijven, checken op betaande atributen, zelf looping

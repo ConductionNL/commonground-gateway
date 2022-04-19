@@ -181,10 +181,6 @@ class EavService
                 ];
             }
 
-            if ($method == 'POST' || $method == 'PUT') {
-                return $this->objectEntityService->handleOwner($object, $owner);
-            }
-
             return $object;
         } elseif ($method == 'POST') {
             $object = new ObjectEntity();
@@ -193,7 +189,7 @@ class EavService
             $object->setOrganization($this->session->get('activeOrganization'));
             $object->setApplication($this->session->get('application'));
 
-            return $this->objectEntityService->handleOwner($object, $owner);
+            return $object;
         }
 
         return null;
@@ -474,13 +470,7 @@ class EavService
 
         // Lets create an object
         if (($requestBase['id'] || $request->getMethod() == 'POST') && $responseType == Response::HTTP_OK) {
-            // Check if @owner is present in the body and if so unset it.
-            $owner = 'owner';
-            if (array_key_exists('@owner', $body)) {
-                $owner = $body['@owner'];
-                unset($body['@owner']);
-            }
-            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity, $owner); // note: $owner is allowed to be null!
+            $object = $this->getObject($requestBase['id'], $request->getMethod(), $entity);
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 $responseType = Response::HTTP_BAD_REQUEST;
                 $result = $object;
@@ -505,14 +495,23 @@ class EavService
         if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+                $this->authorizationService->checkAuthorization([
+                    'method' => $request->getMethod(),
+                    'entity' => $entity,
+                    'object' => $object ?? null,
+                ]);
             } catch (AccessDeniedException $e) {
-                $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
                     'message' => $e->getMessage(),
                     'type'    => 'Forbidden',
                     'path'    => $entity->getName(),
                     'data'    => [],
+                ];
+
+                return [
+                    'result'       => $result,
+                    'responseType' => Response::HTTP_FORBIDDEN,
+                    'object'       => $object ?? null,
                 ];
             }
         }
@@ -859,6 +858,14 @@ class EavService
             ];
         }
 
+        // Check if @owner is present in the body and if so unset it.
+        // note: $owner is allowed to be null!
+        $owner = 'owner';
+        if (array_key_exists('@owner', $body)) {
+            $owner = $body['@owner'];
+            unset($body['@owner']);
+        }
+
         // Validation stap
         $this->validationService->setRequest($request);
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
@@ -927,6 +934,8 @@ class EavService
         if ($request->getMethod() == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $body)) {
             $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
         }
+        // Do handleOwner after all CheckAuthorization function calls
+        $this->objectEntityService->handleOwner($object, $owner); // note: $owner is allowed to be null!
         $this->em->persist($object);
         $this->em->flush();
 
@@ -1041,8 +1050,10 @@ class EavService
                 ];
             }
         }
-        $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
-        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
+
+        $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
+
+        $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
 
         // Lets see if we need to flatten te responce (for example csv use)
         $flat = false;
@@ -1051,7 +1062,7 @@ class EavService
         }
 
         $results = [];
-        foreach ($objects as $object) {
+        foreach ($repositoryResult['objects'] as $object) {
             // Old $MaxDepth in renderResult
 //            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
             $results[] = $this->responseService->renderResult($object, $fields, $flat);
@@ -1064,9 +1075,9 @@ class EavService
 
         // If not lets make it pritty
         $results = ['results' => $results];
-        $results['total'] = $total;
+        $results['total'] = $repositoryResult['total'];
         $results['limit'] = $limit;
-        $results['pages'] = ceil($total / $limit);
+        $results['pages'] = ceil($repositoryResult['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
         $results['page'] = floor($offset / $limit) + 1;
         $results['start'] = $offset + 1;
@@ -1083,7 +1094,7 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
-        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
+        // TODO: Auth check if we are allowed to delete this is already done before this function, but we still need to do auth check for subresources
 //        try {
 //            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
 //                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));

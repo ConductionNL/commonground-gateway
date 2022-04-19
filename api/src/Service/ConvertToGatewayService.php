@@ -238,6 +238,7 @@ class ConvertToGatewayService
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
         if ((is_null($objectEntity) || !$objectEntity->getHasErrors()) && !$newObject->getHasErrors()) {
 //            var_dump('persist and flush');
+            // todo: set owner with: $this->objectEntityService->handleOwner($newObject); // Do this after all CheckAuthorization function calls
             $this->em->persist($newObject);
             $this->em->flush(); // Needed here! read comment above!
             $this->notify($newObject, 'Create'); // todo: use $notifications array for this (EVERYWHERE convertToGatewayObject() is used, also outside this service!)
