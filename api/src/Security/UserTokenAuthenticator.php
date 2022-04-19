@@ -152,6 +152,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     public function validateLocalToken(string $token): AuthenticationUser
     {
         $publicKey = $this->parameterBag->get('app_rsa_key');
+
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
         } catch (\Exception $exception) {
@@ -161,6 +162,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $this->checkExpiry($session);
 
         $this->session->set('activeOrganization', $this->getActiveOrganization($payload['user'], []));
+
         return new AuthenticationUser($payload['user']['id'], $payload['user']['id'], '', $payload['user']['givenName'], $payload['user']['familyName'], $payload['user']['name'], '', $payload['roles'], $payload['user']['id'], null);
     }
 
@@ -208,6 +210,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     public function validateUcToken(string $token): AuthenticationUser
     {
         $publicKey = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']);
+
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
         } catch (\Exception $exception) {
@@ -241,13 +244,13 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
 
     public function validateJwt(string $token)
     {
-            $serializerManager = new JWSSerializerManager([new CompactSerializer()]);
-            $jws = $serializerManager->unserialize($token);
-            if(json_decode($jws->getPayload(), true)['iss'] == $this->parameterBag->get('app_url')){
-                return $this->validateLocalToken($token);
-            } else {
-                return $this->validateUcToken($token);
-            }
+        $serializerManager = new JWSSerializerManager([new CompactSerializer()]);
+        $jws = $serializerManager->unserialize($token);
+        if (json_decode($jws->getPayload(), true)['iss'] == $this->parameterBag->get('app_url')) {
+            return $this->validateLocalToken($token);
+        } else {
+            return $this->validateUcToken($token);
+        }
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
