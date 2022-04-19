@@ -82,9 +82,9 @@ class ObjectEntityService
                 // $owner is allowed to be null or a valid uuid of a UC user
                 if ($owner !== null) {
                     if (!Uuid::isValid($owner)) {
-                        $errorMessage = '@owner (' . $owner . ') is not a valid uuid.';
+                        $errorMessage = '@owner ('.$owner.') is not a valid uuid.';
                     } elseif (!$this->commonGroundService->isResource($this->commonGroundService->cleanUrl(['component' => 'uc', 'type' => 'users', 'id' => $owner]))) {
-                        $errorMessage = '@owner (' . $owner . ') is not an existing user uuid.';
+                        $errorMessage = '@owner ('.$owner.') is not an existing user uuid.';
                     }
                     if (isset($errorMessage)) {
                         return [
