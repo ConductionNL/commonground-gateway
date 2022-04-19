@@ -257,73 +257,9 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
     {
         if (array_key_exists('token', $credentials)) {
             return $this->validateJwt($credentials['token']);
-//            $publicKey = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']);
-//
-//            try {
-//                $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
-//            } catch (\Exception $exception) {
-//                throw new AuthenticationException('The provided token is not valid');
-//            }
-//
-//            $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
-//            $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
-//
-//            if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
-//                throw new AuthenticationException('The provided token refers to an invalid session');
-//            }
         } elseif (array_key_exists('apiKey', $credentials)) {
             return $this->validateApiKey($credentials['apiKey']);
-//            $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
-//
-//            if (!$application || !$application->getResource()) {
-//                throw new AuthenticationException('Invalid ApiKey');
-//            }
-//
-//            try {
-//                $user = $this->commonGroundService->getResource($application->getResource(), [], false);
-//            } catch (\Exception $exception) {
-//                throw new AuthenticationException('Invalid User Uri');
-//            }
-//            $this->session->set('apiKeyApplication', $application->getId()->toString());
         }
-
-//        if (!$user) {
-//            throw new AuthenticationException('The provided token does not match the user it refers to');
-//        }
-//
-//        if (!in_array('ROLE_USER', $user['roles'])) {
-//            $user['roles'][] = 'ROLE_USER';
-//        }
-//        foreach ($user['roles'] as $key => $role) {
-//            if (strpos($role, 'ROLE_') !== 0) {
-//                $user['roles'][$key] = "ROLE_$role";
-//            }
-//        }
-//
-//        $organizations = [];
-//        if (isset($user['organization'])) {
-//            $organizations[] = $user['organization'];
-//        }
-//        foreach ($user['userGroups'] as $userGroup) {
-//            if (!in_array($userGroup['organization'], $organizations)) {
-//                $organizations[] = $userGroup['organization'];
-//            }
-//        }
-//        // Add all the sub organisations
-//        // Add all the parent organisations
-//        $parentOrganizations = [];
-//        foreach ($organizations as $organization) {
-//            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
-//            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
-//        }
-//        $organizations[] = 'localhostOrganization';
-//        $parentOrganizations[] = 'localhostOrganization';
-//        $this->session->set('organizations', $organizations);
-//        $this->session->set('parentOrganizations', $parentOrganizations);
-//        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-//        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
-//
-//        return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }
 
     private function getActiveOrganization(array $user, array $organizations): ?string
