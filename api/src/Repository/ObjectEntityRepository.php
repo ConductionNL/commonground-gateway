@@ -42,9 +42,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
-     * @return array With a key 'objects' containing the actual objects found and a key 'total' with an integer representing the total amount of results found.
-     *
      * @throws NoResultException|NonUniqueResultException
+     *
+     * @return array With a key 'objects' containing the actual objects found and a key 'total' with an integer representing the total amount of results found.
      */
     public function findAndCountByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
@@ -52,7 +52,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return [
             'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $query), // Use already generated $query
-            'total' => $query->select($query->expr()->countDistinct('o'))->getQuery()->getSingleScalarResult()
+            'total'   => $query->select($query->expr()->countDistinct('o'))->getQuery()->getSingleScalarResult(),
         ];
     }
 
@@ -65,9 +65,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
-     * @return array Returns an array of ObjectEntity objects
-     *
      * @throws Exception
+     *
+     * @return array Returns an array of ObjectEntity objects
      */
     public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25, $query = null): array
     {
@@ -106,9 +106,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
-     * @return QueryBuilder The QueryBuilder.
-     *
      * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function createQuery(Entity $entity, array $filters = [], array $order = []): QueryBuilder
     {
@@ -193,7 +193,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $key = '_'.ltrim($key, $key[0]);
             }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
-                $key = str_replace('|valueScopeFilter', "", $key);
+                $key = str_replace('|valueScopeFilter', '', $key);
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
@@ -212,7 +212,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         foreach ($array as $key => $value) {
             if (str_ends_with($key, '|valueScopeFilter')) {
-                $key = str_replace('|valueScopeFilter', "", $key);
+                $key = str_replace('|valueScopeFilter', '', $key);
                 // If a filter is added because of scopes & the user wants to filter on the same $key, make sure we give prio to the user input,
                 // but only allow the filter if the value used as input is present in the valueScopesFilter values.
                 if (in_array($key, array_keys($array))) { //todo this does not yet work for $key (/valueScopes with) subresources: emails.email, because at this point they will have _ instead of . (emails_email)
@@ -266,9 +266,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param string       $prefix       The prefix of the value for the filter we are adding, default = 'value'.
      * @param string       $objectPrefix The prefix of the objectEntity for the filter we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
      *
-     * @return QueryBuilder The QueryBuilder.
-     *
      * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
@@ -302,27 +302,27 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         if (str_contains($key, '|arrayValue')) {
             $arrayValue = true;
-            $key = str_replace('|arrayValue', "", $key);
+            $key = str_replace('|arrayValue', '', $key);
             if (str_ends_with($key, '|compareDateTime')) {
                 $compareDateTime = true;
-                $key = str_replace('|compareDateTime', "", $key);
+                $key = str_replace('|compareDateTime', '', $key);
             }
         }
 
         return [
-            'key' => $key,
-            'arrayValue' => $arrayValue ?? false,
-            'compareDateTime' => $compareDateTime ?? false
+            'key'             => $key,
+            'arrayValue'      => $arrayValue ?? false,
+            'compareDateTime' => $compareDateTime ?? false,
         ];
     }
 
     /**
      * Function that handles special filters starting with _ or the 'id' filter. Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param string $key The key of the filter.
-     * @param array $value The value of the filter.
-     * @param string $prefix The prefix of the value for the filter we are adding.
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The key of the filter.
+     * @param array        $value  The value of the filter.
+     * @param string       $prefix The prefix of the value for the filter we are adding.
      *
      * @throws Exception
      *
@@ -365,17 +365,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Expands a QueryBuilder in the case a filter for a subresource is used (example: subresource.key = something)
+     * Expands a QueryBuilder in the case a filter for a subresource is used (example: subresource.key = something).
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param string $key The key of the filter.
-     * @param array $value The value of the filter.
-     * @param int $level The depth level, if we are filtering on subresource.subresource etc.
-     * @param string $prefix The prefix of the value for the filter we are adding.
-     *
-     * @return QueryBuilder The QueryBuilder.
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The key of the filter.
+     * @param array        $value  The value of the filter.
+     * @param int          $level  The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix The prefix of the value for the filter we are adding.
      *
      * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function buildSubresourceQuery(QueryBuilder $query, string $key, array $value, int $level, string $prefix): QueryBuilder
     {
@@ -389,20 +389,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
             'subValue'.$key.$level,
             'subObjects'.$key.$level
         );
+
         return $query;
     }
 
     /**
      * Expands a QueryBuilder with the correct filters, using the given input and prefix.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param array $filterKey Array containing the key of the filter and some info about it, see clearFilterKey().
-     * @param string|array $value The value of the filter.
-     * @param string $prefix The prefix of the value for the filter we are adding.
-     *
-     * @return QueryBuilder The QueryBuilder.
+     * @param QueryBuilder $query     The existing QueryBuilder.
+     * @param array        $filterKey Array containing the key of the filter and some info about it, see clearFilterKey().
+     * @param string|array $value     The value of the filter.
+     * @param string       $prefix    The prefix of the value for the filter we are adding.
      *
      * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function buildFilterQuery(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
