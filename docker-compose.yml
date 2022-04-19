@@ -69,7 +69,6 @@ services:
       - AUTH_ENABLED=${AUTH_ENABLED}
       - AUDITTRAIL_ENABLED=${AUDITTRAIL_ENABLED}
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
-      - DIGID_ARTIFACT_URL=${DIGID_ARTIFACT_URL}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
@@ -132,7 +131,7 @@ services:
       - NGINX_HOST=user-component-php
   
   user-component-php:
-    image: ghcr.io/conductionnl/user-component-php:latest
+    image: ghcr.io/conductionnl/user-component-php:dev
     depends_on:
       - user-component-postgres
     volumes:

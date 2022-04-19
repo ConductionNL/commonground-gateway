@@ -15,6 +15,8 @@ use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Jose\Component\Signature\Serializer\CompactSerializer;
+use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -134,38 +136,38 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         return $organizations;
     }
 
-    public function getUser($credentials, UserProviderInterface $userProvider)
+    private function checkExpiry(?array $session): void
     {
-        if (array_key_exists('token', $credentials)) {
-            $publicKey = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']);
+        $expiry = new DateTime($session['expiry']);
+        $now = new DateTime();
+//        var_dump($expiry->format('Y-m-d H:i:s'), $now->format('d-m-y H:i:s'), $session['valid']);
+//        var_dump(!$session, new DateTime($session['expiry']) < new DateTime('now'), !$session['valid']);
 
-            try {
-                $payload = $this->authenticationService->verifyJWTToken($credentials['token'], $publicKey);
-            } catch (\Exception $exception) {
-                throw new AuthenticationException('The provided token is not valid');
-            }
-
-            $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
-            $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
-
-            if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
-                throw new AuthenticationException('The provided token refers to an invalid session');
-            }
-        } elseif (array_key_exists('apiKey', $credentials)) {
-            $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $credentials['apiKey']]);
-
-            if (!$application || !$application->getResource()) {
-                throw new AuthenticationException('Invalid ApiKey');
-            }
-
-            try {
-                $user = $this->commonGroundService->getResource($application->getResource(), [], false);
-            } catch (\Exception $exception) {
-                throw new AuthenticationException('Invalid User Uri');
-            }
-            $this->session->set('apiKeyApplication', $application->getId()->toString());
+//        var_dump($session);
+        if (!$session || new DateTime($session['expiry']) < new DateTime('now') || !$session['valid']) {
+            throw new AuthenticationException('The provided token refers to an invalid session');
         }
+    }
 
+    public function validateLocalToken(string $token): AuthenticationUser
+    {
+        $publicKey = $this->parameterBag->get('app_rsa_key');
+
+        try {
+            $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
+        } catch (\Exception $exception) {
+            throw new AuthenticationException('The provided token is not valid');
+        }
+        $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
+        $this->checkExpiry($session);
+
+        $this->session->set('activeOrganization', $this->getActiveOrganization($payload['user'], []));
+
+        return new AuthenticationUser($payload['user']['id'], $payload['user']['id'], '', $payload['user']['givenName'], $payload['user']['familyName'], $payload['user']['name'], '', $payload['roles'], $payload['user']['id'], null);
+    }
+
+    public function getUcUser(array $user): AuthenticationUser
+    {
         if (!$user) {
             throw new AuthenticationException('The provided token does not match the user it refers to');
         }
@@ -205,9 +207,64 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
     }
 
+    public function validateUcToken(string $token): AuthenticationUser
+    {
+        $publicKey = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']);
+
+        try {
+            $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
+        } catch (\Exception $exception) {
+            throw new AuthenticationException('The provided token is not valid');
+        }
+        $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
+        $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
+
+        $this->checkExpiry($session);
+
+        return $this->getUcUser($user);
+    }
+
+    public function validateApiKey(string $key): AuthenticationUser
+    {
+        $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $key]);
+
+        if (!$application || !$application->getResource()) {
+            throw new AuthenticationException('Invalid ApiKey');
+        }
+
+        try {
+            $user = $this->commonGroundService->getResource($application->getResource(), [], false);
+        } catch (\Exception $exception) {
+            throw new AuthenticationException('Invalid User Uri');
+        }
+        $this->session->set('apiKeyApplication', $application->getId()->toString());
+
+        return $this->getUcUser($user);
+    }
+
+    public function validateJwt(string $token)
+    {
+        $serializerManager = new JWSSerializerManager([new CompactSerializer()]);
+        $jws = $serializerManager->unserialize($token);
+        if (json_decode($jws->getPayload(), true)['iss'] == $this->parameterBag->get('app_url')) {
+            return $this->validateLocalToken($token);
+        } else {
+            return $this->validateUcToken($token);
+        }
+    }
+
+    public function getUser($credentials, UserProviderInterface $userProvider)
+    {
+        if (array_key_exists('token', $credentials)) {
+            return $this->validateJwt($credentials['token']);
+        } elseif (array_key_exists('apiKey', $credentials)) {
+            return $this->validateApiKey($credentials['apiKey']);
+        }
+    }
+
     private function getActiveOrganization(array $user, array $organizations): ?string
     {
-        if ($user['organization']) {
+        if (isset($user['organization'])) {
             return $user['organization'];
         }
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has

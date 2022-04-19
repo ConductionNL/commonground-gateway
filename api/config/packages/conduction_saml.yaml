@@ -9,7 +9,7 @@ parameters:
     env(APP_KEY): '/var/certs/certificate.key'
     env(SAML_ARTIFACT_METHOD): 'POST'
 
-    artifactUrl: 'https://digispoof.demodam.nl/artifact'
+    artifactUrl: 'https://digispoof.common-ground.dev/artifact'
     app_cert: '%env(APP_CERT)%'
     app_key: '%env(APP_KEY)%'
     app_x509_cert: '%env(default::file:APP_CERT)%'
