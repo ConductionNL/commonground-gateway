@@ -441,9 +441,11 @@ class ValidaterService
                 return new Rules\Json();
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
-            case null:
-            // For now..
+            case 'duration':
+                // For now..
             case 'uri':
+                // For now..
+            case null:
                 // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();
             default:
