@@ -75,6 +75,8 @@ class TranslationService
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
             } elseif ($format == 'bool') {
                 $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
+            } elseif ($format == 'array' && $search == 'object') {
+                $destination[$replace] = $source;
             }
             unset($format);
 
@@ -184,11 +186,13 @@ class TranslationService
     ) {
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
+            $result = [];
             foreach ($subject as $key => $value) {
-                $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+                $result[$this->parse($key, $translate, $translationVariables, $escapeChar, $errPlaceholder)] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+//                unset($subject[$key]);
             }
 
-            return $subject;
+            return $result;
         }
 
         // We only translate strings
@@ -229,7 +233,20 @@ class TranslationService
         if ($translate) {
             $subject = strtr($subject, $this->translationVariables($translationVariables));
         }
-
+//        var_dump($subject);
         return $subject;
+    }
+
+    public function addPrefix($data, ?string $prefix = null)
+    {
+        if(is_array($data)){
+            $result = [];
+            foreach ($data as $key => $value) {
+                $result[$this->addPrefix($key, $prefix)] = $value;
+            }
+            return $result;
+        } else {
+            return $prefix.$data;
+        }
     }
 }

@@ -205,7 +205,7 @@ class ObjectEntityService
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, array $data = null, string $method = null): array
+    public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null): array
     {
         // check application
         $application = $this->applicationService->getApplication();
@@ -275,15 +275,14 @@ class ObjectEntityService
             //todo: -end- old code...
         } else {
             $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
-
             if ($this->session->get('endpoint')) {
                 $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                if ($endpoint->getOperationType() === 'item' && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
+                if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                     $data = $data['results'][0];
                     if (isset($data['id']) && Uuid::isValid($data['id'])) {
                         $this->session->set('object', $data['id']);
                     }
-                } elseif ($endpoint->getOperationType() === 'item') {
+                } elseif ((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') {
                     throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
                 }
             }
