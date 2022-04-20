@@ -60,15 +60,15 @@ volumes:
     db-mysql: {}
 ```
 
-You can simply download this file to any directory on your computer, then open up your favorite (command line tool)[https://www.google.com/search?q=command+line+tool] or shell, navigate to the specific folder and tell docker to start your containers with the docker-compose up command
+You can simply download this file to any directory on your computer, then open up your favorite [command line tool](https://www.google.com/search?q=command+line+tool) or shell, navigate to the specific folder and tell docker to start your containers with the docker-compose up command
 
 ```cli
-$ docker-compose up
+docker-compose up
 ```
 
 You can now see the containers (virtual machines) come up one by one. Wait until all reports are done, open your browser and navigate to [localhost](localhost:8000). You should see a page that looks like this:
 
-[screenhost]
+[screenhost]()
 
 Alternatively (if you just don't like command line interfaces) you can use the Docker desktop UI to spin up the gateway
 

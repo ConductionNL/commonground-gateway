@@ -6,7 +6,7 @@ The web Gateway is designed as a feature-rich solution to quickly developing Pro
 
 Sources form the beating heart of the Gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web Gateway.
 
-[Read more about sources](./features/MOD_sources.md)
+[Read more about sources](./features/sources.md)
 
 ## Authentication
 
@@ -34,7 +34,7 @@ The web Gateway provides an easy (and inline scripting save) way of providing ap
 
 ## GDPR compliance and logging
 
-The web Gateway supports logging all data requests and there ‘doelbinding’ to a GDPR registry (or in case of Dutch governmental agencies, the VNG doelbindings register). Be aware that activating this functionality can lead to double registrations in said registry if the receiving API is already logging all requests. Please check the API's documentation you are connecting to before activating this functionality
+The web Gateway supports logging all data requests and there 'doelbinding' to a GDPR registry (or in case of Dutch governmental agencies, the VNG doelbindings register). Be aware that activating this functionality can lead to double registrations in said registry if the receiving API is already logging all requests. Please check the API's documentation you are connecting to before activating this functionality
 
 ## Notifications and event driven
 
@@ -173,24 +173,24 @@ Besides validations on type and string, you can also use specific validations; t
 
 ## API Documentation
 
--   To be Added -
+- To be Added -
 
 ## Uploading files through the Gateway
 
--   To be Added -
+- To be Added -
 
 ## Easy configuration
 
--   To be Added -
+- To be Added -
 
 ### Dashboard
 
--   To be Added -
+- To be Added -
 
 ### API
 
--   To be Added -
+- To be Added -
 
 ### YAML
 
--   To be Added -
+- To be Added -

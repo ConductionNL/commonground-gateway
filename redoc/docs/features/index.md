@@ -6,7 +6,7 @@ The Conductor Gateway is designed as a feature-rich solution to quickly develop 
 
 Sources form the beating heart of the gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web gateway.
 
-[Read more about sources](./MOD_sources.md)
+[Read more about sources](./sources.md)
 
 ## Authentication
 
@@ -105,7 +105,7 @@ The download option for exporting a file containing a data set, for GDPR reasons
 
 All the collection endpoints support returning downloadable files, besides JSON objects. Select the 'accept' head to the preferred file format. We currently support `text/csv`,`application/ms-excel`,`application/pdf`. You can use the field, extend, and pagination query functionality to influence the result/data set.
 
-[Read more about export configurations here](./MOD_configurations.md)
+[Read more about export configurations here](./configurations.md)
 
 ## Entities and Attributes
 
@@ -140,7 +140,7 @@ So what does that mean for EAV mapping? Our objects become entities, and our pro
 
 Entities represent objects you want to communicate to underlaying sources. To do this, they require a source and an endpoint on that source to send the object to. You may choose to ignore this. And just 'store' your objects with the gateway, this might be an excellent way to mock API's in development environments, but it's not recommended for production environments.
 
-[Read more about entities](./MOD_object_types.md)
+[Read more about entities](./object_types.md)
 
 ### Attribute
 
@@ -150,28 +150,28 @@ Attributes represent properties on objects that you want to communicate to under
 
 Besides validations on `type` and `string`, you can also use specific validations; these are contained in the `validation array`. Validation might be specific to certain types or formats e.g., `minValue` can only be applied values that can be turned into a numeric value. And other validations might be of a more general nature, e.g., the `required` value.
 
-[Read more about attributes](./MOD_attributes.md)
+[Read more about attributes](./attributes.md)
 
 ## API Documentation
 
--   To be Added -
+- To be Added -
 
 ## Uploading files through the gateway
 
--   To be Added -
+- To be Added -
 
 ## Easy configuration
 
--   To be Added -
+- To be Added -
 
 ### Dashboard
 
--   To be Added -
+- To be Added -
 
 ### API
 
--   To be Added -
+- To be Added -
 
 ### YAML
 
--   To be Added -
+- To be Added -
