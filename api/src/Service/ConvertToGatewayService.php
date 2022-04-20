@@ -58,6 +58,7 @@ class ConvertToGatewayService
         $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
+
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
         $newGatewayObjects = new ArrayCollection();
         $collectionConfigEnvelope = [];
@@ -87,7 +88,7 @@ class ConvertToGatewayService
 
         // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
         //TODO make sure to get all id's from the correct place with $entity->getCollectionConfig()['id'] !!!
-        $externObjectIds = array_column($totalExternObjects, 'id');
+        $externObjectIds = array_column($totalExternObjects, $entity->getCollectionConfig()['id'] ?? 'id');
         $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
         });
