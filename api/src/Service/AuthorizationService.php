@@ -84,6 +84,7 @@ class AuthorizationService
         $itemOrg = $this->cache->getItem('anonymousOrg');
         if ($item->isHit() && $itemOrg->isHit()) {
             $this->session->set('organizations', [$itemOrg->get()]);
+            $this->session->set('activeOrganization', $itemOrg->get());
 
             return $item->get();
         }
@@ -96,6 +97,7 @@ class AuthorizationService
                 $scopes[] = strtolower($scope['code']);
             }
             $this->session->set('organizations', [$groups[0]['organization']]);
+            $this->session->set('activeOrganization', $groups[0]['organization'];
             $itemOrg->set($groups[0]['organization']);
             $itemOrg->tag('anonymousOrg');
             $this->cache->save($itemOrg);
