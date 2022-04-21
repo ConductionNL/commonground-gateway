@@ -94,6 +94,7 @@ class ResponseService
             foreach ($response as $key => $value) {
                 if (is_array($fields) && !array_key_exists($key, $fields)) {
                     unset($response[$key]);
+                    continue;
                 }
 
                 // Make sure we filter out properties we are not allowed to see
@@ -101,7 +102,7 @@ class ResponseService
                 if (!empty($attribute)) {
                     try {
                         if (!$this->objectEntityService->checkOwner($result)) {
-                            $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $response[$key]]);
+                            $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
                         }
                     } catch (AccessDeniedException $exception) {
                         unset($response[$key]);
