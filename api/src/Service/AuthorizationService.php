@@ -53,10 +53,11 @@ class AuthorizationService
 
     public function getRequiredScopes(string $method, ?Attribute $attribute, ?Entity $entity = null): array
     {
+        $method = strtolower($method);
         $scopes['admin_scope'] = $method.'.admin';
         if ($entity) {
             $scopes['base_scope'] = $method.'.'.strtolower($entity->getName());
-            if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
+            if ($method == 'get') { //TODO: maybe for all methods? but make sure to implement BL for it first!
                 $scopes['sub_scopes'] = [];
                 $scopes['sub_scopes'][] = $scopes['base_scope'].'.id';
                 if ($entity->getAvailableProperties()) {
@@ -92,7 +93,7 @@ class AuthorizationService
         $scopes = [];
         if (count($groups) == 1) {
             foreach ($groups[0]['scopes'] as $scope) {
-                $scopes[] = $scope['code'];
+                $scopes[] = strtolower($scope['code']);
             }
             $this->session->set('organizations', [$groups[0]['organization']]);
             $itemOrg->set($groups[0]['organization']);
@@ -116,7 +117,7 @@ class AuthorizationService
         $scopes = [];
         foreach ($roles as $role) {
             if (strpos($role, 'scope') !== null) {
-                $scopes[] = substr($role, strlen('ROLE_scope.'));
+                $scopes[] = strtolower(substr($role, strlen('ROLE_scope.')));
             }
         }
 
@@ -125,15 +126,18 @@ class AuthorizationService
 
     private function getContractScopes(): array
     {
+        $scopes = [];
         $parameters = $this->session->get('parameters');
         if (!empty($parameters) && array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
             $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
-            if (!empty($contract)) {
-                return $contract->getGrants();
+            if (!empty($contract) && !empty($contract->getGrants())) {
+                foreach ($contract->getGrants() as $grant) {
+                    $scopes[] = strtolower($grant);
+                }
             }
         }
 
-        return [];
+        return $scopes;
     }
 
     public function checkAuthorization(array $scopes): void
