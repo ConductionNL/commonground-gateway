@@ -505,7 +505,7 @@ class AuthorizationService
             $grantedScopeName = explode('.', $grantedScopeExploded[0]);
             $grantedScopeMethod = $grantedScopeName[0];
             // Make sure we only check scopes with the correct method
-            if ($grantedScopeMethod !== $info['method']) {
+            if ($grantedScopeMethod !== strtolower($info['method'])) {
                 return null;
             }
             // Get the attribute name out of the scope
