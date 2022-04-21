@@ -97,7 +97,7 @@ class AuthorizationService
                 $scopes[] = strtolower($scope['code']);
             }
             $this->session->set('organizations', [$groups[0]['organization']]);
-            $this->session->set('activeOrganization', $groups[0]['organization'];
+            $this->session->set('activeOrganization', $groups[0]['organization']);
             $itemOrg->set($groups[0]['organization']);
             $itemOrg->tag('anonymousOrg');
             $this->cache->save($itemOrg);
