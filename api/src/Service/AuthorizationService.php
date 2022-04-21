@@ -127,14 +127,14 @@ class AuthorizationService
     {
         //TODO: maybe strtolower entity & attribute ->getName() here?
 
-        $method = $info['method'];
+        $method = strtolower($info['method']);
         $entity = $info['entity'];
         $attribute = $info['attribute'];
 
         $requiredScopes['admin_scope'] = $method.'.admin';
         if ($entity) {
-            $requiredScopes['base_scope'] = $method.'.'.$entity->getName();
-            if ($method == 'GET') { //TODO: maybe for all methods? but make sure to implement BL for it first!
+            $requiredScopes['base_scope'] = $method.'.'.strtolower($entity->getName());
+            if ($method == 'get') { //TODO: maybe for all methods? but make sure to implement BL for it first!
                 $requiredScopes['sub_scopes'] = [];
                 $requiredScopes['sub_scopes'][] = $requiredScopes['base_scope'].'.id';
                 if ($entity->getAvailableProperties()) {
@@ -144,12 +144,12 @@ class AuthorizationService
                     });
                 }
                 foreach ($attributes ?? $entity->getAttributes() as $attribute) {
-                    $requiredScopes['sub_scopes'][] = $requiredScopes['base_scope'].'.'.$attribute->getName();
+                    $requiredScopes['sub_scopes'][] = $requiredScopes['base_scope'].'.'.strtolower($attribute->getName());
                 }
             }
         } elseif ($attribute) {
-            $requiredScopes['base_scope'] = $method.'.'.$attribute->getEntity()->getName();
-            $requiredScopes['sub_scope'] = $requiredScopes['base_scope'].'.'.$attribute->getName();
+            $requiredScopes['base_scope'] = $method.'.'.strtolower($attribute->getEntity()->getName());
+            $requiredScopes['sub_scope'] = $requiredScopes['base_scope'].'.'.strtolower($attribute->getName());
         } else {
             //todo maybe throw an error here?
         }
@@ -204,7 +204,7 @@ class AuthorizationService
 
         foreach ($roles as $role) {
             if (strpos($role, 'scope') !== null) {
-                $scopes[] = substr($role, strlen('ROLE_scope.'));
+                $scopes[] = strtolower(substr($role, strlen('ROLE_scope.')));
             }
         }
 
@@ -234,7 +234,7 @@ class AuthorizationService
         $scopes = [];
         if (count($groups) == 1) {
             foreach ($groups[0]['scopes'] as $scope) {
-                $scopes[] = $scope['code'];
+                $scopes[] = strtolower($scope['code']);
             }
             $this->session->set('organizations', [$groups[0]['organization']]);
             $itemOrg->set($groups[0]['organization']);
@@ -260,15 +260,18 @@ class AuthorizationService
      */
     private function getContractScopes(): array
     {
+        $scopes = [];
         $parameters = $this->session->get('parameters');
         if (!empty($parameters) && array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
             $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
-            if (!empty($contract)) {
-                return $contract->getGrants();
+            if (!empty($contract) && !empty($contract->getGrants())) {
+                foreach ($contract->getGrants() as $grant) {
+                    $scopes[] = strtolower($grant);
+                }
             }
         }
 
-        return [];
+        return $scopes;
     }
 
     /**
@@ -536,7 +539,7 @@ class AuthorizationService
             $grantedScopeName = explode('.', $grantedScopeExploded[0]);
             $grantedScopeMethod = $grantedScopeName[0];
             // Make sure we only check scopes with the correct method
-            if ($grantedScopeMethod !== $info['method']) {
+            if ($grantedScopeMethod !== strtolower($info['method'])) {
                 return null;
             }
             // Get the attribute name out of the scope
@@ -558,7 +561,7 @@ class AuthorizationService
         }
 
         return [
-            'sub_scope'      => $sub_scope,
+            'sub_scope'      => strtolower($sub_scope),
             'scopeAttribute' => $scopeAttribute ?? null,
         ];
     }
