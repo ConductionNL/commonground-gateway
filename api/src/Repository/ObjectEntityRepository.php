@@ -48,11 +48,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findAndCountByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
-        $query = $this->createQuery($entity, $filters, $order);
+        $baseQuery = $this->createQuery($entity, $filters, $order);
 
         return [
-            'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $query), // Use already generated $query
-            'total'   => $query->select($query->expr()->countDistinct('o'))->getQuery()->getSingleScalarResult(),
+            'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $baseQuery),
+            'total'   => $this->countByEntity($entity, [], $baseQuery),
         ];
     }
 
@@ -64,12 +64,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
+     * @param QueryBuilder|null $query An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
      *
      * @throws Exception
      *
      * @return array Returns an array of ObjectEntity objects
      */
-    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25, $query = null): array
+    public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25, QueryBuilder $query = null): array
     {
         $query = $query ?? $this->createQuery($entity, $filters, $order);
 
@@ -81,23 +82,24 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     // todo: see findAndCountByEntity() this function can be removed, but here in case we ever want to use this separately from findByEntity()
-//    /**
-//     * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
-//     *
-//     * @param Entity $entity  The Entity
-//     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-//     *
-//     * @throws NoResultException|NonUniqueResultException
-//     *
-//     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
-//     */
-//    public function countByEntity(Entity $entity, array $filters = []): int
-//    {
-//        $query = $this->createQuery($entity, $filters);
-//        $query->select($query->expr()->countDistinct('o'));
-//
-//        return $query->getQuery()->getSingleScalarResult();
-//    }
+    /**
+     * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
+     *
+     * @param Entity $entity  The Entity
+     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param QueryBuilder|null $query An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
+     *
+     * @throws NoResultException|NonUniqueResultException
+     *
+     * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+     */
+    public function countByEntity(Entity $entity, array $filters = [], QueryBuilder $query = null): int
+    {
+        $query = $query ?? $this->createQuery($entity, $filters);
+        $query->select($query->expr()->countDistinct('o'));
+
+        return $query->getQuery()->getSingleScalarResult();
+    }
 
     /**
      * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.

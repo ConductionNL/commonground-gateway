@@ -1053,7 +1053,13 @@ class EavService
 
         $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
 
-        $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
+        // todo: remove this if and only use findAndCountByEntity(), when $order is not empty findAndCountByEntity() throws a sql error (must appear in the GROUP BY clause or be used in an aggregate function)
+        if ($order) {
+            $repositoryResult['total'] = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
+            $repositoryResult['objects'] = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
+        } else {
+            $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
+        }
 
         // Lets see if we need to flatten te responce (for example csv use)
         $flat = false;
