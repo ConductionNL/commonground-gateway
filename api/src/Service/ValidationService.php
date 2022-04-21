@@ -251,7 +251,11 @@ class ValidationService
     {
         try {
             if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
+                $this->authorizationService->checkAuthorization([
+                    'method'    => $objectEntity->getUri() ? 'PUT' : 'POST',
+                    'attribute' => $attribute,
+                    'value'     => $value,
+                ]);
             }
         } catch (AccessDeniedException $e) {
             $objectEntity->addError($attribute->getName(), $e->getMessage());

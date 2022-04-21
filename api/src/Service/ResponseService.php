@@ -113,7 +113,7 @@ class ResponseService
                 if (!$skipAuthCheck && !empty($attribute)) {
                     try {
                         if (!$this->checkOwner($result)) {
-                            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                            $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
                         }
                     } catch (AccessDeniedException $exception) {
                         unset($response[$key]);
@@ -214,10 +214,8 @@ class ResponseService
 
             // Check if user is allowed to see this
             try {
-                if (!$skipAuthCheck) {
-                    if (!$this->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
-                    }
+                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
                 }
             } catch (AccessDeniedException $exception) {
                 continue;
@@ -234,14 +232,9 @@ class ResponseService
 
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
-                try {
-                    // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                    if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
-                    }
-                    $response[$attribute->getName()] = $this->renderObjects($valueObject, $subfields, $skipAuthCheck, $flat, $level);
+                $response[$attribute->getName()] = $this->renderObjects($result, $valueObject, $subfields, $skipAuthCheck, $flat, $level);
 
-                    // Old $MaxDepth;
+                // Old $MaxDepth;
 //                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
 //                    // If this attribute has no inversedBy but the Object we are rendering has parent objects.
 //                    // Check if one of the parent objects has an attribute with inversedBy -> this attribute.
@@ -277,10 +270,7 @@ class ResponseService
 //                    if ($response[$attribute->getName()] === ['continue' => 'continue']) {
 //                        unset($response[$attribute->getName()]);
 //                    }
-                    continue;
-                } catch (AccessDeniedException $exception) {
-                    continue;
-                }
+                continue;
             } elseif ($attribute->getType() == 'file') {
                 $response[$attribute->getName()] = $this->renderFiles($valueObject);
                 continue;
@@ -304,7 +294,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
-    private function renderObjects(Value $value, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
+    private function renderObjects(ObjectEntity $result, Value $value, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 
@@ -314,28 +304,42 @@ class ResponseService
 
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
-            return $this->renderResult($value->getValue(), $fields, $skipAuthCheck, $flat, $level);
+            try {
+                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
+                }
 
-            // Old $MaxDepth;
-//            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
-//            if ($maxDepth) {
-//                if (!$maxDepth->contains($value->getValue())) {
-//                    return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
+                return $this->renderResult($value->getValue(), $fields, $skipAuthCheck, $flat, $level);
+
+                // Old $MaxDepth;
+//                // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
+//                if ($maxDepth) {
+//                    if (!$maxDepth->contains($value->getValue())) {
+//                        return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
+//                    }
+//
+//                    return ['continue' => 'continue']; //TODO NOTE: We want this here
 //                }
 //
-//                return ['continue' => 'continue']; //TODO NOTE: We want this here
-//            }
-//
-//            return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
+//                return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
+            } catch (AccessDeniedException $exception) {
+                return null;
+            }
         }
 
         // If we can have multiple Objects (because multiple = true)
         $objects = $value->getValue();
         $objectsArray = [];
         foreach ($objects as $object) {
-            $objectsArray[] = $this->renderResult($object, $fields, $skipAuthCheck, $flat, $level);
+            try {
+                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
+                }
+                $objectsArray[] = $this->renderResult($object, $fields, $skipAuthCheck, $flat, $level);
 
-            // Old $MaxDepth;
+                // Old $MaxDepth;
 //            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
 //            if ($maxDepth) {
 //                if (!$maxDepth->contains($object)) {
@@ -347,6 +351,9 @@ class ResponseService
 //                continue;
 //            }
 //            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
+            } catch (AccessDeniedException $exception) {
+                continue;
+            }
         }
 
         return $objectsArray;
