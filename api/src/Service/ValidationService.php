@@ -501,6 +501,7 @@ class ValidationService
                     $this->createdObjects[] = $subObject;
                 }
 
+                $subObject->setSubresourceIndex($key);
                 $subObject = $this->validateEntity($subObject, $object);
                 $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
@@ -1482,7 +1483,9 @@ class ValidationService
         if (in_array($format, $allowedValidations)) {
             if ($format == 'dutch_pc4') {
                 //validate dutch_pc4
-                $this->validateDutchPC4($value);
+                if (!$this->validateDutchPC4($value)) {
+                    $objectEntity->addError($attribute->getName(), 'This is not a valid Dutch postalCode');
+                }
             } else {
                 try {
                     Validator::$format()->check($value);
@@ -1836,12 +1839,7 @@ class ValidationService
             return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
 
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            $uri = 'https://';
-        } else {
-            $uri = 'http://';
-        }
-        $uri .= $_SERVER['HTTP_HOST'];
+        $uri = $_SERVER['HTTP_HOST'] === 'localhost' ? 'http://localhost' : 'https://'.$_SERVER['HTTP_HOST'];
 
         if ($objectEntity->getEntity()->getRoute()) {
             return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();

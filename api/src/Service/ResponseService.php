@@ -105,13 +105,16 @@ class ResponseService
             foreach ($response as $key => $value) {
                 if (is_array($fields) && !array_key_exists($key, $fields)) {
                     unset($response[$key]);
+                    continue;
                 }
 
                 // Make sure we filter out properties we are not allowed to see
                 $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
                 if (!$skipAuthCheck && !empty($attribute)) {
                     try {
-                        $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                        if (!$this->checkOwner($result)) {
+                            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                        }
                     } catch (AccessDeniedException $exception) {
                         unset($response[$key]);
                     }
@@ -212,7 +215,9 @@ class ResponseService
             // Check if user is allowed to see this
             try {
                 if (!$skipAuthCheck) {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', $attribute));
+                    if (!$this->checkOwner($result)) {
+                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+                    }
                 }
             } catch (AccessDeniedException $exception) {
                 continue;

@@ -6,6 +6,7 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
@@ -44,7 +45,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={"objectEntity.id": "exact"})
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "attribute.id": "exact",
+ *     "objectEntity.id": "exact"
+ * })
+ * @ApiFilter(ExistsFilter::class, properties={
+ *     "stringValue",
+ *     "dateTimeValue",
+ * })
  */
 class Value
 {
@@ -215,9 +223,17 @@ class Value
         return $this->integerValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param int|null $integerValue
+     *
+     * @return $this
+     */
     public function setIntegerValue(?int $integerValue): self
     {
         $this->integerValue = $integerValue;
+        $this->stringValue = $integerValue !== null ? (string) $integerValue : null;
 
         return $this;
     }
@@ -227,9 +243,17 @@ class Value
         return $this->numberValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param float|null $numberValue
+     *
+     * @return $this
+     */
     public function setNumberValue(?float $numberValue): self
     {
         $this->numberValue = $numberValue;
+        $this->stringValue = $numberValue !== null ? (string) $numberValue : null;
 
         return $this;
     }
@@ -239,9 +263,18 @@ class Value
         return $this->booleanValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param bool|null $booleanValue
+     *
+     * @return $this
+     */
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
+//        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
+        $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
         return $this;
     }
@@ -263,9 +296,17 @@ class Value
         return $this->dateTimeValue;
     }
 
+    /**
+     * Also stores the value in the stringValue in order to facilitate filtering on the string value. (see ObjectEntityRepository).
+     *
+     * @param DateTimeInterface|null $dateTimeValue
+     *
+     * @return $this
+     */
     public function setDateTimeValue(?DateTimeInterface $dateTimeValue): self
     {
         $this->dateTimeValue = $dateTimeValue;
+        $this->stringValue = $dateTimeValue !== null ? $dateTimeValue->format('Y-m-d H:i:s') : null;
 
         return $this;
     }
@@ -284,6 +325,7 @@ class Value
         if (!$this->objects->contains($object)) {
             $this->objects->add($object);
         }
+
         // handle subresources
         if (!$object->getSubresourceOf()->contains($this)) {
             $object->addSubresourceOf($this);
@@ -441,6 +483,19 @@ class Value
                     if ($value === null) {
                         return $this;
                     }
+                    // todo: We never use setValue function for array of objects, but if we ever do, take a look at $removeObjectsOnPut in validationService and EavService!
+//                    if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
+//                        foreach ($valueObject->getObjects() as $object) {
+//                            // If we are not re-adding this object...
+//                            if (!$saveSubObjects->contains($object)) {
+//                                $this->removeObjectsOnPut[] = [
+//                                    'valueObject' => $valueObject,
+//                                    'object'      => $object,
+//                                ];
+//                            }
+//                        }
+//                        $valueObject->getObjects()->clear();
+//                    }
                     $this->objects->clear();
                     // if multiple is true value should be an array
                     if ($this->getAttribute()->getMultiple()) {
