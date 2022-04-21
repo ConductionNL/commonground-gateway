@@ -472,7 +472,6 @@ class Handler
 
     public function setPrefix(?string $prefix): self
     {
-        var_dump($prefix);
         $this->prefix = $prefix;
 
         return $this;

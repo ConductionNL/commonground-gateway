@@ -59,7 +59,7 @@ App\Entity\Handler:
             - caseTable1
             - caseTable2
         mappingOut:
-            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:object.#: object | array
+            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object: object(s) | array
         methodOverrides:
             POST: 
                 - method: GET
@@ -67,12 +67,13 @@ App\Entity\Handler:
                   operationType: item
                   pathValues:
                     '{identificatie}': SOAP-ENV:Body.ns2:zakLv01.ns2:gelijk.ns2:identificatie
-        #                - method: GET
-#                  condition: Envelope.Body.zakLv01.gelijk.heeftAlsInitiator.gerelateerde.identificatie
-#                  pathValues:
-#                    bsn:
-#                        path: Envelope.Body.zakLv01.gelijk.identificatie
-#        prefixOut: "ZKN:"
+                - method: GET
+                  operationType: collection
+                  condition: SOAP-ENV:Body.ns2:zakLv01.ns2:gelijk.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:identificatie
+                  forceSynchronisation: true
+                  queryParameters:
+                      '@bsn': SOAP-ENV:Body.ns2:zakLv01.ns2:gelijk.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:identificatie
+        prefix: "ZKN:"
         skeletonOut:
             soapenv:Envelope:
                 '@xmlns:soapenv': 'http://schemas.xmlsoap.org/soap/envelope/'

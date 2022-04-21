@@ -8,7 +8,7 @@
         "ext-ctype": "*",
         "ext-fileinfo": "*",
         "ext-iconv": "*",
-        "adbario/php-dot-notation": "^2.2",
+        "adbario/php-dot-notation": "^3",
         "api-platform/core": "^2.6",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",

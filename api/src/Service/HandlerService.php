@@ -127,13 +127,21 @@ class HandlerService
             return;
         }
         $content = new \Adbar\Dot($this->getDataFromRequest());
+
         foreach($overrides[$this->request->getMethod()] as $override){
             if(key_exists($method, $overrides) && $content->has($override['condition'])){
                 $method = $override['method'];
                 $operationType = $override['operationType'];
                 $parameters = $this->request->getSession()->get('parameters');
-                foreach($override['pathValues'] as $key => $value) {
-                    $parameters['path'][$key] = $content->get($value);
+                if(isset($override['pathValues'])){
+                    foreach($override['pathValues'] as $key => $value) {
+                        $parameters['path'][$key] = $content->get($value);
+                    }
+                }
+                if(isset($override['queryParameters'])){
+                    foreach($override['queryParameters'] as $key => $value) {
+                        $this->request->query->set($key, $content->get($value));
+                    }
                 }
                 $this->request->getSession()->set('parameters', $parameters);
             }
@@ -144,6 +152,7 @@ class HandlerService
                 foreach($override['pathValues'] as $key => $value) {
                     $parameters['path'][$key] = $this->request->query->get($value);
                 }
+
                 $this->request->getSession()->set('parameters', $parameters);
             }
         }
@@ -457,7 +466,6 @@ class HandlerService
         if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
-
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
 
         // Update current Log

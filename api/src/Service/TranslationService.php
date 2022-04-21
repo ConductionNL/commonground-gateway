@@ -77,6 +77,12 @@ class TranslationService
                 $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
             } elseif ($format == 'array' && $search == 'object') {
                 $destination[$replace] = $source;
+            } elseif ($format == 'array' && $search == 'object(s)') {
+                $sourceSub = new \Adbar\Dot($source, true);
+                if($sourceSub->has('results')){
+                    $sourceSub = array_values($sourceSub->get('results'));
+                }
+                $destination[$replace] = $sourceSub;
             }
             unset($format);
 
@@ -239,10 +245,14 @@ class TranslationService
 
     public function addPrefix($data, ?string $prefix = null)
     {
-        if(is_array($data)){
+        if(is_array($data) && isset($data['results'])) {
+            $data['results'] = $this->addPrefix($data['results'], $prefix);
+            return $data;
+        }
+        elseif(is_array($data)){
             $result = [];
             foreach ($data as $key => $value) {
-                $result[$this->addPrefix($key, $prefix)] = $value;
+                $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix): $value;
             }
             return $result;
         } else {

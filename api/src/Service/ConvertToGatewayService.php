@@ -41,7 +41,7 @@ class ConvertToGatewayService
      *
      * @return void|null
      */
-    public function convertEntityObjects(Entity $entity)
+    public function convertEntityObjects(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
         if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
@@ -55,7 +55,7 @@ class ConvertToGatewayService
         }
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
-        $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url);
+        $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url, $query);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
 
@@ -103,6 +103,14 @@ class ConvertToGatewayService
         $this->em->flush();
     }
 
+    private function stripAt(array $in) {
+        $out = [];
+        foreach ($in as $key => $value) {
+            $out[ltrim($key, '@')] = $value;
+        }
+        return $out;
+    }
+
     /**
      * Get all objects for this Entity that exist outside the gateway.
      *
@@ -114,9 +122,10 @@ class ConvertToGatewayService
      *
      * @return array
      */
-    private function getExternObjects(array $config, array $component, string $url, array $totalExternObjects = [], int $page = 1): array
+    private function getExternObjects(array $config, array $component, string $url, array $query, array $totalExternObjects = [], int $page = 1): array
     {
-        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, '', ['page'=>$page], $config['headers'], false, 'GET')->getBody()->getContents(), true);
+        $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
+        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, '', array_merge($query, ['page'=>$page]), $config['headers'], false, 'GET')->getBody()->getContents(), true);
         // Now get response from the correct place in the response
         foreach ($config['collectionConfigResults'] as $item) {
             $response = $response[$item];
@@ -138,9 +147,9 @@ class ConvertToGatewayService
         }
         // Repeat if we have pagination and if there is a next page
         if (isset($paginationNext) && $paginationNext) {
-            return $this->getExternObjects($config, $component, $url, $totalExternObjects, $page + 1);
+            return $this->getExternObjects($config, $component, $url, $query, $totalExternObjects, $page + 1);
         }
-//        var_dump('pages: '. $page);
+//        var_dump('pages: '. $page);/
 
         return $totalExternObjects;
     }
