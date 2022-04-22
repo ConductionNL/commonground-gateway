@@ -234,6 +234,15 @@ class ObjectEntityService
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
             $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
+            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+                throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
+            } // Lets check if the user is allowed to view/edit this resource.
+            if (!$this->checkOwner($object)) {
+                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
+                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
+                    throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
+                }
+            }
             if ($object instanceof ObjectEntity) {
                 $this->session->set('object', $object->getId()->toString());
             }
