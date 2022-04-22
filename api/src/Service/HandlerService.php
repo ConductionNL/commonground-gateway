@@ -396,7 +396,7 @@ class HandlerService
         if((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
             $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
         } else {
-            !isset($typeValue) || $typeValue === '*/*' || empty($typeValue) && $typeValue = 'application/json';
+            (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
         }
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
