@@ -231,12 +231,12 @@ class Endpoint
 
 
     /**
-     * @var string The default content type of the endpoint
+     * @var string|null The default content type of the endpoint
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $defaultContentType = 'application/json';
+    private ?string $defaultContentType = 'application/json';
 
     public function __construct()
     {
