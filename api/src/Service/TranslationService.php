@@ -60,8 +60,9 @@ class TranslationService
                         $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
                         $iterator++;
                     }
+                } else {
+                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
                 }
-                $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
                 unset($mapping[$replace]);
                 // todo: also unset the old variable in $destination
             }
