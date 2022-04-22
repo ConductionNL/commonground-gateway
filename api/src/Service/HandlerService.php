@@ -39,6 +39,7 @@ class HandlerService
         'application/hal+json'                                                               => 'jsonhal',
         'application/json+hal'                                                               => 'jsonhal',
         'application/xml'                                                                    => 'xml',
+        'text/xml'                                                                              => 'xml',
         'text/csv'                                                                           => 'csv',
         'text/yaml'                                                                          => 'yaml',
         'text/html'                                                                          => 'html',
