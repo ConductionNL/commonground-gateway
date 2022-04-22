@@ -377,7 +377,7 @@ class HandlerService
      *
      * @return string Accept or content-type
      */
-    public function getRequestType(string $type): string
+    public function getRequestType(string $type, Endpoint $endpoint): string
     {
         // Lets grap the route parameters
         $routeParameters = $this->request->attributes->get('_route_params');
@@ -393,8 +393,9 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
-
+        if(!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) {
+            $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
+        }
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
