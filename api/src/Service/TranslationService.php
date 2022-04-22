@@ -52,7 +52,17 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-        $source = $source->flatten();
+        foreach($mapping as $replace => $search) {
+            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
+                $iterator = 0;
+                while ($source->has(str_replace('$', $iterator, $search))) {
+                    $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
+                    $iterator++;
+                }
+                unset($mapping[$replace]);
+                // todo: also unset the old variable in $destination
+            }
+        }
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
