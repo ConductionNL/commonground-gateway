@@ -339,6 +339,7 @@ class HandlerService
             break;
             case 'xml':
                 $options['xml_root_node_name'] = array_keys($data)[0];
+                $data = $data[array_keys($data)[0]];
                 break;
 
         }
