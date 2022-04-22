@@ -169,10 +169,11 @@ class ConvertToGatewayService
      *
      * @return ObjectEntity|null
      */
-    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null): ?ObjectEntity
+    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$url && (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint())) {
+//            var_dump('No url or gateway+endpoint');
             return null; //Or false or error? //todo?
         }
 
@@ -180,13 +181,15 @@ class ConvertToGatewayService
         if (!$body) {
             if (!$id) {
                 // If we have no $body or $id
+//                var_dump('No id');
                 return null; //Or false or error? //todo?
             } else {
                 $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-                $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
+                $url = !empty($url) ? $url : $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
                 $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
                 // if no resource with this $id exists... (callservice returns array on error)
                 if (is_array($response)) {
+//                    var_dump($response); //Throw error? //todo?
                     return null; //Or false or error? //todo?
                 }
 
@@ -272,9 +275,9 @@ class ConvertToGatewayService
 
         $object = $this->checkAttributes($object, $availableBody, $objectEntity);
 
-//        var_dump($newObject->getExternalId());
-//        if ($newObject->getHasErrors()) {
-//            var_dump($newObject->getErrors());
+//        var_dump($object->getExternalId());
+//        if ($object->getHasErrors()) {
+//            var_dump($object->getErrors());
 //        }
 
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
@@ -436,8 +439,8 @@ class ConvertToGatewayService
             return null;
         }
         // Check for enums TODO: is setting it to null the correct solution here?
-        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
-//            var_dump('Must be one of the following values: ['.implode(', ', $attribute->getEnum()).'] ('.$value.' is not).');
+        if ($attribute->getEnum() && !in_array(strtolower($value), array_map('strtolower', $attribute->getEnum())) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+//            var_dump('Must be one of the following values: ['.implode(', ', array_map('strtolower', $attribute->getEnum())).'] ('.strtolower($value).' is not).');
             return null;
         }
 
@@ -512,13 +515,25 @@ class ConvertToGatewayService
     {
         // If this object is given as a uuid (string) it should be valid
         if (is_string($value) && Uuid::isValid($value) == false) {
-            // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
             if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
                 $value = $this->commonGroundService->getUuidFromUrl($value);
             } else {
-//                'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
-                return null; // set $value to null
+                // We should also allow commonground Uri's like: https://opentest.izaaksuite.nl/api/v1/statussen/8578f55b-1df7-4620-af55-daafd0dc5bf3 OR https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
+                $subObject = $this->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity, $value);
+
+                if (!$subObject) {
+//                var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                    return null; // set $value to null
+                }
+
+                // Object toevoegen
+                if (!$attribute->getMultiple()) {
+                    $valueObject->getObjects()->clear(); // We start with a default object
+                }
+                $valueObject->addObject($subObject);
+
+                return $value;
             }
             $bodyForNewObject = null;
         } elseif (is_array($value)) {
@@ -536,7 +551,7 @@ class ConvertToGatewayService
             }
             // TODO: what if we have no existing id key?
         } else {
-//            'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).'
+//            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
             return null; // set $value to null
         }
 
