@@ -230,7 +230,7 @@ class HandlerService
         $this->logService->saveLog($this->request, null, json_encode($data));
 
         // An lastly we want to create a response
-        $response = $this->createResponse($data);
+        $response = $this->createResponse($data, $endpoint);
 
         // Final update Log
         $this->logService->saveLog($this->request, $response, null, true);
@@ -284,7 +284,7 @@ class HandlerService
      *
      * @todo throw error if $data is not string when creating pdf
      */
-    public function createResponse(array $data): Response
+    public function createResponse(array $data, ?Endpoint $endpoint = null): Response
     {
 
     // We only end up here if there are no errors, so we only suply best case senario's
@@ -308,7 +308,7 @@ class HandlerService
         $status = Response::HTTP_OK;
     }
 
-        $acceptType = $this->getRequestType('accept');
+        $acceptType = $this->getRequestType('accept', $endpoint);
 
         // Lets fill in some options
         $options = [];
