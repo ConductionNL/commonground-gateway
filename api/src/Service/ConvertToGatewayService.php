@@ -125,7 +125,11 @@ class ConvertToGatewayService
     private function getExternObjects(array $config, array $component, string $url, array $query, array $totalExternObjects = [], int $page = 1): array
     {
         $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
-        $firstResponse = $response = json_decode($this->commonGroundService->callService($component, $url, '', array_merge($query, ['page'=>$page]), $config['headers'], false, 'GET')->getBody()->getContents(), true);
+        $response = $this->commonGroundService->callService($component, $url, '', array_merge($query, ['page'=>$page]), $config['headers'], false, 'GET');
+        if (is_array($response)) {
+//            var_dump($response); //Throw error? //todo?
+        }
+        $firstResponse = $response = json_decode($response->getBody()->getContents(), true);
         // Now get response from the correct place in the response
         foreach ($config['collectionConfigResults'] as $item) {
             $response = $response[$item];

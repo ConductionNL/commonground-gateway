@@ -9,6 +9,13 @@ App\Entity\Group:
             - '@admin_read'
             - '@admin_remove'
             - '@admin_update'
+    anonymous:
+        name: ANONYMOUS
+        organization: http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        description: the anonymous group
+        scopes:
+            - '@zaak_create'
+            - '@zaak_read'
 App\Entity\Scope:
     admin_create:
         code: POST.admin
@@ -22,6 +29,12 @@ App\Entity\Scope:
     admin_update:
         code: PUT.admin
         name: Update admin
+    zaak_create:
+        code: POST.Zaak
+        name: Create Zaak
+    zaak_read:
+        code: GET.Zaak
+        name: Read Zaak
 App\Entity\User:
     someUser:
         id: 2ac800cc-b844-458d-87e1-b206fa80113a
