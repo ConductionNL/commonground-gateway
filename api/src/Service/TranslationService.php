@@ -55,10 +55,13 @@ class TranslationService
         foreach($mapping as $replace => $search) {
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $iterator = 0;
-                while ($source->has(str_replace('$', $iterator, $search))) {
-                    $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
-                    $iterator++;
+                if($source->has(str_replace('$', $iterator, $search))){
+                    while ($source->has(str_replace('$', $iterator, $search))) {
+                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
+                        $iterator++;
+                    }
                 }
+                $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
                 unset($mapping[$replace]);
                 // todo: also unset the old variable in $destination
             }
