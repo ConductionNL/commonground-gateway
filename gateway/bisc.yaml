@@ -1826,10 +1826,6 @@ parameters:
     share_studentsItemRegex: "#^(share_students/[^/]*)$#"
 
 
-
-
-
-
 # Endpoints
 App\Entity\Endpoint:
     # User Endpoints
