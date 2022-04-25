@@ -2699,8 +2699,8 @@ App\Entity\ObjectEntity:
 
     # Default person
     defaultPerson:
-        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
-#        uri: "http://localhost/api/people/d2a24edf-6ced-40a2-8e7c-56803f4ce3f5"
+        id: 02dfabea-7607-46a2-a511-a2e9bd9f4de2
+#        uri: "http://localhost/api/people/02dfabea-7607-46a2-a511-a2e9bd9f4de2"
         entity: "@person"
         organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
 #        application: "uuid"
