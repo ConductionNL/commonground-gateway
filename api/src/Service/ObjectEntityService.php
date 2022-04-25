@@ -216,11 +216,7 @@ class ObjectEntityService
             return $application;
         }
 
-        $owner = $this->tokenStorage->getToken()->getUser();
-
-        // @todo check rights/auth (what to give as scopes?)
-        // $this->authorizationService->checkAuthorization();
-
+        // Get Entity
         $entity = $handler->getEntity();
         $this->session->set('entity', $entity->getId()->toString());
         if ($entity->getGateway()) {
@@ -231,6 +227,7 @@ class ObjectEntityService
         $filters = $this->getFilterFromParameters();
         array_key_exists('id', ($filters)) && $id = $filters['id'];
 
+        // Get Object if needed
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
             $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
@@ -262,7 +259,6 @@ class ObjectEntityService
             }
         }
         // throw error if get/put/patch/delete and no id
-        // in_array($method, ['GET', 'PUT', 'PATCH', 'DELETE']) && //throw error
 
         switch ($method) {
             case 'GET':
@@ -285,9 +281,9 @@ class ObjectEntityService
                     } else {
                         $data['error'] = $object;
                     }
-                    //todo: -end- old code...
                 } else {
                     $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+                    //todo: -end- old code...
 
                     if ($this->session->get('endpoint')) {
                         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
@@ -382,9 +378,20 @@ class ObjectEntityService
                 // get object
 
                 // delete object
+
+                //todo: -start- old code...
+                //TODO: old code for deleting an ObjectEntity
+
+                $data = $this->eavService->handleDelete($object);
+                if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
+                    throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
+                }
+
+                //todo: -end- old code...
+
                 break;
             default:
-                // throw error
+                throw new GatewayException('This method is not allowed', null, null, ['data' => ['method' => $method], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
         }
 
         if (isset($validationErrors)) {
