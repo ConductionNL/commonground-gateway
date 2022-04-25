@@ -219,6 +219,10 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
         $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
+        if ($session === false) {
+            throw new AuthenticationException('The provided token refers to an unknown (and thus, invalid) session');
+        }
+
         $this->checkExpiry($session);
 
         return $this->getUcUser($user);
