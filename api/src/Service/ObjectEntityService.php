@@ -285,9 +285,9 @@ class ObjectEntityService
                     } else {
                         $data['error'] = $object;
                     }
-                    //todo: -end- old code...
                 } else {
                     $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+                    //todo: -end- old code...
 
                     if ($this->session->get('endpoint')) {
                         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
