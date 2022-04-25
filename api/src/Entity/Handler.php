@@ -222,7 +222,6 @@ class Handler
     private $methodOverrides = [];
 
     /**
-     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */

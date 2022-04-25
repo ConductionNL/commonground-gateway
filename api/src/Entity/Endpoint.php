@@ -229,7 +229,6 @@ class Endpoint
      */
     private $dateModified;
 
-
     /**
      * @var string|null The default content type of the endpoint
      *
