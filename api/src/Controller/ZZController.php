@@ -40,9 +40,10 @@ class ZZController extends AbstractController
         //        if ($document instanceof Document && $id) {
         //            return $documentService->handleDocument($document, $id);
         //        }
-        //        if ($entity == 'postalCodes') {
-        //            return $validationService->dutchPC4ToJson();
-        //        }
+        // postalCodes list for bisc/taalhuizen
+        if ($path === 'postalCodes') {
+            return $validationService->dutchPC4ToJson();
+        }
         // End of hacky tacky
 
         // Get full path
