@@ -919,10 +919,10 @@ class ValidationService
     private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         // Validation for enum (if attribute type is not object or boolean)
-        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
-            $enumValues = '['.implode(', ', $attribute->getEnum()).']';
+        if ($attribute->getEnum() && !in_array(strtolower($value), array_map('strtolower', $attribute->getEnum())) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+            $enumValues = '['.implode(', ', array_map('strtolower', $attribute->getEnum())).']';
             $errorMessage = $attribute->getMultiple() ? 'All items in this array must be one of the following values: ' : 'Must be one of the following values: ';
-            $objectEntity->addError($attribute->getName(), $errorMessage.$enumValues.' ('.$value.' is not).');
+            $objectEntity->addError($attribute->getName(), $errorMessage.$enumValues.' ('.strtolower($value).' is not).');
         }
 
         // Do validation for attribute depending on its type
@@ -1471,7 +1471,7 @@ class ValidationService
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         // if no format is provided we dont validate TODO validate uri
-        if ($attribute->getFormat() == null || $attribute->getFormat() === 'uri') {
+        if ($attribute->getFormat() == null || in_array($attribute->getFormat(), ['uri', 'duration'])) {
             return $objectEntity;
         }
 

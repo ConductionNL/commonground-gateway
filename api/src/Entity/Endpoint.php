@@ -229,6 +229,15 @@ class Endpoint
      */
     private $dateModified;
 
+
+    /**
+     * @var string|null The default content type of the endpoint
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $defaultContentType = 'application/json';
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
@@ -565,6 +574,18 @@ class Endpoint
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getDefaultContentType(): ?string
+    {
+        return $this->defaultContentType;
+    }
+
+    public function setDefaultContentType(?string $defaultContentType): self
+    {
+        $this->defaultContentType = $defaultContentType;
 
         return $this;
     }

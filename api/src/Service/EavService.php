@@ -948,7 +948,7 @@ class EavService
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
-            $this->convertToGatewayService->convertEntityObjects($entity);
+            $this->convertToGatewayService->convertEntityObjects($entity, $query);
         }
         unset($query['updateGatewayPool']);
 
