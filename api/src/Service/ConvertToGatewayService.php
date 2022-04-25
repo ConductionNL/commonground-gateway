@@ -58,7 +58,6 @@ class ConvertToGatewayService
         $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url, $query);
 //        var_dump('Found total extern objects = '.count($totalExternObjects));
 
-
         // Loop through all extern objects and check if they have an object in the gateway, if not create one.
         $newGatewayObjects = new ArrayCollection();
         $collectionConfigEnvelope = [];
@@ -103,11 +102,13 @@ class ConvertToGatewayService
         $this->em->flush();
     }
 
-    private function stripAt(array $in) {
+    private function stripAt(array $in)
+    {
         $out = [];
         foreach ($in as $key => $value) {
             $out[ltrim($key, '@')] = $value;
         }
+
         return $out;
     }
 

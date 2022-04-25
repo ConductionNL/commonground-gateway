@@ -296,7 +296,6 @@ class ObjectEntityService
                             throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
                         }
                     }
-
                 }
 
                 break;
