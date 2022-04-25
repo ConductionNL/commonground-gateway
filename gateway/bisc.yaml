@@ -1816,14 +1816,14 @@ parameters:
     personItemRegex: "#^(people/[^/]*)$#"
     employeeItemRegex: "#^(employees/[^/]*)$#"
     studentItemRegex: "#^(students/[^/]*)$#"
-    learning_needItemRegex: "#^(learning_needs/[^/]*)$#"
-    learning_resultItemRegex: "#^(learning_results/[^/]*)$#"
+    learningNeedItemRegex: "#^(learning_needs/[^/]*)$#"
+    learningResultItemRegex: "#^(learning_results/[^/]*)$#"
     participationItemRegex: "#^(participations/[^/]*)$#"
-    test_resultItemRegex: "#^(test_results/[^/]*)$#"
+    testResultItemRegex: "#^(test_results/[^/]*)$#"
     documentItemRegex: "#^(documents/[^/]*)$#"
-    contact_momentItemRegex: "#^(contact_moments/[^/]*)$#"
-    postal_codesItemRegex: "#^(postal_codes/[^/]*)$#"
-    share_studentsItemRegex: "#^(share_students/[^/]*)$#"
+    contactMomentItemRegex: "#^(contact_moments/[^/]*)$#"
+    postalCodeItemRegex: "#^(postal_codes/[^/]*)$#"
+    shareStudentItemRegex: "#^(share_students/[^/]*)$#"
 
 
 # Endpoints
@@ -2197,98 +2197,98 @@ App\Entity\Endpoint:
         method: DELETE
         operationType: item
 
-    # learning_need Endpoints
-    learning_needsEndpointGet:
-        name: learning_need endpoint get collection
-        description: endpoint voor het ophalen van alles learning_needs
+    # learningNeed Endpoints
+    learningNeedEndpointGet:
+        name: learningNeed endpoint get collection
+        description: endpoint voor het ophalen van alle learningNeeds
         path: ['learning_needs']
         pathRegex: "#^(learning_needs)$#"
         method: GET
         operationType: collection
         
-    learning_needsEndpointPost:
-        name: learning_need endpoint post
-        description: endpoint voor het toevoegen van een nieuwe learning_needs
+    learningNeedEndpointPost:
+        name: learningNeed endpoint post
+        description: endpoint voor het toevoegen van een nieuwe learningNeed
         path: [ 'learning_needs' ]
         pathRegex: "#^(learning_needs)$#"
         method: POST
         operationType: collection
 
-    learning_needsEndpointGetItem:
-        name: learning_need endpoint get item
-        description: endpoint voor het ophalen van een learning_needs
+    learningNeedEndpointGetItem:
+        name: learningNeed endpoint get item
+        description: endpoint voor het ophalen van een learningNeed
         path: ['learning_needs', '{id}']
-        pathRegex: <{learning_needsItemRegex}>
+        pathRegex: <{learningNeedItemRegex}>
         method: GET
         operationType: item
 
-    learning_needsEndpointPut:
-        name: learning_need endpoint put
-        description: endpoint voor het wijzigen van een learning_needs
+    learningNeedEndpointPut:
+        name: learningNeed endpoint put
+        description: endpoint voor het wijzigen van een learningNeed
         path: ['learning_needs', '{id}']
-        pathRegex: <{learning_needsItemRegex}>
+        pathRegex: <{learningNeedItemRegex}>
         method: PUT
         operationType: item
     
-    learning_needsEndpointDelete:
-        name: learning_need endpoint delete
-        description: endpoint voor het verwijderen van een learning_needs
+    learningNeedEndpointDelete:
+        name: learningNeed endpoint delete
+        description: endpoint voor het verwijderen van een learningNeed
         path: ['learning_needs', '{id}']
-        pathRegex: <{learning_needsItemRegex}>
+        pathRegex: <{learningNeedItemRegex}>
         method: DELETE
         operationType: item
     
-    # learning_result Endpoints
-    learning_resultsEndpointGet:
-        name: learning_results endpoint get collection
-        description: endpoint voor het ophalen van alles learning_results
+    # learningResult Endpoints
+    learningResultEndpointGet:
+        name: learningResult endpoint get collection
+        description: endpoint voor het ophalen van alle learningResults
         path: ['learning_results']
         pathRegex: "#^(learning_results)$#"
         method: GET
         operationType: collection
         
-    learning_resultsEndpointPost:
-        name: learning_results endpoint post
-        description: endpoint voor het toevoegen van een nieuwe learning_results
+    learningResultEndpointPost:
+        name: learningResult endpoint post
+        description: endpoint voor het toevoegen van een nieuwe learningResult
         path: [ 'learning_results' ]
         pathRegex: "#^(learning_results)$#"
         method: POST
         operationType: collection
 
-    learning_resultsEndpointGetItem:
-        name: learning_results endpoint get item
-        description: endpoint voor het ophalen van een learning_results
+    learningResultEndpointGetItem:
+        name: learningResult endpoint get item
+        description: endpoint voor het ophalen van een learningResult
         path: ['learning_results', '{id}']
-        pathRegex: <{learning_resultsItemRegex}>
+        pathRegex: <{learningResultItemRegex}>
         method: GET
         operationType: item
 
-    learning_resultsEndpointPut:
-        name: learning_results endpoint put
-        description: endpoint voor het wijzigen van een learning_results
+    learningResultEndpointPut:
+        name: learningResult endpoint put
+        description: endpoint voor het wijzigen van een learningResult
         path: ['learning_results', '{id}']
-        pathRegex: <{learning_resultsItemRegex}>
+        pathRegex: <{learningResultItemRegex}>
         method: PUT
         operationType: item
     
-    learning_resultsEndpointDelete:
-        name: learning_results endpoint delete
-        description: endpoint voor het verwijderen van een learning_results
+    learningResultEndpointDelete:
+        name: learningResult endpoint delete
+        description: endpoint voor het verwijderen van een learningResult
         path: ['learning_results', '{id}']
-        pathRegex: <{learning_resultsItemRegex}>
+        pathRegex: <{learningResultItemRegex}>
         method: DELETE
         operationType: item
     
     # Participation Endpoints
     participationEndpointGet:
         name: participation endpoint get collection
-        description: endpoint voor het ophalen van alles participations
+        description: endpoint voor het ophalen van alle participations
         path: ['participations']
         pathRegex: "#^(participations)$#"
         method: GET
         operationType: collection
         
-    participationsEndpointPost:
+    participationEndpointPost:
         name: participation endpoint post
         description: endpoint voor het toevoegen van een nieuwe participation
         path: [ 'participations' ]
@@ -2296,109 +2296,109 @@ App\Entity\Endpoint:
         method: POST
         operationType: collection
 
-    participationsEndpointGetItem:
+    participationEndpointGetItem:
         name: participation endpoint get item
         description: endpoint voor het ophalen van een participation
         path: ['participations', '{id}']
-        pathRegex: <{participationsItemRegex}>
+        pathRegex: <{participationItemRegex}>
         method: GET
         operationType: item
 
-    participationsEndpointPut:
+    participationEndpointPut:
         name: participation endpoint put
         description: endpoint voor het wijzigen van een participation
         path: ['participations', '{id}']
-        pathRegex: <{participationsItemRegex}>
+        pathRegex: <{participationItemRegex}>
         method: PUT
         operationType: item
     
-    participationsEndpointDelete:
+    participationEndpointDelete:
         name: participation endpoint delete
         description: endpoint voor het verwijderen van een participation
         path: ['participations', '{id}']
-        pathRegex: <{participationsItemRegex}>
+        pathRegex: <{participationItemRegex}>
         method: DELETE
         operationType: item
 
-    # Share students Endpoints
-    share_studentsEndpointGet:
-        name: share_students endpoint get collection
-        description: endpoint voor het ophalen van alles share_studentss
-        path: ['share_studentss']
-        pathRegex: "#^(share_studentss)$#"
+    # shareStudent Endpoints
+    shareStudentEndpointGet:
+        name: shareStudent endpoint get collection
+        description: endpoint voor het ophalen van alle shareStudents
+        path: ['share_students']
+        pathRegex: "#^(share_students)$#"
         method: GET
         operationType: collection
         
-    share_studentsEndpointPost:
-        name: share_students endpoint post
-        description: endpoint voor het toevoegen van een nieuwe share_students
-        path: [ 'share_studentss' ]
-        pathRegex: "#^(share_studentss)$#"
+    shareStudentEndpointPost:
+        name: shareStudent endpoint post
+        description: endpoint voor het toevoegen van een nieuwe shareStudent
+        path: [ 'share_students' ]
+        pathRegex: "#^(share_students)$#"
         method: POST
         operationType: collection
 
-    share_studentsEndpointGetItem:
-        name: share_students endpoint get item
-        description: endpoint voor het ophalen van een share_students
-        path: ['share_studentss', '{id}']
-        pathRegex: <{share_studentsItemRegex}>
+    shareStudentEndpointGetItem:
+        name: shareStudent endpoint get item
+        description: endpoint voor het ophalen van een shareStudent
+        path: ['share_students', '{id}']
+        pathRegex: <{shareStudentItemRegex}>
         method: GET
         operationType: item
 
-    share_studentsEndpointPut:
-        name: share_students endpoint put
-        description: endpoint voor het wijzigen van een share_students
-        path: ['share_studentss', '{id}']
-        pathRegex: <{share_studentsItemRegex}>
+    shareStudentEndpointPut:
+        name: shareStudent endpoint put
+        description: endpoint voor het wijzigen van een shareStudent
+        path: ['share_students', '{id}']
+        pathRegex: <{shareStudentItemRegex}>
         method: PUT
         operationType: item
     
-    share_studentsEndpointDelete:
-        name: share_students endpoint delete
-        description: endpoint voor het verwijderen van een share_students
-        path: ['share_studentss', '{id}']
-        pathRegex: <{share_studentsItemRegex}>
+    shareStudentEndpointDelete:
+        name: shareStudent endpoint delete
+        description: endpoint voor het verwijderen van een shareStudent
+        path: ['share_students', '{id}']
+        pathRegex: <{shareStudentItemRegex}>
         method: DELETE
         operationType: item
     
-    # Test result Endpoints
-    test_resultEndpointGet:
-        name: test_result endpoint get collection
-        description: endpoint voor het ophalen van alles test_results
+    # testResult Endpoints
+    testResultEndpointGet:
+        name: testResult endpoint get collection
+        description: endpoint voor het ophalen van alle testResults
         path: ['test_results']
         pathRegex: "#^(test_results)$#"
         method: GET
         operationType: collection
         
-    test_resultEndpointPost:
-        name: test_result endpoint post
-        description: endpoint voor het toevoegen van een nieuwe test_result
+    testResultEndpointPost:
+        name: testResult endpoint post
+        description: endpoint voor het toevoegen van een nieuwe testResult
         path: [ 'test_results' ]
         pathRegex: "#^(test_results)$#"
         method: POST
         operationType: collection
 
-    test_resultEndpointGetItem:
-        name: test_result endpoint get item
-        description: endpoint voor het ophalen van een test_result
+    testResultEndpointGetItem:
+        name: testResult endpoint get item
+        description: endpoint voor het ophalen van een testResult
         path: ['test_results', '{id}']
-        pathRegex: <{test_resultItemRegex}>
+        pathRegex: <{testResultItemRegex}>
         method: GET
         operationType: item
 
-    test_resultEndpointPut:
-        name: test_result endpoint put
-        description: endpoint voor het wijzigen van een test_result
+    testResultEndpointPut:
+        name: testResult endpoint put
+        description: endpoint voor het wijzigen van een testResult
         path: ['test_results', '{id}']
-        pathRegex: <{test_resultItemRegex}>
+        pathRegex: <{testResultItemRegex}>
         method: PUT
         operationType: item
     
-    test_resultEndpointDelete:
-        name: test_result endpoint delete
-        description: endpoint voor het verwijderen van een test_result
+    testResultEndpointDelete:
+        name: testResult endpoint delete
+        description: endpoint voor het verwijderen van een testResult
         path: ['test_results', '{id}']
-        pathRegex: <{test_resultItemRegex}>
+        pathRegex: <{testResultItemRegex}>
         method: DELETE
         operationType: item
     
@@ -2443,85 +2443,85 @@ App\Entity\Endpoint:
         method: DELETE
         operationType: item
     
-    # Contactmoment Endpoints
-    contact_momentEndpointGet:
-        name: contact_moment endpoint get collection
-        description: endpoint voor het ophalen van alles contact_moments
+    # contactMoment Endpoints
+    contactMomentEndpointGet:
+        name: contactMoment endpoint get collection
+        description: endpoint voor het ophalen van alle contactMoments
         path: ['contact_moments']
         pathRegex: "#^(contact_moments)$#"
         method: GET
         operationType: collection
         
-    contact_momentEndpointPost:
-        name: contact_moment endpoint post
-        description: endpoint voor het toevoegen van een nieuwe contact_moment
+    contactMomentEndpointPost:
+        name: contactMoment endpoint post
+        description: endpoint voor het toevoegen van een nieuwe contactMoment
         path: [ 'contact_moments' ]
         pathRegex: "#^(contact_moments)$#"
         method: POST
         operationType: collection
 
-    contact_momentEndpointGetItem:
-        name: contact_moment endpoint get item
-        description: endpoint voor het ophalen van een contact_moment
+    contactMomentEndpointGetItem:
+        name: contactMoment endpoint get item
+        description: endpoint voor het ophalen van een contactMoment
         path: ['contact_moments', '{id}']
-        pathRegex: <{contact_momentItemRegex}>
+        pathRegex: <{contactMomentItemRegex}>
         method: GET
         operationType: item
 
-    contact_momentEndpointPut:
-        name: contact_moment endpoint put
-        description: endpoint voor het wijzigen van een contact_moment
+    contactMomentEndpointPut:
+        name: contactMoment endpoint put
+        description: endpoint voor het wijzigen van een contactMoment
         path: ['contact_moments', '{id}']
-        pathRegex: <{contact_momentItemRegex}>
+        pathRegex: <{contactMomentItemRegex}>
         method: PUT
         operationType: item
     
-    contact_momentEndpointDelete:
-        name: contact_moment endpoint delete
-        description: endpoint voor het verwijderen van een contact_moment
+    contactMomentEndpointDelete:
+        name: contactMoment endpoint delete
+        description: endpoint voor het verwijderen van een contactMoment
         path: ['contact_moments', '{id}']
-        pathRegex: <{contact_momentItemRegex}>
+        pathRegex: <{contactMomentItemRegex}>
         method: DELETE
         operationType: item
     
-    # Postal codes Endpoints
-    postal_codesEndpointGet:
-        name: postal_codes endpoint get collection
-        description: endpoint voor het ophalen van alles postal_codes
+    # postalCode Endpoints
+    postalCodeEndpointGet:
+        name: postalCode endpoint get collection
+        description: endpoint voor het ophalen van alles postalCodes
         path: ['postal_codes']
         pathRegex: "#^(postal_codes)$#"
         method: GET
         operationType: collection
         
-    postal_codesEndpointPost:
-        name: postal_codes endpoint post
-        description: endpoint voor het toevoegen van een nieuwe postal_codes
+    postalCodeEndpointPost:
+        name: postalCode endpoint post
+        description: endpoint voor het toevoegen van een nieuwe postalCode
         path: [ 'postal_codes' ]
         pathRegex: "#^(postal_codes)$#"
         method: POST
         operationType: collection
 
-    postal_codesEndpointGetItem:
-        name: postal_codes endpoint get item
-        description: endpoint voor het ophalen van een postal_codes
+    postalCodeEndpointGetItem:
+        name: postalCode endpoint get item
+        description: endpoint voor het ophalen van een postalCode
         path: ['postal_codes', '{id}']
-        pathRegex: <{postal_codesItemRegex}>
+        pathRegex: <{postalCodeItemRegex}>
         method: GET
         operationType: item
 
-    postal_codesEndpointPut:
-        name: postal_codes endpoint put
-        description: endpoint voor het wijzigen van een postal_codes
+    postalCodeEndpointPut:
+        name: postalCode endpoint put
+        description: endpoint voor het wijzigen van een postalCode
         path: ['postal_codes', '{id}']
-        pathRegex: <{postal_codesItemRegex}>
+        pathRegex: <{postalCodeItemRegex}>
         method: PUT
         operationType: item
     
-    postal_codesEndpointDelete:
-        name: postal_codes endpoint delete
-        description: endpoint voor het verwijderen van een postal_codes
+    postalCodeEndpointDelete:
+        name: postalCode endpoint delete
+        description: endpoint voor het verwijderen van een postalCode
         path: ['postal_codes', '{id}']
-        pathRegex: <{postal_codesItemRegex}>
+        pathRegex: <{postalCodeItemRegex}>
         method: DELETE
         operationType: item
         
@@ -2590,95 +2590,95 @@ App\Entity\Handler:
         endpoints: [ "@personEndpointGet", "@personEndpointPost", "@personEndpointGetItem", "@personEndpointPut", "@personEndpointDelete" ]
         entity: "@person"
 
-    # employeesHandler
+    # Employee Handler
     employeeHandler: 
-        name: Employees Handler
+        name: Employee Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoints: ["@employeeEndpointGet", "@employeeEndpointPost", "@employeeEndpointGetItem", "@employeeEndpointPut", "@employeeEndpointDelete"]
         entity: "@employee"
 
-     # studentsHandler
+     # Student Handler
     studentHandler: 
-        name: students Handler
+        name: Student Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoints: ["@studentEndpointGet", "@studentEndpointPost", "@studentEndpointGetItem", "@studentEndpointPut", "@studentEndpointDelete"]
         entity: "@student"
 
-     # learning_needsHandler
-    learning_needsHandler: 
-        name: learning_needs Handler
+     # LearningNeed Handler
+    LearningNeedHandler: 
+        name: LearningNeed Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@learning_needsEndpointGet", "@learning_needsEndpointPost", "@learning_needsEndpointGetItem", "@learning_needsEndpointPut", "@learning_needsEndpointDelete"]
-        entity: "@learning_needs"
+        endpoints: ["@learningNeedEndpointGet", "@learningNeedEndpointPost", "@learningNeedEndpointGetItem", "@learningNeedEndpointPut", "@learningNeedEndpointDelete"]
+        entity: "@learningNeed"
 
-    # learning_resultsHandler
-    learning_resultsHandler: 
-        name: learning_results Handler
+    # LearningResult Handler
+    learningResultHandler: 
+        name: LearningResult Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@learning_resultsEndpointGet", "@learning_resultsEndpointPost", "@learning_resultsEndpointGetItem", "@learning_resultsEndpointPut", "@learning_resultsEndpointDelete"]
-        entity: "@learning_results"
+        endpoints: ["@learningResultEndpointGet", "@learningResultEndpointPost", "@learningResultEndpointGetItem", "@learningResultEndpointPut", "@learningResultEndpointDelete"]
+        entity: "@learningResult"
     
     # Participation Handler
     participationHandler:
-        name: participation handler
+        name: Participation Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoints: ["@participationEndpointGet", "@participationEndpointPost", "@participationEndpointGetItem", "@participationEndpointPut", "@participationEndpointDelete"]
         entity: "@participation"
 
-    # Test result Handler
-    test_resultHandler:
-        name: test_result handler
+    # TestResult Handler
+    TestResultHandler:
+        name: TestResult handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@test_resultEndpointGet", "@test_resultEndpointPost", "@test_resultEndpointGetItem", "@test_resultEndpointPut", "@test_resultEndpointDelete"]
-        entity: "@test_result"
+        endpoints: ["@testResultEndpointGet", "@testResultEndpointPost", "@testResultEndpointGetItem", "@testResultEndpointPut", "@testResultEndpointDelete"]
+        entity: "@testResult"
     
-    # document Handler
+    # Document Handler
     documentHandler:
-        name: document handler
+        name: Document Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
         endpoints: ["@documentEndpointGet", "@documentEndpointPost", "@documentEndpointGetItem", "@documentEndpointPut", "@documentEndpointDelete"]
         entity: "@document"
     
-    # Contactmoment Handler
-    contact_momentHandler:
-        name: contact_moment handler
+    # ContactMoment Handler
+    contactMomentHandler:
+        name: ContactMoment handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@contact_momentEndpointGet", "@contact_momentEndpointPost", "@contact_momentEndpointGetItem", "@contact_momentEndpointPut", "@contact_momentEndpointDelete"]
-        entity: "@contact_moment"
+        endpoints: ["@contactMomentEndpointGet", "@contactMomentEndpointPost", "@contactMomentEndpointGetItem", "@contactMomentEndpointPut", "@contactMomentEndpointDelete"]
+        entity: "@contactMoment"
 
-    # Postal codes Handler
+    # PostalCode Handler
     postal_codesHandler:
-        name: postal_codes handler
+        name: PostalCode Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@postal_codesEndpointGet", "@postal_codesEndpointPost", "@postal_codesEndpointGetItem", "@postal_codesEndpointPut", "@postal_codesEndpointDelete"]
-        entity: "@postal_codes"
+        endpoints: ["@postalCodeEndpointGet", "@postalCodeEndpointPost", "@postalCodeEndpointGetItem", "@postalCodeEndpointPut", "@postalCodeEndpointDelete"]
+        entity: "@postalCode"
     
-    # Share students Handler
-    share_studentsHandler:
-        name: share_students handler
+    # ShareStudent Handler
+    shareStudentHandler:
+        name: ShareStudent Handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@share_studentsEndpointGet", "@share_studentsEndpointPost", "@share_studentsEndpointGetItem", "@share_studentsEndpointPut", "@share_studentsEndpointDelete"]
-        entity: "@share_students"
+        endpoints: ["@shareStudentEndpointGet", "@shareStudentEndpointPost", "@shareStudentEndpointGetItem", "@shareStudentEndpointPut", "@shareStudentEndpointDelete"]
+        entity: "@shareStudent"
 
 
 ##########################
