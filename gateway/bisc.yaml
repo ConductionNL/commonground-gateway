@@ -423,8 +423,7 @@ App\Entity\Attribute:
         immutable: true
 #        requiredIf:
 #            type: team.noDefaultValue #TODO!
-#        defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
-        defaultValue: "a1c8e0b6-2f78-480d-a9fb-9792142f4761" # todo: temp, the org from the default.yaml
+        defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
     organization_addresses:
         name: addresses
         description: Where is the organization located?
@@ -2168,3 +2167,143 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: [ "@personEndpointGet", "@personEndpointPost", "@personEndpointGetItem", "@personEndpointPut", "@personEndpointDelete" ]
         entity: "@person"
+
+
+
+##########################
+# ------ Fixtures ------ #
+##########################
+
+
+# ObjectEntities
+App\Entity\ObjectEntity:
+    # Default organization
+    biscOrganization:
+        id: a0dc8cdc-c637-46b9-be8d-9103edc1e951
+#        uri: "http://localhost/api/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+        entity: "@organization"
+        organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+
+    # Default person
+    defaultPerson:
+        id: d2a24edf-6ced-40a2-8e7c-56803f4ce3f5
+#        uri: "http://localhost/api/people/d2a24edf-6ced-40a2-8e7c-56803f4ce3f5"
+        entity: "@person"
+        organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+
+    # Default person email
+    defaultPerson_email:
+        entity: "@email"
+        organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+
+    # Default person telephone
+    defaultPerson_telephone:
+        entity: "@telephone"
+        organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+
+    # Default person address
+    defaultPerson_address:
+        entity: "@address"
+        organization: "http://api/admin/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        application: "uuid"
+        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+
+# Values
+App\Entity\Value:
+    # Default organization Values
+    biscOrganization_name:
+        attribute: "@organization_name"
+        stringValue: BISC
+        objectEntity: "@biscOrganization"
+
+    biscOrganization_description:
+        attribute: "@organization_description"
+        stringValue: The BISC organization! DO NOT TOUCH!!!
+        objectEntity: "@biscOrganization"
+
+    # Default person Values
+    defaultPerson_givenName:
+        attribute: "@person_givenName"
+        stringValue: John
+        objectEntity: "@defaultPerson"
+
+    defaultPerson_additionalName:
+        attribute: "@person_additionalName"
+        stringValue: Allen
+        objectEntity: "@defaultPerson"
+
+    defaultPerson_familyName:
+        attribute: "@person_familyName"
+        stringValue: Doe
+        objectEntity: "@defaultPerson"
+
+    defaultPerson_emails:
+        attribute: "@person_emails"
+        objects: ["@defaultPerson_email"]
+        objectEntity: "@defaultPerson"
+
+    defaultPerson_telephones:
+        attribute: "@person_telephones"
+        objects: ["@defaultPerson_telephone"]
+        objectEntity: "@defaultPerson"
+
+    defaultPerson_addresses:
+        attribute: "@person_addresses"
+        objects: ["@defaultPerson_address"]
+        objectEntity: "@defaultPerson"
+
+    # Default person email Values
+    defaultPerson_email_name:
+        attribute: "@email_name"
+        stringValue: email for default person
+        objectEntity: "@defaultPerson_email"
+
+    defaultPerson_email_email:
+        attribute: "@email_email"
+        stringValue: default-person@test.com
+        objectEntity: "@defaultPerson_email"
+
+    # Default person telephone Values
+    defaultPerson_telephone_name:
+        attribute: "@telephone_name"
+        stringValue: telephone for default person
+        objectEntity: "@defaultPerson_telephone"
+
+    defaultPerson_telephone_telephone:
+        attribute: "@telephone_telephone"
+        stringValue: 0687654321
+        objectEntity: "@defaultPerson_telephone"
+
+    # Default person address Values
+    defaultPerson_address_name:
+        attribute: "@address_name"
+        stringValue: address for default person
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_street:
+        attribute: "@address_street"
+        stringValue: someotherstreet
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_houseNumber:
+        attribute: "@address_houseNumber"
+        stringValue: 666
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_postalCode:
+        attribute: "@address_postalCode"
+        stringValue: 1234
+        objectEntity: "@defaultPerson_address"
+
+    defaultPerson_address_locality:
+        attribute: "@address_locality"
+        stringValue: Amsterdam
+        objectEntity: "@defaultPerson_address"
