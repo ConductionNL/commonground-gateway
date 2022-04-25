@@ -2274,7 +2274,7 @@ App\Entity\Endpoint:
     # Postal codes Endpoints
     postal_codesEndpointGet:
         name: postal_codes endpoint get collection
-        description: endpoint voor het ophalen van alles postal_codess
+        description: endpoint voor het ophalen van alles postal_codes
         path: ['postal_codes']
         pathRegex: "#^(postal_codes)$#"
         method: GET
