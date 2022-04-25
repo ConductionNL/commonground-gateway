@@ -1062,17 +1062,6 @@ class EavService
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
-        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
-        //        try {
-        //            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-        //                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-        //            }
-        //        } catch (AccessDeniedException $e) {
-        //            $objectEntity->addError($attribute->getName(), $e->getMessage());
-        //
-        //            return $objectEntity;
-        //        }
-
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
