@@ -62,6 +62,7 @@ App\Entity\Entity:
             - locale
             - person
             - currentPassword
+        
 
     # UserGroup (security) object
     usergroup:
@@ -1801,6 +1802,7 @@ App\Entity\Document:
 parameters:
     userItemRegex: "#^(users/[^/]*)$#"
     userGroupItemRegex: "#^(user_groups/[^/]*)$#"
+    employeeItemRegex: "#^(employees/[^/]*)$#"
 
 # Endpoints
 App\Entity\Endpoint:
@@ -1844,7 +1846,7 @@ App\Entity\Endpoint:
         pathRegex: <{userItemRegex}>
         method: DELETE
         operationType: item
-        
+
     # UserGroup Endpoints
     userGroupEndpointGet:
         name: UserGroup endpoint get collection
@@ -1885,6 +1887,47 @@ App\Entity\Endpoint:
         pathRegex: <{userGroupItemRegex}>
         method: DELETE
         operationType: item
+
+   #employee Endpoints   
+    employeeEndpointGet:
+        name: employee endpoint get collection
+        description: endpoint voor het ophalen van alle employees
+        path: ['employees']
+        pathRegex: "#^(employees)$#"
+        method: GET
+        operationType: collection
+    
+    employeeEndpointPost:
+        name: employee endpoint post
+        description: endpoint voor het toevoegen van een nieuwe employee
+        path: [ 'employees' ]
+        pathRegex: "#^(employees)$#"
+        method: POST
+        operationType: collection
+
+    employeeEndpointGetItem:
+        name: employee endpoint get item
+        description: endpoint voor het ophalen van een employee
+        path: ['employees', '{id}']
+        pathRegex: <{employeeItemRegex}>
+        method: GET
+        operationType: item
+
+    employeeEndpointPut:
+        name: employee endpoint put
+        description: endpoint voor het wijzigen van een employee
+        path: ['employees', '{id}']
+        pathRegex: <{employeeItemRegex}>
+        method: PUT
+        operationType: item
+    
+    employeeEndpointDelete:
+        name: employee endpoint delete
+        description: endpoint voor het verwijderen van een employee
+        path: ['employees', '{id}']
+        pathRegex: <{employeeItemRegex}>
+        method: DELETE
+        operationType: item
         
 # Handlers
 App\Entity\Handler:
@@ -1905,4 +1948,13 @@ App\Entity\Handler:
         conditions: "{}"
         endpoints: ["@userGroupEndpointGet", "@userGroupEndpointPost", "@userGroupEndpointGetItem", "@userGroupEndpointPut", "@userGroupEndpointDelete"]
         entity: "@usergroup"
+
+    # employeesHandler
+    employeeHandler: 
+        name: Employees Handler
+        methods: ["*"]
+        sequence: 0
+        conditions: "{}"
+        endpoints: ["@employeeEndpointGet", "@employeeEndpointPost", "@employeeEndpointGetItem", "@employeeEndpointPut", "@employeeEndpointDelete"]
+        entity: "@employee"
 
