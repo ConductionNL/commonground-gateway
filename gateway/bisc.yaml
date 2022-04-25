@@ -2275,23 +2275,23 @@ App\Entity\Endpoint:
     postal_codesEndpointGet:
         name: postal_codes endpoint get collection
         description: endpoint voor het ophalen van alles postal_codess
-        path: ['postal_codess']
-        pathRegex: "#^(postal_codess)$#"
+        path: ['postal_codes']
+        pathRegex: "#^(postal_codes)$#"
         method: GET
         operationType: collection
         
     postal_codesEndpointPost:
         name: postal_codes endpoint post
         description: endpoint voor het toevoegen van een nieuwe postal_codes
-        path: [ 'postal_codess' ]
-        pathRegex: "#^(postal_codess)$#"
+        path: [ 'postal_codes' ]
+        pathRegex: "#^(postal_codes)$#"
         method: POST
         operationType: collection
 
     postal_codesEndpointGetItem:
         name: postal_codes endpoint get item
         description: endpoint voor het ophalen van een postal_codes
-        path: ['postal_codess', '{id}']
+        path: ['postal_codes', '{id}']
         pathRegex: <{postal_codesItemRegex}>
         method: GET
         operationType: item
@@ -2299,7 +2299,7 @@ App\Entity\Endpoint:
     postal_codesEndpointPut:
         name: postal_codes endpoint put
         description: endpoint voor het wijzigen van een postal_codes
-        path: ['postal_codess', '{id}']
+        path: ['postal_codes', '{id}']
         pathRegex: <{postal_codesItemRegex}>
         method: PUT
         operationType: item
@@ -2307,7 +2307,7 @@ App\Entity\Endpoint:
     postal_codesEndpointDelete:
         name: postal_codes endpoint delete
         description: endpoint voor het verwijderen van een postal_codes
-        path: ['postal_codess', '{id}']
+        path: ['postal_codes', '{id}']
         pathRegex: <{postal_codesItemRegex}>
         method: DELETE
         operationType: item
