@@ -50,6 +50,7 @@ class ZZController extends AbstractController
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
 
         // Match path to regex of Endpoints
+        // todo change this foreach into an sql search to make it faster? repository->find(criteria)
         foreach ($allEndpoints as $currentEndpoint) {
             if ($currentEndpoint->getPathRegex() !== null && preg_match($currentEndpoint->getPathRegex(), $path) && strtolower($request->getMethod()) === strtolower($currentEndpoint->getMethod())) {
                 $endpoint = $currentEndpoint;
