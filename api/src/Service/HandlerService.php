@@ -33,21 +33,21 @@ class HandlerService
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     public $acceptHeaderToSerialiazation = [
-        'application/json'                                                                   => 'json',
-        'application/ld+json'                                                                => 'jsonld',
-        'application/json+ld'                                                                => 'jsonld',
-        'application/hal+json'                                                               => 'jsonhal',
-        'application/json+hal'                                                               => 'jsonhal',
-        'application/xml'                                                                    => 'xml',
-        'text/xml'                                                                              => 'xml',
+        'application/json'                                                                                     => 'json',
+        'application/ld+json'                                                                                  => 'jsonld',
+        'application/json+ld'                                                                                  => 'jsonld',
+        'application/hal+json'                                                                                 => 'jsonhal',
+        'application/json+hal'                                                                                 => 'jsonhal',
+        'application/xml'                                                                                      => 'xml',
+        'text/xml'                                                                                             => 'xml',
         'text/xml; charset=utf-8'                                                                              => 'xml',
-        'text/csv'                                                                           => 'csv',
-        'text/yaml'                                                                          => 'yaml',
-        'text/html'                                                                          => 'html',
-        'application/pdf'                                                                    => 'pdf',
-        'application/msword'                                                                 => 'doc',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
-        'application/form.io'                                                                => 'form.io',
+        'text/csv'                                                                                             => 'csv',
+        'text/yaml'                                                                                            => 'yaml',
+        'text/html'                                                                                            => 'html',
+        'application/pdf'                                                                                      => 'pdf',
+        'application/msword'                                                                                   => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
+        'application/form.io'                                                                                  => 'form.io',
     ];
 
     public function __construct(
@@ -125,33 +125,32 @@ class HandlerService
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
     {
         $overrides = $handler->getMethodOverrides();
-        if(!isset($overrides[$this->request->getMethod()])){
+        if (!isset($overrides[$this->request->getMethod()])) {
             return;
         }
         $content = new \Adbar\Dot($this->getDataFromRequest());
 
-        foreach($overrides[$this->request->getMethod()] as $override){
-            if(key_exists($method, $overrides) && $content->has($override['condition'])){
+        foreach ($overrides[$this->request->getMethod()] as $override) {
+            if (key_exists($method, $overrides) && $content->has($override['condition'])) {
                 $method = $override['method'];
                 $operationType = $override['operationType'];
                 $parameters = $this->request->getSession()->get('parameters');
-                if(isset($override['pathValues'])){
-                    foreach($override['pathValues'] as $key => $value) {
+                if (isset($override['pathValues'])) {
+                    foreach ($override['pathValues'] as $key => $value) {
                         $parameters['path'][$key] = $content->get($value);
                     }
                 }
-                if(isset($override['queryParameters'])){
-                    foreach($override['queryParameters'] as $key => $value) {
+                if (isset($override['queryParameters'])) {
+                    foreach ($override['queryParameters'] as $key => $value) {
                         $this->request->query->set($key, $content->get($value));
                     }
                 }
                 $this->request->getSession()->set('parameters', $parameters);
-            }
-            elseif(key_exists($method, $overrides) && $this->request->query->has($override['condition'])){
+            } elseif (key_exists($method, $overrides) && $this->request->query->has($override['condition'])) {
                 $method = $override['method'];
                 $operationType = $override['operationType'];
                 $parameters = $this->request->getSession()->get('parameters');
-                foreach($override['pathValues'] as $key => $value) {
+                foreach ($override['pathValues'] as $key => $value) {
                     $parameters['path'][$key] = $this->request->query->get($value);
                 }
 
@@ -171,7 +170,6 @@ class HandlerService
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
         $this->getMethodOverrides($method, $operationType, $handler);
-
 
         // Form.io components array
         // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
@@ -396,7 +394,7 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        if((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
+        if ((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
             $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
         } else {
             (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';

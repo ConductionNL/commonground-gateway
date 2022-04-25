@@ -52,10 +52,10 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-        foreach($mapping as $replace => $search) {
+        foreach ($mapping as $replace => $search) {
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $iterator = 0;
-                if($source->has(str_replace('$', $iterator, $search))){
+                if ($source->has(str_replace('$', $iterator, $search))) {
                     while ($source->has(str_replace('$', $iterator, $search))) {
                         $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
                         $iterator++;
@@ -93,7 +93,7 @@ class TranslationService
                 $destination[$replace] = $source;
             } elseif ($format == 'array' && $search == 'object(s)') {
                 $sourceSub = new \Adbar\Dot($source, true);
-                if($sourceSub->has('results')){
+                if ($sourceSub->has('results')) {
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
                 $destination[$replace] = $sourceSub;
@@ -259,15 +259,16 @@ class TranslationService
 
     public function addPrefix($data, ?string $prefix = null)
     {
-        if(is_array($data) && isset($data['results'])) {
+        if (is_array($data) && isset($data['results'])) {
             $data['results'] = $this->addPrefix($data['results'], $prefix);
+
             return $data;
-        }
-        elseif(is_array($data)){
+        } elseif (is_array($data)) {
             $result = [];
             foreach ($data as $key => $value) {
-                $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix): $value;
+                $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix) : $value;
             }
+
             return $result;
         } else {
             return $prefix.$data;

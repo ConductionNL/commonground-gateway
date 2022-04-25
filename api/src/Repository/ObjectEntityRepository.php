@@ -59,12 +59,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required. Always use getFilterParameters() to check for allowed filters before using this function!
      *
-     * @param Entity $entity  The Entity
-     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
-     * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
-     * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
-     * @param QueryBuilder|null $query An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
+     * @param Entity            $entity  The Entity
+     * @param array             $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param array             $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param int               $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
+     * @param int               $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
+     * @param QueryBuilder|null $query   An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
      *
      * @throws Exception
      *
@@ -85,9 +85,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity $entity  The Entity
-     * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param QueryBuilder|null $query An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
+     * @param Entity            $entity  The Entity
+     * @param array             $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
+     * @param QueryBuilder|null $query   An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
      *
      * @throws NoResultException|NonUniqueResultException
      *
