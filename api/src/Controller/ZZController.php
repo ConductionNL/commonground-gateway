@@ -50,14 +50,11 @@ class ZZController extends AbstractController
         }
         // End of hacky tacky
 
-        $stopwatch->start('getAllEndpoints', 'ZZController');
-
         // Get full path
         // We should look at a better search moddel in sql
+        $stopwatch->start('getAllEndpoints', 'ZZController');
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
-
-        var_dump((string)$stopwatch->stop('getAllEndpoints'));
-        $stopwatch->start('findEndpoint', 'ZZController');
+        $stopwatch->stop('getAllEndpoints');
 
         // Match path to regex of Endpoints
         // todo change this foreach into an sql search to make it faster? repository->find(criteria)
@@ -67,8 +64,6 @@ class ZZController extends AbstractController
                 break;
             }
         }
-
-        var_dump((string)$stopwatch->stop('findEndpoint'));
 
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
@@ -85,9 +80,6 @@ class ZZController extends AbstractController
         }
 
         // Let create the variable
-
-        $stopwatch->start('parameters', 'ZZController');
-
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
         $pathArray = array_values(array_filter(explode('/', $path)));
@@ -107,15 +99,12 @@ class ZZController extends AbstractController
         // Lets get all the headers
         $parameters['headers'] = $request->headers->all();
 
-        var_dump((string)$stopwatch->stop('parameters'));
-
         // Try handler proces and catch exceptions
         try {
             $stopwatch->start('handleEndpoint', 'ZZController');
             $result = $handlerService->handleEndpoint($endpoint, $parameters);
-
-            var_dump((string)$stopwatch->stop('handleEndpoint'));
-            var_dump((string)$stopwatch->stop('ZZController'));
+            $stopwatch->stop('handleEndpoint');
+            $stopwatch->stop('ZZController');
 
             return $result;
         } catch (GatewayException $gatewayException) {

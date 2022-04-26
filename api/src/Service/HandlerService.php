@@ -122,10 +122,8 @@ class HandlerService
                 $session->set('handler', $handler->getId());
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-
                 $result = $this->handleHandler($handler, $endpoint);
-
-                var_dump((string)$this->stopwatch->stop('handleHandler'));
+                $this->stopwatch->stop('handleHandler');
 
                 return $result;
             }
@@ -182,11 +180,7 @@ class HandlerService
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
 
-        $this->stopwatch->start('getMethodOverrides', 'handleHandler');
-
         $this->getMethodOverrides($method, $operationType, $handler);
-
-        var_dump((string)$this->stopwatch->stop('getMethodOverrides'));
 
         // Form.io components array
         // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
@@ -200,43 +194,30 @@ class HandlerService
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
 
-            $this->stopwatch->start('getDataFromRequest', 'handleHandler');
-
             $data = $this->getDataFromRequest($this->request);
-
-            var_dump((string)$this->stopwatch->stop('getDataFromRequest'));
 
             if ($data == null || empty($data)) {
                 throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
             }
         }
 
-        $this->stopwatch->start('saveLog', 'handleHandler');
-
         // Update current Log
+        $this->stopwatch->start('saveLog', 'handleHandler');
         isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
-
-        var_dump((string)$this->stopwatch->stop('saveLog'));
-        $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
+        $this->stopwatch->stop('saveLog');
 
         // Only do mapping and translation -in for calls with body
+        $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
-
-        var_dump((string)$this->stopwatch->stop('handleDataBeforeEAV'));
-        $this->stopwatch->start('getRequestType+handleObject', 'handleHandler');
+        $this->stopwatch->stop('handleDataBeforeEAV');
 
         // eav new way
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
-
             $this->stopwatch->start('handleObject', 'handleHandler');
-
             $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method, $operationType);
-
-            var_dump((string)$this->stopwatch->stop('handleObject'));
+            $this->stopwatch->stop('handleObject');
         }
-
-        var_dump((string)$this->stopwatch->stop('getRequestType+handleObject'));
 
         // Form.io components array
         if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
@@ -255,46 +236,39 @@ class HandlerService
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-            $this->stopwatch->start('handleSubscribers', 'handleHandler');
-
             // Check if we need to trigger subscribers for this entity
+            $this->stopwatch->start('handleSubscribers', 'handleHandler');
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
-
-            var_dump((string)$this->stopwatch->stop('handleSubscribers'));
+            $this->stopwatch->stop('handleSubscribers');
 
             // Update current Log
+            $this->stopwatch->start('saveLog2', 'handleHandler');
             $this->logService->saveLog($this->request, null, json_encode($data));
+            $this->stopwatch->stop('saveLog2');
 
             $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
-
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
-
-            var_dump((string)$this->stopwatch->stop('handleDataAfterEAV'));
+            $this->stopwatch->stop('handleDataAfterEAV');
         }
 
-        $this->stopwatch->start('saveLog2', 'handleHandler');
-
         // Update current Log
+        $this->stopwatch->start('saveLog3', 'handleHandler');
         $this->logService->saveLog($this->request, null, json_encode($data));
-
-        var_dump((string)$this->stopwatch->stop('saveLog2'));
-        $this->stopwatch->start('createResponse', 'handleHandler');
+        $this->stopwatch->stop('saveLog3');
 
         // An lastly we want to create a response
+        $this->stopwatch->start('createResponse', 'handleHandler');
         $response = $this->createResponse($data, $endpoint);
-
-        var_dump((string)$this->stopwatch->stop('createResponse'));
-        $this->stopwatch->start('saveLog3', 'handleHandler');
+        $this->stopwatch->stop('createResponse');
 
         // Final update Log
+        $this->stopwatch->start('saveLog4', 'handleHandler');
         $this->logService->saveLog($this->request, $response, null, true);
+        $this->stopwatch->stop('saveLog4');
 
-        var_dump((string)$this->stopwatch->stop('saveLog3'));
         $this->stopwatch->start('saveProcessingLog', 'handleHandler');
-
         $this->processingLogService->saveProcessingLog();
-
-        var_dump((string)$this->stopwatch->stop('saveProcessingLog'));
+        $this->stopwatch->stop('saveProcessingLog');
 
         return $response;
     }
@@ -509,38 +483,31 @@ class HandlerService
         }
 
         $this->stopwatch->start('dotHydrator', 'handleDataBeforeEAV');
-
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-
-        var_dump((string)$this->stopwatch->stop('dotHydrator'));
-        $this->stopwatch->start('_saveLog', 'handleDataBeforeEAV');
+        $this->stopwatch->stop('dotHydrator');
 
         // Update current Log
+        $this->stopwatch->start('saveLog5', 'handleDataBeforeEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
-
-        var_dump((string)$this->stopwatch->stop('_saveLog'));
-        $this->stopwatch->start('getRepository-App:Translation', 'handleDataBeforeEAV');
+        $this->stopwatch->stop('saveLog5');
 
         // The we want to do translations on the incomming request
+        $this->stopwatch->start('getRepository-App:Translation', 'handleDataBeforeEAV');
         $transRepo = $this->entityManager->getRepository('App:Translation');
+        $this->stopwatch->stop('getRepository-App:Translation');
 
-        var_dump((string)$this->stopwatch->stop('getRepository-App:Translation'));
         $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
-
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+        $this->stopwatch->stop('getTranslations');
 
-        var_dump((string)$this->stopwatch->stop('getTranslations'));
         $this->stopwatch->start('parse', 'handleDataBeforeEAV');
-
         $data = $this->translationService->parse($data, true, $translations);
-
-        var_dump((string)$this->stopwatch->stop('parse'));
-        $this->stopwatch->start('_saveLog2', 'handleDataBeforeEAV');
+        $this->stopwatch->stop('parse');
 
         // Update current Log
+        $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
-
-        var_dump((string)$this->stopwatch->stop('_saveLog2'));
+        $this->stopwatch->stop('saveLog6');
 
         return $data;
     }
