@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class ZZController extends AbstractController
 {
@@ -31,8 +32,11 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService
+        ProcessingLogService $processingLogService,
+        Stopwatch $stopwatch
     ): Response {
+
+        $stopwatch->start('ZZController');
 
     // Below is hacky tacky
         // @todo refactor
@@ -48,7 +52,9 @@ class ZZController extends AbstractController
 
         // Get full path
         // We should look at a better search moddel in sql
+        $stopwatch->start('getAllEndpoints', 'ZZController');
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
+        $stopwatch->stop('getAllEndpoints');
 
         // Match path to regex of Endpoints
         // todo change this foreach into an sql search to make it faster? repository->find(criteria)
@@ -74,7 +80,6 @@ class ZZController extends AbstractController
         }
 
         // Let create the variable
-
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
         $pathArray = array_values(array_filter(explode('/', $path)));
@@ -96,7 +101,12 @@ class ZZController extends AbstractController
 
         // Try handler proces and catch exceptions
         try {
-            return $handlerService->handleEndpoint($endpoint, $parameters);
+            $stopwatch->start('handleEndpoint', 'ZZController');
+            $result = $handlerService->handleEndpoint($endpoint, $parameters);
+            $stopwatch->stop('handleEndpoint');
+            $stopwatch->stop('ZZController');
+
+            return $result;
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $acceptType = $handlerService->getRequestType('accept');

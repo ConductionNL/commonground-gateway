@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
 {
@@ -35,6 +36,7 @@ class ObjectEntityService
     private EntityManagerInterface $entityManager;
     private CommonGroundService $commonGroundService;
     private ResponseService $responseService;
+    private Stopwatch $stopwatch;
 
     // todo: we need functionService & convertToGatewayService in this service for the saveObject function, add them somehow or move code to other services...
     public function __construct(
@@ -46,8 +48,8 @@ class ObjectEntityService
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
-        ResponseService $responseService
-
+        ResponseService $responseService,
+        Stopwatch $stopwatch
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -58,6 +60,7 @@ class ObjectEntityService
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
         $this->responseService = $responseService;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -319,6 +322,7 @@ class ObjectEntityService
         }
 
         // Check for scopes, if forbidden to view/edit this, throw forbidden error
+        $this->stopwatch->start('checkAuthorization', 'handleObject');
         if ((!isset($object) || !$object->getUri()) || !$this->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
@@ -331,6 +335,7 @@ class ObjectEntityService
                 throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
             }
         }
+        $this->stopwatch->stop('checkAuthorization');
 
         switch ($method) {
             case 'GET':
@@ -372,19 +377,25 @@ class ObjectEntityService
 
                 break;
             case 'POST':
+
+                $this->stopwatch->start('validateData-POST', 'handleObject');
                 // validate
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
+                $this->stopwatch->stop('validateData-POST');
 
+                $this->stopwatch->start('saveObject', 'handleObject');
                 $object = $this->saveObject($object, $data);
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
+                $this->stopwatch->stop('saveObject');
 
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
+//                $this->stopwatch->start('validateEntity', 'handleObject');
 //                $this->validationService->setRequest($this->request);
 //                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
 //                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
@@ -404,6 +415,7 @@ class ObjectEntityService
 //                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
 //                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
 //                }
+//                $this->stopwatch->stop('validateEntity');
 
                 //todo: -end- old code...
 

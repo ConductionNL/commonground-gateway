@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 use Twig\Environment;
 
 class HandlerService
@@ -29,6 +30,7 @@ class HandlerService
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
+    private Stopwatch $stopwatch;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -67,7 +69,8 @@ class HandlerService
         ObjectEntityService $objectEntityService,
         FormIOService $formIOService,
         SubscriberService $subscriberService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -84,6 +87,7 @@ class HandlerService
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -117,7 +121,11 @@ class HandlerService
             if (true) {
                 $session->set('handler', $handler->getId());
 
-                return $this->handleHandler($handler, $endpoint);
+                $this->stopwatch->start('handleHandler', 'handleEndpoint');
+                $result = $this->handleHandler($handler, $endpoint);
+                $this->stopwatch->stop('handleHandler');
+
+                return $result;
             }
         }
 
@@ -171,6 +179,7 @@ class HandlerService
     {
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
+
         $this->getMethodOverrides($method, $operationType, $handler);
 
         // Form.io components array
@@ -184,6 +193,7 @@ class HandlerService
 
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {
@@ -192,15 +202,21 @@ class HandlerService
         }
 
         // Update current Log
+        $this->stopwatch->start('saveLog', 'handleHandler');
         isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
+        $this->stopwatch->stop('saveLog');
 
         // Only do mapping and translation -in for calls with body
+        $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
+        $this->stopwatch->stop('handleDataBeforeEAV');
 
         // eav new way
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
+            $this->stopwatch->start('handleObject', 'handleHandler');
             $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method, $operationType);
+            $this->stopwatch->stop('handleObject');
         }
 
         // Form.io components array
@@ -221,22 +237,38 @@ class HandlerService
         if (!(isset($data['type']) && isset($data['message']))) {
 
             // Check if we need to trigger subscribers for this entity
+            $this->stopwatch->start('handleSubscribers', 'handleHandler');
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
+            $this->stopwatch->stop('handleSubscribers');
 
             // Update current Log
+            $this->stopwatch->start('saveLog2', 'handleHandler');
             $this->logService->saveLog($this->request, null, json_encode($data));
+            $this->stopwatch->stop('saveLog2');
 
+            $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
+            $this->stopwatch->stop('handleDataAfterEAV');
         }
+
         // Update current Log
+        $this->stopwatch->start('saveLog3', 'handleHandler');
         $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->stop('saveLog3');
 
         // An lastly we want to create a response
+        $this->stopwatch->start('createResponse', 'handleHandler');
         $response = $this->createResponse($data, $endpoint);
+        $this->stopwatch->stop('createResponse');
 
         // Final update Log
+        $this->stopwatch->start('saveLog4', 'handleHandler');
         $this->logService->saveLog($this->request, $response, null, true);
+        $this->stopwatch->stop('saveLog4');
+
+        $this->stopwatch->start('saveProcessingLog', 'handleHandler');
         $this->processingLogService->saveProcessingLog();
+        $this->stopwatch->stop('saveProcessingLog');
 
         return $response;
     }
@@ -449,18 +481,33 @@ class HandlerService
         if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
+
+        $this->stopwatch->start('dotHydrator', 'handleDataBeforeEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+        $this->stopwatch->stop('dotHydrator');
 
         // Update current Log
+        $this->stopwatch->start('saveLog5', 'handleDataBeforeEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->stop('saveLog5');
 
         // The we want to do translations on the incomming request
+        $this->stopwatch->start('getRepository-App:Translation', 'handleDataBeforeEAV');
         $transRepo = $this->entityManager->getRepository('App:Translation');
+        $this->stopwatch->stop('getRepository-App:Translation');
+
+        $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+        $this->stopwatch->stop('getTranslations');
+
+        $this->stopwatch->start('parse', 'handleDataBeforeEAV');
         $data = $this->translationService->parse($data, true, $translations);
+        $this->stopwatch->stop('parse');
 
         // Update current Log
+        $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->stop('saveLog6');
 
         return $data;
     }
