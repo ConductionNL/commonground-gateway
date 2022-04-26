@@ -48,6 +48,8 @@ class HandlerService
         'application/msword'                                                                                   => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
         'application/form.io'                                                                                  => 'form.io',
+        //todo: temp fix for taalhuizen, should be txt not json (or just remove this) ;
+        'text/plain;charset=UTF-8'                                                                             => 'json',
     ];
 
     public function __construct(
