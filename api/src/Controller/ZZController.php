@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class ZZController extends AbstractController
 {
@@ -31,8 +32,11 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService
+        ProcessingLogService $processingLogService,
+        Stopwatch $stopwatch
     ): Response {
+
+        $stopwatch->start('ZZController');
 
     // Below is hacky tacky
         // @todo refactor
@@ -46,9 +50,14 @@ class ZZController extends AbstractController
         }
         // End of hacky tacky
 
+        $stopwatch->start('getAllEndpoints', 'ZZController');
+
         // Get full path
         // We should look at a better search moddel in sql
         $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
+
+        var_dump((string)$stopwatch->stop('getAllEndpoints'));
+        $stopwatch->start('findEndpoint', 'ZZController');
 
         // Match path to regex of Endpoints
         // todo change this foreach into an sql search to make it faster? repository->find(criteria)
@@ -58,6 +67,8 @@ class ZZController extends AbstractController
                 break;
             }
         }
+
+        var_dump((string)$stopwatch->stop('findEndpoint'));
 
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
@@ -74,6 +85,8 @@ class ZZController extends AbstractController
         }
 
         // Let create the variable
+
+        $stopwatch->start('parameters', 'ZZController');
 
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
@@ -94,9 +107,17 @@ class ZZController extends AbstractController
         // Lets get all the headers
         $parameters['headers'] = $request->headers->all();
 
+        var_dump((string)$stopwatch->stop('parameters'));
+
         // Try handler proces and catch exceptions
         try {
-            return $handlerService->handleEndpoint($endpoint, $parameters);
+            $stopwatch->start('handleEndpoint', 'ZZController');
+            $result = $handlerService->handleEndpoint($endpoint, $parameters);
+
+            var_dump((string)$stopwatch->stop('handleEndpoint'));
+            var_dump((string)$stopwatch->stop('ZZController'));
+
+            return $result;
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $acceptType = $handlerService->getRequestType('accept');
