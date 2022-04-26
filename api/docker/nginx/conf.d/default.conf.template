@@ -1,7 +1,20 @@
+map $NGINX_ENV  $csp {
+    'prod'      "default-src 'self'";
+    default     "default-src * 'unsafe-inline' blob: data:";
+}
+
 server {
     root /srv/api/public;
-    add_header Content-Security-Policy "default-src 'self'";
+
+    add_header Content-Security-Policy $csp;
     add_header Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(self),focus-without-user-activation=(), hid=(), idle-detection=(), serial=(),sync-script=(), trust-token-redemption=(), vertical-scroll=(self)";
+
+    # Fixes CORS header 
+    if ($http_origin = ''){
+        set $http_origin "*";
+    }
+    proxy_hide_header Access-Control-Allow-Origin;
+    add_header Access-Control-Allow-Origin $http_origin always;
 
     location / {
         # try to serve file directly, fallback to index.php
@@ -21,7 +34,7 @@ server {
 	    proxy_busy_buffers_size    256k;
 
         # Comment the next line and uncomment the next to enable dynamic resolution (incompatible with Kubernetes)
-        fastcgi_pass $ENV{"NGINX_HOST"}:9000;
+        fastcgi_pass ${NGINX_HOST}:9000;
         #resolver 127.0.0.11;
         #set $upstream_host commonground-php;
         #fastcgi_pass $upstream_host:9000;
