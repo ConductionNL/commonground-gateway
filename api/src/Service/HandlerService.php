@@ -356,7 +356,8 @@ class HandlerService
         $response = new Response(
             $result,
             $status,
-            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
+//            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
+            ['content-type' => array_search($acceptType, $this->acceptHeaderToSerialiazation)]
         );
 
         // Lets handle file responses
