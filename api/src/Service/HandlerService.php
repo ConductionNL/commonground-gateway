@@ -95,14 +95,23 @@ class HandlerService
      */
     public function handleEndpoint(Endpoint $endpoint, array $parameters): Response
     {
+        $this->stopwatch->start('invalidateTags-grantedScopes', 'handleEndpoint');
         $this->cache->invalidateTags(['grantedScopes']);
+        $this->stopwatch->stop('invalidateTags-grantedScopes');
 
+        $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
+        $this->stopwatch->stop('newSession');
+        $this->stopwatch->start('saveEndpointInSession', 'handleEndpoint');
         $session->set('endpoint', $endpoint->getId()->toString());
+        $this->stopwatch->stop('saveEndpointInSession');
+        $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
+        $this->stopwatch->stop('saveParametersInSession');
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
+        $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
@@ -112,6 +121,7 @@ class HandlerService
                 }
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
+                $this->stopwatch->lap('handleHandlers');
                 continue;
             }
 
@@ -119,11 +129,14 @@ class HandlerService
             /* @todo acctualy check for json logic */
 
             if (true) {
+                $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
+                $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
                 $result = $this->handleHandler($handler, $endpoint);
                 $this->stopwatch->stop('handleHandler');
+                $this->stopwatch->stop('handleHandlers');
 
                 return $result;
             }
