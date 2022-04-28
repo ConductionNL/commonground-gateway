@@ -492,9 +492,7 @@ class HandlerService
         $this->stopwatch->stop('saveLog5');
 
         // The we want to do translations on the incomming request
-        $this->stopwatch->start('getRepository-App:Translation', 'handleDataBeforeEAV');
         $transRepo = $this->entityManager->getRepository('App:Translation');
-        $this->stopwatch->stop('getRepository-App:Translation');
 
         $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
         $translations = $transRepo->getTranslations($handler->getTranslationsIn());
@@ -521,23 +519,36 @@ class HandlerService
         if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
+        $this->stopwatch->start('dotHydrator2', 'handleDataAfterEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        $this->stopwatch->stop('dotHydrator2');
 
         // Update current Log
+        $this->stopwatch->start('saveLog7', 'handleDataAfterEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->stop('saveLog7');
 
         // The we want to do  translations on the outgoing response
         $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
 
+        $this->stopwatch->start('getTranslations2', 'handleDataAfterEAV');
+        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+        $this->stopwatch->stop('getTranslations2');
+
+        $this->stopwatch->start('parse2', 'handleDataAfterEAV');
         $data = $this->translationService->parse($data, true, $translations);
+        $this->stopwatch->stop('parse2');
 
         // Update current Log
+        $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
         $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->stop('saveLog8');
 
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
+            $this->stopwatch->start('renderTemplate', 'handleDataAfterEAV');
             $data = $this->renderTemplate($handler, $data);
+            $this->stopwatch->stop('renderTemplate');
         }
 
         return $data;

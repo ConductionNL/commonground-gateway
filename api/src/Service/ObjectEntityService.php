@@ -283,7 +283,9 @@ class ObjectEntityService
     public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null): array
     {
         // check application
+        $this->stopwatch->start('getApplication', 'handleObject');
         $application = $this->applicationService->getApplication();
+        $this->stopwatch->stop('getApplication');
 
         // If type is array application is an error
         if (gettype($application) === 'array') {
@@ -299,23 +301,29 @@ class ObjectEntityService
         }
 
         // Check ID
+        $this->stopwatch->start('getFilterFromParameters', 'handleObject');
         $filters = $this->getFilterFromParameters();
+        $this->stopwatch->stop('getFilterFromParameters');
         array_key_exists('id', ($filters)) && $id = $filters['id'];
 
         // todo throw error if get/put/patch/delete and no id ?
         // Get Object if needed
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
+            $this->stopwatch->start('getObject', 'handleObject');
             $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
+            $this->stopwatch->stop('getObject');
             if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
             } // Lets check if the user is allowed to view/edit this resource.
+            $this->stopwatch->start('checkOwner+organization', 'handleObject');
             if (!$this->checkOwner($object)) {
                 // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
                 if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
                     throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
                 }
             }
+            $this->stopwatch->stop('checkOwner+organization');
             if ($object instanceof ObjectEntity) {
                 $this->session->set('object', $object->getId()->toString());
             }
