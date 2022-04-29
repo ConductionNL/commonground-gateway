@@ -538,7 +538,7 @@ class ObjectEntityService
         }
 
         // todo? promises (these should move to subscribers!)
-        // todo notifications
+        // todo: think about what to do with notifications here? this saveObject function will always notify once at the end
 //        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
 //        if ($objectEntity->getEntity()->getGateway()) {
 //            // We notify the notification component here in the createPromise function:
@@ -551,11 +551,6 @@ class ObjectEntityService
 //                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
 //                $objectEntity->setUri($this->createUri($objectEntity));
 //            }
-//            // Notify notification component
-//            $this->notifications[] = [
-//                'objectEntity' => $objectEntity,
-//                'method'       => $this->request->getMethod(),
-//            ];
 //        }
 
         if (!$objectEntity->getUri()) {
@@ -567,6 +562,9 @@ class ObjectEntityService
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
             $objectEntity->setOrganization($post['@organization']);
         }
+
+        // Notify notification component
+        $this->notify($objectEntity, $this->request->getMethod());
 
         return $objectEntity;
     }
@@ -1271,5 +1269,47 @@ class ObjectEntityService
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
+    }
+
+    /**
+     * TODO: docs.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string       $method
+     */
+    public function notify(ObjectEntity $objectEntity, string $method)
+    {
+        if (!$this->commonGroundService->getComponent('nrc')) {
+            return;
+        }
+        // TODO: move this function to a notificationService?
+        $topic = $objectEntity->getEntity()->getName();
+        switch ($method) {
+            case 'POST':
+                $action = 'Create';
+                break;
+            case 'PUT':
+                $action = 'Update';
+                break;
+            case 'DELETE':
+                $action = 'Delete';
+                break;
+        }
+        if (isset($action)) {
+            $notification = [
+                'topic'    => $topic,
+                'action'   => $action,
+                'resource' => $objectEntity->getUri(),
+                'id'       => $objectEntity->getExternalId(),
+            ];
+            if (!$objectEntity->getUri()) {
+                //                var_dump('Couldn\'t notifiy for object, because it has no uri!');
+                //                var_dump('Id: '.$objectEntity->getId());
+                //                var_dump('ExternalId: '.$objectEntity->getExternalId() ?? null);
+                //                var_dump($notification);
+                return;
+            }
+            $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
+        }
     }
 }
