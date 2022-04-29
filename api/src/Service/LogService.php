@@ -91,15 +91,19 @@ class LogService
             $callLog->setEndpoint(!empty($endpoint) ? $endpoint : null);
             $this->stopwatch->stop('setEndpoint(getEndpointFromSession)'.$stopWatchNumber);
 
-            $this->stopwatch->start('setEntitySource(getEntitySourceFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");
             if ($this->session->get('entitySource')) {
+                $this->stopwatch->start('getEntitySourceFromSession'.$stopWatchNumber, "saveLog$stopWatchNumber");
                 $sessionInfo = $this->session->get('entitySource');
+                $this->stopwatch->stop('getEntitySourceFromSession'.$stopWatchNumber);
+                $this->stopwatch->start('getEntitySourceFromDB'.$stopWatchNumber, "saveLog$stopWatchNumber");
                 $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $sessionInfo['entity']]);
                 $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $sessionInfo['source']]);
+                $this->stopwatch->stop('getEntitySourceFromDB'.$stopWatchNumber);
             }
+            $this->stopwatch->start('setEntitySource'.$stopWatchNumber, "saveLog$stopWatchNumber");
             $callLog->setEntity(!empty($entity) ? $entity : null);
             $callLog->setGateway(!empty($source) ? $source : null);
-            $this->stopwatch->stop('setEntitySource(getEntitySourceFromSession)'.$stopWatchNumber);
+            $this->stopwatch->stop('setEntitySource'.$stopWatchNumber);
 
             $this->stopwatch->start('setHandler(getHandlerFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");
             if ($this->session->get('handler')) {
