@@ -402,37 +402,37 @@ class ObjectEntityService
                 }
                 $this->stopwatch->stop('validateData-POST');
 
-                $this->stopwatch->start('saveObject-POST', 'handleObject');
-                $object = $this->saveObject($object, $data);
-                $this->entityManager->persist($object);
-                $this->entityManager->flush();
-                $data['id'] = $object->getId()->toString();
-                $this->stopwatch->stop('saveObject-POST');
+//                $this->stopwatch->start('saveObject-POST', 'handleObject');
+//                $object = $this->saveObject($object, $data);
+//                $this->entityManager->persist($object);
+//                $this->entityManager->flush();
+//                $data['id'] = $object->getId()->toString();
+//                $this->stopwatch->stop('saveObject-POST');
 
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
-//                $this->stopwatch->start('validateEntity-POST', 'handleObject');
-//                $this->validationService->setRequest($this->request);
-//                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-//                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-//                //                $this->validationService->removeObjectsOnPut = []; // to be sure
-//                $object = $this->validationService->validateEntity($object, $data);
-//                if (!empty($this->validationService->promises)) {
-//                    Utils::settle($this->validationService->promises)->wait();
-//
-//                    foreach ($this->validationService->promises as $promise) {
-//                        echo $promise->wait();
-//                    }
-//                }
-//                $this->entityManager->persist($object);
-//                $this->entityManager->flush();
-//                $data['id'] = $object->getId()->toString();
-//                if ($object->getHasErrors()) {
-//                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-//                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-//                }
-//                $this->stopwatch->stop('validateEntity-POST');
+                $this->stopwatch->start('validateEntity-POST', 'handleObject');
+                $this->validationService->setRequest($this->request);
+                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                //                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $object = $this->validationService->validateEntity($object, $data);
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
+                $this->entityManager->persist($object);
+                $this->entityManager->flush();
+                $data['id'] = $object->getId()->toString();
+                if ($object->getHasErrors()) {
+                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
+                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+                }
+                $this->stopwatch->stop('validateEntity-POST');
 
                 //todo: -end- old code...
 
