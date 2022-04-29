@@ -10,6 +10,7 @@
         "ext-iconv": "*",
         "adbario/php-dot-notation": "^3",
         "api-platform/core": "^2.6",
+        "beberlei/doctrineextensions": "^1.3",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",
         "conduction/digidbundle": "dev-feature-jwt",

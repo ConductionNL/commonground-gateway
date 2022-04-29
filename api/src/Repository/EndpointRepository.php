@@ -4,7 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Endpoint;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
+use function Doctrine\ORM\QueryBuilder;
 
 /**
  * @method Endpoint|null find($id, $lockMode = null, $lockVersion = null)
@@ -17,6 +19,28 @@ class EndpointRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Endpoint::class);
+    }
+
+    /**
+     * @TODO
+     *
+     * @param string $method
+     * @param string $path
+     *
+     * @return Endpoint|null
+     *
+     * @throws NonUniqueResultException
+     */
+    public function findByMethodRegex(string $method, string $path): ?Endpoint
+    {
+        $query = $this->createQueryBuilder('e')
+            ->andWhere('e.method = :method')
+            ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
+            ->setParameters(['method' => $method, 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+
+        return $query
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     /**

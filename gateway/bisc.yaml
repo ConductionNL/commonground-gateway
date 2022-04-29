@@ -1807,23 +1807,23 @@ App\Entity\Document:
 
 # Parameters for endpoint regex
 parameters:
-    userItemRegex: "#^(users/[^/]*)$#"
-    userGroupItemRegex: "#^(user_groups/[^/]*)$#"
-    organizationItemRegex: "#^(organizations/[^/]*)$#"
-    emailItemRegex: "#^(emails/[^/]*)$#"
-    telephoneItemRegex: "#^(telephones/[^/]*)$#"
-    addressItemRegex: "#^(addresses/[^/]*)$#"
-    personItemRegex: "#^(people/[^/]*)$#"
-    employeeItemRegex: "#^(employees/[^/]*)$#"
-    studentItemRegex: "#^(students/[^/]*)$#"
-    learningNeedItemRegex: "#^(learning_needs/[^/]*)$#"
-    learningResultItemRegex: "#^(learning_results/[^/]*)$#"
-    participationItemRegex: "#^(participations/[^/]*)$#"
-    testResultItemRegex: "#^(test_results/[^/]*)$#"
-    documentItemRegex: "#^(documents/[^/]*)$#"
-    contactMomentItemRegex: "#^(contact_moments/[^/]*)$#"
-    postalCodeItemRegex: "#^(postal_codes/[^/]*)$#"
-    shareStudentItemRegex: "#^(share_students/[^/]*)$#"
+    userItemRegex: '^users/[a-z0-9-]{36}$'
+    userGroupItemRegex: '^user_groups/[a-z0-9-]{36}$'
+    organizationItemRegex: '^organizations/[a-z0-9-]{36}$'
+    emailItemRegex: '^emails/[a-z0-9-]{36}$'
+    telephoneItemRegex: '^telephones/[a-z0-9-]{36}$'
+    addressItemRegex: '^addresses/[a-z0-9-]{36}$'
+    personItemRegex: '^people/[a-z0-9-]{36}$'
+    employeeItemRegex: '^employees/[a-z0-9-]{36}$'
+    studentItemRegex: '^students/[a-z0-9-]{36}$'
+    learningNeedItemRegex: '^learning_needs/[a-z0-9-]{36}$'
+    learningResultItemRegex: '^learning_results/[a-z0-9-]{36}$'
+    participationItemRegex: '^participations/[a-z0-9-]{36}$'
+    testResultItemRegex: '^test_results/[a-z0-9-]{36}$'
+    documentItemRegex: '^documents/[a-z0-9-]{36}$'
+    contactMomentItemRegex: '^contact_moments/[a-z0-9-]{36}$'
+    postalCodeItemRegex: '^postal_codes/[a-z0-9-]{36}$'
+    shareStudentItemRegex: '^share_students/[a-z0-9-]{36}$'
 
 
 # Endpoints
@@ -1833,7 +1833,7 @@ App\Entity\Endpoint:
         name: User endpoint get collection
         description: endpoint voor het ophalen van alles users
         path: ['users']
-        pathRegex: "#^(users)$#"
+        pathRegex: "^(users)$"
         method: GET
         operationType: collection
         
@@ -1841,7 +1841,7 @@ App\Entity\Endpoint:
         name: User endpoint post
         description: endpoint voor het toevoegen van een nieuwe user
         path: [ 'users' ]
-        pathRegex: "#^(users)$#"
+        pathRegex: "^(users)$"
         method: POST
         operationType: collection
 
@@ -1874,7 +1874,7 @@ App\Entity\Endpoint:
         name: UserGroup endpoint get collection
         description: endpoint voor het ophalen van alles userGroups
         path: ['user_groups']
-        pathRegex: "#^(user_groups)$#"
+        pathRegex: "^(user_groups)$"
         method: GET
         operationType: collection
     
@@ -1882,7 +1882,7 @@ App\Entity\Endpoint:
         name: UserGroup endpoint post
         description: endpoint voor het toevoegen van een nieuwe userGroup
         path: [ 'user_groups' ]
-        pathRegex: "#^(user_groups)$#"
+        pathRegex: "^(user_groups)$"
         method: POST
         operationType: collection
 
@@ -1915,7 +1915,7 @@ App\Entity\Endpoint:
         name: Organization endpoint get collection
         description: endpoint for organizations
         path: [ 'organizations' ]
-        pathRegex: "#^(organizations)$#"
+        pathRegex: "^organizations$"
         method: GET
         operationType: collection
 
@@ -1923,7 +1923,7 @@ App\Entity\Endpoint:
         name: Organization endpoint post
         description: endpoint for organizations
         path: [ 'organizations' ]
-        pathRegex: "#^(organizations)$#"
+        pathRegex: "^organizations$"
         method: POST
         operationType: collection
 
@@ -1956,7 +1956,7 @@ App\Entity\Endpoint:
         name: Email endpoint get collection
         description: endpoint for emails
         path: [ 'emails' ]
-        pathRegex: "#^(emails)$#"
+        pathRegex: "^(emails)$"
         method: GET
         operationType: collection
 
@@ -1964,7 +1964,7 @@ App\Entity\Endpoint:
         name: Email endpoint post
         description: endpoint for emails
         path: [ 'emails' ]
-        pathRegex: "#^(emails)$#"
+        pathRegex: "^(emails)$"
         method: POST
         operationType: collection
 
@@ -1997,7 +1997,7 @@ App\Entity\Endpoint:
         name: Telephone endpoint get collection
         description: endpoint for telephones
         path: [ 'telephones' ]
-        pathRegex: "#^(telephones)$#"
+        pathRegex: "^(telephones)$"
         method: GET
         operationType: collection
 
@@ -2005,7 +2005,7 @@ App\Entity\Endpoint:
         name: Telephone endpoint post
         description: endpoint for telephones
         path: [ 'telephones' ]
-        pathRegex: "#^(telephones)$#"
+        pathRegex: "^(telephones)$"
         method: POST
         operationType: collection
 
@@ -2038,7 +2038,7 @@ App\Entity\Endpoint:
         name: Address endpoint get collection
         description: endpoint for addresses
         path: [ 'addresses' ]
-        pathRegex: "#^(addresses)$#"
+        pathRegex: "^(addresses)$"
         method: GET
         operationType: collection
 
@@ -2046,7 +2046,7 @@ App\Entity\Endpoint:
         name: Address endpoint post
         description: endpoint for addresses
         path: [ 'addresses' ]
-        pathRegex: "#^(addresses)$#"
+        pathRegex: "^(addresses)$"
         method: POST
         operationType: collection
 
@@ -2079,7 +2079,7 @@ App\Entity\Endpoint:
         name: Person endpoint get collection
         description: endpoint for people
         path: [ 'people' ]
-        pathRegex: "#^(people)$#"
+        pathRegex: "^(people)$"
         method: GET
         operationType: collection
 
@@ -2087,7 +2087,7 @@ App\Entity\Endpoint:
         name: Person endpoint post
         description: endpoint for people
         path: [ 'people' ]
-        pathRegex: "#^(people)$#"
+        pathRegex: "^(people)$"
         method: POST
         operationType: collection
 
@@ -2120,7 +2120,7 @@ App\Entity\Endpoint:
         name: employee endpoint get collection
         description: endpoint voor het ophalen van alle employees
         path: ['employees']
-        pathRegex: "#^(employees)$#"
+        pathRegex: "^(employees)$"
         method: GET
         operationType: collection
     
@@ -2128,7 +2128,7 @@ App\Entity\Endpoint:
         name: employee endpoint post
         description: endpoint voor het toevoegen van een nieuwe employee
         path: [ 'employees' ]
-        pathRegex: "#^(employees)$#"
+        pathRegex: "^(employees)$"
         method: POST
         operationType: collection
 
@@ -2161,7 +2161,7 @@ App\Entity\Endpoint:
         name: student endpoint get collection
         description: endpoint voor het ophalen van alle students
         path: ['students']
-        pathRegex: "#^(students)$#"
+        pathRegex: "^(students)$"
         method: GET
         operationType: collection
     
@@ -2169,7 +2169,7 @@ App\Entity\Endpoint:
         name: student endpoint post
         description: endpoint voor het toevoegen van een nieuwe student
         path: [ 'students' ]
-        pathRegex: "#^(students)$#"
+        pathRegex: "^(students)$"
         method: POST
         operationType: collection
 
@@ -2202,7 +2202,7 @@ App\Entity\Endpoint:
         name: learningNeed endpoint get collection
         description: endpoint voor het ophalen van alle learningNeeds
         path: ['learning_needs']
-        pathRegex: "#^(learning_needs)$#"
+        pathRegex: "^(learning_needs)$"
         method: GET
         operationType: collection
         
@@ -2210,7 +2210,7 @@ App\Entity\Endpoint:
         name: learningNeed endpoint post
         description: endpoint voor het toevoegen van een nieuwe learningNeed
         path: [ 'learning_needs' ]
-        pathRegex: "#^(learning_needs)$#"
+        pathRegex: "^(learning_needs)$"
         method: POST
         operationType: collection
 
@@ -2243,7 +2243,7 @@ App\Entity\Endpoint:
         name: learningResult endpoint get collection
         description: endpoint voor het ophalen van alle learningResults
         path: ['learning_results']
-        pathRegex: "#^(learning_results)$#"
+        pathRegex: "^(learning_results)$"
         method: GET
         operationType: collection
         
@@ -2251,7 +2251,7 @@ App\Entity\Endpoint:
         name: learningResult endpoint post
         description: endpoint voor het toevoegen van een nieuwe learningResult
         path: [ 'learning_results' ]
-        pathRegex: "#^(learning_results)$#"
+        pathRegex: "^(learning_results)$"
         method: POST
         operationType: collection
 
@@ -2284,7 +2284,7 @@ App\Entity\Endpoint:
         name: participation endpoint get collection
         description: endpoint voor het ophalen van alle participations
         path: ['participations']
-        pathRegex: "#^(participations)$#"
+        pathRegex: "^(participations)$"
         method: GET
         operationType: collection
         
@@ -2292,7 +2292,7 @@ App\Entity\Endpoint:
         name: participation endpoint post
         description: endpoint voor het toevoegen van een nieuwe participation
         path: [ 'participations' ]
-        pathRegex: "#^(participations)$#"
+        pathRegex: "^(participations)$"
         method: POST
         operationType: collection
 
@@ -2325,7 +2325,7 @@ App\Entity\Endpoint:
         name: shareStudent endpoint get collection
         description: endpoint voor het ophalen van alle shareStudents
         path: ['share_students']
-        pathRegex: "#^(share_students)$#"
+        pathRegex: "^(share_students)$"
         method: GET
         operationType: collection
         
@@ -2333,7 +2333,7 @@ App\Entity\Endpoint:
         name: shareStudent endpoint post
         description: endpoint voor het toevoegen van een nieuwe shareStudent
         path: [ 'share_students' ]
-        pathRegex: "#^(share_students)$#"
+        pathRegex: "^(share_students)$"
         method: POST
         operationType: collection
 
@@ -2366,7 +2366,7 @@ App\Entity\Endpoint:
         name: testResult endpoint get collection
         description: endpoint voor het ophalen van alle testResults
         path: ['test_results']
-        pathRegex: "#^(test_results)$#"
+        pathRegex: "^(test_results)$"
         method: GET
         operationType: collection
         
@@ -2374,7 +2374,7 @@ App\Entity\Endpoint:
         name: testResult endpoint post
         description: endpoint voor het toevoegen van een nieuwe testResult
         path: [ 'test_results' ]
-        pathRegex: "#^(test_results)$#"
+        pathRegex: "^(test_results)$"
         method: POST
         operationType: collection
 
@@ -2407,7 +2407,7 @@ App\Entity\Endpoint:
         name: document endpoint get collection
         description: endpoint voor het ophalen van alles documents
         path: ['documents']
-        pathRegex: "#^(documents)$#"
+        pathRegex: "^(documents)$"
         method: GET
         operationType: collection
         
@@ -2415,7 +2415,7 @@ App\Entity\Endpoint:
         name: document endpoint post
         description: endpoint voor het toevoegen van een nieuwe document
         path: [ 'documents' ]
-        pathRegex: "#^(documents)$#"
+        pathRegex: "^(documents)$"
         method: POST
         operationType: collection
 
@@ -2448,7 +2448,7 @@ App\Entity\Endpoint:
         name: contactMoment endpoint get collection
         description: endpoint voor het ophalen van alle contactMoments
         path: ['contact_moments']
-        pathRegex: "#^(contact_moments)$#"
+        pathRegex: "^(contact_moments)$"
         method: GET
         operationType: collection
         
@@ -2456,7 +2456,7 @@ App\Entity\Endpoint:
         name: contactMoment endpoint post
         description: endpoint voor het toevoegen van een nieuwe contactMoment
         path: [ 'contact_moments' ]
-        pathRegex: "#^(contact_moments)$#"
+        pathRegex: "^(contact_moments)$"
         method: POST
         operationType: collection
 
@@ -2489,7 +2489,7 @@ App\Entity\Endpoint:
         name: postalCode endpoint get collection
         description: endpoint voor het ophalen van alles postalCodes
         path: ['postal_codes']
-        pathRegex: "#^(postal_codes)$#"
+        pathRegex: "^(postal_codes)$"
         method: GET
         operationType: collection
         
@@ -2497,7 +2497,7 @@ App\Entity\Endpoint:
         name: postalCode endpoint post
         description: endpoint voor het toevoegen van een nieuwe postalCode
         path: [ 'postal_codes' ]
-        pathRegex: "#^(postal_codes)$#"
+        pathRegex: "^(postal_codes)$"
         method: POST
         operationType: collection
 
