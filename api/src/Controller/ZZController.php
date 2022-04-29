@@ -125,7 +125,7 @@ class ZZController extends AbstractController
                     ['content-type' => 'json']
                 );
             }
-            $logService->saveLog($request, $response);
+            $logService->saveLog($request, $response, 10);
             $processingLogService->saveProcessingLog();
 
             return $response->prepare($request);

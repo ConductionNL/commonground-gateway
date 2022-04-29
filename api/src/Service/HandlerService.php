@@ -215,9 +215,9 @@ class HandlerService
         }
 
         // Update current Log
-        $this->stopwatch->start('saveLog', 'handleHandler');
-        isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
-        $this->stopwatch->stop('saveLog');
+        $this->stopwatch->start('saveLog0', 'handleHandler');
+        isset($data) ? $this->logService->saveLog($this->request, null, 0, json_encode($data)) : $this->logService->saveLog($this->request, null, 0, null);
+        $this->stopwatch->stop('saveLog0');
 
         // Only do mapping and translation -in for calls with body
         $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
@@ -256,7 +256,7 @@ class HandlerService
 
             // Update current Log
             $this->stopwatch->start('saveLog2', 'handleHandler');
-            $this->logService->saveLog($this->request, null, json_encode($data));
+            $this->logService->saveLog($this->request, null, 2, json_encode($data));
             $this->stopwatch->stop('saveLog2');
 
             $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
@@ -266,7 +266,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog3', 'handleHandler');
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->logService->saveLog($this->request, null, 3, json_encode($data));
         $this->stopwatch->stop('saveLog3');
 
         // An lastly we want to create a response
@@ -276,7 +276,7 @@ class HandlerService
 
         // Final update Log
         $this->stopwatch->start('saveLog4', 'handleHandler');
-        $this->logService->saveLog($this->request, $response, null, true);
+        $this->logService->saveLog($this->request, $response, 4, null, true);
         $this->stopwatch->stop('saveLog4');
 
         $this->stopwatch->start('saveProcessingLog', 'handleHandler');
@@ -501,7 +501,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog5', 'handleDataBeforeEAV');
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->logService->saveLog($this->request, null, 5, json_encode($data));
         $this->stopwatch->stop('saveLog5');
 
         // The we want to do translations on the incomming request
@@ -517,7 +517,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->logService->saveLog($this->request, null, 6, json_encode($data));
         $this->stopwatch->stop('saveLog6');
 
         return $data;
@@ -538,7 +538,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog7', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->logService->saveLog($this->request, null, 7, json_encode($data));
         $this->stopwatch->stop('saveLog7');
 
         // The we want to do  translations on the outgoing response
@@ -554,7 +554,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->logService->saveLog($this->request, null, 8, json_encode($data));
         $this->stopwatch->stop('saveLog8');
 
         // Lets see if we need te use a template

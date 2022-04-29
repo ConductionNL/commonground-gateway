@@ -8,36 +8,45 @@ use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class LogService
 {
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
+    private Stopwatch $stopwatch;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        SessionInterface $session
+        SessionInterface $session,
+        Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request       $request   The request to fill this Log with.
-     * @param Response|null $response  The response to fill this Log with.
-     * @param string|null   $content   The content to fill this Log with if there is no response.
-     * @param bool|null     $finalSave
-     * @param string        $type
+     * @param Request $request The request to fill this Log with.
+     * @param Response|null $response The response to fill this Log with.
+     * @param int $stopWatchNumber Any number, used to keep stopwatch categories apart from each other.
+     * @param string|null $content The content to fill this Log with if there is no response.
+     * @param bool|null $finalSave
+     * @param string $type
      *
      * @return Log
      */
-    public function saveLog(Request $request, Response $response = null, string $content = null, bool $finalSave = null, string $type = 'in'): Log
+    public function saveLog(Request $request, Response $response = null, int $stopWatchNumber = 0, string $content = null, bool $finalSave = null, string $type = 'in'): Log
     {
+        $this->stopwatch->start('getRepository(App:Log)'.$stopWatchNumber, "saveLog$stopWatchNumber");
         $logRepo = $this->entityManager->getRepository('App:Log');
+        $this->stopwatch->stop('getRepository(App:Log)'.$stopWatchNumber);
 
+        $this->stopwatch->start('getCallIdFromSession+getExistingLog'.$stopWatchNumber, "saveLog$stopWatchNumber");
         $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), 'type' => $type]) : $existingLog = null;
+        $this->stopwatch->stop('getCallIdFromSession+getExistingLog'.$stopWatchNumber);
 
         $existingLog ? $callLog = $existingLog : $callLog = new Log();
 
@@ -70,25 +79,34 @@ class LogService
 
         if ($this->session) {
             // add before removing
+            $this->stopwatch->start('setCallId+sessionId'.$stopWatchNumber, "saveLog$stopWatchNumber");
             $callLog->setCallId($this->session->get('callId'));
             $callLog->setSession($this->session->getId());
+            $this->stopwatch->stop('setCallId+sessionId'.$stopWatchNumber);
 
+            $this->stopwatch->start('setEndpoint(getEndpointFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");
             if ($this->session->get('endpoint')) {
                 $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
             }
             $callLog->setEndpoint(!empty($endpoint) ? $endpoint : null);
-            if ($this->session->get('entity')) {
-                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')]);
+            $this->stopwatch->stop('setEndpoint(getEndpointFromSession)'.$stopWatchNumber);
+
+            $this->stopwatch->start('setEntitySource(getEntitySourceFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");
+            if ($this->session->get('entitySource')) {
+                $sessionInfo = $this->session->get('entitySource');
+                $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $sessionInfo['entity']]);
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $sessionInfo['source']]);
             }
             $callLog->setEntity(!empty($entity) ? $entity : null);
-            if ($this->session->get('source')) {
-                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->session->get('source')]);
-            }
             $callLog->setGateway(!empty($source) ? $source : null);
+            $this->stopwatch->stop('setEntitySource(getEntitySourceFromSession)'.$stopWatchNumber);
+
+            $this->stopwatch->start('setHandler(getHandlerFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");
             if ($this->session->get('handler')) {
                 $handler = $this->entityManager->getRepository('App:Handler')->findOneBy(['id' => $this->session->get('handler')]);
             }
             $callLog->setHandler(!empty($handler) ? $handler : null);
+            $this->stopwatch->stop('setHandler(getHandlerFromSession)'.$stopWatchNumber);
 
             // remove before setting the session values
 //            if ($finalSave === true) {
@@ -110,8 +128,10 @@ class LogService
             // unset($sessionValues['applications']);
             // $callLog->setSessionValues($sessionValues);
         }
+        $this->stopwatch->start('PersistFlush'.$stopWatchNumber, "saveLog$stopWatchNumber");
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
+        $this->stopwatch->stop('PersistFlush'.$stopWatchNumber);
 
         return $callLog;
     }

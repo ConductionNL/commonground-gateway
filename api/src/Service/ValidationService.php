@@ -1676,7 +1676,7 @@ class ValidationService
         }
         // log hier
         $logPost = !is_string($post) ? json_encode($post) : $post;
-        $this->logService->saveLog($this->logService->makeRequest(), null, $logPost, null, 'out');
+        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $logPost, null, 'out');
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
@@ -1743,7 +1743,7 @@ class ValidationService
 
                 $responseLog = new Response(json_encode($result), 201, []);
                 // log hier
-                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($result), null, 'out');
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 13, json_encode($result), null, 'out');
 
                 // Notify notification component
                 $this->notifications[] = [
@@ -1778,7 +1778,7 @@ class ValidationService
                 } else {
                     $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
                 }
-                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $error_message, null, 'out');
+                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
                 $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'.$log->getId().') for a full error report');
             }

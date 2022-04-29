@@ -198,7 +198,7 @@ class ConvertToGatewayService
                 $content = $response->getBody()->getContents();
                 $status = $response->getStatusCode();
                 $responseLog = new Response($content, $status, $entity->getGateway()->getHeaders());
-                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $content, null, 'out');
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 9, $content, null, 'out');
 
                 $body = json_decode($content, true);
                 if (array_key_exists('envelope', $entity->getItemConfig())) {

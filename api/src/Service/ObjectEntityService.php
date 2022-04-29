@@ -299,10 +299,11 @@ class ObjectEntityService
         $this->stopwatch->stop('getEntity');
 
         $this->stopwatch->start('saveEntity+SourceInSession', 'handleObject');
-        $this->session->set('entity', $entity->getId()->toString());
-        if ($entity->getGateway()) {
-            $this->session->set('source', $entity->getGateway()->getId()->toString());
-        }
+        $sessionInfo= [
+            'entity' => $entity->getId()->toString(),
+            'source' => $entity->getGateway() ? $entity->getGateway()->getId()->toString() : null
+        ];
+        $this->session->set('entitySource', $sessionInfo);
         $this->stopwatch->stop('saveEntity+SourceInSession');
 
         // Check ID
