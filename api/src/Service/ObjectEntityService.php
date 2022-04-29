@@ -353,18 +353,18 @@ class ObjectEntityService
 
         switch ($method) {
             case 'GET':
-                // get object
-
-                // if id get single object
-
                 //todo: -start- old code...
                 //TODO: old code for getting an ObjectEntity
 
                 // Lets allow for filtering specific fields
+                $this->stopwatch->start('getRequestFields', 'handleObject');
                 $fields = $this->eavService->getRequestFields($this->request);
+                $this->stopwatch->stop('getRequestFields');
                 if (isset($object)) {
                     if ($object instanceof ObjectEntity) {
+                        $this->stopwatch->start('handleGet', 'handleObject');
                         $data = $this->eavService->handleGet($object, $fields);
+                        $this->stopwatch->stop('handleGet');
                         if ($object->getHasErrors()) {
                             $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
                             $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
@@ -373,11 +373,15 @@ class ObjectEntityService
                         $data['error'] = $object;
                     }
                 } else {
+                    $this->stopwatch->start('handleSearch', 'handleObject');
                     $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+                    $this->stopwatch->stop('handleSearch');
                     //todo: -end- old code...
 
                     if ($this->session->get('endpoint')) {
+                        $this->stopwatch->start('getEndpointFromDB', 'handleObject');
                         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+                        $this->stopwatch->stop('getEndpointFromDB');
                         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                             $data = $data['results'][0];
                             if (isset($data['id']) && Uuid::isValid($data['id'])) {
@@ -391,25 +395,24 @@ class ObjectEntityService
 
                 break;
             case 'POST':
-
-                $this->stopwatch->start('validateData-POST', 'handleObject');
                 // validate
+                $this->stopwatch->start('validateData-POST', 'handleObject');
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
                 $this->stopwatch->stop('validateData-POST');
 
-                $this->stopwatch->start('saveObject', 'handleObject');
+                $this->stopwatch->start('saveObject-POST', 'handleObject');
                 $object = $this->saveObject($object, $data);
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
-                $this->stopwatch->stop('saveObject');
+                $this->stopwatch->stop('saveObject-POST');
 
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
-//                $this->stopwatch->start('validateEntity', 'handleObject');
+//                $this->stopwatch->start('validateEntity-POST', 'handleObject');
 //                $this->validationService->setRequest($this->request);
 //                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
 //                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
@@ -429,24 +432,26 @@ class ObjectEntityService
 //                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
 //                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
 //                }
-//                $this->stopwatch->stop('validateEntity');
+//                $this->stopwatch->stop('validateEntity-POST');
 
                 //todo: -end- old code...
 
                 break;
             case 'PUT':
             case 'PATCH':
-                // get object
-
                 // validate
+                $this->stopwatch->start('validateData-PUT', 'handleObject');
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
+                $this->stopwatch->stop('validateData-PUT');
+
                 // put object
 
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
+                $this->stopwatch->start('validateEntity-PUT', 'handleObject');
                 $this->validationService->setRequest($this->request);
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
@@ -466,22 +471,23 @@ class ObjectEntityService
                     $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
+                $this->stopwatch->stop('validateEntity-PUT');
 
                 //todo: -end- old code...
 
                 break;
             case 'DELETE':
-                // get object
-
                 // delete object
 
                 //todo: -start- old code...
                 //TODO: old code for deleting an ObjectEntity
 
+                $this->stopwatch->start('handleDelete', 'handleObject');
                 $data = $this->eavService->handleDelete($object);
                 if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
                     throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
                 }
+                $this->stopwatch->stop('handleDelete');
 
                 //todo: -end- old code...
 
