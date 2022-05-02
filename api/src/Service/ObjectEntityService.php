@@ -18,6 +18,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,8 +38,9 @@ class ObjectEntityService
     private CommonGroundService $commonGroundService;
     private ResponseService $responseService;
     private Stopwatch $stopwatch;
+    private FunctionService $functionService;
 
-    // todo: we need functionService & convertToGatewayService in this service for the saveObject function, add them somehow or move code to other services...
+    // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     public function __construct(
         TokenStorageInterface $tokenStorage,
         RequestStack $requestStack,
@@ -49,7 +51,8 @@ class ObjectEntityService
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
         ResponseService $responseService,
-        Stopwatch $stopwatch
+        Stopwatch $stopwatch,
+        CacheInterface $cache
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -61,6 +64,7 @@ class ObjectEntityService
         $this->commonGroundService = $commonGroundService;
         $this->responseService = $responseService;
         $this->stopwatch = $stopwatch;
+        $this->functionService = new FunctionService($cache, $commonGroundService, $this);
     }
 
     /**
@@ -436,6 +440,14 @@ class ObjectEntityService
                         echo $promise->wait();
                     }
                 }
+                if ($method == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $data)) {
+                    if (!$object->getUri()) {
+                        // Lets make sure we always set the uri
+                        $this->entityManager->persist($object); // So the object has an id to set with createUri...
+                        $object->setUri($this->createUri($object));
+                    }
+                    $object = $this->functionService->createOrganization($object, $object->getUri(), $data['type']);
+                }
                 $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
@@ -716,13 +728,12 @@ class ObjectEntityService
                         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
                         $subObject->setApplication(!empty($application) ? $application : null);
                     }
-                    // todo: add functionService somehow
-//                    $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
-//                        'method'           => $this->request->getMethod(),
-//                        'uri'              => $subObject->getUri(),
-//                        'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
-//                        'userGroupName'    => array_key_exists('name', $object) ? $object['name'] : null,
-//                    ]);
+                    $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
+                        'method'           => $this->request->getMethod(),
+                        'uri'              => $subObject->getUri(),
+                        'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
+                        'userGroupName'    => array_key_exists('name', $object) ? $object['name'] : null,
+                    ]);
 
                     // object toevoegen
                     $saveSubObjects->add($subObject);
@@ -858,8 +869,7 @@ class ObjectEntityService
                     $subObject->addSubresourceOf($valueObject);
                     if ($attribute->getObject()->getFunction() === 'organization') {
                         $this->entityManager->persist($subObject);
-                        // todo: add functionService somehow
-//                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }

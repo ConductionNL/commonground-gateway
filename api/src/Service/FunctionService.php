@@ -80,7 +80,7 @@ class FunctionService
             // Invalidate all changed & related organizations from cache
             if (!empty($organization)) {
                 $tags = ['organization_'.md5($uri)];
-                if (count($organization['subOrganizations']) > 0) {
+                if (array_key_exists('subOrganizations', $organization) && count($organization['subOrganizations']) > 0) {
                     foreach ($organization['subOrganizations'] as $subOrganization) {
                         $tags[] = 'organization_'.md5($subOrganization['@id']);
                     }

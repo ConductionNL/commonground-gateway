@@ -403,14 +403,15 @@ App\Entity\Attribute:
         maxLength: 255
         mustBeUnique: true
         entity: "@organization"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         searchable: true
-    organization_description:
-        name: description
-        description: The description of this organization.
-        type: string
-        maxLength: 255
-        entity: "@organization"
+    # todo: put back after removing cc dependency:
+#    organization_description:
+#        name: description
+#        description: The description of this organization.
+#        type: string
+#        maxLength: 255
+#        entity: "@organization"
     organization_type:
         name: type
         description: To be able to differentiat between organizations we need to know what kind of organization they are. The type attribute descirbes what kind of organization this is.
@@ -418,7 +419,7 @@ App\Entity\Attribute:
         required: true
         enum: ["taalhuis", "bisc", "verwijzer", "aanbieder", "team"]
         entity: "@organization"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         searchable: true
         immutable: true
     organization_parentOrganization:
@@ -427,7 +428,7 @@ App\Entity\Attribute:
         type: object
         entity: "@organization"
         object: "@organization"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         searchable: true
         immutable: true
 #        requiredIf:
@@ -440,7 +441,7 @@ App\Entity\Attribute:
         multiple: true
         entity: "@organization"
         object: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         cascade: true
         cascadeDelete: true
     organization_telephones:
@@ -450,7 +451,7 @@ App\Entity\Attribute:
         multiple: true
         entity: "@organization"
         object: "@telephone"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         cascade: true
         cascadeDelete: true
     organization_emails:
@@ -461,7 +462,7 @@ App\Entity\Attribute:
         mustBeUnique: true
         entity: "@organization"
         object: "@email"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         cascade: true
         cascadeDelete: true
     organization_members:
@@ -501,7 +502,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@email"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     email_email:
         name: email
         type: string
@@ -511,7 +512,7 @@ App\Entity\Attribute:
         mustBeUnique: true
         caseSensitive: false
         entity: "@email"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     
     # Not unique Email
     notUniqueEmail_name:
@@ -519,7 +520,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@notUniqueEmail"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     notUniqueEmail_email:
         name: email
         type: string
@@ -527,7 +528,7 @@ App\Entity\Attribute:
         required: true
         format: email
         entity: "@notUniqueEmail"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
 
     #Telephone
     telephone_name:
@@ -535,7 +536,7 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@telephone"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     telephone_telephone:
         name: telephone
         type: string
@@ -543,7 +544,7 @@ App\Entity\Attribute:
         required: true
         format: phone
         entity: "@telephone"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
 
     # Address
     address_name:
@@ -551,33 +552,33 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     address_street:
         name: street
         type: string
         maxLength: 255
         required: true
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     address_houseNumber:
         name: houseNumber
         type: string
         maxLength: 255
         required: true
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     address_houseNumberSuffix:
         name: houseNumberSuffix
         type: string
         maxLength: 255
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     address_postalCode:
         name: postalCode
         type: string
         maxLength: 255
         required: true
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
         entity: "@address"
     address_locality:
         name: locality
@@ -585,14 +586,14 @@ App\Entity\Attribute:
         maxLength: 255
         required: true
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     address_country:
         name: country
         type: string
         format: countryCode
         maxLength: 255
         entity: "@address"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
 
     # Person Properties
     person_givenName:
@@ -601,25 +602,25 @@ App\Entity\Attribute:
         maxLength: 255
         required: true;
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_additionalName:
         name: additionalName
         type: string
         maxLength: 255
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_familyName:
         name: familyName
         type: string
         maxLength: 255
         entity: "@person"
         required: true
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_birthday:
         name: birthday
         type: date
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_birthplace:
         name: birthplace
         type: string
@@ -632,26 +633,26 @@ App\Entity\Attribute:
         format: countryCode
         maxLength: 255
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_gender:
         name: gender
         type: string
         enum: ["Male", "Female", "X"]
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_maritalStatus:
         name: maritalStatus
         type: string
         enum: ["MARRIED_PARTNER", "SINGLE", "DIVORCED", "WIDOW"]
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_primaryLanguage:
         name: primaryLanguage
         type: string
         #        format: countryCode #TODO: do we want this here? (Lifely just wants a string¿)
         maxLength: 255
         entity: "@person"
-#        persistToGateway: true
+        persistToGateway: true # todo: remove after removing cc dependency:
     person_speakingLanguages:
         name: speakingLanguages
         type: string
