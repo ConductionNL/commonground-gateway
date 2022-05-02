@@ -19,12 +19,13 @@ App\Entity\Gateway:
         apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
         location: https://taalhuizen-bisc.commonground.nu/api/v1/edu
         documentation: https://raw.githubusercontent.com/ConductionNL/education-component/master/api/public/schema/openapi.yaml
-#    contacten_api:
-#        name: contacten component
-#        auth: apikey
-#        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
-#        location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
-#        documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
+    # todo: remove cc dependency:
+    contacten_api:
+        name: contacten component
+        auth: apikey
+        apikey: 8b55691f-346d-423c-bdcf-3f5365806d39
+        location: https://taalhuizen-bisc.commonground.nu/api/v1/cc
+        documentation: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
     mrc_api:
         name: medewerker catalogus
         auth: apikey
@@ -86,116 +87,122 @@ App\Entity\Entity:
         route: "/api/organizations"
         name: organizations
         description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "organizations"
         inherited: true
-#        # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
-#        # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
-#        availableProperties:
-#            - name
-#            - type
-#            - telephones
-#            - addresses
-#            - emails
-#            - parentOrganization
-#        # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
-#        # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
-#        usedProperties:
-#            - name
-#            - type
-#            - telephones
-#            - addresses
-#            - emails
-#            - parentOrganization
-#            - members
-#            - languageHouse_postalCodes
-#            - team_postalCodes
+        # todo: remove availableProperties & usedProperties if we remove cc dependency
+        # (if usedProperties is set) availableProperties could just be : [], would do the same as current list, because all of these attributes are persistToGateway = true
+        # availableProperties = properties we want to get from external object (what we want to show in post/put responses)
+        availableProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
+            - parentOrganization
+        # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
+        # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
+        usedProperties:
+            - name
+            - type
+            - telephones
+            - addresses
+            - emails
+            - parentOrganization
+            - members
+            - languageHouse_postalCodes
+            - team_postalCodes
 
     #Email Object
     email:
         name: email
         description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres moet uniek zijn.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "emails"
-#        availableProperties:
-#            - name
-#            - email
+        # todo: remove availableProperties if we remove cc dependency
+        availableProperties:
+            - name
+            - email
     
     #notUniqueEmail Object
     notUniqueEmail:
         name: email
         description: Dit object beschrijft een email-adres welke gekoppeld kan worden aan een persoon of organisatie. Dit email-adres hoeft niet uniek te zijn.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "emails"
-#        availableProperties:
-#            - name
-#            - email
+        # todo: remove availableProperties if we remove cc dependency
+        availableProperties:
+            - name
+            - email
 
     #Telefoon Object
     telephone:
         name: telephone
         description: Dit object beschrijft een telefoonnummer welke gekoppeld kan worden aan een persoon of organisatie.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "telephones"
-#        availableProperties:
-#            - name
-#            - telephone
+        # todo: remove availableProperties if we remove cc dependency
+        availableProperties:
+            - name
+            - telephone
 
     #Address Object
     address:
         name: address
         description: Dit object beschrijft een adres welke gekoppeld kan worden aan een persoon of organisatie.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "addresses"
-#        availableProperties:
-#            - name
-#            - street
-#            - houseNumber
-#            - houseNumberSuffix
-#            - postalCode
-#            - locality
-#            - country
+        # todo: remove availableProperties if we remove cc dependency
+        availableProperties:
+            - name
+            - street
+            - houseNumber
+            - houseNumberSuffix
+            - postalCode
+            - locality
+            - country
 
     # Person Object
     person:
         name: persons
         description: Dit object beschrijft een persoon en alleen eigenschappen die specifiek bij een persoon horen.
-#        gateway: "@contacten_api"
+        gateway: "@contacten_api" # todo: remove:
         endpoint: "people"
-#        availableProperties:
-#            - givenName
-#            - additionalName
-#            - familyName
-#            - birthday
-#            - primaryLanguage
-#            - birthplace
-#            - gender
-#            - speakingLanguages
-#            - maritalStatus
-#            - addresses
-#            - telephones
-#            - emails
-#            - contactPreference
-#        usedProperties:
-#            - givenName
-#            - additionalName
-#            - familyName
-#            - birthday
-#            - primaryLanguage
-#            - birthplace
-#            - gender
-#            - speakingLanguages
-#            - maritalStatus
-#            - addresses
-#            - telephones
-#            - emails
-#            - contactPreference
-#            # These: are only stored in the gateway, not external. UsedProperties is used to hide user of a person
-#            - contactPreferenceOther
-#            - availability
-#            - availabilityNotes
-#            - children
-#            - country
+        # todo: remove availableProperties & usedProperties if we remove cc dependency
+        availableProperties:
+            - givenName
+            - additionalName
+            - familyName
+            - birthday
+            - primaryLanguage
+            - birthplace
+            - gender
+            - speakingLanguages
+            - maritalStatus
+            - addresses
+            - telephones
+            - emails
+            - contactPreference
+        usedProperties:
+            - givenName
+            - additionalName
+            - familyName
+            - birthday
+            - primaryLanguage
+            - birthplace
+            - gender
+            - speakingLanguages
+            - maritalStatus
+            - addresses
+            - telephones
+            - emails
+            - contactPreference
+            # These: are only stored in the gateway, not external. UsedProperties is used to hide user of a person
+            - contactPreferenceOther
+            - availability
+            - availabilityNotes
+            - children
+            - country
 
     # Employee Object
     employee:
@@ -2685,141 +2692,141 @@ App\Entity\Handler:
 # ------ Fixtures ------ #
 ##########################
 
-
-# ObjectEntities
-App\Entity\ObjectEntity:
-    # Default organization
-    biscOrganization:
-        id: a0dc8cdc-c637-46b9-be8d-9103edc1e951
-#        uri: "http://localhost/api/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-        entity: "@organization"
-        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-#        application: "uuid"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
-
-    # Default person
-    defaultPerson:
-        id: 02dfabea-7607-46a2-a511-a2e9bd9f4de2
-#        uri: "http://localhost/api/people/02dfabea-7607-46a2-a511-a2e9bd9f4de2"
-        entity: "@person"
-        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-#        application: "uuid"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
-
-    # Default person email
-    defaultPerson_email:
-        entity: "@email"
-        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-#        application: "uuid"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
-
-    # Default person telephone
-    defaultPerson_telephone:
-        entity: "@telephone"
-        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-#        application: "uuid"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
-
-    # Default person address
-    defaultPerson_address:
-        entity: "@address"
-        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
-#        application: "uuid"
-        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
-
-# Values
-App\Entity\Value:
-    # Default organization Values
-    biscOrganization_name:
-        attribute: "@organization_name"
-        stringValue: BISC
-        objectEntity: "@biscOrganization"
-
-    biscOrganization_description:
-        attribute: "@organization_description"
-        stringValue: The BISC organization! DO NOT TOUCH!!!
-        objectEntity: "@biscOrganization"
-        
-    biscOrganization_type:
-        attribute: "@organization_type"
-        stringValue: bisc
-        objectEntity: "@biscOrganization"
-
-    # Default person Values
-    defaultPerson_givenName:
-        attribute: "@person_givenName"
-        stringValue: John
-        objectEntity: "@defaultPerson"
-
-    defaultPerson_additionalName:
-        attribute: "@person_additionalName"
-        stringValue: Allen
-        objectEntity: "@defaultPerson"
-
-    defaultPerson_familyName:
-        attribute: "@person_familyName"
-        stringValue: Doe
-        objectEntity: "@defaultPerson"
-
-    defaultPerson_emails:
-        attribute: "@person_emails"
-        objects: ["@defaultPerson_email"]
-        objectEntity: "@defaultPerson"
-
-    defaultPerson_telephones:
-        attribute: "@person_telephones"
-        objects: ["@defaultPerson_telephone"]
-        objectEntity: "@defaultPerson"
-
-    defaultPerson_addresses:
-        attribute: "@person_addresses"
-        objects: ["@defaultPerson_address"]
-        objectEntity: "@defaultPerson"
-
-    # Default person email Values
-    defaultPerson_email_name:
-        attribute: "@email_name"
-        stringValue: email for default person
-        objectEntity: "@defaultPerson_email"
-
-    defaultPerson_email_email:
-        attribute: "@email_email"
-        stringValue: default-person@test.com
-        objectEntity: "@defaultPerson_email"
-
-    # Default person telephone Values
-    defaultPerson_telephone_name:
-        attribute: "@telephone_name"
-        stringValue: telephone for default person
-        objectEntity: "@defaultPerson_telephone"
-
-    defaultPerson_telephone_telephone:
-        attribute: "@telephone_telephone"
-        stringValue: 0687654321
-        objectEntity: "@defaultPerson_telephone"
-
-    # Default person address Values
-    defaultPerson_address_name:
-        attribute: "@address_name"
-        stringValue: address for default person
-        objectEntity: "@defaultPerson_address"
-
-    defaultPerson_address_street:
-        attribute: "@address_street"
-        stringValue: someotherstreet
-        objectEntity: "@defaultPerson_address"
-
-    defaultPerson_address_houseNumber:
-        attribute: "@address_houseNumber"
-        stringValue: 666
-        objectEntity: "@defaultPerson_address"
-
-    defaultPerson_address_postalCode:
-        attribute: "@address_postalCode"
-        stringValue: 1234
-        objectEntity: "@defaultPerson_address"
-
-    defaultPerson_address_locality:
-        attribute: "@address_locality"
-        stringValue: Amsterdam
-        objectEntity: "@defaultPerson_address"
+# todo add these back in when removing cc as dependency
+## ObjectEntities
+#App\Entity\ObjectEntity:
+#    # Default organization
+#    biscOrganization:
+#        id: a0dc8cdc-c637-46b9-be8d-9103edc1e951
+##        uri: "http://localhost/api/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+#        entity: "@organization"
+#        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+##        application: "uuid"
+#        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#
+#    # Default person
+#    defaultPerson:
+#        id: 02dfabea-7607-46a2-a511-a2e9bd9f4de2
+##        uri: "http://localhost/api/people/02dfabea-7607-46a2-a511-a2e9bd9f4de2"
+#        entity: "@person"
+#        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+##        application: "uuid"
+#        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#
+#    # Default person email
+#    defaultPerson_email:
+#        entity: "@email"
+#        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+##        application: "uuid"
+#        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#
+#    # Default person telephone
+#    defaultPerson_telephone:
+#        entity: "@telephone"
+#        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+##        application: "uuid"
+#        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#
+#    # Default person address
+#    defaultPerson_address:
+#        entity: "@address"
+#        organization: "https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951"
+##        application: "uuid"
+#        owner: "2ac800cc-b844-458d-87e1-b206fa80113a"
+#
+## Values
+#App\Entity\Value:
+#    # Default organization Values
+#    biscOrganization_name:
+#        attribute: "@organization_name"
+#        stringValue: BISC
+#        objectEntity: "@biscOrganization"
+#
+#    biscOrganization_description:
+#        attribute: "@organization_description"
+#        stringValue: The BISC organization! DO NOT TOUCH!!!
+#        objectEntity: "@biscOrganization"
+#        
+#    biscOrganization_type:
+#        attribute: "@organization_type"
+#        stringValue: bisc
+#        objectEntity: "@biscOrganization"
+#
+#    # Default person Values
+#    defaultPerson_givenName:
+#        attribute: "@person_givenName"
+#        stringValue: John
+#        objectEntity: "@defaultPerson"
+#
+#    defaultPerson_additionalName:
+#        attribute: "@person_additionalName"
+#        stringValue: Allen
+#        objectEntity: "@defaultPerson"
+#
+#    defaultPerson_familyName:
+#        attribute: "@person_familyName"
+#        stringValue: Doe
+#        objectEntity: "@defaultPerson"
+#
+#    defaultPerson_emails:
+#        attribute: "@person_emails"
+#        objects: ["@defaultPerson_email"]
+#        objectEntity: "@defaultPerson"
+#
+#    defaultPerson_telephones:
+#        attribute: "@person_telephones"
+#        objects: ["@defaultPerson_telephone"]
+#        objectEntity: "@defaultPerson"
+#
+#    defaultPerson_addresses:
+#        attribute: "@person_addresses"
+#        objects: ["@defaultPerson_address"]
+#        objectEntity: "@defaultPerson"
+#
+#    # Default person email Values
+#    defaultPerson_email_name:
+#        attribute: "@email_name"
+#        stringValue: email for default person
+#        objectEntity: "@defaultPerson_email"
+#
+#    defaultPerson_email_email:
+#        attribute: "@email_email"
+#        stringValue: default-person@test.com
+#        objectEntity: "@defaultPerson_email"
+#
+#    # Default person telephone Values
+#    defaultPerson_telephone_name:
+#        attribute: "@telephone_name"
+#        stringValue: telephone for default person
+#        objectEntity: "@defaultPerson_telephone"
+#
+#    defaultPerson_telephone_telephone:
+#        attribute: "@telephone_telephone"
+#        stringValue: 0687654321
+#        objectEntity: "@defaultPerson_telephone"
+#
+#    # Default person address Values
+#    defaultPerson_address_name:
+#        attribute: "@address_name"
+#        stringValue: address for default person
+#        objectEntity: "@defaultPerson_address"
+#
+#    defaultPerson_address_street:
+#        attribute: "@address_street"
+#        stringValue: someotherstreet
+#        objectEntity: "@defaultPerson_address"
+#
+#    defaultPerson_address_houseNumber:
+#        attribute: "@address_houseNumber"
+#        stringValue: 666
+#        objectEntity: "@defaultPerson_address"
+#
+#    defaultPerson_address_postalCode:
+#        attribute: "@address_postalCode"
+#        stringValue: 1234
+#        objectEntity: "@defaultPerson_address"
+#
+#    defaultPerson_address_locality:
+#        attribute: "@address_locality"
+#        stringValue: Amsterdam
+#        objectEntity: "@defaultPerson_address"
