@@ -343,10 +343,10 @@ class HandlerService
         $status = Response::HTTP_CREATED;
         break;
       case 'PUT':
-        $status = Response::HTTP_ACCEPTED;
+        $status = Response::HTTP_OK;
         break;
       case 'UPDATE':
-        $status = Response::HTTP_ACCEPTED;
+        $status = Response::HTTP_OK;
         break;
       case 'DELETE':
         $status = Response::HTTP_NO_CONTENT;
