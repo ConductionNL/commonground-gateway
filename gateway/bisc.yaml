@@ -164,6 +164,7 @@ App\Entity\Entity:
 
     # Person Object
     person:
+#        function: "person" # todo
         name: persons
         description: Dit object beschrijft een persoon en alleen eigenschappen die specifiek bij een persoon horen.
         gateway: "@contacten_api" # todo: remove:

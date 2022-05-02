@@ -50,8 +50,6 @@ class HandlerService
         'application/msword'                                                                                   => 'doc',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
         'application/form.io'                                                                                  => 'form.io',
-        //todo: temp fix for taalhuizen, should be txt not json (or just remove this) ;
-        'text/plain;charset=UTF-8'                                                                             => 'json',
     ];
 
     public function __construct(
@@ -449,6 +447,10 @@ class HandlerService
             (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
         }
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
+            //todo: temp fix for taalhuizen, should be removed after front-end changes
+            if ($typeValue == 'text/plain;charset=UTF-8') {
+                return 'json';
+            }
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
 
