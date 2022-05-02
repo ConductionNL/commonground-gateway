@@ -446,11 +446,11 @@ class HandlerService
         } else {
             (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
         }
+        //todo: temp fix for taalhuizen, should be removed after front-end changes
+        if ($typeValue == 'text/plain;charset=UTF-8') {
+            return 'json';
+        }
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
-            //todo: temp fix for taalhuizen, should be removed after front-end changes
-            if ($typeValue == 'text/plain;charset=UTF-8') {
-                return 'json';
-            }
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
 
