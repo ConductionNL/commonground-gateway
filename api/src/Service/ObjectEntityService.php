@@ -351,14 +351,6 @@ class ObjectEntityService
         }
         $this->stopwatch->stop('checkAuthorization');
 
-        // Check if @owner is present in the body and if so unset it.
-        // note: $owner is allowed to be null!
-        $owner = 'owner';
-        if (array_key_exists('@owner', $data)) {
-            $owner = $data['@owner'];
-            unset($data['@owner']);
-        }
-
         switch ($method) {
             case 'GET':
                 //todo: -start- old code...
@@ -405,6 +397,14 @@ class ObjectEntityService
             case 'POST':
             case 'PUT':
             case 'PATCH':
+                // Check if @owner is present in the body and if so unset it.
+                // note: $owner is allowed to be null!
+                $owner = 'owner';
+                if (array_key_exists('@owner', $data)) {
+                    $owner = $data['@owner'];
+                    unset($data['@owner']);
+                }
+
                 // validate
                 $this->stopwatch->start('validateData', 'handleObject');
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
