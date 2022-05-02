@@ -417,17 +417,13 @@ class ObjectEntityService
                 }
                 $this->stopwatch->stop('validateData');
 
+                // todo: new saveObject function to replace validateEntity, will handle promises and notifications
 //                $this->stopwatch->start('saveObject', 'handleObject');
 //                $object = $this->saveObject($object, $data);
-//                $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
-//                $this->entityManager->persist($object);
-//                $this->entityManager->flush();
-//                $data['id'] = $object->getId()->toString();
 //                $this->stopwatch->stop('saveObject');
 
-                // @todo: -start- old code...
+                // @todo: -start- old code... ValidateEntity + promises
                 // @TODO: old code for creating or updating an ObjectEntity
-
                 $this->validationService->setRequest($this->request);
                 $this->validationService->notifications = []; // to be sure
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
@@ -446,6 +442,9 @@ class ObjectEntityService
                     }
                 }
                 $this->stopwatch->stop('promises');
+                //todo: -end- old code... ValidateEntity + promises
+
+                // Handle Entity Function
                 if ($method == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $data)) {
                     if (!$object->getUri()) {
                         // Lets make sure we always set the uri
@@ -457,24 +456,24 @@ class ObjectEntityService
                 $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
-                $data['id'] = $object->getId()->toString();
+
+                $this->stopwatch->start('renderResult', 'handleObject');
+                $data = $this->responseService->renderResult($object, $fields);
+                $this->stopwatch->stop('renderResult');
+
                 if ($object->getHasErrors()) {
                     $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
 
+                // @todo: -start- old code... notifications
                 // Send notifications
                 $this->stopwatch->start('notifications', 'handleObject');
                 foreach ($this->validationService->notifications as $notification) {
                     $this->validationService->notify($notification['objectEntity'], $notification['method']);
                 }
                 $this->stopwatch->stop('notifications');
-
-                //todo: -end- old code...
-
-                $this->stopwatch->start('renderResult', 'handleObject');
-                $data = $this->responseService->renderResult($object, $fields);
-                $this->stopwatch->stop('renderResult');
+                //todo: -end- old code... notifications
 
                 break;
             case 'DELETE':
