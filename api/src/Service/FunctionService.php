@@ -72,9 +72,9 @@ class FunctionService
             $objectEntity->setOrganization($uri);
 
             $id = substr($uri, strrpos($uri, '/') + 1);
-            if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
-                if (!$organization = $this->objectEntityService->getObjectByUri($uri)) {
-                    $organization = $this->isResource($uri);
+            if (!$organization = $this->isResource($uri)) {
+                if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+                    $organization = $this->objectEntityService->getObjectByUri($uri);
                 }
             }
             // Invalidate all changed & related organizations from cache
@@ -132,9 +132,9 @@ class FunctionService
         }
 
         $id = substr($url, strrpos($url, '/') + 1);
-        if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
-            if (!$organization = $this->objectEntityService->getObjectByUri($url)) {
-                $organization = $this->isResource($url);
+        if (!$organization = $this->isResource($url)) {
+            if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+                $organization = $this->objectEntityService->getObjectByUri($url);
             }
         }
         if (!empty($organization)) {
