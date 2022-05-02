@@ -263,15 +263,18 @@ class ConvertToGatewayService
         // If extern object has a property organization, use that organization // TODO: only use it if it is also saved inside the gateway? (so from $availableBody, or only if it is an actual Entity type?)
         if ($entity->getFunction() === 'organization') {
             $object = $this->functionService->createOrganization($object, $object->getUri(), $body['type']);
-        } elseif (key_exists('organization', $body) && !empty($body['organization'])) {
-            $object->setOrganization($body['organization']);
-        } elseif (count($object->getSubresourceOf()) > 0 && !empty($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-            $object->setOrganization($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-            if (!is_null($object->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
-                $object->setApplication($object->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+        }
+        if (!$object->getOrganization()) {
+            if (key_exists('organization', $body) && !empty($body['organization'])) {
+                $object->setOrganization($body['organization']);
+            } elseif (count($object->getSubresourceOf()) > 0 && !empty($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+                $object->setOrganization($object->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                if (!is_null($object->getSubresourceOf()->first()->getObjectEntity()->getApplication())) {
+                    $object->setApplication($object->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+                }
+            } else {
+                $object->setOrganization($this->session->get('activeOrganization'));
             }
-        } else {
-            $object->setOrganization($this->session->get('activeOrganization'));
         }
 
         $object = $this->checkAttributes($object, $availableBody, $objectEntity);
@@ -288,7 +291,7 @@ class ConvertToGatewayService
 //            var_dump('persist and flush');
             // todo: set owner with: $this->objectEntityService->handleOwner($newObject); // Do this after all CheckAuthorization function calls
             $this->em->persist($object);
-            $this->em->flush(); // Needed here! read comment above!
+            $this->em->flush(); // Needed here! read comment above if statement!
             $this->notify($object, 'Create');
         }
 
