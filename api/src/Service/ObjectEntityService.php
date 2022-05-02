@@ -355,15 +355,16 @@ class ObjectEntityService
         }
         $this->stopwatch->stop('checkAuthorization');
 
+        // Lets allow for filtering specific fields
+        $this->stopwatch->start('getRequestFields', 'handleObject');
+        $fields = $this->eavService->getRequestFields($this->request);
+        $this->stopwatch->stop('getRequestFields');
+
         switch ($method) {
             case 'GET':
                 //todo: -start- old code...
                 //TODO: old code for getting an ObjectEntity
 
-                // Lets allow for filtering specific fields
-                $this->stopwatch->start('getRequestFields', 'handleObject');
-                $fields = $this->eavService->getRequestFields($this->request);
-                $this->stopwatch->stop('getRequestFields');
                 if (isset($object)) {
                     if ($object instanceof ObjectEntity) {
                         $this->stopwatch->start('handleGet', 'handleObject');
@@ -435,6 +436,8 @@ class ObjectEntityService
                 $this->stopwatch->start('validateEntity', 'handleObject');
                 $object = $this->validationService->validateEntity($object, $data);
                 $this->stopwatch->stop('validateEntity');
+
+                $this->stopwatch->start('promises', 'handleObject');
                 if (!empty($this->validationService->promises)) {
                     Utils::settle($this->validationService->promises)->wait();
 
@@ -442,6 +445,7 @@ class ObjectEntityService
                         echo $promise->wait();
                     }
                 }
+                $this->stopwatch->stop('promises');
                 if ($method == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $data)) {
                     if (!$object->getUri()) {
                         // Lets make sure we always set the uri
@@ -460,11 +464,17 @@ class ObjectEntityService
                 }
 
                 // Send notifications
+                $this->stopwatch->start('notifications', 'handleObject');
                 foreach ($this->validationService->notifications as $notification) {
                     $this->validationService->notify($notification['objectEntity'], $notification['method']);
                 }
+                $this->stopwatch->stop('notifications');
 
                 //todo: -end- old code...
+
+                $this->stopwatch->start('renderResult', 'handleObject');
+                $data = $this->responseService->renderResult($object, $fields);
+                $this->stopwatch->stop('renderResult');
 
                 break;
             case 'DELETE':
