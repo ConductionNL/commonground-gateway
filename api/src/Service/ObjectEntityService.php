@@ -209,7 +209,7 @@ class ObjectEntityService
      */
     public function getOrganizationObject(string $id, ?array $fields = null): array
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function' => 'organization']);
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function' => 'organization']); //todo cache this!?
         if ($entity instanceof Entity) {
             return $this->getObject($entity, $id, $fields);
         }

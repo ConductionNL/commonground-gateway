@@ -103,6 +103,7 @@
 #        name: subOrganizations
 #        description: The sub-organizations of which this organization is the parent organization.
 #        type: object
+#        multiple: true
 #        entity: "@organization"
 #        object: "@organization"
 #        cascade: true

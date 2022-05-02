@@ -100,6 +100,7 @@ App\Entity\Entity:
             - addresses
             - emails
             - parentOrganization
+#            - subOrganizations
         # usedProperties could be totally removed here, this would allow all properties to be used, and that equals this list below.
         # usedProperties = properties we want to be able to post, put and get (what we allow to be post/put and what we want to show in get responses)
         usedProperties:
@@ -109,6 +110,7 @@ App\Entity\Entity:
             - addresses
             - emails
             - parentOrganization
+#            - subOrganizations
             - members
             - languageHouse_postalCodes
             - team_postalCodes
@@ -433,7 +435,18 @@ App\Entity\Attribute:
         immutable: true
 #        requiredIf:
 #            type: team.noDefaultValue #TODO!
+#        inversedBy: "@organization_subOrganizations"
         defaultValue: "a0dc8cdc-c637-46b9-be8d-9103edc1e951" # TODO: BISC cc/organization uuid, change this when switching dev, stag or acc.
+#    organization_subOrganizations:
+#        name: subOrganizations
+#        description: The sub-organizations of which this organization is the parent organization.
+#        type: object
+#        multiple: true
+#        entity: "@organization"
+#        object: "@organization"
+#        persistToGateway: true # todo: remove after removing cc dependency:
+#        cascade: true
+#        inversedBy: "@organization_parentOrganization"
     organization_addresses:
         name: addresses
         description: Where is the organization located?
