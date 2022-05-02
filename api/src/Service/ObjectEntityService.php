@@ -351,6 +351,14 @@ class ObjectEntityService
         }
         $this->stopwatch->stop('checkAuthorization');
 
+        // Check if @owner is present in the body and if so unset it.
+        // note: $owner is allowed to be null!
+        $owner = 'owner';
+        if (array_key_exists('@owner', $data)) {
+            $owner = $data['@owner'];
+            unset($data['@owner']);
+        }
+
         switch ($method) {
             case 'GET':
                 //todo: -start- old code...
@@ -395,63 +403,27 @@ class ObjectEntityService
 
                 break;
             case 'POST':
-                // validate
-                $this->stopwatch->start('validateData-POST', 'handleObject');
-                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
-                    break;
-                }
-                $this->stopwatch->stop('validateData-POST');
-
-//                $this->stopwatch->start('saveObject-POST', 'handleObject');
-//                $object = $this->saveObject($object, $data);
-//                $this->entityManager->persist($object);
-//                $this->entityManager->flush();
-//                $data['id'] = $object->getId()->toString();
-//                $this->stopwatch->stop('saveObject-POST');
-
-                // @todo: -start- old code...
-                // @TODO: old code for creating or updating an ObjectEntity
-
-                $this->stopwatch->start('validateEntity-POST', 'handleObject');
-                $this->validationService->setRequest($this->request);
-                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-                //                $this->validationService->removeObjectsOnPut = []; // to be sure
-                $object = $this->validationService->validateEntity($object, $data);
-                if (!empty($this->validationService->promises)) {
-                    Utils::settle($this->validationService->promises)->wait();
-
-                    foreach ($this->validationService->promises as $promise) {
-                        echo $promise->wait();
-                    }
-                }
-                $this->entityManager->persist($object);
-                $this->entityManager->flush();
-                $data['id'] = $object->getId()->toString();
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-                }
-                $this->stopwatch->stop('validateEntity-POST');
-
-                //todo: -end- old code...
-
-                break;
             case 'PUT':
             case 'PATCH':
                 // validate
-                $this->stopwatch->start('validateData-PUT', 'handleObject');
+                $this->stopwatch->start('validateData', 'handleObject');
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
                     break;
                 }
-                $this->stopwatch->stop('validateData-PUT');
+                $this->stopwatch->stop('validateData');
 
-                // put object
+//                $this->stopwatch->start('saveObject', 'handleObject');
+//                $object = $this->saveObject($object, $data);
+//                $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
+//                $this->entityManager->persist($object);
+//                $this->entityManager->flush();
+//                $data['id'] = $object->getId()->toString();
+//                $this->stopwatch->stop('saveObject');
 
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
-                $this->stopwatch->start('validateEntity-PUT', 'handleObject');
+                $this->stopwatch->start('validateEntity', 'handleObject');
                 $this->validationService->setRequest($this->request);
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
@@ -464,6 +436,7 @@ class ObjectEntityService
                         echo $promise->wait();
                     }
                 }
+                $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
                 $data['id'] = $object->getId()->toString();
@@ -471,7 +444,7 @@ class ObjectEntityService
                     $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
-                $this->stopwatch->stop('validateEntity-PUT');
+                $this->stopwatch->stop('validateEntity');
 
                 //todo: -end- old code...
 
