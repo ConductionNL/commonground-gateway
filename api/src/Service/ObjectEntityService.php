@@ -427,12 +427,14 @@ class ObjectEntityService
                 // @todo: -start- old code...
                 // @TODO: old code for creating or updating an ObjectEntity
 
-                $this->stopwatch->start('validateEntity', 'handleObject');
                 $this->validationService->setRequest($this->request);
+                $this->validationService->notifications = []; // to be sure
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 //                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $this->stopwatch->start('validateEntity', 'handleObject');
                 $object = $this->validationService->validateEntity($object, $data);
+                $this->stopwatch->stop('validateEntity');
                 if (!empty($this->validationService->promises)) {
                     Utils::settle($this->validationService->promises)->wait();
 
@@ -456,7 +458,11 @@ class ObjectEntityService
                     $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
-                $this->stopwatch->stop('validateEntity');
+
+                // Send notifications
+                foreach ($this->validationService->notifications as $notification) {
+                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
+                }
 
                 //todo: -end- old code...
 
