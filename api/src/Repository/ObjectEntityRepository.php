@@ -149,6 +149,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if ($entity->getInherited()) {
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
+        var_dump('ORGANIZATIONS', $organizations);
+        var_dump('PARENTORGANIZATIONS', $parentOrganizations);
+        var_dump('ACTIVEORGANIZATION', $this->session->get('activeOrganization', []));
 
         //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
         $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
