@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class FunctionService
@@ -120,7 +121,7 @@ class FunctionService
      * @param $url
      *
      * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return array
      */
@@ -167,6 +168,15 @@ class FunctionService
         }
     }
 
+    /**
+     * @TODO
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return bool
+     *
+     * @throws InvalidArgumentException
+     */
     public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {
         return $this->cache->deleteItem('object_'.md5($objectEntity->getId())) && $this->cache->commit();
