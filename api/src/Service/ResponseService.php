@@ -63,7 +63,7 @@ class ResponseService
      *
      * @return array The resulting response
      */
-    public function filterResult(array $response, array $fields, ObjectEntity $result, bool $skipAuthCheck): array
+    public function filterResult(array $response, ?array $fields, ObjectEntity $result, bool $skipAuthCheck): array
     {
         return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck) {
             if (is_array($fields) && !array_key_exists($key, $fields)) {
