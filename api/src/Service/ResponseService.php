@@ -54,6 +54,37 @@ class ResponseService
     }
 
     /**
+     * Filters fields that should not be displayed.
+     *
+     * @param array        $response      The full response
+     * @param array        $fields        The fields that have to be displayed
+     * @param ObjectEntity $result        The objectEntity that contains the results
+     * @param bool         $skipAuthCheck Whether the authorization should be checked
+     *
+     * @return array The resulting response
+     */
+    public function filterResult(array $response, array $fields, ObjectEntity $result, bool $skipAuthCheck): array
+    {
+        return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck) {
+            if (is_array($fields) && !array_key_exists($key, $fields)) {
+                return false;
+            }
+            $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
+            if (!$skipAuthCheck && !empty($attribute)) {
+                try {
+                    if (!$this->checkOwner($result)) {
+                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
+                    }
+                } catch (AccessDeniedException $exception) {
+                    return false;
+                }
+            }
+
+            return true;
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
      * Renders the result for a ObjectEntity that will be used for the response after a successful api call.
      *
      * @param ObjectEntity $result
@@ -69,10 +100,6 @@ class ResponseService
     public function renderResult(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
-        $item = $this->cache->getItem('object_'.md5($result->getId()));
-        if ($item->isHit()) {
-            return $item->get();
-        }
 
         if (
             $result->getEntity()->getGateway() !== null &&
@@ -81,6 +108,11 @@ class ResponseService
                 $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt')
         ) {
             return $response;
+        }
+
+        $item = $this->cache->getItem('object_'.md5($result->getId()));
+        if ($item->isHit()) {
+            return $this->filterResult($item->get(), $fields, $result, $skipAuthCheck);
         }
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
@@ -106,28 +138,6 @@ class ResponseService
                     return in_array($propertyName, $result->getEntity()->getAvailableProperties());
                 }, ARRAY_FILTER_USE_KEY);
             }
-
-            // Lets make sure we don't return stuf thats not in our field list
-            // @todo make array filter instead of loop
-            // @todo on a higher lever we schould have a filter result function that can also be aprouched by the authentication
-            foreach ($response as $key => $value) {
-                if (is_array($fields) && !array_key_exists($key, $fields)) {
-                    unset($response[$key]);
-                    continue;
-                }
-
-                // Make sure we filter out properties we are not allowed to see
-                $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-                if (!$skipAuthCheck && !empty($attribute)) {
-                    try {
-                        if (!$this->checkOwner($result)) {
-                            $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
-                        }
-                    } catch (AccessDeniedException $exception) {
-                        unset($response[$key]);
-                    }
-                }
-            }
         }
 
         // Let overwrite the id with the gateway id
@@ -146,7 +156,7 @@ class ResponseService
             $item->set($response);
             $this->cache->save($item);
 
-            return $response;
+            return $this->filterResult($response, $fields, $result, $skipAuthCheck);
         }
 
         // Lets make it personal
@@ -188,7 +198,7 @@ class ResponseService
         $item->set($response);
         $this->cache->save($item);
 
-        return $response;
+        return $this->filterResult($response, $fields, $result, $skipAuthCheck);
     }
 
     /**

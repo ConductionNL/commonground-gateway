@@ -167,10 +167,8 @@ class FunctionService
         }
     }
 
-    public function removeResultFromCache(ObjectEntity $objectEntity): void
+    public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {
-        if ($this->cache->hasItem('object_'.md5($objectEntity->getId()))) {
-            $this->cache->deleteItem('object_'.md5($objectEntity->getId()));
-        }
+        return $this->cache->deleteItem('object_'.md5($objectEntity->getId()));
     }
 }

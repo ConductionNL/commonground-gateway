@@ -482,7 +482,7 @@ class ObjectEntityService
                 break;
             case 'DELETE':
                 // delete object
-
+                $this->functionService->removeResultFromCache($object);
                 //todo: -start- old code...
                 //TODO: old code for deleting an ObjectEntity
 
