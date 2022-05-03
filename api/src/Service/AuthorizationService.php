@@ -62,13 +62,16 @@ class AuthorizationService
      */
     private function getValidInfoArray(array $info): array
     {
-        return [
+        $result = [
             'method'    => $info['method'] ?? 'GET',
             'entity'    => $info['entity'] ?? null,
             'attribute' => $info['attribute'] ?? null,
             'object'    => $info['object'] ?? null,
-            'value'     => $info['value'] ?? null,
         ];
+        if (array_key_exists('value', $info)) {
+            $result['value'] = $info['value'];
+        }
+        return $result;
     }
 
     /**
@@ -362,7 +365,7 @@ class AuthorizationService
     private function handleInfoArray(array $info): array
     {
         // We need at least a value or an object for the valueScopes check to work
-        if (empty($info['object']) && empty($info['value'])) { //$info['method'] !== GET makes sure we don't throw this error on get Collection calls
+        if (empty($info['object']) && !array_key_exists('value', $info)) { //$info['method'] !== GET makes sure we don't throw this error on get Collection calls
             return $this->checkValueScopesReturn($this->checkValueScopesReturnError('checkValueScopes has no object & no value'), $info['method'] !== 'GET');
         }
 
@@ -379,7 +382,7 @@ class AuthorizationService
         }
 
         // If no Value is given, but Object & Attribute are given, get Value from the Object using the Attribute.
-        if (empty($info['value']) && !empty($info['object']) && !empty($info['attribute']) &&
+        if (!array_key_exists('value', $info) && !empty($info['object']) && !empty($info['attribute']) &&
             !in_array($info['attribute']->getType(), ['object', 'file', 'array']) &&
             !$info['attribute']->getMultiple()
         ) {
@@ -407,7 +410,7 @@ class AuthorizationService
         }
 
         // If we have an Attribute and a Value we are checking for a single scope
-        if (!empty($info['attribute']) && !empty($info['value'])) {
+        if (!empty($info['attribute']) && array_key_exists('value', $info)) {
             if ($info['method'] === 'GET' || $info['method'] === 'DELETE') {
                 $message = 'Do not check for ValueScopes on Attribute & Value level when doing a GET or DELETE, because we can and should check for ValueScopes on Entity & Object level when doing a GET or DELETE';
 
@@ -493,7 +496,7 @@ class AuthorizationService
                 // Continue checking other $grantedScopes with foreach...
                 return null;
             }
-            if (empty($info['value']) && $subScopeResult['scopeAttribute']) {
+            if (!array_key_exists('value', $info) && $subScopeResult['scopeAttribute']) {
                 // Get the value from the Object with the attribute of this scope
                 $info['value'] = $info['object']->getValueByAttribute($subScopeResult['scopeAttribute'])->getValue();
                 //todo, what to do if a $info['value'] is empty?
