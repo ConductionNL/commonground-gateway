@@ -14,6 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -27,14 +28,16 @@ class ResponseService
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
     private TokenStorageInterface $tokenStorage;
+    private CacheInterface $cache;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, TokenStorageInterface $tokenStorage, CacheInterface $cache)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
         $this->session = $session;
         $this->tokenStorage = $tokenStorage;
+        $this->cache = $cache;
     }
 
     // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
@@ -66,6 +69,11 @@ class ResponseService
     public function renderResult(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
+        $item = $this->cache->getItem('object_'.md5($result->getId()));
+        if($item->isHit()){
+            return $item->get();
+        }
+
         if (
             $result->getEntity()->getGateway() !== null &&
             ($result->getEntity()->getGateway()->getType() == 'soap' ||
@@ -135,7 +143,8 @@ class ResponseService
         // Lets skip the pritty styff when dealing with a flat object
         if ($flat) {
             ksort($response);
-
+            $item->set($response);
+            $this->cache->save($item);
             return $response;
         }
 
@@ -174,6 +183,9 @@ class ResponseService
 
         ksort($response);
         $response = $gatewayContext + $response;
+
+        $item->set($response);
+        $this->cache->save($item);
 
         return $response;
     }

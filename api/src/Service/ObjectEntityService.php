@@ -65,6 +65,7 @@ class ObjectEntityService
         $this->responseService = $responseService;
         $this->stopwatch = $stopwatch;
         $this->functionService = new FunctionService($cache, $commonGroundService, $this);
+
     }
 
     /**
@@ -458,6 +459,7 @@ class ObjectEntityService
                 $this->entityManager->flush();
 
                 $this->stopwatch->start('renderResult', 'handleObject');
+                $this->functionService->removeResultFromCache($object);
                 $data = $this->responseService->renderResult($object, $fields);
                 $this->stopwatch->stop('renderResult');
 
