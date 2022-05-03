@@ -6,7 +6,6 @@ use App\Entity\Endpoint;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
-use function Doctrine\ORM\QueryBuilder;
 
 /**
  * @method Endpoint|null find($id, $lockMode = null, $lockVersion = null)
@@ -27,9 +26,9 @@ class EndpointRepository extends ServiceEntityRepository
      * @param string $method
      * @param string $path
      *
-     * @return Endpoint|null
-     *
      * @throws NonUniqueResultException
+     *
+     * @return Endpoint|null
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {

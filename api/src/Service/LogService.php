@@ -29,12 +29,12 @@ class LogService
     /**
      * Creates or updates a Log object with current request and response or given content.
      *
-     * @param Request $request The request to fill this Log with.
-     * @param Response|null $response The response to fill this Log with.
-     * @param int $stopWatchNumber Any number, used to keep stopwatch categories apart from each other.
-     * @param string|null $content The content to fill this Log with if there is no response.
-     * @param bool|null $finalSave
-     * @param string $type
+     * @param Request       $request         The request to fill this Log with.
+     * @param Response|null $response        The response to fill this Log with.
+     * @param int           $stopWatchNumber Any number, used to keep stopwatch categories apart from each other.
+     * @param string|null   $content         The content to fill this Log with if there is no response.
+     * @param bool|null     $finalSave
+     * @param string        $type
      *
      * @return Log
      */

@@ -204,7 +204,6 @@ class HandlerService
 
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-
             $data = $this->getDataFromRequest($this->request);
 
             if ($data == null || empty($data)) {

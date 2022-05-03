@@ -70,7 +70,7 @@ class ResponseService
     {
         $response = [];
         $item = $this->cache->getItem('object_'.md5($result->getId()));
-        if($item->isHit()){
+        if ($item->isHit()) {
             return $item->get();
         }
 
@@ -145,6 +145,7 @@ class ResponseService
             ksort($response);
             $item->set($response);
             $this->cache->save($item);
+
             return $response;
         }
 
