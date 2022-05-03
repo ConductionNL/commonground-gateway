@@ -57,13 +57,13 @@ class ResponseService
      * Filters fields that should not be displayed.
      *
      * @param array        $response      The full response
-     * @param array        $fields        The fields that have to be displayed
+     * @param array|null   $fields        The fields that have to be displayed
      * @param ObjectEntity $result        The objectEntity that contains the results
      * @param bool         $skipAuthCheck Whether the authorization should be checked
      *
      * @return array The resulting response
      */
-    public function filterResult(array $response, array $fields, ObjectEntity $result, bool $skipAuthCheck): array
+    public function filterResult(array $response, ?array $fields, ObjectEntity $result, bool $skipAuthCheck): array
     {
         return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck) {
             if (is_array($fields) && !array_key_exists($key, $fields)) {
