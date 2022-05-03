@@ -30,10 +30,12 @@ class UserService
         } elseif ($user->getPerson()) {
             try {
                 $id = substr($user->getPerson(), strrpos($user->getPerson(), '/') + 1);
-                $person = $this->objectEntityService->getPersonObject($id);
 
-                if (empty($person) && $this->commonGroundService->getComponent('cc')) {
-                    $person = $this->commonGroundService->getResource($user->getPerson());
+                if (!$this->commonGroundService->getComponent('cc') ||
+                    !$person = $this->commonGroundService->getResource($user->getPerson())) {
+                    if (!$person = $this->objectEntityService->getPersonObject($id)) {
+                        $person = $this->objectEntityService->getObjectByUri($user->getPerson());
+                    }
                 }
                 if (empty($person)) {
                     throw new Exception();
@@ -65,10 +67,12 @@ class UserService
             if (!($organization = $this->objectEntityService->getObjectByUri($user->getOrganization(), $organizationFields))) {
                 try {
                     $id = substr($user->getOrganization(), strrpos($user->getOrganization(), '/') + 1);
-                    $organization = $this->objectEntityService->getOrganizationObject($id);
 
-                    if (empty($organization) && $this->commonGroundService->getComponent('cc')) {
-                        $organization = $this->commonGroundService->getResource($user->getOrganization());
+                    if (!$this->commonGroundService->getComponent('cc') ||
+                        !$organization = $this->commonGroundService->getResource($user->getOrganization())) {
+                        if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+                            $organization = $this->objectEntityService->getObjectByUri($user->getOrganization());
+                        }
                     }
                     if (empty($organization)) {
                         throw new Exception();
