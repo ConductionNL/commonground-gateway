@@ -35,10 +35,9 @@ class ZZController extends AbstractController
         ProcessingLogService $processingLogService,
         Stopwatch $stopwatch
     ): Response {
-
         $stopwatch->start('ZZController');
 
-    // Below is hacky tacky
+        // Below is hacky tacky
         // @todo refactor
         //        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
         //        if ($document instanceof Document && $id) {
