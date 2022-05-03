@@ -33,9 +33,7 @@ class UserService
 
                 if (!$this->commonGroundService->getComponent('cc') ||
                     !$person = $this->commonGroundService->getResource($user->getPerson())) {
-                    if (!$person = $this->objectEntityService->getPersonObject($id)) {
-                        $person = $this->objectEntityService->getObjectByUri($user->getPerson());
-                    }
+                    $person = $this->objectEntityService->getPersonObject($id);
                 }
                 if (empty($person)) {
                     throw new Exception();
@@ -70,9 +68,7 @@ class UserService
 
                     if (!$this->commonGroundService->getComponent('cc') ||
                         !$organization = $this->commonGroundService->getResource($user->getOrganization())) {
-                        if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
-                            $organization = $this->objectEntityService->getObjectByUri($user->getOrganization());
-                        }
+                        $organization = $this->objectEntityService->getOrganizationObject($id);
                     }
                     if (empty($organization)) {
                         throw new Exception();
