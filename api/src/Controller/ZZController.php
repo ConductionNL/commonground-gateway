@@ -105,7 +105,9 @@ class ZZController extends AbstractController
                 $response = new Response(
                     $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-                    ['content-type' => $acceptType]
+//                    ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]]
+                    //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
+                    ['content-type' => array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]
                 );
                 // Catch NotEncodableValueException from symfony serializer
             } catch (NotEncodableValueException $e) {

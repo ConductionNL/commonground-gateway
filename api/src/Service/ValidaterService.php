@@ -225,7 +225,7 @@ class ValidaterService
     private function checkIfAttNullable(Attribute $attribute): Rules\AbstractRule
     {
         // Check if this attribute can be null
-        if ($attribute->getValidations()['nullable'] === true) {
+        if ($attribute->getValidations()['nullable'] !== false) {
             // When works like this: When(IF, TRUE, FALSE)
             return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute), new Rules\AlwaysValid());
         }
