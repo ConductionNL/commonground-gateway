@@ -16,7 +16,7 @@ final class Filename extends AbstractRule
     /**
      * @param string|null $regex
      */
-    public function __construct(?string $regex = '/^[\w,\s()-]{1,255}\.[A-Za-z0-9]{1,5}$/')
+    public function __construct(?string $regex = '/^[^\/:*?\"<>|]{1,255}\.[A-Za-z0-9]{1,5}$/')
     {
         $this->regex = $regex;
     }
