@@ -53,24 +53,24 @@ class ResponseService
         return false;
     }
 
-
     /**
-     * Filters fields that should not be displayed
+     * Filters fields that should not be displayed.
      *
-     * @param   array           $response       The full response
-     * @param   array           $fields         The fields that have to be displayed
-     * @param   ObjectEntity    $result         The objectEntity that contains the results
-     * @param   bool            $skipAuthCheck  Whether the authorization should be checked
-     * @return  array                           The resulting response
+     * @param array        $response      The full response
+     * @param array        $fields        The fields that have to be displayed
+     * @param ObjectEntity $result        The objectEntity that contains the results
+     * @param bool         $skipAuthCheck Whether the authorization should be checked
+     *
+     * @return array The resulting response
      */
     public function filterResult(array $response, array $fields, ObjectEntity $result, bool $skipAuthCheck): array
     {
-        return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck){
-            if(is_array($fields) && !array_key_exists($key, $fields)){
+        return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck) {
+            if (is_array($fields) && !array_key_exists($key, $fields)) {
                 return false;
             }
             $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if(!$skipAuthCheck && !empty($attribute)) {
+            if (!$skipAuthCheck && !empty($attribute)) {
                 try {
                     if (!$this->checkOwner($result)) {
                         $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
@@ -79,6 +79,7 @@ class ResponseService
                     return false;
                 }
             }
+
             return true;
         }, ARRAY_FILTER_USE_BOTH);
     }
