@@ -65,14 +65,13 @@ class ObjectEntityService
         $this->responseService = $responseService;
         $this->stopwatch = $stopwatch;
         $this->functionService = new FunctionService($cache, $commonGroundService, $this);
-
     }
 
     /**
      * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
      *
      * @param ValidationService $validationService
-     * @param EavService $eavService
+     * @param EavService        $eavService
      *
      * @return $this
      */
@@ -148,7 +147,7 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $uri
+     * @param string     $uri
      * @param array|null $fields
      *
      * @return array
@@ -166,8 +165,8 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param Entity $entity
-     * @param string $id
+     * @param Entity     $entity
+     * @param string     $id
      * @param array|null $fields
      *
      * @return array
@@ -185,7 +184,7 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $id
+     * @param string     $id
      * @param array|null $fields
      *
      * @return array
@@ -203,7 +202,7 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $id
+     * @param string     $id
      * @param array|null $fields
      *
      * @return array
@@ -221,7 +220,7 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $username
+     * @param string     $username
      * @param array|null $fields
      *
      * @return array
@@ -276,14 +275,14 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler $handler
-     * @param array|null $data Data to be set into the eav
-     * @param string|null $method Method from request if there is a request
+     * @param Handler     $handler
+     * @param array|null  $data          Data to be set into the eav
+     * @param string|null $method        Method from request if there is a request
      * @param string|null $operationType
      *
-     * @return array $data
-     *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
+     *
+     * @return array $data
      */
     public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null): array
     {
@@ -304,9 +303,9 @@ class ObjectEntityService
         $this->stopwatch->stop('getEntity');
 
         $this->stopwatch->start('saveEntity+SourceInSession', 'handleObject');
-        $sessionInfo= [
+        $sessionInfo = [
             'entity' => $entity->getId()->toString(),
-            'source' => $entity->getGateway() ? $entity->getGateway()->getId()->toString() : null
+            'source' => $entity->getGateway() ? $entity->getGateway()->getId()->toString() : null,
         ];
         $this->session->set('entitySource', $sessionInfo);
         $this->stopwatch->stop('saveEntity+SourceInSession');
@@ -511,10 +510,11 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param array $post
-     * @return ObjectEntity
+     * @param array        $post
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function saveObject(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
@@ -575,12 +575,12 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
+     * @param Attribute    $attribute
      * @param $value
      *
-     * @return ObjectEntity
-     *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function saveAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
@@ -639,8 +639,8 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param Value $valueObject
+     * @param Attribute    $attribute
+     * @param Value        $valueObject
      * @param $value
      *
      * @return ObjectEntity
@@ -810,12 +810,13 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param Value $valueObject
+     * @param Attribute    $attribute
+     * @param Value        $valueObject
      * @param $value
      *
-     * @return ObjectEntity
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function saveAttributeType(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {
@@ -918,8 +919,8 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param Value $valueObject
-     * @param array $fileArray
+     * @param Value        $valueObject
+     * @param array        $fileArray
      *
      * @return ObjectEntity
      */
@@ -1170,7 +1171,7 @@ class ObjectEntityService
     /**
      * Create a file array (matching the Entity File) from an array containing at least a base64 string and maybe a filename (not required).
      *
-     * @param array       $file
+     * @param array $file
      *
      * @return array
      */
@@ -1190,7 +1191,7 @@ class ObjectEntityService
             'extension' => array_key_exists('filename', $file) ? pathinfo($file['filename'], PATHINFO_EXTENSION) : $this->mimeToExt($mime_type),
             'mimeType'  => $mime_type,
             'size'      => $this->getBase64Size($file['base64']),
-            'base64'    => $file['base64']
+            'base64'    => $file['base64'],
         ];
     }
 
@@ -1218,7 +1219,7 @@ class ObjectEntityService
      * Create a file array (matching the Entity File) from an UploadedFile object.
      *
      * @param UploadedFile $file
-     * @param string|null $key
+     * @param string|null  $key
      *
      * @return array
      */

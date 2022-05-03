@@ -4,11 +4,11 @@
 
 namespace App\Command;
 
+use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class AnonymousCacheCommand extends Command
 {
@@ -41,14 +41,16 @@ class AnonymousCacheCommand extends Command
         $io->title('Clear anonymous scopes');
         $io->section('Removing anonymous scopes from cache');
         $io->progressStart(1);
-        $io->text("");
+        $io->text('');
 
         if ($this->cache->invalidateTags(['anonymousScopes'])) {
             $io->progressFinish();
             $io->success('Anonymous scopes have been cleared from cache');
+
             return Command::SUCCESS;
         }
         $io->error('Failed to clear anonymous scopes from cache');
+
         return Command::FAILURE;
     }
 }
