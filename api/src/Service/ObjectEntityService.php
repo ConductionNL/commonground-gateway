@@ -9,6 +9,7 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use App\Exception\GatewayException;
+use App\Message\PromiseMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -39,7 +41,7 @@ class ObjectEntityService
     private ResponseService $responseService;
     private Stopwatch $stopwatch;
     private FunctionService $functionService;
-
+    private MessageBusInterface $messageBus;
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -52,7 +54,8 @@ class ObjectEntityService
         CommonGroundService $commonGroundService,
         ResponseService $responseService,
         Stopwatch $stopwatch,
-        CacheInterface $cache
+        CacheInterface $cache,
+        MessageBusInterface $messageBus
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -65,6 +68,7 @@ class ObjectEntityService
         $this->responseService = $responseService;
         $this->stopwatch = $stopwatch;
         $this->functionService = new FunctionService($cache, $commonGroundService, $this);
+        $this->messageBus = $messageBus;
     }
 
     /**
@@ -421,9 +425,9 @@ class ObjectEntityService
                 $this->stopwatch->stop('validateData');
 
                 // todo: new saveObject function to replace validateEntity, will handle promises and notifications
-//                $this->stopwatch->start('saveObject', 'handleObject');
-//                $object = $this->saveObject($object, $data);
-//                $this->stopwatch->stop('saveObject');
+                $this->stopwatch->start('saveObject', 'handleObject');
+                $object = $this->saveObject($object, $data);
+                $this->stopwatch->stop('saveObject');
 
                 // @todo: -start- old code... ValidateEntity + promises
                 // @TODO: old code for creating or updating an ObjectEntity
@@ -432,19 +436,20 @@ class ObjectEntityService
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 //                $this->validationService->removeObjectsOnPut = []; // to be sure
-                $this->stopwatch->start('validateEntity', 'handleObject');
-                $object = $this->validationService->validateEntity($object, $data);
-                $this->stopwatch->stop('validateEntity');
-
-                $this->stopwatch->start('promises', 'handleObject');
-                if (!empty($this->validationService->promises)) {
-                    Utils::settle($this->validationService->promises)->wait();
-
-                    foreach ($this->validationService->promises as $promise) {
-                        echo $promise->wait();
-                    }
-                }
-                $this->stopwatch->stop('promises');
+//                $this->stopwatch->start('validateEntity', 'handleObject');
+//                $object = $this->validationService->validateEntity($object, $data);
+//                $this->stopwatch->stop('validateEntity');
+//
+//                $this->stopwatch->start('promises', 'handleObject');
+//                if (!empty($this->validationService->promises)) {
+//                    Utils::settle($this->validationService->promises)->wait();
+//
+//                    foreach ($this->validationService->promises as $promise) {
+//                        echo $promise->wait();
+//                    }
+//                }
+//                $this->stopwatch->stop('promises');
+//                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
                 //todo: -end- old code... ValidateEntity + promises
 
                 // Handle Entity Function
@@ -472,11 +477,11 @@ class ObjectEntityService
 
                 // @todo: -start- old code... notifications
                 // Send notifications
-                $this->stopwatch->start('notifications', 'handleObject');
-                foreach ($this->validationService->notifications as $notification) {
-                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
-                }
-                $this->stopwatch->stop('notifications');
+//                $this->stopwatch->start('notifications', 'handleObject');
+//                foreach ($this->validationService->notifications as $notification) {
+//                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
+//                }
+//                $this->stopwatch->stop('notifications');
                 //todo: -end- old code... notifications
 
                 break;

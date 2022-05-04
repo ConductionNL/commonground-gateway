@@ -363,6 +363,9 @@
     "sumup/sumup-ecom-php-sdk": {
         "version": "1.0.2"
     },
+    "symfony/amqp-messenger": {
+        "version": "v5.3.14"
+    },
     "symfony/asset": {
         "version": "v5.3.4"
     },
@@ -392,6 +395,9 @@
     },
     "symfony/doctrine-bridge": {
         "version": "v5.3.4"
+    },
+    "symfony/doctrine-messenger": {
+        "version": "v5.3.14"
     },
     "symfony/dotenv": {
         "version": "v5.3.6"
@@ -457,6 +463,18 @@
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
     },
+    "symfony/messenger": {
+        "version": "5.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "4.3",
+            "ref": "25e3c964d3aee480b3acc3114ffb7940c89edfed"
+        },
+        "files": [
+            "config/packages/messenger.yaml"
+        ]
+    },
     "symfony/options-resolver": {
         "version": "v5.3.4"
     },
@@ -501,6 +519,9 @@
     },
     "symfony/proxy-manager-bridge": {
         "version": "v5.3.4"
+    },
+    "symfony/redis-messenger": {
+        "version": "v5.3.14"
     },
     "symfony/routing": {
         "version": "5.3",
