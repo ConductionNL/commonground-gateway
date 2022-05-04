@@ -8,23 +8,29 @@ use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\ParseDataService;
 
 class CollectionPersistSubscriber implements EventSubscriberInterface
 {
 
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
+    private ParseDataService $dataService;
 
-    public function __construct(EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ParseDataService $dataService
+    ) {
         $this->entityManager = $entityManager;
         $this->oasParser = new OasParserService($entityManager);
+        $this->dataService = $dataService;
     }
 
     // this method can only return the event names; you cannot define a
     // custom method name to execute when each event triggers
     public function getSubscribedEvents(): array
     {
+        // return [];
         return [
             Events::postPersist
         ];
@@ -54,6 +60,6 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
         }
 
         $collection = $this->oasParser->parseOas($collection);
-        $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
+        $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true) : null;
     }
 }
