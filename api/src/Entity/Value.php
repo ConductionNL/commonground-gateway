@@ -392,7 +392,11 @@ class Value
                 case 'string':
                     return $this->setStringValue($value);
                 case 'integer':
-                    return $this->setIntegerValue($value);
+                    if ($value < PHP_INT_MAX) {
+                        return $this->setIntegerValue($value);
+                    } else {
+                        return $this;
+                    }
                 case 'boolean':
                     if (is_string($value)) {
                         // This is used for defaultValue, this is always a string type instead of a boolean
@@ -485,7 +489,8 @@ class Value
 
                     // We don't want to format null
                     if ((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
-                        || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())) {
+                        || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())
+                    ) {
                         return null;
                     }
                     // If we do have a value we want to format that

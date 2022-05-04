@@ -202,8 +202,11 @@ class OasParserService
         isset($schema['maxLength']) && $attribute->setMaxLength($schema['maxLength']);
         isset($schema['minLength']) && $attribute->setMinLength($schema['minLength']);
         isset($schema['enum']) && $attribute->setEnum($schema['enum']);
-        isset($schema['maximum']) && $attribute->setMaximum($schema['maximum']);
-        isset($schema['minimum']) && $attribute->setMinimum($schema['minimum']);
+        // Check if maximum/minimum is numeric string and below max int size
+        isset($schema['maximum']) && $schema['maximum'] = (is_numeric($schema['maximum']) && is_string($schema['maximum'])) ? intval($schema['maximum']) : $schema['maximum'];
+        isset($schema['maximum']) && $schema['maximum'] < PHP_INT_MAX && $attribute->setMaximum($schema['maximum']);
+        isset($schema['minimum']) && $schema['minimum'] = (is_numeric($schema['minimum']) && is_string($schema['minimum'])) ? intval($schema['minimum']) : $schema['minimum'];
+        isset($schema['minimum']) && $schema['minimum'] < PHP_INT_MAX && $attribute->setMinimum($schema['minimum']);
 
         // @TODO do something with pattern
         // isset($property['pattern']) && $attribute->setPattern($property['pattern']);
