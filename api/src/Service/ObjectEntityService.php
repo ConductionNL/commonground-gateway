@@ -9,6 +9,7 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use App\Exception\GatewayException;
+use App\Message\NotificationMessage;
 use App\Message\PromiseMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -482,6 +483,9 @@ class ObjectEntityService
 //                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
 //                }
 //                $this->stopwatch->stop('notifications');
+
+//                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
+//                $this->messageBus->dispatch(new NotificationMessage($object->getId(), $this->request->getMethod()));
                 //todo: -end- old code... notifications
 
                 break;
@@ -549,20 +553,19 @@ class ObjectEntityService
 
         // todo? promises (these should move to subscribers!)
         // todo: think about what to do with notifications here? this saveObject function will always notify once at the end
-//        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
+        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
 //        if ($objectEntity->getEntity()->getGateway()) {
-//            // We notify the notification component here in the createPromise function:
+            // We notify the notification component here in the createPromise function:
 //            $promise = $this->createPromise($objectEntity, $post);
 //            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
 //            $objectEntity->addPromise($promise);
 //        } else {
 //            if (!$objectEntity->getUri()) {
 //                // Lets make sure we always set the uri
-//                $this->em->persist($objectEntity); // So the object has an id to set with createUri...
+//                $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
 //                $objectEntity->setUri($this->createUri($objectEntity));
 //            }
 //        }
-
         if (!$objectEntity->getUri()) {
             // Lets make sure we always set the uri
             $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
@@ -574,7 +577,7 @@ class ObjectEntityService
         }
 
         // Notify notification component
-        $this->notify($objectEntity, $this->request->getMethod());
+//        $this->notify($objectEntity, $this->request->getMethod());
 
         return $objectEntity;
     }

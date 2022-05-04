@@ -1545,9 +1545,9 @@ class ValidationService
             $promises = array_merge($promises, $sub->getPromises());
         }
 
-        if (!empty($promises)) {
-            Utils::settle($promises)->wait();
-        }
+//        if (!empty($promises)) {
+//            Utils::settle($promises)->wait();
+//        }
 
         // Lets
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post

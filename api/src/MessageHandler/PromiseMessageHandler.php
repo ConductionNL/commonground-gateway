@@ -2,9 +2,11 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\ObjectEntity;
 use App\Message\PromiseMessage;
 use App\Repository\ObjectEntityRepository;
 use App\Service\ValidationService;
+use Doctrine\Common\Collections\ArrayCollection;
 use GuzzleHttp\Promise\Utils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
@@ -27,9 +29,8 @@ class PromiseMessageHandler implements MessageHandlerInterface
     {
         $this->validationService->setRequest($promiseMessage->getRequest());
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
-        $subResources = $object->getSubresources();
-        //@TODO: break out promises to recursion
         $this->validationService->validateEntity($object, $promiseMessage->getPost());
+
         if (!empty($this->validationService->promises)) {
             Utils::settle($this->validationService->promises)->wait();
 
@@ -37,9 +38,17 @@ class PromiseMessageHandler implements MessageHandlerInterface
                 echo $promise->wait();
             }
         }
-        foreach ($this->validationService->notifications as $notification) {
-            $this->validationService->notify($notification['objectEntity'], $notification['method']);
-        }
 
     }
+
+//    public function getPromises(ObjectEntity $objectEntity, $post): array
+//    {
+//        $promises = [];
+//        foreach($objectEntity->getAllSubresources(new ArrayCollection()) as $subresource) {
+//            $promises = array_merge($promises, $this->getPromises($objectEntity, $post));
+//        }
+//        $promises[] = $this->validationService->createPromise($objectEntity, $post);
+//
+//        return $promises;
+//    }
 }
