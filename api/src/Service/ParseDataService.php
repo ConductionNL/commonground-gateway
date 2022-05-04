@@ -132,13 +132,13 @@ class ParseDataService
      *
      * @return array The resulting objects
      */
-    public function createObjects(Entity $entity, array $schema): array
+    public function createObjects(Entity $entity, array $schema, ?bool $dontCheckAuth = false): array
     {
         $result = [];
         foreach ($schema as $properties) {
             $object = $this->eavService->getObject(null, 'POST', $entity);
             //TODO: add admin scopes to grantedScopes in the session so this validateEntity function doesn't fail on missing scopes
-            $object = $this->validationService->validateEntity($object, $properties['properties']);
+            $object = $this->validationService->validateEntity($object, $properties['properties'], $dontCheckAuth);
             $this->entityManager->persist($object);
             $result[] = $object;
         }
@@ -156,12 +156,12 @@ class ParseDataService
      *
      * @return array The resulting objects
      */
-    public function parseData(array $data, CollectionEntity $collectionEntity): array
+    public function parseData(array $data, CollectionEntity $collectionEntity, ?bool $dontCheckAuth = false): array
     {
         $result = [];
         foreach ($collectionEntity->getEntities() as $entity) {
             if (array_key_exists($entity->getName(), $data['schemas'])) {
-                $result = array_merge($result, $this->createObjects($entity, $data['schemas'][$entity->getName()]));
+                $result = array_merge($result, $this->createObjects($entity, $data['schemas'][$entity->getName()], $dontCheckAuth));
             }
         }
 
@@ -191,7 +191,7 @@ class ParseDataService
      *
      * @return bool Whether or not the datafile has been loaded
      */
-    public function loadData(?string $dataFile, string $oas): bool
+    public function loadData(?string $dataFile, string $oas, ?bool $dontCheckAuth = false): bool
     {
         $this->bridgeValidationService();
         if (empty($dataFile)) {
@@ -205,7 +205,7 @@ class ParseDataService
         if (!$collection instanceof CollectionEntity) {
             throw new Exception('Collection not found');
         }
-        $results = $this->parseData($data, $collection);
+        $results = $this->parseData($data, $collection, $dontCheckAuth);
         $this->entityManager->flush();
 
         return true;
