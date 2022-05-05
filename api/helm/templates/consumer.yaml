@@ -72,11 +72,6 @@ spec:
               name: idp-certificate
               readOnly: true
             {{- end }}
-            {{- if .Values.fixtures }}
-            - mountPath: /srv/api/fixtures
-              name: fixtures
-              readOnly: true
-            {{- end }}
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
