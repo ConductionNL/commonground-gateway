@@ -47,7 +47,7 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $collection = $object;
+        $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId());
 
         if ($collection->getSyncedAt()) {
             return;
