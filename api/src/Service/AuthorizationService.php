@@ -71,6 +71,7 @@ class AuthorizationService
         if (array_key_exists('value', $info)) {
             $result['value'] = $info['value'];
         }
+
         return $result;
     }
 

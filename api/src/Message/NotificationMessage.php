@@ -6,7 +6,6 @@ use Ramsey\Uuid\UuidInterface;
 
 class NotificationMessage
 {
-
     private UuidInterface $objectEntityId;
     private string $method;
 

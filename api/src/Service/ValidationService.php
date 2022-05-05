@@ -1680,7 +1680,7 @@ class ValidationService
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($objectEntity, $url, $method, $setOrganization) {
+            function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
                 // Lets use the correct response type
