@@ -345,9 +345,9 @@ class ValidaterService
             case 'number':
                 return new Rules\Number();
             case 'date':
-                return new Rules\Date();
+                return new Rules\Date('d-m-Y');
             case 'datetime':
-                return new Rules\DateTime();
+                return new Rules\DateTime('d-m-Y H:i:s');
             case 'array':
                 return new Rules\ArrayType();
             case 'boolean':

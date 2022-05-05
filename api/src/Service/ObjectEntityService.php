@@ -346,10 +346,6 @@ class ObjectEntityService
             if (!$this->checkOwner($object)) {
                 // TODO: do we want to throw a different error if there are no organizations in the session? (because of logging out for example)
                 if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
-                    var_dump('objectOrganization', $object->getOrganization());
-                    var_dump('sessionOrganizations', $this->session->get('organizations') ?? []);
-                    var_dump('parentOrganizations', $this->session->get('parentOrganizations') ?? []);
-
                     throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
                 }
             }

@@ -126,21 +126,18 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $this->buildQuery($filters, $query)->distinct();
         }
 
-        //TODO: owner check
-//        $user = $this->tokenStorage->getToken()->getUser();
-//
-//        if (is_string($user)) {
-//            $user = null;
-//        } else {
-//            $user = $user->getUserIdentifier();
-//        }
-
         // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
         if ($this->session->get('anonymous') === true && !empty($query->getParameter('type')) && in_array($query->getParameter('type')->getValue(), ['taalhuis', 'team'])) {
             return $query;
         }
 
-        // TODO: owner
+        $user = $this->tokenStorage->getToken()->getUser();
+        if (is_string($user)) {
+            $userId = 'anonymousUser'; // Do not use null here!
+        } else {
+            $userId = $user->getUserIdentifier();
+        }
+
         // Multitenancy, only show objects this user is allowed to see.
         // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
         $organizations = $this->session->get('organizations', []);
@@ -150,19 +147,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
-        //todo put this back:
+        //todo: put back owner/userId check
+        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner = :userId')
 //        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
-//            //    ->setParameter('userId', $userId)
-//            ->setParameter('organizations', $organizations)
-//            ->setParameter('parentOrganizations', $parentOrganizations);
-        /*
-        if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
-        } else {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
-        }
-        */
+            ->setParameter('userId', $userId)
+            ->setParameter('organizations', $organizations)
+            ->setParameter('parentOrganizations', $parentOrganizations);
 
         if (!empty($order)) {
             $orderCheck = $this->getOrderParameters($entity);
