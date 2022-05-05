@@ -173,9 +173,9 @@ class FunctionService
      *
      * @param ObjectEntity $objectEntity
      *
-     * @return bool
-     *
      * @throws InvalidArgumentException
+     *
+     * @return bool
      */
     public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {

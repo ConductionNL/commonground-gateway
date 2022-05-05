@@ -349,6 +349,7 @@ class ObjectEntityService
                     var_dump('objectOrganization', $object->getOrganization());
                     var_dump('sessionOrganizations', $this->session->get('organizations') ?? []);
                     var_dump('parentOrganizations', $this->session->get('parentOrganizations') ?? []);
+
                     throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
                 }
             }
@@ -566,7 +567,7 @@ class ObjectEntityService
         // todo: think about what to do with notifications here? this saveObject function will always notify once at the end
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
 //        if ($objectEntity->getEntity()->getGateway()) {
-            // We notify the notification component here in the createPromise function:
+        // We notify the notification component here in the createPromise function:
 //            $promise = $this->createPromise($objectEntity, $post);
 //            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
 //            $objectEntity->addPromise($promise);
@@ -1339,10 +1340,10 @@ class ObjectEntityService
     public function renderSubObjects(Collection $objects, Attribute $attribute): array
     {
         $results = [];
-        foreach($objects as $object) {
+        foreach ($objects as $object) {
             $results[] = $this->renderPostBody($object);
         }
-        if(count($results) == 1 && !$attribute->getMultiple()) {
+        if (count($results) == 1 && !$attribute->getMultiple()) {
             return $results[0];
         } else {
             return $results;
@@ -1352,13 +1353,13 @@ class ObjectEntityService
     public function getSubObjectIris(Collection $objects, Attribute $attribute)
     {
         $results = [];
-        foreach($objects as $object) {
+        foreach ($objects as $object) {
             $results[] =
                 $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
                     "{$object->getEntity()->getEndpoint()}/{$object->getExternalId()}" :
                     $object->getUri();
         }
-        if(count($results) == 1 && !$attribute->getMultiple()) {
+        if (count($results) == 1 && !$attribute->getMultiple()) {
             return $results[0];
         } else {
             return $results;
@@ -1368,9 +1369,9 @@ class ObjectEntityService
     public function renderValue(Value $value, Attribute $attribute)
     {
         $rendered = '';
-        switch($attribute->getType()) {
+        switch ($attribute->getType()) {
             case 'object':
-                if($attribute->getCascade()){
+                if ($attribute->getCascade()) {
                     $rendered = $this->renderSubObjects($value->getObjects(), $attribute);
                 } else {
                     $rendered = $this->getSubObjectIris($value->getObjects(), $attribute);
@@ -1386,12 +1387,13 @@ class ObjectEntityService
     public function renderPostBody(ObjectEntity $objectEntity): array
     {
         $body = [];
-        foreach($objectEntity->getEntity()->getAttributes() as $attribute) {
-            if(!$attribute->getPersistToGateway()){
+        foreach ($objectEntity->getEntity()->getAttributes() as $attribute) {
+            if (!$attribute->getPersistToGateway()) {
                 continue;
             }
             $body[$attribute->getName()] = $this->renderValue($objectEntity->getValueByAttribute($attribute), $attribute);
         }
+
         return $body;
     }
 
@@ -1411,7 +1413,7 @@ class ObjectEntityService
                 $headers['Content-Type'] = 'application/xml;charset=UTF-8';
                 break;
             default:
-                throw new Exception("Encoding type not supported");
+                throw new Exception('Encoding type not supported');
         }
 
         return $body;
@@ -1421,12 +1423,11 @@ class ObjectEntityService
     {
         $oldMethod = $method;
         $config = $objectEntity->getEntity()->getTranslationConfig();
-        if($config && array_key_exists($method, $config)) {
+        if ($config && array_key_exists($method, $config)) {
             !array_key_exists('method', $config[$oldMethod]) ?: $method = $config[$oldMethod]['method'];
             !array_key_exists('headers', $config[$oldMethod]) ?: $headers = array_merge($headers, $config[$oldMethod]['headers']);
             !array_key_exists('query', $config[$oldMethod]) ?: $headers = array_merge($query, $config[$oldMethod]['headers']);
             !array_key_exists('endpoint', $config[$oldMethod]) ?: $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.str_replace('{id}', $objectEntity->getExternalId(), $config[$oldMethod]['endpoint']);
-
         }
     }
 
@@ -1475,6 +1476,7 @@ class ObjectEntityService
             default:
                 throw new Exception('Unsupported type');
         }
+
         return $result;
     }
 
@@ -1487,6 +1489,7 @@ class ObjectEntityService
             $objectEntity->setUri($url);
             $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
         }
+
         return $objectEntity;
     }
 
@@ -1498,6 +1501,7 @@ class ObjectEntityService
                 return in_array($key, $availableProperties);
             }, ARRAY_FILTER_USE_KEY);
         }
+
         return $objectEntity->setExternalResult($result);
     }
 
@@ -1505,6 +1509,7 @@ class ObjectEntityService
     {
         $result = $this->decodeResponse($response, $objectEntity);
         $objectEntity = $this->setExternalId($objectEntity, $result, $url);
+
         return $this->setExternalResult($objectEntity, $result);
     }
 
@@ -1553,7 +1558,7 @@ class ObjectEntityService
             function ($response) use ($objectEntity, $url) {
                 $this->onFulfilled($response, $objectEntity, $url);
             },
-            function($error) use ($objectEntity) {
+            function ($error) use ($objectEntity) {
                 $this->onError($error, $objectEntity);
             }
         );

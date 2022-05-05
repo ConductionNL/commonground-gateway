@@ -2,9 +2,7 @@
 
 namespace App\Message;
 
-use App\Entity\ObjectEntity;
 use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 class PromiseMessage
 {
@@ -19,6 +17,4 @@ class PromiseMessage
     {
         return $this->objectEntityId;
     }
-
-
 }
