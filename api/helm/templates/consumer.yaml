@@ -132,22 +132,22 @@ spec:
             - name: RABBITMQ_HOST
               valueFrom:
                   configMapKeyRef:
-                      name: {{ template "fullname" . }}
+                      name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-host
             - name: RABBITMQ_PORT
               valueFrom:
                   configMapKeyRef:
-                      name: {{ template "fullname" . }}
+                      name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-port
             - name: RABBITMQ_USERNAME
               valueFrom:
                   secretKeyRef:
-                      name: {{ template "fullname" . }}
+                      name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-username
             - name: RABBITMQ_PASSWORD
               valueFrom:
                   secretKeyRef:
-                      name: {{ template "fullname" . }}
+                      name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-password
             {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
             - name: APP_CERT
