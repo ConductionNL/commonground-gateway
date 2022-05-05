@@ -2,17 +2,16 @@
 
 namespace App\EventListener;
 
-use App\Service\OasParserService;
 use App\Entity\CollectionEntity;
+use App\Service\OasParserService;
+use App\Service\ParseDataService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Service\ParseDataService;
 
 class CollectionPersistSubscriber implements EventSubscriberInterface
 {
-
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private ParseDataService $dataService;
@@ -32,7 +31,7 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
     {
         // return [];
         return [
-            Events::postPersist
+            Events::postPersist,
         ];
     }
 
