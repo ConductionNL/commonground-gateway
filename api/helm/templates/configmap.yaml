@@ -1,4 +1,5 @@
 {{- $redisServiceName := include "redis.fullname" . -}}
+{{- $rabbitmqServiceName := include "rabbitmq.fullname" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,3 +19,6 @@ data:
   redis-host: {{ printf "%s-headless" $redisServiceName | quote }}
   redis-port: {{ .Values.redis.redisPort | toString | quote }}
   {{- end }}
+
+  rabbitmq-host: {{ printf "%s" $rabbitmqServiceName | quote }}
+  rabbitmq-port: {{ .Values.rabbitmq.service.port | quote }}
