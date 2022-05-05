@@ -47,446 +47,446 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class CollectionEntity
 {
-	/**
-	 * @var UuidInterface The UUID identifier of this Entity.
-	 *
-	 * @example e2984465-190a-4562-829e-a8cca81aa35d
-	 *
-	 * @Assert\Uuid
-	 * @Groups({"read","read_secure"})
-	 * @ORM\Id
-	 * @ORM\Column(type="uuid", unique=true)
-	 * @ORM\GeneratedValue(strategy="CUSTOM")
-	 * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
-	 */
-	private UuidInterface $id;
-
-	/**
-	 * @var string The name of this Collection
-	 *
-	 * @Assert\NotNull
-	 * @Assert\Type("string")
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="string", length=255)
-	 */
-	private string $name;
-
-	/**
-	 * @var ?string The description of this Collection
-	 *
-	 * @Assert\Type("string")
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $description = null;
-	/**
-	 * @var ?string The location where the OAS can be loaded from
-	 *
-	 * @Assert\Length(
-	 *      max = 255
-	 * )
-	 * @ApiProperty(
-	 *     attributes={
-	 *         "openapi_context"={
-	 *             "type"="string",
-	 *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
-	 *         }
-	 *     }
-	 * )
-	 * @Groups({"read","write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $locationOAS = null;
-
-	/**
-	 * @var ?Gateway|string The source of this Collection
-	 *
-	 * @Groups({"read","write"})
-	 * @ORM\JoinColumn(nullable=true)
-	 * @MaxDepth(1)
-	 * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections")
-	 */
-	private $source;
-
-	/**
-	 * @var ?string The url of this Collection
-	 *
-	 * @Assert\Type("string")
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $sourceUrl = null;
-
-	/**
-	 * @var ?string The source type of this Collection
-	 *
-	 * @Assert\Type("string")
-	 * @Assert\Choice({"url", "GitHub"})
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $sourceType = null;
-
-	/**
-	 * @var ?string The source branch of this Collection
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $sourceBranch = null;
-
-	/**
-	 * @var ?string The location where the test data set can be found
-	 *
-	 * @Assert\Length(
-	 *      max = 255
-	 * )
-	 * @Groups({"read","write"})
-	 * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
-	 */
-	private ?string $testDataLocation = null;
-
-	/**
-	 * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
-	 * @Groups({"read","write"})
-	 *
-	 * @ORM\Column(type="boolean", nullable=true, options={"default":false})
-	 */
-	private bool $loadTestData = false;
-
-	/**
-	 * @var ?DateTimeInterface The moment this Collection was synced
-	 *
-	 * @Groups({"read", "write"})
-	 * @ORM\Column(type="datetime", nullable=true, options={"default":null})
-	 */
-	private ?DateTimeInterface $syncedAt = null;
-
-	/**
-	 * @var bool Wether or not this Collection's config and testdata should be loaded when fixtures are loaded
-	 *
-	 * @Groups({"read","write"})
-	 * @ORM\Column(type="boolean", nullable=true, options={"default":false})
-	 */
-	private bool $autoLoad = false;
-
-	/**
-	 * @var ?Collection The applications of this Collection
-	 *
-	 * @Groups({"read", "write"})
-	 * @MaxDepth(1)
-	 * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections")
-	 */
-	private ?Collection $applications;
-
-	/**
-	 * @var ?Collection The endpoints of this Collection
-	 *
-	 * @Groups({"read", "write"})
-	 * @MaxDepth(1)
-	 * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections")
-	 */
-	private ?Collection $endpoints;
-
-	/**
-	 * @var ?Collection The entities of this Collection
-	 *
-	 * @Groups({"read", "write"})
-	 * @MaxDepth(1)
-	 * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections")
-	 */
-	private ?Collection $entities;
-
-	/**
-	 * @var Datetime The moment this resource was created
-	 *
-	 * @Groups({"read"})
-	 * @Gedmo\Timestampable(on="create")
-	 * @ORM\Column(type="datetime", nullable=true)
-	 */
-	private $dateCreated;
-
-	/**
-	 * @var Datetime The moment this resource was last Modified
-	 *
-	 * @Groups({"read"})
-	 * @Gedmo\Timestampable(on="update")
-	 * @ORM\Column(type="datetime", nullable=true)
-	 */
-	private $dateModified;
-
-	public function __construct()
-	{
-		$this->applications = new ArrayCollection();
-		$this->endpoints = new ArrayCollection();
-		$this->entities = new ArrayCollection();
-	}
-
-	public function export()
-	{
-		if ($this->getSource() !== null) {
-			$source = $this->getSource()->getId()->toString();
-			$source = '@' . $source;
-		} else {
-			$source = null;
-		}
-
-		$data = [
-			'name'                    => $this->getName(),
-			'description'             => $this->getDescription(),
-			'source'                  => $source,
-			'sourceType'              => $this->getSourceType(),
-			'sourceBranch'            => $this->getSourceBranch(),
-			'syncedAt'                => $this->getSyncedAt(),
-			'applications'            => $this->getApplications(),
-			'endpoints'               => $this->getEndpoints(),
-			'entities'                => $this->getEntities(),
-		];
-
-		return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
-	}
-
-	public function getId(): ?UuidInterface
-	{
-		return $this->id;
-	}
-
-	public function setId(UuidInterface $id): self
-	{
-		$this->id = $id;
-
-		return $this;
-	}
-
-	public function getName(): ?string
-	{
-		return $this->name;
-	}
-
-	public function setName(string $name): self
-	{
-		$this->name = $name;
-
-		return $this;
-	}
-
-	public function getDescription(): ?string
-	{
-		return $this->description;
-	}
-
-	public function setDescription(?string $description): self
-	{
-		$this->description = $description;
-
-		return $this;
-	}
-
-	public function getLocationOAS(): ?string
-	{
-		return $this->locationOAS;
-	}
-
-	public function setLocationOAS(?string $locationOAS): self
-	{
-		$this->locationOAS = $locationOAS;
-
-		return $this;
-	}
-
-	public function getSource(): ?Gateway
-	{
-		return $this->source;
-	}
-
-	public function setSource(?Gateway $source): self
-	{
-		$this->source = $source;
-
-		return $this;
-	}
-
-	public function getSourceUrl(): ?string
-	{
-		return $this->sourceUrl;
-	}
-
-	public function setSourceUrl(string $sourceUrl): self
-	{
-		$this->sourceUrl = $sourceUrl;
-
-		return $this;
-	}
-
-	public function getSourceType(): ?string
-	{
-		return $this->sourceType;
-	}
-
-	public function setSourceType(?string $sourceType): self
-	{
-		$this->sourceType = $sourceType;
-
-		return $this;
-	}
-
-	public function getSourceBranch(): ?string
-	{
-		return $this->sourceBranch;
-	}
-
-	public function setSourceBranch(?string $sourceBranch): self
-	{
-		$this->sourceBranch = $sourceBranch;
-
-		return $this;
-	}
-
-	public function getTestDataLocation(): ?string
-	{
-		return $this->testDataLocation;
-	}
-
-	public function setTestDataLocation(?string $testDataLocation): self
-	{
-		$this->testDataLocation = $testDataLocation;
-
-		return $this;
-	}
-
-	public function getLoadTestData(): bool
-	{
-		return $this->loadTestData;
-	}
-
-	public function setLoadTestData(bool $loadTestData): self
-	{
-		$this->loadTestData = $loadTestData;
-
-		return $this;
-	}
-
-	public function getAutoLoad(): bool
-	{
-		return $this->autoLoad;
-	}
-
-	public function setAutoLoad(bool $autoLoad): self
-	{
-		$this->autoLoad = $autoLoad;
-
-		return $this;
-	}
-
-	public function getSyncedAt(): ?\DateTimeInterface
-	{
-		return $this->syncedAt;
-	}
-
-	public function setSyncedAt(?\DateTimeInterface $syncedAt): self
-	{
-		$this->syncedAt = $syncedAt;
-
-		return $this;
-	}
-
-	/**
-	 * @return Collection|Application[]
-	 */
-	public function getApplications(): Collection
-	{
-		return $this->applications;
-	}
-
-	public function addApplication(Application $application): self
-	{
-		if (!$this->applications->contains($application)) {
-			$this->applications[] = $application;
-		}
-
-		return $this;
-	}
-
-	public function removeApplication(Application $application): self
-	{
-		$this->applications->removeElement($application);
-
-		return $this;
-	}
-
-	/**
-	 * @return Collection|Endpoint[]
-	 */
-	public function getEndpoints(): Collection
-	{
-		return $this->endpoints;
-	}
-
-	public function addEndpoint(Endpoint $endpoint): self
-	{
-		if (!$this->endpoints->contains($endpoint)) {
-			$this->endpoints[] = $endpoint;
-		}
-
-		return $this;
-	}
-
-	public function removeEndpoint(Endpoint $endpoint): self
-	{
-		$this->endpoints->removeElement($endpoint);
-
-		return $this;
-	}
-
-	/**
-	 * @return Collection|Entity[]
-	 */
-	public function getEntities(): Collection
-	{
-		return $this->entities;
-	}
-
-	public function addEntity(Entity $entity): self
-	{
-		if (!$this->entities->contains($entity)) {
-			$this->entities[] = $entity;
-		}
-
-		return $this;
-	}
-
-	public function removeEntity(Entity $entity): self
-	{
-		$this->entities->removeElement($entity);
-
-		return $this;
-	}
-
-	public function getDateCreated(): ?DateTimeInterface
-	{
-		return $this->dateCreated;
-	}
-
-	public function setDateCreated(DateTimeInterface $dateCreated): self
-	{
-		$this->dateCreated = $dateCreated;
-
-		return $this;
-	}
-
-	public function getDateModified(): ?DateTimeInterface
-	{
-		return $this->dateModified;
-	}
-
-	public function setDateModified(DateTimeInterface $dateModified): self
-	{
-		$this->dateModified = $dateModified;
-
-		return $this;
-	}
+    /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
+     * @ORM\Id
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
+     */
+    private UuidInterface $id;
+
+    /**
+     * @var string The name of this Collection
+     *
+     * @Assert\NotNull
+     * @Assert\Type("string")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $name;
+
+    /**
+     * @var ?string The description of this Collection
+     *
+     * @Assert\Type("string")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $description = null;
+    /**
+     * @var ?string The location where the OAS can be loaded from
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $locationOAS = null;
+
+    /**
+     * @var ?Gateway|string The source of this Collection
+     *
+     * @Groups({"read","write"})
+     * @ORM\JoinColumn(nullable=true)
+     * @MaxDepth(1)
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections")
+     */
+    private $source;
+
+    /**
+     * @var ?string The url of this Collection
+     *
+     * @Assert\Type("string")
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $sourceUrl = null;
+
+    /**
+     * @var ?string The source type of this Collection
+     *
+     * @Assert\Type("string")
+     * @Assert\Choice({"url", "GitHub"})
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $sourceType = null;
+
+    /**
+     * @var ?string The source branch of this Collection
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $sourceBranch = null;
+
+    /**
+     * @var ?string The location where the test data set can be found
+     *
+     * @Assert\Length(
+     *      max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $testDataLocation = null;
+
+    /**
+     * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private bool $loadTestData = false;
+
+    /**
+     * @var ?DateTimeInterface The moment this Collection was synced
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
+     */
+    private ?DateTimeInterface $syncedAt = null;
+
+    /**
+     * @var bool Wether or not this Collection's config and testdata should be loaded when fixtures are loaded
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private bool $autoLoad = false;
+
+    /**
+     * @var ?Collection The applications of this Collection
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections")
+     */
+    private ?Collection $applications;
+
+    /**
+     * @var ?Collection The endpoints of this Collection
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections")
+     */
+    private ?Collection $endpoints;
+
+    /**
+     * @var ?Collection The entities of this Collection
+     *
+     * @Groups({"read", "write"})
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections")
+     */
+    private ?Collection $entities;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    /**
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateModified;
+
+    public function __construct()
+    {
+        $this->applications = new ArrayCollection();
+        $this->endpoints = new ArrayCollection();
+        $this->entities = new ArrayCollection();
+    }
+
+    public function export()
+    {
+        if ($this->getSource() !== null) {
+            $source = $this->getSource()->getId()->toString();
+            $source = '@'.$source;
+        } else {
+            $source = null;
+        }
+
+        $data = [
+            'name'                    => $this->getName(),
+            'description'             => $this->getDescription(),
+            'source'                  => $source,
+            'sourceType'              => $this->getSourceType(),
+            'sourceBranch'            => $this->getSourceBranch(),
+            'syncedAt'                => $this->getSyncedAt(),
+            'applications'            => $this->getApplications(),
+            'endpoints'               => $this->getEndpoints(),
+            'entities'                => $this->getEntities(),
+        ];
+
+        return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
+    }
+
+    public function getId(): ?UuidInterface
+    {
+        return $this->id;
+    }
+
+    public function setId(UuidInterface $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getLocationOAS(): ?string
+    {
+        return $this->locationOAS;
+    }
+
+    public function setLocationOAS(?string $locationOAS): self
+    {
+        $this->locationOAS = $locationOAS;
+
+        return $this;
+    }
+
+    public function getSource(): ?Gateway
+    {
+        return $this->source;
+    }
+
+    public function setSource(?Gateway $source): self
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getSourceUrl(): ?string
+    {
+        return $this->sourceUrl;
+    }
+
+    public function setSourceUrl(string $sourceUrl): self
+    {
+        $this->sourceUrl = $sourceUrl;
+
+        return $this;
+    }
+
+    public function getSourceType(): ?string
+    {
+        return $this->sourceType;
+    }
+
+    public function setSourceType(?string $sourceType): self
+    {
+        $this->sourceType = $sourceType;
+
+        return $this;
+    }
+
+    public function getSourceBranch(): ?string
+    {
+        return $this->sourceBranch;
+    }
+
+    public function setSourceBranch(?string $sourceBranch): self
+    {
+        $this->sourceBranch = $sourceBranch;
+
+        return $this;
+    }
+
+    public function getTestDataLocation(): ?string
+    {
+        return $this->testDataLocation;
+    }
+
+    public function setTestDataLocation(?string $testDataLocation): self
+    {
+        $this->testDataLocation = $testDataLocation;
+
+        return $this;
+    }
+
+    public function getLoadTestData(): bool
+    {
+        return $this->loadTestData;
+    }
+
+    public function setLoadTestData(bool $loadTestData): self
+    {
+        $this->loadTestData = $loadTestData;
+
+        return $this;
+    }
+
+    public function getAutoLoad(): bool
+    {
+        return $this->autoLoad;
+    }
+
+    public function setAutoLoad(bool $autoLoad): self
+    {
+        $this->autoLoad = $autoLoad;
+
+        return $this;
+    }
+
+    public function getSyncedAt(): ?\DateTimeInterface
+    {
+        return $this->syncedAt;
+    }
+
+    public function setSyncedAt(?\DateTimeInterface $syncedAt): self
+    {
+        $this->syncedAt = $syncedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Application[]
+     */
+    public function getApplications(): Collection
+    {
+        return $this->applications;
+    }
+
+    public function addApplication(Application $application): self
+    {
+        if (!$this->applications->contains($application)) {
+            $this->applications[] = $application;
+        }
+
+        return $this;
+    }
+
+    public function removeApplication(Application $application): self
+    {
+        $this->applications->removeElement($application);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Entity[]
+     */
+    public function getEntities(): Collection
+    {
+        return $this->entities;
+    }
+
+    public function addEntity(Entity $entity): self
+    {
+        if (!$this->entities->contains($entity)) {
+            $this->entities[] = $entity;
+        }
+
+        return $this;
+    }
+
+    public function removeEntity(Entity $entity): self
+    {
+        $this->entities->removeElement($entity);
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
+
+        return $this;
+    }
 }
