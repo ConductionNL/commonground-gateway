@@ -69,6 +69,8 @@ class FunctionService
      */
     public function createOrganization(ObjectEntity $objectEntity, string $uri, ?string $organizationType): ObjectEntity
     {
+        $this->cache->invalidateTags(['organization_'.md5('https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/a0dc8cdc-c637-46b9-be8d-9103edc1e951')]);
+
         if ($organizationType == 'taalhuis') {
             $objectEntity->setOrganization($uri);
 
