@@ -247,7 +247,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value, ?bool $dontCheckAuth = false): ObjectEntity
+    private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value, bool $dontCheckAuth = false): ObjectEntity
     {
         if (!$dontCheckAuth) {
             try {
@@ -288,7 +288,7 @@ class ValidationService
 
         if ($attribute->getMultiple()) {
             // If multiple, this is an array, validation for an array:
-            $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value);
+            $objectEntity = $this->validateAttributeMultiple($objectEntity, $attribute, $value, $dontCheckAuth);
         } else {
             // Multiple == false, so this should not be an array (unless it is an object or a file)
             if (is_array($value) && $attribute->getType() != 'array' && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
@@ -297,7 +297,7 @@ class ValidationService
                 // Lets not continue validation if $value is an array (because this will cause weird 500s!!!)
                 return $objectEntity;
             }
-            $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $value);
+            $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $value, $dontCheckAuth);
             $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
         }
 
@@ -379,7 +379,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    private function validateAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    private function validateAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, $value, ?bool $dontCheckAuth = false): ObjectEntity
     {
         // If multiple, this is an array, validation for an array:
         if (!is_array($value)) {
@@ -503,8 +503,9 @@ class ValidationService
                     $this->createdObjects[] = $subObject;
                 }
 
-                $subObject = $this->validateEntity($subObject, $object);
-                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+                $subObject = $this->validateEntity($subObject, $object, $dontCheckAuth);
+
+                !$dontCheckAuth && $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                 $this->em->persist($subObject);
@@ -582,7 +583,7 @@ class ValidationService
             }
         } else {
             foreach ($value as $item) {
-                $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item);
+                $objectEntity = $this->validateAttributeType($objectEntity, $attribute, $item, $dontCheckAuth);
                 $objectEntity = $this->validateAttributeFormat($objectEntity, $attribute, $value);
             }
         }
@@ -913,7 +914,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
+    private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value, ?bool $dontCheckAuth = false): ObjectEntity
     {
         // Validation for enum (if attribute type is not object or boolean)
         if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
@@ -1004,8 +1005,8 @@ class ValidationService
                 } else {
                     $subObject = $valueObject->getValue();
                 }
-                $subObject = $this->validateEntity($subObject, $value);
-                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+                $subObject = $this->validateEntity($subObject, $value, $dontCheckAuth);
+                !$dontCheckAuth && $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
                 $this->em->persist($subObject);
 
                 // If no errors we can push it into our object
