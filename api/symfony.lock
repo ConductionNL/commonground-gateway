@@ -22,6 +22,9 @@
     "api-platform/schema-generator": {
         "version": "v3.0.0"
     },
+    "beberlei/doctrineextensions": {
+        "version": "v1.3.0"
+    },
     "behat/transliterator": {
         "version": "v1.3.0"
     },
@@ -33,6 +36,9 @@
     },
     "composer/package-versions-deprecated": {
         "version": "1.11.99.3"
+    },
+    "composer/pcre": {
+        "version": "1.0.1"
     },
     "composer/semver": {
         "version": "3.2.5"
@@ -263,9 +269,6 @@
     },
     "phenx/php-svg-lib": {
         "version": "0.3.4"
-    },
-    "php": {
-        "version": "7.4"
     },
     "php-cs-fixer/diff": {
         "version": "v1.3.1"
