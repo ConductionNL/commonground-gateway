@@ -46,11 +46,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query = $this->createQuery($entity, $filters);
 
         return $query
-            // filters toevoegen
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+      // filters toevoegen
+      ->setFirstResult($offset)
+      ->setMaxResults($limit)
+      ->getQuery()
+      ->getResult();
     }
 
     /**
@@ -90,7 +90,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function cleanArray(array $array, array $filterCheck): array
     {
         $result = [];
-        foreach ($array as $key=>$value) {
+        foreach ($array as $key => $value) {
             $key = str_replace(['_', '..'], ['.', '._'], $key);
             if (substr($key, 0, 1) == '.') {
                 $key = '_'.ltrim($key, $key[0]);
@@ -121,7 +121,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
             } else {
                 $query->andWhere("$prefix.stringValue = :$key")
-                    ->setParameter($key, $value);
+          ->setParameter($key, $value);
             }
         }
 
@@ -131,8 +131,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function createQuery(Entity $entity, array $filters): QueryBuilder
     {
         $query = $this->createQueryBuilder('o')
-            ->andWhere('o.entity = :entity')
-            ->setParameters(['entity' => $entity]);
+      ->andWhere('o.entity = :entity')
+      ->setParameters(['entity' => $entity]);
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
@@ -144,13 +144,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         //TODO: owner check
-//        $user = $this->tokenStorage->getToken()->getUser();
-//
-//        if (is_string($user)) {
-//            $user = null;
-//        } else {
-//            $user = $user->getUserIdentifier();
-//        }
+        //        $user = $this->tokenStorage->getToken()->getUser();
+        //
+        //        if (is_string($user)) {
+        //            $user = null;
+        //        } else {
+        //            $user = $user->getUserIdentifier();
+        //        }
 
         // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
         if ($this->session->get('anonymous') === true && !empty($query->getParameter('type')) && in_array($query->getParameter('type')->getValue(), ['taalhuis', 'team'])) {
@@ -167,18 +167,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
-            //    ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations)
-            ->setParameter('parentOrganizations', $parentOrganizations);
+        // $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
+        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization')
+      //  ->setParameter('userId', $userId)
+      ->setParameter('organizations', $organizations)
+      ->setParameter('parentOrganizations', $parentOrganizations)
+      ->setParameter('defaultOrganization', 'http://testdata-organization');
         /*
-        if (empty($this->session->get('organizations'))) {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
-        } else {
-            $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
-        }
-        */
+            if (empty($this->session->get('organizations'))) {
+                $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
+            } else {
+                $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
+            }
+            */
 
         return $query;
     }
@@ -217,49 +218,49 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
         switch ($key) {
-            case 'id':
-                $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
-                break;
-            case '_id':
-                $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
-                break;
-            case '_externalId':
-                $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
-                break;
-            case '_uri':
-                $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
-                break;
-            case '_organization':
-                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
-                break;
-            case '_application':
-                $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
-                break;
-            case '_dateCreated':
-                if (array_key_exists('from', $value)) {
-                    $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
-                }
-                if (array_key_exists('till', $value)) {
-                    $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
-                }
-                break;
-            case '_dateModified':
-                if (array_key_exists('from', $value)) {
-                    $date = new DateTime($value['from']);
-                    $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
-                }
-                if (array_key_exists('till', $value)) {
-                    $date = new DateTime($value['till']);
-                    $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
-                }
-                break;
-            default:
-                //todo: error?
-//                var_dump('Not supported filter for ObjectEntity: '.$key);
-                break;
+      case 'id':
+        $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
+        break;
+      case '_id':
+        $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
+        break;
+      case '_externalId':
+        $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
+        break;
+      case '_uri':
+        $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
+        break;
+      case '_organization':
+        $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
+        break;
+      case '_application':
+        $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
+        break;
+      case '_dateCreated':
+        if (array_key_exists('from', $value)) {
+            $date = new DateTime($value['from']);
+            $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
         }
+        if (array_key_exists('till', $value)) {
+            $date = new DateTime($value['till']);
+            $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
+        }
+        break;
+      case '_dateModified':
+        if (array_key_exists('from', $value)) {
+            $date = new DateTime($value['from']);
+            $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
+        }
+        if (array_key_exists('till', $value)) {
+            $date = new DateTime($value['till']);
+            $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
+        }
+        break;
+      default:
+        //todo: error?
+        //                var_dump('Not supported filter for ObjectEntity: '.$key);
+        break;
+    }
 
         return $query;
     }
@@ -282,7 +283,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ]);
 
         foreach ($Entity->getAttributes() as $attribute) {
-//            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
+            //            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
             if ($attribute->getType() == 'string') {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 5 && !str_contains($prefix, $attribute->getName().'.')) {
@@ -295,12 +296,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     // Filter functie schrijven, checken op betaande atributen, zelf looping
-    // voorbeeld filter student.generaldDesription.landoforigen=NL
-    //                  entity.atribute.propert['name'=landoforigen]
-    //                  (objectEntity.value.objectEntity.value.name=landoforigen and
-    //                  objectEntity.value.objectEntity.value.value=nl)
+  // voorbeeld filter student.generaldDesription.landoforigen=NL
+  //                  entity.atribute.propert['name'=landoforigen]
+  //                  (objectEntity.value.objectEntity.value.name=landoforigen and
+  //                  objectEntity.value.objectEntity.value.value=nl)
 
-    /*
+  /*
     public function findOneBySomeField($value): ?ObjectEntity
     {
         return $this->createQueryBuilder('o')

@@ -186,7 +186,7 @@ class EavService
             $object = new ObjectEntity();
             $object->setEntity($entity);
             // if entity->function == 'organization', organization for this ObjectEntity will be changed later in handleMutation
-            $object->setOrganization($this->session->get('activeOrganization'));
+            $this->session->get('activeOrganization') ? $object->setOrganization($this->session->get('activeOrganization')) : $object->setOrganization('http://testdata-organization');
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
 
@@ -250,21 +250,21 @@ class EavService
 
         $options = [];
         switch ($contentType) {
-      case 'text/csv':
-        $options = [
-            CsvEncoder::ENCLOSURE_KEY   => '"',
-            CsvEncoder::ESCAPE_CHAR_KEY => '+',
-        ];
+            case 'text/csv':
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
 
-        // Lets allow _mapping tot take place
-        /* @todo remove the old fields support */
-        /* @todo make this universal */
-        if ($mapping = $request->query->get('_mapping')) {
-            foreach ($resultConfig['result'] as $key =>  $result) {
-                $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
-            }
+                // Lets allow _mapping tot take place
+                /* @todo remove the old fields support */
+                /* @todo make this universal */
+                if ($mapping = $request->query->get('_mapping')) {
+                    foreach ($resultConfig['result'] as $key =>  $result) {
+                        $resultConfig['result'][$key] = $this->translationService->dotHydrator([], $result, $mapping);
+                    }
+                }
         }
-    }
 
         // Lets seriliaze the shizle
         $result = $this->serializerService->serialize(new ArrayCollection($resultConfig['result']), $requestBase['renderType'], $options);
@@ -707,35 +707,35 @@ class EavService
         // Lets setup a switchy kinda thingy to handle the input
         // Its an enity endpoint
         switch ($request->getMethod()) {
-      case 'GET':
-        $result = $this->handleGet($info['object'], $info['fields']);
-        $responseType = Response::HTTP_OK;
-        break;
-      case 'PUT':
-        // Transfer the variable to the service
-        $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
-        $responseType = Response::HTTP_OK;
-        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-            $responseType = Response::HTTP_FORBIDDEN;
+            case 'GET':
+                $result = $this->handleGet($info['object'], $info['fields']);
+                $responseType = Response::HTTP_OK;
+                break;
+            case 'PUT':
+                // Transfer the variable to the service
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
+                $responseType = Response::HTTP_OK;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
+                break;
+            case 'DELETE':
+                $result = $this->handleDelete($info['object']);
+                $responseType = Response::HTTP_NO_CONTENT;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
+                break;
+            default:
+                $result = [
+                    'message' => 'This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE',
+                    'type'    => 'Bad Request',
+                    'path'    => $info['path'],
+                    'data'    => ['method' => $request->getMethod()],
+                ];
+                $responseType = Response::HTTP_BAD_REQUEST;
+                break;
         }
-        break;
-      case 'DELETE':
-        $result = $this->handleDelete($info['object']);
-        $responseType = Response::HTTP_NO_CONTENT;
-        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-            $responseType = Response::HTTP_FORBIDDEN;
-        }
-        break;
-      default:
-        $result = [
-            'message' => 'This method is not allowed on this endpoint, allowed methods are GET, PUT and DELETE',
-            'type'    => 'Bad Request',
-            'path'    => $info['path'],
-            'data'    => ['method' => $request->getMethod()],
-        ];
-        $responseType = Response::HTTP_BAD_REQUEST;
-        break;
-    }
 
         return [
             'result'       => $result ?? null,
@@ -757,28 +757,28 @@ class EavService
     {
         // its a collection endpoint
         switch ($request->getMethod()) {
-      case 'GET':
-        $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
-        $responseType = Response::HTTP_OK;
-        break;
-      case 'POST':
-        // Transfer the variable to the service
-        $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
-        $responseType = Response::HTTP_CREATED;
-        if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
-            $responseType = Response::HTTP_FORBIDDEN;
+            case 'GET':
+                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
+                $responseType = Response::HTTP_OK;
+                break;
+            case 'POST':
+                // Transfer the variable to the service
+                $result = $this->handleMutation($info['object'], $info['body'], $info['fields'], $request);
+                $responseType = Response::HTTP_CREATED;
+                if (isset($result) && array_key_exists('type', $result) && $result['type'] == 'Forbidden') {
+                    $responseType = Response::HTTP_FORBIDDEN;
+                }
+                break;
+            default:
+                $result = [
+                    'message' => 'This method is not allowed on this endpoint, allowed methods are GET and POST',
+                    'type'    => 'Bad Request',
+                    'path'    => $info['path'],
+                    'data'    => ['method' => $request->getMethod()],
+                ];
+                $responseType = Response::HTTP_BAD_REQUEST;
+                break;
         }
-        break;
-      default:
-        $result = [
-            'message' => 'This method is not allowed on this endpoint, allowed methods are GET and POST',
-            'type'    => 'Bad Request',
-            'path'    => $info['path'],
-            'data'    => ['method' => $request->getMethod()],
-        ];
-        $responseType = Response::HTTP_BAD_REQUEST;
-        break;
-    }
 
         return [
             'result'       => $result ?? null,
@@ -821,8 +821,8 @@ class EavService
         $this->validationService->setRequest($request);
         $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
         $this->validationService->removeObjectsNotMultiple = []; // to be sure
-    $this->validationService->notifications = []; // to be sure
-    $object = $this->validationService->validateEntity($object, $body);
+        $this->validationService->notifications = []; // to be sure
+        $object = $this->validationService->validateEntity($object, $body);
 
         // Let see if we have errors
         if ($object->getHasErrors()) {
@@ -843,9 +843,9 @@ class EavService
         }
 
         // Check optional conditional logic
-    $object->checkConditionlLogic(); // Old way of checking condition logic
+        $object->checkConditionlLogic(); // Old way of checking condition logic
 
-    // Afther guzzle has cleared we need to again check for errors
+        // Afther guzzle has cleared we need to again check for errors
         if ($object->getHasErrors()) {
             $errorsResponse = $this->returnErrors($object);
             $this->handleDeleteOnError();
@@ -871,8 +871,8 @@ class EavService
                     foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
                         if ($attribute->getMustBeUnique()) {
                             // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
-              $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
-              break;
+                            $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
+                            break;
                         }
                     }
                 }

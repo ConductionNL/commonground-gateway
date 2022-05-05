@@ -78,9 +78,9 @@ class CollectionEntity
      * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $description;
+    private ?string $description = null;
     /**
      * @var ?string The location where the OAS can be loaded from
      *
@@ -96,9 +96,9 @@ class CollectionEntity
      *     }
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $locationOAS;
+    private ?string $locationOAS = null;
 
     /**
      * @var ?Gateway|string The source of this Collection
@@ -116,9 +116,9 @@ class CollectionEntity
      * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $sourceUrl;
+    private ?string $sourceUrl = null;
 
     /**
      * @var ?string The source type of this Collection
@@ -127,17 +127,17 @@ class CollectionEntity
      * @Assert\Choice({"url", "GitHub"})
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $sourceType;
+    private ?string $sourceType = null;
 
     /**
      * @var ?string The source branch of this Collection
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $sourceBranch;
+    private ?string $sourceBranch = null;
 
     /**
      * @var ?string The location where the test data set can be found
@@ -146,15 +146,15 @@ class CollectionEntity
      *      max = 255
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
-    private ?string $testDataLocation;
+    private ?string $testDataLocation = null;
 
     /**
      * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
      * @Groups({"read","write"})
      *
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
     private bool $loadTestData = false;
 
@@ -162,9 +162,17 @@ class CollectionEntity
      * @var ?DateTimeInterface The moment this Collection was synced
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?DateTimeInterface $syncedAt;
+    private ?DateTimeInterface $syncedAt = null;
+
+    /**
+     * @var bool Wether or not this Collection's config and testdata should be loaded when fixtures are loaded
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private bool $autoLoad = false;
 
     /**
      * @var ?Collection The applications of this Collection
@@ -358,6 +366,18 @@ class CollectionEntity
     public function setLoadTestData(bool $loadTestData): self
     {
         $this->loadTestData = $loadTestData;
+
+        return $this;
+    }
+
+    public function getAutoLoad(): bool
+    {
+        return $this->autoLoad;
+    }
+
+    public function setAutoLoad(bool $autoLoad): self
+    {
+        $this->autoLoad = $autoLoad;
 
         return $this;
     }
