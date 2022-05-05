@@ -13,8 +13,10 @@ use App\Message\NotificationMessage;
 use App\Message\PromiseMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -28,6 +30,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
@@ -43,7 +46,11 @@ class ObjectEntityService
     private Stopwatch $stopwatch;
     private FunctionService $functionService;
     private MessageBusInterface $messageBus;
+    private GatewayService $gatewayService;
+
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
+    private TranslationService $translationService;
+
     public function __construct(
         TokenStorageInterface $tokenStorage,
         RequestStack $requestStack,
@@ -56,7 +63,9 @@ class ObjectEntityService
         ResponseService $responseService,
         Stopwatch $stopwatch,
         CacheInterface $cache,
-        MessageBusInterface $messageBus
+        MessageBusInterface $messageBus,
+        GatewayService $gatewayService,
+        TranslationService $translationService
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->request = $requestStack->getCurrentRequest();
@@ -70,6 +79,8 @@ class ObjectEntityService
         $this->stopwatch = $stopwatch;
         $this->functionService = new FunctionService($cache, $commonGroundService, $this);
         $this->messageBus = $messageBus;
+        $this->gatewayService = $gatewayService;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -430,10 +441,10 @@ class ObjectEntityService
                 // @todo: -start- old code... ValidateEntity + promises
                 // @TODO: old code for creating or updating an ObjectEntity
 //                $this->validationService->setRequest($this->request);
-//                $this->validationService->notifications = []; // to be sure
-//                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-//                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-//                //                $this->validationService->removeObjectsOnPut = []; // to be sure
+                $this->validationService->notifications = []; // to be sure
+                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+                //                $this->validationService->removeObjectsOnPut = []; // to be sure
 //                $this->stopwatch->start('validateEntity', 'handleObject');
 //                $object = $this->validationService->validateEntity($object, $data);
 //                $this->stopwatch->stop('validateEntity');
@@ -481,7 +492,7 @@ class ObjectEntityService
 //                }
 //                $this->stopwatch->stop('notifications');
 
-                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
+                $this->messageBus->dispatch(new PromiseMessage($object->getId()));
                 $this->messageBus->dispatch(new NotificationMessage($object->getId(), $this->request->getMethod()));
                 //todo: -end- old code... notifications
 
@@ -552,7 +563,7 @@ class ObjectEntityService
         // todo: think about what to do with notifications here? this saveObject function will always notify once at the end
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
 //        if ($objectEntity->getEntity()->getGateway()) {
-            // We notify the notification component here in the createPromise function:
+        // We notify the notification component here in the createPromise function:
 //            $promise = $this->createPromise($objectEntity, $post);
 //            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
 //            $objectEntity->addPromise($promise);
@@ -1320,5 +1331,232 @@ class ObjectEntityService
             }
             $this->commonGroundService->createResource($notification, ['component' => 'nrc', 'type' => 'notifications'], false, true, false);
         }
+    }
+
+    public function renderSubObjects(Collection $objects, Attribute $attribute): array
+    {
+        $results = [];
+        foreach ($objects as $object) {
+            $results[] = $this->renderPostBody($object);
+        }
+        if (count($results) == 1 && !$attribute->getMultiple()) {
+            return $results[0];
+        } else {
+            return $results;
+        }
+    }
+
+    public function getSubObjectIris(Collection $objects, Attribute $attribute)
+    {
+        $results = [];
+        foreach ($objects as $object) {
+            $results[] =
+                $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
+                    "{$object->getEntity()->getEndpoint()}/{$object->getExternalId()}" :
+                    $object->getUri();
+        }
+        if (count($results) == 1 && !$attribute->getMultiple()) {
+            return $results[0];
+        } else {
+            return $results;
+        }
+    }
+
+    public function renderValue(Value $value, Attribute $attribute)
+    {
+        $rendered = '';
+        switch ($attribute->getType()) {
+            case 'object':
+                if ($attribute->getCascade()) {
+                    $rendered = $this->renderSubObjects($value->getObjects(), $attribute);
+                } else {
+                    $rendered = $this->getSubObjectIris($value->getObjects(), $attribute);
+                }
+                break;
+            default:
+                $rendered = $value->getValue();
+        }
+
+        return $rendered;
+    }
+
+    public function renderPostBody(ObjectEntity $objectEntity): array
+    {
+        $body = [];
+        foreach ($objectEntity->getEntity()->getAttributes() as $attribute) {
+            if (!$attribute->getPersistToGateway()) {
+                continue;
+            }
+            $body[$attribute->getName()] = $this->renderValue($objectEntity->getValueByAttribute($attribute), $attribute);
+        }
+
+        return $body;
+    }
+
+    public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
+    {
+        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+            case 'json':
+                $body = json_encode($body);
+                break;
+            case 'soap':
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
+                $body = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
+                    $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
+                    $objectEntity->toArray(),
+                    $objectEntity->getEntity()->getToSoap()->getRequestHydration()
+                ), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
+                $headers['Content-Type'] = 'application/xml;charset=UTF-8';
+                break;
+            default:
+                throw new Exception('Encoding type not supported');
+        }
+
+        return $body;
+    }
+
+    public function getTranslationConfig(ObjectEntity $objectEntity, string &$method, array &$headers, array &$query, string &$url): void
+    {
+        $oldMethod = $method;
+        $config = $objectEntity->getEntity()->getTranslationConfig();
+        if ($config && array_key_exists($method, $config)) {
+            !array_key_exists('method', $config[$oldMethod]) ?: $method = $config[$oldMethod]['method'];
+            !array_key_exists('headers', $config[$oldMethod]) ?: $headers = array_merge($headers, $config[$oldMethod]['headers']);
+            !array_key_exists('query', $config[$oldMethod]) ?: $headers = array_merge($query, $config[$oldMethod]['headers']);
+            !array_key_exists('endpoint', $config[$oldMethod]) ?: $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.str_replace('{id}', $objectEntity->getExternalId(), $config[$oldMethod]['endpoint']);
+        }
+    }
+
+    public function decideMethodAndUrl(ObjectEntity $objectEntity, string &$url, string &$method): void
+    {
+        if ($objectEntity->getUri()) {
+            $method = 'PUT';
+            $url = $objectEntity->getUri();
+        } elseif ($objectEntity->getExternalId()) {
+            $method = 'PUT';
+            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+        } else {
+            $method = 'POST';
+            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
+        }
+    }
+
+    private function settleSubPromises(ObjectEntity $objectEntity): void
+    {
+        foreach ($objectEntity->getSubresources() as $sub) {
+            $promises = $sub->getPromises();
+        }
+
+        if (!empty($promises)) {
+            Utils::settle($promises)->wait();
+        }
+    }
+
+    private function decodeResponse($response, ObjectEntity $objectEntity): array
+    {
+        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+            case 'json':
+                $result = json_decode($response->getBody()->getContents(), true);
+                break;
+            case 'xml':
+                $xmlEncoder = new XmlEncoder();
+                $result = $xmlEncoder->decode($response->getBody()->getContents(), 'xml');
+                break;
+            case 'soap':
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'soap:Envelope']);
+                $result = $response->getBody()->getContents();
+                // $result = $this->translationService->parse($result);
+                $result = $xmlEncoder->decode($result, 'xml');
+                $result = $this->translationService->dotHydrator([], $result, $objectEntity->getEntity()->getToSoap()->getResponseHydration());
+                break;
+            default:
+                throw new Exception('Unsupported type');
+        }
+
+        return $result;
+    }
+
+    private function setExternalId(ObjectEntity $objectEntity, array $result, string $url): ObjectEntity
+    {
+        if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
+            $objectEntity->setUri($url.'/'.$result['id']);
+            $objectEntity->setExternalId($result['id']);
+        } else {
+            $objectEntity->setUri($url);
+            $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
+        }
+
+        return $objectEntity;
+    }
+
+    private function setExternalResult(ObjectEntity $objectEntity, array $result): ObjectEntity
+    {
+        if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
+            $availableProperties = $objectEntity->getEntity()->getAvailableProperties();
+            $result = array_filter($result, function ($key) use ($availableProperties) {
+                return in_array($key, $availableProperties);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        return $objectEntity->setExternalResult($result);
+    }
+
+    private function onFulfilled($response, ObjectEntity $objectEntity, string $url)
+    {
+        $result = $this->decodeResponse($response, $objectEntity);
+        $objectEntity = $this->setExternalId($objectEntity, $result, $url);
+
+        return $this->setExternalResult($objectEntity, $result);
+    }
+
+    private function onError($error, ObjectEntity $objectEntity)
+    {
+        /* @todo lelijke code */
+        if ($error->getResponse()) {
+            $errorBody = json_decode((string) $error->getResponse()->getBody(), true);
+            if ($errorBody && array_key_exists('message', $errorBody)) {
+                $error_message = $errorBody['message'];
+            } elseif ($errorBody && array_key_exists('hydra:description', $errorBody)) {
+                $error_message = $errorBody['hydra:description'];
+            } else {
+                $error_message = (string) $error->getResponse()->getBody();
+            }
+        } else {
+            $error_message = $error->getMessage();
+        }
+        // log hier
+//        if ($error->getResponse() instanceof Response) {
+//            $responseLog = $error->getResponse();
+//        } else {
+//            $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
+//        }
+//        $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
+        /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
+        $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'/*.$log->getId()*/.') for a full error report');
+    }
+
+    public function createPromise(ObjectEntity $objectEntity): PromiseInterface
+    {
+        $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+        $query = [];
+        $headers = [];
+        $url = '';
+        $method = '';
+        $this->decideMethodAndUrl($objectEntity, $url, $method);
+
+        $this->settleSubPromises($objectEntity);
+
+        $body = $this->renderPostBody($objectEntity);
+        $body = $this->encodeBody($objectEntity, $body, $headers);
+        $this->getTranslationConfig($objectEntity, $method, $headers, $query, $url);
+
+        return $this->commonGroundService->callService($component, $url, $body, $query, $headers, true, $method)->then(
+            function ($response) use ($objectEntity, $url) {
+                $this->onFulfilled($response, $objectEntity, $url);
+            },
+            function ($error) use ($objectEntity) {
+                $this->onError($error, $objectEntity);
+            }
+        );
     }
 }

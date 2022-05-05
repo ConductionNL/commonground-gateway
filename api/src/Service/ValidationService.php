@@ -104,7 +104,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post, bool $persist = true): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
 
@@ -1568,7 +1568,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
-                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'. $this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
+                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
                     }
@@ -1680,7 +1680,7 @@ class ValidationService
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($objectEntity, $url, $method, $setOrganization) {
+            function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
                 // Lets use the correct response type
@@ -1716,21 +1716,21 @@ class ValidationService
                 }
 
                 // Set organization for this object
-                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-                } else {
-                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
-                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                    $objectEntity->setApplication(!empty($application) ? $application : null);
-                }
-                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-                    'method' => $method,
-                    'uri'    => $objectEntity->getUri(),
-                ]);
-                if (isset($setOrganization)) {
-                    $objectEntity->setOrganization($setOrganization);
-                }
+//                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+//                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+//                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+//                } else {
+//                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+//                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+//                    $objectEntity->setApplication(!empty($application) ? $application : null);
+//                }
+//                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+//                    'method' => $method,
+//                    'uri'    => $objectEntity->getUri(),
+//                ]);
+//                if (isset($setOrganization)) {
+//                    $objectEntity->setOrganization($setOrganization);
+//                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {

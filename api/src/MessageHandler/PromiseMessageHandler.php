@@ -5,50 +5,51 @@ namespace App\MessageHandler;
 use App\Entity\ObjectEntity;
 use App\Message\PromiseMessage;
 use App\Repository\ObjectEntityRepository;
-use App\Service\ValidationService;
-use Doctrine\Common\Collections\ArrayCollection;
+use App\Service\ObjectEntityService;
+use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Promise\Utils;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 class PromiseMessageHandler implements MessageHandlerInterface
 {
     private ObjectEntityRepository $objectEntityRepository;
+    private ObjectEntityService $objectEntityService;
+    private EntityManagerInterface $entityManager;
 
-    //@TODO: The code used in this service should be refactored and moved to another location
-    private ValidationService $validationService;
-    private Request $request;
-
-    public function __construct(ObjectEntityRepository $objectEntityRepository, ValidationService $validationService)
+    public function __construct(ObjectEntityRepository $objectEntityRepository, ObjectEntityService $objectEntityService, EntityManagerInterface $entityManager)
     {
         $this->objectEntityRepository = $objectEntityRepository;
-        $this->validationService = $validationService;
+        $this->objectEntityService = $objectEntityService;
+        $this->entityManager = $entityManager;
     }
 
     public function __invoke(PromiseMessage $promiseMessage): void
     {
-        $this->validationService->setRequest($promiseMessage->getRequest());
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
-        $this->validationService->validateEntity($object, $promiseMessage->getPost());
+        $promises = $this->getPromises($object);
+        if (!empty($promises)) {
+            Utils::settle($promises)->wait();
 
-        if (!empty($this->validationService->promises)) {
-            Utils::settle($this->validationService->promises)->wait();
-
-            foreach ($this->validationService->promises as $promise) {
+            foreach ($promises as $promise) {
                 echo $promise->wait();
             }
         }
-
+        $this->entityManager->persist($object);
+        $this->entityManager->flush();
     }
 
-//    public function getPromises(ObjectEntity $objectEntity, $post): array
-//    {
-//        $promises = [];
-//        foreach($objectEntity->getAllSubresources(new ArrayCollection()) as $subresource) {
-//            $promises = array_merge($promises, $this->getPromises($objectEntity, $post));
-//        }
-//        $promises[] = $this->validationService->createPromise($objectEntity, $post);
-//
-//        return $promises;
-//    }
+    public function getPromises(ObjectEntity $objectEntity): array
+    {
+        $promises = [];
+        foreach ($objectEntity->getSubresources() as $subresource) {
+            $promises = array_merge($promises, $this->getPromises($subresource));
+        }
+        if ($objectEntity->getEntity()->getGateway()) {
+            $promise = $this->objectEntityService->createPromise($objectEntity);
+            $promises[] = $promise;
+            $objectEntity->addPromise($promise);
+        }
+
+        return $promises;
+    }
 }
