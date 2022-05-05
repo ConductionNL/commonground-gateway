@@ -73,6 +73,10 @@ services:
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
       - GITHUB_KEY=${GITHUB_KEY}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     ports:
       - "82:80"
 
@@ -171,6 +175,12 @@ services:
       - POSTGRES_PASSWORD=!ChangeMe!
     volumes:
       - uc-data:/var/lib/postgresql/data:rw
+
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
 
 networks:
   nlx:

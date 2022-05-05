@@ -104,7 +104,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    public function validateEntity(ObjectEntity $objectEntity, array $post): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post, bool $persist = true): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
 
@@ -1545,9 +1545,9 @@ class ValidationService
             $promises = array_merge($promises, $sub->getPromises());
         }
 
-//        if (!empty($promises)) {
-//            Utils::settle($promises)->wait();
-//        }
+        if (!empty($promises)) {
+            Utils::settle($promises)->wait();
+        }
 
         // Lets
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
@@ -1716,21 +1716,21 @@ class ValidationService
                 }
 
                 // Set organization for this object
-                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-                } else {
-                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
-                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                    $objectEntity->setApplication(!empty($application) ? $application : null);
-                }
-                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-                    'method' => $method,
-                    'uri'    => $objectEntity->getUri(),
-                ]);
-                if (isset($setOrganization)) {
-                    $objectEntity->setOrganization($setOrganization);
-                }
+//                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+//                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+//                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+//                } else {
+//                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+//                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+//                    $objectEntity->setApplication(!empty($application) ? $application : null);
+//                }
+//                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+//                    'method' => $method,
+//                    'uri'    => $objectEntity->getUri(),
+//                ]);
+//                if (isset($setOrganization)) {
+//                    $objectEntity->setOrganization($setOrganization);
+//                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
