@@ -38,3 +38,11 @@
 #         testDataLocation: https://raw.githubusercontent.com/ConductionNL/brc_publiccode/main/data/brc.json
 #         loadTestData: true
 #         autoLoad: true
+        
+#     brpCollection:
+#         name: brp collection 
+#         sourceType: GitHub
+#         locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-BRP-bevragen/master/specificatie/genereervariant/openapi.yaml
+#         testDataLocation: https://raw.githubusercontent.com/ConductionNL/brp_publiccode/main/data/brp.yml
+#         loadTestData: true
+#         autoLoad: true

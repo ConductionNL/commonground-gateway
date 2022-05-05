@@ -167,8 +167,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //$query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization')
+    // $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
+    $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization')
       //  ->setParameter('userId', $userId)
       ->setParameter('organizations', $organizations)
       ->setParameter('parentOrganizations', $parentOrganizations)
