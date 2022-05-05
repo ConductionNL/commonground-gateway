@@ -426,9 +426,9 @@ class ObjectEntityService
                 $this->stopwatch->stop('validateData');
 
                 // todo: new saveObject function to replace validateEntity, will handle promises and notifications
-                $this->stopwatch->start('saveObject', 'handleObject');
-                $object = $this->saveObject($object, $data);
-                $this->stopwatch->stop('saveObject');
+//                $this->stopwatch->start('saveObject', 'handleObject');
+//                $object = $this->saveObject($object, $data);
+//                $this->stopwatch->stop('saveObject');
 
                 // @todo: -start- old code... ValidateEntity + promises
                 // @TODO: old code for creating or updating an ObjectEntity
@@ -437,19 +437,19 @@ class ObjectEntityService
                 //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
                 //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
                 //                $this->validationService->removeObjectsOnPut = []; // to be sure
-//                $this->stopwatch->start('validateEntity', 'handleObject');
-//                $object = $this->validationService->validateEntity($object, $data);
-//                $this->stopwatch->stop('validateEntity');
-//
-//                $this->stopwatch->start('promises', 'handleObject');
-//                if (!empty($this->validationService->promises)) {
-//                    Utils::settle($this->validationService->promises)->wait();
-//
-//                    foreach ($this->validationService->promises as $promise) {
-//                        echo $promise->wait();
-//                    }
-//                }
-//                $this->stopwatch->stop('promises');
+                $this->stopwatch->start('validateEntity', 'handleObject');
+                $object = $this->validationService->validateEntity($object, $data);
+                $this->stopwatch->stop('validateEntity');
+
+                $this->stopwatch->start('promises', 'handleObject');
+                if (!empty($this->validationService->promises)) {
+                    Utils::settle($this->validationService->promises)->wait();
+
+                    foreach ($this->validationService->promises as $promise) {
+                        echo $promise->wait();
+                    }
+                }
+                $this->stopwatch->stop('promises');
 //                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
                 //todo: -end- old code... ValidateEntity + promises
 
@@ -478,11 +478,11 @@ class ObjectEntityService
 
                 // @todo: -start- old code... notifications
                 // Send notifications
-//                $this->stopwatch->start('notifications', 'handleObject');
-//                foreach ($this->validationService->notifications as $notification) {
-//                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
-//                }
-//                $this->stopwatch->stop('notifications');
+                $this->stopwatch->start('notifications', 'handleObject');
+                foreach ($this->validationService->notifications as $notification) {
+                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
+                }
+                $this->stopwatch->stop('notifications');
 
 //                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
 //                $this->messageBus->dispatch(new NotificationMessage($object->getId(), $this->request->getMethod()));

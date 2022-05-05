@@ -1545,9 +1545,9 @@ class ValidationService
             $promises = array_merge($promises, $sub->getPromises());
         }
 
-//        if (!empty($promises)) {
-//            Utils::settle($promises)->wait();
-//        }
+        if (!empty($promises)) {
+            Utils::settle($promises)->wait();
+        }
 
         // Lets
         // At this point in time we have the object values (becuse this is post validation) so we can use those to filter the post
@@ -1568,7 +1568,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
-                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
+                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'. $this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
                     }
