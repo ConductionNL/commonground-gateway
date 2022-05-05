@@ -148,9 +148,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         //todo: put back owner/userId check
-//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner = :userId')
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
-//            ->setParameter('userId', $userId)
+        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner = :userId')
+//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
+            ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations)
             ->setParameter('parentOrganizations', $parentOrganizations);
 

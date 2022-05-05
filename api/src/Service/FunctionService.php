@@ -129,7 +129,7 @@ class FunctionService
     {
         $item = $this->cache->getItem('organizations_'.md5("$url"));
         if ($item->isHit()) {
-//            return $item->get();
+            return $item->get();
         }
 
         $id = substr($url, strrpos($url, '/') + 1);
