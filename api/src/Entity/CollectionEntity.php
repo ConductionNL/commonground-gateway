@@ -230,7 +230,7 @@ class CollectionEntity
     {
         if ($this->getSource() !== null) {
             $source = $this->getSource()->getId()->toString();
-            $source = '@' . $source;
+            $source = '@'.$source;
         } else {
             $source = null;
         }
