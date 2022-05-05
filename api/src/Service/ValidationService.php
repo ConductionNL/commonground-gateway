@@ -1568,7 +1568,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
-                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'. $this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
+                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
                     }
