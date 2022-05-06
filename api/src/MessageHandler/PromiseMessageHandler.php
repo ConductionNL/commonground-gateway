@@ -31,7 +31,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     {
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
         $parents = [];
-        $promises = $this->getPromises($object, $parents);
+        $promises = $this->getPromises($object, $promiseMessage->getMethod(), $parents);
         if (!empty($promises)) {
             Utils::settle($promises)->wait();
 
@@ -41,11 +41,9 @@ class PromiseMessageHandler implements MessageHandlerInterface
         }
         $this->entityManager->persist($object);
         $this->entityManager->flush();
-
-        $this->messageBus->dispatch(new NotificationMessage($object->getId(), $promiseMessage->getMethod()));
     }
 
-    public function getPromises(ObjectEntity $objectEntity, array &$parentObjects): array
+    public function getPromises(ObjectEntity $objectEntity, string $method, array &$parentObjects): array
     {
         $promises = [];
         $parentObjects[] = $objectEntity;
@@ -60,6 +58,8 @@ class PromiseMessageHandler implements MessageHandlerInterface
             $promises[] = $promise;
             $objectEntity->addPromise($promise);
         }
+
+        $this->messageBus->dispatch(new NotificationMessage($objectEntity->getId(), $method));
 
         return $promises;
     }

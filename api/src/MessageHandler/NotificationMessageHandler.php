@@ -21,5 +21,6 @@ class NotificationMessageHandler implements MessageHandlerInterface
     public function __invoke(NotificationMessage $message): void
     {
         $this->objectEntityService->notify($this->repository->find($message->getObjectEntityId()), $message->getMethod());
+
     }
 }
