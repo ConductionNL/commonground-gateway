@@ -72,6 +72,10 @@ spec:
               name: idp-certificate
               readOnly: true
             {{- end }}
+          args:
+              - supervisord
+              - -c
+              - /srv/api/config/supervisord.conf
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
