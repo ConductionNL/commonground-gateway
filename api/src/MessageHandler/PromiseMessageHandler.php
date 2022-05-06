@@ -44,11 +44,15 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->messageBus->dispatch(new NotificationMessage($object->getId(), $promiseMessage->getMethod()));
     }
 
-    public function getPromises(ObjectEntity $objectEntity): array
+    public function getPromises(ObjectEntity $objectEntity, array &$parentObjects): array
     {
         $promises = [];
+        $parentObjects[] = $objectEntity;
         foreach ($objectEntity->getSubresources() as $subresource) {
-            $promises = array_merge($promises, $this->getPromises($subresource));
+            if(in_array($objectEntity, $parentObjects)){
+                continue;
+            }
+            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects));
         }
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity);
