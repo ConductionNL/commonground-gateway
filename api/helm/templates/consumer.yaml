@@ -73,9 +73,10 @@ spec:
               readOnly: true
             {{- end }}
           args:
-              - supervisord
-              - -c
-              - /srv/api/config/supervisord.conf
+              - bin/console
+              - messenger:consume
+              - async
+              - -vvv
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}

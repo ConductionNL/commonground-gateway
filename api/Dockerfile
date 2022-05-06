@@ -25,7 +25,6 @@ RUN set -eux; \
     	python3 \
     	py-meld3 \
     	py-setuptools \
-    	supervisor \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
