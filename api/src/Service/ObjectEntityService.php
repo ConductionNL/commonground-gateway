@@ -483,19 +483,15 @@ class ObjectEntityService
                     $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
-
-                // @todo: -start- old code... notifications
-                // Send notifications
+                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
+//                @todo: -start- old code... notification
+//                Send notifications
 //                $this->stopwatch->start('notifications', 'handleObject');
 //                foreach ($this->validationService->notifications as $notification) {
 //                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
 //                }
-//                $this->stopwatch->stop('notifications');
-
-                $this->messageBus->dispatch(new PromiseMessage($object->getId()));
-                $this->messageBus->dispatch(new NotificationMessage($object->getId(), $this->request->getMethod()));
-                //todo: -end- old code... notifications
-
+//                $this->stopwatch->stop('notifications')
+//                todo: -end- old code... notifications
                 break;
             case 'DELETE':
                 // delete object
