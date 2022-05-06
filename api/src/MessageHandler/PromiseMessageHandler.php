@@ -30,7 +30,8 @@ class PromiseMessageHandler implements MessageHandlerInterface
     public function __invoke(PromiseMessage $promiseMessage): void
     {
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
-        $promises = $this->getPromises($object);
+        $parents = [];
+        $promises = $this->getPromises($object, $parents);
         if (!empty($promises)) {
             Utils::settle($promises)->wait();
 
