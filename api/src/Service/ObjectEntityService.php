@@ -1505,9 +1505,13 @@ class ObjectEntityService
         $result = $this->decodeResponse($response, $objectEntity);
         $objectEntity = $this->setExternalId($objectEntity, $result, $url);
 
+        // Lets reset cache
+        $this->functionService->removeResultFromCache($objectEntity);
+//        $this->responseService->renderResult($objectEntity, null);
+
         // log
-        $responseLog = new Response(json_encode($result), 201, []);
-        $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 13, json_encode($result), null, 'out');
+//        $responseLog = new Response(json_encode($result), 201, []);
+//        $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 13, json_encode($result), null, 'out');
 
         return $this->setExternalResult($objectEntity, $result);
     }
@@ -1527,15 +1531,15 @@ class ObjectEntityService
         } else {
             $error_message = $error->getMessage();
         }
-        // log
-        if ($error->getResponse() instanceof Response) {
-            $responseLog = $error->getResponse();
-        } else {
-            $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
-        }
-        $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
+//        // log
+//        if ($error->getResponse() instanceof Response) {
+//            $responseLog = $error->getResponse();
+//        } else {
+//            $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
+//        }
+//        $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
         /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-        $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'.$log->getId().') for a full error report');
+        $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/') for a full error report');
     }
 
     public function createPromise(ObjectEntity $objectEntity): PromiseInterface
@@ -1553,8 +1557,8 @@ class ObjectEntityService
         $body = $this->encodeBody($objectEntity, $body, $headers);
         $this->getTranslationConfig($objectEntity, $method, $headers, $query, $url);
 
-        // log
-        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $body, null, 'out');
+//        // log
+//        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $body, null, 'out');
 
         return $this->commonGroundService->callService($component, $url, $body, $query, $headers, true, $method)->then(
             function ($response) use ($objectEntity, $url) {
