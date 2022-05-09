@@ -146,11 +146,7 @@ class ValidaterService
             $validator->addRule(
                 new Rules\When(
                     $conditionals, // IF (the $conditionals Rule does not return any exceptions)
-                    new Rules\Key(
-                        $attribute->getName(),
-                        $this->getAttributeValidator($attribute),
-                        $attribute->getValidations()['required'] === true // mandatory = required validation.
-                    ), // TRUE (continue with the 'normal' / other Attribute validations)
+                    $this->checkIfAttRequired($attribute), // TRUE (continue with the required rule, incl inversedBy check)
                     $conditionals // FALSE (return exception message from $conditionals Rule)
                 )
             );
@@ -194,6 +190,70 @@ class ValidaterService
         return new Rules\AllOf(
             $requiredIf,
             $forbiddenIf
+        );
+    }
+
+    /**
+     * This function helps determine if we might want to skip the required check because of inversedBy.
+     *
+     * @param Attribute $attribute
+     *
+     * @return bool Returns always false, unless we might want to skip the required check because of inversedBy.
+     */
+    private function checkInversedBy(Attribute $attribute): bool
+    {
+        if ($attribute->getType() == 'object' &&
+            $attribute->getObject() &&
+            $attribute->getInversedBy()
+            && $attribute->getInversedBy()->getEntity() === $attribute->getObject()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns a Rule that makes sure an Attribute is present if it is required. Continues with the 'normal' / other Attribute validations after that.
+     *
+     * @param Attribute $attribute
+     *
+     * @return Rules\AbstractRule
+     *
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     */
+    private function checkIfAttRequired(Attribute $attribute): Rules\AbstractRule
+    {
+        // If attribute is required and an 'inversedBy required loop' is possible
+        if ($attribute->getValidations()['required'] === true && $this->checkInversedBy($attribute)) {
+            // todo: this is an incomplete solution to the inversedBy required loop problem, because this way fields that are inversedBy are never required...
+            return new Rules\Key(
+                $attribute->getName(),
+                $this->getAttributeValidator($attribute),
+                false // mandatory = required validation. False = not required.
+            );
+
+            // todo: JsonLogic needs to be able to check parent attributes/entities in the request body for this to work:
+//            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
+//            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
+//            return new Rules\When(
+//                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
+//                new Rules\Key(
+//                    $attribute->getName(),
+//                    $this->getAttributeValidator($attribute),
+//                    false // mandatory = required validation. False = not required.
+//                ), // TRUE
+//                new Rules\Key(
+//                    $attribute->getName(),
+//                    $this->getAttributeValidator($attribute),
+//                    true // mandatory = required validation. True = required.
+//                ) // FALSE
+//            );
+        }
+
+        // Else, continue with the 'normal' required validation.
+        return new Rules\Key(
+            $attribute->getName(),
+            $this->getAttributeValidator($attribute),
+            $attribute->getValidations()['required'] === true // mandatory = required validation.
         );
     }
 
@@ -350,6 +410,8 @@ class ValidaterService
                     new Rules\Date('Y-m-d'),
                 );
             case 'datetime':
+                // todo: make a custom rule that checks if we can do new DateTime() with the input value to allow multiple formats?
+                // default format for Rules\DateTime = 'c' = ISO standard -> Y-m-dTH:i:s+timezone(00:00)
                 return new Rules\OneOf(
                     new Rules\DateTime('d-m-Y'),
                     new Rules\DateTime('d-m-Y H:i:s'),
