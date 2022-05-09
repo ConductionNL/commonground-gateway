@@ -33,7 +33,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     {
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
         $parents = [];
-        $promises = $this->getPromises($object, $promiseMessage->getMethod(), $parents);
+        $promises = $this->getPromises($object, $parents);
         if (!empty($promises)) {
             Utils::settle($promises)->wait();
 
@@ -44,12 +44,12 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
-        foreach ($this->notifications as $notification) {
-            $this->messageBus->dispatch($notification);
+        foreach ($this->notifications as $objectEntityId) {
+            $this->messageBus->dispatch(new NotificationMessage($objectEntityId, $promiseMessage->getMethod()));
         }
     }
 
-    public function getPromises(ObjectEntity $objectEntity, string $method, array &$parentObjects): array
+    public function getPromises(ObjectEntity $objectEntity, array &$parentObjects): array
     {
         $promises = [];
         $parentObjects[] = $objectEntity;
@@ -57,7 +57,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             if(in_array($objectEntity, $parentObjects)){
                 continue;
             }
-            $promises = array_merge($promises, $this->getPromises($subresource, $method, $parentObjects));
+            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects));
         }
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity);
@@ -65,7 +65,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             $objectEntity->addPromise($promise);
         }
 
-        $this->notifications[] = new NotificationMessage($objectEntity->getId(), $method);
+        $this->notifications[] = $objectEntity->getId();
 
         return $promises;
     }
