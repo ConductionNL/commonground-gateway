@@ -18,6 +18,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     private ObjectEntityService $objectEntityService;
     private EntityManagerInterface $entityManager;
     private MessageBusInterface $messageBus;
+    private array $notifications;
 
     public function __construct(ObjectEntityRepository $objectEntityRepository, ObjectEntityService $objectEntityService, EntityManagerInterface $entityManager, MessageBusInterface $messageBus)
     {
@@ -25,6 +26,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->objectEntityService = $objectEntityService;
         $this->entityManager = $entityManager;
         $this->messageBus = $messageBus;
+        $this->notifications = [];
     }
 
     public function __invoke(PromiseMessage $promiseMessage): void
@@ -41,6 +43,10 @@ class PromiseMessageHandler implements MessageHandlerInterface
         }
         $this->entityManager->persist($object);
         $this->entityManager->flush();
+
+        foreach ($this->notifications as $notification) {
+            $this->messageBus->dispatch($notification);
+        }
     }
 
     public function getPromises(ObjectEntity $objectEntity, string $method, array &$parentObjects): array
@@ -56,10 +62,10 @@ class PromiseMessageHandler implements MessageHandlerInterface
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity);
             $promises[] = $promise;
-            $objectEntity->addPromise($promise);
+//            $objectEntity->addPromise($promise);
         }
 
-        $this->messageBus->dispatch(new NotificationMessage($objectEntity->getId(), $method));
+        $this->notifications[] = new NotificationMessage($objectEntity->getId(), $method);
 
         return $promises;
     }
