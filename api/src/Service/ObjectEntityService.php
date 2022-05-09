@@ -48,6 +48,7 @@ class ObjectEntityService
     private MessageBusInterface $messageBus;
     private GatewayService $gatewayService;
     private LogService $logService;
+    private ConvertToGatewayService $convertToGatewayService;
 
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     private TranslationService $translationService;
@@ -84,6 +85,7 @@ class ObjectEntityService
         $this->gatewayService = $gatewayService;
         $this->translationService = $translationService;
         $this->logService = $logService;
+        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService);
     }
 
     /**
@@ -421,6 +423,7 @@ class ObjectEntityService
             case 'POST':
             case 'PUT':
             case 'PATCH':
+                // todo: what about @organization? (See saveObject function, test it first, look at and compare with old code!)
                 // Check if @owner is present in the body and if so unset it.
                 // note: $owner is allowed to be null!
                 $owner = 'owner';
@@ -444,10 +447,10 @@ class ObjectEntityService
                 // @todo: -start- old code... ValidateEntity + promises
                 // @TODO: old code for creating or updating an ObjectEntity
 //                $this->validationService->setRequest($this->request);
-                $this->validationService->notifications = []; // to be sure
-                //                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-                //                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-                //                $this->validationService->removeObjectsOnPut = []; // to be sure
+//                $this->validationService->notifications = []; // to be sure
+//                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
+//                $this->validationService->removeObjectsNotMultiple = []; // to be sure
+//                $this->validationService->removeObjectsOnPut = []; // to be sure
 //                $this->stopwatch->start('validateEntity', 'handleObject');
 //                $object = $this->validationService->validateEntity($object, $data);
 //                $this->stopwatch->stop('validateEntity');
@@ -687,8 +690,7 @@ class ObjectEntityService
                         if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
                             if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside the gateway for an existing object.
-                                // todo: add convertToGatewayService somehow
-//                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
+                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
                                 if (!$subObject) {
                                     // todo: throw error?
 //                                    var_dump('Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
@@ -713,8 +715,7 @@ class ObjectEntityService
                         });
                         if (count($subObject) == 0) {
                             // look outside the gateway
-                            // todo: add convertToGatewayService somehow
-//                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
+                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
 
                             if (!$subObject) {
                                 // todo: throw error?
@@ -863,8 +864,7 @@ class ObjectEntityService
                     if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
                         if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
                             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside the gateway for an existing object.
-                            // todo: add convertToGatewayService somehow
-//                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
+                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
                             if (!$subObject) {
                                 // todo: throw error?
 //                                var_dump('Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());

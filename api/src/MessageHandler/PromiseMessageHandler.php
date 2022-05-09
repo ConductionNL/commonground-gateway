@@ -62,7 +62,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity);
             $promises[] = $promise;
-//            $objectEntity->addPromise($promise);
+            $objectEntity->addPromise($promise);
         }
 
         $this->notifications[] = new NotificationMessage($objectEntity->getId(), $method);
