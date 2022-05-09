@@ -224,7 +224,7 @@ class ValidaterService
     {
         // If attribute is required and an 'inversedBy required loop' is possible
         if ($attribute->getValidations()['required'] === true && $this->checkInversedBy($attribute) && $level != 0) {
-            // todo: this is an incomplete solution to the inversedBy required loop problem, because this way fields that are inversedBy are never required...
+            // todo: this is an incomplete solution to the inversedBy required loop problem, because this way fields that are inversedBy are never required unless they are on level 0...
             return new Rules\Key(
                 $attribute->getName(),
                 $this->getAttributeValidator($attribute, $level),
