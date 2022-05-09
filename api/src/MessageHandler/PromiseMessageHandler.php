@@ -51,7 +51,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             if(in_array($objectEntity, $parentObjects)){
                 continue;
             }
-            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects));
+            $promises = array_merge($promises, $this->getPromises($subresource, $method, $parentObjects));
         }
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity);
