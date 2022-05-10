@@ -1426,13 +1426,15 @@ class ObjectEntityService
         }
     }
 
-    public function decideUrl(ObjectEntity $objectEntity, string &$url, string $method): void
+    public function decideMethodAndUrl(ObjectEntity $objectEntity, string &$url, string &$method): void
     {
-        if ($method == 'POST') {
+        if ($method == 'POST' && $objectEntity->getUri() != $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId()) {
             $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
         } elseif ($objectEntity->getUri()) {
+            $method = 'PUT';
             $url = $objectEntity->getUri();
         } elseif ($objectEntity->getExternalId()) {
+            $method = 'PUT';
             $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
     }
@@ -1539,13 +1541,13 @@ class ObjectEntityService
         $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/') for a full error report');
     }
 
-    public function createPromise(ObjectEntity $objectEntity, string $method): PromiseInterface
+    public function createPromise(ObjectEntity $objectEntity, string &$method): PromiseInterface
     {
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
         $query = [];
         $headers = [];
         $url = '';
-        $this->decideUrl($objectEntity, $url, $method);
+        $this->decideMethodAndUrl($objectEntity, $url, $method);
 
         $this->settleSubPromises($objectEntity);
 
