@@ -248,12 +248,13 @@ class ResponseService
             }
 
             // Lets deal with subfields filtering
-            $subfields = false;
-            if (is_array($fields) && array_key_exists($attribute->getName(), $fields) && is_array($fields[$attribute->getName()])) {
-                $subfields = $fields[$attribute->getName()];
-            }
-            if (!$subfields) {
-                $subfields = $fields;
+            $subfields = null;
+            if (is_array($fields) && array_key_exists($attribute->getName(), $fields)) {
+                if (is_array($fields[$attribute->getName()])) {
+                    $subfields = $fields[$attribute->getName()];
+                } elseif ($fields[$attribute->getName()] == false) {
+                    continue;
+                }
             }
 
             $valueObject = $result->getValueByAttribute($attribute);
