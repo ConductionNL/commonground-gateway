@@ -625,12 +625,12 @@ class ObjectEntityService
                 $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
                 foreach ($value as $key => $object) {
                     // If we are not cascading and value is a string, then value should be an id.
-                    if (is_string($value)) {
-                        if (Uuid::isValid($value) == false) {
+                    if (is_string($object)) {
+                        if (Uuid::isValid($object) == false) {
                             // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
-                                $value = $this->commonGroundService->getUuidFromUrl($value);
+                            if ($object == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
+                                $object = $this->commonGroundService->getUuidFromUrl($object);
                             } else {
 //                                var_dump('The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
                                 continue;
@@ -639,13 +639,13 @@ class ObjectEntityService
 
                         // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
                         // todo make one sql query for finding an ObjectEntity by id or externalId
-                        if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
-                            if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
+                        if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $object])) {
+                            if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $object])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside the gateway for an existing object.
-                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
+                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object, $valueObject, $objectEntity);
                                 if (!$subObject) {
                                     // todo: throw error?
-//                                    var_dump('Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());
+//                                    var_dump('Could not find an object with id '.$object.' of type '.$attribute->getObject()->getName());
                                     continue;
                                 }
                             }
@@ -690,7 +690,7 @@ class ObjectEntityService
                         $object['id'] = $subObject->getExternalId();
                     } else {
                         //Lets do a cascade check here.
-                        if (!$attribute->getCascade() && !is_string($value)) {
+                        if (!$attribute->getCascade() && !is_string($object)) {
                             continue;
                         }
 
