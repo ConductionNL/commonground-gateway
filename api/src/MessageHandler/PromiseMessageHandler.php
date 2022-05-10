@@ -33,7 +33,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     {
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
         $parents = [];
-        $promises = $this->getPromises($object, $parents);
+        $promises = $this->getPromises($object, $parents, $promiseMessage->getMethod());
         if (!empty($promises)) {
             Utils::settle($promises)->wait();
 
@@ -49,7 +49,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         }
     }
 
-    public function getPromises(ObjectEntity $objectEntity, array &$parentObjects): array
+    public function getPromises(ObjectEntity $objectEntity, array &$parentObjects, string $method): array
     {
         $promises = [];
         $parentObjects[] = $objectEntity;
@@ -57,10 +57,10 @@ class PromiseMessageHandler implements MessageHandlerInterface
             if(in_array($objectEntity, $parentObjects)){
                 continue;
             }
-            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects));
+            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects, $method));
         }
         if ($objectEntity->getEntity()->getGateway()) {
-            $promise = $this->objectEntityService->createPromise($objectEntity);
+            $promise = $this->objectEntityService->createPromise($objectEntity, $method);
             $promises[] = $promise;
             $objectEntity->addPromise($promise);
         }
