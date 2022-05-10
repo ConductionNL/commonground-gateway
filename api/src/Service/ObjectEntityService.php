@@ -439,40 +439,12 @@ class ObjectEntityService
                 }
                 $this->stopwatch->stop('validateData');
 
-                // todo: new saveObject function to replace validateEntity, will handle promises and notifications
+                // Save the object
                 $this->stopwatch->start('saveObject', 'handleObject');
                 $object = $this->saveObject($object, $data);
                 $this->stopwatch->stop('saveObject');
 
-                // @todo: -start- old code... ValidateEntity + promises
-                // @TODO: old code for creating or updating an ObjectEntity
-//                $this->validationService->setRequest($this->request);
-//                $this->validationService->notifications = []; // to be sure
-//                $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
-//                $this->validationService->removeObjectsNotMultiple = []; // to be sure
-//                $this->validationService->removeObjectsOnPut = []; // to be sure
-//                $this->stopwatch->start('validateEntity', 'handleObject');
-//                $object = $this->validationService->validateEntity($object, $data);
-//                $this->stopwatch->stop('validateEntity');
-//
-//                $this->stopwatch->start('promises', 'handleObject');
-//                if (!empty($this->validationService->promises)) {
-//                    Utils::settle($this->validationService->promises)->wait();
-//
-//                    foreach ($this->validationService->promises as $promise) {
-//                        echo $promise->wait();
-//                    }
-//                }
-//                $this->stopwatch->stop('promises');
-//                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
-                //todo: -end- old code... ValidateEntity + promises
-
                 // Handle Entity Function (note that this might be overwritten when handling the promise later!)
-                if (!$object->getUri()) {
-                    // Lets make sure we always set the uri
-                    $this->entityManager->persist($object); // So the object has an id to set with createUri...
-                    $object->setUri($this->createUri($object));
-                }
                 $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
                     'method'           => $method,
                     'uri'              => $object->getUri(),
@@ -493,18 +465,13 @@ class ObjectEntityService
                     $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
                 }
                 $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
-//                @todo: -start- old code... notification
-//                Send notifications
-//                $this->stopwatch->start('notifications', 'handleObject');
-//                foreach ($this->validationService->notifications as $notification) {
-//                    $this->validationService->notify($notification['objectEntity'], $notification['method']);
-//                }
-//                $this->stopwatch->stop('notifications')
-//                todo: -end- old code... notifications
                 break;
             case 'DELETE':
                 // delete object
                 $this->functionService->removeResultFromCache($object);
+
+                //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
+
                 //todo: -start- old code...
                 //TODO: old code for deleting an ObjectEntity
 
@@ -564,21 +531,6 @@ class ObjectEntityService
             }
         }
 
-        // todo? promises (these should move to subscribers!)
-        // todo: think about what to do with notifications here? this saveObject function will always notify once at the end
-        // Dit is de plek waarop we weten of er een api call moet worden gemaakt
-//        if ($objectEntity->getEntity()->getGateway()) {
-        // We notify the notification component here in the createPromise function:
-//            $promise = $this->createPromise($objectEntity, $post);
-//            $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
-//            $objectEntity->addPromise($promise);
-//        } else {
-//            if (!$objectEntity->getUri()) {
-//                // Lets make sure we always set the uri
-//                $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
-//                $objectEntity->setUri($this->createUri($objectEntity));
-//            }
-//        }
         if (!$objectEntity->getUri()) {
             // Lets make sure we always set the uri
             $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
@@ -588,9 +540,6 @@ class ObjectEntityService
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
             $objectEntity->setOrganization($post['@organization']);
         }
-
-        // Notify notification component
-//        $this->notify($objectEntity, $this->request->getMethod());
 
         return $objectEntity;
     }
