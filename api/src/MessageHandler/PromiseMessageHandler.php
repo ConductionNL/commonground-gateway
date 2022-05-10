@@ -60,7 +60,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         foreach ($objectEntity->getSubresources() as $subresource) {
             $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects, $method));
         }
-        if ($objectEntity->getEntity()->getGateway() && true===false) {
+        if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity, $method);
             $promises[] = $promise;
             $objectEntity->addPromise($promise);
