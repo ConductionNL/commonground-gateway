@@ -719,8 +719,8 @@ class ObjectEntityService
                     $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
                         'method'           => $this->request->getMethod(),
                         'uri'              => $subObject->getUri(),
-                        'organizationType' => array_key_exists('type', $object) ? $object['type'] : null,
-                        'userGroupName'    => array_key_exists('name', $object) ? $object['name'] : null,
+                        'organizationType' => is_array($object) && array_key_exists('type', $object) ? $object['type'] : null,
+                        'userGroupName'    => is_array($object) && array_key_exists('name', $object) ? $object['name'] : null,
                     ]);
 
                     // object toevoegen
