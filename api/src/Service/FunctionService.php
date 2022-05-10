@@ -33,12 +33,14 @@ class FunctionService
     {
         switch ($function) {
             case 'organization':
-                if (array_key_exists('organizationType', $data) && $data['organizationType']) {
-                    $organizationType = $data['organizationType'];
-                } else {
-                    $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                if ($data['method'] == 'POST') {
+                    if (array_key_exists('organizationType', $data) && $data['organizationType']) {
+                        $organizationType = $data['organizationType'];
+                    } else {
+                        $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                    }
+                    $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 }
-                $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 break;
             case 'userGroup':
                 if ($data['method'] == 'PUT') {

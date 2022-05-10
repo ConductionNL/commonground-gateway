@@ -467,15 +467,18 @@ class ObjectEntityService
 //                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $data, $this->request));
                 //todo: -end- old code... ValidateEntity + promises
 
-                // Handle Entity Function
-                if ($method == 'POST' && $object->getEntity()->getFunction() === 'organization' && !array_key_exists('@organization', $data)) {
-                    if (!$object->getUri()) {
-                        // Lets make sure we always set the uri
-                        $this->entityManager->persist($object); // So the object has an id to set with createUri...
-                        $object->setUri($this->createUri($object));
-                    }
-                    $object = $this->functionService->createOrganization($object, $object->getUri(), $data['type']);
+                // Handle Entity Function (note that this might be overwritten when handling the promise later!)
+                if (!$object->getUri()) {
+                    // Lets make sure we always set the uri
+                    $this->entityManager->persist($object); // So the object has an id to set with createUri...
+                    $object->setUri($this->createUri($object));
                 }
+                $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
+                    'method'           => $method,
+                    'uri'              => $object->getUri(),
+                    'organizationType' => array_key_exists('type', $data) ? $data['type'] : null,
+                    'userGroupName'    => array_key_exists('name', $data) ? $data['name'] : null,
+                ]);
                 $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
@@ -1332,14 +1335,18 @@ class ObjectEntityService
         }
     }
 
-    public function renderSubObjects(Collection $objects, Attribute $attribute): array
+    public function renderSubObjects(Collection $objects, Attribute $attribute): ?array
     {
         $results = [];
         foreach ($objects as $object) {
             $results[] = $this->renderPostBody($object);
         }
-        if (count($results) == 1 && !$attribute->getMultiple()) {
-            return $results[0];
+        if (!$attribute->getMultiple()) {
+            if (count($results) == 1) {
+                return $results[0];
+            } else {
+                return null;
+            }
         } else {
             return $results;
         }
@@ -1351,11 +1358,15 @@ class ObjectEntityService
         foreach ($objects as $object) {
             $results[] =
                 $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
-                    "{$object->getEntity()->getEndpoint()}/{$object->getExternalId()}" :
+                    "/{$object->getEntity()->getEndpoint()}/{$object->getExternalId()}" :
                     $object->getUri();
         }
-        if (count($results) == 1 && !$attribute->getMultiple()) {
-            return $results[0];
+        if (!$attribute->getMultiple()) {
+            if (count($results) == 1) {
+                return $results[0];
+            } else {
+                return null;
+            }
         } else {
             return $results;
         }
@@ -1474,7 +1485,7 @@ class ObjectEntityService
         return $result;
     }
 
-    private function setExternalId(ObjectEntity $objectEntity, array $result, string $url): ObjectEntity
+    private function setExternalId(ObjectEntity $objectEntity, array $result, string $url, string $method): ObjectEntity
     {
         if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
             $objectEntity->setUri($url.'/'.$result['id']);
@@ -1484,7 +1495,11 @@ class ObjectEntityService
             $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
         }
 
-        return $objectEntity;
+        // Handle Function todo: what if @organization is used in the post body? than we shouldn't handle function organization here:
+        return $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+            'method'           => $method,
+            'uri'              => $objectEntity->getUri(),
+        ]);
     }
 
     private function setExternalResult(ObjectEntity $objectEntity, array $result): ObjectEntity
@@ -1499,14 +1514,14 @@ class ObjectEntityService
         return $objectEntity->setExternalResult($result);
     }
 
-    private function onFulfilled($response, ObjectEntity $objectEntity, string $url)
+    private function onFulfilled($response, ObjectEntity $objectEntity, string $url, string $method)
     {
         $result = $this->decodeResponse($response, $objectEntity);
-        $objectEntity = $this->setExternalId($objectEntity, $result, $url);
+        $objectEntity = $this->setExternalId($objectEntity, $result, $url, $method);
 
         // Lets reset cache
         $this->functionService->removeResultFromCache($objectEntity);
-//        $this->responseService->renderResult($objectEntity, null);
+//        $this->responseService->renderResult($objectEntity, null); // pre-load/re-load cache
 
         // log
 //        $responseLog = new Response(json_encode($result), 201, []);
@@ -1530,6 +1545,8 @@ class ObjectEntityService
         } else {
             $error_message = $error->getMessage();
         }
+//        var_dump($error_message);
+
 //        // log
 //        if ($error->getResponse() instanceof Response) {
 //            $responseLog = $error->getResponse();
@@ -1558,11 +1575,16 @@ class ObjectEntityService
 //        // log
 //        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $body, null, 'out');
 
+//        var_dump($url);
+//        var_dump($body);
+
         return $this->commonGroundService->callService($component, $url, $body, $query, $headers, true, $method)->then(
-            function ($response) use ($objectEntity, $url) {
-                $this->onFulfilled($response, $objectEntity, $url);
+            function ($response) use ($objectEntity, $url, $method) {
+//                var_dump('succes');
+                $this->onFulfilled($response, $objectEntity, $url, $method);
             },
             function ($error) use ($objectEntity) {
+//                var_dump('error');
                 $this->onError($error, $objectEntity);
             }
         );

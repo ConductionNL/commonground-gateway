@@ -79,6 +79,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             }
         }
 
+//        var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
         $this->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
 
         return $promises;
