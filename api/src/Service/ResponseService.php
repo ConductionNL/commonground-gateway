@@ -100,7 +100,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    public function renderResult(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
+    public function renderResult(ObjectEntity $result, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -217,7 +217,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    private function renderValues(ObjectEntity $result, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
+    private function renderValues(ObjectEntity $result, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -320,7 +320,7 @@ class ResponseService
      */
     // Old $MaxDepth;
 //    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
-    private function renderObjects(ObjectEntity $result, Value $value, $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
+    private function renderObjects(ObjectEntity $result, Value $value, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 

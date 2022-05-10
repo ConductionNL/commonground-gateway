@@ -914,7 +914,7 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, $fields): array
+    public function handleGet(ObjectEntity $object, ?array $fields): array
     {
         return $this->responseService->renderResult($object, $fields);
     }
@@ -929,7 +929,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(string $entityName, Request $request, $fields, $extension, $filters = null): array
+    public function handleSearch(string $entityName, Request $request, ?array $fields, $extension, $filters = null): array
     {
         $query = $request->query->all();
         unset($query['limit']);
