@@ -233,7 +233,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $key]);
 
         if (!$application || !$application->getResource()) {
-            throw new AuthenticationException('Invalid ApiKey');
+            throw new AuthenticationException('Invalid ApiKey: '.$key);
         }
 
         try {
