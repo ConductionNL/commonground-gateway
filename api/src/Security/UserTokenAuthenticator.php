@@ -239,7 +239,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         try {
             $user = $this->commonGroundService->getResource($application->getResource(), [], false);
         } catch (\Exception $exception) {
-            throw new AuthenticationException('Invalid User Uri');
+            throw new AuthenticationException('Invalid User Uri: '.$application->getResource());
         }
         $this->session->set('apiKeyApplication', $application->getId()->toString());
 
