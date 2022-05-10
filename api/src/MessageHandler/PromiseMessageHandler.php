@@ -50,15 +50,15 @@ class PromiseMessageHandler implements MessageHandlerInterface
         }
     }
 
-    public function getPromises(ObjectEntity $objectEntity, array $parentObjects, string $method): array
+    public function getPromises(ObjectEntity $objectEntity, array $parentObjects, string $method, int $level = 0): array
     {
         $promises = [];
-        if (in_array($objectEntity, $parentObjects)) {
+        if (in_array($objectEntity, $parentObjects) || $level > 2) {
             return $promises;
         }
         $parentObjects[] = $objectEntity;
         foreach ($objectEntity->getSubresources() as $subresource) {
-            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects, $method));
+            $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects, $method, $level + 1));
         }
         if ($objectEntity->getEntity()->getGateway()) {
             $promise = $this->objectEntityService->createPromise($objectEntity, $method);
