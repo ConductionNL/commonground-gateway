@@ -34,26 +34,26 @@ class OIDCAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): PassportInterface
     {
         $code = $request->query->get('code');
-        $method = $request->getMethod();
-        $identifier = $request->query->get('identifier');
+        $method = $request->attributes->get('method');
+        $identifier = $request->attributes->get('identifier');
 
         $result = $this->authenticationService->authenticate($method, $identifier, $code);
+
         return new Passport(
             new UserBadge($result['email'], function($userIdentifier) use ($result) {
                 return new AuthenticationUser(
-                    $result['username'],
-                    '', $result['givenName'],
-                    $result['familyName'],
-                    "{$result['givenName']} {$result['familyName']}",
+                    $result['email'],
+                    '', $result['givenName'] ?? '',
+                    $result['familyName'] ?? '',
+                    $result['name'] ?? '',
                     null,
-                    $result['groups'],
+                    $result['groups'] ?? [],
                     $result['email']
                 );
             }),
             new CustomCredentials(
                 function($credentials, $user) {
-                    $result = $credentials['service']->authenticate($credentials['method'], $credentials['identifier'], $credentials['code']);
-                    return $user->getUserIdentifier() == $result['username'];
+                    return true;
                     }, ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
             )
         );

@@ -3,21 +3,21 @@ issuer: http://127.0.0.1:5556/dex
 storage:
     type: sqlite3
     config:
-        file: var/sqlite/dex.db
+        file: var/dex/dex.db
 
 web:
-    http: 127.0.0.1:5556
+    http: 0.0.0.0:5556
 
-telemetry:
-    http: 127.0.0.1:5558
-
-grpc:
-    addr: 127.0.0.1:5557
+#telemetry:
+#    http: 127.0.0.1:5558
+#
+#grpc:
+#    addr: 127.0.0.1:5557
 
 staticClients:
     - id: common-gateway
       redirectURIs:
-          - 'http://127.0.0.1:80/login/oidc/{identifier}'
+          - 'http://localhost/login/oidc/dex'
       name: 'Common Gateway'
       secret: ZXhhbXBsZS1hcHAtc2VjcmV0
 

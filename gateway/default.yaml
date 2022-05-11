@@ -8,6 +8,20 @@
 #        sourceType: github
 #        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
 
+App\Entity\Authentication:
+    dex:
+        id: bdbdb679-2b4b-461f-827d-eb812864b2b1
+        name: dex
+        authenticateUrl: http://localhost:5556/dex/auth
+        tokenUrl: http://dex:5556/dex/token
+        secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+        clientId: common-gateway
+        scopes:
+            - openid
+            - email
+            - groups
+            - profile
+
 # Entities
 App\Entity\Entity:
     # Organization Entity

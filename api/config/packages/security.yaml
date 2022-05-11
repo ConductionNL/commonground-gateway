@@ -1,25 +1,30 @@
 security:
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    enable_authenticator_manager: true
     providers:
         authenticationProvider:
             id: Conduction\SamlBundle\Security\User\AuthenticationProvider
     firewalls:
         main:
-            anonymous: ~
+#            anonymous: ~
             logout:
                 path: app_user_logout
                 target: app_user_redirect
             stateless: false
             provider: authenticationProvider
-            guard:
-                authenticators:
-                    - Conduction\DigidBundle\Security\CommongroundDigidAuthenticator
-                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
-                    - App\Security\DigispoofAuthenticator
-                    - App\Security\OauthAuthenticator
-                    - App\Security\BasicAuthAuthenticator
-                    - App\Security\UserTokenAuthenticator
-                entry_point: App\Security\UserTokenAuthenticator
+            custom_authenticators: 
+                - App\Security\OIDCAuthenticator
+                - App\Security\TokenAuthenticator
+#            entry_point: App\Security\OIDCAuthenticator
+#            guard:
+#                authenticators:
+#                    - Conduction\DigidBundle\Security\CommongroundDigidAuthenticator
+#                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
+#                    - App\Security\DigispoofAuthenticator
+#                    - App\Security\OauthAuthenticator
+#                    - App\Security\BasicAuthAuthenticator
+#                    - App\Security\UserTokenAuthenticator
+#                entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 

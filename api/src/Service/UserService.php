@@ -25,6 +25,7 @@ class UserService
 
             return [];
         }
+        var_dump($user->getPerson());
         if ($user->getPerson() && $person = $this->objectEntityService->getObjectByUri($user->getPerson())) {
             return $person;
         } elseif ($user->getPerson()) {
