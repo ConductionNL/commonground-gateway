@@ -1056,7 +1056,7 @@ class EavService
     /**
      * Handles a delete api call.
      *
-     * @param ObjectEntity $object
+     * @param ObjectEntity         $object
      * @param ArrayCollection|null $maxDepth
      *
      * @return array
