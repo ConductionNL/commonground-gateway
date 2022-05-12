@@ -1287,7 +1287,10 @@ class ObjectEntityService
     {
         $results = [];
         foreach ($objects as $object) {
-            $results[] = $this->renderPostBody($object);
+            $results[] =
+                $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
+                    $this->renderPostBody($object) :
+                    $object->getUri();
         }
         if (!$attribute->getMultiple()) {
             if (count($results) == 1) {
