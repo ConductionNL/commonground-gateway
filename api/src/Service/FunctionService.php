@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 
 class FunctionService
@@ -32,12 +33,14 @@ class FunctionService
     {
         switch ($function) {
             case 'organization':
-                if (array_key_exists('organizationType', $data) && $data['organizationType']) {
-                    $organizationType = $data['organizationType'];
-                } else {
-                    $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                if ($data['method'] == 'POST') {
+                    if (array_key_exists('organizationType', $data) && $data['organizationType']) {
+                        $organizationType = $data['organizationType'];
+                    } else {
+                        $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                    }
+                    $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 }
-                $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 break;
             case 'userGroup':
                 if ($data['method'] == 'PUT') {
@@ -72,15 +75,15 @@ class FunctionService
             $objectEntity->setOrganization($uri);
 
             $id = substr($uri, strrpos($uri, '/') + 1);
-            if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+            if (!$organization = $this->isResource($uri)) {
                 if (!$organization = $this->objectEntityService->getObjectByUri($uri)) {
-                    $organization = $this->isResource($uri);
+                    $organization = $this->objectEntityService->getOrganizationObject($id);
                 }
             }
             // Invalidate all changed & related organizations from cache
             if (!empty($organization)) {
                 $tags = ['organization_'.md5($uri)];
-                if (count($organization['subOrganizations']) > 0) {
+                if (array_key_exists('subOrganizations', $organization) && count($organization['subOrganizations']) > 0) {
                     foreach ($organization['subOrganizations'] as $subOrganization) {
                         $tags[] = 'organization_'.md5($subOrganization['@id']);
                     }
@@ -120,7 +123,7 @@ class FunctionService
      * @param $url
      *
      * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return array
      */
@@ -132,9 +135,9 @@ class FunctionService
         }
 
         $id = substr($url, strrpos($url, '/') + 1);
-        if (!$organization = $this->objectEntityService->getOrganizationObject($id)) {
+        if (!$organization = $this->isResource($url)) {
             if (!$organization = $this->objectEntityService->getObjectByUri($url)) {
-                $organization = $this->isResource($url);
+                $organization = $this->objectEntityService->getOrganizationObject($id);
             }
         }
         if (!empty($organization)) {
@@ -165,5 +168,19 @@ class FunctionService
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * @TODO
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return bool
+     */
+    public function removeResultFromCache(ObjectEntity $objectEntity): bool
+    {
+        return $this->cache->deleteItem('object_'.md5($objectEntity->getId())) && $this->cache->commit();
     }
 }

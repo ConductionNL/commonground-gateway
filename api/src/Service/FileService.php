@@ -50,7 +50,7 @@ class FileService
     public function checkUserScopesForFile(ObjectEntity $objectEntity)
     {
         if (!$this->objectEntityService->checkOwner($objectEntity)) {
-            $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes('GET', null, $objectEntity->getEntity()));
+            $this->authorizationService->checkAuthorization(['entity' => $objectEntity->getEntity(), 'object' => $objectEntity]);
         }
     }
 

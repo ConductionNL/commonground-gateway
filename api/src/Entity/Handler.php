@@ -35,6 +35,7 @@ use Symfony\Component\Validator\Constraints\Json;
  * @ORM\Entity(repositoryClass="App\Repository\HandlerRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  * @ApiFilter(SearchFilter::class, properties={
+ *     "name": "exact",
  *     "endpoints.id": "exact"
  * })
  */
@@ -214,6 +215,17 @@ class Handler
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $methodOverrides = [];
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $prefix;
 
     public function __construct()
     {
@@ -437,6 +449,30 @@ class Handler
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getMethodOverrides(): ?array
+    {
+        return $this->methodOverrides;
+    }
+
+    public function setMethodOverrides(?array $methodOverrides): self
+    {
+        $this->methodOverrides = $methodOverrides;
+
+        return $this;
+    }
+
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(?string $prefix): self
+    {
+        $this->prefix = $prefix;
 
         return $this;
     }

@@ -114,7 +114,7 @@ class SubscriberService
 
             // create log
             $responseLog = new Response(json_encode($data), 201, []);
-            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($data), null, 'out');
+            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 11, json_encode($data), null, 'out');
         } else {
             // Create a gateway object of entity $subscriber->getEntityOut() with the $data array
             $newObjectEntity = $this->eavService->getObject(null, 'POST', $subscriber->getEntityOut());

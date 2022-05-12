@@ -88,12 +88,11 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
 
         if (isset($user['person']) && filter_var($user['person'], FILTER_VALIDATE_URL)) {
             $id = substr($user['person'], strrpos($user['person'], '/') + 1);
-            $person = $this->objectEntityService->getPersonObject($id);
-
-            if (empty($person) && $this->commonGroundService->getComponent('cc')) {
-                $person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id]);
-            } else {
-                $person = [];
+            if (!$this->commonGroundService->getComponent('cc') ||
+                !$person = $this->commonGroundService->getResource(['component' => 'cc', 'type' => 'people', 'id' => $id])) {
+                if (!$person = $this->objectEntityService->getPersonObject($id)) {
+                    $person = $this->objectEntityService->getObjectByUri($user['person']);
+                }
             }
         }
 

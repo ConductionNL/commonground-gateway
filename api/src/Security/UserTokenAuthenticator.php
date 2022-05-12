@@ -241,6 +241,10 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $payload['userId']], [], false, false, true, false, false);
         $session = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'sessions', 'id' => $payload['session']], [], false, false, true, false, false);
 
+        if ($session === false) {
+            throw new AuthenticationException('The provided token refers to an unknown (and thus, invalid) session');
+        }
+
         $this->checkExpiry($session);
 
         return $this->getUcUser($user);
@@ -251,13 +255,13 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $key]);
 
         if (!$application || !$application->getResource()) {
-            throw new AuthenticationException('Invalid ApiKey');
+            throw new AuthenticationException('Invalid ApiKey: '.$key);
         }
 
         try {
             $user = $this->commonGroundService->getResource($application->getResource(), [], false);
         } catch (\Exception $exception) {
-            throw new AuthenticationException('Invalid User Uri');
+            throw new AuthenticationException('Invalid User Uri: '.$application->getResource());
         }
         $this->session->set('apiKeyApplication', $application->getId()->toString());
 

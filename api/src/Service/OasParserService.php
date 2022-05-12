@@ -197,7 +197,8 @@ class OasParserService
 
         // If format == date-time set type: datetime
         isset($schema['format']) && $schema['format'] === 'date-time' && $attribute->setType('datetime');
-        isset($schema['format']) && $schema['format'] !== 'date-time' && $attribute->setFormat($schema['format']);
+        isset($schema['format']) && $schema['format'] === 'date' && $attribute->setType('date');
+        isset($schema['format']) && ($schema['format'] !== 'date-time' && $schema['format'] !== 'date') && $attribute->setFormat($schema['format']);
         isset($schema['readyOnly']) && $attribute->setReadOnly($schema['readOnly']);
         isset($schema['maxLength']) && $attribute->setMaxLength($schema['maxLength']);
         isset($schema['minLength']) && $attribute->setMinLength($schema['minLength']);

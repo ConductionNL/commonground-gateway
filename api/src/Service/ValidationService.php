@@ -104,7 +104,7 @@ class ValidationService
      *
      * @return ObjectEntity
      */
-    public function validateEntity(ObjectEntity $objectEntity, array $post, ?bool $dontCheckAuth = false): ObjectEntity
+    public function validateEntity(ObjectEntity $objectEntity, array $post, bool $persist = true, ?bool $dontCheckAuth = false): ObjectEntity
     {
         $entity = $objectEntity->getEntity();
 
@@ -249,15 +249,13 @@ class ValidationService
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value, bool $dontCheckAuth = false): ObjectEntity
     {
-        if (!$dontCheckAuth) {
-            try {
-                if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-                    $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-                }
-            } catch (AccessDeniedException $e) {
-                $objectEntity->addError($attribute->getName(), $e->getMessage());
-
-                return $objectEntity;
+        try {
+            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
+                $this->authorizationService->checkAuthorization([
+                    'method'    => $objectEntity->getUri() ? 'PUT' : 'POST',
+                    'attribute' => $attribute,
+                    'value'     => $value,
+                ]);
             }
         }
 
@@ -503,7 +501,9 @@ class ValidationService
                     $this->createdObjects[] = $subObject;
                 }
 
-                $subObject = $this->validateEntity($subObject, $object, $dontCheckAuth);
+                $subObject->setSubresourceIndex($key);
+                $subObject = $this->validateEntity($subObject, $object);
+                $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                 !$dontCheckAuth && $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
@@ -917,10 +917,10 @@ class ValidationService
     private function validateAttributeType(ObjectEntity $objectEntity, Attribute $attribute, $value, ?bool $dontCheckAuth = false): ObjectEntity
     {
         // Validation for enum (if attribute type is not object or boolean)
-        if ($attribute->getEnum() && !in_array($value, $attribute->getEnum()) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
-            $enumValues = '['.implode(', ', $attribute->getEnum()).']';
+        if ($attribute->getEnum() && !in_array(strtolower($value), array_map('strtolower', $attribute->getEnum())) && $attribute->getType() != 'object' && $attribute->getType() != 'boolean') {
+            $enumValues = '['.implode(', ', array_map('strtolower', $attribute->getEnum())).']';
             $errorMessage = $attribute->getMultiple() ? 'All items in this array must be one of the following values: ' : 'Must be one of the following values: ';
-            $objectEntity->addError($attribute->getName(), $errorMessage.$enumValues.' ('.$value.' is not).');
+            $objectEntity->addError($attribute->getName(), $errorMessage.$enumValues.' ('.strtolower($value).' is not).');
         }
 
         // Do validation for attribute depending on its type
@@ -1469,7 +1469,7 @@ class ValidationService
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         // if no format is provided we dont validate TODO validate uri
-        if ($attribute->getFormat() == null || $attribute->getFormat() === 'uri') {
+        if ($attribute->getFormat() == null || in_array($attribute->getFormat(), ['uri', 'duration'])) {
             return $objectEntity;
         }
 
@@ -1485,7 +1485,9 @@ class ValidationService
         if (in_array($format, $allowedValidations)) {
             if ($format == 'dutch_pc4') {
                 //validate dutch_pc4
-                $this->validateDutchPC4($value);
+                if (!$this->validateDutchPC4($value)) {
+                    $objectEntity->addError($attribute->getName(), 'This is not a valid Dutch postalCode');
+                }
             } else {
                 try {
                     Validator::$format()->check($value);
@@ -1564,7 +1566,7 @@ class ValidationService
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
                     if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
-                        $ubjectUri = $objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
+                        $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
                     }
@@ -1672,11 +1674,11 @@ class ValidationService
         }
         // log hier
         $logPost = !is_string($post) ? json_encode($post) : $post;
-        $this->logService->saveLog($this->logService->makeRequest(), null, $logPost, null, 'out');
+        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $logPost, null, 'out');
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
-            function ($response) use ($objectEntity, $url, $method, $setOrganization) {
+            function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
                 // Lets use the correct response type
@@ -1712,21 +1714,21 @@ class ValidationService
                 }
 
                 // Set organization for this object
-                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-                } else {
-                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
-                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                    $objectEntity->setApplication(!empty($application) ? $application : null);
-                }
-                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-                    'method' => $method,
-                    'uri'    => $objectEntity->getUri(),
-                ]);
-                if (isset($setOrganization)) {
-                    $objectEntity->setOrganization($setOrganization);
-                }
+//                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+//                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+//                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+//                } else {
+//                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+//                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+//                    $objectEntity->setApplication(!empty($application) ? $application : null);
+//                }
+//                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+//                    'method' => $method,
+//                    'uri'    => $objectEntity->getUri(),
+//                ]);
+//                if (isset($setOrganization)) {
+//                    $objectEntity->setOrganization($setOrganization);
+//                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1739,7 +1741,7 @@ class ValidationService
 
                 $responseLog = new Response(json_encode($result), 201, []);
                 // log hier
-                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($result), null, 'out');
+                $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 13, json_encode($result), null, 'out');
 
                 // Notify notification component
                 $this->notifications[] = [
@@ -1774,7 +1776,7 @@ class ValidationService
                 } else {
                     $responseLog = new Response($error_message, $error->getResponse()->getStatusCode(), []);
                 }
-                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, $error_message, null, 'out');
+                $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
                 /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
                 $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'.$log->getId().') for a full error report');
             }
@@ -1839,12 +1841,7 @@ class ValidationService
             return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
 
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-            $uri = 'https://';
-        } else {
-            $uri = 'http://';
-        }
-        $uri .= isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+        $uri = $_SERVER['HTTP_HOST'] === 'localhost' ? 'http://localhost' : 'https://'.$_SERVER['HTTP_HOST'];
 
         if ($objectEntity->getEntity()->getRoute()) {
             return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();

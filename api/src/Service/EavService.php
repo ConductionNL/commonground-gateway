@@ -455,14 +455,23 @@ class EavService
         if ((!isset($object) || !$object->getUri()) || !$this->objectEntityService->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
-                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($request->getMethod(), null, $entity));
+                $this->authorizationService->checkAuthorization([
+                    'method' => $request->getMethod(),
+                    'entity' => $entity,
+                    'object' => $object ?? null,
+                ]);
             } catch (AccessDeniedException $e) {
-                $responseType = Response::HTTP_FORBIDDEN;
                 $result = [
                     'message' => $e->getMessage(),
                     'type'    => 'Forbidden',
                     'path'    => $entity->getName(),
                     'data'    => [],
+                ];
+
+                return [
+                    'result'       => $result,
+                    'responseType' => Response::HTTP_FORBIDDEN,
+                    'object'       => $object ?? null,
                 ];
             }
         }
@@ -905,7 +914,7 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, $fields): array
+    public function handleGet(ObjectEntity $object, ?array $fields): array
     {
         return $this->responseService->renderResult($object, $fields);
     }
@@ -920,7 +929,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(string $entityName, Request $request, $fields, $extension, $filters = null): array
+    public function handleSearch(string $entityName, Request $request, ?array $fields, $extension, $filters = null): array
     {
         $query = $request->query->all();
         unset($query['limit']);
@@ -939,11 +948,42 @@ class EavService
         /* @todo we might want some filtering here, also this should be in the entity repository */
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
-            $this->convertToGatewayService->convertEntityObjects($entity);
+            $this->convertToGatewayService->convertEntityObjects($entity, $query);
         }
         unset($query['updateGatewayPool']);
 
+        // Allowed order by
+        $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
+        // todo: ^^^ add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
+        // todo: sortable?
+
+        $order = [];
+        if (array_key_exists('order', $query)) {
+            $order = $query['order'];
+            unset($query['order']);
+            if (count($order) > 1) {
+                $message = 'Only one order query param at the time is allowed.';
+            }
+            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
+                $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
+            }
+            if (!in_array(array_keys($order)[0], $orderCheck)) {
+                $orderCheckStr = implode(', ', $orderCheck);
+                $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
+            }
+            if (isset($message)) {
+                return [
+                    'message' => $message,
+                    'type'    => 'error',
+                    'path'    => $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0],
+                    'data'    => ['order' => $order],
+                ];
+            }
+        }
+
+        // Allowed filters
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
+
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
@@ -955,13 +995,7 @@ class EavService
                 $param = '_'.ltrim($param, $param[0]);
             }
             if (!in_array($param, $filterCheck)) {
-                $filterCheckStr = '';
-                foreach ($filterCheck as $filter) {
-                    $filterCheckStr = $filterCheckStr.$filter;
-                    if ($filter != end($filterCheck)) {
-                        $filterCheckStr = $filterCheckStr.', ';
-                    }
-                }
+                $filterCheckStr = implode(', ', $filterCheck);
 
                 if (is_array($value)) {
                     $value = end($value);
@@ -979,9 +1013,15 @@ class EavService
         if ($filters) {
             $query = array_merge($query, $filters);
         }
+        $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
 
-        $total = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
-        $objects = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $offset, $limit);
+        // todo: remove this if and only use findAndCountByEntity(), when $order is not empty findAndCountByEntity() throws a sql error (must appear in the GROUP BY clause or be used in an aggregate function)
+        if ($order) {
+            $repositoryResult['total'] = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
+            $repositoryResult['objects'] = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
+        } else {
+            $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
+        }
 
         // Lets see if we need to flatten te responce (for example csv use)
         $flat = false;
@@ -990,8 +1030,10 @@ class EavService
         }
 
         $results = [];
-        foreach ($objects as $object) {
-            $results[] = $this->responseService->renderResult($object, $fields, false, $flat);
+        foreach ($repositoryResult['objects'] as $object) {
+            // Old $MaxDepth in renderResult
+//            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, $flat);
         }
 
         // If we need a flattend responce we are al done
@@ -1001,9 +1043,9 @@ class EavService
 
         // If not lets make it pritty
         $results = ['results' => $results];
-        $results['total'] = $total;
+        $results['total'] = $repositoryResult['total'];
         $results['limit'] = $limit;
-        $results['pages'] = ceil($total / $limit);
+        $results['pages'] = ceil($repositoryResult['total'] / $limit);
         $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
         $results['page'] = floor($offset / $limit) + 1;
         $results['start'] = $offset + 1;
@@ -1015,22 +1057,12 @@ class EavService
      * Handles a delete api call.
      *
      * @param ObjectEntity $object
+     * @param ArrayCollection|null $maxDepth
      *
      * @return array
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
-        // TODO: check if we are allowed to delete this?!!! (this is a copy paste):
-        //        try {
-        //            if (!$this->objectEntityService->checkOwner($objectEntity) && !($attribute->getDefaultValue() && $value === $attribute->getDefaultValue())) {
-        //                $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($objectEntity->getUri() ? 'PUT' : 'POST', $attribute));
-        //            }
-        //        } catch (AccessDeniedException $e) {
-        //            $objectEntity->addError($attribute->getName(), $e->getMessage());
-        //
-        //            return $objectEntity;
-        //        }
-
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
