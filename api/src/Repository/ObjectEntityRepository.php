@@ -75,11 +75,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query = $query ?? $this->createQuery($entity, $filters, $order);
 
         return $query
-      // filters toevoegen
-      ->setFirstResult($offset)
-      ->setMaxResults($limit)
-      ->getQuery()
-      ->getResult();
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     // todo: see findAndCountByEntity() this function can be removed, but here in case we ever want to use this separately from findByEntity()
@@ -177,6 +176,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function cleanArray(array $array, array $filterCheck): array
     {
         $result = [];
+
+        // Handles valueScopeFilters. This will prevent duplicate filters and makes sure the user can not bypass authorization by using filters!
+        $array = $this->handleValueScopeFilters($array);
+
         foreach ($array as $key => $value) {
             $key = str_replace(['_', '..'], ['.', '._'], $key);
             if (substr($key, 0, 1) == '.') {
@@ -200,23 +203,18 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function handleValueScopeFilters(array $array): array
     {
-        foreach ($filters as $key => $value) {
-            if (is_array($value)) {
-                $query->leftJoin("$objectPrefix.objectValues", "$prefix$key");
-                $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
-                $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
-                $query = $this->buildQuery(
-                    $value,
-                    $query,
-                    $level + 1,
-                    'subValue'.$key.$level,
-                    'subObjects'.$key.$level
-                );
-            } elseif (substr($key, 0, 1) == '_' || $key == 'id') {
-                $query = $this->getObjectEntityFilter($query, $key, $value, $objectPrefix);
-            } else {
-                $query->andWhere("$prefix.stringValue = :$key")
-          ->setParameter($key, $value);
+        foreach ($array as $key => $value) {
+            if (str_ends_with($key, '|valueScopeFilter')) {
+                $key = str_replace('|valueScopeFilter', '', $key);
+                // If a filter is added because of scopes & the user wants to filter on the same $key, make sure we give prio to the user input,
+                // but only allow the filter if the value used as input is present in the valueScopesFilter values.
+                if (in_array($key, array_keys($array))) { //todo this does not yet work for $key (/valueScopes with) subresources: emails.email, because at this point they will have _ instead of . (emails_email)
+                    if (in_array($array[$key], $value)) {
+                        unset($array[$key.'|valueScopeFilter']);
+                        continue;
+                    }
+                    unset($array[$key]);
+                }
             }
         }
 
@@ -234,27 +232,23 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function recursiveFilterSplit(array $key, $value, array $result): array
     {
-        $query = $this->createQueryBuilder('o')
-      ->andWhere('o.entity = :entity')
-      ->setParameters(['entity' => $entity]);
-
-        if (!empty($filters)) {
-            $filterCheck = $this->getFilterParameters($entity);
-
-            $filters = $this->cleanArray($filters, $filterCheck);
-
-            $query->leftJoin('o.objectValues', 'value');
-            $this->buildQuery($filters, $query)->distinct();
+        if (count($key) > 1) {
+            $currentKey = array_shift($key);
+            $result[$currentKey] = $this->recursiveFilterSplit($key, $value, $result[$currentKey] ?? []);
+        } else {
+            $newKey = array_shift($key);
+            if (is_array($value)) {
+                $newKey = $newKey.'|arrayValue';
+                // todo: remove from & till after gateway refactor
+                if (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
+                    $newKey = $newKey.'|compareDateTime';
+                }
+            }
+            $result[$newKey] = $value;
         }
 
-        //TODO: owner check
-        //        $user = $this->tokenStorage->getToken()->getUser();
-        //
-        //        if (is_string($user)) {
-        //            $user = null;
-        //        } else {
-        //            $user = $user->getUserIdentifier();
-        //        }
+        return $result;
+    }
 
     /**
      * Expands a QueryBuilder in the case that filters are used in createQuery().
@@ -276,19 +270,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
             $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['key']);
 
-        // $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.owner == :userId')
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization')
-      //  ->setParameter('userId', $userId)
-      ->setParameter('organizations', $organizations)
-      ->setParameter('parentOrganizations', $parentOrganizations)
-      ->setParameter('defaultOrganization', 'http://testdata-organization');
-        /*
-            if (empty($this->session->get('organizations'))) {
-                $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', []);
+            if (substr($filterKey['key'], 0, 1) == '_' || $filterKey['key'] == 'id') {
+                // If the filter starts with _ or == id we need to handle this filter differently
+                $query = $this->getObjectEntityFilter($query, $filterKey['key'], $value, $objectPrefix);
+            } elseif (is_array($value) && !$filterKey['arrayValue']) {
+                // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
+                $query = $this->buildSubresourceQuery($query, $filterKey['key'], $value, $level, $prefix);
             } else {
-                $query->andWhere('o.organization IN (:organizations)')->setParameter('organizations', $this->session->get('organizations'));
+                $query = $this->buildFilterQuery($query, $filterKey, $value, $prefix);
             }
-            */
+        }
 
         return $query;
     }
@@ -333,49 +324,35 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
         switch ($key) {
-      case 'id':
-        $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
-        break;
-      case '_id':
-        $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
-        break;
-      case '_externalId':
-        $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
-        break;
-      case '_uri':
-        $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
-        break;
-      case '_organization':
-        $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
-        break;
-      case '_application':
-        $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
-        break;
-      case '_dateCreated':
-        if (array_key_exists('from', $value)) {
-            $date = new DateTime($value['from']);
-            $query->andWhere($prefix.'.dateCreated >= :dateCreatedFrom')->setParameter('dateCreatedFrom', $date->format('Y-m-d H:i:s'));
+            case 'id':
+                $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
+                break;
+            case '_id':
+                $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
+                break;
+            case '_externalId':
+                $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
+                break;
+            case '_uri':
+                $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
+                break;
+            case '_organization':
+                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
+                break;
+            case '_application':
+                $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
+                break;
+            case '_dateCreated':
+                $query = $this->getDateTimeFilter($query, 'dateCreated', $value, $prefix);
+                break;
+            case '_dateModified':
+                $query = $this->getDateTimeFilter($query, 'dateModified', $value, $prefix);
+                break;
+            default:
+                //todo: error?
+//                var_dump('Not supported filter for ObjectEntity: '.$key);
+                break;
         }
-        if (array_key_exists('till', $value)) {
-            $date = new DateTime($value['till']);
-            $query->andWhere($prefix.'.dateCreated <= :dateCreatedTill')->setParameter('dateCreatedTill', $date->format('Y-m-d H:i:s'));
-        }
-        break;
-      case '_dateModified':
-        if (array_key_exists('from', $value)) {
-            $date = new DateTime($value['from']);
-            $query->andWhere($prefix.'.dateModified >= :dateModifiedFrom')->setParameter('dateModifiedFrom', $date->format('Y-m-d H:i:s'));
-        }
-        if (array_key_exists('till', $value)) {
-            $date = new DateTime($value['till']);
-            $query->andWhere($prefix.'.dateModified <= :dateModifiedTill')->setParameter('dateModifiedTill', $date->format('Y-m-d H:i:s'));
-        }
-        break;
-      default:
-        //todo: error?
-        //                var_dump('Not supported filter for ObjectEntity: '.$key);
-        break;
-    }
 
         return $query;
     }
@@ -530,7 +507,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
-
         // NOTE:
         // Filter id looks for ObjectEntity id and externalId
         // Filter _id looks specifically/only for ObjectEntity id
@@ -543,8 +519,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            //            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
-            if ($attribute->getType() == 'string') {
+//            if ($attribute->getType() == 'string' && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
@@ -582,12 +558,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     // Filter functie schrijven, checken op betaande atributen, zelf looping
-  // voorbeeld filter student.generaldDesription.landoforigen=NL
-  //                  entity.atribute.propert['name'=landoforigen]
-  //                  (objectEntity.value.objectEntity.value.name=landoforigen and
-  //                  objectEntity.value.objectEntity.value.value=nl)
+    // voorbeeld filter student.generaldDesription.landoforigen=NL
+    //                  entity.atribute.propert['name'=landoforigen]
+    //                  (objectEntity.value.objectEntity.value.name=landoforigen and
+    //                  objectEntity.value.objectEntity.value.value=nl)
 
-  /*
+    /*
     public function findOneBySomeField($value): ?ObjectEntity
     {
         return $this->createQueryBuilder('o')

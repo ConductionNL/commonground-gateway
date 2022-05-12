@@ -6,6 +6,7 @@ use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
+use Doctrine\ORM\EntityManagerInterface;
 use Jose\Component\Signature\Serializer\CompactSerializer;
 use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -28,13 +29,15 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private FunctionService $functionService;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         CommonGroundService $commonGroundService,
         AuthenticationService $authenticationService,
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService
+        FunctionService $functionService,
+        EntityManagerInterface $entityManager
     )
     {
         $this->commonGroundService = $commonGroundService;
@@ -42,6 +45,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->functionService = $functionService;
+        $this->entityManager = $entityManager;
     }
     /**
      * @inheritDoc
@@ -174,7 +178,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     public function authenticate(Request $request): PassportInterface
     {
         $key = $request->headers->get('Authorization');
-        $application = $this->em->getRepository('App:Application')->findOneBy(['secret' => $key]);
+        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['secret' => $key]);
         if (!$application || !$application->getResource()) {
             throw new AuthenticationException('Invalid ApiKey');
         }
@@ -221,9 +225,8 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
-
         return new Passport(
-            new UserBadge($user['user']['id'] ?? $user['userId'], function ($userIdentifier) use ($user) {
+            new UserBadge($user['id'], function ($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $user['user']['id'] ?? $user['username'],
@@ -232,7 +235,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
                     $user['user']['familyName'] ?? $user['username'],
                     $user['username'],
                     '',
-                    $this->prefixRoles($user['roles']),
+                    $user['roles'],
                     $user['username'],
                     $user['locale'],
                     $user['organization'] ?? null,
@@ -241,7 +244,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             }),
             new CustomCredentials(
                 function(array $credentials, UserInterface $user) {
-                    return $user->getUserIdentifier() == $credentials['userId'];
+                    return $user->getUserIdentifier() == $credentials['id'];
                 }, $user
             )
         );
