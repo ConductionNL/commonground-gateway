@@ -3,12 +3,10 @@
 namespace App\Security;
 
 use App\Service\FunctionService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
-use Jose\Component\Signature\Serializer\CompactSerializer;
-use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,8 +36,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         SessionInterface $session,
         FunctionService $functionService,
         EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         $this->commonGroundService = $commonGroundService;
         $this->parameterBag = $parameterBag;
         $this->authenticationService = $authenticationService;
@@ -47,6 +44,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         $this->functionService = $functionService;
         $this->entityManager = $entityManager;
     }
+
     /**
      * @inheritDoc
      */
@@ -66,7 +64,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             throw new AuthenticationException('The provided token is not valid');
         }
         $now = new \DateTime();
-        if($payload['exp'] < $now->getTimestamp()) {
+        if ($payload['exp'] < $now->getTimestamp()) {
             throw new AuthenticationException('The provided token has expired');
         }
 
@@ -132,7 +130,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         $organizations = $user['organizations'] ?? [];
         $parentOrganizations = [];
-        foreach($organizations as $organization) {
+        foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
             $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
         }
@@ -182,6 +180,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         if (!$application || !$application->getResource()) {
             throw new AuthenticationException('Invalid ApiKey');
         }
+
         try {
             $user = $this->commonGroundService->getResource($application->getResource(), [], false);
         } catch (\Exception $exception) {
@@ -243,9 +242,10 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
                 );
             }),
             new CustomCredentials(
-                function(array $credentials, UserInterface $user) {
+                function (array $credentials, UserInterface $user) {
                     return $user->getUserIdentifier() == $credentials['id'];
-                }, $user
+                },
+                $user
             )
         );
     }

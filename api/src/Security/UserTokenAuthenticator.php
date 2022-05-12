@@ -169,7 +169,8 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             '',
             $payload['user']['givenName'],
             $payload['user']['familyName'],
-            $payload['user']['name'], '',
+            $payload['user']['name'],
+            '',
             $payload['roles'],
             $payload['user']['id'],
             null
@@ -226,7 +227,8 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             $user['username'],
             $user['locale'],
             isset($user['organization']) ? $user['organization'] : null,
-            isset($user['person']) ? $user['person'] : null);
+            isset($user['person']) ? $user['person'] : null
+        );
     }
 
     public function validateUcToken(string $token): AuthenticationUser

@@ -235,9 +235,9 @@ class AuthenticationService
 
     public function handleOidcRedirectUrl(string $redirectUrl, Authentication $authentication): string
     {
-        $scopes = implode(" ", $authentication->getScopes());
-        return "{$authentication->getAuthenticateUrl()}?client_id={$authentication->getClientId()}&response_type=code&scope={$scopes}&state={$this->session->getId()}&redirect_uri={$redirectUrl}";
+        $scopes = implode(' ', $authentication->getScopes());
 
+        return "{$authentication->getAuthenticateUrl()}?client_id={$authentication->getClientId()}&response_type=code&scope={$scopes}&state={$this->session->getId()}&redirect_uri={$redirectUrl}";
     }
 
     public function handleAdfsRedirectUrl(string $redirectUrl, Authentication $authentication): string

@@ -9,7 +9,6 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use App\Exception\GatewayException;
-use App\Message\NotificationMessage;
 use App\Message\PromiseMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;

@@ -17,7 +17,6 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class OIDCAuthenticator extends AbstractAuthenticator
 {
-
     private AuthenticationService $authenticationService;
 
     public function __construct(AuthenticationService $authenticationService)
@@ -40,10 +39,11 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $result = $this->authenticationService->authenticate($method, $identifier, $code);
 
         return new Passport(
-            new UserBadge($result['email'], function($userIdentifier) use ($result) {
+            new UserBadge($result['email'], function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
                     $result['email'],
-                    '', $result['givenName'] ?? '',
+                    '',
+                    $result['givenName'] ?? '',
                     $result['familyName'] ?? '',
                     $result['name'] ?? '',
                     null,
@@ -52,12 +52,12 @@ class OIDCAuthenticator extends AbstractAuthenticator
                 );
             }),
             new CustomCredentials(
-                function($credentials, $user) {
+                function ($credentials, $user) {
                     return true;
-                    }, ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
+                },
+                ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
             )
         );
-
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

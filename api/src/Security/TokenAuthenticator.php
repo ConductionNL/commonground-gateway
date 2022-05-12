@@ -3,11 +3,9 @@
 namespace App\Security;
 
 use App\Service\FunctionService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\SamlBundle\Security\User\AuthenticationUser;
-use Jose\Component\Signature\Serializer\CompactSerializer;
-use Jose\Component\Signature\Serializer\JWSSerializerManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,14 +33,14 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
         FunctionService $functionService
-    )
-    {
+    ) {
         $this->commonGroundService = $commonGroundService;
         $this->parameterBag = $parameterBag;
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->functionService = $functionService;
     }
+
     /**
      * @inheritDoc
      */
@@ -62,7 +60,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             throw new AuthenticationException('The provided token is not valid');
         }
         $now = new \DateTime();
-        if($payload['exp'] < $now->getTimestamp()) {
+        if ($payload['exp'] < $now->getTimestamp()) {
             throw new AuthenticationException('The provided token has expired');
         }
 
@@ -128,7 +126,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     {
         $organizations = $user['organizations'] ?? [];
         $parentOrganizations = [];
-        foreach($organizations as $organization) {
+        foreach ($organizations as $organization) {
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
             $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
         }
@@ -175,9 +173,10 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
                 );
             }),
             new CustomCredentials(
-                function(array $credentials, UserInterface $user) {
+                function (array $credentials, UserInterface $user) {
                     return $user->getUserIdentifier() == $credentials['userId'];
-                }, $user
+                },
+                $user
             )
         );
     }

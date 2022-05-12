@@ -208,6 +208,7 @@ class ValidaterService
             && $attribute->getInversedBy()->getEntity() === $attribute->getObject()) {
             return true;
         }
+
         return false;
     }
 
@@ -216,9 +217,9 @@ class ValidaterService
      *
      * @param Attribute $attribute
      *
-     * @return Rules\AbstractRule
-     *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Rules\AbstractRule
      */
     private function checkIfAttRequired(Attribute $attribute, int $level): Rules\AbstractRule
     {
