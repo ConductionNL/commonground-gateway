@@ -15,6 +15,7 @@ security:
             custom_authenticators: 
                 - App\Security\OIDCAuthenticator
                 - App\Security\TokenAuthenticator
+                - App\Security\ApiKeyAuthenticator
 #            entry_point: App\Security\OIDCAuthenticator
 #            guard:
 #                authenticators:
