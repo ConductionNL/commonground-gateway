@@ -507,7 +507,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
-
         // NOTE:
         // Filter id looks for ObjectEntity id and externalId
         // Filter _id looks specifically/only for ObjectEntity id

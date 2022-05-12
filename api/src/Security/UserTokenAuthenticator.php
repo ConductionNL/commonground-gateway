@@ -163,7 +163,18 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
 
         $this->session->set('activeOrganization', $this->getActiveOrganization($payload['user'], []));
 
-        return new AuthenticationUser($payload['user']['id'], $payload['user']['id'], '', $payload['user']['givenName'], $payload['user']['familyName'], $payload['user']['name'], '', $payload['roles'], $payload['user']['id'], null);
+        return new AuthenticationUser(
+            $payload['user']['id'],
+            $payload['user']['id'],
+            '',
+            $payload['user']['givenName'],
+            $payload['user']['familyName'],
+            $payload['user']['name'],
+            '',
+            $payload['roles'],
+            $payload['user']['id'],
+            null
+        );
     }
 
     public function getUcUser(array $user): AuthenticationUser
@@ -204,7 +215,20 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
-        return new AuthenticationUser($user['id'], $user['username'], '', $user['username'], $user['username'], $user['username'], '', $user['roles'], $user['username'], $user['locale'], isset($user['organization']) ? $user['organization'] : null, isset($user['person']) ? $user['person'] : null);
+        return new AuthenticationUser(
+            $user['id'],
+            $user['username'],
+            '',
+            $user['username'],
+            $user['username'],
+            $user['username'],
+            '',
+            $user['roles'],
+            $user['username'],
+            $user['locale'],
+            isset($user['organization']) ? $user['organization'] : null,
+            isset($user['person']) ? $user['person'] : null
+        );
     }
 
     public function validateUcToken(string $token): AuthenticationUser

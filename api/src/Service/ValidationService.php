@@ -312,7 +312,6 @@ class ValidationService
         }
 
         //        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
-
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
         if ((!$objectEntity->getHasErrors() || $this->ignoreErrors) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
@@ -1679,7 +1678,7 @@ class ValidationService
         $this->logService->saveLog($this->logService->makeRequest(), null, 12, $logPost, null, 'out');
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
-            // $onFulfilled
+        // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
