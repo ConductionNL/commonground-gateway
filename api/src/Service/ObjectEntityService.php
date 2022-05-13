@@ -1283,10 +1283,11 @@ class ObjectEntityService
         }
     }
 
-    public function renderSubObjects(Collection $objects, Attribute $attribute): ?array
+    public function renderSubObjects(Collection $objects, Attribute $attribute)
     {
         $results = [];
         foreach ($objects as $object) {
+            // We allow cascading on promises, but only if the gateway of the parent entity and subresource match.
             $results[] =
                 $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
                     $this->renderPostBody($object) :
@@ -1328,6 +1329,7 @@ class ObjectEntityService
         $rendered = '';
         switch ($attribute->getType()) {
             case 'object':
+                // We allow cascading on promises, but only if the gateway of the parent entity and subresource match.
                 if ($attribute->getCascade()) {
                     $rendered = $this->renderSubObjects($value->getObjects(), $attribute);
                 } else {
