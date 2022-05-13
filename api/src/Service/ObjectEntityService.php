@@ -48,6 +48,7 @@ class ObjectEntityService
     private GatewayService $gatewayService;
     private LogService $logService;
     private ConvertToGatewayService $convertToGatewayService;
+    public array $notifications;
 
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     private TranslationService $translationService;
@@ -85,6 +86,7 @@ class ObjectEntityService
         $this->translationService = $translationService;
         $this->logService = $logService;
         $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService);
+        $this->notifications = [];
     }
 
     /**
@@ -1448,6 +1450,8 @@ class ObjectEntityService
             $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
         }
 
+//        var_dump('GetUri: '.$objectEntity->getUri());
+
         // Handle Function todo: what if @organization is used in the post body? than we shouldn't handle function organization here:
         return $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
             'method'           => $method,
@@ -1475,6 +1479,10 @@ class ObjectEntityService
         // Lets reset cache
         $this->functionService->removeResultFromCache($objectEntity);
 //        $this->responseService->renderResult($objectEntity, null); // pre-load/re-load cache
+
+        // Create Notification
+//        var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
+        $this->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
 
         // log
 //        $responseLog = new Response(json_encode($result), 201, []);
@@ -1528,7 +1536,7 @@ class ObjectEntityService
 //        // log
 //        $this->logService->saveLog($this->logService->makeRequest(), null, 12, $body, null, 'out');
 
-//        var_dump($url);
+//        var_dump('CallServiceUrl: '.$url);
 //        var_dump($body);
 
         return $this->commonGroundService->callService($component, $url, $body, $query, $headers, true, $method)->then(

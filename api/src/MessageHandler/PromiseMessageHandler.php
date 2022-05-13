@@ -20,7 +20,6 @@ class PromiseMessageHandler implements MessageHandlerInterface
     private ObjectEntityService $objectEntityService;
     private EntityManagerInterface $entityManager;
     private MessageBusInterface $messageBus;
-    private array $notifications;
 
     public function __construct(ObjectEntityRepository $objectEntityRepository, ObjectEntityService $objectEntityService, EntityManagerInterface $entityManager, MessageBusInterface $messageBus)
     {
@@ -28,7 +27,6 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->objectEntityService = $objectEntityService;
         $this->entityManager = $entityManager;
         $this->messageBus = $messageBus;
-        $this->notifications = [];
     }
 
     public function __invoke(PromiseMessage $promiseMessage): void
@@ -45,7 +43,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
-        foreach ($this->notifications as $notification) {
+        foreach ($this->objectEntityService->notifications as $notification) {
             $this->messageBus->dispatch(new NotificationMessage($notification['id'], $notification['method']));
         }
     }
@@ -61,6 +59,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             $promises = array_merge($promises, $this->getPromises($subresource, $parentObjects, $method, $level + 1));
         }
         if ($objectEntity->getEntity()->getGateway()) {
+            // createPromise will add a notification if promise is successful
             $promise = $this->objectEntityService->createPromise($objectEntity, $method);
             $promises[] = $promise;
             $objectEntity->addPromise($promise);
@@ -77,10 +76,11 @@ class PromiseMessageHandler implements MessageHandlerInterface
             if ($compareDate > $now) {
                 $method = 'PUT';
             }
-        }
 
-//        var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
-        $this->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
+            // Create Notification
+//            var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
+            $this->objectEntityService->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
+        }
 
         return $promises;
     }
