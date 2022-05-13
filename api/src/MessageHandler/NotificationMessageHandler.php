@@ -2,6 +2,7 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\ObjectEntity;
 use App\Message\NotificationMessage;
 use App\Repository\ObjectEntityRepository;
 use App\Service\ObjectEntityService;
@@ -20,6 +21,9 @@ class NotificationMessageHandler implements MessageHandlerInterface
 
     public function __invoke(NotificationMessage $message): void
     {
-        $this->objectEntityService->notify($this->repository->find($message->getObjectEntityId()), $message->getMethod());
+        $object = $this->repository->find($message->getObjectEntityId());
+        if ($object instanceof ObjectEntity) {
+            $this->objectEntityService->notify($object, $message->getMethod());
+        }
     }
 }
