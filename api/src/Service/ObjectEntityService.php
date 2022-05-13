@@ -540,7 +540,9 @@ class ObjectEntityService
         }
 
         // If we change an ObjectEntity we should remove it from the result cache
-        $this->functionService->removeResultFromCache($objectEntity);
+        if ($this->request->getMethod() != 'POST') {
+            $this->functionService->removeResultFromCache($objectEntity);
+        }
         return $objectEntity;
     }
 

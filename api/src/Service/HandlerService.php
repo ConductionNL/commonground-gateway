@@ -505,16 +505,20 @@ class HandlerService
         $this->logService->saveLog($this->request, null, 5, json_encode($data));
         $this->stopwatch->stop('saveLog5');
 
-        // The we want to do translations on the incomming request
-        $transRepo = $this->entityManager->getRepository('App:Translation');
+        if (!empty($handler->getTranslationsIn())) {
+            // Then we want to do translations on the incomming request
+            $transRepo = $this->entityManager->getRepository('App:Translation');
 
-        $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
-        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-        $this->stopwatch->stop('getTranslations');
+            $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
+            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+            $this->stopwatch->stop('getTranslations');
 
-        $this->stopwatch->start('parse', 'handleDataBeforeEAV');
-        $data = $this->translationService->parse($data, true, $translations);
-        $this->stopwatch->stop('parse');
+            if (!empty($translations)) {
+                $this->stopwatch->start('parse', 'handleDataBeforeEAV');
+                $data = $this->translationService->parse($data, true, $translations);
+                $this->stopwatch->stop('parse');
+            }
+        }
 
         // Update current Log
         $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
@@ -542,16 +546,20 @@ class HandlerService
         $this->logService->saveLog($this->request, null, 7, json_encode($data));
         $this->stopwatch->stop('saveLog7');
 
-        // The we want to do  translations on the outgoing response
-        $transRepo = $this->entityManager->getRepository('App:Translation');
+        if (!empty($handler->getTranslationsOut())) {
+            // Then we want to do  translations on the outgoing response
+            $transRepo = $this->entityManager->getRepository('App:Translation');
 
-        $this->stopwatch->start('getTranslations2', 'handleDataAfterEAV');
-        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-        $this->stopwatch->stop('getTranslations2');
+            $this->stopwatch->start('getTranslations2', 'handleDataAfterEAV');
+            $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+            $this->stopwatch->stop('getTranslations2');
 
-        $this->stopwatch->start('parse2', 'handleDataAfterEAV');
-        $data = $this->translationService->parse($data, true, $translations);
-        $this->stopwatch->stop('parse2');
+            if (!empty($translations)) {
+                $this->stopwatch->start('parse2', 'handleDataAfterEAV');
+                $data = $this->translationService->parse($data, true, $translations);
+                $this->stopwatch->stop('parse2');
+            }
+        }
 
         // Update current Log
         $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
