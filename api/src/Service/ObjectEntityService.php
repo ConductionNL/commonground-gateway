@@ -440,7 +440,7 @@ class ObjectEntityService
                 }
                 $this->stopwatch->stop('validateData');
 
-                // Save the object
+                // Save the object (this will remove this object result from the cache)
                 $this->stopwatch->start('saveObject', 'handleObject');
                 $object = $this->saveObject($object, $data);
                 $this->stopwatch->stop('saveObject');
@@ -457,7 +457,6 @@ class ObjectEntityService
                 $this->entityManager->flush();
 
                 $this->stopwatch->start('renderResult', 'handleObject');
-                $this->functionService->removeResultFromCache($object);
                 $data = $this->responseService->renderResult($object, $fields);
                 $this->stopwatch->stop('renderResult');
 
@@ -468,15 +467,13 @@ class ObjectEntityService
                 $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
                 break;
             case 'DELETE':
-                // delete object
-                $this->functionService->removeResultFromCache($object);
-
                 //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
 
                 //todo: -start- old code...
                 //TODO: old code for deleting an ObjectEntity
 
                 $this->stopwatch->start('handleDelete', 'handleObject');
+                // delete object (this will remove this object result from the cache)
                 $data = $this->eavService->handleDelete($object);
                 if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
                     throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
@@ -542,6 +539,8 @@ class ObjectEntityService
             $objectEntity->setOrganization($post['@organization']);
         }
 
+        // If we change an ObjectEntity we should remove it from the result cache
+        $this->functionService->removeResultFromCache($objectEntity);
         return $objectEntity;
     }
 

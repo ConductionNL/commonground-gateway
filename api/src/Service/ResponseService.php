@@ -57,20 +57,16 @@ class ResponseService
      * Filters fields that should not be displayed.
      *
      * @param array        $response      The full response
-     * @param array|null   $fields        The fields that have to be displayed
      * @param ObjectEntity $result        The objectEntity that contains the results
      * @param bool         $skipAuthCheck Whether the authorization should be checked
      *
      * @return array The resulting response
      */
-    public function filterResult(array $response, ?array $fields, ObjectEntity $result, bool $skipAuthCheck): array
+    public function filterResult(array $response, ObjectEntity $result, bool $skipAuthCheck): array
     {
-        return array_filter($response, function ($value, $key) use ($fields, $result, $skipAuthCheck) {
+        return array_filter($response, function ($value, $key) use ($result, $skipAuthCheck) {
             if (str_starts_with($key, '@') || $key == 'id') {
                 return true;
-            }
-            if (is_array($fields) && !array_key_exists($key, $fields)) {
-                return false;
             }
             $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
             if (!$skipAuthCheck && !empty($attribute)) {
@@ -113,10 +109,12 @@ class ResponseService
             return $response;
         }
 
-        $item = $this->cache->getItem('object_'.md5($result->getId()));
+        $item = $this->cache->getItem('object_'.md5($result->getId().http_build_query($fields ?? [],'',',')));
         if ($item->isHit()) {
-            return $this->filterResult($item->get(), $fields, $result, $skipAuthCheck);
+//            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
+            return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
+        $item->tag('object_'.md5($result->getId()->toString()));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 2) {
@@ -159,7 +157,7 @@ class ResponseService
             $item->set($response);
             $this->cache->save($item);
 
-            return $this->filterResult($response, $fields, $result, $skipAuthCheck);
+            return $response;
         }
 
         // Lets make it personal
@@ -201,7 +199,7 @@ class ResponseService
         $item->set($response);
         $this->cache->save($item);
 
-        return $this->filterResult($response, $fields, $result, $skipAuthCheck);
+        return $response;
     }
 
     /**

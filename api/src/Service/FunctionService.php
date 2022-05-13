@@ -181,6 +181,6 @@ class FunctionService
      */
     public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {
-        return $this->cache->deleteItem('object_'.md5($objectEntity->getId())) && $this->cache->commit();
+        return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
     }
 }
