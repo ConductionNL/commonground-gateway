@@ -181,6 +181,7 @@ class FunctionService
      */
     public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {
+        // todo: maybe also invalidate tags of parent objects?
         return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
     }
 }

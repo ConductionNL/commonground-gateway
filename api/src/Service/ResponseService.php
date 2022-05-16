@@ -134,10 +134,10 @@ class ResponseService
             }
 
             // Only render the attributes that are available for this Entity (filters out unwanted properties from external results)
-            if (!is_null($result->getEntity()->getAvailableProperties())) {
-                $response = array_filter($response, function ($propertyName) use ($result) {
-                    return in_array($propertyName, $result->getEntity()->getAvailableProperties()) &&
-                        (empty($fields) || in_array($propertyName, $fields));
+            if (!is_null($result->getEntity()->getAvailableProperties() || !empty($fields))) {
+                $response = array_filter($response, function ($propertyName) use ($result, $fields) {
+                    return (empty($fields) || array_key_exists($propertyName, $fields)) &&
+                        (empty($result->getEntity()->getAvailableProperties()) || in_array($propertyName, $result->getEntity()->getAvailableProperties()));
                 }, ARRAY_FILTER_USE_KEY);
             }
         }
