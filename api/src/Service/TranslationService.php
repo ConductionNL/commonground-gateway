@@ -94,9 +94,10 @@ class TranslationService
     {
         if(count($search) > 1) {
             return $this->getRecursive($source[array_shift($search)], $search);
-        } else {
+        } elseif(isset($source[array_shift($search)])) {
             return $source[array_shift($search)];
         }
+        return [];
     }
 
     /**
@@ -162,8 +163,9 @@ class TranslationService
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
                 $destination[$replace] = $sourceSub;
-            } elseif ($format == 'array')
-                $destination[$replace] = $this->getRecursive($source->all(), explode('.', $search));
+            } elseif ($format == 'array') {
+                $destination[$replace] = $this->getRecursive($source->all(), explode('.', $search)) ?? $destination[$replace] ?? [];
+            }
             unset($format);
 
             if ($destination[$replace] === [] || $destination[$replace] === '') {
