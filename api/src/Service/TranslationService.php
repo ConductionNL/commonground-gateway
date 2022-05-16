@@ -60,7 +60,7 @@ class TranslationService
         return $iterator;
     }
 
-    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator, array $source): array
+    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator, ?string $format): array
     {
         if($iterator == 1 && !isset($source['results'])) {
             $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
@@ -68,7 +68,8 @@ class TranslationService
             return $mapping;
         }
         for($i = 0; $i < $iterator; $i++) {
-            $mapping[str_replace('$', $i, $replace)] = str_replace('$', $i, $search);
+            $newSearch = $format ? str_replace('$', $i, $search). " | $format" : str_replace('$', $i, $search);
+            $mapping[str_replace('$', $i, $replace)] = $newSearch;
         }
         unset($mapping[$replace]);
         return $mapping;
@@ -77,11 +78,13 @@ class TranslationService
     public function getIterativeKeys(array $source, array $mapping): array
     {
         foreach($mapping as $replace => $search) {
-            $search = explode('|', $search)[0];
+            $pre = explode('|', $search);
+            $search = trim($pre[0]);
+            $format = trim($pre[1]);
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $explodedKey = explode('.', $search);
                 $iterator = $this->getIterator(array_shift($explodedKey), $explodedKey, $source);
-                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator, $source);
+                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator, $format);
             }
         }
         return $mapping;
