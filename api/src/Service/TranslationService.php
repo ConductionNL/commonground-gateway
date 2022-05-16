@@ -77,6 +77,7 @@ class TranslationService
     public function getIterativeKeys(array $source, array $mapping): array
     {
         foreach($mapping as $replace => $search) {
+            $search = explode('|', $search)[0];
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $explodedKey = explode('.', $search);
                 $iterator = $this->getIterator(array_shift($explodedKey), $explodedKey, $source);
@@ -159,7 +160,7 @@ class TranslationService
                 }
                 $destination[$replace] = $sourceSub;
             } elseif ($format == 'array')
-                $destination[$replace] = $this->getRecursive($source->all(), $search);
+                $destination[$replace] = $this->getRecursive($source->all(), explode('.', $search));
             unset($format);
 
             if ($destination[$replace] === [] || $destination[$replace] === '') {

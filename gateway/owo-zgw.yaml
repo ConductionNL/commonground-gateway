@@ -60,8 +60,8 @@ App\Entity\Handler:
             - caseTable2
         mappingOut:
             soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object: object(s) | array
-            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object.$.ZKN:heeft.ZKN:gerelateerde: "results.ZKN:$.ZKN:status"
-            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object.$.ZKN:isVan.ZKN:gerelateerde: "results.ZKN:$.ZKN:zaaktype"
+            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object.$.ZKN:heeft.ZKN:gerelateerde: "results.ZKN:$.ZKN:status | array"
+            soapenv:Envelope.soapenv:Body.ZKN:zakLa01.ZKN:antwoord.ZKN:object.$.ZKN:isVan.ZKN:gerelateerde: "results.ZKN:$.ZKN:zaaktype | array"
         methodOverrides:
             POST: 
                 - method: GET
