@@ -94,7 +94,7 @@ class TranslationService
     {
         if(count($search) > 1) {
             return $this->getRecursive($source[array_shift($search)], $search);
-        } elseif(isset($source[array_shift($search)])) {
+        } elseif(isset($source[$search[0]])) {
             return $source[array_shift($search)];
         }
         return [];
