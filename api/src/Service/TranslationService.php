@@ -37,7 +37,7 @@ class TranslationService
 
     private function hasKeys($keys, $value): bool
     {
-        $key = array_pop($keys);
+        $key = array_shift($keys);
         if(count($keys) > 1 && isset($value[$key])) {
             return $this->hasKeys($keys, $value);
         } else {
@@ -49,20 +49,20 @@ class TranslationService
     {
         $iterator = 0;
         if($key === '$'){
-            while($value[$iterator]) {
-                if($this->hasKeys($keys, $value[$iterator])){
+            while(isset($value[str_replace('$', $iterator, $key)])) {
+//                if($this->hasKeys($keys, $value[str_replace('$', $iterator, $key)])){
                     $iterator++;
-                }
+//                }
             }
         } elseif(isset($value[$key])) {
-            return $this->getIterator(array_pop($keys), $keys, $value[$key]);
+            return $this->getIterator(array_shift($keys), $keys, $value[$key]);
         }
         return $iterator;
     }
 
-    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator): array
+    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator, array $source): array
     {
-        if($iterator == 1) {
+        if($iterator == 1 && !isset($source['results'])) {
             $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
             unset($mapping[$replace]);
             return $mapping;
@@ -79,8 +79,8 @@ class TranslationService
         foreach($mapping as $replace => $search) {
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $explodedKey = explode('.', $search);
-                $iterator = $this->getIterator(array_pop($explodedKey), $explodedKey, $source);
-                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator);
+                $iterator = $this->getIterator(array_shift($explodedKey), $explodedKey, $source);
+                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator, $source);
             }
         }
         return $mapping;
