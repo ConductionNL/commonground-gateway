@@ -165,8 +165,8 @@ class TranslationService
                 $destination->merge($replace, $sourceSub);
             } elseif ($format == 'array') {
                 $destination->merge($replace, $this->getRecursive($source->all(), explode('.', $search)) ?? $destination[$replace] ?? []);
-            } elseif ($format == 'default') {
-                $destination[$replace] = $search;
+            } elseif (strpos($format, 'default=') !== false) {
+                $destination[$replace] = isset($source[$search]) ? ($source[$search] == null ? explode('=', $format)[1] : $source[$search]) : '';
             }
             unset($format);
 
