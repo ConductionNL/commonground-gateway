@@ -60,7 +60,7 @@ class TranslationService
         return $iterator;
     }
 
-    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator, ?string $format): array
+    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator, array $source, ?string $format): array
     {
         if($iterator == 1 && !isset($source['results'])) {
             $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
@@ -84,7 +84,7 @@ class TranslationService
             if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
                 $explodedKey = explode('.', $search);
                 $iterator = $this->getIterator(array_shift($explodedKey), $explodedKey, $source);
-                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator, $format);
+                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator, $source, $format);
             }
         }
         return $mapping;
