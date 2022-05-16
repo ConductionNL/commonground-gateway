@@ -156,15 +156,15 @@ class TranslationService
             } elseif ($format == 'bool') {
                 $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
             } elseif ($format == 'array' && $search == 'object') {
-                $destination[$replace] = $source;
+                $destination->merge($replace, $source);
             } elseif ($format == 'array' && $search == 'object(s)') {
                 $sourceSub = new \Adbar\Dot($source, true);
                 if($sourceSub->has('results')){
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
-                $destination[$replace] = $sourceSub;
+                $destination->merge($replace, $sourceSub);
             } elseif ($format == 'array') {
-                $destination[$replace] = $this->getRecursive($source->all(), explode('.', $search)) ?? $destination[$replace] ?? [];
+                $destination->merge($replace, $this->getRecursive($source->all(), explode('.', $search)) ?? $destination[$replace] ?? []);
             }
             unset($format);
 
