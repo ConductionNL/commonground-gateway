@@ -35,6 +35,57 @@ class TranslationService
         return $result;
     }
 
+    private function hasKeys($keys, $value): bool
+    {
+        $key = array_pop($keys);
+        if(count($keys) > 1 && isset($value[$key])) {
+            return $this->hasKeys($keys, $value);
+        } else {
+            return isset($value[$key]);
+        }
+    }
+
+    public function getIterator (string $key, array $keys, array $value): int
+    {
+        $iterator = 0;
+        if($key === '$'){
+            while($value[$iterator]) {
+                if($this->hasKeys($keys, $value[$iterator])){
+                    $iterator++;
+                }
+            }
+        } elseif(isset($value[$key])) {
+            return $this->getIterator(array_pop($keys), $keys, $value[$key]);
+        }
+        return $iterator;
+    }
+
+    private function replaceDestination(array $mapping, string $replace, string $search, int $iterator): array
+    {
+        if($iterator == 1) {
+            $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+            unset($mapping[$replace]);
+            return $mapping;
+        }
+        for($i = 0; $i < $iterator; $i++) {
+            $mapping[str_replace('$', $i, $replace)] = str_replace('$', $i, $search);
+        }
+        unset($mapping[$replace]);
+        return $mapping;
+    }
+
+    public function getIterativeKeys(array $source, array $mapping): array
+    {
+        foreach($mapping as $replace => $search) {
+            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
+                $explodedKey = explode('.', $search);
+                $iterator = $this->getIterator(array_pop($explodedKey), $explodedKey, $source);
+                $mapping = $this->replaceDestination($mapping, $replace, $search, $iterator);
+            }
+        }
+        return $mapping;
+    }
+
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
      *
@@ -51,22 +102,23 @@ class TranslationService
 
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
-        $source = new \Adbar\Dot($source);
-        foreach($mapping as $replace => $search) {
-            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
-                $iterator = 0;
-                if($source->has(str_replace('$', $iterator, $search))){
-                    while ($source->has(str_replace('$', $iterator, $search))) {
-                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
-                        $iterator++;
-                    }
-                } else {
-                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
-                }
-                unset($mapping[$replace]);
-                // todo: also unset the old variable in $destination
-            }
-        }
+        $source = new \Adbar\Dot($source, true);
+//        foreach($mapping as $replace => $search) {
+//            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
+//                $iterator = 0;
+//                if($source->has(str_replace('$', $iterator, $search))){
+//                    while ($source->has(str_replace('$', $iterator, $search))) {
+//                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
+//                        $iterator++;
+//                    }
+//                } else {
+//                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+//                }
+//                unset($mapping[$replace]);
+//                // todo: also unset the old variable in $destination
+//            }
+//        }
+        $mapping = $this->getIterativeKeys($source->all(), $mapping);
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {

@@ -16,6 +16,7 @@ App\Entity\Group:
         scopes:
             - '@zaak_create'
             - '@zaak_read'
+            - '@stufskeleton_create'
 App\Entity\Scope:
     admin_create:
         code: POST.admin
@@ -31,7 +32,10 @@ App\Entity\Scope:
         name: Update admin
     zaak_create:
         code: POST.Zaak
-        name: Create Zaak
+        name: Create Zaak    
+    stufskeleton_create:
+        code: POST.stufskeleton
+        name: Create Stuf Skeleton
     zaak_read:
         code: GET.Zaak
         name: Read Zaak
