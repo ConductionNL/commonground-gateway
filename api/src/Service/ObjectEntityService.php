@@ -1482,7 +1482,7 @@ class ObjectEntityService
 //        $this->responseService->renderResult($objectEntity, null); // pre-load/re-load cache
 
         // Create Notification
-//        var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
+//        var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getId()->toString().' - '.$objectEntity->getExternalId().' - '.$method);
         $this->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
 
         // log

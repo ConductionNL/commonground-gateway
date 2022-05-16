@@ -44,6 +44,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->entityManager->flush();
 
         foreach ($this->objectEntityService->notifications as $notification) {
+//            var_dump('DispatchNotification: '.$notification['id']->toString().' - '.$notification['method']);
             $this->messageBus->dispatch(new NotificationMessage($notification['id'], $notification['method']));
         }
     }
@@ -78,7 +79,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
             }
 
             // Create Notification
-//            var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getExternalId().' - '.$method);
+//            var_dump('NOTIFICATION: '.$objectEntity->getEntity()->getName().' - '.$objectEntity->getId()->toString().' - '.$objectEntity->getExternalId().' - '.$method);
             $this->objectEntityService->notifications[] = ['id' => $objectEntity->getId(), 'method' => $method];
         }
 
