@@ -31,6 +31,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
 
     public function __invoke(PromiseMessage $promiseMessage): void
     {
+        $this->objectEntityService->notifications = []; // Make sure we reset notifications array.
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
         $promises = $this->getPromises($object, [], $promiseMessage->getMethod());
         if (!empty($promises)) {
@@ -44,7 +45,6 @@ class PromiseMessageHandler implements MessageHandlerInterface
         $this->entityManager->flush();
 
         foreach ($this->objectEntityService->notifications as $notification) {
-//            var_dump('DispatchNotification: '.$notification['id']->toString().' - '.$notification['method']);
             $this->messageBus->dispatch(new NotificationMessage($notification['id'], $notification['method']));
         }
     }

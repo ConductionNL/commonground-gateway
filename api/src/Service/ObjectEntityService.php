@@ -517,15 +517,15 @@ class ObjectEntityService
             // If no value is present in the post body for this attribute check for defaultValue and nullable.
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->saveAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
-            } elseif ($attribute->getDefaultValue()) {
-                // todo: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string
-                // DefaultValue can be a uuid string to connect an object...
-                $objectEntity = $this->saveAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
-            } elseif ($attribute->getNullable() === true) {
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
             } elseif ($this->request->getMethod() == 'POST') {
-                // If no value is given when creating a new object, make sure we set a value to null for this attribute.
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                if ($attribute->getDefaultValue()) {
+                    // todo: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string
+                    // DefaultValue can be a uuid string to connect an object...
+                    $objectEntity = $this->saveAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
+                } else {
+                    // If no value is given when creating a new object, make sure we set a value to null for this attribute.
+                    $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                }
             }
         }
 

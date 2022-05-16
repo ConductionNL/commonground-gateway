@@ -23,6 +23,7 @@ class NotificationMessageHandler implements MessageHandlerInterface
     {
         $object = $this->repository->find($message->getObjectEntityId());
         if ($object instanceof ObjectEntity) {
+//            var_dump('DispatchNotification: '.$object->getEntity()->getName().' - '.$message->getObjectEntityId()->toString().' - '.$object->getExternalId().' - '.$message->getMethod());
             $this->objectEntityService->notify($object, $message->getMethod());
         } else {
 //            var_dump('No ObjectEntity found with id: '.$message->getObjectEntityId()->toString());
