@@ -48,7 +48,7 @@ class TranslationService
     public function getIterator (string $key, array $keys, array $value): int
     {
         $iterator = 0;
-        if($key === '$'){
+        if(strpos($key, '$') !== false){
             while(isset($value[str_replace('$', $iterator, $key)])) {
 //                if($this->hasKeys($keys, $value[str_replace('$', $iterator, $key)])){
                     $iterator++;
@@ -84,6 +84,15 @@ class TranslationService
             }
         }
         return $mapping;
+    }
+
+    public function getRecursive(array $source, array $search): array
+    {
+        if(count($search) > 1) {
+            return $this->getRecursive($source[array_shift($search)], $search);
+        } else {
+            return $source[array_shift($search)];
+        }
     }
 
     /**
@@ -149,7 +158,8 @@ class TranslationService
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
                 $destination[$replace] = $sourceSub;
-            }
+            } elseif ($format == 'array')
+                $destination[$replace] = $this->getRecursive($source->all(), $search);
             unset($format);
 
             if ($destination[$replace] === [] || $destination[$replace] === '') {
