@@ -356,10 +356,13 @@ class HandlerService
         $status = Response::HTTP_OK;
     }
 
+        $this->stopwatch->start('getRequestType', 'createResponse');
         $acceptType = $this->getRequestType('accept', $endpoint);
+        $this->stopwatch->stop('getRequestType');
 
         // Lets fill in some options
         $options = [];
+        $this->stopwatch->start('switchAcceptType', 'createResponse');
         switch ($acceptType) {
             case 'text/csv':
             // @todo do something with options?
@@ -389,16 +392,20 @@ class HandlerService
                 break;
 
         }
+        $this->stopwatch->stop('switchAcceptType');
 
         // Lets seriliaze the shizle (if no document and we have a result)
+        $this->stopwatch->start('serialize', 'createResponse');
         try {
             !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
         } catch (NotEncodableValueException $e) {
             !isset($document) && $result = $this->serializer->serialize($data, 'json', $options);
             // throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
+        $this->stopwatch->stop('serialize');
 
         // Lets create the actual response
+        $this->stopwatch->start('newResponse', 'createResponse');
         $response = new Response(
             $result,
             $status,
@@ -406,8 +413,10 @@ class HandlerService
             //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
             ['content-type' => array_search($acceptType, $this->acceptHeaderToSerialiazation)]
         );
+        $this->stopwatch->stop('newResponse');
 
         // Lets handle file responses
+        $this->stopwatch->start('routeParameters', 'createResponse');
         $routeParameters = $this->request->attributes->get('_route_params');
         if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
@@ -415,8 +424,11 @@ class HandlerService
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$acceptType}");
             $response->headers->set('Content-Disposition', $disposition);
         }
+        $this->stopwatch->stop('routeParameters');
 
+        $this->stopwatch->start('prepareResponse', 'createResponse');
         $response->prepare($this->request);
+        $this->stopwatch->stop('prepareResponse');
 
         return $response;
     }
