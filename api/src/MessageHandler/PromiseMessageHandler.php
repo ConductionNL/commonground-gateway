@@ -52,7 +52,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     public function getPromises(ObjectEntity $objectEntity, array $parentObjects, string $method, int $level = 0): array
     {
         $promises = [];
-        if (in_array($objectEntity, $parentObjects) || $level > 2) {
+        if (in_array($objectEntity, $parentObjects) || $level > 3) {
             return $promises;
         }
         $parentObjects[] = $objectEntity;

@@ -117,7 +117,7 @@ class ResponseService
         $item->tag('object_'.md5($result->getId()->toString()));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
-        if ($level > 2) {
+        if ($level > 3) {
             return [
                 '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId(),
             ];
