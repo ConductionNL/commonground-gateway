@@ -2627,8 +2627,21 @@ App\Entity\Handler:
         methods: ["*"]
         sequence: 0
         conditions: "{}"
-        endpoints: ["@studentEndpointGet", "@studentEndpointPost", "@studentEndpointGetItem", "@studentEndpointPut", "@studentEndpointDelete"]
+        endpoints: ["@studentEndpointGet", "@studentEndpointPost", "@studentEndpointPut", "@studentEndpointDelete"]
         entity: "@student"
+        
+    # Student Handler
+    studentGetItemHandler:
+        name: Student get item Handler
+        methods: [ "*" ]
+        sequence: 0
+        conditions: "{}"
+        endpoints: [ "@studentEndpointGetItem" ]
+        entity: "@student"
+        methodOverrides:
+            GET:
+                - { queryParameters: { 'fields': [civicIntegration, educations, intake, languageHouse.name, languageHouse.type, languageHouse.addresses, languageHouse.emails, languageHouse.telephones, learningNeeds, mentor.name, mentor.teams, motivation, name, person, status] } }
+#    ^^^ missing(?) : dateOfAcceptance, participations, endDate, referred, referredBy, results, startDate, team
 
      # LearningNeed Handler
     LearningNeedHandler: 

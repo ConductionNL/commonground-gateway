@@ -217,6 +217,7 @@ class Handler
     private $dateModified;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private $methodOverrides = [];

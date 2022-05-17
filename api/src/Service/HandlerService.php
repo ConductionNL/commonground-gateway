@@ -152,9 +152,9 @@ class HandlerService
         $content = new \Adbar\Dot($this->getDataFromRequest());
 
         foreach ($overrides[$this->request->getMethod()] as $override) {
-            if (key_exists($method, $overrides) && $content->has($override['condition'])) {
-                $method = $override['method'];
-                $operationType = $override['operationType'];
+            if (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $content->has($override['condition']))) {
+                $method = array_key_exists("method", $override) ? $override['method'] : $method;
+                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 if (isset($override['pathValues'])) {
                     foreach ($override['pathValues'] as $key => $value) {
@@ -163,13 +163,17 @@ class HandlerService
                 }
                 if (isset($override['queryParameters'])) {
                     foreach ($override['queryParameters'] as $key => $value) {
-                        $this->request->query->set($key, $content->get($value));
+                        if ($key == 'fields') {
+                            $this->request->query->set('fields', $value);
+                        } else {
+                            $this->request->query->set($key, $content->get($value));
+                        }
                     }
                 }
                 $this->request->getSession()->set('parameters', $parameters);
-            } elseif (key_exists($method, $overrides) && $this->request->query->has($override['condition'])) {
-                $method = $override['method'];
-                $operationType = $override['operationType'];
+            } elseif (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $this->request->query->has($override['condition']))) {
+                $method = array_key_exists("method", $override) ? $override['method'] : $method;
+                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 foreach ($override['pathValues'] as $key => $value) {
                     $parameters['path'][$key] = $this->request->query->get($value);
