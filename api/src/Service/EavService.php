@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\Stopwatch\Stopwatch;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
 use Ramsey\Uuid\Uuid;
@@ -45,6 +46,7 @@ class EavService
     private TranslationService $translationService;
     private FunctionService $functionService;
     private CacheInterface $cache;
+    private Stopwatch $stopwatch;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -60,7 +62,8 @@ class EavService
         ParameterBagInterface $parameterBag,
         TranslationService $translationService,
         FunctionService $functionService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        Stopwatch $stopwatch
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -76,6 +79,7 @@ class EavService
         $this->translationService = $translationService;
         $this->functionService = $functionService;
         $this->cache = $cache;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -946,13 +950,19 @@ class EavService
         }
 
         /* @todo we might want some filtering here, also this should be in the entity repository */
+        $this->stopwatch->start('FindEntity', 'handleSearch');
         $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
+        $this->stopwatch->stop('FindEntity');
+
+        $this->stopwatch->start('updateGatewayPool', 'handleSearch');
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
             $this->convertToGatewayService->convertEntityObjects($entity, $query);
         }
         unset($query['updateGatewayPool']);
+        $this->stopwatch->stop('updateGatewayPool');
 
         // Allowed order by
+        $this->stopwatch->start('orderParametersCheck', 'handleSearch');
         $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);
         // todo: ^^^ add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
         // todo: sortable?
@@ -980,8 +990,10 @@ class EavService
                 ];
             }
         }
+        $this->stopwatch->stop('orderParametersCheck');
 
         // Allowed filters
+        $this->stopwatch->start('filterParametersCheck', 'handleSearch');
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
 
         // Lets add generic filters
@@ -1013,14 +1025,25 @@ class EavService
         if ($filters) {
             $query = array_merge($query, $filters);
         }
+        $this->stopwatch->stop('filterParametersCheck');
+
+        $this->stopwatch->start('valueScopesToFilters', 'handleSearch');
         $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
+        $this->stopwatch->stop('valueScopesToFilters');
 
         // todo: remove this if and only use findAndCountByEntity(), when $order is not empty findAndCountByEntity() throws a sql error (must appear in the GROUP BY clause or be used in an aggregate function)
         if ($order) {
+            $this->stopwatch->start('countByEntity', 'handleSearch');
             $repositoryResult['total'] = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
+            $this->stopwatch->stop('countByEntity');
+
+            $this->stopwatch->start('findByEntity', 'handleSearch');
             $repositoryResult['objects'] = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
+            $this->stopwatch->stop('findByEntity');
         } else {
+            $this->stopwatch->start('findAndCountByEntity', 'handleSearch');
             $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
+            $this->stopwatch->stop('findAndCountByEntity');
         }
 
         // Lets see if we need to flatten te responce (for example csv use)
@@ -1030,11 +1053,14 @@ class EavService
         }
 
         $results = [];
+        $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
             // Old $MaxDepth in renderResult
 //            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
             $results[] = $this->responseService->renderResult($object, $fields, $flat);
+            $this->stopwatch->lap('renderResults');
         }
+        $this->stopwatch->stop('renderResults');
 
         // If we need a flattend responce we are al done
         if ($flat) {
