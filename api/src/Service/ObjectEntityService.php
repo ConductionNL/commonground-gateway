@@ -43,7 +43,7 @@ class ObjectEntityService
     private CommonGroundService $commonGroundService;
     private ResponseService $responseService;
     private Stopwatch $stopwatch;
-    private FunctionService $functionService;
+    public FunctionService $functionService;
     private MessageBusInterface $messageBus;
     private GatewayService $gatewayService;
     private LogService $logService;
@@ -442,6 +442,7 @@ class ObjectEntityService
 
                 // Save the object (this will remove this object result from the cache)
                 $this->stopwatch->start('saveObject', 'handleObject');
+                $this->functionService->removeResultFromCache = [];
                 $object = $this->saveObject($object, $data);
                 $this->stopwatch->stop('saveObject');
 
@@ -474,6 +475,7 @@ class ObjectEntityService
 
                 $this->stopwatch->start('handleDelete', 'handleObject');
                 // delete object (this will remove this object result from the cache)
+                $this->functionService->removeResultFromCache = [];
                 $data = $this->eavService->handleDelete($object);
                 if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
                     throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);

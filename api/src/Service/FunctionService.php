@@ -12,12 +12,14 @@ class FunctionService
     private CacheInterface $cache;
     private CommonGroundService $commonGroundService;
     private ObjectEntityService $objectEntityService;
+    public array $removeResultFromCache;
 
     public function __construct(CacheInterface $cache, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
     {
         $this->cache = $cache;
         $this->commonGroundService = $commonGroundService;
         $this->objectEntityService = $objectEntityService;
+        $this->removeResultFromCache = [];
     }
 
     /**
@@ -181,7 +183,16 @@ class FunctionService
      */
     public function removeResultFromCache(ObjectEntity $objectEntity): bool
     {
-        // todo: maybe also invalidate tags of parent objects?
-        return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
+        if (!in_array($objectEntity->getId()->toString(), $this->removeResultFromCache)) {
+            if (!$objectEntity->getSubresourceOf()->isEmpty()) {
+                $this->removeResultFromCache[] = $objectEntity->getId()->toString();
+                foreach ($objectEntity->getSubresourceOf() as $parentValue) {
+                    $this->removeResultFromCache($parentValue->getObjectEntity());
+                }
+            }
+            return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
+        }
+
+        return false;
     }
 }

@@ -33,6 +33,7 @@ class PromiseMessageHandler implements MessageHandlerInterface
     {
         $this->objectEntityService->notifications = []; // Make sure we reset notifications array.
         $object = $this->objectEntityRepository->find($promiseMessage->getObjectEntityId());
+        $this->objectEntityService->functionService->removeResultFromCache = [];
         $promises = $this->getPromises($object, [], $promiseMessage->getMethod());
         if (!empty($promises)) {
             Utils::settle($promises)->wait();
