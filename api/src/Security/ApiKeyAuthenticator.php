@@ -206,7 +206,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             $organizations[] = $user['organization'];
         }
         foreach ($user['userGroups'] as $userGroup) {
-            if (!in_array($userGroup['organization'], $organizations)) {
+            if (isset($userGroup['organization']) && !in_array($userGroup['organization'], $organizations)) {
                 $organizations[] = $userGroup['organization'];
             }
         }

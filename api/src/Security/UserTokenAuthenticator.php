@@ -197,7 +197,7 @@ class UserTokenAuthenticator extends AbstractGuardAuthenticator
             $organizations[] = $user['organization'];
         }
         foreach ($user['userGroups'] as $userGroup) {
-            if (!in_array($userGroup['organization'], $organizations)) {
+            if (isset($userGroup['organization']) && !in_array($userGroup['organization'], $organizations)) {
                 $organizations[] = $userGroup['organization'];
             }
         }
