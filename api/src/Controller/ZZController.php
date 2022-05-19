@@ -10,6 +10,7 @@ use App\Service\HandlerService;
 use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,10 +40,13 @@ class ZZController extends AbstractController
 
         // Below is hacky tacky
         // @todo refactor
-        //        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
-        //        if ($document instanceof Document && $id) {
-        //            return $documentService->handleDocument($document, $id);
-        //        }
+        $id = substr($path, strrpos($path, '/') + 1);
+        if (Uuid::isValid($id)) {
+            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, "", $path)]);
+            if ($document instanceof Document) {
+                return $documentService->handleDocument($document, $id);
+            }
+        }
         // postalCodes list for bisc/taalhuizen
         if ($path === 'postalCodes') {
             return $validationService->dutchPC4ToJson();
