@@ -127,6 +127,9 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         $organizations = $user['organizations'] ?? [];
         $parentOrganizations = [];
         foreach ($organizations as $organization) {
+            if ($organization === null) {
+                continue;
+            }
             $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
             $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
         }
