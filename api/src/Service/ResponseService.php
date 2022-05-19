@@ -109,7 +109,7 @@ class ResponseService
             return $response;
         }
 
-        $item = $this->cache->getItem('object_'.md5($result->getId().http_build_query($fields ?? [],'',',')));
+        $item = $this->cache->getItem('object_'.md5($result->getId().$level.http_build_query($fields ?? [],'',',')));
         if ($item->isHit()) {
 //            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
