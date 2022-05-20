@@ -1144,11 +1144,13 @@ class EavService
             }
         }
 
+        // Remove this object from cache
+        $this->functionService->removeResultFromCache($object);
+
         $this->em->remove($object);
         $this->em->flush();
 
-        // Remove this object from cache and send a notification
-        $this->functionService->removeResultFromCache($object);
+        // Send a notification
         $this->validationService->notify($object, 'DELETE');
 
         return [];
