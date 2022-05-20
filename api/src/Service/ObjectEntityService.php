@@ -1352,7 +1352,9 @@ class ObjectEntityService
     {
         $body = [];
         foreach ($objectEntity->getEntity()->getAttributes() as $attribute) {
-            if (!$attribute->getPersistToGateway()) {
+            // todo: With this ===null check we can never set a value to null with a promise.
+            // todo: Maybe we should add a new bool to attribute that determines it shouldn't be added if value===null?
+            if (!$attribute->getPersistToGateway() || (!$attribute->getRequired() && $objectEntity->getValueByAttribute($attribute)->getValue() === null)) {
                 continue;
             }
             $body[$attribute->getName()] = $this->renderValue($objectEntity->getValueByAttribute($attribute), $attribute);
