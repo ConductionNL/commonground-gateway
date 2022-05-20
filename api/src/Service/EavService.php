@@ -16,6 +16,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Stopwatch\Stopwatch;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
@@ -695,7 +697,7 @@ class EavService
 
             $dot = new Dot();
             // Lets turn the from dor attat into an propper array
-            foreach ($fields as $field => $value) {
+            foreach ($fields as $key => $value) {
                 $dot->add($value, true);
             }
 
@@ -703,6 +705,35 @@ class EavService
         }
 
         return $fields;
+    }
+
+    /**
+     * Gets extend from the request to use for extending.
+     *
+     * @param Request $request
+     *
+     * @return array
+     */
+    public function getRequestExtend(Request $request): ?array
+    {
+        $extend = $request->query->get('extend');
+
+        if ($extend) {
+            // Lets deal with a comma seperated list
+            if (!is_array($extend)) {
+                $extend = explode(',', $extend);
+            }
+
+            $dot = new Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach ($extend as $key => $value) {
+                $dot->add($value, true);
+            }
+
+            $extend = $dot->all();
+        }
+
+        return $extend;
     }
 
     /**
@@ -721,7 +752,7 @@ class EavService
         // Its an enity endpoint
         switch ($request->getMethod()) {
             case 'GET':
-                $result = $this->handleGet($info['object'], $info['fields']);
+                $result = $this->handleGet($info['object'], $info['fields'], null);
                 $responseType = Response::HTTP_OK;
                 break;
             case 'PUT':
@@ -771,7 +802,7 @@ class EavService
         // its a collection endpoint
         switch ($request->getMethod()) {
             case 'GET':
-                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
+                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], null, $info['extension']);
                 $responseType = Response::HTTP_OK;
                 break;
             case 'POST':
@@ -907,33 +938,41 @@ class EavService
             $this->validationService->notify($notification['objectEntity'], $notification['method']);
         }
 
-        return $this->responseService->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields, null);
     }
 
     /**
      * Handles a get item api call.
      *
      * @param ObjectEntity $object
-     * @param $fields
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param string $acceptType
      *
      * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
      */
-    public function handleGet(ObjectEntity $object, ?array $fields): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
     {
-        return $this->responseService->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
     }
 
     /**
      * Handles a search (collection) api call.
      *
-     * @param string  $entityName
+     * @param string $entityName
      * @param Request $request
-     * @param $fields
+     * @param array|null $fields
      * @param $extension
-     *
+     * @param null $filters
+     * @param string $acceptType
      * @return array|array[]
+     *
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
-    public function handleSearch(string $entityName, Request $request, ?array $fields, $extension, $filters = null): array
+    public function handleSearch(string $entityName, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
         $query = $request->query->all();
         unset($query['limit']);
@@ -1056,8 +1095,8 @@ class EavService
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
             // Old $MaxDepth in renderResult
-//            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
-            $results[] = $this->responseService->renderResult($object, $fields, $flat);
+//            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, null, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType , false, $flat);
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');

@@ -129,7 +129,7 @@ class Entity
     private string $function = 'noFunction';
 
     /**
-     * wheter or not the properties of the original object are automaticly include.
+     * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)

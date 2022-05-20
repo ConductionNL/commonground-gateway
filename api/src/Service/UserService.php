@@ -62,7 +62,7 @@ class UserService
                     'name' => true, 'type' => true, 'addresses' => true, 'emails' => true, 'telephones' => true,
                 ],
             ];
-            if (!($organization = $this->objectEntityService->getObjectByUri($user->getOrganization(), $organizationFields))) {
+            if (!($organization = $this->objectEntityService->getObjectByUri($user->getOrganization(), $organizationFields, $organizationFields))) {
                 try {
                     $id = substr($user->getOrganization(), strrpos($user->getOrganization(), '/') + 1);
 

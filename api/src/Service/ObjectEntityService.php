@@ -169,16 +169,19 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $uri
+     * @param string $uri
      * @param array|null $fields
+     * @param array|null $extend
      *
      * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
      */
-    public function getObjectByUri(string $uri, ?array $fields = null): array
+    public function getObjectByUri(string $uri, ?array $fields = null, ?array $extend = null): array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['uri' => $uri]);
         if ($object instanceof ObjectEntity) {
-            return $this->responseService->renderResult($object, $fields, true);
+            return $this->responseService->renderResult($object, $fields, $extend, 'jsonld', true);
         }
 
         return [];
@@ -187,17 +190,19 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param Entity     $entity
-     * @param string     $id
+     * @param Entity $entity
+     * @param string $id
      * @param array|null $fields
+     * @param array|null $extend
      *
      * @return array
+     * @throws CacheException|InvalidArgumentException
      */
-    public function getObject(Entity $entity, string $id, ?array $fields = null): array
+    public function getObject(Entity $entity, string $id, ?array $fields = null, ?array $extend = null): array
     {
         $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id]);
         if ($object instanceof ObjectEntity) {
-            return $this->responseService->renderResult($object, $fields, true);
+            return $this->responseService->renderResult($object, $fields, $extend, 'jsonld', true);
         }
 
         return [];
@@ -206,16 +211,19 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $id
+     * @param string $id
      * @param array|null $fields
+     * @param array|null $extend
      *
      * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
      */
-    public function getPersonObject(string $id, ?array $fields = null): array
+    public function getPersonObject(string $id, ?array $fields = null, ?array $extend = null): array
     {
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function' => 'person']);
         if ($entity instanceof Entity) {
-            return $this->getObject($entity, $id, $fields);
+            return $this->getObject($entity, $id, $fields, $extend);
         }
 
         return [];
@@ -224,16 +232,19 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $id
+     * @param string $id
      * @param array|null $fields
+     * @param array|null $extend
      *
      * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
      */
-    public function getOrganizationObject(string $id, ?array $fields = null): array
+    public function getOrganizationObject(string $id, ?array $fields = null, ?array $extend = null): array
     {
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['function' => 'organization']); //todo cache this!?
         if ($entity instanceof Entity) {
-            return $this->getObject($entity, $id, $fields);
+            return $this->getObject($entity, $id, $fields, $extend);
         }
 
         return [];
@@ -242,12 +253,15 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $username
+     * @param string $username
      * @param array|null $fields
+     * @param array|null $extend
      *
      * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
      */
-    public function getUserObjectEntity(string $username, ?array $fields = null): array
+    public function getUserObjectEntity(string $username, ?array $fields = null, ?array $extend = null): array
     {
         // Because inversedBy wil not set the UC->user->person when creating a person with a user in the gateway.
         // We need to do this in order to find the person of this user:
@@ -259,7 +273,7 @@ class ObjectEntityService
 
         $objects = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['username' => $username]);
         if (count($objects) == 1) {
-            $user = $this->responseService->renderResult($objects[0], $fields, true);
+            $user = $this->responseService->renderResult($objects[0], $fields, $extend, 'jsonld', true);
             // This: will be false if a user has no rights to do get on a person object
             if (isset($user['person'])) {
                 return $user['person'];
@@ -301,12 +315,13 @@ class ObjectEntityService
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
      * @param string|null $operationType
+     * @param string $acceptType
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null): array
+    public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
         // check application
         $this->stopwatch->start('getApplication', 'handleObject');
@@ -382,6 +397,11 @@ class ObjectEntityService
         $fields = $this->eavService->getRequestFields($this->request);
         $this->stopwatch->stop('getRequestFields');
 
+        // Lets allow for extending
+        $this->stopwatch->start('getRequestExtend', 'handleObject');
+        $extend = $this->eavService->getRequestExtend($this->request);
+        $this->stopwatch->stop('getRequestExtend');
+
         switch ($method) {
             case 'GET':
                 //todo: -start- old code...
@@ -390,7 +410,7 @@ class ObjectEntityService
                 if (isset($object)) {
                     if ($object instanceof ObjectEntity) {
                         $this->stopwatch->start('handleGet', 'handleObject');
-                        $data = $this->eavService->handleGet($object, $fields);
+                        $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
                         $this->stopwatch->stop('handleGet');
                         if ($object->getHasErrors()) {
                             $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
@@ -401,7 +421,7 @@ class ObjectEntityService
                     }
                 } else {
                     $this->stopwatch->start('handleSearch', 'handleObject');
-                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, false, $filters ?? []);
+                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
                     $this->stopwatch->stop('handleSearch');
                     //todo: -end- old code...
 
@@ -458,7 +478,7 @@ class ObjectEntityService
                 $this->entityManager->flush();
 
                 $this->stopwatch->start('renderResult', 'handleObject');
-                $data = $this->responseService->renderResult($object, $fields);
+                $data = $this->responseService->renderResult($object, $fields, $extend, $acceptType);
                 $this->stopwatch->stop('renderResult');
 
                 if ($object->getHasErrors()) {

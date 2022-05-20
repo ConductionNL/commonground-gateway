@@ -12,6 +12,8 @@ use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
@@ -87,16 +89,20 @@ class ResponseService
      * Renders the result for a ObjectEntity that will be used for the response after a successful api call.
      *
      * @param ObjectEntity $result
-     * @param $fields
-     * //     * @param ArrayCollection|null $maxDepth
-     * @param bool $flat
-     * @param int  $level
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param string $acceptType
+     * @param bool $skipAuthCheck
+     * @param bool $flat todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
+     * @param int $level
      *
-     * @return array
+     * @return array|string[]
+     *
+     * @throws CacheException|InvalidArgumentException
      */
     // Old $MaxDepth;
 //    public function renderResult(ObjectEntity $result, $fields, ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    public function renderResult(ObjectEntity $result, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
+    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -109,22 +115,22 @@ class ResponseService
             return $response;
         }
 
-        $item = $this->cache->getItem('object_'.md5($result->getId().$level.http_build_query($fields ?? [],'',',')));
+        $item = $this->cache->getItem('object_'.md5($result->getId().$acceptType.$level.http_build_query($fields ?? [],'',',')));
         if ($item->isHit()) {
 //            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
-            return $this->filterResult($item->get(), $result, $skipAuthCheck);
+//            return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.md5($result->getId()->toString()));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
             return [
-                '@id' => ucfirst($result->getEntity()->getName()).'/'.$result->getId(),
+                '@id' => '/'.$result->getEntity()->getName().'/'.$result->getId(),
             ];
         }
 
+        // Lets start with the external result
         if ($result->getEntity()->getGateway() && $result->getEntity()->getEndpoint()) {
-            // Lets start with the external results
             if (!empty($result->getExternalResult())) {
                 $response = array_merge($response, $result->getExternalResult());
             } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
@@ -147,55 +153,22 @@ class ResponseService
 
         // Let get the internal results
         // Old $MaxDepth;
-//        $response = array_merge($response, $this->renderValues($result, $fields, $maxDepth, $flat, $level));
-        $response = array_merge($response, $this->renderValues($result, $fields, $skipAuthCheck, $flat, $level));
+//        $response = array_merge($response, $this->renderValues($result, $fields, $extend, $maxDepth, $flat, $level));
+        $response = array_merge($response, $this->renderValues($result, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level));
 
         // Lets sort the result alphabeticly
+        ksort($response);
 
         // Lets skip the pritty styff when dealing with a flat object
+        // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
         if ($flat) {
-            ksort($response);
             $item->set($response);
             $this->cache->save($item);
 
             return $response;
         }
 
-        // Lets make it personal
-        $gatewayContext = [];
-        $gatewayContext['@id'] = ucfirst($result->getEntity()->getName()).'/'.$result->getId();
-        $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-        $gatewayContext['@dateCreated'] = $result->getDateCreated();
-        $gatewayContext['@dateModified'] = $result->getDateModified();
-        $gatewayContext['@organization'] = $result->getOrganization();
-        if ($result->getApplication() !== null) {
-            $gatewayContext['@application'] = $result->getApplication()->getId();
-        }
-        $gatewayContext['@owner'] = $result->getOwner();
-        if ($result->getUri()) {
-            $gatewayContext['@uri'] = $result->getUri();
-        }
-        // Lets move some stuff out of the way
-        if (array_key_exists('@context', $response)) {
-            $gatewayContext['@gateway/context'] = $response['@context'];
-        }
-        if ($result->getExternalId()) {
-            $gatewayContext['@gateway/id'] = $result->getExternalId();
-        } elseif (array_key_exists('id', $response)) {
-            $gatewayContext['@gateway/id'] = $response['id'];
-        }
-        if (array_key_exists('@type', $response)) {
-            $gatewayContext['@gateway/type'] = $response['@type'];
-        }
-        if (is_array($fields)) {
-            $gatewayContext['@fields'] = $fields;
-        }
-        $gatewayContext['@level'] = $level;
-        $gatewayContext['id'] = $result->getId();
-
-        ksort($response);
-        $response = $gatewayContext + $response;
+        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response);
 
         $item->set($response);
         $this->cache->save($item);
@@ -204,19 +177,101 @@ class ResponseService
     }
 
     /**
-     * Renders the values of an ObjectEntity for the renderResult function.
+     * @TODO
      *
      * @param ObjectEntity $result
-     * @param $fields
-     * //     * @param ArrayCollection|null $maxDepth
-     * @param bool $flat
-     * @param int  $level
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param string $acceptType
+     * @param int $level
+     * @param array $response
      *
      * @return array
      */
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response): array
+    {
+        $gatewayContext = [];
+        // todo: split switch into functions?
+        switch ($acceptType) {
+            case 'jsonld':
+                $gatewayContext['@id'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
+                $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
+                $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+                $gatewayContext['@dateCreated'] = $result->getDateCreated();
+                $gatewayContext['@dateModified'] = $result->getDateModified();
+                $gatewayContext['@owner'] = $result->getOwner();
+                $gatewayContext['@organization'] = $result->getOrganization();
+                $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
+                $gatewayContext['@uri'] = $result->getUri();
+                $gatewayContext['@gateway/id'] = $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null);
+                if (array_key_exists('@type', $response)) {
+                    $gatewayContext['@gateway/type'] = $response['@type'];
+                }
+                if (array_key_exists('@context', $response)) {
+                    $gatewayContext['@gateway/context'] = $response['@context'];
+                }
+                if (is_array($extend)) {
+                    $gatewayContext['@extend'] = $extend;
+                }
+                if (is_array($fields)) {
+                    $gatewayContext['@fields'] = $fields;
+                }
+                $gatewayContext['@level'] = $level;
+                break;
+            case 'jsonhal':
+                $gatewayContext['_links']['self'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
+                $gatewayContext['_metadata'] = [
+                    "@type"         => ucfirst($result->getEntity()->getName()),
+                    "@context"      => '/contexts/'.ucfirst($result->getEntity()->getName()),
+                    "@dateCreated"  => $result->getDateCreated(),
+                    "@dateModified" => $result->getDateModified(),
+                    "@owner"        => $result->getOwner(),
+                    "@organization" => $result->getOrganization(),
+                    "@application"  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
+                    "@uri"          => $result->getUri(),
+                    "@gateway/id"   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null)
+                ];
+                if (array_key_exists('@type', $response)) {
+                    $gatewayContext['_metadata']['@gateway/type'] = $response['@type'];
+                }
+                if (array_key_exists('@context', $response)) {
+                    $gatewayContext['_metadata']['@gateway/context'] = $response['@context'];
+                }
+                if (is_array($extend)) {
+                    $gatewayContext['_metadata']['@extend'] = $extend;
+                }
+                if (is_array($fields)) {
+                    $gatewayContext['_metadata']['@fields'] = $fields;
+                }
+                $gatewayContext['_metadata']['@level'] = $level;
+                break;
+            case 'json':
+            default:
+                break;
+        }
+
+        $gatewayContext['id'] = $result->getId();
+        return $gatewayContext + $response;
+    }
+
+    /**
+     * Renders the values of an ObjectEntity for the renderResult function.
+     *
+     * @param ObjectEntity $result
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param string $acceptType
+     * @param bool $skipAuthCheck
+     * @param bool $flat
+     * @param int $level
+     *
+     * @return array
+     *
+     * @throws CacheException|InvalidArgumentException
+     */
     // Old $MaxDepth;
 //    private function renderValues(ObjectEntity $result, $fields, ?ArrayCollection $maxDepth = null, bool $flat = false, int $level = 0): array
-    private function renderValues(ObjectEntity $result, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
+    private function renderValues(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
 
@@ -246,19 +301,33 @@ class ResponseService
                 continue;
             }
 
-            // Lets deal with subfields filtering
-            $subfields = null;
-            if (is_array($fields) && array_key_exists($attribute->getName(), $fields)) {
-                if (is_array($fields[$attribute->getName()])) {
-                    $subfields = $fields[$attribute->getName()];
-                } elseif ($fields[$attribute->getName()] == false) {
-                    continue;
-                }
-            }
-
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
-                $response[$attribute->getName()] = $this->renderObjects($result, $valueObject, $subfields, $skipAuthCheck, $flat, $level);
+                // Lets deal with extending
+                if ($attribute->getExtend() !== true && (!is_array($extend) || !array_key_exists($attribute->getName(), $extend))) {
+                    continue;
+                }
+
+                // Let's deal with subFields filtering
+                $subFields = null;
+                if (is_array($fields) && array_key_exists($attribute->getName(), $fields)) {
+                    if (is_array($fields[$attribute->getName()])) {
+                        $subFields = $fields[$attribute->getName()];
+                    } elseif ($fields[$attribute->getName()] == false) {
+                        continue;
+                    }
+                }
+
+                // Let's deal with subExtend extending
+                $subExtend = null;
+                if (is_array($extend) && array_key_exists($attribute->getName(), $extend)) {
+                    if (is_array($extend[$attribute->getName()])) {
+                        $subExtend = $extend[$attribute->getName()];
+                    } elseif ($extend[$attribute->getName()] == false) {
+                        continue;
+                    }
+                }
+                $response[$attribute->getName()] = $this->renderObjects($result, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
 
                 // Old $MaxDepth;
 //                    // TODO: this code might cause for very slow api calls, another fix could be to always set inversedBy on both (sides) attributes so we only have to check $attribute->getInversedBy()
@@ -310,17 +379,22 @@ class ResponseService
     /**
      * Renders the objects of a value with attribute type 'object' for the renderValues function.
      *
+     * @param ObjectEntity $result
      * @param Value $value
-     * @param $fields
-     * //     * @param ArrayCollection|null $maxDepth
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param string $acceptType
+     * @param bool $skipAuthCheck
      * @param bool $flat
-     * @param int  $level
+     * @param int $level
      *
      * @return array|null
+     *
+     * @throws CacheException|InvalidArgumentException
      */
     // Old $MaxDepth;
 //    private function renderObjects(Value $value, $fields, ?ArrayCollection $maxDepth, bool $flat = false, int $level = 0): ?array
-    private function renderObjects(ObjectEntity $result, Value $value, ?array $fields, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
+    private function renderObjects(ObjectEntity $result, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): ?array
     {
         $attribute = $value->getAttribute();
 
@@ -336,19 +410,25 @@ class ResponseService
                     $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
                 }
 
-                return $this->renderResult($value->getValue(), $fields, $skipAuthCheck, $flat, $level);
+                if ($attribute->getInclude()) {
+                    return $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
+                }
+                $object = $value->getValue();
+                return [
+                    '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                ];
 
                 // Old $MaxDepth;
 //                // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
 //                if ($maxDepth) {
 //                    if (!$maxDepth->contains($value->getValue())) {
-//                        return $this->renderResult($value->getValue(), $fields, $maxDepth, $flat, $level);
+//                        return $this->renderResult($value->getValue(), $fields, $extend, $maxDepth, $flat, $level);
 //                    }
 //
 //                    return ['continue' => 'continue']; //TODO NOTE: We want this here
 //                }
 //
-//                return $this->renderResult($value->getValue(), $fields, null, $flat, $level);
+//                return $this->renderResult($value->getValue(), $fields, $extend, null, $flat, $level);
             } catch (AccessDeniedException $exception) {
                 return null;
             }
@@ -363,20 +443,26 @@ class ResponseService
                 if (!$skipAuthCheck && !$this->checkOwner($result)) {
                     $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
                 }
-                $objectsArray[] = $this->renderResult($object, $fields, $skipAuthCheck, $flat, $level);
+                if ($attribute->getInclude()) {
+                    $objectsArray[] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
+                } else {
+                    $objectsArray[] = [
+                        '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                    ];
+                }
 
                 // Old $MaxDepth;
 //            // Do not call recursive function if we reached maxDepth (if we already rendered this object before)
 //            if ($maxDepth) {
 //                if (!$maxDepth->contains($object)) {
-//                    $objectsArray[] = $this->renderResult($object, $fields, $maxDepth, $flat, $level);
+//                    $objectsArray[] = $this->renderResult($object, $fields, $extend, $maxDepth, $flat, $level);
 //                    continue;
 //                }
 //                // If multiple = true and a subresource contains an inversedby list of resources that contains this resource ($result), only show the @id
 //                $objectsArray[] = ['@id' => ucfirst($object->getEntity()->getName()).'/'.$object->getId()];
 //                continue;
 //            }
-//            $objectsArray[] = $this->renderResult($object, $fields, null, $flat, $level);
+//            $objectsArray[] = $this->renderResult($object, $fields, $extend, null, $flat, $level);
             } catch (AccessDeniedException $exception) {
                 continue;
             }

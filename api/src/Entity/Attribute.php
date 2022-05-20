@@ -140,6 +140,22 @@ class Attribute
     private ?Entity $object = null;
 
     /**
+     * @var bool whether the properties of the original object are automatically include.
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="boolean", options={"default":false})
+     */
+    private bool $extend = false;
+
+    /**
+     * @var bool whether the properties of the object are always shown, even outside or instead of the embedded array.
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="boolean", options={"default":false})
+     */
+    private bool $include = false;
+
+    /**
      * Used for schema or oas parsing.
      *
      * @Assert\Length(max = 255)
@@ -780,6 +796,30 @@ class Attribute
     {
         $this->type = 'object';
         $this->object = $object;
+
+        return $this;
+    }
+
+    public function getExtend(): ?bool
+    {
+        return $this->extend;
+    }
+
+    public function setExtend(?bool $extend): self
+    {
+        $this->extend = $extend;
+
+        return $this;
+    }
+
+    public function getInclude(): ?bool
+    {
+        return $this->include;
+    }
+
+    public function setInclude(?bool $include): self
+    {
+        $this->include = $include;
 
         return $this;
     }
