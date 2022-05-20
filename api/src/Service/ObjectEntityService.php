@@ -365,9 +365,11 @@ class ObjectEntityService
 
                 break;
             case 'DELETE':
-                // get object
-
                 // delete object
+                $data = $this->eavService->handleDelete($object);
+                if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
+                    throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
+                }
                 break;
             default:
                 // throw error

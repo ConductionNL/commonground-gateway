@@ -354,36 +354,41 @@ App\Entity\Endpoint:
     organizationEndpointGet:
         name: Organization endpoint get collection
         description: endpoint for organizations
-        path: ['organizations']
+        path: [ 'organizations' ]
         pathRegex: "#^(organizations)$#"
+        method: GET
         operationType: collection
 
     organizationEndpointPost:
         name: Organization endpoint post
         description: endpoint for organizations
-        path: ['organizations']
+        path: [ 'organizations' ]
         pathRegex: "#^(organizations)$#"
+        method: POST
         operationType: collection
 
     organizationEndpointGetItem:
         name: Organization endpoint get item
         description: endpoint for organizations
-        path: ['organizations', '{id}']
+        path: [ 'organizations', '{id}' ]
         pathRegex: <{organizationItemRegex}>
+        method: GET
         operationType: item
 
     organizationEndpointPut:
         name: Organization endpoint put
         description: endpoint for organizations
-        path: ['organizations', '{id}']
+        path: [ 'organizations', '{id}' ]
         pathRegex: <{organizationItemRegex}>
+        method: PUT
         operationType: item
 
     organizationEndpointDelete:
         name: Organization endpoint delete
         description: endpoint for organizations
-        path: ['organizations', '{id}']
+        path: [ 'organizations', '{id}' ]
         pathRegex: <{organizationItemRegex}>
+        method: DELETE
         operationType: item
 
     # Person Endpoints
@@ -392,6 +397,7 @@ App\Entity\Endpoint:
         description: endpoint for people
         path: [ 'people' ]
         pathRegex: "#^(people)$#"
+        method: GET
         operationType: collection
 
     personEndpointPost:
@@ -399,6 +405,7 @@ App\Entity\Endpoint:
         description: endpoint for people
         path: [ 'people' ]
         pathRegex: "#^(people)$#"
+        method: POST
         operationType: collection
 
     personEndpointGetItem:
@@ -406,6 +413,7 @@ App\Entity\Endpoint:
         description: endpoint for people
         path: [ 'people', '{id}' ]
         pathRegex: <{personItemRegex}>
+        method: GET
         operationType: item
 
     personEndpointPut:
@@ -413,6 +421,7 @@ App\Entity\Endpoint:
         description: endpoint for people
         path: [ 'people', '{id}' ]
         pathRegex: <{personItemRegex}>
+        method: PUT
         operationType: item
 
     personEndpointDelete:
@@ -420,6 +429,7 @@ App\Entity\Endpoint:
         description: endpoint for people
         path: [ 'people', '{id}' ]
         pathRegex: <{personItemRegex}>
+        method: DELETE
         operationType: item
 
     # Email Endpoints
@@ -428,6 +438,7 @@ App\Entity\Endpoint:
         description: endpoint for emails
         path: [ 'emails' ]
         pathRegex: "#^(emails)$#"
+        method: GET
         operationType: collection
 
     emailEndpointPost:
@@ -435,6 +446,7 @@ App\Entity\Endpoint:
         description: endpoint for emails
         path: [ 'emails' ]
         pathRegex: "#^(emails)$#"
+        method: POST
         operationType: collection
 
     emailEndpointGetItem:
@@ -442,6 +454,7 @@ App\Entity\Endpoint:
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
         pathRegex: <{emailItemRegex}>
+        method: GET
         operationType: item
 
     emailEndpointPut:
@@ -449,6 +462,7 @@ App\Entity\Endpoint:
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
         pathRegex: <{emailItemRegex}>
+        method: PUT
         operationType: item
 
     emailEndpointDelete:
@@ -456,6 +470,7 @@ App\Entity\Endpoint:
         description: endpoint for emails
         path: [ 'emails', '{id}' ]
         pathRegex: <{emailItemRegex}>
+        method: DELETE
         operationType: item
 
     # Telephone Endpoints
@@ -464,6 +479,7 @@ App\Entity\Endpoint:
         description: endpoint for telephones
         path: [ 'telephones' ]
         pathRegex: "#^(telephones)$#"
+        method: GET
         operationType: collection
 
     telephoneEndpointPost:
@@ -471,6 +487,7 @@ App\Entity\Endpoint:
         description: endpoint for telephones
         path: [ 'telephones' ]
         pathRegex: "#^(telephones)$#"
+        method: POST
         operationType: collection
 
     telephoneEndpointGetItem:
@@ -478,6 +495,7 @@ App\Entity\Endpoint:
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
         pathRegex: <{telephoneItemRegex}>
+        method: GET
         operationType: item
 
     telephoneEndpointPut:
@@ -485,6 +503,7 @@ App\Entity\Endpoint:
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
         pathRegex: <{telephoneItemRegex}>
+        method: PUT
         operationType: item
 
     telephoneEndpointDelete:
@@ -492,6 +511,7 @@ App\Entity\Endpoint:
         description: endpoint for telephones
         path: [ 'telephones', '{id}' ]
         pathRegex: <{telephoneItemRegex}>
+        method: DELETE
         operationType: item
 
     # Address Endpoints
@@ -500,6 +520,7 @@ App\Entity\Endpoint:
         description: endpoint for addresses
         path: [ 'addresses' ]
         pathRegex: "#^(addresses)$#"
+        method: GET
         operationType: collection
 
     addressEndpointPost:
@@ -507,6 +528,7 @@ App\Entity\Endpoint:
         description: endpoint for addresses
         path: [ 'addresses' ]
         pathRegex: "#^(addresses)$#"
+        method: POST
         operationType: collection
 
     addressEndpointGetItem:
@@ -514,6 +536,7 @@ App\Entity\Endpoint:
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
         pathRegex: <{addressItemRegex}>
+        method: GET
         operationType: item
 
     addressEndpointPut:
@@ -521,6 +544,7 @@ App\Entity\Endpoint:
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
         pathRegex: <{addressItemRegex}>
+        method: PUT
         operationType: item
 
     addressEndpointDelete:
@@ -528,6 +552,7 @@ App\Entity\Endpoint:
         description: endpoint for addresses
         path: [ 'addresses', '{id}' ]
         pathRegex: <{addressItemRegex}>
+        method: DELETE
         operationType: item
 
 
