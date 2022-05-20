@@ -353,11 +353,11 @@
 #
 ## Parameters for endpoint regex
 #parameters:
-#    organizationItemRegex: "#^(organizations/[^/]*)$#"
-#    personItemRegex: "#^(people/[^/]*)$#"
-#    emailItemRegex: "#^(emails/[^/]*)$#"
-#    telephoneItemRegex: "#^(telephones/[^/]*)$#"
-#    addressItemRegex: "#^(addresses/[^/]*)$#"
+#    organizationItemRegex: "^organizations/[a-z0-9-]{36}$"
+#    personItemRegex: "^people/[a-z0-9-]{36}$"
+#    emailItemRegex: "^emails/[a-z0-9-]{36}$"
+#    telephoneItemRegex: "^telephones/[a-z0-9-]{36}$"
+#    addressItemRegex: "^addresses/[a-z0-9-]{36}$"
 #
 ## Endpoints        
 #App\Entity\Endpoint:
@@ -366,7 +366,7 @@
 #        name: Organization endpoint get collection
 #        description: endpoint for organizations
 #        path: [ 'organizations' ]
-#        pathRegex: "#^(organizations)$#"
+#        pathRegex: "^(organizations)$"
 #        method: GET
 #        operationType: collection
 #
@@ -374,7 +374,7 @@
 #        name: Organization endpoint post
 #        description: endpoint for organizations
 #        path: [ 'organizations' ]
-#        pathRegex: "#^(organizations)$#"
+#        pathRegex: "^(organizations)$"
 #        method: POST
 #        operationType: collection
 #
@@ -407,7 +407,7 @@
 #        name: Person endpoint get collection
 #        description: endpoint for people
 #        path: [ 'people' ]
-#        pathRegex: "#^(people)$#"
+#        pathRegex: "^(people)$"
 #        method: GET
 #        operationType: collection
 #
@@ -415,7 +415,7 @@
 #        name: Person endpoint post
 #        description: endpoint for people
 #        path: [ 'people' ]
-#        pathRegex: "#^(people)$#"
+#        pathRegex: "^(people)$"
 #        method: POST
 #        operationType: collection
 #
@@ -448,7 +448,7 @@
 #        name: Email endpoint get collection
 #        description: endpoint for emails
 #        path: [ 'emails' ]
-#        pathRegex: "#^(emails)$#"
+#        pathRegex: "^(emails)$"
 #        method: GET
 #        operationType: collection
 #
@@ -456,7 +456,7 @@
 #        name: Email endpoint post
 #        description: endpoint for emails
 #        path: [ 'emails' ]
-#        pathRegex: "#^(emails)$#"
+#        pathRegex: "^(emails)$"
 #        method: POST
 #        operationType: collection
 #
@@ -489,7 +489,7 @@
 #        name: Telephone endpoint get collection
 #        description: endpoint for telephones
 #        path: [ 'telephones' ]
-#        pathRegex: "#^(telephones)$#"
+#        pathRegex: "^(telephones)$"
 #        method: GET
 #        operationType: collection
 #
@@ -497,7 +497,7 @@
 #        name: Telephone endpoint post
 #        description: endpoint for telephones
 #        path: [ 'telephones' ]
-#        pathRegex: "#^(telephones)$#"
+#        pathRegex: "^(telephones)$"
 #        method: POST
 #        operationType: collection
 #
@@ -530,7 +530,7 @@
 #        name: Address endpoint get collection
 #        description: endpoint for addresses
 #        path: [ 'addresses' ]
-#        pathRegex: "#^(addresses)$#"
+#        pathRegex: "^(addresses)$"
 #        method: GET
 #        operationType: collection
 #
@@ -538,7 +538,7 @@
 #        name: Address endpoint post
 #        description: endpoint for addresses
 #        path: [ 'addresses' ]
-#        pathRegex: "#^(addresses)$#"
+#        pathRegex: "^(addresses)$"
 #        method: POST
 #        operationType: collection
 #
