@@ -49,7 +49,7 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to load
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() !== null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif (!$collection->getLocationOAS()) {
@@ -61,7 +61,7 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -76,9 +76,9 @@ class ConvenienceController extends AbstractController
 
         $methods = [
             'hasGETCollection' => false,
-            'hasPOST' => false,
-            'hasGETItem' => false,
-            'hasPUT' => false
+            'hasPOST'          => false,
+            'hasGETItem'       => false,
+            'hasPUT'           => false,
         ];
 
         $isValid = true;
@@ -110,7 +110,7 @@ class ConvenienceController extends AbstractController
             $this->serializer->serialize(['isValid' => $isValid], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
-        );;
+        );
     }
 
     /**
