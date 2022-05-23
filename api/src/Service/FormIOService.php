@@ -217,14 +217,16 @@ class FormIOService
         $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
 
         $component = $this->basicComponent;
-        $component['label'] = $attr->getName().($attr->getRequired() ? '*' : '');
+        $component['label'] = $attr->getName() . ($attr->getRequired() ? '*' : '');
         $component['key'] = $preSetKey ?? $attr->getName();
         $component['multiple'] = $attr->getMultiple();
+        empty($defaultValue) && $defaultValue = null;
+
         $component['defaultValue'] = $attr->getDefaultValue() ?? $defaultValue;
         $component['placeholder'] = $attr->getExample() ?? '';
         $component['unique'] = $attr->getMustBeUnique() ?? '';
         $attr->getReadOnly() !== null && $component['disabled'] = true;
-        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'].+' (read only)';
+        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'] . +' (read only)';
 
         $component['validate'] = [
             'required'      => $attr->getRequired() ?? false,
