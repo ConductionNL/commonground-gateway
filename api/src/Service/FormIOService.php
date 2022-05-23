@@ -290,7 +290,7 @@ class FormIOService
                     'key'          => '@application',
                     'type'         => 'textfield',
                     'inputType'    => 'text',
-                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/'.$objectEntity->getApplication()->getId() : '',
+                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/' . $objectEntity->getApplication()->getId() : '',
 
                 ],
                 [
