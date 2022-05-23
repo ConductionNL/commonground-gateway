@@ -478,6 +478,7 @@ class ObjectEntityService
                 $this->entityManager->flush();
 
                 $this->stopwatch->start('renderResult', 'handleObject');
+                // todo: maybe add an option for extend all? if we always want to show every subresource after a post/put?
                 $data = $this->responseService->renderResult($object, $fields, $extend, $acceptType);
                 $this->stopwatch->stop('renderResult');
 
