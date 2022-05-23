@@ -49,7 +49,7 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to load
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() !== null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif (!$collection->getLocationOAS()) {
@@ -61,18 +61,25 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
     }
 
     /**
-     * @Route("/admin/entity-can-use-formio/{id}")
+     * @Route("/admin/entity-crud-endpoint/{id}")
      */
-    public function entityCanUseFormIO(string $id): Response
+    public function getEntityCrudEndpoint(string $id): Response
     {
         $entity = $this->entityManager->getRepository('App:Entity')->find($id);
+
+        if (!$entity) return new Response(
+            $this->serializer->serialize(['message' => 'No entity found with id: ' . $id], 'json'),
+            Response::HTTP_NOT_FOUND,
+            ['content-type' => 'json']
+        );;
+
 
         $methods = [
             'hasGETCollection' => false,
@@ -81,6 +88,7 @@ class ConvenienceController extends AbstractController
             'hasPUT'           => false,
         ];
 
+        $crudEndpoint = null;
         $isValid = true;
 
         foreach ($entity->getHandlers() as $handler) {
@@ -88,7 +96,11 @@ class ConvenienceController extends AbstractController
                 foreach ($handler->getEndpoints() as $endpoint) {
                     switch ($endpoint->getMethod()) {
                         case 'get':
-                            $endpoint->getOperationType() == 'collection' && $methods['hasGETCollection'] = true;
+                            if ($endpoint->getOperationType() == 'collection') {
+                                $methods['hasGETCollection'] = true;
+                                $crudEndpoint = $endpoint->getPath()[0];
+                                break;
+                            }
                             $endpoint->getOperationType() == 'item' && $methods['hasGETItem'] = true;
                             break;
                         case 'post':
@@ -102,12 +114,17 @@ class ConvenienceController extends AbstractController
             }
         }
 
-        foreach ($methods as $method) {
-            $method === false && $isValid = false;
+        if (!$crudEndpoint) {
+            $isValid = false;
+        } else {
+            foreach ($methods as $method) {
+                $method === false && $isValid = false;
+                break;
+            }
         }
 
         return new Response(
-            $this->serializer->serialize(['isValid' => $isValid], 'json'),
+            $this->serializer->serialize(['endpoint' => $isValid === false ? $isValid : $crudEndpoint], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
