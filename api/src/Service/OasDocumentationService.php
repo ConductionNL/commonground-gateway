@@ -4,21 +4,24 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
-use Cassandra\Uuid;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
 class OasDocumentationService
 {
+    private ParameterBagInterface $params;
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
     private ValidationService $validationService;
     private array $supportedValidators;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
+    public function __construct(ParameterBagInterface $params, EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
     {
+        $this->params = $params;
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
@@ -65,9 +68,10 @@ class OasDocumentationService
     /**
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array.
      *
+     * @param string $applicationId
      * @return array
      */
-    public function getRenderDocumentation(Uuid $application): array
+    public function getRenderDocumentation(Request $request, string $applicationId): array
     {
         $docs = [];
 
@@ -75,17 +79,21 @@ class OasDocumentationService
         $docs['openapi'] = '3.0.3';
         $docs['info'] = $this->getDocumentationInfo();
 
+//        $host = $request->server->get('HTTP_HOST');
+//        $path = $request->getPathInfo();
+
         /* @todo the server should include the base url */
         $docs['servers'] = [
-            ['url'=>'/api', 'description'=>'Gateway server'],
+            ['url'=> $request->getBaseUrl(), 'description'=>'Gateway server'],
         ];
 
         $docs['tags'] = [];
 
-        $endpoints = $this->em->getRepository('App:Endpoint')->findAll(); ///findBy(['expose_in_docs'=>true]);
+        $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $applicationId]); ///findBy(['expose_in_docs'=>true]);
+        $endpoints = $this->em->getRepository('App:Endpoint')->findByApplication($application); ///findBy(['expose_in_docs'=>true]);
 
         foreach ($endpoints as $endpoint) {
-            $docs = $this->addEnpointToDocs($endpoint, $docs);
+            $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
         return $docs;
@@ -99,43 +107,43 @@ class OasDocumentationService
     private function getDocumentationInfo(): array
     {
         return [
-            'title'         => 'Commonground Gateway EAV endpoints', /*@todo pull from config */
-            'description'   => 'This documentation contains the endpoints on your commonground gateway.',  /*@todo pull from config */
-            'termsOfService'=> 'http://example.com/terms/',  /*@todo pull from config */
+            'title'         => $this->params->get('documentation_title'),
+            'description'   => $this->params->get('documentation_description'),
+            'termsOfService'=> $this->params->get('documentation_terms_of_service'),
             'contact'       => [
-                'name' => 'Gateway Support', /*@todo pull from config */
-                'url'  => 'http://www.conduction.nl/contact', /*@todo pull from config */
-                'email'=> 'info@conduction.nl', /*@todo pull from config */
+                'name' => $this->params->get('documentation_contact_name'),
+                'url'  => $this->params->get('documentation_contact_url'),
+                'email'=> $this->params->get('documentation_contact_email'),
             ],
             'license'=> [
-                'name'=> 'Apache 2.0', /*@todo pull from config */
-                'url' => 'https://www.apache.org/licenses/LICENSE-2.0.html', /*@todo pull from config */
+                'name'=> $this->params->get('documentation_licence_name'),
+                'url' => $this->params->get('documentation_licence_url'),
             ],
-            'version'=> '1.0.1',
+            'version'=> $this->params->get('documentation_version'),
         ];
     }
 
     /**
-     * Generates an OAS3 path for an specific endoint.
+     * Generates an OAS3 path for a specific endpoint.
      *
      * @param Endpoint $endpoint
      * @param array  $docs
      *
      * @return array
      */
-    public function addEnpointToDocs(Endpoint $endpoint, array $docs): array
+    public function addEndpointToDocs(Endpoint $endpoint, array $docs): array
     {
 
         /* @todo this only goes one deep */
-        //$docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
+//        $docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
 
-        // Lets only add the main entities as root
+        // Let's only add the main entities as root
         if (!$endpoint->getPath()) {
             return $docs;
         }
 
-        // Lets add the path
-        $docs['paths'][$endpoint->getPath()] = $this->getEnpointMethods($endpoint);
+        // Let's add the path
+        $docs['paths'][$endpoint->getPath()] = $this->getEndpointMethods($endpoint);
 
         // create the tag
         $docs['tags'][] = [
@@ -153,13 +161,10 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getEnpointMethods(Endpoint $endpoint): array
+    public function getEndpointMethods(Endpoint $endpoint): array
     {
         $methods = [];
-        foreach ($endpoint->getMethods() as $method){
-            $methods[$method] = $this->getEnpointMethod($endpoint, $method);
-        }
-        return $methods;
+        return $methods[$endpoint->getMethod()] = $this->getEndpointMethod($endpoint, $endpoint->getMethod());
     }
 
     /**
@@ -170,10 +175,11 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getEnpointMethod(Endpoint $endpoint, string $method): array
+    public function getEndpointMethod(Endpoint $endpoint, string $method): array
     {
+
         /* @todo name should be cleaned before being used like this */
-        $method = [
+        $methodArray = [
             "operationId" => $endpoint->getName().'_'.$method,
             "summary"=>$endpoint->getDescription(),
             "description"=>$endpoint->getDescription(),
@@ -182,48 +188,48 @@ class OasDocumentationService
         ];
 
         // Parameters
-        foreach($endpoint->getPathArray() as $parameter){
+//        foreach($endpoint->getPathArray() as $parameter){
+//
+//        }
 
-        }
-
-        // Primary Responce (succes)
-        $responceTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
-        $responce = false;
+        // Primary Response (success)
+        $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
+        $response = false;
         switch ($method) {
-            case 'get':
+            case 'GET':
                 $description = 'OK';
-                $responce = 200;
+                $response = 200;
                 break;
-            case 'post':
+            case 'POST':
                 $description = 'Created';
-                $responce = 201;
+                $response = 201;
                 break;
-            case 'put':
+            case 'PUT':
                 $description = 'Accepted';
-                $responce = 202;
+                $response = 202;
                 break;
         }
 
-        if($responce){
-            $method['responses'][$responce] = [
-                'description' = $description,
+        if($response){
+            $methodArray['responses'][$response] = [
+                'description' => $description,
                 'content' => []
             ];
 
-            foreach($responceTypes as $responceType){
-                $method['responses'][$responce]['content'] = $this->getRequestScheme($endpoint, $method,$responceType);
+            foreach($responseTypes as $responseType){
+                $methodArray['responses'][$response]['content'] = $this->getResponseScheme($endpoint, $method, $responseType);
             }
         }
 
         // Let see is we need request bodies
         $requestTypes = ["application/json","application/xml","application/yaml"];
-        if(in_array($method, ['put','post'])){
+        if(in_array($methodArray, ['put','post'])){
             foreach($requestTypes as $requestType){
-
+                $methodArray['requests']['content'] = $this->getRequestScheme($endpoint, $method, $requestType);
             }
         }
 
-        return $method;
+        return $methodArray;
     }
 
     /**
@@ -245,11 +251,11 @@ class OasDocumentationService
      *
      * @param Endpoint $endpoint
      * @param string $method
-     * @param string $responceType
+     * @param string $responseType
      *
      * @return array
      */
-    public function getResponceScheme(Endpoint $endpoint, string $method, string $responceType): array
+    public function getResponseScheme(Endpoint $endpoint, string $method, string $responseType): array
     {
         return [];
     }
