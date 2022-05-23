@@ -211,7 +211,7 @@ class OasDocumentationService
             ];
 
             foreach($responceTypes as $responceType){
-                $method['responses'][$responce]['content'] = $this->getRequestScheme();
+                $method['responses'][$responce]['content'] = $this->getRequestScheme($endpoint, $method,$responceType);
             }
         }
 
@@ -224,5 +224,33 @@ class OasDocumentationService
         }
 
         return $method;
+    }
+
+    /**
+     * Gets an OAS description for a specific method
+     *
+     * @param Endpoint $endpoint
+     * @param string $method
+     * @param string $requestType;
+     *
+     * @return array
+     */
+    public function getRequestScheme(Endpoint $endpoint, string $method, string $requestType): array
+    {
+        return [];
+    }
+
+    /**
+     * Gets an OAS description for a specific method
+     *
+     * @param Endpoint $endpoint
+     * @param string $method
+     * @param string $responceType
+     *
+     * @return array
+     */
+    public function getResponceScheme(Endpoint $endpoint, string $method, string $responceType): array
+    {
+        return [];
     }
 }
