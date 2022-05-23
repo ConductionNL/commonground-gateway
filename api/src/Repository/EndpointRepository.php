@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Application;
 use App\Entity\Endpoint;
+use App\Entity\Entity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -53,6 +55,23 @@ class EndpointRepository extends ServiceEntityRepository
           ->setMaxResults(1)
           ->getQuery()
           ->getResult();
+    }
+
+    /**
+     * @param string $application  The Application.
+     * @return Endpoint Returns a Endpoint object
+     */
+    public function findByApplication(Application $application): array
+    {
+        $query = $this->createQueryBuilder('e')
+            ->leftJoin('e.applications', 'a')
+            ->where('a.id = :applicationId')
+            ->setParameter('applicationId', $application->getId()->toString())
+            ->distinct();
+
+        return $query
+            ->getQuery()
+            ->getResult();
     }
 
     // /**
