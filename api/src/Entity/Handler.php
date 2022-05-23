@@ -75,7 +75,7 @@ class Handler
     private ?string $description;
 
     /**
-     * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE"}, multiple=true)
+     * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE", "get", "post", "put", "patch", "delete"}, multiple=true)
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
