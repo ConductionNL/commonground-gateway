@@ -514,6 +514,8 @@ class ValidaterService
                 return new Rules\Json();
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
+            case 'date':
+                // For now..
             case 'duration':
                 // For now..
             case 'uri':
