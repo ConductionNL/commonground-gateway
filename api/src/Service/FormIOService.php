@@ -172,11 +172,14 @@ class FormIOService
         $accordionComponent['components'] = [];
 
         if (isset($defaultValue['id'])) {
-            $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey.'[id]');
+            $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey . '[id]');
         }
 
         // Add attributes from this object as sub components
         foreach ($object->getAttributes() as $objectAttr) {
+            // $attr->getName() == 'openpubAudience' && var_dump($objectAttr->getName());
+            !$objectAttr->getMultiple() && isset($defaultValue[0]) && $defaultValue = $defaultValue[0];
+            // $attr->getName() == 'openpubAudience' && isset($defaultValue) && var_dump($defaultValue);
             isset($defaultValue[$objectAttr->getName()]) ? $defaultValueToPass = $defaultValue[$objectAttr->getName()] : $defaultValueToPass = null;
             $accordionComponent['components'][] = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass);
         }
