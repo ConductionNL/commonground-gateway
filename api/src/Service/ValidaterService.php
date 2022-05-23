@@ -30,8 +30,8 @@ class ValidaterService
         $this->cache = $cache;
         Factory::setDefaultInstance(
             (new Factory())
-            ->withRuleNamespace('App\Service\Validation\Rules')
-            ->withExceptionNamespace('App\Service\Validation\Exceptions')
+                ->withRuleNamespace('App\Service\Validation\Rules')
+                ->withExceptionNamespace('App\Service\Validation\Exceptions')
         );
     }
 
@@ -86,7 +86,7 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function getEntityValidator(Entity $entity): Validator
+    private function getEntityValidator(Entity $entity, int $level = 0): Validator
     {
         // Max Depth, todo: find a better way to do this? something like depth level instead of this...
         if (in_array($entity->getId()->toString(), $this->maxDepth)) {
@@ -102,7 +102,7 @@ class ValidaterService
 
         // No Validator found in cache for this Entity(+method), so create a new Validator and cache that.
         $validator = new Validator();
-        $validator = $this->addAttributeValidators($entity, $validator);
+        $validator = $this->addAttributeValidators($entity, $validator, $level);
 
         $item->set($validator);
         $item->tag('entityValidator'); // Tag for all Entity Validators
@@ -123,7 +123,7 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function addAttributeValidators(Entity $entity, Validator $validator): Validator
+    private function addAttributeValidators(Entity $entity, Validator $validator, int $level): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
             if (($this->method == 'PUT' || $this->method == 'PATCH') && $attribute->getValidations()['immutable']) {
@@ -146,11 +146,7 @@ class ValidaterService
             $validator->addRule(
                 new Rules\When(
                     $conditionals, // IF (the $conditionals Rule does not return any exceptions)
-                    new Rules\Key(
-                        $attribute->getName(),
-                        $this->getAttributeValidator($attribute),
-                        $attribute->getValidations()['required'] === true // mandatory = required validation.
-                    ), // TRUE (continue with the 'normal' / other Attribute validations)
+                    $this->checkIfAttRequired($attribute, $level), // TRUE (continue with the required rule, incl inversedBy check)
                     $conditionals // FALSE (return exception message from $conditionals Rule)
                 )
             );
@@ -198,6 +194,71 @@ class ValidaterService
     }
 
     /**
+     * This function helps determine if we might want to skip the required check because of inversedBy.
+     *
+     * @param Attribute $attribute
+     *
+     * @return bool Returns always false, unless we might want to skip the required check because of inversedBy.
+     */
+    private function checkInversedBy(Attribute $attribute): bool
+    {
+        if ($attribute->getType() == 'object' &&
+            $attribute->getObject() &&
+            $attribute->getInversedBy()
+            && $attribute->getInversedBy()->getEntity() === $attribute->getObject()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns a Rule that makes sure an Attribute is present if it is required. Continues with the 'normal' / other Attribute validations after that.
+     *
+     * @param Attribute $attribute
+     *
+     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     *
+     * @return Rules\AbstractRule
+     */
+    private function checkIfAttRequired(Attribute $attribute, int $level): Rules\AbstractRule
+    {
+        // If attribute is required and an 'inversedBy required loop' is possible
+        if ($attribute->getValidations()['required'] === true && $this->checkInversedBy($attribute) && $level != 0) {
+            // todo: this is an incomplete solution to the inversedBy required loop problem, because this way fields that are inversedBy are never required unless they are on level 0...
+            return new Rules\Key(
+                $attribute->getName(),
+                $this->getAttributeValidator($attribute, $level),
+                false // mandatory = required validation. False = not required.
+            );
+
+            // todo: JsonLogic needs to be able to check parent attributes/entities in the request body for this to work:
+//            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
+//            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
+//            return new Rules\When(
+//                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
+//                new Rules\Key(
+//                    $attribute->getName(),
+//                    $this->getAttributeValidator($attribute),
+//                    false // mandatory = required validation. False = not required.
+//                ), // TRUE
+//                new Rules\Key(
+//                    $attribute->getName(),
+//                    $this->getAttributeValidator($attribute),
+//                    true // mandatory = required validation. True = required.
+//                ) // FALSE
+//            );
+        }
+
+        // Else, continue with the 'normal' required validation.
+        return new Rules\Key(
+            $attribute->getName(),
+            $this->getAttributeValidator($attribute, $level),
+            $attribute->getValidations()['required'] === true // mandatory = required validation.
+        );
+    }
+
+    /**
      * Gets a Validator for the given Attribute. This function is the point from where we start validating the actual value of an Attribute.
      *
      * @param Attribute $attribute
@@ -206,11 +267,11 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function getAttributeValidator(Attribute $attribute): Validator
+    private function getAttributeValidator(Attribute $attribute, int $level): Validator
     {
         $attributeValidator = new Validator();
 
-        return $attributeValidator->addRule($this->checkIfAttNullable($attribute));
+        return $attributeValidator->addRule($this->checkIfAttNullable($attribute, $level));
     }
 
     /**
@@ -222,15 +283,15 @@ class ValidaterService
      *
      * @return Rules\AbstractRule
      */
-    private function checkIfAttNullable(Attribute $attribute): Rules\AbstractRule
+    private function checkIfAttNullable(Attribute $attribute, int $level): Rules\AbstractRule
     {
         // Check if this attribute can be null
-        if ($attribute->getValidations()['nullable'] === true) {
+        if ($attribute->getValidations()['nullable'] !== false) {
             // When works like this: When(IF, TRUE, FALSE)
-            return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute), new Rules\AlwaysValid());
+            return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute, $level), new Rules\AlwaysValid());
         }
 
-        return $this->checkIfAttMultiple($attribute);
+        return $this->checkIfAttMultiple($attribute, $level);
     }
 
     /**
@@ -242,11 +303,11 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function checkIfAttMultiple(Attribute $attribute): Validator
+    private function checkIfAttMultiple(Attribute $attribute, int $level): Validator
     {
         // Get all validations for validating this Attributes value in one Validator.
         // This includes Rules for the type, format and possible other validations.
-        $attributeRulesValidator = $this->getAttTypeValidator($attribute);
+        $attributeRulesValidator = $this->getAttTypeValidator($attribute, $level);
 
         // Check if this attribute should be an array
         if ($attribute->getValidations()['multiple'] === true) {
@@ -273,13 +334,13 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function getAttTypeValidator(Attribute $attribute): Validator
+    private function getAttTypeValidator(Attribute $attribute, int $level): Validator
     {
         $attributeTypeValidator = new Validator();
 
         // Get the Rule for the type of this Attribute.
         // (Note: make sure to not call functions like this twice when using the Rule twice in a When Rule).
-        $attTypeRule = $this->getAttTypeRule($attribute);
+        $attTypeRule = $this->getAttTypeRule($attribute, $level);
 
         // If attribute type is correct continue validation of attribute format
         $attributeTypeValidator->addRule(
@@ -331,7 +392,7 @@ class ValidaterService
      *
      * @return Rules\AbstractRule
      */
-    private function getAttTypeRule(Attribute $attribute): Rules\AbstractRule
+    private function getAttTypeRule(Attribute $attribute, int $level): Rules\AbstractRule
     {
         switch ($attribute->getType()) {
             case 'string':
@@ -345,9 +406,21 @@ class ValidaterService
             case 'number':
                 return new Rules\Number();
             case 'date':
-                return new Rules\Date();
+                return new Rules\OneOf(
+                    new Rules\Date('d-m-Y'),
+                    new Rules\Date('Y-m-d'),
+                );
             case 'datetime':
-                return new Rules\DateTime();
+                // todo: make a custom rule that checks if we can do new DateTime() with the input value to allow multiple formats?
+                // default format for Rules\DateTime = 'c' = ISO standard -> Y-m-dTH:i:s+timezone(00:00)
+                return new Rules\OneOf(
+                    new Rules\DateTime('d-m-Y'),
+                    new Rules\DateTime('d-m-Y H:i:s'),
+                    new Rules\DateTime('d-m-YTH:i:s'),
+                    new Rules\DateTime('Y-m-d'),
+                    new Rules\DateTime('Y-m-d H:i:s'),
+                    new Rules\DateTime('Y-m-dTH:i:s'),
+                );
             case 'array':
                 return new Rules\ArrayType();
             case 'boolean':
@@ -356,7 +429,7 @@ class ValidaterService
             case 'file':
                 return new CustomRules\Base64File();
             case 'object':
-                return $this->getObjectValidator($attribute);
+                return $this->getObjectValidator($attribute, $level);
             default:
                 throw new GatewayException(
                     'Unknown attribute type.',
@@ -380,7 +453,7 @@ class ValidaterService
      *
      * @return Validator
      */
-    private function getObjectValidator(Attribute $attribute): Validator
+    private function getObjectValidator(Attribute $attribute, int $level): Validator
     {
         $objectValidator = new Validator();
 
@@ -396,7 +469,7 @@ class ValidaterService
             $objectValidator->addRule(
                 new Rules\When(
                     new Rules\ArrayType(), // IF
-                    $this->getEntityValidator($attribute->getObject()), // TRUE
+                    $this->getEntityValidator($attribute->getObject(), $level + 1), // TRUE
                     new Rules\AlwaysValid() // FALSE
                 )
             );
@@ -441,9 +514,11 @@ class ValidaterService
                 return new Rules\Json();
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
-            case null:
-            // For now..
+            case 'duration':
+                // For now..
             case 'uri':
+                // For now..
+            case null:
                 // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();
             default:
@@ -478,8 +553,10 @@ class ValidaterService
             // And $ignoredValidations here are not done through this getValidationRule function, but somewhere else!
             $ignoredValidations = ['required', 'nullable', 'multiple', 'uniqueItems', 'requiredIf', 'forbiddenIf', 'cascade', 'immutable', 'unsetable', 'defaultValue'];
             // todo: instead of this^ array we could also add these options to the switch in the getValidationRule function but return the AlwaysValid rule?
-            // @TODO do something with validation pattern
-            if (empty($config) || in_array($validation, $ignoredValidations) || $validation === 'pattern') {
+            // And $todoValidations here are not done yet anywhere, they still need to be added somewhere!
+            // todo: ^^^
+            $todoValidations = ['mustBeUnique', 'pattern'];
+            if (empty($config) || in_array($validation, $ignoredValidations) || in_array($validation, $todoValidations)) {
                 continue;
             }
             $validationRulesValidator->AddRule($this->getValidationRule($attribute, $validation, $config));
