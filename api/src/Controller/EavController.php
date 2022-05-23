@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Service\AuthorizationService;
-use App\Service\EavDocumentationService;
+use App\Service\OasDocumentationService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,33 +18,37 @@ use Symfony\Contracts\Cache\CacheInterface;
 class EavController extends AbstractController
 {
     /**
-     * @Route("/admin/openapi.{extension}")
+     * @Route("/openapi.{extension}")
      */
-    public function OasAction(EavDocumentationService $eavDocumentationService, CacheInterface $customThingCache, $extension): Response
+    public function OasAction(OasDocumentationService $oasDocumentationService, CacheInterface $customThingCache, $extension): Response
     {
+        /* @todo accept only json an yaml as extensions or throw error */
+
         // Let default an id while we grap it
-        /* @todo pull this from session */
+        /* @todo pull this from query parameter */
         $application = 666;
 
         // Lets scheck the cashe
         $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
+
+
         if ($item->isHit()) {
-            $docs = $item->get();
+            $oas = $item->get();
         } else {
-            $docs = $eavDocumentationService->getRenderDocumentation();
+            $oas = $oasDocumentationService->getDocumentation($application);
 
             if ($extension == 'json') {
-                $docs = json_encode($docs);
+                $oas = json_encode($oas);
             } else {
-                $docs = Yaml::dump($docs);
+                $oas = Yaml::dump($oas);
             }
 
             // Lets stuf it into the cashe
-            $item->set($docs);
+            $item->set($oas);
             $customThingCache->save($item);
         }
 
-        $response = new Response($docs, 200, [
+        $response = new Response($oas, 200, [
             'Content-type'=> 'application/'.$extension,
         ]);
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'openapi.'.$extension);
