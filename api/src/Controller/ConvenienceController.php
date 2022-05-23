@@ -68,6 +68,52 @@ class ConvenienceController extends AbstractController
     }
 
     /**
+     * @Route("/admin/entity-can-use-formio/{id}")
+     */
+    public function entityCanUseFormIO(string $id): Response
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->find($id);
+
+        $methods = [
+            'hasGETCollection' => false,
+            'hasPOST'          => false,
+            'hasGETItem'       => false,
+            'hasPUT'           => false,
+        ];
+
+        $isValid = true;
+
+        foreach ($entity->getHandlers() as $handler) {
+            if ($handler->getEndpoints()) {
+                foreach ($handler->getEndpoints() as $endpoint) {
+                    switch ($endpoint->getMethod()) {
+                        case 'get':
+                            $endpoint->getOperationType() == 'collection' && $methods['hasGETCollection'] = true;
+                            $endpoint->getOperationType() == 'item' && $methods['hasGETItem'] = true;
+                            break;
+                        case 'post':
+                            $methods['hasPOST'] = true;
+                            break;
+                        case 'put':
+                            $methods['hasPUT'] = true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        foreach ($methods as $method) {
+            $method === false && $isValid = false;
+        }
+
+        return new Response(
+            $this->serializer->serialize(['isValid' => $isValid], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
      * @Route("/admin/publiccode")
      *
      * @throws GuzzleException
