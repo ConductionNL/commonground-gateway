@@ -168,7 +168,8 @@ class ResponseService
         $response['id'] = $result->getId()->toString(); // todo: remove this line of code if $flat is removed
 
         // Let get the internal results
-        $response = array_merge($response, $this->renderValues($result, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level));
+        $renderValues = $this->renderValues($result, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
+        $response = array_merge($response, $renderValues['renderValuesResponse']);
 
         // Lets sort the result alphabeticly
         ksort($response);
@@ -182,7 +183,7 @@ class ResponseService
             return $response;
         }
 
-        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response);
+        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
 
         $item->set($response);
         $this->cache->save($item);
@@ -202,7 +203,7 @@ class ResponseService
      *
      * @return array
      */
-    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response): array
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
         // todo: split switch into functions?
@@ -231,6 +232,9 @@ class ResponseService
                     $gatewayContext['@fields'] = $fields;
                 }
                 $gatewayContext['@level'] = $level;
+                if (!empty($embedded)) {
+                    $embedded['@embedded'] = $embedded;
+                }
                 break;
             case 'jsonhal':
                 $gatewayContext['_links']['self'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
@@ -258,14 +262,19 @@ class ResponseService
                     $gatewayContext['_metadata']['_fields'] = $fields;
                 }
                 $gatewayContext['_metadata']['_level'] = $level;
+                if (!empty($embedded)) {
+                    $embedded['_embedded'] = $embedded;
+                }
                 break;
             case 'json':
+                // todo: do we want to use embedded here? or just always show all objects instead? see include on attribute...
+                $embedded['embedded'] = $embedded;
             default:
                 break;
         }
 
         $gatewayContext['id'] = $result->getId();
-        return $gatewayContext + $response;
+        return $gatewayContext + $response + $embedded;
     }
 
     /**
@@ -286,8 +295,9 @@ class ResponseService
     private function renderValues(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
         $response = [];
+        $embedded = [];
 
-        // Lets keep track of how deep in the three we are
+        // Lets keep track of how deep in the tree we are
         $level++;
 
         $entity = $result->getEntity();
@@ -340,7 +350,11 @@ class ResponseService
                     }
                 }
 
-                $response[$attribute->getName()] = $this->renderObjects($result, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
+                $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
+                $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
+                if (is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects)) {
+                    $embedded = $renderObjects['renderObjectsEmbedded'];
+                }
 
                 continue;
             } elseif ($attribute->getType() == 'file') {
@@ -350,7 +364,10 @@ class ResponseService
             $response[$attribute->getName()] = $valueObject->getValue();
         }
 
-        return $response;
+        return [
+            'renderValuesResponse' => $response,
+            'renderValuesEmbedded' => isset($renderObjects) && is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects) ? $renderObjects['renderObjectsEmbedded'] : []
+        ];
     }
 
     /**
@@ -369,7 +386,7 @@ class ResponseService
      *
      * @throws CacheException|InvalidArgumentException
      */
-    private function renderObjects(ObjectEntity $result, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
+    private function renderObjects(ObjectEntity $result, array $embedded, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $attribute = $value->getAttribute();
 
@@ -387,14 +404,23 @@ class ResponseService
 
                 if ($attribute->getInclude()) {
                     return $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
+                } else {
+                    $embedded[$attribute->getName()] = $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                 }
+
                 $object = $value->getValue();
                 if ($acceptType === 'jsonld') {
                     return [
-                        '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                        'renderObjectsObjectsArray' => [
+                            '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                        ],
+                        'renderObjectsEmbedded' => $embedded
                     ];
                 }
-                return '/'.$object->getEntity()->getName().'/'.$object->getId();
+                return [
+                    'renderObjectsObjectsArray' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                    'renderObjectsEmbedded' => $embedded
+                ];
             } catch (AccessDeniedException $exception) {
                 return null;
             }
@@ -411,7 +437,12 @@ class ResponseService
                 }
                 if ($attribute->getInclude()) {
                     $objectsArray[] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
-                } elseif ($acceptType === 'jsonld') {
+                    continue;
+                } else {
+                    $embedded[$attribute->getName()][] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
+                }
+
+                if ($acceptType === 'jsonld') {
                     $objectsArray[] = [
                         '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
                     ];
@@ -423,7 +454,10 @@ class ResponseService
             }
         }
 
-        return $objectsArray;
+        return [
+            'renderObjectsObjectsArray' => $objectsArray,
+            'renderObjectsEmbedded' => $embedded
+        ];
     }
 
     /**
