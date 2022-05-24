@@ -375,9 +375,14 @@ class OasDocumentationService
                 break;
             case "application/json+hal":
                 // @todo add specific elements
+            case "application/json+orc":
+                // @todo add specific elements
+            case "application/json+form.io":
+                // @todo add specific elements
                 break;
             default:
                 /* @todo throw error */
+        }
 
         return $schema;
     }
