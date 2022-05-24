@@ -4,6 +4,8 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
+use App\Entity\Entity;
+use App\Entity\Handler;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -243,7 +245,9 @@ class OasDocumentationService
      */
     public function getRequestScheme(Endpoint $endpoint, string $method, string $requestType): array
     {
-        return [];
+        $handler = $this->getHandler($endpoint,$method);
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+        return $schema;
     }
 
     /**
@@ -257,6 +261,101 @@ class OasDocumentationService
      */
     public function getResponseScheme(Endpoint $endpoint, string $method, string $responseType): array
     {
-        return [];
+        $handler = $this->getHandler($endpoint,$method);
+        $schema = $this->getSchema($handler->getEntity(), $handler->geMappingOut());
+
+        return $schema;
     }
+
+    /**
+     * Gets an handler for an endpoint method combination
+     *
+     * @todo i would expect this function to live in the handlerservice
+     *
+     * @param Endpoint $endpoint
+     * @param string $method
+     *
+     * @return Handler|boolean
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            // Check if handler should be used for this method
+            if (in_array($method,$handler->getMethods())) {
+                return $handler;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Genreaters an OAS schema from an entty
+     *
+     * @param Entity $entity
+     * @param array $mapping
+     *
+     * @return array
+     */
+    public function getSchema(Entity $entity, array $mapping): array
+    {
+        $schema = [
+            'type'      => 'object',
+            'required'  => [],
+            'properties'=> [],
+
+        ];
+
+        foreach($entity->getAttributes() as $attribute ){
+
+            // Handle requireded fields
+            if ($attribute->getRequired() and $attribute->getRequired() != null) {
+                $schema['required'][] = $attribute->getName();
+            }
+
+            // Add the attribute
+            $schema['properties'][$attribute->getName()] = [
+                'type'       => $attribute->getType(),
+                'title'      => $attribute->getName(),
+                'description'=> $attribute->getDescription(),
+            ];
+
+            // Setup a mappping array
+            $mappingArray = [];
+            foreach($mapping as $key => $value){
+                // @todo for this exercise this only goes one deep
+            }
+
+            // The attribute might be a scheme on its own
+            if ($attribute->getObject() && $attribute->getCascade()) {
+                /* @todo this might throw errors in the current setup */
+                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+                // Schema's dont have validators so
+                continue;
+            } elseif ($attribute->getObject() && !$attribute->getCascade()) {
+                $schema['properties'][$attribute->getName()]['type'] = 'string';
+                $schema['properties'][$attribute->getName()]['format'] = 'uuid';
+                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
+                // uuids dont have validators so
+                continue;
+            }
+
+            // Add the validators
+            foreach ($attribute->getValidations() as $validator => $validation) {
+                if (!array_key_exists($validator, $this->supportedValidators) && $validation != null) {
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+
+            // Let do mapping (changing of property names)
+            if(array_key_exists($attribute->getName(), $mappingArray)){
+                $schema['properties'][$mappingArray[$attribute->getName()]] =  $schema['properties'][$attribute->getName()];
+                unset($schema['properties'][$attribute->getName()]);
+            }
+
+        }
+
+        return $schema;
+    }
+
 }
