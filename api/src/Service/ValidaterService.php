@@ -457,6 +457,10 @@ class ValidaterService
     {
         $objectValidator = new Validator();
 
+        // Make sure we do not allow empty string for an object
+        // (will also invalidate null, but if attribute is nullable and the value is null we never get here and never check this rule)
+        $objectValidator->addRule(new Rules\NotEmpty());
+
         // TODO: Make a custom rule for cascading so we can give custom exception messages back?
         // Validate for cascading
         if ($attribute->getValidations()['cascade'] === true) {
