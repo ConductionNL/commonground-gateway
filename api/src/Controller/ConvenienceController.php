@@ -49,7 +49,7 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to load
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() !== null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has already been loaded, syncing again is not yet supported'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif (!$collection->getLocationOAS()) {
@@ -61,7 +61,7 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -74,12 +74,13 @@ class ConvenienceController extends AbstractController
     {
         $entity = $this->entityManager->getRepository('App:Entity')->find($id);
 
-        if (!$entity) return new Response(
-            $this->serializer->serialize(['message' => 'No entity found with id: ' . $id], 'json'),
-            Response::HTTP_NOT_FOUND,
-            ['content-type' => 'json']
-        );;
-
+        if (!$entity) {
+            return new Response(
+                $this->serializer->serialize(['message' => 'No entity found with id: '.$id], 'json'),
+                Response::HTTP_NOT_FOUND,
+                ['content-type' => 'json']
+            );
+        }
 
         $methods = [
             'hasGETCollection' => false,
