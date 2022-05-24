@@ -237,7 +237,7 @@ class ResponseService
                 }
                 break;
             case 'jsonhal':
-                $gatewayContext['_links']['self'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
+                $gatewayContext['_links']['self']['href'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
                 $gatewayContext['_metadata'] = [
                     "_type"         => ucfirst($result->getEntity()->getName()),
                     "_context"      => '/contexts/'.ucfirst($result->getEntity()->getName()),

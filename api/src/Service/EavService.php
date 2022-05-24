@@ -1086,6 +1086,7 @@ class EavService
         }
 
         // Lets see if we need to flatten te responce (for example csv use)
+        // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
         $flat = false;
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             $flat = true;
@@ -1102,20 +1103,71 @@ class EavService
         $this->stopwatch->stop('renderResults');
 
         // If we need a flattend responce we are al done
+        // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
         if ($flat) {
             return $results;
         }
 
         // If not lets make it pritty
-        $results = ['results' => $results];
-        $results['total'] = $repositoryResult['total'];
-        $results['limit'] = $limit;
-        $results['pages'] = ceil($repositoryResult['total'] / $limit);
-        $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
-        $results['page'] = floor($offset / $limit) + 1;
-        $results['start'] = $offset + 1;
+        return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
 
-        return $results;
+    /**
+     * @TODO
+     *
+     * @param string $acceptType
+     * @param Entity $entity
+     * @param array $results
+     * @param int $total
+     * @param int $limit
+     * @param int $offset
+     *
+     * @return array[]
+     */
+    private function handlePagination(string $acceptType, Entity $entity, array $results, int $total, int $limit, int $offset): array
+    {
+        $pages = ceil($total / $limit);
+        $pages = $pages == 0 ? 1 : $pages;
+        $page = floor($offset / $limit) + 1;
+
+        // todo: split switch into functions? duplicate code is here because order of the keys matter.
+        switch ($acceptType) {
+            case 'jsonld':
+                $paginationResult = ['results' => $results];
+                $paginationResult['count'] = count($results);
+                $paginationResult['limit'] = $limit;
+                $paginationResult['total'] = $total;
+                $paginationResult['start'] = $offset + 1;
+                $paginationResult['page'] = $page;
+                $paginationResult['pages'] = $pages;
+                break;
+            case 'jsonhal':
+                $paginationResult['_links'] = [
+                    "self" => ['href' => '/'.$entity->getName().($page == 1 ? '' : '?page='.$page)],
+                    "first" => ['href' => '/'.$entity->getName()]
+                ];
+                if ($page > 1) {
+                    $paginationResult['_links']['prev']['href'] = '/'.$entity->getName().($page == 2 ? '' : '?page='.($page-1));
+                }
+                if ($page < $pages) {
+                    $paginationResult['_links']['next']['href'] = '/'.$entity->getName().'?page='.($page+1);
+                }
+                $paginationResult['_links']['last']['href'] = '/'.$entity->getName().($pages == 1 ? '' : '?page='.$pages);
+                $paginationResult['count'] = count($results);
+                $paginationResult['limit'] = $limit;
+                $paginationResult['total'] = $total;
+                $paginationResult['start'] = $offset + 1;
+                $paginationResult['page'] = $page;
+                $paginationResult['pages'] = $pages;
+                $paginationResult['_embedded'] = [ $entity->getName() => $results];
+                break;
+            case 'json':
+            default:
+                $paginationResult = $results;
+                break;
+        }
+
+        return $paginationResult;
     }
 
     /**
