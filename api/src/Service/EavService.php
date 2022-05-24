@@ -1132,15 +1132,6 @@ class EavService
 
         // todo: split switch into functions? duplicate code is here because order of the keys matter.
         switch ($acceptType) {
-            case 'jsonld':
-                $paginationResult = ['results' => $results];
-                $paginationResult['count'] = count($results);
-                $paginationResult['limit'] = $limit;
-                $paginationResult['total'] = $total;
-                $paginationResult['start'] = $offset + 1;
-                $paginationResult['page'] = $page;
-                $paginationResult['pages'] = $pages;
-                break;
             case 'jsonhal':
                 $paginationResult['_links'] = [
                     "self" => ['href' => '/'.$entity->getName().($page == 1 ? '' : '?page='.$page)],
@@ -1161,9 +1152,17 @@ class EavService
                 $paginationResult['pages'] = $pages;
                 $paginationResult['_embedded'] = [ $entity->getName() => $results];
                 break;
+            case 'jsonld':
+                // todo: try and match api-platform ? https://api-platform.com/docs/core/pagination/
             case 'json':
             default:
-                $paginationResult = $results;
+                $paginationResult = ['results' => $results];
+                $paginationResult['count'] = count($results);
+                $paginationResult['limit'] = $limit;
+                $paginationResult['total'] = $total;
+                $paginationResult['start'] = $offset + 1;
+                $paginationResult['page'] = $page;
+                $paginationResult['pages'] = $pages;
                 break;
         }
 

@@ -478,6 +478,8 @@ App\Entity\Attribute:
         persistToGateway: true # todo: remove after removing cc dependency:
         cascade: true
         cascadeDelete: true
+#        include: true
+#        extend: true
     organization_members:
         name: members
         description: The members of this organization (if it is a team).
