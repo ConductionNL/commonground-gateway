@@ -68,12 +68,34 @@ class OasDocumentationService
     }
 
     /**
+     * Places an schema.yaml and schema.json in the /public/eav folder for use by redoc and swagger.
+     *
+     * @return bool returns true if succcesfull or false on failure
+     */
+    public function write(array $docs): bool
+    {
+        // Setup the file system
+        $filesystem = new Filesystem();
+
+        // Check if there is a eav folder in the /public folder
+        if (!$filesystem->exists('public/eav')) {
+            $filesystem->mkdir('public/eav');
+        }
+
+        $filesystem->dumpFile('public/eav/schema.json', json_encode($docs, JSON_UNESCAPED_SLASHES));
+        $filesystem->dumpFile('public/eav/schema.yaml', Yaml::dump($docs));
+
+        return true;
+    }
+
+
+    /**
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array.
      *
      * @param string $applicationId
      * @return array
      */
-    public function getRenderDocumentation(Request $request, string $applicationId): array
+    public function getRenderDocumentation(string $applicationId): array
     {
         $docs = [];
 
@@ -86,7 +108,7 @@ class OasDocumentationService
 
         /* @todo the server should include the base url */
         $docs['servers'] = [
-            ['url'=> $request->getBaseUrl(), 'description'=>'Gateway server'],
+            ['url'=> "test", 'description'=>'Gateway server'],
         ];
 
         $docs['tags'] = [];
@@ -97,6 +119,8 @@ class OasDocumentationService
         foreach ($endpoints as $endpoint) {
             $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
+
+        $this->write($docs);
 
         return $docs;
     }
@@ -133,7 +157,7 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function addEndpointToDocs(Endpoint $endpoint, array $docs): array
+    public function addEndpointToDocs(Endpoint $endpoint, array &$docs): array
     {
 
         /* @todo this only goes one deep */
@@ -143,9 +167,13 @@ class OasDocumentationService
         if (!$endpoint->getPath()) {
             return $docs;
         }
+//        var_dump($endpoint->getPath());die();
 
+        /* @todo fix path */
+        $path = $endpoint->getPath();
         // Let's add the path
-        $docs['paths'][$endpoint->getPath()] = $this->getEndpointMethods($endpoint);
+
+        $docs['paths']['/api/'.$path[0]] = $this->getEndpointMethods($endpoint);
 
         // create the tag
         $docs['tags'][] = [
@@ -166,7 +194,10 @@ class OasDocumentationService
     public function getEndpointMethods(Endpoint $endpoint): array
     {
         $methods = [];
-        return $methods[$endpoint->getMethod()] = $this->getEndpointMethod($endpoint, $endpoint->getMethod());
+        $method = strtolower($endpoint->getMethod());
+        $methods[$method] = $this->getEndpointMethod($endpoint, $method);
+
+        return $methods;
     }
 
     /**
@@ -179,36 +210,29 @@ class OasDocumentationService
      */
     public function getEndpointMethod(Endpoint $endpoint, string $method): array
     {
-
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
+            "description"=>$endpoint->getDescription(),
             "operationId" => $endpoint->getName().'_'.$method,
             "summary"=>$endpoint->getDescription(),
-            "description"=>$endpoint->getDescription(),
             "parameters"=>[],
             "responses"=>[],
         ];
 
-        // Parameters
-//        foreach($endpoint->getPathArray() as $parameter){
-//
-//        }
-
         // Primary Response (success)
-        $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
+//        $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
         $responseTypes = ["application/json","application/json-ld","application/json-hal"]; // @todo this is a short cut, lets focus on json first */
-
         $response = false;
         switch ($method) {
-            case 'GET':
+            case 'get':
                 $description = 'OK';
                 $response = 200;
                 break;
-            case 'POST':
+            case 'post':
                 $description = 'Created';
                 $response = 201;
                 break;
-            case 'PUT':
+            case 'put':
                 $description = 'Accepted';
                 $response = 202;
                 break;
@@ -216,6 +240,15 @@ class OasDocumentationService
 
         // Get the handler
         $handler = $this->getHandler($endpoint,$method);
+        $methodArray['parameters'] = array_merge($this->getPaginationParameters(), $this->getFilterParameters($handler->getEntity()));
+
+//        // Parameters
+//        foreach($endpoint->getPathArray() as $parameter){
+//            var_dump($this->getPaginationParameters());
+//
+//        }
+//
+//        var_dump($methodArray);
 
         if($response){
             $methodArray['responses'][$response] = [
@@ -224,18 +257,18 @@ class OasDocumentationService
             ];
 
             foreach($responseTypes as $responseType){
-                $schema = $this->getSchema($handler->getEntity(), $handler->geMappingOut());
-                $methodArray['responses'][$response]['content'] = $schema;
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+                $methodArray['responses'][$response]['content'][$responseType]['schema'] = $schema;
             }
         }
 
         // Let see is we need request bodies
-        $requestTypes = ["application/json","application/xml","application/yaml"];
+//        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
-        if(in_array($methodArray, ['put','post'])){
+        if(in_array($method, ['put','post', '*'])){
             foreach($requestTypes as $requestType){
                 $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
-                $methodArray['requests']['content'] = $schema;
+                $methodArray['requests']['content'][$requestType] = $schema;
             }
         }
 
@@ -243,7 +276,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an handler for an endpoint method combination
+     * Gets a handler for an endpoint method combination
      *
      * @todo i would expect this function to live in the handlerservice
      *
@@ -255,17 +288,20 @@ class OasDocumentationService
     public function getHandler(Endpoint $endpoint, string $method)
     {
         foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array( '*',$handler->getMethods())) {
+                return $handler;
+            }
+
             // Check if handler should be used for this method
             if (in_array($method,$handler->getMethods())) {
                 return $handler;
             }
         }
-
         return false;
     }
 
     /**
-     * Generates an OAS schema from an entty
+     * Generates an OAS schema from an entity
      *
      * @param Entity $entity
      * @param array $mapping
@@ -426,6 +462,60 @@ class OasDocumentationService
         }
 
         return $schema;
+    }
+
+    public function getPaginationParameters(): array
+    {
+        $parameters = [];
+        //
+        $parameters[] = [
+            'name'       => 'start',
+            'in'         => 'query',
+            'description'=> 'The start number or offset of you list',
+            'required'   => false,
+            'style'      => 'simple',
+        ];
+        //
+        $parameters[] = [
+            'name'       => 'limit',
+            'in'         => 'query',
+            'description'=> 'the total items pe list/page that you want returned',
+            'required'   => false,
+            'style'      => 'simple',
+        ];
+        //
+        $parameters[] = [
+            'name'       => 'page',
+            'in'         => 'query',
+            'description'=> 'The page that you want returned',
+            'required'   => false,
+            'style'      => 'simple',
+        ];
+
+        return $parameters;
+    }
+
+    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    {
+        $parameters = [];
+
+        // @todo searchable is set to false
+        foreach ($Entity->getAttributes() as $attribute) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
+                $parameters[] = [
+                    'name'       => $prefix.$attribute->getName(),
+                    'in'         => 'query',
+                    'description'=> 'Search '.$prefix.$attribute->getName().' on an exact match of the string',
+                    'required'   => false,
+                    'style'      => 'simple',
+                ];
+            } elseif ($attribute->getObject() && $level < 5) {
+                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.', $level + 1));
+            }
+            continue;
+        }
+
+        return $parameters;
     }
 
 }
