@@ -28,19 +28,19 @@ class FormIOService
             'spellCheck'  => false,
         ];
         $this->advConfComponent =
-      $this->submitButtonComponent = [
-          'type'             => 'button',
-          'theme'            => 'primary',
-          'disableOnInvalid' => true,
-          'action'           => 'submit',
-          'rightIcon'        => '',
-          'leftIcon'         => '',
-          'size'             => 'md',
-          'key'              => 'submit',
-          'tableView'        => false,
-          'label'            => 'Submit',
-          'input'            => 'true',
-      ];
+            $this->submitButtonComponent = [
+                'type'             => 'button',
+                'theme'            => 'primary',
+                'disableOnInvalid' => true,
+                'action'           => 'submit',
+                'rightIcon'        => '',
+                'leftIcon'         => '',
+                'size'             => 'md',
+                'key'              => 'submit',
+                'tableView'        => false,
+                'label'            => 'Submit',
+                'input'            => 'true',
+            ];
     }
 
     /**
@@ -56,34 +56,34 @@ class FormIOService
         $type = 'textfield';
 
         switch ($attr->getType()) {
-      case 'date':
-      case 'datetime':
-        $type = 'datetime';
-        break;
-      case 'integer':
-      case 'float':
-      case 'number':
-        $type = 'number';
-        break;
-      case 'boolean':
-        $type = 'checkbox';
-        break;
-      case 'file':
-        $type = 'file';
-        break;
-    }
+            case 'date':
+            case 'datetime':
+                $type = 'datetime';
+                break;
+            case 'integer':
+            case 'float':
+            case 'number':
+                $type = 'number';
+                break;
+            case 'boolean':
+                $type = 'checkbox';
+                break;
+            case 'file':
+                $type = 'file';
+                break;
+        }
 
         switch ($attr->getFormat()) {
-      case 'email':
-        $type = 'email';
-        break;
-      case 'phone':
-        $type = 'tel';
-        break;
-      case 'url':
-        $type = 'url';
-        break;
-    }
+            case 'email':
+                $type = 'email';
+                break;
+            case 'phone':
+                $type = 'tel';
+                break;
+            case 'url':
+                $type = 'url';
+                break;
+        }
 
         return $type;
     }
@@ -117,7 +117,7 @@ class FormIOService
      */
     private function extendPreSetKey(?string $preSetKey = null, string $attrName): string
     {
-        return $preSetKey ? $preSetKey = $preSetKey.'['.$attrName.']' : $preSetKey = $attrName;
+        return $preSetKey ? $preSetKey = $preSetKey . '[' . $attrName . ']' : $preSetKey = $attrName;
     }
 
     /**
@@ -131,6 +131,7 @@ class FormIOService
      */
     private function createAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
     {
+        // $attr->getName() == 'openpubAudience' && var_dump($attr->getNullable());
         if ($attr->getType() == 'object' && $attr->getObject() !== null) {
             return $this->createEntityAsAttribute($attr, $preSetKey, $defaultValue);
         } else {
@@ -151,25 +152,40 @@ class FormIOService
     {
         $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
 
+        // if ($preSetKey == 'taxonomies[openpubAudience]') {
+        //     var_dump($preSetKey);
+        //     // die;
+        // }
+
+        $createDataGrid = false;
+        if ($attr->getMultiple()) {
+            $createDataGrid = true;
+        }
+
         if ($attr->getCascade() !== true) {
             return $this->createUriAttribute($attr, $preSetKey);
         }
-
+        // $attr->getName() == 'openPubAudience' && var_dump($attr->getName());
         $object = $attr->getObject();
+
+        $dataGridComponent = null;
+        if ($createDataGrid) {
+            $dataGridComponent = $this->createDataGrid($attr, $preSetKey);
+        }
+
         $accordionComponent = [
             'title'         => $attr->getName(),
             'theme'         => 'default',
             'collapsible'   => true,
             'collapsed'     => true,
-            'key'           => !empty($preSetKey) ? $preSetKey : $attr->getName(),
+            'key'           => $createDataGrid ? null : (!empty($preSetKey) ? $preSetKey : $attr->getName()),
             'type'          => 'panel',
             'label'         => 'Panel',
             'breadcrumb'    => $attr->getName(),
             'labelPosition' => 'top',
             'validateOn'    => 'change',
+            'components'    => []
         ];
-
-        $accordionComponent['components'] = [];
 
         if (isset($defaultValue['id'])) {
             $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey . '[id]');
@@ -177,14 +193,54 @@ class FormIOService
 
         // Add attributes from this object as sub components
         foreach ($object->getAttributes() as $objectAttr) {
-            // $attr->getName() == 'openpubAudience' && var_dump($objectAttr->getName());
             !$objectAttr->getMultiple() && isset($defaultValue[0]) && $defaultValue = $defaultValue[0];
-            // $attr->getName() == 'openpubAudience' && isset($defaultValue) && var_dump($defaultValue);
             isset($defaultValue[$objectAttr->getName()]) ? $defaultValueToPass = $defaultValue[$objectAttr->getName()] : $defaultValueToPass = null;
-            $accordionComponent['components'][] = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass);
+            if ($dataGridComponent) {
+                $dataGridComponent['components'][] = $this->createAttribute($objectAttr, null, $defaultValueToPass);
+            } else {
+                $accordionComponent['components'][] = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass);
+            }
+        }
+
+        // If this attribute is a array of subobjects return the datagrid
+        if ($attr->getMultiple() && $attr->getType() === 'object') {
+            return $dataGridComponent;
+        }
+
+        if ($dataGridComponent) {
+            return $accordionComponent['components'][] = $dataGridComponent;
         }
 
         return $accordionComponent;
+    }
+
+    /**
+     * Creates a datagrid (table) type formio input for a Object Attribute Multiple.
+     *
+     * @param Attribute $attr         The Attribute that will be parsed to a formio input
+     * @param string    $preSetKey    The pre set key that will be used as key for that input
+     *
+     * @return array Array/object of a formio input
+     */
+    private function createDataGrid(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
+    {
+        return [
+            "label" => $attr->getName(),
+            "addAnotherPosition" => "bottom",
+            "defaultValue" => $defaultValue,
+            "key" => $preSetKey ?? $attr->getName(),
+            "type" => "datagrid",
+            "input" => true,
+            "persistent" => true,
+            "hidden" => false,
+            "clearOnHide" => true,
+            "labelPosition" => "top",
+            "validateOn" => "change",
+            "validate" => [
+                "required" => $attr->getRequired() ?? false,
+            ],
+            "tree" => true
+        ];
     }
 
     /**
@@ -199,7 +255,7 @@ class FormIOService
     private function createUriAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
     {
         $component = $this->basicComponent;
-        $component['label'] = $attr->getName().' (uri)';
+        $component['label'] = $attr->getName() . ' (uri)';
         $component['key'] = $preSetKey ?? $attr->getName();
         $component['type'] = 'textfield';
 
@@ -264,7 +320,7 @@ class FormIOService
 
         // If we have a id set it as disabled component
         isset($object['id']) &&
-      $formIOArray['components'][] = $this->createIDComponent($object['id']);
+            $formIOArray['components'][] = $this->createIDComponent($object['id']);
 
         // All attributes as inputs
         foreach ($entity->getAttributes() as $attr) {
@@ -295,22 +351,22 @@ class FormIOService
                     'key'          => '@application',
                     'type'         => 'textfield',
                     'inputType'    => 'text',
-                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/'.$objectEntity->getApplication()->getId() : '',
+                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/' . $objectEntity->getApplication()->getId() : '',
 
                 ],
-                [
-                    'label'         => 'Organization',
-                    'labelPosition' => 'top',
-                    'widget'        => [
-                        'type' => 'input',
-                    ],
-                    'validateOn'   => 'change',
-                    'key'          => '@organization',
-                    'type'         => 'textfield',
-                    'inputType'    => 'text',
-                    'defaultValue' => isset($objectEntity) ? $objectEntity->getOrganization() : '',
+                // [
+                //     'label'         => 'Organization',
+                //     'labelPosition' => 'top',
+                //     'widget'        => [
+                //         'type' => 'input',
+                //     ],
+                //     'validateOn'   => 'change',
+                //     'key'          => '@organization',
+                //     'type'         => 'textfield',
+                //     'inputType'    => 'text',
+                //     'defaultValue' => isset($objectEntity) ? $objectEntity->getOrganization() : '',
 
-                ],
+                // ],
                 [
                     'label'         => 'Owner',
                     'labelPosition' => 'top',
