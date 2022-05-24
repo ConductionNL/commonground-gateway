@@ -115,6 +115,7 @@ class OasDocumentationService
 
         $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $applicationId]); ///findBy(['expose_in_docs'=>true]);
         $endpoints = $this->em->getRepository('App:Endpoint')->findByApplication($application); ///findBy(['expose_in_docs'=>true]);
+//        $endpoints = $this->em->getRepository('App:Endpoint')->findAll(); ///findBy(['expose_in_docs'=>true]);
 
         foreach ($endpoints as $endpoint) {
             $docs = $this->addEndpointToDocs($endpoint, $docs);
@@ -173,11 +174,15 @@ class OasDocumentationService
         $path = $endpoint->getPath();
         // Let's add the path
 
-        $docs['paths']['/api/'.$path[0]] = $this->getEndpointMethods($endpoint);
+        $method = strtolower($endpoint->getMethod());
+        $handler = $this->getHandler($endpoint,$method);
 
+        $docs['paths']['/api/'.$path[0]] = $this->getEndpointMethods($endpoint, $handler);
+        $docs['components']['schemas'][$handler->getEntity()->getName()] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+        
         // create the tag
         $docs['tags'][] = [
-            'name'       => ucfirst($endpoint->getName()),
+            'name'       => ucfirst($handler->getEntity()->getName()),
             'description'=> $endpoint->getDescription(),
         ];
 
@@ -191,11 +196,11 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getEndpointMethods(Endpoint $endpoint): array
+    public function getEndpointMethods(Endpoint $endpoint, $handler): array
     {
         $methods = [];
         $method = strtolower($endpoint->getMethod());
-        $methods[$method] = $this->getEndpointMethod($endpoint, $method);
+        $methods[$method] = $this->getEndpointMethod($endpoint, $method, $handler);
 
         return $methods;
     }
@@ -208,12 +213,13 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getEndpointMethod(Endpoint $endpoint, string $method): array
+    public function getEndpointMethod(Endpoint $endpoint, string $method, $handler): array
     {
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
             "description"=>$endpoint->getDescription(),
-            "operationId" => $endpoint->getName().'_'.$method,
+            "operationId" => $handler->getEntity()->getName().'_'.$method,
+            "tags" => [ucfirst($handler->getEntity()->getName())],
             "summary"=>$endpoint->getDescription(),
             "parameters"=>[],
             "responses"=>[],
@@ -369,7 +375,7 @@ class OasDocumentationService
 
             // Let do mapping (changing of property names)
             if(array_key_exists($attribute->getName(), $mappingArray)){
-                $schema['properties'][$mappingArray[$attribute->getName()]] =  $schema['properties'][$attribute->getName()];
+                $schema['properties'][$mappingArray][$attribute->getName()] =  $schema['properties'][$attribute->getName()];
                 unset($schema['properties'][$attribute->getName()]);
             }
 
@@ -516,6 +522,23 @@ class OasDocumentationService
         }
 
         return $parameters;
+    }
+
+    /**
+     * Turns a string to CammelCase.
+     *
+     * @param string $string the string to convert to CamelCase
+     *
+     * @return string the CamelCase represention of the string
+     */
+    public function toCamelCase($string, $dontStrip = [])
+    {
+        /*
+         * This will take any dash or underscore turn it into a space, run ucwords against
+         * it so it capitalizes the first letter in all words separated by a space then it
+         * turns and deletes all spaces.
+         */
+        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('', $dontStrip).']+/', ' ', $string))));
     }
 
 }
