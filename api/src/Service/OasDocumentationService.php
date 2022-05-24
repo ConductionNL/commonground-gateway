@@ -196,6 +196,8 @@ class OasDocumentationService
 
         // Primary Response (success)
         $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
+        $responseTypes = ["application/json","application/json-ld","application/json-hal"]; // @todo this is a short cut, lets focus on json first */
+
         $response = false;
         switch ($method) {
             case 'GET':
@@ -212,6 +214,9 @@ class OasDocumentationService
                 break;
         }
 
+        // Get the handler
+        $handler = $this->getHandler($endpoint,$method);
+
         if($response){
             $methodArray['responses'][$response] = [
                 'description' => $description,
@@ -219,52 +224,22 @@ class OasDocumentationService
             ];
 
             foreach($responseTypes as $responseType){
-                $methodArray['responses'][$response]['content'] = $this->getResponseScheme($endpoint, $method, $responseType);
+                $schema = $this->getSchema($handler->getEntity(), $handler->geMappingOut());
+                $methodArray['responses'][$response]['content'] = $schema;
             }
         }
 
         // Let see is we need request bodies
         $requestTypes = ["application/json","application/xml","application/yaml"];
+        $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
         if(in_array($methodArray, ['put','post'])){
             foreach($requestTypes as $requestType){
-                $methodArray['requests']['content'] = $this->getRequestScheme($endpoint, $method, $requestType);
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+                $methodArray['requests']['content'] = $schema;
             }
         }
 
         return $methodArray;
-    }
-
-    /**
-     * Gets an OAS description for a specific method
-     *
-     * @param Endpoint $endpoint
-     * @param string $method
-     * @param string $requestType;
-     *
-     * @return array
-     */
-    public function getRequestScheme(Endpoint $endpoint, string $method, string $requestType): array
-    {
-        $handler = $this->getHandler($endpoint,$method);
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
-        return $schema;
-    }
-
-    /**
-     * Gets an OAS description for a specific method
-     *
-     * @param Endpoint $endpoint
-     * @param string $method
-     * @param string $responseType
-     *
-     * @return array
-     */
-    public function getResponseScheme(Endpoint $endpoint, string $method, string $responseType): array
-    {
-        $handler = $this->getHandler($endpoint,$method);
-        $schema = $this->getSchema($handler->getEntity(), $handler->geMappingOut());
-
-        return $schema;
     }
 
     /**
@@ -290,7 +265,7 @@ class OasDocumentationService
     }
 
     /**
-     * Genreaters an OAS schema from an entty
+     * Generates an OAS schema from an entty
      *
      * @param Entity $entity
      * @param array $mapping
@@ -347,12 +322,102 @@ class OasDocumentationService
                 }
             }
 
+            // Set example data
+            /* @todo we need to provide example data for AOS this is iether provided by the atriute itself our should be created trough a function */
+            if($attribute->getExample()){
+                $schema['properties'][$attribute->getName()]['example']= $attribute->getExample();
+            }
+            else{
+                $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
+            }
+
             // Let do mapping (changing of property names)
             if(array_key_exists($attribute->getName(), $mappingArray)){
                 $schema['properties'][$mappingArray[$attribute->getName()]] =  $schema['properties'][$attribute->getName()];
                 unset($schema['properties'][$attribute->getName()]);
             }
 
+        }
+
+        return $schema;
+    }
+
+
+    /**
+     * Generates an OAS example (data) for an atribute)
+     *
+     * @param Attribute $attribute
+     *
+     * @return string
+     */
+    public function generateAttributeExample(Attribute $attribute): string
+    {
+        // @to use a type and format switch to generate examples */
+        return 'string';
+    }
+
+    /**
+     * Serializes a schema (array) to standard e.g. application/json
+     *
+     * @param array $schema
+     * @param string $type
+     *
+     * @return array
+     */
+    public function serializeSchema(array $schema, string $type): array
+    {
+        // @to use a type and format switch to generate examples */
+        switch ($type) {
+            case "application/json":
+                break;
+            case "application/json+ld":
+                // @todo add specific elements
+                break;
+            case "application/json+hal":
+                // @todo add specific elements
+                break;
+            default:
+                /* @todo throw error */
+
+        return $schema;
+    }
+
+
+    /**
+     * Serializes a collect for a schema (array) to standard e.g. application/json
+     *
+     * @param Entity $entity
+     * @param string $type
+     *
+     * @return array
+     */
+    public function getCollectionWrapper(Entity $entity, string $type): array
+    {
+        // Basic schema setup
+        $schema = [
+            'type'      => 'object',
+            'required'  => [],
+            'properties'=> [],
+
+        ];
+
+        switch ($type) {
+            case "application/json":
+                $schema['properties'] = [
+                  'count' =>  ['type'=>'integer'],
+                  'next'  =>  ['type'=>'string','format'=>'uri','nullable'=>'true'],
+                  'previous' => ['type'=>'string','format'=>'uri','nullable'=>'true'],
+                  'results' => ['type'=>'array','items'=>'$ref: #/components/schemas/Klant'] //@todo lets think about how we are going to establish the ref
+                ];
+                break;
+            case "application/json+ld":
+                // @todo add specific elements
+                break;
+            case "application/json+hal":
+                // @todo add specific elements
+                break;
+            default:
+                /* @todo throw error */
         }
 
         return $schema;
