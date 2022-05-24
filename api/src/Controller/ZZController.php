@@ -54,7 +54,6 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Get full path
-        // We should look at a better search moddel in sql
         $stopwatch->start('getEndpoint', 'ZZController');
         $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
         $stopwatch->stop('getEndpoint');
