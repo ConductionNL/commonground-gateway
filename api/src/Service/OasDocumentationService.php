@@ -171,16 +171,19 @@ class OasDocumentationService
         $method = strtolower($endpoint->getMethod());
         $handler = $this->getHandler($endpoint,$method);
 
+        if (!$handler) {
+            return $docs;
+        }
+
         foreach ($paths as $path) {
             if ($path == '{id}') {
-                $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($endpoint, $method, $handler);
+                $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($method, $handler, true);
             }
 
             if ($method === 'get' || $method === ' post') {
-                $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($endpoint, $method, $handler);
+                $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
             }
         }
-//        var_dump($paths);
 
         $docs['components']['schemas'][$handler->getEntity()->getName()] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
 
@@ -196,22 +199,6 @@ class OasDocumentationService
     }
 
     /**
-     * Returns als the allowed methods for an endpoint
-     *
-     * @param Endpoint $endpoint
-     *
-     * @return array
-     */
-    public function getEndpointMethods(Endpoint $endpoint, $handler): array
-    {
-        $methods = [];
-        $method = strtolower($endpoint->getMethod());
-        $methods[$method] = $this->getEndpointMethod($endpoint, $method, $handler);
-
-        return $methods;
-    }
-
-    /**
      * Gets an OAS description for a specific method
      *
      * @param Endpoint $endpoint
@@ -219,14 +206,14 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getEndpointMethod(Endpoint $endpoint, string $method, $handler): array
+    public function getEndpointMethod(string $method, $handler, bool $item): array
     {
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
-            "description"=>$endpoint->getDescription(),
-            "operationId" => $handler->getEntity()->getName().'_'.$method,
+            "description"=>$handler->getEntity()->getDescription(),
+            "operationId" => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
             "tags" => [ucfirst($handler->getEntity()->getName())],
-            "summary"=>$endpoint->getDescription(),
+            "summary"=>$handler->getEntity()->getDescription(),
             "parameters"=>[],
             "responses"=>[],
         ];
@@ -250,17 +237,10 @@ class OasDocumentationService
                 break;
         }
 
-        // Get the handler
-        $handler = $this->getHandler($endpoint,$method);
+//        // Get the handler
+//        $handler = $this->getHandler($endpoint,$method);
+        // Parameters
         $methodArray['parameters'] = array_merge($this->getPaginationParameters(), $this->getFilterParameters($handler->getEntity()));
-
-//        // Parameters
-//        foreach($endpoint->getPathArray() as $parameter){
-//            var_dump($this->getPaginationParameters());
-//
-//        }
-//
-//        var_dump($methodArray);
 
         if($response){
             $methodArray['responses'][$response] = [
@@ -274,13 +254,14 @@ class OasDocumentationService
             }
         }
 
+
         // Let see is we need request bodies
 //        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
-        if(in_array($method, ['put','post', '*'])){
+        if(in_array($method, ['put','post'])){
             foreach($requestTypes as $requestType){
                 $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
-                $methodArray['requests']['content'][$requestType] = $schema;
+                $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
         }
 
@@ -345,9 +326,9 @@ class OasDocumentationService
 
             // Setup a mappping array
             $mappingArray = [];
-            foreach($mapping as $key => $value){
-                // @todo for this exercise this only goes one deep
-            }
+//            foreach($mapping as $key => $value){
+//                // @todo for this exercise this only goes one deep
+//            }
 
             // The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
