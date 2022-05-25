@@ -66,6 +66,14 @@ class ObjectEntity
     private $id;
 
     /**
+     * @var string The {at sign}id or self->href of this Object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $self;
+
+    /**
      * @var string UUID of the external object of this ObjectEntity
      *
      * @Assert\Uuid
@@ -213,6 +221,18 @@ class ObjectEntity
     public function setId(string $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getSelf(): ?string
+    {
+        return $this->self;
+    }
+
+    public function setSelf(?string $self): self
+    {
+        $this->self = $self;
 
         return $this;
     }

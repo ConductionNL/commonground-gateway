@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Handler;
@@ -350,8 +351,10 @@ class ObjectEntityService
         // Check ID
         $this->stopwatch->start('getFilterFromParameters', 'handleObject');
         $filters = $this->getFilterFromParameters();
+
         $this->stopwatch->stop('getFilterFromParameters');
         array_key_exists('id', ($filters)) && $id = $filters['id'];
+        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
         // todo throw error if get/put/patch/delete and no id ?
         // Get Object if needed
@@ -409,6 +412,12 @@ class ObjectEntityService
 
                 if (isset($object)) {
                     if ($object instanceof ObjectEntity) {
+                        if (!$object->getSelf()) {
+                            // Lets make sure we always set the self (@id)
+                            $this->entityManager->persist($object);
+                            $object->setSelf($this->createSelf($object));
+                        }
+
                         $this->stopwatch->start('handleGet', 'handleObject');
                         $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
                         $this->stopwatch->stop('handleGet');
@@ -467,15 +476,23 @@ class ObjectEntityService
                 $this->stopwatch->stop('saveObject');
 
                 // Handle Entity Function (note that this might be overwritten when handling the promise later!)
+                $this->stopwatch->start('handleFunction', 'handleObject');
                 $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
                     'method'           => $method,
                     'uri'              => $object->getUri(),
                     'organizationType' => array_key_exists('type', $data) ? $data['type'] : null,
                     'userGroupName'    => array_key_exists('name', $data) ? $data['name'] : null,
                 ]);
+                $this->stopwatch->stop('handleFunction');
+
+                $this->stopwatch->start('handleOwner', 'handleObject');
                 $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
+                $this->stopwatch->stop('handleOwner');
+
+                $this->stopwatch->start('persistFlushObject', 'handleObject');
                 $this->entityManager->persist($object);
                 $this->entityManager->flush();
+                $this->stopwatch->stop('persistFlushObject');
 
                 $this->stopwatch->start('renderResult', 'handleObject');
                 // todo: maybe add an option for extend all? if we always want to show every subresource after a post/put?
@@ -556,6 +573,11 @@ class ObjectEntityService
             // Lets make sure we always set the uri
             $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
             $objectEntity->setUri($this->createUri($objectEntity));
+        }
+        if (!$objectEntity->getSelf()) {
+            // Lets make sure we always set the self (@id)
+            $this->entityManager->persist($objectEntity);
+            $objectEntity->setSelf($this->createSelf($objectEntity));
         }
 
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
@@ -730,8 +752,10 @@ class ObjectEntityService
                     $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                     // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
+                    // todo: i think we can remove this because in saveObject uri is already set, test it first!
                     $this->entityManager->persist($subObject);
                     $subObject->setUri($this->createUri($subObject));
+
                     // Set organization for this object
                     if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
                         $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
@@ -1258,13 +1282,36 @@ class ObjectEntityService
             return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
 
-        $uri = $_SERVER['HTTP_HOST'] === 'localhost' ? 'http://localhost' : 'https://'.$_SERVER['HTTP_HOST'];
+        $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
 
         if ($objectEntity->getEntity()->getRoute()) {
             return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
+    }
+
+    /**
+     * @TODO
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return string
+     */
+    public function createSelf(ObjectEntity $objectEntity): string
+    {
+        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if ($endpoint instanceof Endpoint) {
+            $pathArray = $endpoint->getPath();
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
+                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            if ($foundId !== false) {
+                $path = implode('/', $pathArray);
+                return '/api/'.$path;
+            }
+        }
+
+        return '/api/'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
     }
 
     /**

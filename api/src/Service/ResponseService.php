@@ -124,7 +124,7 @@ class ResponseService
         );
         if ($item->isHit()) {
 //            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
-//            return $this->filterResult($item->get(), $result, $skipAuthCheck);
+            return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.md5($result->getId()->toString()));
 
@@ -132,10 +132,10 @@ class ResponseService
         if ($level > 3) {
             if ($acceptType === 'jsonld') {
                 return [
-                    '@id' => '/'.$result->getEntity()->getName().'/'.$result->getId(),
+                    '@id' => $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
                 ];
             }
-            return '/'.$result->getEntity()->getName().'/'.$result->getId();
+            return $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         }
 
         // todo: do we still want to do this if we have BL for syncing objects?
@@ -209,7 +209,7 @@ class ResponseService
         // todo: split switch into functions?
         switch ($acceptType) {
             case 'jsonld':
-                $gatewayContext['@id'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
+                $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
                 $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
                 $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
                 $gatewayContext['@dateCreated'] = $result->getDateCreated();
@@ -237,7 +237,7 @@ class ResponseService
                 }
                 break;
             case 'jsonhal':
-                $gatewayContext['_links']['self']['href'] = '/'.$result->getEntity()->getName().'/'.$result->getId();
+                $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
                 $gatewayContext['_metadata'] = [
                     "_type"         => ucfirst($result->getEntity()->getName()),
                     "_context"      => '/contexts/'.ucfirst($result->getEntity()->getName()),
@@ -412,13 +412,13 @@ class ResponseService
                 if ($acceptType === 'jsonld') {
                     return [
                         'renderObjectsObjectsArray' => [
-                            '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                            '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
                         ],
                         'renderObjectsEmbedded' => $embedded
                     ];
                 }
                 return [
-                    'renderObjectsObjectsArray' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                    'renderObjectsObjectsArray' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
                     'renderObjectsEmbedded' => $embedded
                 ];
             } catch (AccessDeniedException $exception) {
@@ -444,10 +444,10 @@ class ResponseService
 
                 if ($acceptType === 'jsonld') {
                     $objectsArray[] = [
-                        '@id' => '/'.$object->getEntity()->getName().'/'.$object->getId(),
+                        '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
                     ];
                 } else {
-                    $objectsArray[] = '/'.$object->getEntity()->getName().'/'.$object->getId();
+                    $objectsArray[] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
                 }
             } catch (AccessDeniedException $exception) {
                 continue;

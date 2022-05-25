@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
@@ -220,6 +221,11 @@ class ValidationService
                     // Lets make sure we always set the uri
                     $this->em->persist($objectEntity); // So the object has an id to set with createUri...
                     $objectEntity->setUri($this->createUri($objectEntity));
+                }
+                if (!$objectEntity->getSelf()) {
+                    // Lets make sure we always set the self (@id)
+                    $this->em->persist($objectEntity);
+                    $objectEntity->setSelf($this->createSelf($objectEntity));
                 }
                 // Notify notification component
                 $this->notifications[] = [
@@ -1851,6 +1857,29 @@ class ValidationService
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
+    }
+
+    /**
+     * @TODO
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return string
+     */
+    public function createSelf(ObjectEntity $objectEntity): string
+    {
+        $endpoint = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if ($endpoint instanceof Endpoint) {
+            $pathArray = $endpoint->getPath();
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
+                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            if ($foundId !== false) {
+                $path = implode('/', $pathArray);
+                return '/api/'.$path;
+            }
+        }
+
+        return '/api/'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
     }
 
     /**

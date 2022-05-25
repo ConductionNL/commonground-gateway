@@ -1133,24 +1133,29 @@ class EavService
         // todo: split switch into functions? duplicate code is here because order of the keys matter.
         switch ($acceptType) {
             case 'jsonhal':
+                $path = $entity->getName();
+                if ($this->session->get('endpoint')) {
+                    $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+                    $path = implode('/', $endpoint->getPath());
+                }
                 $paginationResult['_links'] = [
-                    "self" => ['href' => '/'.$entity->getName().($page == 1 ? '' : '?page='.$page)],
-                    "first" => ['href' => '/'.$entity->getName()]
+                    "self" => ['href' => '/api/'.$path.($page == 1 ? '' : '?page='.$page)],
+                    "first" => ['href' => '/api/'.$path]
                 ];
                 if ($page > 1) {
-                    $paginationResult['_links']['prev']['href'] = '/'.$entity->getName().($page == 2 ? '' : '?page='.($page-1));
+                    $paginationResult['_links']['prev']['href'] = '/api/'.$path.($page == 2 ? '' : '?page='.($page-1));
                 }
                 if ($page < $pages) {
-                    $paginationResult['_links']['next']['href'] = '/'.$entity->getName().'?page='.($page+1);
+                    $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($page+1);
                 }
-                $paginationResult['_links']['last']['href'] = '/'.$entity->getName().($pages == 1 ? '' : '?page='.$pages);
+                $paginationResult['_links']['last']['href'] = '/api/'.$path.($pages == 1 ? '' : '?page='.$pages);
                 $paginationResult['count'] = count($results);
                 $paginationResult['limit'] = $limit;
                 $paginationResult['total'] = $total;
                 $paginationResult['start'] = $offset + 1;
                 $paginationResult['page'] = $page;
                 $paginationResult['pages'] = $pages;
-                $paginationResult['_embedded'] = [ $entity->getName() => $results];
+                $paginationResult['_embedded'] = [ $path => $results]; //todo replace $path with $entity->getName() ?
                 break;
             case 'jsonld':
                 // todo: try and match api-platform ? https://api-platform.com/docs/core/pagination/

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Endpoint;
+use App\Entity\Entity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -36,6 +37,29 @@ class EndpointRepository extends ServiceEntityRepository
             ->andWhere('LOWER(e.method) = :method')
             ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
             ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+
+        return $query
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @TODO
+     *
+     * @param Entity $entity
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return Endpoint|null
+     */
+    public function findGetItemByEntity(Entity $entity): ?Endpoint
+    {
+        $query = $this->createQueryBuilder('e')
+            ->leftJoin('e.handlers', 'h')
+            ->where('h.entity = :entity')
+            ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
+            ->setParameters(['entity' => $entity, 'method' => 'get', 'operationType' => 'item'])
+            ->distinct();
 
         return $query
             ->getQuery()
