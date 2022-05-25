@@ -449,14 +449,14 @@ class OasParserService
      */
     private function getPathRegex(array $path, array $method): string
     {
-        $pathRegex = '#^(';
+        $pathRegex = '^';
         foreach ($path as $key => $part) {
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]{36}' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
         }
-        $pathRegex .= ')$#';
+        $pathRegex .= '$';
 
         return $pathRegex;
     }
