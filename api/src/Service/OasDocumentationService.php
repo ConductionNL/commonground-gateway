@@ -180,12 +180,12 @@ class OasDocumentationService
                 $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($method, $handler, true);
             }
 
-            if ($method === 'get' || $method === ' post') {
+            if (in_array($method, ['get', 'post'])) {
                 $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
             }
         }
 
-        $docs['components']['schemas'][$handler->getEntity()->getName()] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
 
 
         // @todo remove duplicates from array
@@ -261,6 +261,7 @@ class OasDocumentationService
         if(in_array($method, ['put','post'])){
             foreach($requestTypes as $requestType){
                 $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+                $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
         }
