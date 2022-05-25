@@ -230,6 +230,7 @@ class ObjectEntityService
         // Check ID
         $filters = $this->getFilterFromParameters();
         array_key_exists('id', ($filters)) && $id = $filters['id'];
+        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
         if (isset($id) || $method == 'POST') {
             // todo: re-used old code for getting an objectEntity
