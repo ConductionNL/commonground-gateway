@@ -160,26 +160,32 @@ class OasDocumentationService
      */
     public function addEndpointToDocs(Endpoint $endpoint, array &$docs): array
     {
-
-        /* @todo this only goes one deep */
-//        $docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
-
         // Let's only add the main entities as root
         if (!$endpoint->getPath()) {
             return $docs;
         }
-//        var_dump($endpoint->getPath());die();
 
         /* @todo fix path */
-        $path = $endpoint->getPath();
+        $paths = $endpoint->getPath();
         // Let's add the path
-
         $method = strtolower($endpoint->getMethod());
         $handler = $this->getHandler($endpoint,$method);
 
-        $docs['paths']['/api/'.$path[0]] = $this->getEndpointMethods($endpoint, $handler);
+        foreach ($paths as $path) {
+            if ($path == '{id}') {
+                $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($endpoint, $method, $handler);
+            }
+
+            if ($method === 'get' || $method === ' post') {
+                $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($endpoint, $method, $handler);
+            }
+        }
+//        var_dump($paths);
+
         $docs['components']['schemas'][$handler->getEntity()->getName()] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
-        
+
+
+        // @todo remove duplicates from array
         // create the tag
         $docs['tags'][] = [
             'name'       => ucfirst($handler->getEntity()->getName()),
@@ -327,7 +333,7 @@ class OasDocumentationService
 
             // Handle requireded fields
             if ($attribute->getRequired() and $attribute->getRequired() != null) {
-                $schema['required'][] = $attribute->getName();
+                $schema['required'][] = ucfirst($attribute->getName());
             }
 
             // Add the attribute
