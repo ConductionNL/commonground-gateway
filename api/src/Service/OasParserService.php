@@ -247,9 +247,7 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) :
-                (
-                    isset($response['content']['application/json']['schema']['properties']) ?
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (isset($response['content']['application/json']['schema']['properties']) ?
                     substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
                     substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
                 );
@@ -453,7 +451,7 @@ class OasParserService
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
         }
         $pathRegex .= ')$#';
 
@@ -477,7 +475,7 @@ class OasParserService
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName().$propertyName.'Entity';
+            $targetEntity = $entity->getName() . $propertyName . 'Entity';
         }
 
         if (!isset($property['type']) || $property['type'] == 'object') {
@@ -511,7 +509,12 @@ class OasParserService
             foreach ($allOf as $set) {
                 if (isset($set['$ref'])) {
                     $schema = $this->getSchemaFromRef($set['$ref']);
-                    $properties = array_merge($schema['properties'], $properties);
+
+                    if (isset($schema['properties'])) {
+                        $properties = array_merge($schema['properties'], $properties);
+                    } else {
+                        $properties[] = $schema;
+                    }
                 } else {
                     $properties = array_merge($set['properties'], $properties);
                 }
@@ -537,7 +540,7 @@ class OasParserService
         $pathArray = array_values(array_filter(explode('/', $path)));
         $endpoint = new Endpoint();
         $endpoint->addCollection($collection);
-        $endpoint->setName($path.' '.$methodName);
+        $endpoint->setName($path . ' ' . $methodName);
         $endpoint->setMethod($methodName);
         $endpoint->setPath($pathArray);
 
@@ -770,7 +773,7 @@ class OasParserService
         $handlers = $this->createHandlers();
         $this->entityManager->flush();
         // Set synced at
-        $collection->setSyncedAt(new \DateTime('now'));
+        // $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
         $this->entityManager->clear();
