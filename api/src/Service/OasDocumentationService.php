@@ -108,7 +108,7 @@ class OasDocumentationService
 
         /* @todo the server should include the base url */
         $docs['servers'] = [
-            ['url' => "test", 'description' => 'Gateway server'],
+            ['url' => "localhost:", 'description' => 'Gateway server'],
         ];
 
         $docs['tags'] = [];
@@ -318,18 +318,10 @@ class OasDocumentationService
                 return $schema;
                 break;
             case "application/json-hal":
-//                $schema = $this->getSchema($handler->getEntity(), $mapping, $type);
                 $schema['properties'] = [
-                    '__links' => [],
-                    '__metadata'=> $this->getJsonHalSchema($schema),
+                    '__links' => $this->getLinks($schema),
+                    '__metadata'=> $this->getMetaData($schema),
                 ];
-//                $schema['properties'] = [
-////                    '__link'    => 'object',
-////                    '__embedded'=> [],
-////                    '__metadata' => ['type'=>'array','items'=> $this->getJsonHalSchema($handler->getEntity(), $mapping)],
-////                    'results' => ['type'=>'array','items'=> $this->getSchema($handler->getEntity(), $mapping)],
-//                    '__metadata' => $this->getJsonHalSchema($handler->getEntity(), $mapping),
-//                ];
                 break;
 //            case "application/json+orc":
 //                $schema = [];
@@ -347,18 +339,36 @@ class OasDocumentationService
     /**
      * Generates an OAS schema from an entity
      *
-     * @param Entity $entity
-     * @param array $mapping
-     *
+     * @param array $schema
      * @return array
      */
-    public function getJsonHalSchema(array $schema): array
+    public function getMetaData(array $schema): array
     {
         foreach ($schema['properties'] as $key => $value) {
-            $schema['properties']['__'.$key] = $schema['properties'][$key];
+            // change key to __key
+            $schema['properties']['__' . $key] = $schema['properties'][$key];
             unset($schema['properties'][$key]);
+            unset($schema['properties']['__' . $key]['$ref']);
         }
 
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param array $schema
+     * @return array
+     */
+    public function getLinks(array $schema): array
+    {
+        foreach ($schema['properties'] as $key => $value) {
+            if ($key === 'id') {
+                // change id to self
+                $schema['properties']['self'] = $schema['properties'][$key];
+            }
+            unset($schema['properties'][$key]);
+        }
         return $schema;
     }
 
@@ -385,6 +395,11 @@ class OasDocumentationService
             if ($attribute->getRequired() and $attribute->getRequired() != null) {
                 $schema['required'][] = ucfirst($attribute->getName());
             }
+
+            $schema['properties']['id'] = [
+                'type' => 'string',
+                'title' => 'The id of '.$attribute->getName(),
+            ];
 
             // Add the attribute
             $schema['properties'][$attribute->getName()] = [
