@@ -108,7 +108,7 @@ class OasDocumentationService
 
         /* @todo the server should include the base url */
         $docs['servers'] = [
-            ['url'=> "test", 'description'=>'Gateway server'],
+            ['url' => "test", 'description' => 'Gateway server'],
         ];
 
         $docs['tags'] = [];
@@ -134,19 +134,19 @@ class OasDocumentationService
     private function getDocumentationInfo(): array
     {
         return [
-            'title'         => $this->params->get('documentation_title'),
-            'description'   => $this->params->get('documentation_description'),
-            'termsOfService'=> $this->params->get('documentation_terms_of_service'),
-            'contact'       => [
+            'title' => $this->params->get('documentation_title'),
+            'description' => $this->params->get('documentation_description'),
+            'termsOfService' => $this->params->get('documentation_terms_of_service'),
+            'contact' => [
                 'name' => $this->params->get('documentation_contact_name'),
-                'url'  => $this->params->get('documentation_contact_url'),
-                'email'=> $this->params->get('documentation_contact_email'),
+                'url' => $this->params->get('documentation_contact_url'),
+                'email' => $this->params->get('documentation_contact_email'),
             ],
-            'license'=> [
-                'name'=> $this->params->get('documentation_licence_name'),
+            'license' => [
+                'name' => $this->params->get('documentation_licence_name'),
                 'url' => $this->params->get('documentation_licence_url'),
             ],
-            'version'=> $this->params->get('documentation_version'),
+            'version' => $this->params->get('documentation_version'),
         ];
     }
 
@@ -154,7 +154,7 @@ class OasDocumentationService
      * Generates an OAS3 path for a specific endpoint.
      *
      * @param Endpoint $endpoint
-     * @param array  $docs
+     * @param array $docs
      *
      * @return array
      */
@@ -165,34 +165,36 @@ class OasDocumentationService
             return $docs;
         }
 
-        /* @todo fix path */
-        $paths = $endpoint->getPath();
-        // Let's add the path
         $method = strtolower($endpoint->getMethod());
-        $handler = $this->getHandler($endpoint,$method);
+        $handler = $this->getHandler($endpoint, $method);
 
         if (!$handler) {
             return $docs;
         }
 
+        // Get path and loop through the array
+        $paths = $endpoint->getPath();
         foreach ($paths as $path) {
+
+            // Paths -> entity route / {id}
             if ($path == '{id}') {
-                $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($method, $handler, true);
+                $docs['paths'][$handler->getEntity()->getRoute() . '/' . $path][$method] = $this->getEndpointMethod($method, $handler, true);
             }
 
+            // Paths -> entity route
             if (in_array($method, ['get', 'post'])) {
                 $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
             }
         }
 
-        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
-
+        // components -> schemas
+        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null);
 
         // @todo remove duplicates from array
-        // create the tag
+        // Tags
         $docs['tags'][] = [
-            'name'       => ucfirst($handler->getEntity()->getName()),
-            'description'=> $endpoint->getDescription(),
+            'name' => ucfirst($handler->getEntity()->getName()),
+            'description' => $endpoint->getDescription(),
         ];
 
         return $docs;
@@ -210,17 +212,17 @@ class OasDocumentationService
     {
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
-            "description"=>$handler->getEntity()->getDescription(),
-            "operationId" => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
+            "description" => $handler->getEntity()->getDescription(),
+            "operationId" => $item ? $handler->getEntity()->getName() . '_' . $method . 'Id' : $handler->getEntity()->getName() . '_' . $method,
             "tags" => [ucfirst($handler->getEntity()->getName())],
-            "summary"=>$handler->getEntity()->getDescription(),
-            "parameters"=>[],
-            "responses"=>[],
+            "summary" => $handler->getEntity()->getDescription(),
+            "parameters" => [],
+            "responses" => [],
         ];
 
         // Primary Response (success)
 //        $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
-        $responseTypes = ["application/json","application/json-ld","application/json-hal"]; // @todo this is a short cut, lets focus on json first */
+        $responseTypes = ["application/json", "application/json-ld", "application/json-hal"]; // @todo this is a short cut, lets focus on json first */
         $response = false;
         switch ($method) {
             case 'get':
@@ -237,30 +239,29 @@ class OasDocumentationService
                 break;
         }
 
-//        // Get the handler
-//        $handler = $this->getHandler($endpoint,$method);
         // Parameters
         $methodArray['parameters'] = array_merge($this->getPaginationParameters(), $this->getFilterParameters($handler->getEntity()));
 
-        if($response){
+        if ($response) {
             $methodArray['responses'][$response] = [
                 'description' => $description,
                 'content' => []
             ];
 
-            foreach($responseTypes as $responseType){
-                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+            foreach ($responseTypes as $responseType) {
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null);
+                $schema = $this->serializeSchema($schema, $responseType);
                 $methodArray['responses'][$response]['content'][$responseType]['schema'] = $schema;
             }
         }
 
-
         // Let see is we need request bodies
 //        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
-        if(in_array($method, ['put','post'])){
-            foreach($requestTypes as $requestType){
-                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+        if (in_array($method, ['put', 'post'])) {
+            foreach ($requestTypes as $requestType) {
+                $schema = $this->serializeSchema($schema, $requestType);
+//                $schema = $this->serializeSchema($requestType, $handler, $handler->getMappingIn());
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
@@ -272,26 +273,75 @@ class OasDocumentationService
     /**
      * Gets a handler for an endpoint method combination
      *
-     * @todo i would expect this function to live in the handlerservice
-     *
      * @param Endpoint $endpoint
      * @param string $method
      *
      * @return Handler|boolean
+     * @todo i would expect this function to live in the handlerservice
+     *
      */
     public function getHandler(Endpoint $endpoint, string $method)
     {
         foreach ($endpoint->getHandlers() as $handler) {
-            if (in_array( '*',$handler->getMethods())) {
+            if (in_array('*', $handler->getMethods())) {
                 return $handler;
             }
 
             // Check if handler should be used for this method
-            if (in_array($method,$handler->getMethods())) {
+            if (in_array($method, $handler->getMethods())) {
                 return $handler;
             }
         }
         return false;
+    }
+
+    /**
+     * Serializes a schema (array) to standard e.g. application/json
+     *
+     * @param array $schema
+     * @param string $type
+     *
+     * @return array
+     */
+    public function serializeSchema(array $schema, string $type): array
+    {
+        // Basic schema setup
+
+        // @todo add specific elements
+        // @to use a type and format switch to generate examples */
+        switch ($type) {
+            case "application/json":
+                return $schema;
+                break;
+            case "application/json-ld":
+                //
+                return $schema;
+                break;
+            case "application/json-hal":
+//                $schema = $this->getSchema($handler->getEntity(), $mapping, $type);
+                $schema['properties'] = [
+                    '__links' => [],
+                    '__metadata'=> $this->getJsonHalSchema($schema),
+                ];
+//                $schema['properties'] = [
+////                    '__link'    => 'object',
+////                    '__embedded'=> [],
+////                    '__metadata' => ['type'=>'array','items'=> $this->getJsonHalSchema($handler->getEntity(), $mapping)],
+////                    'results' => ['type'=>'array','items'=> $this->getSchema($handler->getEntity(), $mapping)],
+//                    '__metadata' => $this->getJsonHalSchema($handler->getEntity(), $mapping),
+//                ];
+                break;
+//            case "application/json+orc":
+//                $schema = [];
+//                break;
+//            case "application/json+form.io":
+//                $schema = [];
+//                break;
+            default:
+                /* @todo throw error */
+                $schema = [];
+        }
+        return $schema;
     }
 
     /**
@@ -302,16 +352,34 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getSchema(Entity $entity, array $mapping): array
+    public function getJsonHalSchema(array $schema): array
+    {
+        foreach ($schema['properties'] as $key => $value) {
+            $schema['properties']['__'.$key] = $schema['properties'][$key];
+            unset($schema['properties'][$key]);
+        }
+
+        return $schema;
+    }
+
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param Entity $entity
+     * @param array $mapping
+     *
+     * @return array
+     */
+    public function getSchema(Entity $entity, array $mapping, $type): array
     {
         $schema = [
-            'type'      => 'object',
-            'required'  => [],
-            'properties'=> [],
-
+            'type' => 'object',
+            'required' => [],
+            'properties' => [],
         ];
 
-        foreach($entity->getAttributes() as $attribute ){
+        foreach ($entity->getAttributes() as $attribute) {
 
             // Handle requireded fields
             if ($attribute->getRequired() and $attribute->getRequired() != null) {
@@ -320,9 +388,9 @@ class OasDocumentationService
 
             // Add the attribute
             $schema['properties'][$attribute->getName()] = [
-                'type'       => $attribute->getType(),
-                'title'      => $attribute->getName(),
-                'description'=> $attribute->getDescription(),
+                'type' => $attribute->getType(),
+                'title' => $attribute->getName(),
+                'description' => $attribute->getDescription(),
             ];
 
             // Setup a mappping array
@@ -334,13 +402,14 @@ class OasDocumentationService
             // The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
                 /* @todo this might throw errors in the current setup */
-                $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+                $schema['properties'][$attribute->getName()] = ['$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+
                 // Schema's dont have validators so
                 continue;
             } elseif ($attribute->getObject() && !$attribute->getCascade()) {
                 $schema['properties'][$attribute->getName()]['type'] = 'string';
                 $schema['properties'][$attribute->getName()]['format'] = 'uuid';
-                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null';
+                $schema['properties'][$attribute->getName()]['description'] = $schema['properties'][$attribute->getName()]['description'] . 'The uuid of the [' . $attribute->getObject()->getName() . ']() object that you want to link, you can unlink objects by setting this field to null';
                 // uuids dont have validators so
                 continue;
             }
@@ -354,16 +423,15 @@ class OasDocumentationService
 
             // Set example data
             /* @todo we need to provide example data for AOS this is iether provided by the atriute itself our should be created trough a function */
-            if($attribute->getExample()){
-                $schema['properties'][$attribute->getName()]['example']= $attribute->getExample();
-            }
-            else{
+            if ($attribute->getExample()) {
+                $schema['properties'][$attribute->getName()]['example'] = $attribute->getExample();
+            } else {
                 $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
             }
 
             // Let do mapping (changing of property names)
-            if(array_key_exists($attribute->getName(), $mappingArray)){
-                $schema['properties'][$mappingArray][$attribute->getName()] =  $schema['properties'][$attribute->getName()];
+            if (array_key_exists($attribute->getName(), $mappingArray)) {
+                $schema['properties'][$mappingArray][$attribute->getName()] = $schema['properties'][$attribute->getName()];
                 unset($schema['properties'][$attribute->getName()]);
             }
 
@@ -387,38 +455,6 @@ class OasDocumentationService
     }
 
     /**
-     * Serializes a schema (array) to standard e.g. application/json
-     *
-     * @param array $schema
-     * @param string $type
-     *
-     * @return array
-     */
-    public function serializeSchema(array $schema, string $type): array
-    {
-        // @to use a type and format switch to generate examples */
-        switch ($type) {
-            case "application/json":
-                break;
-            case "application/json+ld":
-                // @todo add specific elements
-                break;
-            case "application/json+hal":
-                // @todo add specific elements
-            case "application/json+orc":
-                // @todo add specific elements
-            case "application/json+form.io":
-                // @todo add specific elements
-                break;
-            default:
-                /* @todo throw error */
-        }
-
-        return $schema;
-    }
-
-
-    /**
      * Serializes a collect for a schema (array) to standard e.g. application/json
      *
      * @param Entity $entity
@@ -428,21 +464,14 @@ class OasDocumentationService
      */
     public function getCollectionWrapper(Entity $entity, string $type): array
     {
-        // Basic schema setup
-        $schema = [
-            'type'      => 'object',
-            'required'  => [],
-            'properties'=> [],
-
-        ];
 
         switch ($type) {
             case "application/json":
                 $schema['properties'] = [
-                  'count' =>  ['type'=>'integer'],
-                  'next'  =>  ['type'=>'string','format'=>'uri','nullable'=>'true'],
-                  'previous' => ['type'=>'string','format'=>'uri','nullable'=>'true'],
-                  'results' => ['type'=>'array','items'=>'$ref: #/components/schemas/Klant'] //@todo lets think about how we are going to establish the ref
+                    'count' => ['type' => 'integer'],
+                    'next' => ['type' => 'string', 'format' => 'uri', 'nullable' => 'true'],
+                    'previous' => ['type' => 'string', 'format' => 'uri', 'nullable' => 'true'],
+                    'results' => ['type' => 'array', 'items' => '$ref: #/components/schemas/Klant'] //@todo lets think about how we are going to establish the ref
                 ];
                 break;
             case "application/json+ld":
@@ -463,27 +492,27 @@ class OasDocumentationService
         $parameters = [];
         //
         $parameters[] = [
-            'name'       => 'start',
-            'in'         => 'query',
-            'description'=> 'The start number or offset of you list',
-            'required'   => false,
-            'style'      => 'simple',
+            'name' => 'start',
+            'in' => 'query',
+            'description' => 'The start number or offset of you list',
+            'required' => false,
+            'style' => 'simple',
         ];
         //
         $parameters[] = [
-            'name'       => 'limit',
-            'in'         => 'query',
-            'description'=> 'the total items pe list/page that you want returned',
-            'required'   => false,
-            'style'      => 'simple',
+            'name' => 'limit',
+            'in' => 'query',
+            'description' => 'the total items pe list/page that you want returned',
+            'required' => false,
+            'style' => 'simple',
         ];
         //
         $parameters[] = [
-            'name'       => 'page',
-            'in'         => 'query',
-            'description'=> 'The page that you want returned',
-            'required'   => false,
-            'style'      => 'simple',
+            'name' => 'page',
+            'in' => 'query',
+            'description' => 'The page that you want returned',
+            'required' => false,
+            'style' => 'simple',
         ];
 
         return $parameters;
@@ -497,14 +526,14 @@ class OasDocumentationService
         foreach ($Entity->getAttributes() as $attribute) {
             if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
                 $parameters[] = [
-                    'name'       => $prefix.$attribute->getName(),
-                    'in'         => 'query',
-                    'description'=> 'Search '.$prefix.$attribute->getName().' on an exact match of the string',
-                    'required'   => false,
-                    'style'      => 'simple',
+                    'name' => $prefix . $attribute->getName(),
+                    'in' => 'query',
+                    'description' => 'Search ' . $prefix . $attribute->getName() . ' on an exact match of the string',
+                    'required' => false,
+                    'style' => 'simple',
                 ];
             } elseif ($attribute->getObject() && $level < 5) {
-                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName().'.', $level + 1));
+                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName() . '.', $level + 1));
             }
             continue;
         }
@@ -526,7 +555,7 @@ class OasDocumentationService
          * it so it capitalizes the first letter in all words separated by a space then it
          * turns and deletes all spaces.
          */
-        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('', $dontStrip).']+/', ' ', $string))));
+        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9' . implode('', $dontStrip) . ']+/', ' ', $string))));
     }
 
 }
