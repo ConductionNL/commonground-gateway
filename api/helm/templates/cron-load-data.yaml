@@ -1,9 +1,9 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ .Chart.Name }}-warmup
+  name: {{ include "commonground-gateway.fullname" . }}
   labels:
-    {{- include "template.labels" . | nindent 4 }}
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
   # this cronjob runs every 10 minutes https://crontab.guru/#*_*_*_*_*
   schedule: "0 5 * * *"
