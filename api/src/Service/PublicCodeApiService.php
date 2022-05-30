@@ -17,24 +17,18 @@ use Symfony\Component\Yaml\Yaml;
 
 class PublicCodeApiService
 {
-//    private EntityManagerInterface $entityManager;
-//    private ParameterBagInterface $params;
     private array $query;
 
-    public function __construct(
-//        EntityManagerInterface $entityManager,
-//        ParameterBagInterface $params,
-    ) {
-//        $this->entityManager = $entityManager;
-//        $this->params = $params;
+    public function __construct()
+    {
         $this->query = [
-            'rowsPerPage'    => 10000,
+            'rowsPerPage' => 10000,
             'page' => 1,
         ];
     }
 
     /**
-     * This function gets all the github repository details.
+     * This function creates an array from the api's
      *
      * @param array $item a repository from github with a publicclode.yaml file
      * @param $type
@@ -43,22 +37,21 @@ class PublicCodeApiService
     public function createArray(array $item, $type): array
     {
         return [
-            'id'          => $item['id'],
-            'name'        => $item['name'],
+            'id' => $item['id'],
+            'name' => $item['name'],
             'url' => $type === 'repository' ? $item['url'] : $item['repositoryUrl'],
-//            'applicationSuite'   => 'Organization' ? $this->getGithubOwnerInfo($item) : null, //object id, name
-//            'landingURL'    => $item['html_url'], // ?
-//            'isBasedOn'     => $item['private'], // ?
-//            'softwareVersion'       => $item['owner']['type'], // ?
+            'applicationSuite' => null,
+            'landingURL' => $type === 'repository' ? $item['url'] : $item['repositoryUrl'],
+            'isBasedOn' => null,
+            'softwareVersion' => null,
         ];
     }
 
     /**
      * This function retrieves the developer.overheid.nl repositories
      *
+     * @return Response*
      * @throws GuzzleException
-     *
-     * @return Response
      */
     public function createPropertiesArray(): Response
     {
@@ -76,7 +69,7 @@ class PublicCodeApiService
             ];
         }
 
-        return new Response(json_encode($propertiesArray), 200, ['content-type'=>'json']);
+        return new Response(json_encode($propertiesArray), 200, ['content-type' => 'json']);
     }
 
     /**
@@ -91,7 +84,7 @@ class PublicCodeApiService
         $response = $client->request('GET', '/api/repositories', ['query' => $this->query]);
         $repositories = $response->getBody()->getContents();
 
-       return json_decode($repositories, true);
+        return json_decode($repositories, true);
     }
 
     /**
