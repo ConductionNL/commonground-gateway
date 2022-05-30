@@ -10,7 +10,6 @@ use App\Entity\ObjectEntity;
 use App\Entity\RequestLog;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -89,16 +88,16 @@ class ResponseService
      * Renders the result for a ObjectEntity that will be used for the response after a successful api call.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param string $acceptType
-     * @param bool $skipAuthCheck
-     * @param bool $flat todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
-     * @param int $level
-     *
-     * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
+     * @param bool         $skipAuthCheck
+     * @param bool         $flat          todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
+     * @param int          $level
      *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
      */
     public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
@@ -115,11 +114,12 @@ class ResponseService
 
         $item = $this->cache->getItem(
             'object_'
-            .md5($result->getId()
+            .md5(
+                $result->getId()
                 .$acceptType
                 .$level
-                .http_build_query($fields ?? [],'',',')
-                .http_build_query($extend ?? [],'',',')
+                .http_build_query($fields ?? [], '', ',')
+                .http_build_query($extend ?? [], '', ',')
             )
         );
         if ($item->isHit()) {
@@ -135,6 +135,7 @@ class ResponseService
                     '@id' => $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
                 ];
             }
+
             return $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         }
 
@@ -156,6 +157,7 @@ class ResponseService
                     if ($attribute = $result->getEntity()->getAttributeByName($propertyName)) {
                         $attTypeObject = $attribute->getType() === 'object';
                     }
+
                     return
                         (empty($fields) || array_key_exists($propertyName, $fields)) &&
                         (!$attTypeObject || $attribute->getExtend() || (!empty($extend) && array_key_exists($propertyName, $extend))) &&
@@ -195,12 +197,12 @@ class ResponseService
      * Returns a response array for renderResult function. This response is different depending on the acceptType.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param string $acceptType
-     * @param int $level
-     * @param array $response
-     * @param array $embedded
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
+     * @param int          $level
+     * @param array        $response
+     * @param array        $embedded
      *
      * @return array
      */
@@ -240,15 +242,15 @@ class ResponseService
             case 'jsonhal':
                 $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
                 $gatewayContext['_metadata'] = [
-                    "_type"         => ucfirst($result->getEntity()->getName()),
-                    "_context"      => '/contexts/'.ucfirst($result->getEntity()->getName()),
-                    "_dateCreated"  => $result->getDateCreated(),
-                    "_dateModified" => $result->getDateModified(),
-                    "_owner"        => $result->getOwner(),
-                    "_organization" => $result->getOrganization(),
-                    "_application"  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
-                    "_uri"          => $result->getUri(),
-                    "_gateway/id"   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null)
+                    '_type'         => ucfirst($result->getEntity()->getName()),
+                    '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
+                    '_dateCreated'  => $result->getDateCreated(),
+                    '_dateModified' => $result->getDateModified(),
+                    '_owner'        => $result->getOwner(),
+                    '_organization' => $result->getOrganization(),
+                    '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
+                    '_uri'          => $result->getUri(),
+                    '_gateway/id'   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null),
                 ];
                 if (array_key_exists('@type', $response)) {
                     $gatewayContext['_metadata']['_gateway/type'] = $response['@type'];
@@ -275,6 +277,7 @@ class ResponseService
         }
 
         $gatewayContext['id'] = $result->getId();
+
         return $gatewayContext + $response + $embedded;
     }
 
@@ -282,16 +285,16 @@ class ResponseService
      * Renders the values of an ObjectEntity for the renderResult function.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param string $acceptType
-     * @param bool $skipAuthCheck
-     * @param bool $flat
-     * @param int $level
-     *
-     * @return array
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
+     * @param bool         $skipAuthCheck
+     * @param bool         $flat
+     * @param int          $level
      *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     private function renderValues(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
@@ -367,7 +370,7 @@ class ResponseService
 
         return [
             'renderValuesResponse' => $response,
-            'renderValuesEmbedded' => isset($renderObjects) && is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects) ? $renderObjects['renderObjectsEmbedded'] : []
+            'renderValuesEmbedded' => isset($renderObjects) && is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects) ? $renderObjects['renderObjectsEmbedded'] : [],
         ];
     }
 
@@ -375,19 +378,19 @@ class ResponseService
      * Renders the objects of a value with attribute type 'object' for the renderValues function.
      *
      * @param ObjectEntity $result
-     * @param array $embedded
-     * @param Value $value
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param string $acceptType
-     * @param bool $skipAuthCheck
-     * @param bool $flat
-     * @param int $level
-     *
-     * @return string|array|null
+     * @param array        $embedded
+     * @param Value        $value
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
+     * @param bool         $skipAuthCheck
+     * @param bool         $flat
+     * @param int          $level
      *
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return string|array|null
      */
     private function renderObjects(ObjectEntity $result, array $embedded, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
@@ -417,12 +420,13 @@ class ResponseService
                         'renderObjectsObjectsArray' => [
                             '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
                         ],
-                        'renderObjectsEmbedded' => $embedded
+                        'renderObjectsEmbedded' => $embedded,
                     ];
                 }
+
                 return [
                     'renderObjectsObjectsArray' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                    'renderObjectsEmbedded' => $embedded
+                    'renderObjectsEmbedded'     => $embedded,
                 ];
             } catch (AccessDeniedException $exception) {
                 return null;
@@ -459,7 +463,7 @@ class ResponseService
 
         return [
             'renderObjectsObjectsArray' => $objectsArray,
-            'renderObjectsEmbedded' => $embedded
+            'renderObjectsEmbedded'     => $embedded,
         ];
     }
 
@@ -532,10 +536,10 @@ class ResponseService
     /**
      * @TODO
      *
-     * @param Request $request
-     * @param Entity|null $entity
-     * @param array $result
-     * @param Response $response
+     * @param Request           $request
+     * @param Entity|null       $entity
+     * @param array             $result
+     * @param Response          $response
      * @param ObjectEntity|null $object
      *
      * @return RequestLog
@@ -620,8 +624,8 @@ class ResponseService
      * @TODO
      *
      * @param Endpoint $endpoint
-     * @param array $headers
-     * @param int $level
+     * @param array    $headers
+     * @param int      $level
      *
      * @return array
      */

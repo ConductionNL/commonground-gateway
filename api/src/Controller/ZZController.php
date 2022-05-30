@@ -42,7 +42,7 @@ class ZZController extends AbstractController
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
         if (Uuid::isValid($id)) {
-            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, "", $path)]);
+            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, '', $path)]);
             if ($document instanceof Document) {
                 return $documentService->handleDocument($document, $id);
             }

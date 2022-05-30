@@ -190,6 +190,7 @@ class FunctionService
                     $this->removeResultFromCache($parentValue->getObjectEntity());
                 }
             }
+
             return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
         }
 

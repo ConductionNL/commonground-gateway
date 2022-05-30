@@ -1875,6 +1875,7 @@ class ValidationService
                 (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
                 $path = implode('/', $pathArray);
+
                 return '/api/'.$path;
             }
         }
