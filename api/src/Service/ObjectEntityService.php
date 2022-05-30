@@ -170,13 +170,13 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $uri
+     * @param string     $uri
      * @param array|null $fields
      * @param array|null $extend
      *
-     * @return array
-     *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function getObjectByUri(string $uri, ?array $fields = null, ?array $extend = null): array
     {
@@ -191,13 +191,14 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param Entity $entity
-     * @param string $id
+     * @param Entity     $entity
+     * @param string     $id
      * @param array|null $fields
      * @param array|null $extend
      *
-     * @return array
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function getObject(Entity $entity, string $id, ?array $fields = null, ?array $extend = null): array
     {
@@ -212,13 +213,13 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $id
+     * @param string     $id
      * @param array|null $fields
      * @param array|null $extend
      *
-     * @return array
-     *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function getPersonObject(string $id, ?array $fields = null, ?array $extend = null): array
     {
@@ -233,13 +234,13 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $id
+     * @param string     $id
      * @param array|null $fields
      * @param array|null $extend
      *
-     * @return array
-     *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function getOrganizationObject(string $id, ?array $fields = null, ?array $extend = null): array
     {
@@ -254,13 +255,13 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string $username
+     * @param string     $username
      * @param array|null $fields
      * @param array|null $extend
      *
-     * @return array
-     *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function getUserObjectEntity(string $username, ?array $fields = null, ?array $extend = null): array
     {
@@ -316,7 +317,7 @@ class ObjectEntityService
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
      * @param string|null $operationType
-     * @param string $acceptType
+     * @param string      $acceptType
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
@@ -588,6 +589,7 @@ class ObjectEntityService
         if ($this->request->getMethod() != 'POST') {
             $this->functionService->removeResultFromCache($objectEntity);
         }
+
         return $objectEntity;
     }
 
@@ -1307,6 +1309,7 @@ class ObjectEntityService
                 (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
                 $path = implode('/', $pathArray);
+
                 return '/api/'.$path;
             }
         }

@@ -16,11 +16,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Psr\Cache\CacheException;
-use Psr\Cache\InvalidArgumentException;
-use Symfony\Component\Stopwatch\Stopwatch;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -31,6 +30,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class EavService
 {
@@ -945,13 +945,13 @@ class EavService
      * Handles a get item api call.
      *
      * @param ObjectEntity $object
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param string $acceptType
-     *
-     * @return array
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
      *
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
     {
@@ -961,16 +961,17 @@ class EavService
     /**
      * Handles a search (collection) api call.
      *
-     * @param string $entityName
-     * @param Request $request
+     * @param string     $entityName
+     * @param Request    $request
      * @param array|null $fields
      * @param $extension
-     * @param null $filters
+     * @param null   $filters
      * @param string $acceptType
-     * @return array|array[]
      *
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return array|array[]
      */
     public function handleSearch(string $entityName, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
@@ -1097,7 +1098,7 @@ class EavService
         foreach ($repositoryResult['objects'] as $object) {
             // Old $MaxDepth in renderResult
 //            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, null, $flat);
-            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType , false, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
@@ -1117,10 +1118,10 @@ class EavService
      *
      * @param string $acceptType
      * @param Entity $entity
-     * @param array $results
-     * @param int $total
-     * @param int $limit
-     * @param int $offset
+     * @param array  $results
+     * @param int    $total
+     * @param int    $limit
+     * @param int    $offset
      *
      * @return array[]
      */
@@ -1139,14 +1140,14 @@ class EavService
                     $path = implode('/', $endpoint->getPath());
                 }
                 $paginationResult['_links'] = [
-                    "self" => ['href' => '/api/'.$path.($page == 1 ? '' : '?page='.$page)],
-                    "first" => ['href' => '/api/'.$path]
+                    'self'  => ['href' => '/api/'.$path.($page == 1 ? '' : '?page='.$page)],
+                    'first' => ['href' => '/api/'.$path],
                 ];
                 if ($page > 1) {
-                    $paginationResult['_links']['prev']['href'] = '/api/'.$path.($page == 2 ? '' : '?page='.($page-1));
+                    $paginationResult['_links']['prev']['href'] = '/api/'.$path.($page == 2 ? '' : '?page='.($page - 1));
                 }
                 if ($page < $pages) {
-                    $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($page+1);
+                    $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($page + 1);
                 }
                 $paginationResult['_links']['last']['href'] = '/api/'.$path.($pages == 1 ? '' : '?page='.$pages);
                 $paginationResult['count'] = count($results);
@@ -1155,7 +1156,7 @@ class EavService
                 $paginationResult['start'] = $offset + 1;
                 $paginationResult['page'] = $page;
                 $paginationResult['pages'] = $pages;
-                $paginationResult['_embedded'] = [ $path => $results]; //todo replace $path with $entity->getName() ?
+                $paginationResult['_embedded'] = [$path => $results]; //todo replace $path with $entity->getName() ?
                 break;
             case 'jsonld':
                 // todo: try and match api-platform ? https://api-platform.com/docs/core/pagination/

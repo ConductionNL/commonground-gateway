@@ -152,9 +152,9 @@ class HandlerService
         $content = new \Adbar\Dot($this->getDataFromRequest());
 
         foreach ($overrides[$this->request->getMethod()] as $override) {
-            if (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $content->has($override['condition']))) {
-                $method = array_key_exists("method", $override) ? $override['method'] : $method;
-                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
+            if (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $content->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 if (isset($override['pathValues'])) {
                     foreach ($override['pathValues'] as $key => $value) {
@@ -171,9 +171,9 @@ class HandlerService
                     }
                 }
                 $this->request->getSession()->set('parameters', $parameters);
-            } elseif (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $this->request->query->has($override['condition']))) {
-                $method = array_key_exists("method", $override) ? $override['method'] : $method;
-                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
+            } elseif (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $this->request->query->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 foreach ($override['pathValues'] as $key => $value) {
                     $parameters['path'][$key] = $this->request->query->get($value);
@@ -396,6 +396,7 @@ class HandlerService
 
         // Lets seriliaze the shizle (if no document and we have a result)
         $this->stopwatch->start('serialize', 'createResponse');
+
         try {
             !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
         } catch (NotEncodableValueException $e) {
