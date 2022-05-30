@@ -37,7 +37,7 @@ spec:
         {{- if .Values.fixtures }}
         - name: fixtures
           configMap:
-            name: { { include "commonground-gateway.fullname" . }}-fixtures
+            name: {{ include "commonground-gateway.fullname" . }}-fixtures
             defaultMode: 420
         {{- end }}
           containers:
