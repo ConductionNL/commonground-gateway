@@ -27,7 +27,7 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
-            if ($value === []) {
+            if ($value === [] && $newKey != 'results') {
                 unset($result[$newKey]);
             }
         }
@@ -52,7 +52,21 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-        $source = $source->flatten();
+        foreach ($mapping as $replace => $search) {
+            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
+                $iterator = 0;
+                if ($source->has(str_replace('$', $iterator, $search))) {
+                    while ($source->has(str_replace('$', $iterator, $search))) {
+                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
+                        $iterator++;
+                    }
+                } else {
+                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+                }
+                unset($mapping[$replace]);
+                // todo: also unset the old variable in $destination
+            }
+        }
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
@@ -75,6 +89,14 @@ class TranslationService
                 $destination[$replace] = isset($source[$search]) ? $xmlEncoder->decode($source[$search], 'xml') : ($destination[$replace]) ?? null;
             } elseif ($format == 'bool') {
                 $destination[$replace] = isset($source[$search]) ? (bool) $source[$search] : ((bool) $destination[$replace]) ?? null;
+            } elseif ($format == 'array' && $search == 'object') {
+                $destination[$replace] = $source;
+            } elseif ($format == 'array' && $search == 'object(s)') {
+                $sourceSub = new \Adbar\Dot($source, true);
+                if ($sourceSub->has('results')) {
+                    $sourceSub = array_values($sourceSub->get('results'));
+                }
+                $destination[$replace] = $sourceSub;
             }
             unset($format);
 
@@ -127,25 +149,26 @@ class TranslationService
     public function translationVariables(array $variables = []): array
     {
         $variables = array_merge($variables, [
-            'death_in_municipality' => 'Overlijden in gemeente',
-            'intra_mun_relocation'  => 'Binnengemeentelijke verhuizing',
-            'inter_mun_relocation'  => 'Inter-gemeentelijke verhuizing',
-            'emigration'            => 'Emigratie',
-            'resettlement'          => 'Hervestiging',
-            'birth'                 => 'Geboorte',
-            'confidentiality'       => 'Verstrekkingsbeperking',
-            'commitment'            => 'Huwelijk/Geregistreerd partnerschap',
-            'discovered_body'       => 'Lijkvinding',
-            'acknowledgement'       => 'Erkenning',
-            'marriage'              => 'Huwelijk',
-            'incomplete'            => 'Incompleet',
-            'created'               => 'Opgenomen',
-            'processing'            => 'In behandeling',
-            'on_hold'               => 'In wachtkamer',
-            'processed'             => 'Verwerkt',
-            'cancelled'             => 'Geannuleerd',
-            'deleted'               => 'Verwijderd',
-            'refused'               => 'Geweigerd',
+            // todo: taalhuizen doesn't like this, if you want to translate create Translation objects...
+            //            'death_in_municipality' => 'Overlijden in gemeente',
+            //            'intra_mun_relocation'  => 'Binnengemeentelijke verhuizing',
+            //            'inter_mun_relocation'  => 'Inter-gemeentelijke verhuizing',
+            //            'emigration'            => 'Emigratie',
+            //            'resettlement'          => 'Hervestiging',
+            //            'birth'                 => 'Geboorte',
+            //            'confidentiality'       => 'Verstrekkingsbeperking',
+            //            'commitment'            => 'Huwelijk/Geregistreerd partnerschap',
+            //            'discovered_body'       => 'Lijkvinding',
+            //            'acknowledgement'       => 'Erkenning',
+            //            'marriage'              => 'Huwelijk',
+            //            'incomplete'            => 'Incompleet',
+            //            'created'               => 'Opgenomen',
+            //            'processing'            => 'In behandeling',
+            //            'on_hold'               => 'In wachtkamer',
+            //            'processed'             => 'Verwerkt',
+            //            'cancelled'             => 'Geannuleerd',
+            //            'deleted'               => 'Verwijderd',
+            //            'refused'               => 'Geweigerd',
             '<![CDATA['             => '',
             ']]>'                   => '',
             '<conductionPartners>'  => '',
@@ -184,11 +207,13 @@ class TranslationService
     ) {
         // TODO should be done with array_walk_recursive
         if (is_array($subject)) {
+            $result = [];
             foreach ($subject as $key => $value) {
-                $subject[$key] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+                $result[$this->parse($key, $translate, $translationVariables, $escapeChar, $errPlaceholder)] = $this->parse($value, $translate, $translationVariables, $escapeChar, $errPlaceholder);
+//                unset($subject[$key]);
             }
 
-            return $subject;
+            return $result;
         }
 
         // We only translate strings
@@ -229,7 +254,25 @@ class TranslationService
         if ($translate) {
             $subject = strtr($subject, $this->translationVariables($translationVariables));
         }
-
+//        var_dump($subject);
         return $subject;
+    }
+
+    public function addPrefix($data, ?string $prefix = null)
+    {
+        if (is_array($data) && isset($data['results'])) {
+            $data['results'] = $this->addPrefix($data['results'], $prefix);
+
+            return $data;
+        } elseif (is_array($data)) {
+            $result = [];
+            foreach ($data as $key => $value) {
+                $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix) : $value;
+            }
+
+            return $result;
+        } else {
+            return $prefix.$data;
+        }
     }
 }

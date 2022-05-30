@@ -3,7 +3,7 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.964062503+01:00"
+    created: "2022-05-06T10:20:28.111036206+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -13,8 +13,11 @@ entries:
       name: redis
       repository: https://charts.bitnami.com/bitnami
       version: 15.3.2
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
     description: A Helm chart for Kubernetes
-    digest: 0f72c855cd9276b06a6eb82f4f5e1367c9eff7629de3c2671c52de6db1300d74
+    digest: 8ea59faa16a20291e0b2452a0b6e236896257f2848b5038b85f51391a921f560
     name: commonground-gateway
     type: application
     urls:
@@ -22,7 +25,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.952550564+01:00"
+    created: "2022-05-06T10:20:28.097680332+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -41,7 +44,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.939718305+01:00"
+    created: "2022-05-06T10:20:28.087904489+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -60,7 +63,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.926860294+01:00"
+    created: "2022-05-06T10:20:28.077893218+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -79,7 +82,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.914028903+01:00"
+    created: "2022-05-06T10:20:28.068525563+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -98,7 +101,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.902538273+01:00"
+    created: "2022-05-06T10:20:28.057721642+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -117,7 +120,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.880245564+01:00"
+    created: "2022-05-06T10:20:28.042625433+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -136,7 +139,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-25T16:37:36.865885753+01:00"
+    created: "2022-05-06T10:20:28.026550959+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -158,7 +161,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2022-03-25T16:37:36.970989988+01:00"
+    created: "2022-05-06T10:20:28.116956675+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -187,12 +190,44 @@ entries:
     urls:
     - charts/postgresql-10.9.5.tgz
     version: 10.9.5
+  rabbitmq:
+  - annotations:
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 3.9.16
+    created: "2022-05-06T10:20:28.124296435+02:00"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - bitnami-common
+      version: 1.x.x
+    description: RabbitMQ is an open source general-purpose message broker that is
+      designed for consistent, highly-available messaging scenarios (both synchronous
+      and asynchronous).
+    digest: e87eafdbe989aecc9e6dd4a9190b0fa616591b26004a760a5c4ef4d4f4dbb0fd
+    home: https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq
+    icon: https://bitnami.com/assets/stacks/rabbitmq/img/rabbitmq-stack-220x234.png
+    keywords:
+    - rabbitmq
+    - message queue
+    - AMQP
+    maintainers:
+    - email: containers@bitnami.com
+      name: Bitnami
+    name: rabbitmq
+    sources:
+    - https://github.com/bitnami/bitnami-docker-rabbitmq
+    - https://www.rabbitmq.com
+    urls:
+    - charts/rabbitmq-9.0.1.tgz
+    version: 9.0.1
   redis:
   - annotations:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2022-03-25T16:37:36.980595416+01:00"
+    created: "2022-05-06T10:20:28.131629255+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -221,4 +256,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2022-03-25T16:37:36.850397428+01:00"
+generated: "2022-05-06T10:20:28.012993221+02:00"

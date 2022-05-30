@@ -181,7 +181,7 @@ class GatewayDocumentationService
         if (array_key_exists('anyOf', $schema)) {
             foreach ($schema['anyOf'] as $anyOfkey=>$value) {
                 if (array_key_exists('$ref', $value)) {
-                    if ($level > 2) {
+                    if ($level > 3) {
                         unset($schema['anyOf'][$anyOfkey]);
                         continue;
                     }
@@ -221,7 +221,7 @@ class GatewayDocumentationService
             if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
 
                 // we only go 5 levels deep
-                if ($level > 2) {
+                if ($level > 3) {
                     unset($schema['properties'][$key]['items']);
                     continue;
                 }
@@ -231,7 +231,7 @@ class GatewayDocumentationService
             if (array_key_exists('anyOf', $property)) {
                 foreach ($property['anyOf'] as $anyOfkey=>$value) {
                     if (array_key_exists('$ref', $value)) {
-                        if ($level > 2) {
+                        if ($level > 3) {
                             unset($schema['properties'][$key]['anyOf'][$anyOfkey]);
                             continue;
                         }

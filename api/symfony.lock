@@ -22,6 +22,9 @@
     "api-platform/schema-generator": {
         "version": "v3.0.0"
     },
+    "beberlei/doctrineextensions": {
+        "version": "v1.3.0"
+    },
     "behat/transliterator": {
         "version": "v1.3.0"
     },
@@ -33,6 +36,9 @@
     },
     "composer/package-versions-deprecated": {
         "version": "1.11.99.3"
+    },
+    "composer/pcre": {
+        "version": "1.0.1"
     },
     "composer/semver": {
         "version": "3.2.5"
@@ -264,9 +270,6 @@
     "phenx/php-svg-lib": {
         "version": "0.3.4"
     },
-    "php": {
-        "version": "7.4"
-    },
     "php-cs-fixer/diff": {
         "version": "v1.3.1"
     },
@@ -363,6 +366,9 @@
     "sumup/sumup-ecom-php-sdk": {
         "version": "1.0.2"
     },
+    "symfony/amqp-messenger": {
+        "version": "v5.3.14"
+    },
     "symfony/asset": {
         "version": "v5.3.4"
     },
@@ -392,6 +398,9 @@
     },
     "symfony/doctrine-bridge": {
         "version": "v5.3.4"
+    },
+    "symfony/doctrine-messenger": {
+        "version": "v5.3.14"
     },
     "symfony/dotenv": {
         "version": "v5.3.6"
@@ -457,6 +466,18 @@
             "ref": "fadbfe33303a76e25cb63401050439aa9b1a9c7f"
         }
     },
+    "symfony/messenger": {
+        "version": "5.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "4.3",
+            "ref": "25e3c964d3aee480b3acc3114ffb7940c89edfed"
+        },
+        "files": [
+            "config/packages/messenger.yaml"
+        ]
+    },
     "symfony/options-resolver": {
         "version": "v5.3.4"
     },
@@ -501,6 +522,9 @@
     },
     "symfony/proxy-manager-bridge": {
         "version": "v5.3.4"
+    },
+    "symfony/redis-messenger": {
+        "version": "v5.3.14"
     },
     "symfony/routing": {
         "version": "5.3",

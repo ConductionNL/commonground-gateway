@@ -13,8 +13,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 use Twig\Environment;
 
 class HandlerService
@@ -28,23 +30,26 @@ class HandlerService
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
+    private Stopwatch $stopwatch;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     public $acceptHeaderToSerialiazation = [
-        'application/json'                                                                   => 'json',
-        'application/ld+json'                                                                => 'jsonld',
-        'application/json+ld'                                                                => 'jsonld',
-        'application/hal+json'                                                               => 'jsonhal',
-        'application/json+hal'                                                               => 'jsonhal',
-        'application/xml'                                                                    => 'xml',
-        'text/csv'                                                                           => 'csv',
-        'text/yaml'                                                                          => 'yaml',
-        'text/html'                                                                          => 'html',
-        'application/pdf'                                                                    => 'pdf',
-        'application/msword'                                                                 => 'doc',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'            => 'docx',
-        'application/form.io'                                                                => 'form.io',
+        'application/json'                                                                                     => 'json',
+        'application/ld+json'                                                                                  => 'jsonld',
+        'application/json+ld'                                                                                  => 'jsonld',
+        'application/hal+json'                                                                                 => 'jsonhal',
+        'application/json+hal'                                                                                 => 'jsonhal',
+        'application/xml'                                                                                      => 'xml',
+        'text/xml'                                                                                             => 'xml',
+        'text/xml; charset=utf-8'                                                                              => 'xml',
+        'text/csv'                                                                                             => 'csv',
+        'text/yaml'                                                                                            => 'yaml',
+        'text/html'                                                                                            => 'html',
+        'application/pdf'                                                                                      => 'pdf',
+        'application/msword'                                                                                   => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
+        'application/form.io'                                                                                  => 'form.io',
     ];
 
     public function __construct(
@@ -62,7 +67,8 @@ class HandlerService
         ObjectEntityService $objectEntityService,
         FormIOService $formIOService,
         SubscriberService $subscriberService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -79,6 +85,7 @@ class HandlerService
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
+        $this->stopwatch = $stopwatch;
     }
 
     /**
@@ -86,14 +93,23 @@ class HandlerService
      */
     public function handleEndpoint(Endpoint $endpoint, array $parameters): Response
     {
+        $this->stopwatch->start('invalidateTags-grantedScopes', 'handleEndpoint');
         $this->cache->invalidateTags(['grantedScopes']);
+        $this->stopwatch->stop('invalidateTags-grantedScopes');
 
+        $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
+        $this->stopwatch->stop('newSession');
+        $this->stopwatch->start('saveEndpointInSession', 'handleEndpoint');
         $session->set('endpoint', $endpoint->getId()->toString());
+        $this->stopwatch->stop('saveEndpointInSession');
+        $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
+        $this->stopwatch->stop('saveParametersInSession');
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
+        $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
@@ -103,6 +119,7 @@ class HandlerService
                 }
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
+                $this->stopwatch->lap('handleHandlers');
                 continue;
             }
 
@@ -110,13 +127,61 @@ class HandlerService
             /* @todo acctualy check for json logic */
 
             if (true) {
+                $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
+                $this->stopwatch->stop('saveHandlerInSession');
 
-                return $this->handleHandler($handler, $endpoint);
+                $this->stopwatch->start('handleHandler', 'handleEndpoint');
+                $result = $this->handleHandler($handler, $endpoint);
+                $this->stopwatch->stop('handleHandler');
+                $this->stopwatch->stop('handleHandlers');
+
+                return $result;
             }
         }
 
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+    }
+
+    public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
+    {
+        $overrides = $handler->getMethodOverrides();
+        if (!isset($overrides[$this->request->getMethod()])) {
+            return;
+        }
+        $content = new \Adbar\Dot($this->getDataFromRequest());
+
+        foreach ($overrides[$this->request->getMethod()] as $override) {
+            if (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $content->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
+                $parameters = $this->request->getSession()->get('parameters');
+                if (isset($override['pathValues'])) {
+                    foreach ($override['pathValues'] as $key => $value) {
+                        $parameters['path'][$key] = $content->get($value);
+                    }
+                }
+                if (isset($override['queryParameters'])) {
+                    foreach ($override['queryParameters'] as $key => $value) {
+                        if ($key == 'fields') {
+                            $this->request->query->set('fields', $value);
+                        } else {
+                            $this->request->query->set($key, $content->get($value));
+                        }
+                    }
+                }
+                $this->request->getSession()->set('parameters', $parameters);
+            } elseif (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $this->request->query->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
+                $parameters = $this->request->getSession()->get('parameters');
+                foreach ($override['pathValues'] as $key => $value) {
+                    $parameters['path'][$key] = $this->request->query->get($value);
+                }
+
+                $this->request->getSession()->set('parameters', $parameters);
+            }
+        }
     }
 
     /**
@@ -128,6 +193,9 @@ class HandlerService
     public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
     {
         $method = $this->request->getMethod();
+        $operationType = $endpoint->getOperationType();
+
+        $this->getMethodOverrides($method, $operationType, $handler);
 
         // Form.io components array
         // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
@@ -148,15 +216,21 @@ class HandlerService
         }
 
         // Update current Log
-        isset($data) ? $this->logService->saveLog($this->request, null, json_encode($data)) : $this->logService->saveLog($this->request, null, null);
+        $this->stopwatch->start('saveLog0', 'handleHandler');
+        isset($data) ? $this->logService->saveLog($this->request, null, 0, json_encode($data)) : $this->logService->saveLog($this->request, null, 0, null);
+        $this->stopwatch->stop('saveLog0');
 
         // Only do mapping and translation -in for calls with body
+        $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
+        $this->stopwatch->stop('handleDataBeforeEAV');
 
         // eav new way
         // dont get collection if accept type is formio
-        if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $endpoint->getOperationType() === 'item')) || $this->getRequestType('accept') !== 'form.io') {
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method);
+        if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
+            $this->stopwatch->start('handleObject', 'handleHandler');
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
+            $this->stopwatch->stop('handleObject');
         }
 
         // Form.io components array
@@ -176,23 +250,39 @@ class HandlerService
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-      // Check if we need to trigger subscribers for this entity
+            // Check if we need to trigger subscribers for this entity
+            $this->stopwatch->start('handleSubscribers', 'handleHandler');
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
+            $this->stopwatch->stop('handleSubscribers');
 
             // Update current Log
-            $this->logService->saveLog($this->request, null, json_encode($data));
+            $this->stopwatch->start('saveLog2', 'handleHandler');
+            $this->logService->saveLog($this->request, null, 2, json_encode($data));
+            $this->stopwatch->stop('saveLog2');
 
+            $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
+            $this->stopwatch->stop('handleDataAfterEAV');
         }
+
         // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->start('saveLog3', 'handleHandler');
+        $this->logService->saveLog($this->request, null, 3, json_encode($data));
+        $this->stopwatch->stop('saveLog3');
 
         // An lastly we want to create a response
-        $response = $this->createResponse($data);
+        $this->stopwatch->start('createResponse', 'handleHandler');
+        $response = $this->createResponse($data, $endpoint);
+        $this->stopwatch->stop('createResponse');
 
         // Final update Log
-        $this->logService->saveLog($this->request, $response, null, true);
+        $this->stopwatch->start('saveLog4', 'handleHandler');
+        $this->logService->saveLog($this->request, $response, 4, null, true);
+        $this->stopwatch->stop('saveLog4');
+
+        $this->stopwatch->start('saveProcessingLog', 'handleHandler');
         $this->processingLogService->saveProcessingLog();
+        $this->stopwatch->stop('saveProcessingLog');
 
         return $response;
     }
@@ -215,10 +305,12 @@ class HandlerService
       case 'jsonld':
         return json_decode($content, true);
       case 'xml':
+          $xmlEncoder = new XmlEncoder();
+          $xml = $xmlEncoder->decode($content, $contentType);
         // otherwise xml will throw its own error bypassing our exception handling
-        libxml_use_internal_errors(true);
+//        libxml_use_internal_errors(true);
         // string to xml object, encode that to json then decode to array
-        $xml = simplexml_load_string($content);
+//        $xml = simplexml_load_string($content);
         // if xml is false get errors and throw exception
         if ($xml === false) {
             $errors = 'Something went wrong decoding xml:';
@@ -240,7 +332,7 @@ class HandlerService
      *
      * @todo throw error if $data is not string when creating pdf
      */
-    public function createResponse(array $data): Response
+    public function createResponse(array $data, ?Endpoint $endpoint = null): Response
     {
 
     // We only end up here if there are no errors, so we only suply best case senario's
@@ -252,10 +344,10 @@ class HandlerService
         $status = Response::HTTP_CREATED;
         break;
       case 'PUT':
-        $status = Response::HTTP_ACCEPTED;
+        $status = Response::HTTP_OK;
         break;
       case 'UPDATE':
-        $status = Response::HTTP_ACCEPTED;
+        $status = Response::HTTP_OK;
         break;
       case 'DELETE':
         $status = Response::HTTP_NO_CONTENT;
@@ -264,51 +356,68 @@ class HandlerService
         $status = Response::HTTP_OK;
     }
 
-        $acceptType = $this->getRequestType('accept');
+        $this->stopwatch->start('getRequestType', 'createResponse');
+        $acceptType = $this->getRequestType('accept', $endpoint);
+        $this->stopwatch->stop('getRequestType');
 
         // Lets fill in some options
         $options = [];
+        $this->stopwatch->start('switchAcceptType', 'createResponse');
         switch ($acceptType) {
-      case 'text/csv':
-        // @todo do something with options?
-        $options = [
-            CsvEncoder::ENCLOSURE_KEY   => '"',
-            CsvEncoder::ESCAPE_CHAR_KEY => '+',
-        ];
-        $data = $this->serializer->encode($data, 'csv');
+            case 'text/csv':
+            // @todo do something with options?
+            $options = [
+                CsvEncoder::ENCLOSURE_KEY   => '"',
+                CsvEncoder::ESCAPE_CHAR_KEY => '+',
+            ];
+            $data = $this->serializer->encode($data, 'csv');
 
-        break;
-      case 'pdf':
-        $document = new Document();
-        // @todo find better name for document
-        $document->setName('pdf');
-        $document->setDocumentType($acceptType);
-        $document->setType('pdf');
-        // If data is not a template json_encode it
-        if (isset($data) && !is_string($data)) {
-            $data = json_encode($data);
+            break;
+            case 'pdf':
+            $document = new Document();
+            // @todo find better name for document
+            $document->setName('pdf');
+            $document->setDocumentType($acceptType);
+            $document->setType('pdf');
+            // If data is not a template json_encode it
+            if (isset($data) && !is_string($data)) {
+                $data = json_encode($data);
+            }
+            $document->setContent($data);
+            $result = $this->templateService->renderPdf($document);
+            break;
+            case 'xml':
+                $options['xml_root_node_name'] = array_keys($data)[0];
+                $data = $data[array_keys($data)[0]];
+                break;
+
         }
-        $document->setContent($data);
-        $result = $this->templateService->renderPdf($document);
-        break;
-    }
+        $this->stopwatch->stop('switchAcceptType');
 
         // Lets seriliaze the shizle (if no document and we have a result)
+        $this->stopwatch->start('serialize', 'createResponse');
+
         try {
             !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
         } catch (NotEncodableValueException $e) {
             !isset($document) && $result = $this->serializer->serialize($data, 'json', $options);
             // throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
+        $this->stopwatch->stop('serialize');
 
         // Lets create the actual response
+        $this->stopwatch->start('newResponse', 'createResponse');
         $response = new Response(
             $result,
             $status,
-            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
+//            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
+            //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
+            ['content-type' => array_search($acceptType, $this->acceptHeaderToSerialiazation)]
         );
+        $this->stopwatch->stop('newResponse');
 
         // Lets handle file responses
+        $this->stopwatch->start('routeParameters', 'createResponse');
         $routeParameters = $this->request->attributes->get('_route_params');
         if (array_key_exists('extension', $routeParameters) && $extension = $routeParameters['extension']) {
             $date = new \DateTime();
@@ -316,8 +425,11 @@ class HandlerService
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$routeParameters['route']}_{$date}.{$acceptType}");
             $response->headers->set('Content-Disposition', $disposition);
         }
+        $this->stopwatch->stop('routeParameters');
 
+        $this->stopwatch->start('prepareResponse', 'createResponse');
         $response->prepare($this->request);
+        $this->stopwatch->stop('prepareResponse');
 
         return $response;
     }
@@ -329,7 +441,7 @@ class HandlerService
      *
      * @return string Accept or content-type
      */
-    public function getRequestType(string $type): string
+    public function getRequestType(string $type, ?Endpoint $endpoint = null): string
     {
         // Lets grap the route parameters
         $routeParameters = $this->request->attributes->get('_route_params');
@@ -345,8 +457,15 @@ class HandlerService
 
         // Lets pick the first accaptable content type that we support
         $typeValue = $this->request->headers->get($type);
-        (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
-
+        if ((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
+            $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
+        } else {
+            (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
+        }
+        //todo: temp fix for taalhuizen, should be removed after front-end changes
+        if ($typeValue == 'text/plain;charset=UTF-8') {
+            return 'json';
+        }
         if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
             return $this->acceptHeaderToSerialiazation[$typeValue];
         }
@@ -393,48 +512,82 @@ class HandlerService
         if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
+
+        $this->stopwatch->start('dotHydrator', 'handleDataBeforeEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
+        $this->stopwatch->stop('dotHydrator');
 
         // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->start('saveLog5', 'handleDataBeforeEAV');
+        $this->logService->saveLog($this->request, null, 5, json_encode($data));
+        $this->stopwatch->stop('saveLog5');
 
-        // The we want to do translations on the incomming request
-        $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-        $data = $this->translationService->parse($data, true, $translations);
+        if (!empty($handler->getTranslationsIn())) {
+            // Then we want to do translations on the incomming request
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+
+            $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
+            $translations = $transRepo->getTranslations($handler->getTranslationsIn());
+            $this->stopwatch->stop('getTranslations');
+
+            if (!empty($translations)) {
+                $this->stopwatch->start('parse', 'handleDataBeforeEAV');
+                $data = $this->translationService->parse($data, true, $translations);
+                $this->stopwatch->stop('parse');
+            }
+        }
 
         // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
+        $this->logService->saveLog($this->request, null, 6, json_encode($data));
+        $this->stopwatch->stop('saveLog6');
 
         return $data;
     }
 
     private function handleDataAfterEAV(array $data, Handler $handler): array
     {
-
-    // The we want to do  translations on the outgoing response
-        $transRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $transRepo->getTranslations($handler->getTranslationsOut());
-
-        $data = $this->translationService->parse($data, true, $translations);
-
-        // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $data = $this->translationService->addPrefix($data, $handler->getPrefix());
 
         // Then we want to do to mapping on the outgoing response
         $skeleton = $handler->getSkeletonOut();
         if (!$skeleton || empty($skeleton)) {
             $skeleton = $data;
         }
-
+        $this->stopwatch->start('dotHydrator2', 'handleDataAfterEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+        $this->stopwatch->stop('dotHydrator2');
 
         // Update current Log
-        $this->logService->saveLog($this->request, null, json_encode($data));
+        $this->stopwatch->start('saveLog7', 'handleDataAfterEAV');
+        $this->logService->saveLog($this->request, null, 7, json_encode($data));
+        $this->stopwatch->stop('saveLog7');
+
+        if (!empty($handler->getTranslationsOut())) {
+            // Then we want to do  translations on the outgoing response
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+
+            $this->stopwatch->start('getTranslations2', 'handleDataAfterEAV');
+            $translations = $transRepo->getTranslations($handler->getTranslationsOut());
+            $this->stopwatch->stop('getTranslations2');
+
+            if (!empty($translations)) {
+                $this->stopwatch->start('parse2', 'handleDataAfterEAV');
+                $data = $this->translationService->parse($data, true, $translations);
+                $this->stopwatch->stop('parse2');
+            }
+        }
+
+        // Update current Log
+        $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
+        $this->logService->saveLog($this->request, null, 8, json_encode($data));
+        $this->stopwatch->stop('saveLog8');
 
         // Lets see if we need te use a template
         if ($handler->getTemplatetype() && $handler->getTemplate()) {
+            $this->stopwatch->start('renderTemplate', 'handleDataAfterEAV');
             $data = $this->renderTemplate($handler, $data);
+            $this->stopwatch->stop('renderTemplate');
         }
 
         return $data;

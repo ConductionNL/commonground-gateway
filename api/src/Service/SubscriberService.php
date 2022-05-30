@@ -109,12 +109,12 @@ class SubscriberService
         if (array_key_exists('externalId', $data)) {
             // Convert an object outside the gateway into an ObjectEntity in the gateway
             $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
-            $data = $this->eavService->handleGet($newObjectEntity, null);
+            $data = $this->eavService->handleGet($newObjectEntity, null, null);
 //            var_dump($data);
 
             // create log
             $responseLog = new Response(json_encode($data), 201, []);
-            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, json_encode($data), null, 'out');
+            $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 11, json_encode($data), null, 'out');
         } else {
             // Create a gateway object of entity $subscriber->getEntityOut() with the $data array
             $newObjectEntity = $this->eavService->getObject(null, 'POST', $subscriber->getEntityOut());

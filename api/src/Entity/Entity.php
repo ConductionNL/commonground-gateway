@@ -129,7 +129,7 @@ class Entity
     private string $function = 'noFunction';
 
     /**
-     * wheter or not the properties of the original object are automaticly include.
+     * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
@@ -153,14 +153,14 @@ class Entity
 
     /**
      * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
 
     /**
      * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $usedIn;
@@ -234,8 +234,8 @@ class Entity
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
     private Collection $handlers;
 
@@ -243,14 +243,14 @@ class Entity
      * @var array|null The subscribers used for this entity.
      *
      * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
     private Collection $subscribers;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $subscriberOut;
@@ -258,9 +258,9 @@ class Entity
     /**
      * @var ?Collection The collections of this Entity
      *
-     * @Groups({"read", "write"})
+     * @Groups({"write"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities", fetch="EXTRA_LAZY")
      */
     private ?Collection $collections;
 
