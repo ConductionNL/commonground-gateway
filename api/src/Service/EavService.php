@@ -1133,7 +1133,7 @@ class EavService
             case 'jsonhal':
                 $paginationResult = $this->handleJsonHal($entity, [
                     'results' => $results, 'limit' => $limit, 'total' => $total,
-                    'offset' => $offset, 'page' => $page, 'pages' => $pages
+                    'offset'  => $offset, 'page' => $page, 'pages' => $pages,
                 ]);
                 break;
             case 'jsonld':
@@ -1143,7 +1143,7 @@ class EavService
                 $paginationResult = ['results' => $results];
                 $paginationResult = $this->handleDefaultPagination($paginationResult, [
                     'results' => $results, 'limit' => $limit, 'total' => $total,
-                    'offset' => $offset, 'page' => $page, 'pages' => $pages
+                    'offset'  => $offset, 'page' => $page, 'pages' => $pages,
                 ]);
                 break;
         }
@@ -1190,12 +1190,12 @@ class EavService
     /**
      * Handles a delete api call.
      *
-     * @param ObjectEntity $object
+     * @param ObjectEntity         $object
      * @param ArrayCollection|null $maxDepth
      *
-     * @return array
-     *
      * @throws InvalidArgumentException
+     *
+     * @return array
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {

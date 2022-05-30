@@ -236,11 +236,11 @@ class ResponseService
      * Returns a response array for renderResult function. This response conforms to the acceptType jsonLd.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param int $level
-     * @param array $response
-     * @param array $embedded
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param int          $level
+     * @param array        $response
+     * @param array        $embedded
      *
      * @return array
      */
@@ -275,7 +275,7 @@ class ResponseService
 
         return [
             'gatewayContext' => $gatewayContext,
-            'embedded' => $embedded
+            'embedded'       => $embedded,
         ];
     }
 
@@ -283,11 +283,11 @@ class ResponseService
      * Returns a response array for renderResult function. This response conforms to the acceptType jsonHal.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param int $level
-     * @param array $response
-     * @param array $embedded
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param int          $level
+     * @param array        $response
+     * @param array        $embedded
      *
      * @return array
      */
@@ -324,7 +324,7 @@ class ResponseService
 
         return [
             'gatewayContext' => $gatewayContext,
-            'embedded' => $embedded
+            'embedded'       => $embedded,
         ];
     }
 
