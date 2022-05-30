@@ -502,6 +502,8 @@ class ValidaterService
         $format = str_replace(['telephone'], ['phone'], $format);
 
         switch ($format) {
+            case 'date':
+                return new Rules\Date();
             case 'countryCode':
                 return new Rules\CountryCode();
             case 'bsn':
