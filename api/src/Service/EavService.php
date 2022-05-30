@@ -1113,7 +1113,7 @@ class EavService
     }
 
     /**
-     * @TODO
+     * Returns a response array including pagination for handleSearch function. This response is different depending on the acceptType.
      *
      * @param string $acceptType
      * @param Entity $entity

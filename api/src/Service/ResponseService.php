@@ -192,7 +192,7 @@ class ResponseService
     }
 
     /**
-     * @TODO
+     * Returns a response array for renderResult function. This response is different depending on the acceptType.
      *
      * @param ObjectEntity $result
      * @param array|null $fields
@@ -200,6 +200,7 @@ class ResponseService
      * @param string $acceptType
      * @param int $level
      * @param array $response
+     * @param array $embedded
      *
      * @return array
      */
@@ -374,6 +375,7 @@ class ResponseService
      * Renders the objects of a value with attribute type 'object' for the renderValues function.
      *
      * @param ObjectEntity $result
+     * @param array $embedded
      * @param Value $value
      * @param array|null $fields
      * @param array|null $extend
@@ -384,7 +386,8 @@ class ResponseService
      *
      * @return string|array|null
      *
-     * @throws CacheException|InvalidArgumentException
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
     private function renderObjects(ObjectEntity $result, array $embedded, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
@@ -505,6 +508,14 @@ class ResponseService
         ];
     }
 
+    /**
+     * @TODO
+     *
+     * @param array $result
+     * @param $responseType
+     *
+     * @return bool
+     */
     public function checkForErrorResponse(array $result, $responseType = Response::HTTP_BAD_REQUEST): bool
     {
         if (
@@ -518,6 +529,17 @@ class ResponseService
         return false;
     }
 
+    /**
+     * @TODO
+     *
+     * @param Request $request
+     * @param Entity|null $entity
+     * @param array $result
+     * @param Response $response
+     * @param ObjectEntity|null $object
+     *
+     * @return RequestLog
+     */
     public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
     {
         // TODO: REMOVE THIS WHEN ENDPOINTS BL IS ADDED
@@ -573,6 +595,13 @@ class ResponseService
         return $requestLog;
     }
 
+    /**
+     * @TODO
+     *
+     * @param int $statusCode
+     *
+     * @return string|null
+     */
     private function getStatusWithCode(int $statusCode): ?string
     {
         $reflectionClass = new ReflectionClass(Response::class);
@@ -587,6 +616,15 @@ class ResponseService
         return null;
     }
 
+    /**
+     * @TODO
+     *
+     * @param Endpoint $endpoint
+     * @param array $headers
+     * @param int $level
+     *
+     * @return array
+     */
     private function filterRequestLogHeaders(Endpoint $endpoint, array $headers, int $level = 1): array
     {
         foreach ($headers as $header => &$headerValue) {
