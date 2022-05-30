@@ -222,7 +222,7 @@ class OasDocumentationService
 
         // Primary Response (success)
 //        $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
-        $responseTypes = ["application/json", "application/json-ld", "application/json-hal"]; // @todo this is a short cut, lets focus on json first */
+        $responseTypes = ["application/json", "application/json+ld", "application/json+hal"]; // @todo this is a short cut, lets focus on json first */
         $response = false;
         switch ($method) {
             case 'get':
@@ -249,7 +249,7 @@ class OasDocumentationService
             ];
 
             foreach ($responseTypes as $responseType) {
-                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null);
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
                 $schema = $this->serializeSchema($schema, $responseType);
                 $methodArray['responses'][$response]['content'][$responseType]['schema'] = $schema;
             }
@@ -260,8 +260,9 @@ class OasDocumentationService
         $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
         if (in_array($method, ['put', 'post'])) {
             foreach ($requestTypes as $requestType) {
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
                 $schema = $this->serializeSchema($schema, $requestType);
-//                $schema = $this->serializeSchema($requestType, $handler, $handler->getMappingIn());
+
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
@@ -311,13 +312,11 @@ class OasDocumentationService
         // @to use a type and format switch to generate examples */
         switch ($type) {
             case "application/json":
-                return $schema;
                 break;
-            case "application/json-ld":
+            case "application/json+ld":
                 //
-                return $schema;
                 break;
-            case "application/json-hal":
+            case "application/json+hal":
                 $schema['properties'] = [
                     '__links' => $this->getLinks($schema),
                     '__metadata'=> $this->getMetaData($schema),
@@ -381,7 +380,7 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getSchema(Entity $entity, array $mapping, $type): array
+    public function getSchema(Entity $entity, array $mapping): array
     {
         $schema = [
             'type' => 'object',
