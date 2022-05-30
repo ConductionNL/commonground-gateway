@@ -209,76 +209,123 @@ class ResponseService
     private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
-        // todo: split switch into functions?
         switch ($acceptType) {
             case 'jsonld':
-                $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
-                $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
-                $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
-                $gatewayContext['@dateCreated'] = $result->getDateCreated();
-                $gatewayContext['@dateModified'] = $result->getDateModified();
-                $gatewayContext['@owner'] = $result->getOwner();
-                $gatewayContext['@organization'] = $result->getOrganization();
-                $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
-                $gatewayContext['@uri'] = $result->getUri();
-                $gatewayContext['@gateway/id'] = $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null);
-                if (array_key_exists('@type', $response)) {
-                    $gatewayContext['@gateway/type'] = $response['@type'];
-                }
-                if (array_key_exists('@context', $response)) {
-                    $gatewayContext['@gateway/context'] = $response['@context'];
-                }
-                if (is_array($extend)) {
-                    $gatewayContext['@extend'] = $extend;
-                }
-                if (is_array($fields)) {
-                    $gatewayContext['@fields'] = $fields;
-                }
-                $gatewayContext['@level'] = $level;
-                if (!empty($embedded)) {
-                    $embedded['@embedded'] = $embedded;
-                }
+                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $level, $response, $embedded);
+                $gatewayContext = $jsonLd['gatewayContext'];
+                $embedded = $jsonLd['embedded'];
                 break;
             case 'jsonhal':
-                $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
-                $gatewayContext['_metadata'] = [
-                    '_type'         => ucfirst($result->getEntity()->getName()),
-                    '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
-                    '_dateCreated'  => $result->getDateCreated(),
-                    '_dateModified' => $result->getDateModified(),
-                    '_owner'        => $result->getOwner(),
-                    '_organization' => $result->getOrganization(),
-                    '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
-                    '_uri'          => $result->getUri(),
-                    '_gateway/id'   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null),
-                ];
-                if (array_key_exists('@type', $response)) {
-                    $gatewayContext['_metadata']['_gateway/type'] = $response['@type'];
-                }
-                if (array_key_exists('@context', $response)) {
-                    $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
-                }
-                if (is_array($extend)) {
-                    $gatewayContext['_metadata']['_extend'] = $extend;
-                }
-                if (is_array($fields)) {
-                    $gatewayContext['_metadata']['_fields'] = $fields;
-                }
-                $gatewayContext['_metadata']['_level'] = $level;
-                if (!empty($embedded)) {
-                    $embedded['_embedded'] = $embedded;
-                }
+                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $level, $response, $embedded);
+                $gatewayContext = $jsonHal['gatewayContext'];
+                $embedded = $jsonHal['embedded'];
                 break;
             case 'json':
+            default:
                 // todo: do we want to use embedded here? or just always show all objects instead? see include on attribute...
                 $embedded['embedded'] = $embedded;
-            default:
                 break;
         }
 
         $gatewayContext['id'] = $result->getId();
 
         return $gatewayContext + $response + $embedded;
+    }
+
+    /**
+     * Returns a response array for renderResult function. This response conforms to the acceptType jsonLd.
+     *
+     * @param ObjectEntity $result
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param int $level
+     * @param array $response
+     * @param array $embedded
+     *
+     * @return array
+     */
+    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
+    {
+        $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
+        $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
+        $gatewayContext['@dateCreated'] = $result->getDateCreated();
+        $gatewayContext['@dateModified'] = $result->getDateModified();
+        $gatewayContext['@owner'] = $result->getOwner();
+        $gatewayContext['@organization'] = $result->getOrganization();
+        $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
+        $gatewayContext['@uri'] = $result->getUri();
+        $gatewayContext['@gateway/id'] = $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null);
+        if (array_key_exists('@type', $response)) {
+            $gatewayContext['@gateway/type'] = $response['@type'];
+        }
+        if (array_key_exists('@context', $response)) {
+            $gatewayContext['@gateway/context'] = $response['@context'];
+        }
+        if (is_array($extend)) {
+            $gatewayContext['@extend'] = $extend;
+        }
+        if (is_array($fields)) {
+            $gatewayContext['@fields'] = $fields;
+        }
+        $gatewayContext['@level'] = $level;
+        if (!empty($embedded)) {
+            $embedded['@embedded'] = $embedded;
+        }
+
+        return [
+            'gatewayContext' => $gatewayContext,
+            'embedded' => $embedded
+        ];
+    }
+
+    /**
+     * Returns a response array for renderResult function. This response conforms to the acceptType jsonHal.
+     *
+     * @param ObjectEntity $result
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param int $level
+     * @param array $response
+     * @param array $embedded
+     *
+     * @return array
+     */
+    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
+    {
+        $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['_metadata'] = [
+            '_type'         => ucfirst($result->getEntity()->getName()),
+            '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
+            '_dateCreated'  => $result->getDateCreated(),
+            '_dateModified' => $result->getDateModified(),
+            '_owner'        => $result->getOwner(),
+            '_organization' => $result->getOrganization(),
+            '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
+            '_uri'          => $result->getUri(),
+            '_gateway/id'   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null),
+        ];
+        if (array_key_exists('@type', $response)) {
+            $gatewayContext['_metadata']['_gateway/type'] = $response['@type'];
+        }
+        if (array_key_exists('@context', $response)) {
+            $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
+        }
+        if (is_array($extend)) {
+            $gatewayContext['_metadata']['_extend'] = $extend;
+        }
+        if (is_array($fields)) {
+            $gatewayContext['_metadata']['_fields'] = $fields;
+        }
+        $gatewayContext['_metadata']['_level'] = $level;
+        if (!empty($embedded)) {
+            $embedded['_embedded'] = $embedded;
+        }
+
+        return [
+            'gatewayContext' => $gatewayContext,
+            'embedded' => $embedded
+        ];
     }
 
     /**

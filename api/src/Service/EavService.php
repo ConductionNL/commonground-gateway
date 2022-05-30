@@ -1096,8 +1096,6 @@ class EavService
         $results = [];
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
-            // Old $MaxDepth in renderResult
-//            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, null, $flat);
             $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $this->stopwatch->lap('renderResults');
         }
@@ -1131,46 +1129,60 @@ class EavService
         $pages = $pages == 0 ? 1 : $pages;
         $page = floor($offset / $limit) + 1;
 
-        // todo: split switch into functions? duplicate code is here because order of the keys matter.
         switch ($acceptType) {
             case 'jsonhal':
-                $path = $entity->getName();
-                if ($this->session->get('endpoint')) {
-                    $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                    $path = implode('/', $endpoint->getPath());
-                }
-                $paginationResult['_links'] = [
-                    'self'  => ['href' => '/api/'.$path.($page == 1 ? '' : '?page='.$page)],
-                    'first' => ['href' => '/api/'.$path],
-                ];
-                if ($page > 1) {
-                    $paginationResult['_links']['prev']['href'] = '/api/'.$path.($page == 2 ? '' : '?page='.($page - 1));
-                }
-                if ($page < $pages) {
-                    $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($page + 1);
-                }
-                $paginationResult['_links']['last']['href'] = '/api/'.$path.($pages == 1 ? '' : '?page='.$pages);
-                $paginationResult['count'] = count($results);
-                $paginationResult['limit'] = $limit;
-                $paginationResult['total'] = $total;
-                $paginationResult['start'] = $offset + 1;
-                $paginationResult['page'] = $page;
-                $paginationResult['pages'] = $pages;
-                $paginationResult['_embedded'] = [$path => $results]; //todo replace $path with $entity->getName() ?
+                $paginationResult = $this->handleJsonHal($entity, [
+                    'results' => $results, 'limit' => $limit, 'total' => $total,
+                    'offset' => $offset, 'page' => $page, 'pages' => $pages
+                ]);
                 break;
             case 'jsonld':
                 // todo: try and match api-platform ? https://api-platform.com/docs/core/pagination/
             case 'json':
             default:
                 $paginationResult = ['results' => $results];
-                $paginationResult['count'] = count($results);
-                $paginationResult['limit'] = $limit;
-                $paginationResult['total'] = $total;
-                $paginationResult['start'] = $offset + 1;
-                $paginationResult['page'] = $page;
-                $paginationResult['pages'] = $pages;
+                $paginationResult = $this->handleDefaultPagination($paginationResult, [
+                    'results' => $results, 'limit' => $limit, 'total' => $total,
+                    'offset' => $offset, 'page' => $page, 'pages' => $pages
+                ]);
                 break;
         }
+
+        return $paginationResult;
+    }
+
+    private function handleJsonHal(Entity $entity, array $data): array
+    {
+        $path = $entity->getName();
+        if ($this->session->get('endpoint')) {
+            $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+            $path = implode('/', $endpoint->getPath());
+        }
+        $paginationResult['_links'] = [
+            'self'  => ['href' => '/api/'.$path.($data['page'] == 1 ? '' : '?page='.$data['page'])],
+            'first' => ['href' => '/api/'.$path],
+        ];
+        if ($data['page'] > 1) {
+            $paginationResult['_links']['prev']['href'] = '/api/'.$path.($data['page'] == 2 ? '' : '?page='.($data['page'] - 1));
+        }
+        if ($data['page'] < $data['pages']) {
+            $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($data['page'] + 1);
+        }
+        $paginationResult['_links']['last']['href'] = '/api/'.$path.($data['pages'] == 1 ? '' : '?page='.$data['pages']);
+        $paginationResult = $this->handleDefaultPagination($paginationResult, $data);
+        $paginationResult['_embedded'] = [$path => $data['results']]; //todo replace $path with $entity->getName() ?
+
+        return $paginationResult;
+    }
+
+    private function handleDefaultPagination(array $paginationResult, array $data): array
+    {
+        $paginationResult['count'] = count($data['results']);
+        $paginationResult['limit'] = $data['limit'];
+        $paginationResult['total'] = $data['total'];
+        $paginationResult['start'] = $data['offset'] + 1;
+        $paginationResult['page'] = $data['page'];
+        $paginationResult['pages'] = $data['pages'];
 
         return $paginationResult;
     }
@@ -1178,10 +1190,12 @@ class EavService
     /**
      * Handles a delete api call.
      *
-     * @param ObjectEntity         $object
+     * @param ObjectEntity $object
      * @param ArrayCollection|null $maxDepth
      *
      * @return array
+     *
+     * @throws InvalidArgumentException
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {

@@ -147,9 +147,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //todo: put back owner/userId check
         $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
-//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
             ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations)
             ->setParameter('parentOrganizations', $parentOrganizations)
@@ -556,22 +554,4 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return $sortable;
     }
-
-    // Filter functie schrijven, checken op betaande atributen, zelf looping
-    // voorbeeld filter student.generaldDesription.landoforigen=NL
-    //                  entity.atribute.propert['name'=landoforigen]
-    //                  (objectEntity.value.objectEntity.value.name=landoforigen and
-    //                  objectEntity.value.objectEntity.value.value=nl)
-
-    /*
-    public function findOneBySomeField($value): ?ObjectEntity
-    {
-        return $this->createQueryBuilder('o')
-            ->andWhere('o.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }
