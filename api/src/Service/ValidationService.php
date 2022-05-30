@@ -222,16 +222,16 @@ class ValidationService
                     $this->em->persist($objectEntity); // So the object has an id to set with createUri...
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
-                if (!$objectEntity->getSelf()) {
-                    // Lets make sure we always set the self (@id)
-                    $this->em->persist($objectEntity);
-                    $objectEntity->setSelf($this->createSelf($objectEntity));
-                }
                 // Notify notification component
                 $this->notifications[] = [
                     'objectEntity' => $objectEntity,
                     'method'       => $this->request->getMethod(),
                 ];
+            }
+            if (!$objectEntity->getSelf()) {
+                // Lets make sure we always set the self (@id)
+                $this->em->persist($objectEntity);
+                $objectEntity->setSelf($this->createSelf($objectEntity));
             }
         }
 
