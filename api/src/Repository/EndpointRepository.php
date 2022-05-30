@@ -44,7 +44,7 @@ class EndpointRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Finds the get item endpoint for the given entity, if it (/only one) exists.
      *
      * @param Entity $entity
      *

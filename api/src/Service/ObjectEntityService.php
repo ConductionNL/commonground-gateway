@@ -1294,7 +1294,8 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * Returns the string used for {at sign}id or self->href for the given objectEntity. This function will use the ObjectEntity->Entity
+     * to first look for the get item endpoint and else use the Entity route or name to generate the correct string.
      *
      * @param ObjectEntity $objectEntity
      *
