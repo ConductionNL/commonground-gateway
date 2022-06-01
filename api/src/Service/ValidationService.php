@@ -944,10 +944,10 @@ class ValidationService
                         $objectEntity->addError($attribute->getName(), 'The attribute->object->gateway has no location');
                         break;
                     } else {
-                        if ($value == $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($value)) {
+                        if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
                             $value = $this->commonGroundService->getUuidFromUrl($value);
                         } else {
-                            $objectEntity->addError($attribute->getName(), 'The given value (' . $value . ') is not a valid object, a valid uuid or a valid uri (' . $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/uuid).');
+                            $objectEntity->addError($attribute->getName(), 'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
                             break;
                         }
                     }
@@ -955,7 +955,7 @@ class ValidationService
 
                 // Lets check for cascading
                 if (!$attribute->getCascade() && !is_string($value)) {
-                    $objectEntity->addError($attribute->getName(), 'Is not a string but ' . $attribute->getName() . ' is not allowed to cascade, provide an uuid as string instead');
+                    $objectEntity->addError($attribute->getName(), 'Is not a string but '.$attribute->getName().' is not allowed to cascade, provide an uuid as string instead');
                     break;
                 }
 
