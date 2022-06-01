@@ -420,6 +420,8 @@ class ValidaterService
                     new Rules\DateTime('Y-m-d'),
                     new Rules\DateTime('Y-m-d H:i:s'),
                     new Rules\DateTime('Y-m-dTH:i:s'),
+                    new Rules\DateTime('Y-m-d\TH:i:s'),
+                    new Rules\DateTime('Y-m-d\U\T\CH:i:s'),
                 );
             case 'array':
                 return new Rules\ArrayType();
