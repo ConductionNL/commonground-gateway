@@ -313,6 +313,7 @@ class OasParserService
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);
         $attribute->setEntity($parentEntity);
+        $attribute->setSearchable(true);
 
         return $attribute;
     }
@@ -362,6 +363,7 @@ class OasParserService
         $newAttribute->setEntity($parentEntity);
         $newAttribute->setCascade(true);
         $newAttribute->setMultiple($multiple);
+        $newAttribute->setSearchable(true);
 
         $newAttribute->setObject($targetEntity);
 
