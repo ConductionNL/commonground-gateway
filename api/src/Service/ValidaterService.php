@@ -233,21 +233,21 @@ class ValidaterService
             );
 
             // todo: JsonLogic needs to be able to check parent attributes/entities in the request body for this to work:
-//            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
-//            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
-//            return new Rules\When(
-//                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
-//                new Rules\Key(
-//                    $attribute->getName(),
-//                    $this->getAttributeValidator($attribute),
-//                    false // mandatory = required validation. False = not required.
-//                ), // TRUE
-//                new Rules\Key(
-//                    $attribute->getName(),
-//                    $this->getAttributeValidator($attribute),
-//                    true // mandatory = required validation. True = required.
-//                ) // FALSE
-//            );
+            //            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
+            //            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
+            //            return new Rules\When(
+            //                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
+            //                new Rules\Key(
+            //                    $attribute->getName(),
+            //                    $this->getAttributeValidator($attribute),
+            //                    false // mandatory = required validation. False = not required.
+            //                ), // TRUE
+            //                new Rules\Key(
+            //                    $attribute->getName(),
+            //                    $this->getAttributeValidator($attribute),
+            //                    true // mandatory = required validation. True = required.
+            //                ) // FALSE
+            //            );
         }
 
         // Else, continue with the 'normal' required validation.
