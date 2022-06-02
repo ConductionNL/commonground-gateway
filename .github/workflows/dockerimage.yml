@@ -80,8 +80,8 @@ jobs:
       - name: Setting APP_ENV to feature-merge-cleanup
         if: contains( github.ref, 'feature-merge-cleanup' ) || contains( github.base_ref, 'feature-merge-cleanup' )
         run: |
-          echo "APP_ENV=merge-cleanup">> $GITHUB_ENV
-          echo "APP_BUILD=merge-cleanup-$RELEASE">> $GITHUB_ENV
+          echo "APP_ENV=mergeCleanup">> $GITHUB_ENV
+          echo "APP_BUILD=mergeCleanup-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to feature-cleanup-taalhuizen
         if: contains( github.ref, 'feature-cleanup-taalhuizen' ) || contains( github.base_ref, 'feature-cleanup-taalhuizen' )
