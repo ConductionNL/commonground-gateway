@@ -99,7 +99,10 @@ class ConvenienceController extends AbstractController
                         case 'get':
                             if ($endpoint->getOperationType() == 'collection') {
                                 $methods['hasGETCollection'] = true;
-                                $crudEndpoint = $endpoint->getPath()[0];
+                                $crudEndpoint = '';
+                                foreach ($endpoint->getPath() as $key => $path) {
+                                    $crudEndpoint .= $key < 1 ? $path : '/' . $path;
+                                }
                                 break;
                             }
                             $endpoint->getOperationType() == 'item' && $methods['hasGETItem'] = true;
