@@ -452,7 +452,7 @@ class OasParserService
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
         }
         $pathRegex .= ')$#';
 
