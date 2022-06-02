@@ -145,11 +145,22 @@ class Entity
     private $inherited = false;
 
     /**
+     * The attributes of this Entity.
+     *
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
+
+    /**
+     * The attributes allowed to partial search on using the search query parameter.
+     *
+     * @Groups({"read","write"})
+     * @ORM\OneToMany(targetEntity=Attribute::class, cascade={"persist", "remove"}, fetch="EAGER")
+     * @MaxDepth(1)
+     */
+    private Collection $searchPartial;
 
     /**
      * @Groups({"write"})
@@ -285,6 +296,7 @@ class Entity
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
@@ -486,6 +498,30 @@ class Entity
                 $attribute->setEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getSearchPartial(): Collection
+    {
+        return $this->searchPartial;
+    }
+
+    public function addSearchPartial(Attribute $attribute): self
+    {
+        if (!$this->searchPartial->contains($attribute)) {
+            $this->searchPartial[] = $attribute;
+        }
+
+        return $this;
+    }
+
+    public function removeSearchPartial(Attribute $attribute): self
+    {
+        $this->searchPartial->removeElement($attribute);
 
         return $this;
     }
