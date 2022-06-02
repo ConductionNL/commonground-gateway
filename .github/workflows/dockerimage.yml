@@ -19,6 +19,7 @@ on:
       - feature-soap-extra
       - feature-cleanup
       - feature-cleanup-taalhuizen
+      - feature-merge-cleanup
       - odyssey-hackathon-2022
 
 jobs:
