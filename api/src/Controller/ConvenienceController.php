@@ -101,7 +101,7 @@ class ConvenienceController extends AbstractController
                                 $methods['hasGETCollection'] = true;
                                 $crudEndpoint = '';
                                 foreach ($endpoint->getPath() as $key => $path) {
-                                    $crudEndpoint .= $key < 1 ? $path : '/' . $path;
+                                    $crudEndpoint .= $key < 1 ? $path : '/'.$path;
                                 }
                                 break;
                             }
