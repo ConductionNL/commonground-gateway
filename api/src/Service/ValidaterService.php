@@ -508,6 +508,8 @@ class ValidaterService
                 return new Rules\CountryCode();
             case 'bsn':
                 return new Rules\Bsn();
+            case 'rsin':
+                return new CustomRules\Rsin();
             case 'url':
                 return new Rules\Url();
             case 'uuid':
