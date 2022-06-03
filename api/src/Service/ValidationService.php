@@ -758,6 +758,7 @@ class ValidationService
 
         // Let be a bit compasionate and compatable
         $format = str_replace(['telephone'], ['phone'], $format);
+        $format = str_replace(['rsin'], ['bsn'], $format);
 
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
         $allowedFormats = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json'];
@@ -1488,6 +1489,7 @@ class ValidationService
 
         // Let be a bit compasionate and compatable
         $format = str_replace(['telephone'], ['phone'], $format);
+        $format = str_replace(['rsin'], ['bsn'], $format);
 
         // In order not to allow any respect/validation function to be called we explicatly call those containing formats
         $allowedValidations = ['countryCode', 'bsn', 'url', 'uuid', 'email', 'phone', 'json', 'dutch_pc4'];
