@@ -307,7 +307,7 @@ class OasParserService
         $attribute = new Attribute();
         $attribute->setName($propertyName);
 
-        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $attribute->setRequired(true);
+        (isset($schema['required']) && $schema['required'] === true) && $attribute->setRequired(true);
         isset($schema['description']) && $attribute->setDescription($schema['description']);
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
@@ -588,6 +588,9 @@ class OasParserService
         // Loop through properties and create Attributes
         if (isset($schema['properties'])) {
             foreach ($schema['properties'] as $propertyName => $property) {
+                if (isset($schema['required']) && is_array($schema['required']) && in_array($propertyName, $schema['required'])) {
+                    $property['required'] = true;
+                }
                 $attribute = $this->createAttribute($property, $propertyName, $newEntity, $collection);
             }
         }
