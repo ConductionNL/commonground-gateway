@@ -125,12 +125,14 @@ class HandlerService
     public function cutPath(array $pathParams): string
     {
         $path = parse_url($this->request->getUri())['path'];
+
         return substr($path, strlen('/api/'.$pathParams[0]));
     }
 
     public function proxy(Handler $handler, Endpoint $endpoint, string $method): Response
     {
         $path = $this->cutPath($endpoint->getPath());
+
         return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
     }
 
@@ -144,11 +146,9 @@ class HandlerService
     {
         $method = $this->request->getMethod();
 
-        if ($handler->getProxyGateway()){
+        if ($handler->getProxyGateway()) {
             return $this->proxy($handler, $endpoint, $method);
         }
-
-
 
         // Form.io components array
         // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
