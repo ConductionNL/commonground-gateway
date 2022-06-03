@@ -28,6 +28,7 @@ class HandlerService
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
+    private GatewayService $gatewayService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -62,7 +63,8 @@ class HandlerService
         ObjectEntityService $objectEntityService,
         FormIOService $formIOService,
         SubscriberService $subscriberService,
-        CacheInterface $cache
+        CacheInterface $cache,
+        GatewayService $gatewayService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -79,6 +81,7 @@ class HandlerService
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
+        $this->gatewayService = $gatewayService;
     }
 
     /**
@@ -119,6 +122,18 @@ class HandlerService
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
+    public function cutPath(array $pathParams): string
+    {
+        $path = parse_url($this->request->getUri())['path'];
+        return substr($path, strlen('/api/'.$pathParams[0]));
+    }
+
+    public function proxy(Handler $handler, Endpoint $endpoint, string $method): Response
+    {
+        $path = $this->cutPath($endpoint->getPath());
+        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+    }
+
     /**
      * This function walks through the $handler with $data from the request to perform mapping, translating and fetching/saving from/to the eav.
      *
@@ -128,6 +143,12 @@ class HandlerService
     public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
     {
         $method = $this->request->getMethod();
+
+        if ($handler->getProxyGateway()){
+            return $this->proxy($handler, $endpoint, $method);
+        }
+
+
 
         // Form.io components array
         // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
