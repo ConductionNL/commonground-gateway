@@ -117,7 +117,7 @@ class FormIOService
      */
     private function extendPreSetKey(?string $preSetKey = null, string $attrName): string
     {
-        return $preSetKey ? $preSetKey = $preSetKey . '[' . $attrName . ']' : $preSetKey = $attrName;
+        return $preSetKey ? $preSetKey = $preSetKey.'['.$attrName.']' : $preSetKey = $attrName;
     }
 
     /**
@@ -135,7 +135,8 @@ class FormIOService
         if ($attr->getType() == 'object' && $attr->getObject() !== null) {
             if ($parentAttribute && $this->checkIfWeAreLooping($attr, $parentAttribute)) {
                 return null;
-            };
+            }
+
             return $this->createEntityAsAttribute($attr, $preSetKey, $defaultValue);
         } else {
             return $this->createNormalAttribute($attr, $preSetKey, $defaultValue);
@@ -150,6 +151,7 @@ class FormIOService
                 return true;
             }
         }
+
         return false;
     }
 
@@ -202,7 +204,7 @@ class FormIOService
         ];
 
         if (isset($defaultValue['id'])) {
-            $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey . '[id]');
+            $accordionComponent['components'][] = $this->createIDComponent($defaultValue['id'], $preSetKey.'[id]');
         }
 
         // Add attributes from this object as sub components
@@ -270,7 +272,7 @@ class FormIOService
     private function createUriAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
     {
         $component = $this->basicComponent;
-        $component['label'] = $attr->getName() . ' (uri)';
+        $component['label'] = $attr->getName().' (uri)';
         $component['key'] = $preSetKey ?? $attr->getName();
         $component['type'] = 'textfield';
 
@@ -291,7 +293,7 @@ class FormIOService
         $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
 
         $component = $this->basicComponent;
-        $component['label'] = $attr->getName() . ($attr->getRequired() ? '*' : '');
+        $component['label'] = $attr->getName().($attr->getRequired() ? '*' : '');
         $component['key'] = $preSetKey ?? $attr->getName();
         $component['multiple'] = $attr->getMultiple();
         empty($defaultValue) && $defaultValue = null;
@@ -300,7 +302,7 @@ class FormIOService
         $component['placeholder'] = $attr->getExample() ?? '';
         $component['unique'] = $attr->getMustBeUnique() ?? '';
         $attr->getReadOnly() !== null && $component['disabled'] = true;
-        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'] . +' (read only)';
+        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'].+' (read only)';
 
         $component['validate'] = [
             'required'      => $attr->getRequired() ?? false,
@@ -366,7 +368,7 @@ class FormIOService
                     'key'          => '@application',
                     'type'         => 'textfield',
                     'inputType'    => 'text',
-                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/' . $objectEntity->getApplication()->getId() : '',
+                    'defaultValue' => isset($objectEntity) && $objectEntity->getApplication() ? '/admin/applications/'.$objectEntity->getApplication()->getId() : '',
 
                 ],
                 // [
