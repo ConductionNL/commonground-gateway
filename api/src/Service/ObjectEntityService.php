@@ -241,7 +241,7 @@ class ObjectEntityService
         }
 
         // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
-        if ((!isset($object) || !$object->getUri()) || !$this->checkOwner($object)) {
+        if ((!isset($object) || !is_array($object) || !$object->getUri()) || !$this->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
                 $this->authorizationService->checkAuthorization($this->authorizationService->getRequiredScopes($this->request->getMethod(), null, $entity));
