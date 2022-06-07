@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\CollectionEntity;
+use App\Entity\Entity;
 use App\Service\OasParserService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
@@ -52,39 +53,65 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to clear
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() === null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet, there is nothing to purge'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
+        $deletedObjects = [];
+
         foreach ($collection->getEndpoints() as $endpoint) {
             foreach ($endpoint->getHandlers() as $handler) {
                 if ($handler->getEntity()) {
-                    foreach ($handler->getEntity()->getObjectEntities() as $object) {
-                        foreach ($object->getObjectValues() as $value) {
-                            $this->entityManager->remove($value);
-                        }
-                        $this->entityManager->remove($object);
-                    }
-                    foreach ($handler->getEntity()->getAttributes() as $attribute) {
-                        $this->entityManager->remove($attribute);
-                    }
-                    $this->entityManager->remove($handler->getEntity());
+                    $deletedObjects = $this->deleteEntity($handler->getEntity(), $deletedObjects);
                 }
                 $this->entityManager->remove($handler);
+                $deletedObjects[] = $handler->getId();
             }
             $this->entityManager->remove($endpoint);
+            $deletedObjects[] = $endpoint->getId();
         }
+        $this->entityManager->flush();
+
+        $leftOverEntities = $this->entityManager->getRepository('App:Entity')->findItemsByCollection($collection);
+        var_dump(count($leftOverEntities));
 
         $collection->setSyncedAt(null);
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Data succesfully purged for: '.$collection->getName()], 'json'),
+            $this->serializer->serialize(['message' => 'Data succesfully purged for: ' . $collection->getName()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
+    }
+
+    private function deleteEntity(Entity $entity, array $deletedObjects): array
+    {
+        if (in_array($entity->getId(), $deletedObjects)) {
+            return $deletedObjects;
+        }
+
+
+        foreach ($entity->getObjectEntities() as $object) {
+            foreach ($object->getObjectValues() as $value) {
+                $this->entityManager->remove($value);
+            }
+            $this->entityManager->remove($object);
+        }
+        foreach ($entity->getAttributes() as $attribute) {
+            if ($attribute->getObject()) {
+                $timelyDeletedObjects = $deletedObjects;
+                $timelyDeletedObjects[] = $attribute->getObject()->getId();
+                $deletedObjects = $this->deleteEntity($attribute->getObject(), $timelyDeletedObjects);
+            }
+            $this->entityManager->remove($attribute);
+        }
+        $this->entityManager->remove($entity);
+        $deletedObjects[] = $entity->getId();
+
+        return $deletedObjects;
     }
 
     /**
