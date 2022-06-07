@@ -312,9 +312,9 @@ class OasDocumentationService
             'dateModified', 'owner', 'organization', 'application', 'uri', 'gateway/id'];
 
         // add schema properties to array
-        // unset schama properties
+        // unset schema properties
         $oldArray = $schema['properties'];
-        $schema['properties']  = [];
+        $schema['properties'] = [];
 
         // switch type to add attributes  */
         switch ($type) {
@@ -357,13 +357,12 @@ class OasDocumentationService
     public function getProperties(array $schema, $items, $entity): array
     {
         foreach ($items as $item) {
-            $schema['properties']['@'.$item] = [
+            $schema['properties']['@' . $item] = [
                 'type' => 'string',
                 'title' => 'The id of ',
             ];
         }
 
-        // array_merge return new array
         return $schema;
     }
 
@@ -442,6 +441,7 @@ class OasDocumentationService
 
             $schema['properties']['id'] = [
                 'type' => 'string',
+                'format' => 'uuid',
                 'title' => 'The id of ' . $attribute->getName(),
             ];
 
@@ -475,7 +475,6 @@ class OasDocumentationService
             }
 
             // Set example data
-            /* @todo we need to provide example data for AOS this is iether provided by the atriute itself our should be created trough a function */
             if ($attribute->getExample()) {
                 $schema['properties'][$attribute->getName()]['example'] = $attribute->getExample();
             } else {
@@ -505,45 +504,121 @@ class OasDocumentationService
      *
      * @return string
      */
-    public function generateAttributeExample(Attribute $attribute): string
+    public function generateAttributeExample(Attribute $attribute)
     {
-        // eerst switch format {"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4"}
-        // geen format dan ->
-        // @todo use a type and format switch to generate examples */
-        return 'string';
+        if ($attribute->getFormat()) {
+             $example = $this->getAttributeFormat($attribute);
+        } else {
+            $example = $this->getAttributeType($attribute);
+        }
+
+        return $example;
     }
 
     /**
-     * Serializes a collect for a schema (array) to standard e.g. application/json
+     * Generates an OAS example (data) for an attribute)
      *
-     * @param Entity $entity
-     * @param string $type
+     * @param Attribute $attribute
      *
-     * @return array
+     * @return ?string
      */
-    public function getCollectionWrapper(Entity $entity, string $type): array
+    public function getAttributeType(Attribute $attribute)
     {
-
-        switch ($type) {
-            case "application/json":
-                $schema['properties'] = [
-                    'count' => ['type' => 'integer'],
-                    'next' => ['type' => 'string', 'format' => 'uri', 'nullable' => 'true'],
-                    'previous' => ['type' => 'string', 'format' => 'uri', 'nullable' => 'true'],
-                    'results' => ['type' => 'array', 'items' => '$ref: #/components/schemas/Klant'] //@todo lets think about how we are going to establish the ref
-                ];
+        $example = '';
+        // switch format to add example data to attributes  */
+        switch ($attribute->getType()) {
+            case "string":
+                if ($attribute->getEnum()) {
+                    $example = $attribute->getEnum();
+                } else {
+                    $example = 'string';
+                }
                 break;
-            case "application/json+ld":
-                // @todo add specific elements
+            case "date":
+                $example = date("d-m-Y");
                 break;
-            case "application/json+hal":
-                // @todo add specific elements
+            case "datetime":
+                $example = new \DateTime();
+                break;
+            case "integer":
+                $example = 1;
+                break;
+            case "array":
+                $example = ['string', 'string'];
+                break;
+            case "boolean":
+                $example = true;
+                break;
+            case "float":
+                $example = 0.000;
+                break;
+            case "number":
+                $example = 175;
+                break;
+            case "file":
+                if ($attribute->getFileTypes()) {
+                    $example = $attribute->getFileTypes();
+                } else {
+                    $example = 'example.pdf';
+                }
+                break;
+            case "object":
                 break;
             default:
-                /* @todo throw error */
+                $example = 'string';
         }
 
-        return $schema;
+        return $example;
+    }
+
+    /**
+     * Generates an OAS example (data) for an atribute)
+     *
+     * @param Attribute $attribute
+     *
+     * @return string
+     */
+    public function getAttributeFormat(Attribute $attribute)
+    {
+        $example = '';
+        // switch format to add example data to attributes  */
+        switch ($attribute->getFormat()) {
+            case "countryCode":
+                $example = 'NL';
+                break;
+            case "bsn":
+                $example = '9999999990';
+                break;
+            case "url":
+                $example = 'www.example.nl';
+                break;
+            case "uri":
+                $example = '/api/example/94e8bb2c-e66b-11ec-8fea-0242ac120002';
+                break;
+            case "uuid":
+                $example = '94e8bb2c-e66b-11ec-8fea-0242ac120002';
+                break;
+            case "email":
+                $example = 'example@hotmail.com';
+                break;
+            case "phone":
+                $example = '0612345678';
+                break;
+            case "json":
+                $example = [
+                    "string" => "string",
+                    "string1" => "string1"
+                ];
+                $example = json_encode($example);
+                break;
+            case "dutch_pc4":
+                $example = '1217';
+                break;
+            default:
+                $example = 'string';
+        }
+
+        return $example;
     }
 
     public function getPaginationParameters(): array
