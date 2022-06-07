@@ -44,12 +44,12 @@ class ConvenienceController extends AbstractController
      */
     public function purgeCollectionAction(Request $request, string $collectionId): Response
     {
-        // Get CollectionEntity 
+        // Get CollectionEntity
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
 
         // Check if collection is egligible to clear
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() === null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet, there is nothing to purge'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
@@ -78,7 +78,7 @@ class ConvenienceController extends AbstractController
         $this->entityManager->flush();
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Data succesfully purged for: ' . $collection->getName()], 'json'),
+            $this->serializer->serialize(['message' => 'Data succesfully purged for: '.$collection->getName()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -106,12 +106,12 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
-        $collection->setSyncedAt(new \DateTime("now"));
+        $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
