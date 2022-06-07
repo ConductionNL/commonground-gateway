@@ -40,6 +40,51 @@ class ConvenienceController extends AbstractController
     }
 
     /**
+     * @Route("/admin/purge-collection/{collectionId}", methods={"DELETE"}, name="purge_collection_route")
+     */
+    public function purgeCollectionAction(Request $request, string $collectionId): Response
+    {
+        // Get CollectionEntity 
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+
+        // Check if collection is egligible to clear
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        } elseif ($collection->getSyncedAt() === null) {
+            return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet, there is nothing to purge'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
+        foreach ($collection->getEndpoints() as $endpoint) {
+            foreach ($endpoint->getHandlers() as $handler) {
+                if ($handler->getEntity()) {
+                    foreach ($handler->getEntity()->getObjectEntities() as $object) {
+                        foreach ($object->getObjectValues() as $value) {
+                            $this->entityManager->remove($value);
+                        }
+                        $this->entityManager->remove($object);
+                    }
+                    foreach ($handler->getEntity()->getAttributes() as $attribute) {
+                        $this->entityManager->remove($attribute);
+                    }
+                    $this->entityManager->remove($handler->getEntity());
+                }
+                $this->entityManager->remove($handler);
+            }
+            $this->entityManager->remove($endpoint);
+        }
+
+        $collection->setSyncedAt(null);
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush();
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Data succesfully purged for: ' . $collection->getName()], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
      * @Route("/admin/load/{collectionId}", name="dynamic_route_load_type")
      */
     public function loadAction(Request $request, string $collectionId): Response
