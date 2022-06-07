@@ -60,8 +60,13 @@ class ConvenienceController extends AbstractController
         $collection = $this->oasParser->parseOas($collection);
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+        $collection->setSyncedAt(new \DateTime("now"));
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush();
+
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );

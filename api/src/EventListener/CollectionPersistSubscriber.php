@@ -60,5 +60,10 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
 
         $collection = $this->oasParser->parseOas($collection);
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true) : null;
+
+        $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId());
+        $collection->setSyncedAt(new \DateTime("now"));
+        $this->entityManager->persist($collection);
+        $this->entityManager->flush($collection);
     }
 }
