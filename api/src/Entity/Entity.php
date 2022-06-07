@@ -154,13 +154,13 @@ class Entity
     private Collection $attributes;
 
     /**
-     * The attributes allowed to partial search on using the search query parameter.
+     * @var Collection|null The attributes allowed to partial search on using the search query parameter.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, cascade={"persist", "remove"}, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
      * @MaxDepth(1)
      */
-    private Collection $searchPartial;
+    private ?Collection $searchPartial;
 
     /**
      * @Groups({"write"})
@@ -512,16 +512,27 @@ class Entity
 
     public function addSearchPartial(Attribute $attribute): self
     {
-        if (!$this->searchPartial->contains($attribute)) {
+        // Only allow adding to searchPartial if the attribute is part of this Entity.
+        // Or if this entity has no attributes, when loading in fixtures.
+        if (!$this->searchPartial->contains($attribute)
+            && ($this->attributes->isEmpty() || $this->attributes->contains($attribute))
+        ) {
             $this->searchPartial[] = $attribute;
+            $attribute->setSearchPartial($this);
         }
+        //todo: else throw error?
 
         return $this;
     }
 
     public function removeSearchPartial(Attribute $attribute): self
     {
-        $this->searchPartial->removeElement($attribute);
+        if ($this->searchPartial->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getSearchPartial() === $this) {
+                $attribute->setSearchPartial(null);
+            }
+        }
 
         return $this;
     }
