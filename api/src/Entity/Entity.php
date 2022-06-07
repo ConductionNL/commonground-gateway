@@ -44,7 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact"
+ *     "name": "exact",
+ *     "collections.id": "exact" 
  * })
  */
 class Entity
@@ -300,7 +301,7 @@ class Entity
     {
         if ($this->getGateway() !== null) {
             $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+            $gateway = '@' . $gateway;
         } else {
             $gateway = null;
         }
