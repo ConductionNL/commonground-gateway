@@ -31,6 +31,7 @@ class OasDocumentationService
         // Lets define the validator that we support for docummentation right now
         $this->supportedValidators = $this->supportedValidators();
 
+        // @todo "string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object", "array"
         // Lets define the validator that we support for docummentation right now
         $this->supportedTypes = [
             'string',
@@ -304,23 +305,27 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function serializeSchema(array $schema, string $type): array
+    public function serializeSchema(array $schema, string $type, Entity $entity): array
     {
         // Basic schema setup
+        $items = ['id', 'type', 'context', 'dateCreated', 'dateCreated',
+            'dateModified', 'owner', 'organization', 'application', 'uri', 'gateway/id'];
 
-        // @todo add specific elements
-        // @to use a type and format switch to generate examples */
+        // add schema properties to array
+        // unset schama properties
+        $oldArray = $schema['properties'];
+        $schema['properties']  = [];
+
+        // switch type to add attributes  */
         switch ($type) {
             case "application/json":
                 break;
             case "application/json+ld":
-                //
+                $schema = $this->getProperties($schema, $items, $entity);
                 break;
             case "application/json+hal":
-                $schema['properties'] = [
-                    '__links' => $this->getLinks($schema),
-                    '__metadata'=> $this->getMetaData($schema),
-                ];
+                $schema['properties']['__links'] = $this->getLinks($schema, $oldArray);
+                $schema['properties']['__metadata'] = $this->getMetaData($schema, $items, $entity);
                 break;
 //            case "application/json+orc":
 //                $schema = [];
@@ -332,22 +337,10 @@ class OasDocumentationService
                 /* @todo throw error */
                 $schema = [];
         }
-        return $schema;
-    }
 
-    /**
-     * Generates an OAS schema from an entity
-     *
-     * @param array $schema
-     * @return array
-     */
-    public function getMetaData(array $schema): array
-    {
-        foreach ($schema['properties'] as $key => $value) {
-            // change key to __key
-            $schema['properties']['__' . $key] = $schema['properties'][$key];
-            unset($schema['properties'][$key]);
-            unset($schema['properties']['__' . $key]['$ref']);
+        // add the schema properties to the array
+        foreach ($oldArray as $key => $value) {
+            $schema['properties'][$key] = $value;
         }
 
         return $schema;
@@ -357,20 +350,72 @@ class OasDocumentationService
      * Generates an OAS schema from an entity
      *
      * @param array $schema
+     * @param $items
+     * @param $entity
      * @return array
      */
-    public function getLinks(array $schema): array
+    public function getProperties(array $schema, $items, $entity): array
     {
+        foreach ($items as $item) {
+            $schema['properties']['@'.$item] = [
+                'type' => 'string',
+                'title' => 'The id of ',
+            ];
+        }
+
+        // array_merge return new array
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param array $schema
+     * @param $items
+     * @param $entity
+     * @return array
+     */
+    public function getMetaData(array $schema, $items, $entity): array
+    {
+        // delete key __links
         foreach ($schema['properties'] as $key => $value) {
+            if ($key === '__links') {
+                unset($schema['properties'][$key]);
+            }
+        }
+
+        // add items to metadata
+        foreach ($items as $item) {
+            if ($item !== 'id') {
+                $schema['properties']['__' . $item] = [
+                    'type' => 'string',
+                    'title' => 'The id of ',
+                ];
+            }
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param array $schema
+     * @param array $schemaProperties
+     * @return array
+     */
+    public function getLinks(array $schema, array $schemaProperties): array
+    {
+        // add key id to self
+        foreach ($schemaProperties as $key => $value) {
             if ($key === 'id') {
                 // change id to self
-                $schema['properties']['self'] = $schema['properties'][$key];
+                $schema['properties']['self'] = $schemaProperties[$key];
             }
-            unset($schema['properties'][$key]);
+            unset($schemaProperties[$key]);
         }
         return $schema;
     }
-
 
     /**
      * Generates an OAS schema from an entity
@@ -397,7 +442,7 @@ class OasDocumentationService
 
             $schema['properties']['id'] = [
                 'type' => 'string',
-                'title' => 'The id of '.$attribute->getName(),
+                'title' => 'The id of ' . $attribute->getName(),
             ];
 
             // Add the attribute
@@ -406,12 +451,6 @@ class OasDocumentationService
                 'title' => $attribute->getName(),
                 'description' => $attribute->getDescription(),
             ];
-
-            // Setup a mappping array
-            $mappingArray = [];
-//            foreach($mapping as $key => $value){
-//                // @todo for this exercise this only goes one deep
-//            }
 
             // The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
@@ -443,14 +482,18 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
             }
 
+            // Setup a mappping array
+            $mappingArray = [];
+//            foreach($mapping as $key => $value){
+//                // @todo for this exercise this only goes one deep
+//            }7
+
             // Let do mapping (changing of property names)
             if (array_key_exists($attribute->getName(), $mappingArray)) {
                 $schema['properties'][$mappingArray][$attribute->getName()] = $schema['properties'][$attribute->getName()];
                 unset($schema['properties'][$attribute->getName()]);
             }
-
         }
-
         return $schema;
     }
 
@@ -464,7 +507,9 @@ class OasDocumentationService
      */
     public function generateAttributeExample(Attribute $attribute): string
     {
-        // @to use a type and format switch to generate examples */
+        // eerst switch format {"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4"}
+        // geen format dan ->
+        // @todo use a type and format switch to generate examples */
         return 'string';
     }
 
@@ -546,10 +591,11 @@ class OasDocumentationService
                     'required' => false,
                     'style' => 'simple',
                 ];
-            } elseif ($attribute->getObject() && $level < 5) {
+            }
+
+            if ($attribute->getObject() && $level < 5) {
                 $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName() . '.', $level + 1));
             }
-            continue;
         }
 
         return $parameters;
