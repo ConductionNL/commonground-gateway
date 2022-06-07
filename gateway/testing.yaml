@@ -49,13 +49,15 @@ App\Entity\Endpoint:
         description: endpoint voor weekend
         path: ['weekend']
         pathRegex: "#^(weekend)$#"
+        method: GET
         operationType: collection
 
     weekendEndpointGetItem:
         name: Weekend GET item
-        description: endpoint voor dingen rondom weer
+        description: endpoint voor weekend
         path: ['weekend', '{id}']
         pathRegex: <{weekendItemRegex}>
+        method: GET
         operationType: item
 
     # peopleEndpoint:
@@ -75,6 +77,7 @@ App\Entity\Entity:
         description: Dit entity behandeld weer.
 
     weekendEntity:
+        route: "/api/weekend"
         name: weekend
         description: Dit entity behandeld weekend.
 
@@ -303,9 +306,8 @@ App\Entity\Handler:
         # template: "<html><body><h1>Test</h1></body></html>"
         # templateType: twig
 
-
     weekendHandler:
-        name: Weather handler
+        name: Weekend handler
         methods: ["*"]
         sequence: 0
         conditions: "{}"
