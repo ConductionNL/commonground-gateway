@@ -41,6 +41,9 @@ class ConvenienceController extends AbstractController
 
     /**
      * @Route("/admin/purge-collection/{collectionId}", methods={"DELETE"}, name="purge_collection_route")
+     * 
+     * Removes all objects tied to the Collection such as: objectEntities, values, entities, attributes, handlers and endpoints.
+     * So if something went wrong when the Collection was loaded, we can clean the leftover data.
      */
     public function purgeCollectionAction(Request $request, string $collectionId): Response
     {
