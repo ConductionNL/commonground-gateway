@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Entity;
+use App\Entity\CollectionEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -58,5 +59,26 @@ class EntityRepository extends ServiceEntityRepository
         $entity = $query->setMaxResults(1)->getOneOrNullResult();
 
         return $entity;
+    }
+
+    /**
+     * Finds the get item endpoint for the given entity, if it (/only one) exists.
+     *
+     * @param Entity $entity
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return array|null
+     */
+    public function findItemsByCollection(CollectionEntity $collection): ?array
+    {
+        $query = $this->createQueryBuilder('e')
+            ->where(':collection IN e.collections')
+            ->setParameters(['collection' => $collection])
+            ->distinct();
+
+        return $query
+            ->getQuery()
+            ->getResult();
     }
 }
