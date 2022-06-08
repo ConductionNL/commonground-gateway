@@ -21,6 +21,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * This entity holds the information about a Collections.
@@ -44,6 +45,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ * 
+ * @UniqueEntity("name")
  */
 class CollectionEntity
 {
@@ -66,10 +69,9 @@ class CollectionEntity
      *
      * @Assert\NotNull
      * @Assert\Type("string")
-     * @Assert\Type("unique")
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(name="name", type="string", length=255)
      */
     private string $name;
 
