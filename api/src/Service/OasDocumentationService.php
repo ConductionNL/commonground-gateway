@@ -7,6 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\Handler;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -28,17 +29,21 @@ class OasDocumentationService
         $this->commonGroundService = $commonGroundService;
         $this->validationService = $validationService;
 
-        // Lets define the validator that we support for docummentation right now
+        // Let's define the validator that we support for documentation right now
         $this->supportedValidators = $this->supportedValidators();
 
-        // @todo "string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object", "array"
-        // Lets define the validator that we support for docummentation right now
+        // Let's define the validator that we support for documentation right now
         $this->supportedTypes = [
             'string',
             'date',
-            'date-time',
+            'datetime',
             'integer',
             'array',
+            'boolean',
+            'float',
+            'number',
+            'file',
+            'object'
         ];
     }
 
@@ -204,9 +209,9 @@ class OasDocumentationService
     /**
      * Gets an OAS description for a specific method
      *
-     * @param Endpoint $endpoint
      * @param string $method
-     *
+     * @param $handler
+     * @param bool $item
      * @return array
      */
     public function getEndpointMethod(string $method, $handler, bool $item): array
@@ -251,7 +256,7 @@ class OasDocumentationService
 
             foreach ($responseTypes as $responseType) {
                 $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
-                $schema = $this->serializeSchema($schema, $responseType);
+                $schema = $this->serializeSchema($schema, $responseType, $handler->getEntity());
                 $methodArray['responses'][$response]['content'][$responseType]['schema'] = $schema;
             }
         }
@@ -262,7 +267,7 @@ class OasDocumentationService
         if (in_array($method, ['put', 'post'])) {
             foreach ($requestTypes as $requestType) {
                 $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
-                $schema = $this->serializeSchema($schema, $requestType);
+                $schema = $this->serializeSchema($schema, $requestType, $handler->getEntity());
 
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
@@ -439,10 +444,12 @@ class OasDocumentationService
                 $schema['required'][] = ucfirst($attribute->getName());
             }
 
+            // Add id to properties
             $schema['properties']['id'] = [
                 'type' => 'string',
                 'format' => 'uuid',
                 'title' => 'The id of ' . $attribute->getName(),
+                'description' => 'The uuid of the ' . $attribute->getName(),
             ];
 
             // Add the attribute
@@ -456,7 +463,6 @@ class OasDocumentationService
             if ($attribute->getObject() && $attribute->getCascade()) {
                 /* @todo this might throw errors in the current setup */
                 $schema['properties'][$attribute->getName()] = ['$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
-
                 // Schema's dont have validators so
                 continue;
             } elseif ($attribute->getObject() && !$attribute->getCascade()) {
@@ -481,17 +487,28 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
             }
 
-            // Setup a mappping array
-            $mappingArray = [];
-//            foreach($mapping as $key => $value){
-//                // @todo for this exercise this only goes one deep
-//            }7
-
             // Let do mapping (changing of property names)
-            if (array_key_exists($attribute->getName(), $mappingArray)) {
-                $schema['properties'][$mappingArray][$attribute->getName()] = $schema['properties'][$attribute->getName()];
-                unset($schema['properties'][$attribute->getName()]);
+            foreach ($mapping as $key => $value) {
+//                var_dump($value);
+//                var_dump($value);
+                if ($attribute->getName() === $value) {
+                    $schema['properties'][$key] = $schema['properties'][$attribute->getName()];
+                    $schema['properties'][$key]['example'] = $value;
+                    unset($schema['properties'][$attribute->getName()]);
+                }
             }
+
+//            // Setup a mappping array
+//            $mappingArray = [];
+////            foreach($mapping as $key => $value){
+////                // @todo for this exercise this only goes one deep
+////            }7
+//
+//            // Let do mapping (changing of property names)
+//            if (array_key_exists($attribute->getName(), $mappingArray)) {
+//                $schema['properties'][$mappingArray][$attribute->getName()] = $schema['properties'][$attribute->getName()];
+//                unset($schema['properties'][$attribute->getName()]);
+//            }
         }
         return $schema;
     }
@@ -507,7 +524,7 @@ class OasDocumentationService
     public function generateAttributeExample(Attribute $attribute)
     {
         if ($attribute->getFormat()) {
-             $example = $this->getAttributeFormat($attribute);
+            $example = $this->getAttributeFormat($attribute);
         } else {
             $example = $this->getAttributeType($attribute);
         }
@@ -538,7 +555,7 @@ class OasDocumentationService
                 $example = date("d-m-Y");
                 break;
             case "datetime":
-                $example = new \DateTime();
+                $example = new DateTime();
                 break;
             case "integer":
                 $example = 1;
