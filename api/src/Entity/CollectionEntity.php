@@ -66,6 +66,7 @@ class CollectionEntity
      *
      * @Assert\NotNull
      * @Assert\Type("string")
+     * @Assert\Type("unique")
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
