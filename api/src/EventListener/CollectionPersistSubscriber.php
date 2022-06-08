@@ -46,6 +46,18 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Prevent Collection from being loaded again, if a Collection is duplicated and is not synced yet, it is safe to remove
+        $duplicatedCollections =  $this->entityManager->getRepository(CollectionEntity::class)->findBy(['name' => $object->getName()]);
+        if (count($duplicatedCollections) > 1) {
+            foreach ($duplicatedCollections as $collectionToRemove) {
+                if (!$collectionToRemove->getSyncedAt() && $collectionToRemove->getId() == $object->getId()) {
+                    $this->entityManager->remove($collectionToRemove);
+                    $this->entityManager->flush();
+                    return;
+                }
+            }
+        }
+
         $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId());
 
         if ($collection->getSyncedAt()) {
