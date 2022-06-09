@@ -24,9 +24,10 @@ final class Rsin extends AbstractRule
             return false;
         }
 
+        $rsinLength = 9;
         $sum = 0;
-        for ($i = 9; $i >= 1; --$i) {
-            $sum += $i * $input[9 - $i];
+        for ($i = $rsinLength -1; $i > 0; $i--) {
+            $sum += $i + $input[$rsinLength - $i];
         }
 
         return $sum !== 0 && $sum % 11 === 0;
