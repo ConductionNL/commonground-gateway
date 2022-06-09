@@ -777,7 +777,8 @@ class OasParserService
         $handlers = $this->createHandlers();
         $this->entityManager->flush();
         // Set synced at
-        // $collection->setSyncedAt(new \DateTime('now'));
+        $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($collection->getId());
+        $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
         $this->entityManager->clear();
