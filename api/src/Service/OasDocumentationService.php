@@ -255,7 +255,7 @@ class OasDocumentationService
             ];
 
             foreach ($responseTypes as $responseType) {
-                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), $handler->getMappingOut());
                 $schema = $this->serializeSchema($schema, $responseType, $handler->getEntity());
                 $methodArray['responses'][$response]['content'][$responseType]['schema'] = $schema;
             }
@@ -266,7 +266,7 @@ class OasDocumentationService
         $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
         if (in_array($method, ['put', 'post'])) {
             foreach ($requestTypes as $requestType) {
-                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+                $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null);
                 $schema = $this->serializeSchema($schema, $requestType, $handler->getEntity());
 
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
@@ -429,7 +429,7 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getSchema(Entity $entity, array $mapping): array
+    public function getSchema(Entity $entity, array $mappingIn, ?array $mappingOut): array
     {
         $schema = [
             'type' => 'object',
@@ -438,7 +438,6 @@ class OasDocumentationService
         ];
 
         foreach ($entity->getAttributes() as $attribute) {
-
             // Handle requireded fields
             if ($attribute->getRequired() and $attribute->getRequired() != null) {
                 $schema['required'][] = ucfirst($attribute->getName());
@@ -461,8 +460,20 @@ class OasDocumentationService
 
             // The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
-                /* @todo this might throw errors in the current setup */
-                $schema['properties'][$attribute->getName()] = ['$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+
+                // If mappingIn then change property name
+                if ($mappingIn) {
+                    $schema = $this->generateMappingIn($attribute, $mappingIn, $schema);
+
+                    if ($mappingOut) {
+                        $schema = $this->generateMappingOut($mappingIn, $mappingOut, $schema);
+                    }
+                } else {
+                    // Else add schema
+                    /* @todo this might throw errors in the current setup */
+                    $schema['properties'][$attribute->getName()] = ['$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
+                }
+
                 // Schema's dont have validators so
                 continue;
             } elseif ($attribute->getObject() && !$attribute->getCascade()) {
@@ -487,28 +498,100 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
             }
 
-            // Let do mapping (changing of property names)
-            foreach ($mapping as $key => $value) {
-//                var_dump($value);
-//                var_dump($value);
-                if ($attribute->getName() === $value) {
-                    $schema['properties'][$key] = $schema['properties'][$attribute->getName()];
+            $schema = $this->generateMappingIn($attribute, $mappingIn, $schema);
+
+            if ($mappingOut) {
+                $schema = $this->generateMappingOut($mappingIn, $mappingOut, $schema);
+            }
+
+//            // Let do mapping (changing of property names)
+//            foreach ($mappingIn as $key => $value) {
+//                if ($attribute->getName() === $value) {
+//                    $schema['properties'][$key] = $schema['properties'][$attribute->getName()];
+//                    $schema['properties'][$key]['example'] = $value;
+//                    unset($schema['properties'][$attribute->getName()]);
+//                }
+//            }
+//
+//            // Setup a mappingIn array
+//            $mappingArray = [];
+//            foreach ($mappingIn as $key => $value) {
+//                $mappingArray[] = $key;
+//            }
+//
+//
+//            if ($mappingOut) {
+//                // Let do mapping (changing of property names)
+//                foreach ($mappingOut as $key => $value) {
+//                    if (in_array($value, $mappingArray)) {
+//                        unset($schema['properties'][$value]);
+//                        $schema['properties'][$key]['example'] = $value;
+//                    }
+//                }
+//            }
+        }
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS example (data) for an atribute)
+     *
+     * @param Attribute $attribute
+     * @param array $mappingIn
+     * @param array $schema
+     * @return array
+     */
+    public function generateMappingIn(Attribute $attribute, array $mappingIn, array $schema)
+    {
+        // Let do mapping (changing of property names)
+        foreach ($mappingIn as $key => $value) {
+
+            // Get first and last part of the string
+            $last_part = substr(strrchr($value, "."), 1);
+
+            if ($last_part) {
+                $parts = explode('.', $value);
+                $firstPart = $parts[0];
+
+                if ($attribute->getName() === $firstPart) {
+                    unset($schema['properties'][$firstPart]);
                     $schema['properties'][$key]['example'] = $value;
-                    unset($schema['properties'][$attribute->getName()]);
                 }
             }
 
-//            // Setup a mappping array
-//            $mappingArray = [];
-////            foreach($mapping as $key => $value){
-////                // @todo for this exercise this only goes one deep
-////            }7
-//
-//            // Let do mapping (changing of property names)
-//            if (array_key_exists($attribute->getName(), $mappingArray)) {
-//                $schema['properties'][$mappingArray][$attribute->getName()] = $schema['properties'][$attribute->getName()];
-//                unset($schema['properties'][$attribute->getName()]);
-//            }
+            if ($attribute->getName() === $value) {
+                $schema['properties'][$key] = $schema['properties'][$attribute->getName()];
+                $schema['properties'][$key]['example'] = $value;
+                unset($schema['properties'][$attribute->getName()]);
+            }
+        }
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS example (data) for an atribute)
+     *
+     * @param array $mappingIn
+     * @param array $mappingOut
+     * @param array $schema
+     * @return array
+     */
+    public function generateMappingOut(array $mappingIn, array $mappingOut, array $schema)
+    {
+        // Setup a mappingIn array
+        $mappingArray = [];
+        foreach ($mappingIn as $key => $value) {
+            $mappingArray[] = $key;
+        }
+
+        if ($mappingOut) {
+            // Let do mapping (changing of property names)
+            foreach ($mappingOut as $key => $value) {
+                if (in_array($value, $mappingArray)) {
+                    unset($schema['properties'][$value]);
+                    $schema['properties'][$key]['example'] = $value;
+                }
+            }
         }
         return $schema;
     }
