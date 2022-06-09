@@ -97,7 +97,7 @@ App\Entity\Entity:
 App\Entity\Attribute:
     # weekWeather Attributes
     weekWeather_monday:
-        name: monday
+        name: maandag
         description: Weather of this day.
         type: string
         maxLength: 255
@@ -105,34 +105,33 @@ App\Entity\Attribute:
         entity: "@weekWeather"
         nullable: true
     weekWeather_tuesday:
-        name: tuesday
+        name: dinsdag
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
     weekWeather_wednesday:
-        name: wednesday
+        name: woensdag
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
     weekWeather_thursday:
-        name: thursday
+        name: donderdag
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
     weekWeather_friday:
-        name: friday
+        name: vrijdag
         description: Weather of this day.
         type: string
         maxLength: 255
         required: true
         entity: "@weekWeather"
-
     weekWeather_weekend:
         name: weekend
         description: Weekend of this weer.
@@ -147,7 +146,6 @@ App\Entity\Attribute:
         type: string
         maxLength: 255
         entity: "@weekendEntity"
-
     weekend_sunday:
         name: sunday
         description: Sunday of this weekend.
