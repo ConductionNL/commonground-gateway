@@ -129,7 +129,7 @@ class Entity
     private string $function = 'noFunction';
 
     /**
-     * wheter or not the properties of the original object are automaticly include.
+     * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
@@ -145,6 +145,8 @@ class Entity
     private $inherited = false;
 
     /**
+     * The attributes of this Entity.
+     *
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
@@ -152,15 +154,24 @@ class Entity
     private Collection $attributes;
 
     /**
+     * @var Collection|null The attributes allowed to partial search on using the search query parameter.
+     *
+     * @Groups({"read","write"})
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
+     * @MaxDepth(1)
+     */
+    private ?Collection $searchPartial;
+
+    /**
      * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
 
     /**
      * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $usedIn;
@@ -234,8 +245,8 @@ class Entity
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
     private Collection $handlers;
 
@@ -243,14 +254,14 @@ class Entity
      * @var array|null The subscribers used for this entity.
      *
      * @MaxDepth(1)
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity", fetch="EXTRA_LAZY")
      */
     private Collection $subscribers;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut")
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      */
     private Collection $subscriberOut;
@@ -258,9 +269,9 @@ class Entity
     /**
      * @var ?Collection The collections of this Entity
      *
-     * @Groups({"read", "write"})
+     * @Groups({"write"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities", fetch="EXTRA_LAZY")
      */
     private ?Collection $collections;
 
@@ -285,6 +296,7 @@ class Entity
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
@@ -484,6 +496,41 @@ class Entity
             // set the owning side to null (unless already changed)
             if ($attribute->getEntity() === $this) {
                 $attribute->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getSearchPartial(): Collection
+    {
+        return $this->searchPartial;
+    }
+
+    public function addSearchPartial(Attribute $attribute): self
+    {
+        // Only allow adding to searchPartial if the attribute is part of this Entity.
+        // Or if this entity has no attributes, when loading in fixtures.
+        if (!$this->searchPartial->contains($attribute)
+            && ($this->attributes->isEmpty() || $this->attributes->contains($attribute))
+        ) {
+            $this->searchPartial[] = $attribute;
+            $attribute->setSearchPartial($this);
+        }
+        //todo: else throw error?
+
+        return $this;
+    }
+
+    public function removeSearchPartial(Attribute $attribute): self
+    {
+        if ($this->searchPartial->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getSearchPartial() === $this) {
+                $attribute->setSearchPartial(null);
             }
         }
 

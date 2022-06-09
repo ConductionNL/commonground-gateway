@@ -106,10 +106,10 @@ class CollectionEntity
     /**
      * @var ?Gateway|string The source of this Collection
      *
-     * @Groups({"read","write"})
+     * @Groups({"write"})
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
-     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections")
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private $source;
 
@@ -180,27 +180,27 @@ class CollectionEntity
     /**
      * @var ?Collection The applications of this Collection
      *
-     * @Groups({"read", "write"})
+     * @Groups({"write"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections")
+     * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $applications;
 
     /**
      * @var ?Collection The endpoints of this Collection
      *
-     * @Groups({"read", "write"})
+     * @Groups({"write"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections")
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $endpoints;
 
     /**
      * @var ?Collection The entities of this Collection
      *
-     * @Groups({"read", "write"})
+     * @Groups({"write"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections")
+     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $entities;
 

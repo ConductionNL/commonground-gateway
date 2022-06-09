@@ -78,7 +78,7 @@ class Authentication
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @var string The Name of the Gateway which is used in the commonGround service
@@ -200,7 +200,7 @@ class Authentication
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
         $this->id = $id;
 

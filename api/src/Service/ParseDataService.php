@@ -138,6 +138,7 @@ class ParseDataService
         foreach ($schema as $properties) {
             $object = $this->eavService->getObject(null, 'POST', $entity);
             //TODO: add admin scopes to grantedScopes in the session so this validateEntity function doesn't fail on missing scopes
+            // todo use new validation and saveObject function instead of validateEntity
             $object = $this->validationService->validateEntity($object, $properties['properties'], $dontCheckAuth);
             $this->entityManager->persist($object);
             $result[] = $object;

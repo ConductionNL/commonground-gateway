@@ -61,8 +61,8 @@ class ProcessingLogService
             return null;
         }
 
-        if ($this->session->get('entity')) {
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entity')]);
+        if ($this->session->get('entitySource')) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->session->get('entitySource')['entity']]);
         }
         if (empty($entity) || $processingLogEntity === $entity) {
 //            var_dump('$processingLogEntity === $entity');

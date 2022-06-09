@@ -66,6 +66,14 @@ class ObjectEntity
     private $id;
 
     /**
+     * @var string The {at sign}id or self->href of this Object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $self;
+
+    /**
      * @var string UUID of the external object of this ObjectEntity
      *
      * @Assert\Uuid
@@ -164,6 +172,16 @@ class ObjectEntity
     private $subresourceOf;
 
     /**
+     * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
+     * Used for showing correct index in error messages.
+     *
+     * @var int|null
+     *
+     * @Groups({"read", "write"})
+     */
+    private ?int $subresourceIndex = null;
+
+    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
      */
@@ -203,6 +221,18 @@ class ObjectEntity
     public function setId(string $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getSelf(): ?string
+    {
+        return $this->self;
+    }
+
+    public function setSelf(?string $self): self
+    {
+        $this->self = $self;
 
         return $this;
     }
@@ -384,12 +414,13 @@ class ObjectEntity
 
         foreach ($values as $value) {
             foreach ($value->getObjects() as $key => $subResource) {
-                if ($value->getAttribute()->getMultiple()) {
-                    $key = '['.$key.']';
-                } else {
-                    $key = '';
-                }
                 if (!$maxDepth->contains($subResource)) {
+                    if ($value->getAttribute()->getMultiple()) {
+                        $key = $subResource->getSubresourceIndex() ?? $key;
+                        $key = '['.$key.']';
+                    } else {
+                        $key = '';
+                    }
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
                         $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
@@ -750,6 +781,18 @@ class ObjectEntity
             // SubresourceOf will be removed from this ObjectEntity in this function;
             $subresourceOf->removeObject($this);
         }
+
+        return $this;
+    }
+
+    public function getSubresourceIndex(): ?int
+    {
+        return $this->subresourceIndex;
+    }
+
+    public function setSubresourceIndex(?int $subresourceIndex): self
+    {
+        $this->subresourceIndex = $subresourceIndex;
 
         return $this;
     }

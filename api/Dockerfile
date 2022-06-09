@@ -19,6 +19,12 @@ RUN set -eux; \
 		postgresql-dev \
 		zlib-dev \
 		gmp-dev \
+    	rabbitmq-c \
+    	rabbitmq-c-dev \
+    	openssl-dev \
+    	python3 \
+    	py-meld3 \
+    	py-setuptools \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
@@ -34,6 +40,7 @@ RUN set -eux; \
 	pecl install \
 		apcu-${APCU_VERSION} \
 		redis \
+    	amqp \
 	; \
 	rm -rf /tmp/pear \
 	pecl clear-cache; \
@@ -42,6 +49,7 @@ RUN set -eux; \
 		opcache \
 		mysqli \
 		redis \
+    	amqp \
 	; \
 	\
 	runDeps="$( \

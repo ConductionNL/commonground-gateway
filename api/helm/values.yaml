@@ -99,6 +99,13 @@ redis:
   auth:
     enabled: false
   pullPolicy: IfNotPresent
+  
+rabbitmq:
+  auth:
+      username: 'example'
+      password: '!changeMe!'
+  service:
+      port: 5672
 
 imagePullSecrets: []
 nameOverride: ""

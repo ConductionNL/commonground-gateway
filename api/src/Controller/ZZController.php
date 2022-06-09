@@ -10,12 +10,14 @@ use App\Service\HandlerService;
 use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class ZZController extends AbstractController
 {
@@ -31,31 +33,30 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService
+        ProcessingLogService $processingLogService,
+        Stopwatch $stopwatch
     ): Response {
+        $stopwatch->start('ZZController');
 
-    // Below is hacky tacky
+        // Below is hacky tacky
         // @todo refactor
-        //        $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => $entity]);
-        //        if ($document instanceof Document && $id) {
-        //            return $documentService->handleDocument($document, $id);
-        //        }
-        //        if ($entity == 'postalCodes') {
-        //            return $validationService->dutchPC4ToJson();
-        //        }
+        $id = substr($path, strrpos($path, '/') + 1);
+        if (Uuid::isValid($id)) {
+            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, '', $path)]);
+            if ($document instanceof Document) {
+                return $documentService->handleDocument($document, $id);
+            }
+        }
+        // postalCodes list for bisc/taalhuizen
+        if ($path === 'postalCodes') {
+            return $validationService->dutchPC4ToJson();
+        }
         // End of hacky tacky
 
         // Get full path
-        // We should look at a better search moddel in sql
-        $allEndpoints = $this->getDoctrine()->getRepository('App:Endpoint')->findAll();
-
-        // Match path to regex of Endpoints
-        foreach ($allEndpoints as $currentEndpoint) {
-            if ($currentEndpoint->getPathRegex() !== null && preg_match($currentEndpoint->getPathRegex(), $path) && strtolower($request->getMethod()) === strtolower($currentEndpoint->getMethod())) {
-                $endpoint = $currentEndpoint;
-                break;
-            }
-        }
+        $stopwatch->start('getEndpoint', 'ZZController');
+        $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
+        $stopwatch->stop('getEndpoint');
 
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
@@ -72,7 +73,6 @@ class ZZController extends AbstractController
         }
 
         // Let create the variable
-
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
         $pathArray = array_values(array_filter(explode('/', $path)));
@@ -94,7 +94,12 @@ class ZZController extends AbstractController
 
         // Try handler proces and catch exceptions
         try {
-            return $handlerService->handleEndpoint($endpoint, $parameters);
+            $stopwatch->start('handleEndpoint', 'ZZController');
+            $result = $handlerService->handleEndpoint($endpoint, $parameters);
+            $stopwatch->stop('handleEndpoint');
+            $stopwatch->stop('ZZController');
+
+            return $result;
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $acceptType = $handlerService->getRequestType('accept');
@@ -103,7 +108,9 @@ class ZZController extends AbstractController
                 $response = new Response(
                     $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-                    ['content-type' => $acceptType]
+//                    ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]]
+                    //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
+                    ['content-type' => array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]
                 );
                 // Catch NotEncodableValueException from symfony serializer
             } catch (NotEncodableValueException $e) {
@@ -113,7 +120,7 @@ class ZZController extends AbstractController
                     ['content-type' => 'json']
                 );
             }
-            $logService->saveLog($request, $response);
+            $logService->saveLog($request, $response, 10);
             $processingLogService->saveProcessingLog();
 
             return $response->prepare($request);

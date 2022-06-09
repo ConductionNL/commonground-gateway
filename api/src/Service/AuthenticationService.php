@@ -178,6 +178,7 @@ class AuthenticationService
         }
 
         switch ($method) {
+            case 'oidc':
             case 'adfs':
                 return $this->retrieveAdfsData($code, $authentication, $redirectUrl);
                 break;
@@ -220,6 +221,8 @@ class AuthenticationService
     public function buildRedirectUrl(string $method, string $redirectUrl, Authentication $authentication): ?string
     {
         switch ($method) {
+            case 'oidc':
+                return $this->handleOidcRedirectUrl($redirectUrl, $authentication);
             case 'adfs':
                 return $this->handleAdfsRedirectUrl($redirectUrl, $authentication);
                 break;
@@ -228,6 +231,13 @@ class AuthenticationService
             default:
                 throw new BadRequestException('Authentication method not supported');
         }
+    }
+
+    public function handleOidcRedirectUrl(string $redirectUrl, Authentication $authentication): string
+    {
+        $scopes = implode(' ', $authentication->getScopes());
+
+        return "{$authentication->getAuthenticateUrl()}?client_id={$authentication->getClientId()}&response_type=code&scope={$scopes}&state={$this->session->getId()}&redirect_uri={$redirectUrl}";
     }
 
     public function handleAdfsRedirectUrl(string $redirectUrl, Authentication $authentication): string

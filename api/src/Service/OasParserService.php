@@ -197,7 +197,8 @@ class OasParserService
 
         // If format == date-time set type: datetime
         isset($schema['format']) && $schema['format'] === 'date-time' && $attribute->setType('datetime');
-        isset($schema['format']) && $schema['format'] !== 'date-time' && $attribute->setFormat($schema['format']);
+        isset($schema['format']) && $schema['format'] === 'date' && $attribute->setType('date');
+        isset($schema['format']) && ($schema['format'] !== 'date-time' && $schema['format'] !== 'date') && $attribute->setFormat($schema['format']);
         isset($schema['readyOnly']) && $attribute->setReadOnly($schema['readOnly']);
         isset($schema['maxLength']) && $attribute->setMaxLength($schema['maxLength']);
         isset($schema['minLength']) && $attribute->setMinLength($schema['minLength']);
@@ -313,6 +314,7 @@ class OasParserService
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);
         $attribute->setEntity($parentEntity);
+        $attribute->setSearchable(true);
 
         return $attribute;
     }
@@ -362,6 +364,7 @@ class OasParserService
         $newAttribute->setEntity($parentEntity);
         $newAttribute->setCascade(true);
         $newAttribute->setMultiple($multiple);
+        $newAttribute->setSearchable(true);
 
         $newAttribute->setObject($targetEntity);
 
@@ -447,14 +450,14 @@ class OasParserService
      */
     private function getPathRegex(array $path, array $method): string
     {
-        $pathRegex = '#^(';
+        $pathRegex = '^';
         foreach ($path as $key => $part) {
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]{36}' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
         }
-        $pathRegex .= ')$#';
+        $pathRegex .= '$';
 
         return $pathRegex;
     }
