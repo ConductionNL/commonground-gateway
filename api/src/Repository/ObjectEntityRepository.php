@@ -258,7 +258,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case that the search query is used.
      *
-     * @param string $search
+     * @param string       $search
      * @param QueryBuilder $query
      *
      * @throws Exception
@@ -268,9 +268,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function buildSearchQuery(string $search, QueryBuilder $query): QueryBuilder
     {
         $query
-            ->leftJoin("o.objectValues", 'valueSearch')
-            ->leftJoin("valueSearch.attribute", 'valueSearchAttribute')
-            ->andWhere("valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL")
+            ->leftJoin('o.objectValues', 'valueSearch')
+            ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
+            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
             ->setParameter('search', '%'.$search.'%');
 
         return $query;
