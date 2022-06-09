@@ -26,7 +26,7 @@ final class Rsin extends AbstractRule
 
         $rsinLength = 9;
         $sum = 0;
-        for ($i = $rsinLength -1; $i > 0; $i--) {
+        for ($i = $rsinLength - 1; $i > 0; $i--) {
             $sum += $i + $input[$rsinLength - $i];
         }
 
