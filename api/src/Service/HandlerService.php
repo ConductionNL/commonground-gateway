@@ -69,7 +69,7 @@ class HandlerService
         FormIOService $formIOService,
         SubscriberService $subscriberService,
         CacheInterface $cache,
-        GatewayService $gatewayService
+        GatewayService $gatewayService,
         Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
@@ -215,7 +215,7 @@ class HandlerService
         if ($handler->getProxyGateway()) {
             return $this->proxy($handler, $endpoint, $method);
         }
-        
+
         $this->getMethodOverrides($method, $operationType, $handler);
 
         // Form.io components array
