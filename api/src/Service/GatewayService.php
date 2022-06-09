@@ -46,7 +46,7 @@ class GatewayService
      */
     public function processGateway(string $name, string $endpoint, string $method, string $content, array $query, array $headers): Response
     {
-        $this->checkAuthentication();
+//        $this->checkAuthentication();
         $gateway = $this->retrieveGateway($name);
         $this->checkGateway($gateway);
         $component = $this->gatewayToArray($gateway);

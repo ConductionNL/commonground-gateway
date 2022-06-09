@@ -129,14 +129,30 @@ class FormIOService
      *
      * @return array Array/object of a formio input
      */
-    private function createAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
+    private function createAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null, string $parentAttribute = null)
     {
         // $attr->getName() == 'openpubAudience' && var_dump($attr->getNullable());
         if ($attr->getType() == 'object' && $attr->getObject() !== null) {
+            if ($parentAttribute && $this->checkIfWeAreLooping($attr, $parentAttribute)) {
+                return null;
+            }
+
             return $this->createEntityAsAttribute($attr, $preSetKey, $defaultValue);
         } else {
             return $this->createNormalAttribute($attr, $preSetKey, $defaultValue);
         }
+    }
+
+    private function checkIfWeAreLooping(Attribute $attr, string $parentAttribute)
+    {
+        $entity = $attr->getObject();
+        foreach ($entity->getAttributes() as $childAttribute) {
+            if ($childAttribute->getName() === $parentAttribute) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -196,10 +212,11 @@ class FormIOService
             !$objectAttr->getMultiple() && isset($defaultValue[0]) && $defaultValue = $defaultValue[0];
             isset($defaultValue[$objectAttr->getName()]) ? $defaultValueToPass = $defaultValue[$objectAttr->getName()] : $defaultValueToPass = null;
             if ($dataGridComponent) {
-                $dataGridComponent['components'][] = $this->createAttribute($objectAttr, null, $defaultValueToPass);
+                $newComponent = $this->createAttribute($objectAttr, null, $defaultValueToPass, $attr->getName());
             } else {
-                $accordionComponent['components'][] = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass);
+                $newComponent = $this->createAttribute($objectAttr, $preSetKey, $defaultValueToPass, $attr->getName());
             }
+            $newComponent && $dataGridComponent['components'][] = $newComponent;
         }
 
         // If this attribute is a array of subobjects return the datagrid

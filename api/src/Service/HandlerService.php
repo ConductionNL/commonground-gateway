@@ -30,6 +30,7 @@ class HandlerService
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
+    private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
@@ -68,6 +69,7 @@ class HandlerService
         FormIOService $formIOService,
         SubscriberService $subscriberService,
         CacheInterface $cache,
+        GatewayService $gatewayService
         Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
@@ -85,6 +87,7 @@ class HandlerService
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
+        $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
     }
 
@@ -143,6 +146,20 @@ class HandlerService
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
+    public function cutPath(array $pathParams): string
+    {
+        $path = parse_url($this->request->getUri())['path'];
+
+        return substr($path, strlen('/api/'.$pathParams[0]));
+    }
+
+    public function proxy(Handler $handler, Endpoint $endpoint, string $method): Response
+    {
+        $path = $this->cutPath($endpoint->getPath());
+
+        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+    }
+
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
     {
         $overrides = $handler->getMethodOverrides();
@@ -195,6 +212,10 @@ class HandlerService
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
 
+        if ($handler->getProxyGateway()) {
+            return $this->proxy($handler, $endpoint, $method);
+        }
+        
         $this->getMethodOverrides($method, $operationType, $handler);
 
         // Form.io components array

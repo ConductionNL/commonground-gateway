@@ -199,6 +199,14 @@ class Handler
     private ?Collection $endpoints;
 
     /**
+     * @var string|null The gateway to proxy to
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $proxyGateway = null;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -426,6 +434,18 @@ class Handler
     public function removeEndpoint(Endpoint $endpoint): self
     {
         $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    public function getProxyGateway(): ?string
+    {
+        return $this->proxyGateway;
+    }
+
+    public function setProxyGateway(string $proxyGateway): self
+    {
+        $this->proxyGateway = $proxyGateway;
 
         return $this;
     }
