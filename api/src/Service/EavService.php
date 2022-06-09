@@ -1039,6 +1039,7 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
+        $filterCheck[] = 'search';
 
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);

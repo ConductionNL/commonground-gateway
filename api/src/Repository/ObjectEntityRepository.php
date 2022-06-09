@@ -118,6 +118,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
+        if (array_key_exists('search', $filters)) {
+            $search = $filters['search'];
+            unset($filters['search']);
+            $this->buildSearchQuery($search, $query)->distinct();
+        }
+
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
 
@@ -247,6 +253,27 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         return $result;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case that the search query is used.
+     *
+     * @param string       $search
+     * @param QueryBuilder $query
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder
+     */
+    private function buildSearchQuery(string $search, QueryBuilder $query): QueryBuilder
+    {
+        $query
+            ->leftJoin('o.objectValues', 'valueSearch')
+            ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
+            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
+            ->setParameter('search', '%'.$search.'%');
+
+        return $query;
     }
 
     /**

@@ -145,11 +145,22 @@ class Entity
     private $inherited = false;
 
     /**
+     * The attributes of this Entity.
+     *
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
+
+    /**
+     * @var Collection|null The attributes allowed to partial search on using the search query parameter.
+     *
+     * @Groups({"read","write"})
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
+     * @MaxDepth(1)
+     */
+    private ?Collection $searchPartial;
 
     /**
      * @Groups({"write"})
@@ -285,6 +296,7 @@ class Entity
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
@@ -484,6 +496,41 @@ class Entity
             // set the owning side to null (unless already changed)
             if ($attribute->getEntity() === $this) {
                 $attribute->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getSearchPartial(): Collection
+    {
+        return $this->searchPartial;
+    }
+
+    public function addSearchPartial(Attribute $attribute): self
+    {
+        // Only allow adding to searchPartial if the attribute is part of this Entity.
+        // Or if this entity has no attributes, when loading in fixtures.
+        if (!$this->searchPartial->contains($attribute)
+            && ($this->attributes->isEmpty() || $this->attributes->contains($attribute))
+        ) {
+            $this->searchPartial[] = $attribute;
+            $attribute->setSearchPartial($this);
+        }
+        //todo: else throw error?
+
+        return $this;
+    }
+
+    public function removeSearchPartial(Attribute $attribute): self
+    {
+        if ($this->searchPartial->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getSearchPartial() === $this) {
+                $attribute->setSearchPartial(null);
             }
         }
 

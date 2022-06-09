@@ -118,11 +118,23 @@ class Attribute
     private bool $multiple = false;
 
     /**
+     * The Entity this attribute is part of.
+     *
      * @Groups({"write"})
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
      * @MaxDepth(1)
      */
     private Entity $entity;
+
+    /**
+     * Null, or the Entity this attribute is part of, if it is allowed to partial search on this attribute using the search query parameter.
+     *
+     * @Groups({"write"})
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="searchPartial")
+     * @ORM\JoinColumn(nullable=true)
+     * @MaxDepth(1)
+     */
+    private ?Entity $searchPartial = null;
 
     /**
      * @Groups({"write"})
@@ -753,6 +765,23 @@ class Attribute
     public function setEntity(?Entity $entity): self
     {
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    public function getSearchPartial(): ?Entity
+    {
+        return $this->searchPartial;
+    }
+
+    public function setSearchPartial(?Entity $searchPartial): self
+    {
+        // Only allow null or the entity of this Attribute when setting searchPartial.
+        // Allow setting searchPartial when entity is not set, because of loading in fixtures.
+        if ($searchPartial === null || !isset($this->entity) || $searchPartial === $this->entity) {
+            $this->searchPartial = $searchPartial;
+        }
+        //todo: else throw error?
 
         return $this;
     }
