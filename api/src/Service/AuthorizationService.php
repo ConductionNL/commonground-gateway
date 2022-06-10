@@ -15,17 +15,12 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Security;
 
 class AuthorizationService
 {
-    private AuthorizationChecker $authorizationChecker;
     private ParameterBagInterface $parameterBag;
     private CommonGroundService $commonGroundService;
     private Security $security;
@@ -35,9 +30,6 @@ class AuthorizationService
 
 
     public function __construct(
-        TokenStorageInterface $tokenStorage,
-        AuthenticationManagerInterface $authenticationManager,
-        AccessDecisionManagerInterface $accessDecisionManager,
         ParameterBagInterface $parameterBag,
         CommonGroundService $commonGroundService,
         Security $security,
@@ -45,7 +37,6 @@ class AuthorizationService
         CacheInterface $cache,
         EntityManagerInterface $entityManager
     ) {
-        $this->authorizationChecker = new AuthorizationChecker($tokenStorage, $authenticationManager, $accessDecisionManager);
         $this->parameterBag = $parameterBag;
         $this->commonGroundService = $commonGroundService;
         $this->security = $security;
@@ -178,7 +169,6 @@ class AuthorizationService
         } else {
             $this->session->set('anonymous', false);
 
-//            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
             if ($this->security->isGranted('IS_AUTHENTICATED_FULLY')) {
                 $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
             } else {
@@ -187,7 +177,6 @@ class AuthorizationService
                 $this->session->set('anonymous', true);
             }
             $grantedScopes = array_merge($grantedScopes, $this->getContractScopes());
-
             $item->set($grantedScopes);
             $item->tag('grantedScopes');
             $this->cache->save($item);

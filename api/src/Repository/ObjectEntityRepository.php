@@ -13,6 +13,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Security;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -23,12 +24,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 class ObjectEntityRepository extends ServiceEntityRepository
 {
     private SessionInterface $session;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    public function __construct(ManagerRegistry $registry, SessionInterface $session, Security $security)
     {
         $this->session = $session;
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
 
         parent::__construct($registry, ObjectEntity::class);
     }
@@ -137,8 +138,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             return $query;
         }
 
-        $user = $this->tokenStorage->getToken()->getUser();
-        if (is_string($user)) {
+        $user = $this->security->getUser();
+        if (!$user) {
             $userId = 'anonymousUser'; // Do not use null here!
         } else {
             $userId = $user->getUserIdentifier();
