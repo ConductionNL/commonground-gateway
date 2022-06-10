@@ -206,6 +206,84 @@ class OasDocumentationService
     }
 
     /**
+     * Gets an OAS description for a specific method
+     *
+     * @param string $method
+     * @param Handler $handler
+     * @param bool $item
+     * @return array
+     */
+    public function getEndpointMethod(string $method, Handler $handler, bool $item): array
+    {
+        /* @todo name should be cleaned before being used like this */
+        $methodArray = [
+            "description" => $handler->getEntity()->getDescription(),
+            "operationId" => $item ? $handler->getEntity()->getName() . '_' . $method . 'Id' : $handler->getEntity()->getName() . '_' . $method,
+            "tags" => [ucfirst($handler->getEntity()->getName())],
+            "summary" => $handler->getEntity()->getDescription(),
+            "parameters" => [],
+            "responses" => [],
+        ];
+
+        // Parameters
+        $methodArray['parameters'] = $this->getParameters($handler);
+
+        // Primary Response (success)
+        // get the response type -> returns statusCode and description
+        $response = $this->getResponseType($method);
+        if ($response) {
+            $methodArray['responses'][$response['statusCode']] = [
+                'description' => $response['description'],
+                'content' => []
+            ];
+
+//          $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
+            $responseTypes = ["application/json", "application/json+ld", "application/json+hal"]; // @todo this is a short cut, lets focus on json first */
+            foreach ($responseTypes as $responseType) {
+                $schema = $this->getResponseSchema($handler, $responseType);
+                $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
+            }
+        }
+
+        // Let see is we need request bodies
+//        $requestTypes = ["application/json","application/xml","application/yaml"];
+        $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
+        if (in_array($method, ['put', 'post'])) {
+            foreach ($requestTypes as $requestType) {
+                $schema = $this->getRequestSchema($handler, $requestType);
+                $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
+                $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
+            }
+        }
+        return $methodArray;
+    }
+
+    /**
+     * Gets a handler for an endpoint method combination
+     *
+     * @param Endpoint $endpoint
+     * @param string $method
+     *
+     * @return Handler|boolean
+     * @todo i would expect this function to live in the handlerService
+     *
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array('*', $handler->getMethods())) {
+                return $handler;
+            }
+
+            // Check if handler should be used for this method
+            if (in_array($method, $handler->getMethods())) {
+                return $handler;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Gets the response type from the method
      *
      * @param string $method
@@ -254,92 +332,13 @@ class OasDocumentationService
      * Gets an OAS description for a specific method
      *
      * @param Handler $handler
-     * @param $requestType
+     * @param string $requestType
      * @return array
      */
-    public function getRequestSchema(Handler $handler, $requestType): array
+    public function getRequestSchema(Handler $handler, string $requestType): array
     {
         $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null);
         return $this->serializeSchema($schema, $requestType, $handler->getEntity());
-    }
-
-    /**
-     * Gets an OAS description for a specific method
-     *
-     * @param string $method
-     * @param $handler
-     * @param bool $item
-     * @return array
-     */
-    public function getEndpointMethod(string $method, $handler, bool $item): array
-    {
-        /* @todo name should be cleaned before being used like this */
-        $methodArray = [
-            "description" => $handler->getEntity()->getDescription(),
-            "operationId" => $item ? $handler->getEntity()->getName() . '_' . $method . 'Id' : $handler->getEntity()->getName() . '_' . $method,
-            "tags" => [ucfirst($handler->getEntity()->getName())],
-            "summary" => $handler->getEntity()->getDescription(),
-            "parameters" => [],
-            "responses" => [],
-        ];
-
-        // Parameters
-        $methodArray['parameters'] = $this->getParameters($handler);
-//        $methodArray['parameters'] = array_merge($this->getPaginationParameters(), $this->getFilterParameters($handler->getEntity()));
-
-        // Primary Response (success)
-        // get the response type -> returns statusCode and description
-        $response = $this->getResponseType($method);
-        if ($response) {
-            $methodArray['responses'][$response['statusCode']] = [
-                'description' => $response['description'],
-                'content' => []
-            ];
-
-//          $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
-            $responseTypes = ["application/json", "application/json+ld", "application/json+hal"]; // @todo this is a short cut, lets focus on json first */
-            foreach ($responseTypes as $responseType) {
-                $schema = $this->getResponseSchema($handler, $responseType);
-                $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
-            }
-        }
-
-        // Let see is we need request bodies
-//        $requestTypes = ["application/json","application/xml","application/yaml"];
-        $requestTypes = ["application/json"]; // @todo this is a short cut, lets focus on json first */
-        if (in_array($method, ['put', 'post'])) {
-            foreach ($requestTypes as $requestType) {
-                $schema = $this->getRequestSchema($handler, $requestType);
-                $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
-                $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
-            }
-        }
-        return $methodArray;
-    }
-
-    /**
-     * Gets a handler for an endpoint method combination
-     *
-     * @param Endpoint $endpoint
-     * @param string $method
-     *
-     * @return Handler|boolean
-     * @todo i would expect this function to live in the handlerservice
-     *
-     */
-    public function getHandler(Endpoint $endpoint, string $method)
-    {
-        foreach ($endpoint->getHandlers() as $handler) {
-            if (in_array('*', $handler->getMethods())) {
-                return $handler;
-            }
-
-            // Check if handler should be used for this method
-            if (in_array($method, $handler->getMethods())) {
-                return $handler;
-            }
-        }
-        return false;
     }
 
     /**
@@ -360,26 +359,31 @@ class OasDocumentationService
         // unset schema properties
         $oldArray = $schema['properties'];
         $schema['properties'] = [];
+        $embedded = [];
 
         // switch type to add attributes  */
         switch ($type) {
             case "application/json":
                 break;
             case "application/json+ld":
-                $schema = $this->getProperties($schema, $items, $entity);
+                $schema = $this->getProperties($schema, $items);
                 foreach ($entity->getAttributes() as $attribute) {
                     if ($attribute->getObject()) {
-                        $schema['properties'][$attribute->getObject()->getName()] = $this->addPropertiesToBodyMetadata($attribute->getObject()->getAttributes());
+                        $embedded[$attribute->getObject()->getName()] = [
+                            'type' => 'object',
+                            'title' => 'The parameter extend',
+                            'example' => $this->addPropertiesMetadata($attribute->getObject()->getAttributes())
+                        ];
                     }
                 }
                 break;
             case "application/json+hal":
                 $schema['properties']['__links'] = $this->getLinks($schema, $oldArray);
                 $schema['properties']['__metadata'] = $this->getMetaData($schema, $items, $entity);
-                $schema['properties']['__embedded'] = [
+                $embedded['__embedded'] = [
                     'type' => 'object',
                     'title' => 'The parameter extend',
-                    'example' => $this->addExtendToBody($entity, $schema['properties']['__metadata'])
+                    'example' => $this->addEmbeddedToBody($entity, $items)
                 ];
                 break;
             case "application/json+orc":
@@ -398,153 +402,81 @@ class OasDocumentationService
             $schema['properties'][$key] = $value;
         }
 
-        return $schema;
-    }
+        $schema['properties'] = array_merge($schema['properties'], $embedded);
 
-    /**
-     * Generates an OAS schema from an entity
-     *
-     * @param array $schema
-     * @param $items
-     * @param $entity
-     * @return array
-     */
-    public function getProperties(array $schema, $items, $entity): array
-    {
-        foreach ($items as $item) {
-            $schema['properties']['@' . $item] = [
-                'type' => 'string',
-                'title' => 'The id of ',
-            ];
-        }
-
-        $schema['properties']['@extend'] = [
-            'type' => 'object',
-            'title' => 'The parameter extend',
-            'example' => $this->getExtendProperties($entity)
-        ];
 
         return $schema;
     }
 
     /**
-     * Generates an OAS schema from an entity
+     * Generates the attribute objects as name and type
      *
-     * @param $entity
+     * @param $attributes
      * @return array
      */
-    public function addPropertiesToBody($entity): array
-    {
-        $example = [];
-
-        foreach ($entity as $key => $value) {
-            var_dump($key);
-            $example[] = [
-                $key => $value
-            ];
-        }
-        return $example;
-    }
-
-    /**
-     * Generates an OAS schema from an entity
-     *
-     * @param $entity
-     * @return array
-     */
-    public function addPropertiesToBodyMetadata($attributes): array
+    public function addPropertiesMetadata($attributes): array
     {
         $example = [];
 
         foreach ($attributes as $attribute) {
-            // Add the attribute
-            $example[] = $attribute->getName();
+            // Add the attribute with type
+            $example[$attribute->getName()] = $attribute->getType();
         }
         return $example;
     }
 
     /**
-     * Generates an OAS schema from an entity
+     * Generates metadata items
      *
-     * @param $entity
+     * @param $items
      * @return array
      */
-    public function addExtendToBody($entity, $oldArray): array
+    public function addEmbeddedMetadata($items): array
     {
         $example = [];
-        foreach ($entity->getAttributes() as $attribute) {
-            if ($attribute->getObject()) {
-                // add items to metadata
-                $example[] = [
-                    $attribute->getObject()->getName() => [
-                        '__links' => [
-                            'self' => 'uuid'
-                        ],
-                        '__metadata' => $this->addPropertiesToBodyMetadata($attribute->getObject()->getAttributes()),
-                        ''.$this->addPropertiesToBodyMetadata($attribute->getObject()->getAttributes()) => 'string'
-                    ]
-                ];
-            }
-        }
-        return $example;
-    }
-
-    /**
-     * Generates an OAS schema from an entity
-     *
-     * @param $entity
-     * @return array
-     */
-    public function getObjects($entity): array
-    {
-        $items = [];
-        foreach ($entity->getAttributes() as $attribute) {
-            if ($attribute->getObject()) {
-                // add items to metadata
-                $items[] = $attribute->getObject();
-            }
-        }
-        return $items;
-    }
-
-    /**
-     * Generates an OAS schema from an entity
-     *
-     * @param array $schema
-     * @param $items
-     * @param $entity
-     * @return array
-     */
-    public function getMetaData(array $schema, $items, $entity): array
-    {
-        // delete key __links
-        foreach ($schema['properties'] as $key => $value) {
-            if ($key === '__links') {
-                unset($schema['properties'][$key]);
-            }
-        }
 
         // add items to metadata
         foreach ($items as $item) {
             if ($item !== 'id') {
-                $schema['properties']['__' . $item] = [
-                    'type' => 'string',
-                    'title' => 'The id of ',
+                $example['__' . $item] = 'string';
+            }
+        }
+        return $example;
+    }
+
+    /**
+     * Generates embedded properties
+     *
+     * @param $entity
+     * @param $items
+     * @return array
+     */
+    public function addEmbeddedToBody($entity, $items): array
+    {
+        $examples = [];
+        foreach ($entity->getAttributes() as $attribute) {
+            if ($attribute->getObject()) {
+                $properties = $this->addPropertiesMetadata($attribute->getObject()->getAttributes());
+                $metadata = $this->addEmbeddedMetadata($items);
+                $att = [
+                    '__links' => [
+                        'self' => 'uuid'
+                    ],
+                    '__metadata' => $metadata,
+                ];
+                $example = array_merge($att, $properties);
+
+                $examples[] = [
+                    $attribute->getObject()->getName() => $example,
                 ];
             }
         }
 
-        $schema['properties']['__extend'] = [
-            'type' => 'object',
-            'title' => 'The parameter extend',
-            'example' => $this->getExtendProperties($entity)
-        ];
-
-        return $schema;
+        return $examples;
     }
 
     /**
-     * Generates an OAS schema from an entity
+     * Generates filter parameters for extend
      *
      * @param Entity $entity
      * @return array
@@ -561,6 +493,55 @@ class OasDocumentationService
             }
         }
         return $example;
+    }
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param array $schema
+     * @param array $items
+     * @return array
+     */
+    public function getProperties(array $schema, array $items): array
+    {
+        foreach ($items as $item) {
+            $schema['properties']['@' . $item] = [
+                'type' => 'string',
+                'title' => 'The id of ',
+            ];
+        }
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS schema from an entity
+     *
+     * @param array $schema
+     * @param $items
+     * @param $entity
+     * @return array
+     */
+    public function getMetaData(array $schema, $items, $entity): array
+    {
+        // @todo add example data for metadata
+
+        // delete key __links
+        foreach ($schema['properties'] as $key => $value) {
+            if ($key === '__links') {
+                unset($schema['properties'][$key]);
+            }
+        }
+
+        // add items to metadata
+        foreach ($items as $item) {
+            if ($item !== 'id') {
+                $schema['properties']['__' . $item] = [
+                    'type' => 'string',
+                    'title' => 'The id of ',
+                ];
+            }
+        }
+        return $schema;
     }
 
     /**
@@ -767,7 +748,7 @@ class OasDocumentationService
      */
     public function getAttributeType(Attribute $attribute)
     {
-        $example = '';
+        $example = 'string';
         // switch format to add example data to attributes  */
         switch ($attribute->getType()) {
             case "string":
@@ -823,7 +804,7 @@ class OasDocumentationService
      */
     public function getAttributeFormat(Attribute $attribute): ?string
     {
-        $example = '';
+        $example = 'string';
         // switch format to add example data to attributes  */
         switch ($attribute->getFormat()) {
             case "countryCode":
@@ -911,19 +892,18 @@ class OasDocumentationService
      * Generates the filter parameters of an entity
      *
      * @param Entity $Entity
-     * @param int $level
      * @return array
      */
-    public function getExtendFilterParameters(Entity $Entity, int $level = 1): array
+    public function getExtendFilterParameters(Entity $Entity): array
     {
         $parameters = [];
 
         foreach ($Entity->getAttributes() as $attribute) {
             if ($attribute->getObject()) {
                 $parameters[] = [
-                    'name' => 'extend[] ' . $attribute->getObject()->getName(),
+                    'name' => 'extend[] for' . $attribute->getObject()->getName(),
                     'in' => 'query',
-                    'description' => 'The object you want to extend', // @todo set description
+                    'description' => 'The object you want to extend',
                     'required' => false,
                     'style' => 'simple',
                     'schema' => [
@@ -974,7 +954,7 @@ class OasDocumentationService
      *
      * @return string the CamelCase representation of the string
      */
-    public function toCamelCase(string $string, $dontStrip = []): string
+    public function toCamelCase(string $string, array $dontStrip = []): string
     {
         /*
          * This will take any dash or underscore turn it into a space, run ucwords against
