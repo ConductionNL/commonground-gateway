@@ -83,3 +83,10 @@
 #        name: ZTC collection
 #        sourceType: GitHub
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/ztc_publiccode/main/data/ztc.json
+#    referentielijstenCollection:
+#        name: Referentielijsten collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/OAS.yaml
+#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
+#        loadTestData: true
+#        autoLoad: true
