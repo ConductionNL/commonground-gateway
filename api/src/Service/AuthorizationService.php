@@ -33,6 +33,7 @@ class AuthorizationService
     private CacheInterface $cache;
     private EntityManagerInterface $entityManager;
 
+
     public function __construct(
         TokenStorageInterface $tokenStorage,
         AuthenticationManagerInterface $authenticationManager,
@@ -92,7 +93,6 @@ class AuthorizationService
 
         $info = $this->getValidInfoArray($info);
         $requiredScopes = $this->getRequiredScopes($info);
-
         try {
             $grantedScopes = $this->getGrantedScopes();
         } catch (InvalidArgumentException|CacheException $e) {
@@ -178,7 +178,8 @@ class AuthorizationService
         } else {
             $this->session->set('anonymous', false);
 
-            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+//            if ($this->authorizationChecker->isGranted('IS_AUTHENTICATED_FULLY')) {
+            if ($this->security->isGranted('IS_AUTHENTICATED_FULLY')) {
                 $grantedScopes = $this->getScopesFromRoles($this->security->getUser()->getRoles());
             } else {
                 $grantedScopes = $this->getScopesForAnonymous();

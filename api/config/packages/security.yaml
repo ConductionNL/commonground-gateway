@@ -6,7 +6,6 @@ security:
             id: Conduction\SamlBundle\Security\User\AuthenticationProvider
     firewalls:
         main:
-#            anonymous: ~
             logout:
                 path: app_user_logout
                 target: app_user_redirect
@@ -36,7 +35,7 @@ security:
     # Note: Only the *first* access control that matches will be used
     access_control:
         # Documentation
-        - { path: ^/api/docs, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
 
         # Admin
         - { path: ^/admin, roles: ROLE_group.admin }
@@ -45,6 +44,6 @@ security:
         - {
               path: ^/api/users,
               methods: ["POST"],
-              roles: IS_AUTHENTICATED_ANONYMOUSLY,
+              roles:  PUBLIC_ACCESS,
           }
-        - { path: ^/api/users/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/users/login, roles: PUBLIC_ACCESS }
