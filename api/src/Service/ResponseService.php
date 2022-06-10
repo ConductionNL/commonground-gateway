@@ -19,8 +19,8 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Security;
 
 class ResponseService
 {
@@ -28,16 +28,16 @@ class ResponseService
     private CommonGroundService $commonGroundService;
     private AuthorizationService $authorizationService;
     private SessionInterface $session;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
     private CacheInterface $cache;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, TokenStorageInterface $tokenStorage, CacheInterface $cache)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, Security $security, CacheInterface $cache)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
         $this->authorizationService = $authorizationService;
         $this->session = $session;
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
         $this->cache = $cache;
     }
 
@@ -45,9 +45,9 @@ class ResponseService
     private function checkOwner(ObjectEntity $result): bool
     {
         // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+        if ($user && $result->getOwner() === $user->getUserIdentifier()) {
             return true;
         }
 
@@ -629,7 +629,7 @@ class ResponseService
         }
         $requestLog->setApplication($application);
         $requestLog->setOrganization($this->session->get('activeOrganization'));
-        $requestLog->setUser(!is_string($this->tokenStorage->getToken()->getUser()) ? $this->tokenStorage->getToken()->getUser()->getUserIdentifier() : $this->tokenStorage->getToken()->getUser());
+        $requestLog->setUser($this->security->getUser() ? $this->security->getUser()->getUserIdentifier() : 'anonymousUser');
 
         $requestLog->setStatusCode($response->getStatusCode());
         $requestLog->setStatus($this->getStatusWithCode($response->getStatusCode()) ?? $result['type']);

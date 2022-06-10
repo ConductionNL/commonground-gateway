@@ -9,6 +9,15 @@ App\Entity\Group:
             - '@admin_read'
             - '@admin_remove'
             - '@admin_update'
+    anonymous:
+        description: the anonymous group
+        name: ANONYMOUS
+        organization: http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761
+        scopes:
+            - '@admin_create'
+            - '@admin_read'
+            - '@admin_remove'
+            - '@admin_update'
 App\Entity\Scope:
     admin_create:
         code: POST.admin
