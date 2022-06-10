@@ -366,7 +366,7 @@ class OasDocumentationService
             case "application/json":
                 break;
             case "application/json+ld":
-                $schema = $this->getProperties($schema, $items);
+                $schema = $this->getProperties($schema, $items, $entity);
                 foreach ($entity->getAttributes() as $attribute) {
                     if ($attribute->getObject()) {
                         $embedded[$attribute->getObject()->getName()] = [
@@ -385,6 +385,12 @@ class OasDocumentationService
                     'title' => 'The parameter extend',
                     'example' => $this->addEmbeddedToBody($entity, $items)
                 ];
+
+                // unset __embedded if there is no example
+                $example = $embedded['__embedded']['example'];
+                if (count($example) === 0) {
+                    unset($embedded['__embedded']);
+                }
                 break;
             case "application/json+orc":
                 //
@@ -401,9 +407,7 @@ class OasDocumentationService
         foreach ($oldArray as $key => $value) {
             $schema['properties'][$key] = $value;
         }
-
         $schema['properties'] = array_merge($schema['properties'], $embedded);
-
 
         return $schema;
     }
@@ -483,13 +487,12 @@ class OasDocumentationService
      */
     public function getExtendProperties(Entity $entity): array
     {
+
         $example = [];
+
         foreach ($entity->getAttributes() as $attribute) {
             if ($attribute->getObject()) {
-                // add items to metadata
-                $example = [
-                    $attribute->getObject()->getName() => true
-                ];
+                $example[$attribute->getName()] = true;
             }
         }
         return $example;
@@ -500,9 +503,10 @@ class OasDocumentationService
      *
      * @param array $schema
      * @param array $items
+     * @param Entity $entity
      * @return array
      */
-    public function getProperties(array $schema, array $items): array
+    public function getProperties(array $schema, array $items, Entity $entity): array
     {
         foreach ($items as $item) {
             $schema['properties']['@' . $item] = [
@@ -510,6 +514,19 @@ class OasDocumentationService
                 'title' => 'The id of ',
             ];
         }
+
+        $schema['properties']['@extend'] = [
+            'type' => 'object',
+            'title' => 'The parameter extend',
+            'example' => $this->getExtendProperties($entity)
+        ];
+
+        // unset @extend if there is no example
+        $example = $schema['properties']['@extend']['example'];
+        if (count($example) === 0) {
+            unset($schema['properties']['@extend']);
+        }
+
         return $schema;
     }
 
@@ -541,6 +558,19 @@ class OasDocumentationService
                 ];
             }
         }
+
+        $schema['properties']['__extend'] = [
+            'type' => 'object',
+            'title' => 'The parameter extend',
+            'example' => $this->getExtendProperties($entity)
+        ];
+
+        // unset __extend if there is no example
+        $example = $schema['properties']['__extend']['example'];
+        if (count($example) === 0) {
+            unset($schema['properties']['__extend']);
+        }
+
         return $schema;
     }
 
@@ -901,7 +931,7 @@ class OasDocumentationService
         foreach ($Entity->getAttributes() as $attribute) {
             if ($attribute->getObject()) {
                 $parameters[] = [
-                    'name' => 'extend[] for' . $attribute->getObject()->getName(),
+                    'name' => 'extend[] for ' . $attribute->getObject()->getName(),
                     'in' => 'query',
                     'description' => 'The object you want to extend',
                     'required' => false,
