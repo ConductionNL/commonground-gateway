@@ -28,14 +28,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
 {
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
     private ValidaterService $validaterService;
     private SessionInterface $session;
     private ?ValidationService $validationService;
@@ -55,7 +55,7 @@ class ObjectEntityService
     private TranslationService $translationService;
 
     public function __construct(
-        TokenStorageInterface $tokenStorage,
+        Security $security,
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
@@ -71,7 +71,7 @@ class ObjectEntityService
         TranslationService $translationService,
         LogService $logService
     ) {
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
         $this->request = $requestStack->getCurrentRequest();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
@@ -119,9 +119,9 @@ class ObjectEntityService
      */
     public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
     {
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user) && !$result->getOwner()) {
+        if ($user && !$result->getOwner()) {
             if ($owner == 'owner') {
                 $result->setOwner($user->getUserIdentifier());
             } else {
@@ -158,9 +158,9 @@ class ObjectEntityService
     public function checkOwner(ObjectEntity $result): bool
     {
         // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+        if ($user && $result->getOwner() === $user->getUserIdentifier()) {
             return true;
         }
 

@@ -12,22 +12,22 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Security;
 
 class GatewayService
 {
     private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
     private AuthenticationService $authenticationService;
     private RequestStack $requestStack;
     private TranslationService $translationService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, AuthenticationService $authenticationService, RequestStack $requestStack, TranslationService $translationService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, Security $security, AuthenticationService $authenticationService, RequestStack $requestStack, TranslationService $translationService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
         $this->authenticationService = $authenticationService;
         $this->requestStack = $requestStack;
         $this->translationService = $translationService;
@@ -86,11 +86,11 @@ class GatewayService
     {
         $request = $this->requestStack->getCurrentRequest();
         $authorized = true;
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
         $token = str_replace('Bearer ', '', $request->headers->get('Authorization'));
 
-        if (is_string($user)) {
+        if (!$user) {
             $authorized = $this->authenticationService->validateJWTAndGetPayload($token, $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']));
             $authorized = $this->authenticationService->checkJWTExpiration($token);
             $authorized = $this->authenticationService->retrieveJWTUser($token);
