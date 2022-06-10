@@ -28,7 +28,6 @@ class AuthorizationService
     private CacheInterface $cache;
     private EntityManagerInterface $entityManager;
 
-
     public function __construct(
         ParameterBagInterface $parameterBag,
         CommonGroundService $commonGroundService,
@@ -84,6 +83,7 @@ class AuthorizationService
 
         $info = $this->getValidInfoArray($info);
         $requiredScopes = $this->getRequiredScopes($info);
+
         try {
             $grantedScopes = $this->getGrantedScopes();
         } catch (InvalidArgumentException|CacheException $e) {
