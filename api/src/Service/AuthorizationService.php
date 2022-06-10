@@ -249,6 +249,8 @@ class AuthorizationService
             $this->cache->save($itemOrg);
         }
         if (count($scopes) > 0) {
+            $scopes = array_map('strtolower', $scopes);
+
             // Save in cache
             $item->set($scopes);
             $item->tag('anonymousScopes');
