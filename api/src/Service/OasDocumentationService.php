@@ -957,10 +957,8 @@ class OasDocumentationService
     public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         $parameters = [];
-
-        // @todo searchable is set to false
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime'])) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime']) and $attribute->getSearchable()) {
                 $parameters[] = [
                     'name' => $prefix . $attribute->getName(),
                     'in' => 'query',
@@ -970,8 +968,8 @@ class OasDocumentationService
                 ];
             }
 
-            if ($attribute->getObject() && $level < 5) {
-                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $attribute->getName() . '.', $level + 1));
+            if ($attribute->getObject() && $level < 3) {
+                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName() . '.', $level + 1));
             }
         }
         return $parameters;
