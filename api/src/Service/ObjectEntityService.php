@@ -431,7 +431,7 @@ class ObjectEntityService
                     }
                 } else {
                     $this->stopwatch->start('handleSearch', 'handleObject');
-                    $data = $this->eavService->handleSearch($entity->getName(), $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
+                    $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
                     $this->stopwatch->stop('handleSearch');
                     //todo: -end- old code...
 

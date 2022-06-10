@@ -802,7 +802,7 @@ class EavService
         // its a collection endpoint
         switch ($request->getMethod()) {
             case 'GET':
-                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], null, $info['extension']);
+                $result = $this->handleSearch($info['entity'], $request, $info['fields'], null, $info['extension']);
                 $responseType = Response::HTTP_OK;
                 break;
             case 'POST':
@@ -961,7 +961,7 @@ class EavService
     /**
      * Handles a search (collection) api call.
      *
-     * @param string     $entityName
+     * @param Entity     $entity
      * @param Request    $request
      * @param array|null $fields
      * @param $extension
@@ -973,7 +973,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(string $entityName, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
         $query = $request->query->all();
         unset($query['limit']);
@@ -988,11 +988,6 @@ class EavService
         } else {
             $offset = ($page - 1) * $limit;
         }
-
-        /* @todo we might want some filtering here, also this should be in the entity repository */
-        $this->stopwatch->start('FindEntity', 'handleSearch');
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
-        $this->stopwatch->stop('FindEntity');
 
         $this->stopwatch->start('updateGatewayPool', 'handleSearch');
         if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
