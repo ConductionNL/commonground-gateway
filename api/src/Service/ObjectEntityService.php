@@ -314,6 +314,7 @@ class ObjectEntityService
      * A function to handle calls to eav.
      *
      * @param Handler     $handler
+     * @param Endpoint    $endpoint
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
      * @param string|null $operationType
@@ -323,7 +324,7 @@ class ObjectEntityService
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
         // check application
         $this->stopwatch->start('getApplication', 'handleObject');
@@ -436,9 +437,6 @@ class ObjectEntityService
                     //todo: -end- old code...
 
                     if ($this->session->get('endpoint')) {
-                        $this->stopwatch->start('getEndpointFromDB', 'handleObject');
-                        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                        $this->stopwatch->stop('getEndpointFromDB');
                         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                             $data = $data['results'][0];
                             if (isset($data['id']) && Uuid::isValid($data['id'])) {
