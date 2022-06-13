@@ -18,8 +18,6 @@ on:
       - feature-soap
       - feature-soap-extra
       - feature-cleanup
-      - feature-cleanup-taalhuizen
-      - feature-merge-cleanup
       - odyssey-hackathon-2022
 
 jobs:
@@ -76,18 +74,6 @@ jobs:
         run: |
           echo "APP_ENV=cleanup">> $GITHUB_ENV
           echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to feature-merge-cleanup
-        if: contains( github.ref, 'feature-merge-cleanup' ) || contains( github.base_ref, 'feature-merge-cleanup' )
-        run: |
-          echo "APP_ENV=mergeCleanup">> $GITHUB_ENV
-          echo "APP_BUILD=mergeCleanup-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to feature-cleanup-taalhuizen
-        if: contains( github.ref, 'feature-cleanup-taalhuizen' ) || contains( github.base_ref, 'feature-cleanup-taalhuizen' )
-        run: |
-          echo "APP_ENV=refactorTaalhuizen">> $GITHUB_ENV
-          echo "APP_BUILD=refactorTaalhuizen-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to odyssey-hackathon-2022
         if: contains( github.ref, 'odyssey-hackathon-2022' ) || contains( github.base_ref, 'odyssey-hackathon-2022' )
@@ -146,11 +132,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/feature-merge-cleanup' || github.ref == 'refs/heads/feature-cleanup-taalhuizen' || github.ref == 'refs/heads/odyssey-hackathon-2022')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/odyssey-hackathon-2022')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/feature-merge-cleanup' || github.ref == 'refs/heads/feature-cleanup-taalhuizen' || github.ref == 'refs/heads/odyssey-hackathon-2022')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/odyssey-hackathon-2022')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
