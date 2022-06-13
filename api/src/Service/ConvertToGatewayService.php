@@ -304,6 +304,7 @@ class ConvertToGatewayService
         $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
 
         if ($objectEntity instanceof ObjectEntity && $objectEntity->getExternalId()) {
+            $this->functionService->removeResultFromCache($objectEntity);
             $objectEntity = $this->convertToGatewayObject($objectEntity->getEntity(), null, $objectEntity->getExternalId());
         }
 
