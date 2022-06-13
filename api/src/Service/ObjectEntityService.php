@@ -364,7 +364,7 @@ class ObjectEntityService
             $this->stopwatch->start('getObject', 'handleObject');
             $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
             $this->stopwatch->stop('getObject');
-            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+            if (is_array($object) && array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
             } // Lets check if the user is allowed to view/edit this resource.
             $this->stopwatch->start('checkOwner+organization', 'handleObject');
