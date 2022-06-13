@@ -160,7 +160,7 @@ class ResponseService
 
                     return
                         (empty($fields) || array_key_exists($propertyName, $fields)) &&
-                        (!$attTypeObject || $attribute->getExtend() || (!empty($extend) && array_key_exists($propertyName, $extend))) &&
+                        (!$attTypeObject || $attribute->getExtend() || (!empty($extend) && (array_key_exists('all', $extend) || array_key_exists($propertyName, $extend)))) &&
                         (empty($result->getEntity()->getAvailableProperties()) || in_array($propertyName, $result->getEntity()->getAvailableProperties()));
                 }, ARRAY_FILTER_USE_KEY);
             }
@@ -377,7 +377,7 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-                if ($attribute->getExtend() !== true && (!is_array($extend) || !array_key_exists($attribute->getName(), $extend))) {
+                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) || !array_key_exists($attribute->getName(), $extend)))) {
                     continue;
                 }
 
