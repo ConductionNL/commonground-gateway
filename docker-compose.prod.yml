@@ -100,7 +100,6 @@ services:
       - php
     volumes:
       - ./api/public:/srv/api/public:ro
-      - ./api/docker/nginx/conf.d/generated:/etc/nginx/conf.d
     ports:
       - "80:80"
     environment:

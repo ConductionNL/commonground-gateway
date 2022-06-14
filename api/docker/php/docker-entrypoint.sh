@@ -17,7 +17,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
 	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 
-	if ["$READ_ONLY" != 'false']; then
+	if [ "$READ_ONLY" != 'true' ]; then
 		composer install --prefer-dist --no-progress --no-suggest --no-interaction
 	fi
 
@@ -54,5 +54,4 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		#fi
 	fi
 fi
-
 exec docker-php-entrypoint "$@"
