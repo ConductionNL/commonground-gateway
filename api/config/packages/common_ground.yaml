@@ -39,6 +39,7 @@ parameters:
   env(APP_INTERNAL): "false"
   env(APP_BUILD_ALL_FIXTURES):
   env(APP_URL): "http://localhost"
+  env(PUBLICCODE): ""
   env(FACEBOOK_ID): ""
   env(FACEBOOK_SECRET): ""
   env(GMAIL_ID): ""
@@ -89,6 +90,7 @@ parameters:
   app_subpath: "%env(APP_SUBPATH)%"
   app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
   app_url: "%env(trimtrailingslash:APP_URL)%"
+  PUBLICCODE: "%env(PUBLICCODE)%"
   app_demo: "%env(APP_DEMO)%"
   app_web: "%env(APP_WEB)%"
   app_internal: "%env(APP_INTERNAL)%"
@@ -274,6 +276,7 @@ twig:
     app_internal: "%env(APP_INTERNAL)%"
     app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
     app_url: "%env(APP_URL)%"
+    PUBLICCODE: "%env(PUBLICCODE)%"
     app_build: "%env(APP_BUILD)%"
     app_chart: "%env(APP_CHART)%"
     app_session_duration: "%env(APP_SESSION_DURATION)%"
