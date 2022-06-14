@@ -77,13 +77,14 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - READ_ONLY=false
+      - READ_ONLY=true
     ports:
       - "82:80"
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges
+    read_only: true
 
   api:
     &nginx
