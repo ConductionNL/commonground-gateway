@@ -357,8 +357,18 @@ class OasDocumentationService
     public function serializeSchema(array $schema, string $type, Entity $entity): array
     {
         // Basic schema setup
-        $items = ['id', 'type', 'context', 'dateCreated', 'dateCreated',
-            'dateModified', 'owner', 'organization', 'application', 'uri', 'gateway/id'];
+        $items = [
+            'id' => 'uuid',
+            'type' => 'string',
+            'context' => 'string',
+            'dateCreated' => date("d-m-Y H:s"),
+            'dateModified' => date("d-m-Y H:s"),
+            'owner' => 'string',
+            'organization' => 'string',
+            'application' => 'string',
+            'uri' => 'string',
+            'gateway/id' => 'string'
+        ];
 
         // add schema properties to array
         // unset schema properties
@@ -372,15 +382,7 @@ class OasDocumentationService
                 break;
             case "application/json+ld":
                 $schema = $this->getProperties($schema, $items, $entity);
-                foreach ($entity->getAttributes() as $attribute) {
-                    if ($attribute->getObject()) {
-                        $embedded[$attribute->getObject()->getName()] = [
-                            'type' => 'object',
-                            'title' => 'The parameter extend',
-                            'example' => $this->addPropertiesMetadata($attribute->getObject()->getAttributes())
-                        ];
-                    }
-                }
+                # @todo add embedded array
                 break;
             case "application/json+hal":
                 $schema['properties']['__links'] = $this->getLinks($schema, $oldArray);
@@ -457,9 +459,9 @@ class OasDocumentationService
         $example = [];
 
         // add items to metadata
-        foreach ($items as $item) {
-            if ($item !== 'id') {
-                $example['__' . $item] = 'string';
+        foreach ($items as $key => $value) {
+            if ($key !== 'id') {
+                $example['__' . $key] = 'string';
             }
         }
         return $example;
@@ -525,10 +527,11 @@ class OasDocumentationService
      */
     public function getProperties(array $schema, array $items, Entity $entity): array
     {
-        foreach ($items as $item) {
-            $schema['properties']['@' . $item] = [
+        foreach ($items as $key => $value) {
+            $schema['properties']['@' . $key] = [
                 'type' => 'string',
                 'title' => 'The id of ',
+                'example' => $value
             ];
         }
 
@@ -567,11 +570,12 @@ class OasDocumentationService
         }
 
         // add items to metadata
-        foreach ($items as $item) {
-            if ($item !== 'id') {
-                $schema['properties']['__' . $item] = [
+        foreach ($items as $key => $value) {
+            if ($key !== 'id') {
+                $schema['properties']['__' . $key] = [
                     'type' => 'string',
                     'title' => 'The id of ',
+                    'example' => $value
                 ];
             }
         }
@@ -809,7 +813,7 @@ class OasDocumentationService
                 $example = date("d-m-Y");
                 break;
             case "datetime":
-                $example = new DateTime();
+                $example = date("d-m-Y H:s");
                 break;
             case "integer":
                 $example = 1;
