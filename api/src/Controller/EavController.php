@@ -3,11 +3,10 @@
 namespace App\Controller;
 
 use App\Service\AuthorizationService;
-use App\Service\OasDocumentationService;
 use App\Service\EavService;
+use App\Service\OasDocumentationService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +30,7 @@ class EavController extends AbstractController
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
     }
+
     /**
      * @Route("/openapi.{extension}")
      */
@@ -39,7 +39,7 @@ class EavController extends AbstractController
         /* accept only json an yaml as extensions or throw error */
         if ($extension !== 'yaml' && $extension !== 'json') {
             return new Response(
-                $this->serializer->serialize(['message' => 'The extension ' .$extension .' is not valid. We only support yaml and json'], 'json'),
+                $this->serializer->serialize(['message' => 'The extension '.$extension.' is not valid. We only support yaml and json'], 'json'),
                 400,
                 ['content-type' => 'json']
             );
