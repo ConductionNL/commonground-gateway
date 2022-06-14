@@ -20,139 +20,49 @@ As a Kubernetes open-source software project, all the Gateway's images are publi
 This is done through a `docker-compose` file (example below). The latest version is pulled automatically with your repository.
 
 ```yaml
-version: '3.5'
-
-x-cache:
-  &cache
-  cache_from:
-    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
-    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
+version: "3.4"
 
 services:
-  #  gateway-frontend:
-  #    &gateway-frontend
-  #    image: ghcr.io/conductionnl/commonground-gateway-frontend:latest
-  #    depends_on:
-  #      - php
-  #    ports:
-  #      - "83:80"
-  php:
-    &php
-    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
-    build:
-      context: ./api
-      target: api_platform_php
-      <<: *cache
-    depends_on:
-      - db
-    volumes:
-      - ./api:/srv/api:rw,cached
-      - ./api/var/certs:/var/certs:rw,cached
-      - ./gateway:/srv/api/fixtures:rw,cached
-    environment:
-      - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
-      - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      #- DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
-      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
-      - APP_ENV=${APP_ENV}
-      - APP_CONTAINER=${APP_CONTAINER}
-      - APP_DEBUG=${APP_DEBUG}
-      - APP_CACHE=${APP_CACHE}
-      - APP_VERSION=${APP_VERSION}
-      - APP_NAME=${APP_NAME}
-      - APP_NAME_TECHNICAL=${APP_NAME_TECHNICAL}
-      - APP_DOMAIN=${APP_DOMAIN}
-      - APP_SUBDOMAIN=${APP_SUBDOMAIN}
-      - APP_SUBPATH=${APP_SUBPATH}
-      - APP_SUBPATH_ROUTING=${APP_SUBPATH_ROUTING}
-      - APP_DEMO=${APP_DEMO}
-      - APP_REPRO=${APP_REPRO}
-      - APP_DESCRIPTION=${APP_DESCRIPTION}
-      - APP_LOGO=${APP_LOGO}
-      - APP_HOME=${APP_HOME}
-      - APP_COMMONGROUND_ID=${APP_COMMONGROUND_ID}
-      - APP_APPLICATION_KEY=${APP_APPLICATION_KEY}
-      - APP_BUILD_ALL_FIXTURES=${APP_BUILD_ALL_FIXTURES}
-      - APP_WEB=${APP_WEB}
-      - BADGES=${BADGES}
-      - APP_BUILD=${APP_BUILD}
-      - APP_INTERNAL=${APP_INTERNAL}
-      - APP_URL=${APP_URL}
-      - APP_CHART=${APP_CHART}
-      - HELM_REPOSITORY=${HELM_REPOSITORY}
-      - ARTIFACTHUB_ID=${ARTIFACTHUB_ID}
-      - ARTIFACTHUB_USER=${ARTIFACTHUB_USER}
-      - OWNER_NAME=${OWNER_NAME}
-      - OWNER_URL=${OWNER_URL}
-      - APP_SESSION_DURATION=${APP_SESSION_DURATION}
-      - LICENCE_NAME=${LICENCE_NAME}
-      - TRUSTED_PROXIES=${TRUSTED_PROXIES}
-      - TRUSTED_HOSTS=${TRUSTED_HOSTS}
-      - AUTH_ENABLED=${AUTH_ENABLED}
-      - AUDITTRAIL_ENABLED=${AUDITTRAIL_ENABLED}
-      - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
-      - DIGID_ARTIFACT_URL=${DIGID_ARTIFACT_URL}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - APP_AUTH=${APP_AUTH}
-    ports:
-      - "82:80"
+    php: &php
+        image: conduction/commonground-gateway-php:dev
+        depends_on:
+            - db
+        volumes:
+            - ./gateway:/srv/api/fixtures:rw,cached
+        environment:
+            #- DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+            - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+            - AUTH_ENABLED=false
+            - REDIS_HOST=redis
+            - REDIS_PORT=6379
+            - APP_REPRO=example
+        ports:
+            - "82:80"
 
-  api:
-    &nginx
-    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx:${APP_ENV}
-    build:
-      context: ./api
-      target: api_platform_nginx
-      dockerfile: Dockerfile-nginx
-      <<: *cache
-    depends_on:
-      - php
-    volumes:
-      - ./api/public:/srv/api/public:ro
-    ports:
-      - "80:80"
-    environment:
-      - NGINX_HOST=php
-      - NGINX_ENV=${APP_ENV}
+    api: &nginx
+        image: conduction/commonground-gateway-nginx:latest
+        depends_on:
+            - php
+        ports:
+            - "80:80"
+        environment:
+            - NGINX_HOST=php
 
-  # helmPackage:
-  #   image: alpine/helm:3.2.1
-  #   volumes:
-  #     - ./api/helm:/apps
-  #   command: package /apps
-
-  # helmIndex:
-  #   depends_on:
-  #     - helmPackage
-  #   image: alpine/helm:3.2.1
-  #   volumes:
-  #     - ./api/helm:/apps
-  #   command: repo index /apps
-
-  redis:
-    image: redis:4-alpine
-
-  db:
-    image: mysql:5.7
-    environment:
-      - MYSQL_ROOT_PASSWORD=example
-      - MYSQL_DATABASE=api
-      - MYSQL_USER=api-platform
-      - MYSQL_PASSWORD=!ChangeMe!
-    volumes:
-      - db-mysql:/var/lib/mysql:rw
-    ports:
-      - "3366:3306"
-
-networks:
-  nlx:
-    name: nlx
+    db:
+        image: mysql:5.7
+        environment:
+            - MYSQL_ROOT_PASSWORD=example
+            - MYSQL_DATABASE=api
+            - MYSQL_USER=api-platform
+            - MYSQL_PASSWORD=!ChangeMe!
+        volumes:
+            - db-mysql:/var/lib/mysql:rw
+        ports:
+            - "3366:3306"
 
 volumes:
-  db-data: {}
-  db-mysql: {}
-  nlx-data-2: {}
+    db-data: {}
+    db-mysql: {}
 ```
 
 You can download this file to any directory on your computer, open up your [command line tool](https://www.google.com/search?q=command+line+tool) or shell, and tell Docker to start your containers with the `docker-compose up` command from the folder you just downloaded the yaml file to.
