@@ -30,13 +30,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/object_entities/{id}"},
- *      "put"={"path"="/admin/object_entities/{id}"},
- *      "delete"={"path"="/admin/object_entities/{id}"}
+ *     "get"={"path"="/admin/object_entities/{id}"},
+ *     "get_sync"={
+ *          "method"="GET",
+ *          "path"="/admin/object_entities/{id}/sync"
+ *      },
+ *     "put"={"path"="/admin/object_entities/{id}"},
+ *     "delete"={"path"="/admin/object_entities/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/object_entities"},
- *      "post"={"path"="/admin/object_entities"}
+ *     "get"={"path"="/admin/object_entities"},
+ *     "post"={"path"="/admin/object_entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

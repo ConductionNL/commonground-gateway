@@ -11,6 +11,7 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -35,17 +36,22 @@ class ConvertToGatewayService
     }
 
     /**
-     * @param Entity $entity
+     * Gets all objects from entity->gateway (/source) and converts them to ObjectEntities,
+     * will also remove ObjectEntities that should no longer exist, because they got removed from the source api.
+     * @TODO: use Promises and MessageQueue for this process! One promise per page from source? (see $this->getExternObjects())
      *
-     * @throws Exception
+     * @param Entity $entity
+     * @param $query
      *
      * @return void|null
+     *
+     * @throws Exception|InvalidArgumentException
      */
     public function convertEntityObjects(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
         if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
-            return null; //Or false or error? //todo?
+            return null; //Or false or error?
         }
 
         // Get all objects for this Entity that exist outside the gateway
@@ -65,7 +71,7 @@ class ConvertToGatewayService
             $collectionConfigEnvelope = explode('.', $entity->getCollectionConfig()['envelope']);
         }
         $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
-        foreach ($totalExternObjects as &$externObject) {
+        foreach ($totalExternObjects as $externObject) {
             $id = $externObject;
             // Make sure to get this item from the correct place in $externObject
             foreach ($collectionConfigEnvelope as $item) {
@@ -85,16 +91,19 @@ class ConvertToGatewayService
         }
 //        var_dump('New gateway objects = '.count($newGatewayObjects));
 
-        // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
-        //TODO make sure to get all id's from the correct place with $entity->getCollectionConfig()['id'] !!!
-        $externObjectIds = array_column($totalExternObjects, $entity->getCollectionConfig()['id'] ?? 'id');
+        // Now also find all objects that exist in the gateway but not outside the gateway in the extern component.
+        $externObjectIds = $totalExternObjects;
+        foreach ($collectionConfigId as $item) {
+            $externObjectIds = array_column($externObjectIds, $item);
+        }
+//        var_dump('ExternObjectIds:', $externObjectIds);
         $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
         });
 
         // Delete these $onlyInGateway objectEntities ?
         foreach ($onlyInGateway as $item) {
-//            var_dump($item->getId());
+//            var_dump($item->getId()->toString());
             $this->em->remove($item);
         }
 //        var_dump('Deleted gateway objects = '.count($onlyInGateway));
@@ -113,13 +122,14 @@ class ConvertToGatewayService
     }
 
     /**
-     * Get all objects for this Entity that exist outside the gateway.
+     * Get all objects for this Entity that exist outside the gateway. (todo: note: will only get the first 25 pages for now!)
      *
-     * @param array  $config             array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
-     * @param array  $component
+     * @param array $config array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
+     * @param array $component
      * @param string $url
-     * @param array  $totalExternObjects
-     * @param int    $page
+     * @param array $query
+     * @param array $totalExternObjects
+     * @param int $page
      *
      * @return array
      */
@@ -151,24 +161,29 @@ class ConvertToGatewayService
             }
         }
         // Repeat if we have pagination and if there is a next page
-        if (isset($paginationNext) && $paginationNext) {
+        // TODO: to many pages will break and throw a 504 timeout if not done async!
+        // TODO: remove "&& $page < 25" when we do this async with promises!
+        if (isset($paginationNext) && $paginationNext && $page < 25) {
             return $this->getExternObjects($config, $component, $url, $query, $totalExternObjects, $page + 1);
         }
-//        var_dump('pages: '. $page);/
+//        var_dump('pages: '. $page);
 
         return $totalExternObjects;
     }
 
     /**
-     * @param Entity            $entity
-     * @param array|null        $body
-     * @param string|null       $id
-     * @param Value|null        $subresourceOf
-     * @param ObjectEntity|null $objectEntity  a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * Convert an object from outside the gateway into an ObjectEntity in the gateway.
      *
-     * @throws Exception
+     * @param Entity $entity
+     * @param array|null $body
+     * @param string|null $id
+     * @param Value|null $subresourceOf
+     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * @param string|null $url
      *
      * @return ObjectEntity|null
+     *
+     * @throws InvalidArgumentException
      */
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null): ?ObjectEntity
     {
@@ -292,14 +307,30 @@ class ConvertToGatewayService
             // todo: set owner with: $this->objectEntityService->handleOwner($newObject); // Do this after all CheckAuthorization function calls
             $this->em->persist($object);
             $this->em->flush(); // Needed here! read comment above if statement!
-            $this->notify($object, 'Create');
+            $this->functionService->removeResultFromCache($object);
+            $this->notify($object, 'Create'); // TODO: use promises instead of this function?
         }
 
         return $object;
     }
 
+    /**
+     * @TODO docs
+     *
+     * @param string $id
+     *
+     * @return ObjectEntity|null
+     *
+     * @throws InvalidArgumentException
+     */
     public function syncObjectEntity(string $id): ?ObjectEntity
     {
+        // todo: sync should work both ways, now we only sync from extern -> gateway
+        // todo: if we want to sync the other way around we could/should use promises (from gateway -> extern)
+        // todo: we can't sync both ways at the same time? How to determine which way has priority above the other?
+
+        // todo: And what if the object no longer exists when trying to sync? delete it?
+
         // Should we support externalId as $id input option?
         $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
 
@@ -310,7 +341,7 @@ class ConvertToGatewayService
         return $objectEntity;
     }
 
-    // TODO: duplicate with notify function in validationService, move this to a notificationService
+    // TODO: duplicate with other notify functions in validationService & objectEntityService.
     /**
      * @param ObjectEntity $objectEntity
      * @param string       $method
@@ -350,6 +381,17 @@ class ConvertToGatewayService
         }
     }
 
+    /**
+     * @TODO docs
+     *
+     * @param ObjectEntity $newObject
+     * @param array $body
+     * @param ObjectEntity|null $objectEntity
+     *
+     * @return ObjectEntity
+     *
+     * @throws Exception|InvalidArgumentException
+     */
     private function checkAttributes(ObjectEntity $newObject, array $body, ?ObjectEntity $objectEntity): ObjectEntity
     {
         $entity = $newObject->getEntity();
@@ -426,14 +468,16 @@ class ConvertToGatewayService
     }
 
     /**
+     * @TODO docs
+     *
      * @param $value
      * @param Attribute         $attribute
      * @param ObjectEntity      $newObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @throws Exception
-     *
      * @return string|null
+     *
+     * @throws Exception|InvalidArgumentException
      */
     private function checkAttribute($value, Attribute $attribute, ObjectEntity $newObject, ?ObjectEntity $objectEntity)
     {
@@ -506,14 +550,16 @@ class ConvertToGatewayService
     }
 
     /**
+     * @TODO docs
+     *
      * @param Attribute $attribute
      * @param $value
      * @param Value             $valueObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @throws Exception
+     * @return array|false|string|null
      *
-     * @return false|mixed|string|null
+     * @throws Exception|InvalidArgumentException
      */
     private function addObjectToValue(Attribute $attribute, $value, Value $valueObject, ?ObjectEntity $objectEntity)
     {

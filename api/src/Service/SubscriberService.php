@@ -125,6 +125,7 @@ class SubscriberService
 //            $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
 //            $this->validationService->removeObjectsNotMultiple = []; // to be sure
 //            $this->validationService->removeObjectsOnPut = []; // to be sure
+            // todo: use new ObjectEntityService->saveObject function
             $newObjectEntity = $this->validationService->validateEntity($newObjectEntity, $data);
             if (!empty($this->validationService->promises)) {
                 Utils::settle($this->validationService->promises)->wait();

@@ -3,6 +3,7 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
+use App\Entity\Entity;
 use App\Service\AuthorizationService;
 use App\Service\ConvertToGatewayService;
 use App\Service\EavService;
@@ -45,6 +46,17 @@ class EavSubscriber implements EventSubscriberInterface
     {
         $route = $event->getRequest()->attributes->get('_route');
         $resource = $event->getControllerResult();
+
+        if ($route == 'api_entities_get_sync_item') {
+            $query = $event->getRequest()->query->all();
+            unset($query['limit']);
+            unset($query['page']);
+            unset($query['start']);
+            $entity = $this->entityManager->getRepository('App:Entity')->find($event->getRequest()->attributes->get('id'));
+            if ($entity instanceof Entity) {
+                $this->convertToGatewayService->convertEntityObjects($entity, $query);
+            }
+        }
 
         if ($route == 'api_object_entities_get_sync_item') {
             $this->convertToGatewayService->syncObjectEntity($event->getRequest()->attributes->get('id'));

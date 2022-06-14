@@ -250,7 +250,7 @@ class HandlerService
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
             $this->stopwatch->start('handleObject', 'handleHandler');
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
             $this->stopwatch->stop('handleObject');
         }
 
