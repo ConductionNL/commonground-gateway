@@ -24,9 +24,10 @@ class EavController extends AbstractController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params,
-        SerializerInterface $serializer
-    ) {
+        ParameterBagInterface  $params,
+        SerializerInterface    $serializer
+    )
+    {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
     }
@@ -39,7 +40,7 @@ class EavController extends AbstractController
         /* accept only json an yaml as extensions or throw error */
         if ($extension !== 'yaml' && $extension !== 'json') {
             return new Response(
-                $this->serializer->serialize(['message' => 'The extension '.$extension.' is not valid. We only support yaml and json'], 'json'),
+                $this->serializer->serialize(['message' => 'The extension ' . $extension . ' is not valid. We only support yaml and json'], 'json'),
                 400,
                 ['content-type' => 'json']
             );
@@ -48,30 +49,30 @@ class EavController extends AbstractController
         /* Get application id from query parameter */
         $application = $request->query->get('application');
 
-        // Let's check the cache
-        $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
+//         Let's check the cache
+        $item = $customThingCache->getItem('oas_' . md5($application) . '_' . $extension);
 
         if ($item->isHit()) {
             $oas = $item->get();
         } else {
-            $oas = $oasDocumentationService->getRenderDocumentation($request, $application);
+            $oas = $oasDocumentationService->getRenderDocumentation($application !== null ? $application : null);
 
             if ($extension == 'json') {
                 $oas = json_encode($oas);
             } else {
                 $oas = Yaml::dump($oas);
             }
-
+            
             // Let's stuff it into the cache
             $item->set($oas);
             $customThingCache->save($item);
         }
 
         $response = new Response($oas, 200, [
-            'Content-type'=> 'application/'.$extension,
+            'Content-type' => 'application/' . $extension,
         ]);
 
-        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'openapi.'.$extension);
+        $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'openapi.' . $extension);
         $response->headers->set('Content-Disposition', $disposition);
 
         return $response;
