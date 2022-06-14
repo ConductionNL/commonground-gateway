@@ -121,9 +121,12 @@ class OasDocumentationService
 //        $host = $request->server->get('HTTP_HOST');
 //        $path = $request->getPathInfo();
 
-//        $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $applicationId]); ///findBy(['expose_in_docs'=>true]);
-//        $endpoints = $this->em->getRepository('App:Endpoint')->findByApplication($application); ///findBy(['expose_in_docs'=>true]);
-        $endpoints = $this->em->getRepository('App:Endpoint')->findAll(); ///findBy(['expose_in_docs'=>true]);
+        $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $applicationId]); ///findBy(['expose_in_docs'=>true]);
+        if ($application !== null) {
+            $endpoints = $this->em->getRepository('App:Endpoint')->findByApplication($application); ///findBy(['expose_in_docs'=>true]);
+        } else {
+            $endpoints = $this->em->getRepository('App:Endpoint')->findAll(); ///findBy(['expose_in_docs'=>true]);
+        }
 
         foreach ($endpoints as $endpoint) {
             $docs = $this->addEndpointToDocs($endpoint, $docs);
