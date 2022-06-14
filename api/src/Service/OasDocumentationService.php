@@ -7,6 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\Handler;
 use Doctrine\ORM\EntityManagerInterface;
+use phpDocumentor\Reflection\Types\This;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +19,42 @@ class OasDocumentationService
     private EntityManagerInterface $em;
     private TranslationService $translationService;
     private HandlerService $handlerService;
-    private array $supportedValidators;
+    // Let's define the validator that we support for documentation right now
+    private const SUPPORTED_TYPES = [
+        'string',
+        'date',
+        'datetime',
+        'integer',
+        'array',
+        'boolean',
+        'float',
+        'number',
+        'file',
+        'object',
+    ];
+
+    private const SUPPORTED_VALIDATORS = [
+        'multipleOf',
+        'maximum',
+        'exclusiveMaximum',
+        'minimum',
+        'exclusiveMinimum',
+        'maxLength',
+        'minLength',
+        'maxItems',
+        'uniqueItems',
+        'maxProperties',
+        'minProperties',
+        'required',
+        'enum',
+        'allOf',
+        'oneOf',
+        'anyOf',
+        'not',
+        'items',
+        'additionalProperties',
+        'default',
+    ];
 
     public function __construct(
         ParameterBagInterface $params,
@@ -30,49 +66,6 @@ class OasDocumentationService
         $this->em = $em;
         $this->translationService = $translationService;
         $this->handlerService = $handlerService;
-
-        // Let's define the validator that we support for documentation right now
-        $this->supportedValidators = $this->supportedValidators();
-
-        // Let's define the validator that we support for documentation right now
-        $this->supportedTypes = [
-            'string',
-            'date',
-            'datetime',
-            'integer',
-            'array',
-            'boolean',
-            'float',
-            'number',
-            'file',
-            'object',
-        ];
-    }
-
-    private function supportedValidators(): array
-    {
-        return [
-            'multipleOf',
-            'maximum',
-            'exclusiveMaximum',
-            'minimum',
-            'exclusiveMinimum',
-            'maxLength',
-            'minLength',
-            'maxItems',
-            'uniqueItems',
-            'maxProperties',
-            'minProperties',
-            'required',
-            'enum',
-            'allOf',
-            'oneOf',
-            'anyOf',
-            'not',
-            'items',
-            'additionalProperties',
-            'default',
-        ];
     }
 
     /**
@@ -99,11 +92,11 @@ class OasDocumentationService
     /**
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array.
      *
-     * @param string $applicationId
+     * @param ?string|null $applicationId
      *
      * @return array
      */
-    public function getRenderDocumentation(string $applicationId): array
+    public function getRenderDocumentation(?string $applicationId): array
     {
         $docs = [];
 
@@ -115,8 +108,6 @@ class OasDocumentationService
         $docs['servers'] = [
             ['url' => 'localhost:', 'description' => 'Gateway server'],
         ];
-//        $host = $request->server->get('HTTP_HOST');
-//        $path = $request->getPathInfo();
 
         $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $applicationId]); ///findBy(['expose_in_docs'=>true]);
         if ($application !== null) {
@@ -236,6 +227,22 @@ class OasDocumentationService
 
         // Primary Response (success)
         // get the response type -> returns statusCode and description
+       $methodArray = $this->getResponse($handler, $methodArray, $method);
+        // Let see is we need request bodies
+        return $this->getRequest($handler, $methodArray, $method);
+    }
+
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Handler $handler
+     * @param array $methodArray
+     * @param string $method
+     *
+     * @return array
+     */
+    public function getResponse(Handler $handler, array $methodArray, string $method)
+    {
         $response = $this->getResponseType($method);
         if ($response) {
             $methodArray['responses'][$response['statusCode']] = [
@@ -250,9 +257,21 @@ class OasDocumentationService
                 $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
             }
         }
+        return $methodArray;
+    }
 
-        // Let see is we need request bodies
-//        $requestTypes = ["application/json","application/xml","application/yaml"];
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Handler $handler
+     * @param array $methodArray
+     * @param string $method
+     *
+     * @return array
+     */
+    public function getRequest(Handler $handler, array $methodArray, string $method)
+    {
+        //        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ['application/json']; // @todo this is a short cut, lets focus on json first */
         if (in_array($method, ['put', 'post'])) {
             foreach ($requestTypes as $requestType) {
@@ -261,7 +280,6 @@ class OasDocumentationService
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
         }
-
         return $methodArray;
     }
 
@@ -391,35 +409,13 @@ class OasDocumentationService
             case 'application/json':
                 break;
             case 'application/json+ld':
-                $schema = $this->getProperties($schema, $items, $entity);
+                $schema = $this->getJsonLdSchema($schema, $items, $entity);
                 // @todo add embedded array
                 break;
             case 'application/json+hal':
-                $schema['properties']['__links'] = $this->getLinks($schema, $oldArray);
-                $schema['properties']['__metadata'] = $this->getMetaData($schema, $items, $entity);
-                $embedded['__embedded'] = [
-                    'type'    => 'object',
-                    'title'   => 'The parameter extend',
-                    'example' => $this->addEmbeddedToBody($entity, $items),
-                ];
-
-                foreach ($oldArray as $key => $value) {
-                    if (key_exists('$ref', $value)) {
-                        unset($oldArray[$key]['$ref']);
-                        $oldArray[$key] = [
-                            'type'    => 'string',
-                            'format'  => 'uuid',
-                            'title'   => 'The uuid of the '.$key,
-                            'example' => 'uuid', //@todo here the uuid of the object
-                        ];
-                    }
-                }
-
-                // unset __embedded if there is no example
-                $example = $embedded['__embedded']['example'];
-                if (count($example) === 0) {
-                    unset($embedded['__embedded']);
-                }
+                $schema = $this->getJsonHalSchema($entity, $schema, $oldArray, $items);
+                $embedded = $this->getJsonHalEmbeddedSchema($entity, $items);
+                $oldArray = $this->changeObjects($oldArray);
                 break;
             case 'application/json+orc':
                 //
@@ -439,6 +435,70 @@ class OasDocumentationService
         $schema['properties'] = array_merge($schema['properties'], $embedded);
 
         return $schema;
+    }
+
+    /**
+     * Generates the attribute objects as name and type.
+     *
+     * @param Entity $entity
+     * @param array $schema
+     * @param array $oldArray
+     * @param array $items
+     * @return array
+     */
+    public function getJsonHalSchema(Entity $entity, array $schema, array $oldArray, array $items): array
+    {
+        $schema['properties']['__links'] = $this->getLinks($schema, $oldArray);
+        $schema['properties']['__metadata'] = $this->getMetaData($schema, $items, $entity);
+
+        return $schema;
+    }
+
+    /**
+     * Generates the attribute objects as name and type.
+     *
+     * @param array $oldArray
+     * @return array
+     */
+    public function changeObjects(array $oldArray): array
+    {
+        foreach ($oldArray as $key => $value) {
+            if (key_exists('$ref', $value)) {
+                unset($oldArray[$key]['$ref']);
+                $oldArray[$key] = [
+                    'type'    => 'string',
+                    'format'  => 'uuid',
+                    'title'   => 'The uuid of the '.$key,
+                    'example' => 'uuid', //@todo here the uuid of the object
+                ];
+            }
+        }
+
+        return $oldArray;
+    }
+
+    /**
+     * Generates the attribute objects as name and type.
+     *
+     * @param Entity $entity
+     * @param array $items
+     * @return array
+     */
+    public function getJsonHalEmbeddedSchema(Entity $entity, array $items): array
+    {
+        $embedded['__embedded'] = [
+            'type'    => 'object',
+            'title'   => 'The parameter extend',
+            'example' => $this->addEmbeddedToBody($entity, $items),
+        ];
+
+        // unset __embedded if there is no example
+        $example = $embedded['__embedded']['example'];
+        if (count($example) === 0) {
+            unset($embedded['__embedded']);
+        }
+
+        return $embedded;
     }
 
     /**
@@ -542,7 +602,7 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function getProperties(array $schema, array $items, Entity $entity): array
+    public function getJsonLdSchema(array $schema, array $items, Entity $entity): array
     {
         foreach ($items as $key => $value) {
             $schema['properties']['@'.$key] = [
@@ -715,7 +775,7 @@ class OasDocumentationService
 
             // Add the validators
             foreach ($attribute->getValidations() as $validator => $validation) {
-                if (!array_key_exists($validator, $this->supportedValidators) && $validation != null) {
+                if (!array_key_exists($validator, OasDocumentationService::SUPPORTED_VALIDATORS) && $validation != null) {
                     $schema['properties'][$attribute->getName()] = [
                         $validator => $validation,
                     ];
@@ -779,20 +839,34 @@ class OasDocumentationService
             // Get first and last part of the string
             $last_part = substr(strrchr($value, '.'), 1);
 
-            if ($last_part) {
-                $parts = explode('.', $value);
-                $firstPart = $parts[0];
-
-                if ($attribute->getName() === $firstPart) {
-                    unset($schema['properties'][$firstPart]);
-                }
-            }
+            $schema = $this->unsetObject($attribute, $schema, $last_part, $value);
 
             if ($attribute->getName() === $value) {
                 unset($schema['properties'][$attribute->getName()]);
             }
         }
+        return $schema;
+    }
 
+    /**
+     * Generates an OAS example (data) for an attribute.
+     *
+     * @param Attribute $attribute
+     * @param array $schema
+     * @param $last_part
+     * @param $value
+     * @return array
+     */
+    public function unsetObject(Attribute $attribute, array $schema, $last_part, $value): array
+    {
+        if ($last_part) {
+            $parts = explode('.', $value);
+            $firstPart = $parts[0];
+
+            if ($attribute->getName() === $firstPart) {
+                unset($schema['properties'][$firstPart]);
+            }
+        }
         return $schema;
     }
 
