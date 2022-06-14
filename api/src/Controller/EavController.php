@@ -48,13 +48,13 @@ class EavController extends AbstractController
         /* Get application id from query parameter */
         $application = $request->query->get('application');
 
-        // Let's check the cache
+//         Let's check the cache
         $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
 
         if ($item->isHit()) {
             $oas = $item->get();
         } else {
-            $oas = $oasDocumentationService->getRenderDocumentation($request, $application);
+            $oas = $oasDocumentationService->getRenderDocumentation($application !== null ? $application : null);
 
             if ($extension == 'json') {
                 $oas = json_encode($oas);
@@ -68,7 +68,7 @@ class EavController extends AbstractController
         }
 
         $response = new Response($oas, 200, [
-            'Content-type'=> 'application/'.$extension,
+            'Content-type' => 'application/'.$extension,
         ]);
 
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'openapi.'.$extension);
