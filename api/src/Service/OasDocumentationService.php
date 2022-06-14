@@ -386,6 +386,18 @@ class OasDocumentationService
                     'example' => $this->addEmbeddedToBody($entity, $items)
                 ];
 
+                foreach ($oldArray as $key => $value) {
+                    if (key_exists('$ref', $value)) {
+                        unset($oldArray[$key]['$ref']);
+                        $oldArray[$key] = [
+                            'type' => 'string',
+                            'format' => 'uuid',
+                            'title' => 'The uuid of the '.$key,
+                            'example' => 'uuid' #@todo here the uuid of the object
+                        ];
+                    }
+                }
+
                 // unset __embedded if there is no example
                 $example = $embedded['__embedded']['example'];
                 if (count($example) === 0) {
