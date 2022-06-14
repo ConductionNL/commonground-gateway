@@ -227,7 +227,7 @@ class OasDocumentationService
 
         // Primary Response (success)
         // get the response type -> returns statusCode and description
-       $methodArray = $this->getResponse($handler, $methodArray, $method);
+        $methodArray = $this->getResponse($handler, $methodArray, $method);
         // Let see is we need request bodies
         return $this->getRequest($handler, $methodArray, $method);
     }
@@ -236,8 +236,8 @@ class OasDocumentationService
      * Gets a handler for an endpoint method combination.
      *
      * @param Handler $handler
-     * @param array $methodArray
-     * @param string $method
+     * @param array   $methodArray
+     * @param string  $method
      *
      * @return array
      */
@@ -257,6 +257,7 @@ class OasDocumentationService
                 $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
             }
         }
+
         return $methodArray;
     }
 
@@ -264,8 +265,8 @@ class OasDocumentationService
      * Gets a handler for an endpoint method combination.
      *
      * @param Handler $handler
-     * @param array $methodArray
-     * @param string $method
+     * @param array   $methodArray
+     * @param string  $method
      *
      * @return array
      */
@@ -280,6 +281,7 @@ class OasDocumentationService
                 $methodArray['responses'][400]['content'][$requestType]['schema'] = $schema;
             }
         }
+
         return $methodArray;
     }
 
@@ -441,9 +443,10 @@ class OasDocumentationService
      * Generates the attribute objects as name and type.
      *
      * @param Entity $entity
-     * @param array $schema
-     * @param array $oldArray
-     * @param array $items
+     * @param array  $schema
+     * @param array  $oldArray
+     * @param array  $items
+     *
      * @return array
      */
     public function getJsonHalSchema(Entity $entity, array $schema, array $oldArray, array $items): array
@@ -458,6 +461,7 @@ class OasDocumentationService
      * Generates the attribute objects as name and type.
      *
      * @param array $oldArray
+     *
      * @return array
      */
     public function changeObjects(array $oldArray): array
@@ -481,7 +485,8 @@ class OasDocumentationService
      * Generates the attribute objects as name and type.
      *
      * @param Entity $entity
-     * @param array $items
+     * @param array  $items
+     *
      * @return array
      */
     public function getJsonHalEmbeddedSchema(Entity $entity, array $items): array
@@ -845,6 +850,7 @@ class OasDocumentationService
                 unset($schema['properties'][$attribute->getName()]);
             }
         }
+
         return $schema;
     }
 
@@ -852,9 +858,10 @@ class OasDocumentationService
      * Generates an OAS example (data) for an attribute.
      *
      * @param Attribute $attribute
-     * @param array $schema
+     * @param array     $schema
      * @param $last_part
      * @param $value
+     *
      * @return array
      */
     public function unsetObject(Attribute $attribute, array $schema, $last_part, $value): array
@@ -867,6 +874,7 @@ class OasDocumentationService
                 unset($schema['properties'][$firstPart]);
             }
         }
+
         return $schema;
     }
 
