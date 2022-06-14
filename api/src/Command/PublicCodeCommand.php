@@ -76,8 +76,16 @@ class PublicCodeCommand extends Command
 
 
 
+    /**
+     * Creates a Collection and loads it oas with testdata
+     * 
+     * @param string $publicCodeLink Link to the publiccode.
+     * @param Client $httpClient Client to get the publiccode file with.
+     * @param OutputInterface $output OutputInterface to write in the console with.
+     */
     protected function loadPublicCode(string $publicCodeLink, Client $httpClient, OutputInterface $output)
     {
+        // Fetch publiccode
         try {
             $httpResponse = $httpClient->request('GET', trim($publicCodeLink, ' '));
         } catch (GuzzleException $exception) {
@@ -89,6 +97,8 @@ class PublicCodeCommand extends Command
             ]);
             return Command::FAILURE;
         }
+
+        // Parse yaml
         try {
             $publicCodeParsed = Yaml::parse($httpResponse->getBody()->getContents());
         } catch (ParseException $exception) {
@@ -99,7 +109,8 @@ class PublicCodeCommand extends Command
             ]);
             return Command::FAILURE;
         }
-        // Prevent Collection from being made again
+
+        // Prevent Collection from being a duplicate
         if (isset($publicCodeParsed['description']['en']['apiDocumentation'])) {
             $duplicatedCollections = $this->entityManager->getRepository(CollectionEntity::class)->findBy(['locationOAS' => $publicCodeParsed['description']['en']['apiDocumentation']]);
             if (count($duplicatedCollections) > 0) {
@@ -107,6 +118,7 @@ class PublicCodeCommand extends Command
             }
         }
 
+        // Create Collection
         $collection = new CollectionEntity();
         $collection->setName($publicCodeParsed['name']);
         isset($publicCodeParsed['description']['en']['shortDescription']) && $collection->setDescription($publicCodeParsed['description']['en']['shortDescription']);
@@ -115,11 +127,11 @@ class PublicCodeCommand extends Command
         isset($publicCodeParsed['description']['en']['apiDocumentation']) && $collection->setLocationOAS($publicCodeParsed['description']['en']['apiDocumentation']);
         $collection->setLoadTestData(isset($publicCodeParsed['description']['en']['testDataLocation']));
         isset($publicCodeParsed['description']['en']['testDataLocation']) && $collection->setTestDataLocation($publicCodeParsed['description']['en']['testDataLocation']);
-
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
 
+        // Parse and load testdata
         $collection = $this->oasParser->parseOas($collection);
         $message = 'Succesfully created collection ' . $publicCodeParsed['name'] . ' and config loaded';
         if ($collection->getLoadTestData()) {
@@ -133,6 +145,7 @@ class PublicCodeCommand extends Command
         $this->entityManager->flush();
 
 
+        // Write success message
         $output->writeln([
             '',
             $message,
