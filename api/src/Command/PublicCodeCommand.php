@@ -2,19 +2,19 @@
 
 namespace App\Command;
 
+use App\Entity\CollectionEntity;
+use App\Service\OasParserService;
+use App\Service\ParseDataService;
+use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use GuzzleHttp\Client;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
-use App\Entity\CollectionEntity;
-use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Exception\GuzzleException;
-use App\Service\OasParserService;
-use App\Service\ParseDataService;
 
 // the name of the command is what users type after "php bin/console"
 #[AsCommand(name: 'app:load-publiccodes')]
@@ -38,7 +38,6 @@ class PublicCodeCommand extends Command
 
         parent::__construct();
     }
-
 
     protected function configure(): void
     {
@@ -74,14 +73,12 @@ class PublicCodeCommand extends Command
         // return Command::INVALID
     }
 
-
-
     /**
-     * Creates a Collection and loads it oas with testdata
-     * 
-     * @param string $publicCodeLink Link to the publiccode.
-     * @param Client $httpClient Client to get the publiccode file with.
-     * @param OutputInterface $output OutputInterface to write in the console with.
+     * Creates a Collection and loads it oas with testdata.
+     *
+     * @param string          $publicCodeLink Link to the publiccode.
+     * @param Client          $httpClient     Client to get the publiccode file with.
+     * @param OutputInterface $output         OutputInterface to write in the console with.
      */
     protected function loadPublicCode(string $publicCodeLink, Client $httpClient, OutputInterface $output)
     {
@@ -93,8 +90,9 @@ class PublicCodeCommand extends Command
                 '',
                 $publicCodeLink,
                 $exception->getMessage(),
-                ''
+                '',
             ]);
+
             return Command::FAILURE;
         }
 
@@ -105,8 +103,9 @@ class PublicCodeCommand extends Command
             $output->writeln([
                 '',
                 $exception->getMessage(),
-                ''
+                '',
             ]);
+
             return Command::FAILURE;
         }
 
@@ -130,26 +129,24 @@ class PublicCodeCommand extends Command
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
-
         // Parse and load testdata
         $collection = $this->oasParser->parseOas($collection);
-        $message = 'Succesfully created collection ' . $publicCodeParsed['name'] . ' and config loaded';
+        $message = 'Succesfully created collection '.$publicCodeParsed['name'].' and config loaded';
         if ($collection->getLoadTestData()) {
             $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true);
             $message .= ' with testdata';
-        };
+        }
 
         $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($collection->getId());
         $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();
 
-
         // Write success message
         $output->writeln([
             '',
             $message,
-            ''
+            '',
         ]);
     }
 }
