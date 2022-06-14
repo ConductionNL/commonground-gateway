@@ -14,7 +14,7 @@
 #        authorizationHeader: API-Key
 #        headers:
 #            Api-Interface-Id: 676
-#            
+#
 #    openzaak_zrc:
 #        name: open-zaak
 #        location: https://openzaak.sed-xllnc.commonground.nu/zaken
@@ -22,7 +22,7 @@
 #        jwtId: demo
 #        secret: 'offcourseIwillnottellyoumysecret'
 #        accept: application/json
-#        
+#
 #    openzaak_ztc:
 #        name: open-zaak
 #        location: http://open-zaak.openzaak.svc.cluster.local/catalogi/api/v1
@@ -30,26 +30,70 @@
 #        jwtId: demo
 #        secret: 'offcourseIwillnottellyoumysecret'
 #
+#parameters:
+#    caseItemRegex: '^cases/[a-z0-9-]{36}$'
+#    zaakItemRegex: '^zaken/[a-z0-9-]{36}$'
+#
 #App\Entity\Endpoint:
-#    notificationEndpoint:
-#        name: Notification endpoint
-#        description: Endpoint for notifications
-#        path: notifications
-#    
-#    caseEndpoint:
-#        name: Case endpoint
-#        description: endpoint for cases
-#        path: cases
+#    # Notification Endpoint
+#    notificationEndpointPost:
+#        name: Notification endpoint post
+#        description: Endpoint for creating notifications
+#        path: [ 'notifications' ]
+#        pathRegex: "^(notifications)$"
+#        method: POST
+#        operationType: collection
+#
+#    # Case Endpoints
+#    caseEndpointGet:
+#        name: Case endpoint get collection
+#        description: endpoint for getting all cases
+#        path: [ 'cases' ]
+#        pathRegex: "^(cases)$"
+#        method: GET
+#        operationType: collection
+#
+#    caseEndpointPost:
+#        name: Case endpoint post
+#        description: endpoint for adding a new case
+#        path: [ 'cases' ]
+#        pathRegex: "^(cases)$"
+#        method: POST
+#        operationType: collection
+#
+#    caseEndpointGetItem:
+#        name: Case endpoint get item
+#        description: endpoint for getting a single case
+#        path: ['cases', '{id}']
+#        pathRegex: <{caseItemRegex}>
+#        method: GET
+#        operationType: item
+#
+#    # CaseType Endpoint
+#    caseTypeEndpointGet:
+#        name: Case Type endpoint get collection
+#        description: endpoint for getting all casetypes
+#        path: ['casetypes']
+#        pathRegex: "^(casetypes)$"
+#        method: GET
+#        operationType: collection
+#
+#    # Zaken Endpoints
+#    zakenEndpointGet:
+#        name: Zaken endpoint get collection
+#        description: endpoint for getting all zaken
+#        path: ['zaken']
+#        pathRegex: "^(zaken)$"
+#        method: GET
+#        operationType: collection
 #        
-#    caseTypeEndpoint:
-#        name: Case Type endpoint
-#        description: endpoint for case types
-#        path: casetypes
-#        
-#    zakenEndpoint:
-#        name: zaken endpoint
-#        description: endpoint for zaken
-#        path: zaken
+#    zakenEndpointGetItem:
+#        name: Zaken endpoint get item
+#        description: endpoint for getting a single zaak
+#        path: [ 'zaken', '{id}' ]
+#        pathRegex: <{zaakItemRegex}>
+#        method: GET
+#        operationType: item
 #
 #App\Entity\Subscriber:
 #    notificationToCase:
@@ -61,7 +105,7 @@
 #        entity: '@notification'
 #        mappingIn:
 #            externalId: caseReference
-#            
+#
 #    caseToZgwCase:
 #        name: caseToZgwCase
 #        description: A subscriber on a gateway (Exxellence) case object that converts that object to a gateway zgw case object.
@@ -130,18 +174,18 @@
 #        #TODO: move itemConfig to endpoint object later
 #        itemConfig:
 #            envelope: 'result.instance'
-#            
+#
 #    zgwCase:
 #        endpoint: 'api/v1/zaken'
 #        name: zgwCase
 #        description: A case on the ZGW endpoints
 #        gateway: '@openzaak_zrc'
 #        route: '/api/zaken'
-#        
+#
 #    zgwGeoJSONGeometry:
 #        name: zgwGeoJSONGeometry
 #        description: The GeoJSON Geometry for a case
-#    
+#
 #    zgwExtension:
 #        name: zgwExtension
 #        description: An extension object for a case
@@ -149,17 +193,17 @@
 #    zgwSuspension:
 #        name: zgwSuspension
 #        description: An extension object for a case
-#        
+#
 #    zgwRelevantOtherCase:
 #        name: zgwRelevantOtherCase
 #        description: A case that is relevant to the current case
-#        
+#
 #    zgwProperty:
 #        name: zgwProperty
 #        description: A property to a case
 #
 #App\Entity\Attribute:
-#    
+#
 #    zgwProperty_property:
 #        name: kenmerk
 #        description: Identifies the case in another administration
@@ -178,8 +222,8 @@
 #        minLength: 1
 #        persistToGateway: true
 #        entity: '@zgwProperty'
-#        
-#    
+#
+#
 #    zgwRelevantOtherCase_url:
 #        type: string
 #        name: url
@@ -198,7 +242,7 @@
 #        required: true
 #        persistToGateway: true
 #        entity: '@zgwRelevantOtherCase'
-#    
+#
 #    zgwExtension_reason:
 #        name: reden
 #        description: Description of the reason for the extension of the case process
@@ -215,7 +259,7 @@
 #        required: true
 #        persistToGateway: true
 #        entity: '@zgwExtension'
-#        
+#
 #    zgwSuspension_reason:
 #        name: reden
 #        description: Description of the reason for the extension of the case process
@@ -232,8 +276,8 @@
 #        required: true
 #        persistToGateway: true
 #        entity: '@zgwSuspension'
-#        
-#    
+#
+#
 #    zgwGeoJSON_type:
 #        name: type
 #        type: string
@@ -252,7 +296,7 @@
 #        description: (A collection of) 2D Point(s)
 #        entity: '@zgwGeoJSONGeometry'
 #        persistToGateway: true
-#    
+#
 #    zgwCase_identification:
 #        name: identificatie
 #        description: The id of the case
@@ -686,15 +730,15 @@
 #            instance.case.instance: caseInstance
 #            instance.case.type: caseType
 #            instance.type: instanceType
-#        endpoint: "@notificationEndpoint"
+#        endpoints: ["@notificationEndpointPost"]
 #        entity: "@notification"
-#    
+#
 #    caseHandler:
 #        name: Case handler
 #        methods: ["*"]
 #        sequence: 0
 #        conditions: "{}"
-#        endpoint: "@caseEndpoint"
+#        endpoints: ["@caseEndpointGet", "@caseEndpointPost", "@caseEndpointGetItem"]
 #        entity: "@case"
 #
 #    caseTypeHandler:
@@ -702,13 +746,13 @@
 #        methods: ["*"]
 #        sequence: 0
 #        conditions: "{}"
-#        endpoint: "@caseTypeEndpoint"
+#        endpoints: ["@caseTypeEndpointGet"]
 #        entity: "@caseType"
-#        
+#
 #    zakenHandler:
-#        name: zaken handler
+#        name: Zaken handler
 #        methods: ["*"]
 #        sequence: 0
 #        conditions: "{}"
-#        endpoint: '@zakenEndpoint'
-#        entity: '@zgwCase'
+#        endpoints: ["@zakenEndpointGet", "@zakenEndpointGetItem"]
+#        entity: "@zgwCase"

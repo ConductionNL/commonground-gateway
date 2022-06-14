@@ -989,13 +989,6 @@ class EavService
             $offset = ($page - 1) * $limit;
         }
 
-        $this->stopwatch->start('updateGatewayPool', 'handleSearch');
-        if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
-            $this->convertToGatewayService->convertEntityObjects($entity, $query);
-        }
-        unset($query['updateGatewayPool']);
-        $this->stopwatch->stop('updateGatewayPool');
-
         // Allowed order by
         $this->stopwatch->start('orderParametersCheck', 'handleSearch');
         $orderCheck = $this->em->getRepository('App:ObjectEntity')->getOrderParameters($entity);

@@ -1,14 +1,14 @@
 ## Parameters for endpoint regex
 #parameters:
-#    weerItemRegex: "#^(weer/[^/]*)$#"
-#    weekendItemRegex: "#^(weer/[^/]*)$#"
+#    weerItemRegex: "^(weer/[^/]*)$"
+#    weekendItemRegex: "^(weer/[^/]*)$"
 #
 #App\Entity\Endpoint:
 #    weerEndpointGet:
 #        name: Weer endpoint get collection
 #        description: endpoint voor dingen rondom weer
 #        path: ['weer']
-#        pathRegex: "#^(weer)$#"
+#        pathRegex: "^(weer)$"
 #        method: GET
 #        operationType: collection
 #
@@ -24,7 +24,7 @@
 #        name: Weer endpoint post
 #        description: endpoint voor dingen rondom weer
 #        path: ['weer']
-#        pathRegex: "#^(weer)$#"
+#        pathRegex: "^(weer)$"
 #        method: POST
 #        operationType: collection
 #
@@ -35,7 +35,7 @@
 #        pathRegex: <{weerItemRegex}>
 #        method: PUT
 #        operationType: item
-#        
+#
 #    weerEndpointDelete:
 #        name: Weer endpoint delete
 #        description: endpoint voor dingen rondom weer
@@ -48,7 +48,7 @@
 #        name: Weekend GET collection
 #        description: endpoint voor weekend
 #        path: ['weekend']
-#        pathRegex: "#^(weekend)$#"
+#        pathRegex: "^(weekend)$"
 #        operationType: collection
 #
 #    weekendEndpointGetItem:
@@ -303,7 +303,7 @@
 #        # template: "<html><body><h1>Test</h1></body></html>"
 #        # templateType: twig
 #
-#        
+#
 #    weekendHandler:
 #        name: Weather handler
 #        methods: ["*"]

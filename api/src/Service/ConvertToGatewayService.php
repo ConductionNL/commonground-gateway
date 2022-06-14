@@ -300,10 +300,17 @@ class ConvertToGatewayService
 
     public function syncObjectEntity(string $id): ?ObjectEntity
     {
+        // todo: sync should work both ways, now we only sync from extern -> gateway
+        // todo: if we want to sync the other way around we could/should use promises (from gateway -> extern)
+        // todo: we can't sync both ways at the same time? How to determine which way has priority above the other?
+
+        // todo: And what if the object no longer exists when trying to sync? delete it?
+
         // Should we support externalId as $id input option?
         $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
 
         if ($objectEntity instanceof ObjectEntity && $objectEntity->getExternalId()) {
+            $this->functionService->removeResultFromCache($objectEntity);
             $objectEntity = $this->convertToGatewayObject($objectEntity->getEntity(), null, $objectEntity->getExternalId());
         }
 

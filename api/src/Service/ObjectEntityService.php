@@ -28,14 +28,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
 {
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
     private ValidaterService $validaterService;
     private SessionInterface $session;
     private ?ValidationService $validationService;
@@ -55,7 +55,7 @@ class ObjectEntityService
     private TranslationService $translationService;
 
     public function __construct(
-        TokenStorageInterface $tokenStorage,
+        Security $security,
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
@@ -71,7 +71,7 @@ class ObjectEntityService
         TranslationService $translationService,
         LogService $logService
     ) {
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
         $this->request = $requestStack->getCurrentRequest();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
@@ -119,9 +119,9 @@ class ObjectEntityService
      */
     public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
     {
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user) && !$result->getOwner()) {
+        if ($user && !$result->getOwner()) {
             if ($owner == 'owner') {
                 $result->setOwner($user->getUserIdentifier());
             } else {
@@ -158,9 +158,9 @@ class ObjectEntityService
     public function checkOwner(ObjectEntity $result): bool
     {
         // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user) && $result->getOwner() === $user->getUserIdentifier()) {
+        if ($user && $result->getOwner() === $user->getUserIdentifier()) {
             return true;
         }
 
@@ -314,6 +314,7 @@ class ObjectEntityService
      * A function to handle calls to eav.
      *
      * @param Handler     $handler
+     * @param Endpoint    $endpoint
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
      * @param string|null $operationType
@@ -323,7 +324,7 @@ class ObjectEntityService
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
         // check application
         $this->stopwatch->start('getApplication', 'handleObject');
@@ -364,7 +365,7 @@ class ObjectEntityService
             $this->stopwatch->start('getObject', 'handleObject');
             $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
             $this->stopwatch->stop('getObject');
-            if (array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+            if (is_array($object) && array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
                 throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
             } // Lets check if the user is allowed to view/edit this resource.
             $this->stopwatch->start('checkOwner+organization', 'handleObject');
@@ -436,9 +437,6 @@ class ObjectEntityService
                     //todo: -end- old code...
 
                     if ($this->session->get('endpoint')) {
-                        $this->stopwatch->start('getEndpointFromDB', 'handleObject');
-                        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
-                        $this->stopwatch->stop('getEndpointFromDB');
                         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
                             $data = $data['results'][0];
                             if (isset($data['id']) && Uuid::isValid($data['id'])) {
