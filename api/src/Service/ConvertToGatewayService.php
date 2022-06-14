@@ -65,7 +65,7 @@ class ConvertToGatewayService
             $collectionConfigEnvelope = explode('.', $entity->getCollectionConfig()['envelope']);
         }
         $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
-        foreach ($totalExternObjects as &$externObject) {
+        foreach ($totalExternObjects as $externObject) {
             $id = $externObject;
             // Make sure to get this item from the correct place in $externObject
             foreach ($collectionConfigEnvelope as $item) {
@@ -87,14 +87,18 @@ class ConvertToGatewayService
 
         // Now also find all objects that exist in the gateway but not outside the gateway on the extern component.
         //TODO make sure to get all id's from the correct place with $entity->getCollectionConfig()['id'] !!!
-        $externObjectIds = array_column($totalExternObjects, $entity->getCollectionConfig()['id'] ?? 'id');
+        $externObjectIds = $totalExternObjects;
+        foreach ($collectionConfigId as $item) {
+            $externObjectIds = array_column($externObjectIds, $item);
+        }
+//        var_dump('ExternObjectIds:', $externObjectIds);
         $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
             return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
         });
 
         // Delete these $onlyInGateway objectEntities ?
         foreach ($onlyInGateway as $item) {
-//            var_dump($item->getId());
+//            var_dump($item->getId()->toString());
             $this->em->remove($item);
         }
 //        var_dump('Deleted gateway objects = '.count($onlyInGateway));
@@ -292,6 +296,7 @@ class ConvertToGatewayService
             // todo: set owner with: $this->objectEntityService->handleOwner($newObject); // Do this after all CheckAuthorization function calls
             $this->em->persist($object);
             $this->em->flush(); // Needed here! read comment above if statement!
+            $this->functionService->removeResultFromCache($object);
             $this->notify($object, 'Create');
         }
 
@@ -310,7 +315,6 @@ class ConvertToGatewayService
         $objectEntity = $this->em->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
 
         if ($objectEntity instanceof ObjectEntity && $objectEntity->getExternalId()) {
-            $this->functionService->removeResultFromCache($objectEntity);
             $objectEntity = $this->convertToGatewayObject($objectEntity->getEntity(), null, $objectEntity->getExternalId());
         }
 
