@@ -30,8 +30,8 @@ class ValidaterService
         $this->cache = $cache;
         Factory::setDefaultInstance(
             (new Factory())
-            ->withRuleNamespace('App\Service\Validation\Rules')
-            ->withExceptionNamespace('App\Service\Validation\Exceptions')
+                ->withRuleNamespace('App\Service\Validation\Rules')
+                ->withExceptionNamespace('App\Service\Validation\Exceptions')
         );
     }
 
@@ -233,21 +233,21 @@ class ValidaterService
             );
 
             // todo: JsonLogic needs to be able to check parent attributes/entities in the request body for this to work:
-//            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
-//            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
-//            return new Rules\When(
-//                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
-//                new Rules\Key(
-//                    $attribute->getName(),
-//                    $this->getAttributeValidator($attribute),
-//                    false // mandatory = required validation. False = not required.
-//                ), // TRUE
-//                new Rules\Key(
-//                    $attribute->getName(),
-//                    $this->getAttributeValidator($attribute),
-//                    true // mandatory = required validation. True = required.
-//                ) // FALSE
-//            );
+            //            // Make sure we only make this attribute required if it is not getting auto connected because of inversedBy
+            //            // We can do this by checking if the Attribute->getInversedBy attribute is already present in the body.
+            //            return new Rules\When(
+            //                new CustomRules\JsonLogic(["var" => $attribute->getInversedBy()->getName()]), // IF
+            //                new Rules\Key(
+            //                    $attribute->getName(),
+            //                    $this->getAttributeValidator($attribute),
+            //                    false // mandatory = required validation. False = not required.
+            //                ), // TRUE
+            //                new Rules\Key(
+            //                    $attribute->getName(),
+            //                    $this->getAttributeValidator($attribute),
+            //                    true // mandatory = required validation. True = required.
+            //                ) // FALSE
+            //            );
         }
 
         // Else, continue with the 'normal' required validation.
@@ -420,6 +420,8 @@ class ValidaterService
                     new Rules\DateTime('Y-m-d'),
                     new Rules\DateTime('Y-m-d H:i:s'),
                     new Rules\DateTime('Y-m-dTH:i:s'),
+                    new Rules\DateTime('Y-m-d\TH:i:s'),
+                    new Rules\DateTime('Y-m-d\U\T\CH:i:s'),
                 );
             case 'array':
                 return new Rules\ArrayType();
@@ -456,6 +458,10 @@ class ValidaterService
     private function getObjectValidator(Attribute $attribute, int $level): Validator
     {
         $objectValidator = new Validator();
+
+        // Make sure we do not allow empty string for an object
+        // (will also invalidate null, but if attribute is nullable and the value is null we never get here and never check this rule)
+        $objectValidator->addRule(new Rules\NotEmpty());
 
         // TODO: Make a custom rule for cascading so we can give custom exception messages back?
         // Validate for cascading
@@ -502,6 +508,8 @@ class ValidaterService
                 return new Rules\CountryCode();
             case 'bsn':
                 return new Rules\Bsn();
+            case 'rsin':
+                return new CustomRules\Rsin();
             case 'url':
                 return new Rules\Url();
             case 'uuid':
@@ -514,9 +522,13 @@ class ValidaterService
                 return new Rules\Json();
             case 'dutch_pc4':
                 return new CustomRules\DutchPostalcode();
+            case 'date':
+                // For now..
             case 'duration':
                 // For now..
             case 'uri':
+                // For now..
+            case 'int64':
                 // For now..
             case null:
                 // If attribute has no format return alwaysValid

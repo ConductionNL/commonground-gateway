@@ -7,7 +7,7 @@ use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Security;
 
 // todo: maybe move all of this to the FunctionService?
 class ProcessingLogService
@@ -16,20 +16,20 @@ class ProcessingLogService
     private SessionInterface $session;
     private EavService $eavService;
     private ValidationService $validationService;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         SessionInterface $session,
         EavService $eavService,
         ValidationService $validationService,
-        TokenStorageInterface $tokenStorage
+        Security $security
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->eavService = $eavService;
         $this->validationService = $validationService;
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
     }
 
     /**
@@ -74,7 +74,7 @@ class ProcessingLogService
 //            var_dump($object->getId()->toString());
         }
 
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
         $processingLog = [
             'actieNaam'                       => 'placeholder',

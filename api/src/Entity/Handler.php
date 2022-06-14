@@ -76,7 +76,7 @@ class Handler
     private ?string $description;
 
     /**
-     * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE"}, multiple=true)
+     * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE", "get", "post", "put", "patch", "delete"}, multiple=true)
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
@@ -197,6 +197,14 @@ class Handler
      * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers")
      */
     private ?Collection $endpoints;
+
+    /**
+     * @var string|null The gateway to proxy to
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $proxyGateway = null;
 
     /**
      * @var Datetime The moment this resource was created
@@ -426,6 +434,18 @@ class Handler
     public function removeEndpoint(Endpoint $endpoint): self
     {
         $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    public function getProxyGateway(): ?string
+    {
+        return $this->proxyGateway;
+    }
+
+    public function setProxyGateway(string $proxyGateway): self
+    {
+        $this->proxyGateway = $proxyGateway;
 
         return $this;
     }

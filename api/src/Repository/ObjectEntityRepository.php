@@ -12,7 +12,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Security;
 
 /**
  * @method ObjectEntity|null find($id, $lockMode = null, $lockVersion = null)
@@ -23,12 +23,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 class ObjectEntityRepository extends ServiceEntityRepository
 {
     private SessionInterface $session;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session, TokenStorageInterface $tokenStorage)
+    public function __construct(ManagerRegistry $registry, SessionInterface $session, Security $security)
     {
         $this->session = $session;
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
 
         parent::__construct($registry, ObjectEntity::class);
     }
@@ -118,6 +118,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
+        if (array_key_exists('search', $filters)) {
+            $search = $filters['search'];
+            unset($filters['search']);
+            $this->buildSearchQuery($search, $query)->distinct();
+        }
+
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
 
@@ -131,8 +137,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             return $query;
         }
 
-        $user = $this->tokenStorage->getToken()->getUser();
-        if (is_string($user)) {
+        $user = $this->security->getUser();
+        if (!$user) {
             $userId = 'anonymousUser'; // Do not use null here!
         } else {
             $userId = $user->getUserIdentifier();
@@ -147,9 +153,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        //todo: put back owner/userId check
         $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
-//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations)')
             ->setParameter('userId', $userId)
             ->setParameter('organizations', $organizations)
             ->setParameter('parentOrganizations', $parentOrganizations)
@@ -249,6 +253,27 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         return $result;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case that the search query is used.
+     *
+     * @param string       $search
+     * @param QueryBuilder $query
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder
+     */
+    private function buildSearchQuery(string $search, QueryBuilder $query): QueryBuilder
+    {
+        $query
+            ->leftJoin('o.objectValues', 'valueSearch')
+            ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
+            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
+            ->setParameter('search', '%'.$search.'%');
+
+        return $query;
     }
 
     /**
@@ -556,22 +581,4 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return $sortable;
     }
-
-    // Filter functie schrijven, checken op betaande atributen, zelf looping
-    // voorbeeld filter student.generaldDesription.landoforigen=NL
-    //                  entity.atribute.propert['name'=landoforigen]
-    //                  (objectEntity.value.objectEntity.value.name=landoforigen and
-    //                  objectEntity.value.objectEntity.value.value=nl)
-
-    /*
-    public function findOneBySomeField($value): ?ObjectEntity
-    {
-        return $this->createQueryBuilder('o')
-            ->andWhere('o.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

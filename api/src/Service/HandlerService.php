@@ -30,6 +30,7 @@ class HandlerService
     private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
+    private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
@@ -68,6 +69,7 @@ class HandlerService
         FormIOService $formIOService,
         SubscriberService $subscriberService,
         CacheInterface $cache,
+        GatewayService $gatewayService,
         Stopwatch $stopwatch
     ) {
         $this->entityManager = $entityManager;
@@ -85,6 +87,7 @@ class HandlerService
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
+        $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
     }
 
@@ -143,6 +146,20 @@ class HandlerService
         throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
+    public function cutPath(array $pathParams): string
+    {
+        $path = parse_url($this->request->getUri())['path'];
+
+        return substr($path, strlen('/api/'.$pathParams[0]));
+    }
+
+    public function proxy(Handler $handler, Endpoint $endpoint, string $method): Response
+    {
+        $path = $this->cutPath($endpoint->getPath());
+
+        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+    }
+
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
     {
         $overrides = $handler->getMethodOverrides();
@@ -152,9 +169,9 @@ class HandlerService
         $content = new \Adbar\Dot($this->getDataFromRequest());
 
         foreach ($overrides[$this->request->getMethod()] as $override) {
-            if (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $content->has($override['condition']))) {
-                $method = array_key_exists("method", $override) ? $override['method'] : $method;
-                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
+            if (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $content->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 if (isset($override['pathValues'])) {
                     foreach ($override['pathValues'] as $key => $value) {
@@ -171,9 +188,9 @@ class HandlerService
                     }
                 }
                 $this->request->getSession()->set('parameters', $parameters);
-            } elseif (key_exists($method, $overrides) && (!array_key_exists("condition", $override) || $this->request->query->has($override['condition']))) {
-                $method = array_key_exists("method", $override) ? $override['method'] : $method;
-                $operationType = array_key_exists("operationType", $override) ? $override['operationType'] : $operationType;
+            } elseif (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $this->request->query->has($override['condition']))) {
+                $method = array_key_exists('method', $override) ? $override['method'] : $method;
+                $operationType = array_key_exists('operationType', $override) ? $override['operationType'] : $operationType;
                 $parameters = $this->request->getSession()->get('parameters');
                 foreach ($override['pathValues'] as $key => $value) {
                     $parameters['path'][$key] = $this->request->query->get($value);
@@ -194,6 +211,10 @@ class HandlerService
     {
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
+
+        if ($handler->getProxyGateway()) {
+            return $this->proxy($handler, $endpoint, $method);
+        }
 
         $this->getMethodOverrides($method, $operationType, $handler);
 
@@ -229,7 +250,7 @@ class HandlerService
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
             $this->stopwatch->start('handleObject', 'handleHandler');
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $data ?? null, $method, $operationType);
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
             $this->stopwatch->stop('handleObject');
         }
 
@@ -396,6 +417,7 @@ class HandlerService
 
         // Lets seriliaze the shizle (if no document and we have a result)
         $this->stopwatch->start('serialize', 'createResponse');
+
         try {
             !isset($document) && $result = $this->serializer->serialize($data, $acceptType, $options);
         } catch (NotEncodableValueException $e) {

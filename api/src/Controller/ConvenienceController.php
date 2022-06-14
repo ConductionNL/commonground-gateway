@@ -68,6 +68,73 @@ class ConvenienceController extends AbstractController
     }
 
     /**
+     * @Route("/admin/entity-crud-endpoint/{id}")
+     */
+    public function getEntityCrudEndpoint(string $id): Response
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->find($id);
+
+        if (!$entity) {
+            return new Response(
+                $this->serializer->serialize(['message' => 'No entity found with id: '.$id], 'json'),
+                Response::HTTP_NOT_FOUND,
+                ['content-type' => 'json']
+            );
+        }
+
+        $methods = [
+            'hasGETCollection' => false,
+            'hasPOST'          => false,
+            'hasGETItem'       => false,
+            'hasPUT'           => false,
+        ];
+
+        $crudEndpoint = null;
+        $isValid = true;
+
+        foreach ($entity->getHandlers() as $handler) {
+            if ($handler->getEndpoints()) {
+                foreach ($handler->getEndpoints() as $endpoint) {
+                    switch ($endpoint->getMethod()) {
+                        case 'get':
+                            if ($endpoint->getOperationType() == 'collection') {
+                                $methods['hasGETCollection'] = true;
+                                $crudEndpoint = '';
+                                foreach ($endpoint->getPath() as $key => $path) {
+                                    $crudEndpoint .= $key < 1 ? $path : '/'.$path;
+                                }
+                                break;
+                            }
+                            $endpoint->getOperationType() == 'item' && $methods['hasGETItem'] = true;
+                            break;
+                        case 'post':
+                            $methods['hasPOST'] = true;
+                            break;
+                        case 'put':
+                            $methods['hasPUT'] = true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        if (!$crudEndpoint) {
+            $isValid = false;
+        } else {
+            foreach ($methods as $method) {
+                $method === false && $isValid = false;
+                break;
+            }
+        }
+
+        return new Response(
+            $this->serializer->serialize(['endpoint' => $isValid === false ? $isValid : $crudEndpoint], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
      * @Route("/admin/publiccode")
      *
      * @throws GuzzleException

@@ -14,12 +14,9 @@ on:
       - master
       - staging
       - development
-      - feature-admin
       - feature-soap
       - feature-soap-extra
       - feature-cleanup
-      - feature-cleanup-taalhuizen
-      - odyssey-hackathon-2022
 
 jobs:
   build:
@@ -57,12 +54,6 @@ jobs:
         run: |
           echo "APP_ENV=stag">> $GITHUB_ENV
           echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"  
-      - name: Setting APP_ENV to admin
-        if: contains( github.ref, 'feature-admin' ) || contains( github.base_ref, 'feature-admin' )
-        run: |
-          echo "APP_ENV=admin">> $GITHUB_ENV
-          echo "APP_BUILD=admin-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to soap
         if: contains( github.ref, 'feature-soap' ) || contains( github.base_ref, 'feature-soap' )
@@ -76,18 +67,6 @@ jobs:
           echo "APP_ENV=cleanup">> $GITHUB_ENV
           echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to feature-cleanup-taalhuizen
-        if: contains( github.ref, 'feature-cleanup-taalhuizen' ) || contains( github.base_ref, 'feature-cleanup-taalhuizen' )
-        run: |
-          echo "APP_ENV=refactorTaalhuizen">> $GITHUB_ENV
-          echo "APP_BUILD=refactorTaalhuizen-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to odyssey-hackathon-2022
-        if: contains( github.ref, 'odyssey-hackathon-2022' ) || contains( github.base_ref, 'odyssey-hackathon-2022' )
-        run: |
-            echo "APP_ENV=odyssey">> $GITHUB_ENV
-            echo "APP_BUILD=odyssey-$RELEASE">> $GITHUB_ENV
-            echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to soap-extensions
         if: contains( github.ref, 'feature-soap-extra' ) || contains( github.base_ref, 'feature-soap-extra' )
         run: |
@@ -101,7 +80,7 @@ jobs:
       - name: Run the docker image
         run: docker-compose up -d
       - name: Taking some sleep (for containers to come up)
-        run: sleep 35
+        run: sleep 45
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
@@ -139,11 +118,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/feature-cleanup-taalhuizen' || github.ref == 'refs/heads/odyssey-hackathon-2022')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-admin'|| github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/feature-cleanup-taalhuizen' || github.ref == 'refs/heads/odyssey-hackathon-2022')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)

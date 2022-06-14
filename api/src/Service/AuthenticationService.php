@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Security;
 use Twig\Environment;
 
 class AuthenticationService
@@ -24,16 +24,16 @@ class AuthenticationService
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
     private Client $client;
-    private TokenStorageInterface $tokenStorage;
+    private Security $security;
     private CommonGroundService $commonGroundService;
     private Environment $twig;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, TokenStorageInterface $tokenStorage, CommonGroundService $commonGroundService, Environment $twig)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, CommonGroundService $commonGroundService, Environment $twig)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->client = new Client();
-        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
         $this->commonGroundService = $commonGroundService;
         $this->twig = $twig;
     }
@@ -149,9 +149,9 @@ class AuthenticationService
 
     public function retrieveCurrentUser()
     {
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->security->getUser();
 
-        if (!is_string($user)) {
+        if ($user) {
             return $user;
         }
 

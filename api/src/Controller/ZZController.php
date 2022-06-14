@@ -42,7 +42,7 @@ class ZZController extends AbstractController
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
         if (Uuid::isValid($id)) {
-            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, "", $path)]);
+            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, '', $path)]);
             if ($document instanceof Document) {
                 return $documentService->handleDocument($document, $id);
             }
@@ -54,7 +54,6 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // Get full path
-        // We should look at a better search moddel in sql
         $stopwatch->start('getEndpoint', 'ZZController');
         $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
         $stopwatch->stop('getEndpoint');
@@ -62,7 +61,7 @@ class ZZController extends AbstractController
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
             $acceptType = $handlerService->getRequestType('accept');
-            $acceptType === 'form.io' && $acceptType = 'json';
+            in_array($acceptType, ['form.io', 'jsonhal'])  && $acceptType = 'json';
 
             return new Response(
                 $serializer->serialize(['message' =>  'Could not find an Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),

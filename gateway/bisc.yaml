@@ -63,7 +63,7 @@
 #            - locale
 #            - person
 #            - currentPassword
-#
+#        
 #
 #    # UserGroup (security) object
 #    usergroup:
@@ -125,7 +125,7 @@
 #        availableProperties:
 #            - name
 #            - email
-#
+#    
 #    #notUniqueEmail Object
 #    notUniqueEmail:
 #        name: email
@@ -286,13 +286,13 @@
 #        route: "/api/postal_codes"
 #        name: postalCode
 #        description: Een combinatie van een 1000 code van een postcode, en een taalhuis
-#
+#    
 #    # shareStudent object
 #    shareStudent:
 #        route: "/api/share_students"
 #        name: shareStudent
 #        description: Het delen van een student met een specifiek email adres
-#
+#    
 #    # ReferringPerson object
 #    referringPerson:
 #        name: referringPerson
@@ -478,6 +478,8 @@
 #        persistToGateway: true # todo: remove after removing cc dependency:
 #        cascade: true
 #        cascadeDelete: true
+##        include: true
+##        extend: true
 #    organization_members:
 #        name: members
 #        description: The members of this organization (if it is a team).
@@ -526,7 +528,7 @@
 #        caseSensitive: false
 #        entity: "@email"
 #        persistToGateway: true # todo: remove after removing cc dependency:
-#
+#    
 #    # Not unique Email
 #    notUniqueEmail_name:
 #        name: name
@@ -1223,7 +1225,7 @@
 #        type: boolean
 #        entity: "@studentIntake"
 #        required: true
-#
+#    
 #    # ReferringPerson Properties
 #    referringPerson_givenName:
 #        name: givenName
@@ -1793,7 +1795,7 @@
 #        entity: "@postalCode"
 #        object: "@organization"
 #        inversedBy: "@organization_team_postalCodes"
-#
+#    
 #    #share student
 #    shareStudent_student:
 #        name: student
@@ -1858,7 +1860,7 @@
 #        pathRegex: "^(users)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    userEndpointPost:
 #        name: User endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe user
@@ -1882,7 +1884,7 @@
 #        pathRegex: <{userItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    userEndpointDelete:
 #        name: User endpoint delete
 #        description: endpoint voor het verwijderen van een user
@@ -1899,7 +1901,7 @@
 #        pathRegex: "^(user_groups)$"
 #        method: GET
 #        operationType: collection
-#
+#    
 #    userGroupEndpointPost:
 #        name: UserGroup endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe userGroup
@@ -1923,7 +1925,7 @@
 #        pathRegex: <{userGroupItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    userGroupEndpointDelete:
 #        name: UserGroup endpoint delete
 #        description: endpoint voor het verwijderen van een userGroup
@@ -1931,7 +1933,7 @@
 #        pathRegex: <{userGroupItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#        
 #    # Organization Endpoints
 #    organizationEndpointGet:
 #        name: Organization endpoint get collection
@@ -2095,7 +2097,7 @@
 #        pathRegex: <{addressItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#        
 #    # Person Endpoints
 #    personEndpointGet:
 #        name: Person endpoint get collection
@@ -2145,7 +2147,7 @@
 #        pathRegex: "^(employees)$"
 #        method: GET
 #        operationType: collection
-#
+#    
 #    employeeEndpointPost:
 #        name: employee endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe employee
@@ -2169,7 +2171,7 @@
 #        pathRegex: <{employeeItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    employeeEndpointDelete:
 #        name: employee endpoint delete
 #        description: endpoint voor het verwijderen van een employee
@@ -2186,7 +2188,7 @@
 #        pathRegex: "^(students)$"
 #        method: GET
 #        operationType: collection
-#
+#    
 #    studentEndpointPost:
 #        name: student endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe student
@@ -2210,7 +2212,7 @@
 #        pathRegex: <{studentItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    studentEndpointDelete:
 #        name: student endpoint delete
 #        description: endpoint voor het verwijderen van een student
@@ -2227,7 +2229,7 @@
 #        pathRegex: "^(learning_needs)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    learningNeedEndpointPost:
 #        name: learningNeed endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe learningNeed
@@ -2251,7 +2253,7 @@
 #        pathRegex: <{learningNeedItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    learningNeedEndpointDelete:
 #        name: learningNeed endpoint delete
 #        description: endpoint voor het verwijderen van een learningNeed
@@ -2259,7 +2261,7 @@
 #        pathRegex: <{learningNeedItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # learningResult Endpoints
 #    learningResultEndpointGet:
 #        name: learningResult endpoint get collection
@@ -2268,7 +2270,7 @@
 #        pathRegex: "^(learning_results)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    learningResultEndpointPost:
 #        name: learningResult endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe learningResult
@@ -2292,7 +2294,7 @@
 #        pathRegex: <{learningResultItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    learningResultEndpointDelete:
 #        name: learningResult endpoint delete
 #        description: endpoint voor het verwijderen van een learningResult
@@ -2300,7 +2302,7 @@
 #        pathRegex: <{learningResultItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # Participation Endpoints
 #    participationEndpointGet:
 #        name: participation endpoint get collection
@@ -2309,7 +2311,7 @@
 #        pathRegex: "^(participations)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    participationEndpointPost:
 #        name: participation endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe participation
@@ -2333,7 +2335,7 @@
 #        pathRegex: <{participationItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    participationEndpointDelete:
 #        name: participation endpoint delete
 #        description: endpoint voor het verwijderen van een participation
@@ -2350,7 +2352,7 @@
 #        pathRegex: "^(share_students)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    shareStudentEndpointPost:
 #        name: shareStudent endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe shareStudent
@@ -2374,7 +2376,7 @@
 #        pathRegex: <{shareStudentItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    shareStudentEndpointDelete:
 #        name: shareStudent endpoint delete
 #        description: endpoint voor het verwijderen van een shareStudent
@@ -2382,7 +2384,7 @@
 #        pathRegex: <{shareStudentItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # testResult Endpoints
 #    testResultEndpointGet:
 #        name: testResult endpoint get collection
@@ -2391,7 +2393,7 @@
 #        pathRegex: "^(test_results)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    testResultEndpointPost:
 #        name: testResult endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe testResult
@@ -2415,7 +2417,7 @@
 #        pathRegex: <{testResultItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    testResultEndpointDelete:
 #        name: testResult endpoint delete
 #        description: endpoint voor het verwijderen van een testResult
@@ -2423,7 +2425,7 @@
 #        pathRegex: <{testResultItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # document Endpoints
 #    documentEndpointGet:
 #        name: document endpoint get collection
@@ -2432,7 +2434,7 @@
 #        pathRegex: "^(documents)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    documentEndpointPost:
 #        name: document endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe document
@@ -2456,7 +2458,7 @@
 #        pathRegex: <{documentItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    documentEndpointDelete:
 #        name: document endpoint delete
 #        description: endpoint voor het verwijderen van een document
@@ -2464,7 +2466,7 @@
 #        pathRegex: <{documentItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # contactMoment Endpoints
 #    contactMomentEndpointGet:
 #        name: contactMoment endpoint get collection
@@ -2473,7 +2475,7 @@
 #        pathRegex: "^(contact_moments)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    contactMomentEndpointPost:
 #        name: contactMoment endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe contactMoment
@@ -2497,7 +2499,7 @@
 #        pathRegex: <{contactMomentItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    contactMomentEndpointDelete:
 #        name: contactMoment endpoint delete
 #        description: endpoint voor het verwijderen van een contactMoment
@@ -2505,7 +2507,7 @@
 #        pathRegex: <{contactMomentItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#    
 #    # postalCode Endpoints
 #    postalCodeEndpointGet:
 #        name: postalCode endpoint get collection
@@ -2514,7 +2516,7 @@
 #        pathRegex: "^(postal_codes)$"
 #        method: GET
 #        operationType: collection
-#
+#        
 #    postalCodeEndpointPost:
 #        name: postalCode endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe postalCode
@@ -2538,7 +2540,7 @@
 #        pathRegex: <{postalCodeItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+#    
 #    postalCodeEndpointDelete:
 #        name: postalCode endpoint delete
 #        description: endpoint voor het verwijderen van een postalCode
@@ -2546,7 +2548,7 @@
 #        pathRegex: <{postalCodeItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
+#        
 ## Handlers
 #App\Entity\Handler:
 #    # User Handler
@@ -2557,7 +2559,7 @@
 #        conditions: "{}"
 #        endpoints: ["@userEndpointGet", "@userEndpointPost", "@userEndpointGetItem", "@userEndpointPut", "@userEndpointDelete"]
 #        entity: "@user"
-#
+#        
 #    # UserGroup Handler
 #    userGroupHandler:
 #        name: UserGroup handler
@@ -2566,7 +2568,7 @@
 #        conditions: "{}"
 #        endpoints: ["@userGroupEndpointGet", "@userGroupEndpointPost", "@userGroupEndpointGetItem", "@userGroupEndpointPut", "@userGroupEndpointDelete"]
 #        entity: "@usergroup"
-#
+#        
 #    # Organization Handler
 #    organizationHandler:
 #        name: Organization handler
@@ -2602,7 +2604,7 @@
 #        conditions: "{}"
 #        endpoints: [ "@addressEndpointGet", "@addressEndpointPost", "@addressEndpointGetItem", "@addressEndpointPut", "@addressEndpointDelete" ]
 #        entity: "@address"
-#
+#        
 #    # Person Handler
 #    personHandler:
 #        name: Person handler
@@ -2629,7 +2631,7 @@
 #        conditions: "{}"
 #        endpoints: ["@studentEndpointGet", "@studentEndpointPost", "@studentEndpointPut", "@studentEndpointDelete"]
 #        entity: "@student"
-#
+#        
 #    # Student Handler
 #    studentGetItemHandler:
 #        name: Student get item Handler
@@ -2660,7 +2662,7 @@
 #        conditions: "{}"
 #        endpoints: ["@learningResultEndpointGet", "@learningResultEndpointPost", "@learningResultEndpointGetItem", "@learningResultEndpointPut", "@learningResultEndpointDelete"]
 #        entity: "@learningResult"
-#
+#    
 #    # Participation Handler
 #    participationHandler:
 #        name: Participation Handler
@@ -2678,7 +2680,7 @@
 #        conditions: "{}"
 #        endpoints: ["@testResultEndpointGet", "@testResultEndpointPost", "@testResultEndpointGetItem", "@testResultEndpointPut", "@testResultEndpointDelete"]
 #        entity: "@testResult"
-#
+#    
 #    # Document Handler
 #    documentHandler:
 #        name: Document Handler
@@ -2687,7 +2689,7 @@
 #        conditions: "{}"
 #        endpoints: ["@documentEndpointGet", "@documentEndpointPost", "@documentEndpointGetItem", "@documentEndpointPut", "@documentEndpointDelete"]
 #        entity: "@document"
-#
+#    
 #    # ContactMoment Handler
 #    contactMomentHandler:
 #        name: ContactMoment handler
@@ -2705,7 +2707,7 @@
 #        conditions: "{}"
 #        endpoints: ["@postalCodeEndpointGet", "@postalCodeEndpointPost", "@postalCodeEndpointGetItem", "@postalCodeEndpointPut", "@postalCodeEndpointDelete"]
 #        entity: "@postalCode"
-#
+#    
 #    # ShareStudent Handler
 #    shareStudentHandler:
 #        name: ShareStudent Handler

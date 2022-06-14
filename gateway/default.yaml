@@ -1,12 +1,12 @@
-## ContactCatalogus Entities, Attributes, Endpoints, Handlers & (fixtures:) ObjectEntities + Values
-## todo: Collection could and maybe should replace everything but Fixtures (check other todo's and defaultValues first)
-#
-#Collections
-App\Entity\CollectionEntity:
-    contactCatalogusCollection:
-        name: ContactCatalogus collection
-        sourceType: github
-        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
+# ContactCatalogus Entities, Attributes, Endpoints, Handlers & (fixtures:) ObjectEntities + Values
+# todo: Collection could and maybe should replace everything but Fixtures (check other todo's and defaultValues first)
+
+# Collections
+#App\Entity\CollectionEntity:
+#    contactCatalogusCollection:
+#        name: ContactCatalogus collection
+#        sourceType: github
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
 
 # Entities
 App\Entity\Entity:
@@ -27,7 +27,7 @@ App\Entity\Entity:
         description: Entity Person exists of an id, a givenName, a additionalName, a familyName, one or more telephones, one or more addresses, one or more emails and one or more organisations.
         endpoint: "people"
 
-#    Email Entity
+    #Email Entity
     email:
         route: "/api/emails"
         name: email

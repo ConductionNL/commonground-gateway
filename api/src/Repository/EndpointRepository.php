@@ -35,9 +35,32 @@ class EndpointRepository extends ServiceEntityRepository
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
         $query = $this->createQueryBuilder('e')
-            ->andWhere('e.method = :method')
+            ->andWhere('LOWER(e.method) = :method')
             ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
-            ->setParameters(['method' => $method, 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+            ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+
+        return $query
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Finds the get item endpoint for the given entity, if it (/only one) exists.
+     *
+     * @param Entity $entity
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return Endpoint|null
+     */
+    public function findGetItemByEntity(Entity $entity): ?Endpoint
+    {
+        $query = $this->createQueryBuilder('e')
+            ->leftJoin('e.handlers', 'h')
+            ->where('h.entity = :entity')
+            ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
+            ->setParameters(['entity' => $entity, 'method' => 'get', 'operationType' => 'item'])
+            ->distinct();
 
         return $query
             ->getQuery()

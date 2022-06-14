@@ -3,7 +3,7 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.111036206+02:00"
+    created: "2022-06-02T10:42:11.1611055+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -17,7 +17,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 9.0.1
     description: A Helm chart for Kubernetes
-    digest: 8ea59faa16a20291e0b2452a0b6e236896257f2848b5038b85f51391a921f560
+    digest: 61176b210c41b7f1153021924af204988fb50a0dbef2ed51856d5b98543078f7
     name: commonground-gateway
     type: application
     urls:
@@ -25,7 +25,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.097680332+02:00"
+    created: "2022-06-02T10:42:11.1470975+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -44,7 +44,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.087904489+02:00"
+    created: "2022-06-02T10:42:11.13809+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -63,7 +63,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.077893218+02:00"
+    created: "2022-06-02T10:42:11.1291651+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -82,7 +82,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.068525563+02:00"
+    created: "2022-06-02T10:42:11.1194311+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -101,7 +101,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.057721642+02:00"
+    created: "2022-06-02T10:42:11.1111628+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -120,7 +120,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.042625433+02:00"
+    created: "2022-06-02T10:42:11.0991632+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -139,7 +139,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-05-06T10:20:28.026550959+02:00"
+    created: "2022-06-02T10:42:11.0883193+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -161,13 +161,12 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2022-05-06T10:20:28.116956675+02:00"
+    created: "2022-06-02T10:42:11.1641055+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       version: 1.x.x
-    description: Chart for PostgreSQL, an object-relational database management system
-      (ORDBMS) with an emphasis on extensibility and on standards-compliance.
+    description: Chart for PostgreSQL, an object-relational database management system (ORDBMS) with an emphasis on extensibility and on standards-compliance.
     digest: 871e4726cd44dddc531dc9bcdbd4fb6e7da875fbe0c6ec347bfcda33acc2d246
     home: https://github.com/bitnami/charts/tree/master/bitnami/postgresql
     icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-220x234.png
@@ -195,16 +194,14 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 3.9.16
-    created: "2022-05-06T10:20:28.124296435+02:00"
+    created: "2022-06-02T10:42:11.1681069+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
       version: 1.x.x
-    description: RabbitMQ is an open source general-purpose message broker that is
-      designed for consistent, highly-available messaging scenarios (both synchronous
-      and asynchronous).
+    description: RabbitMQ is an open source general-purpose message broker that is designed for consistent, highly-available messaging scenarios (both synchronous and asynchronous).
     digest: e87eafdbe989aecc9e6dd4a9190b0fa616591b26004a760a5c4ef4d4f4dbb0fd
     home: https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq
     icon: https://bitnami.com/assets/stacks/rabbitmq/img/rabbitmq-stack-220x234.png
@@ -227,16 +224,14 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2022-05-06T10:20:28.131629255+02:00"
+    created: "2022-06-02T10:42:11.1721062+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
       version: 1.x.x
-    description: Open source, advanced key-value store. It is often referred to as
-      a data structure server since keys can contain strings, hashes, lists, sets
-      and sorted sets.
+    description: Open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.
     digest: f8fa3b0bdaecf7f9aa1669b027c5452f7efaab21c10b0dbcf7148e17c54ac5b7
     home: https://github.com/bitnami/charts/tree/master/bitnami/redis
     icon: https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png
@@ -256,4 +251,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2022-05-06T10:20:28.012993221+02:00"
+generated: "2022-06-02T10:42:11.0757922+02:00"

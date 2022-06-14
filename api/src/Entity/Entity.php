@@ -29,13 +29,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/entities/{id}"},
- *      "put"={"path"="/admin/entities/{id}"},
- *      "delete"={"path"="/admin/entities/{id}"}
+ *     "get"={"path"="/admin/entities/{id}"},
+ *     "get_sync"={
+ *          "method"="GET",
+ *          "path"="/admin/entities/{id}/sync"
+ *      },
+ *     "put"={"path"="/admin/entities/{id}"},
+ *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/entities"},
- *      "post"={"path"="/admin/entities"}
+ *     "get"={"path"="/admin/entities"},
+ *     "post"={"path"="/admin/entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -129,7 +133,7 @@ class Entity
     private string $function = 'noFunction';
 
     /**
-     * wheter or not the properties of the original object are automaticly include.
+     * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="boolean", nullable=true)
@@ -145,11 +149,22 @@ class Entity
     private $inherited = false;
 
     /**
+     * The attributes of this Entity.
+     *
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
+
+    /**
+     * @var Collection|null The attributes allowed to partial search on using the search query parameter.
+     *
+     * @Groups({"read","write"})
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
+     * @MaxDepth(1)
+     */
+    private ?Collection $searchPartial;
 
     /**
      * @Groups({"write"})
@@ -285,6 +300,7 @@ class Entity
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
@@ -484,6 +500,41 @@ class Entity
             // set the owning side to null (unless already changed)
             if ($attribute->getEntity() === $this) {
                 $attribute->setEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getSearchPartial(): Collection
+    {
+        return $this->searchPartial;
+    }
+
+    public function addSearchPartial(Attribute $attribute): self
+    {
+        // Only allow adding to searchPartial if the attribute is part of this Entity.
+        // Or if this entity has no attributes, when loading in fixtures.
+        if (!$this->searchPartial->contains($attribute)
+            && ($this->attributes->isEmpty() || $this->attributes->contains($attribute))
+        ) {
+            $this->searchPartial[] = $attribute;
+            $attribute->setSearchPartial($this);
+        }
+        //todo: else throw error?
+
+        return $this;
+    }
+
+    public function removeSearchPartial(Attribute $attribute): self
+    {
+        if ($this->searchPartial->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getSearchPartial() === $this) {
+                $attribute->setSearchPartial(null);
             }
         }
 

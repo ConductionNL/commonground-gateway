@@ -30,13 +30,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/object_entities/{id}"},
- *      "put"={"path"="/admin/object_entities/{id}"},
- *      "delete"={"path"="/admin/object_entities/{id}"}
+ *     "get"={"path"="/admin/object_entities/{id}"},
+ *     "get_sync"={
+ *          "method"="GET",
+ *          "path"="/admin/object_entities/{id}/sync"
+ *      },
+ *     "put"={"path"="/admin/object_entities/{id}"},
+ *     "delete"={"path"="/admin/object_entities/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/object_entities"},
- *      "post"={"path"="/admin/object_entities"}
+ *     "get"={"path"="/admin/object_entities"},
+ *     "post"={"path"="/admin/object_entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -64,6 +68,14 @@ class ObjectEntity
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
+
+    /**
+     * @var string The {at sign}id or self->href of this Object.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $self;
 
     /**
      * @var string UUID of the external object of this ObjectEntity
@@ -213,6 +225,18 @@ class ObjectEntity
     public function setId(string $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getSelf(): ?string
+    {
+        return $this->self;
+    }
+
+    public function setSelf(?string $self): self
+    {
+        $this->self = $self;
 
         return $this;
     }

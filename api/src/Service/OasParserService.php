@@ -248,8 +248,7 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) :
-                (
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (
                     isset($response['content']['application/json']['schema']['properties']) ?
                     substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
                     substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
@@ -309,12 +308,13 @@ class OasParserService
         $attribute = new Attribute();
         $attribute->setName($propertyName);
 
-        (isset($entityInfo['required']) && in_array($propertyName, $entityInfo['required'])) && $attribute->setRequired(true);
+        (isset($schema['required']) && $schema['required'] === true) && $attribute->setRequired(true);
         isset($schema['description']) && $attribute->setDescription($schema['description']);
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);
         $attribute->setEntity($parentEntity);
+        $attribute->setSearchable(true);
 
         return $attribute;
     }
@@ -364,6 +364,7 @@ class OasParserService
         $newAttribute->setEntity($parentEntity);
         $newAttribute->setCascade(true);
         $newAttribute->setMultiple($multiple);
+        $newAttribute->setSearchable(true);
 
         $newAttribute->setObject($targetEntity);
 
@@ -449,14 +450,14 @@ class OasParserService
      */
     private function getPathRegex(array $path, array $method): string
     {
-        $pathRegex = '#^(';
+        $pathRegex = '^';
         foreach ($path as $key => $part) {
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[^/]*' : ($key <= 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]{36}' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
         }
-        $pathRegex .= ')$#';
+        $pathRegex .= '$';
 
         return $pathRegex;
     }
@@ -512,7 +513,12 @@ class OasParserService
             foreach ($allOf as $set) {
                 if (isset($set['$ref'])) {
                     $schema = $this->getSchemaFromRef($set['$ref']);
-                    $properties = array_merge($schema['properties'], $properties);
+
+                    if (isset($schema['properties'])) {
+                        $properties = array_merge($schema['properties'], $properties);
+                    } else {
+                        $properties[] = $schema;
+                    }
                 } else {
                     $properties = array_merge($set['properties'], $properties);
                 }
@@ -583,6 +589,9 @@ class OasParserService
         // Loop through properties and create Attributes
         if (isset($schema['properties'])) {
             foreach ($schema['properties'] as $propertyName => $property) {
+                if (isset($schema['required']) && is_array($schema['required']) && in_array($propertyName, $schema['required'])) {
+                    $property['required'] = true;
+                }
                 $attribute = $this->createAttribute($property, $propertyName, $newEntity, $collection);
             }
         }
@@ -771,6 +780,7 @@ class OasParserService
         $handlers = $this->createHandlers();
         $this->entityManager->flush();
         // Set synced at
+        $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($collection->getId());
         $collection->setSyncedAt(new \DateTime('now'));
         $this->entityManager->persist($collection);
         $this->entityManager->flush();

@@ -109,7 +109,7 @@ class SubscriberService
         if (array_key_exists('externalId', $data)) {
             // Convert an object outside the gateway into an ObjectEntity in the gateway
             $newObjectEntity = $this->convertToGatewayService->convertToGatewayObject($subscriber->getEntityOut(), null, $data['externalId']);
-            $data = $this->eavService->handleGet($newObjectEntity, null);
+            $data = $this->eavService->handleGet($newObjectEntity, null, null);
 //            var_dump($data);
 
             // create log
@@ -125,6 +125,7 @@ class SubscriberService
 //            $this->validationService->createdObjects = $this->request->getMethod() == 'POST' ? [$object] : [];
 //            $this->validationService->removeObjectsNotMultiple = []; // to be sure
 //            $this->validationService->removeObjectsOnPut = []; // to be sure
+            // todo: use new ObjectEntityService->saveObject function
             $newObjectEntity = $this->validationService->validateEntity($newObjectEntity, $data);
             if (!empty($this->validationService->promises)) {
                 Utils::settle($this->validationService->promises)->wait();

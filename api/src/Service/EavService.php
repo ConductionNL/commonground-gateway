@@ -16,9 +16,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Symfony\Component\Stopwatch\Stopwatch;
 use function GuzzleHttp\json_decode;
 use GuzzleHttp\Promise\Utils;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class EavService
 {
@@ -695,7 +697,7 @@ class EavService
 
             $dot = new Dot();
             // Lets turn the from dor attat into an propper array
-            foreach ($fields as $field => $value) {
+            foreach ($fields as $key => $value) {
                 $dot->add($value, true);
             }
 
@@ -703,6 +705,35 @@ class EavService
         }
 
         return $fields;
+    }
+
+    /**
+     * Gets extend from the request to use for extending.
+     *
+     * @param Request $request
+     *
+     * @return array
+     */
+    public function getRequestExtend(Request $request): ?array
+    {
+        $extend = $request->query->get('extend');
+
+        if ($extend) {
+            // Lets deal with a comma seperated list
+            if (!is_array($extend)) {
+                $extend = explode(',', $extend);
+            }
+
+            $dot = new Dot();
+            // Lets turn the from dor attat into an propper array
+            foreach ($extend as $key => $value) {
+                $dot->add($value, true);
+            }
+
+            $extend = $dot->all();
+        }
+
+        return $extend;
     }
 
     /**
@@ -721,7 +752,7 @@ class EavService
         // Its an enity endpoint
         switch ($request->getMethod()) {
             case 'GET':
-                $result = $this->handleGet($info['object'], $info['fields']);
+                $result = $this->handleGet($info['object'], $info['fields'], null);
                 $responseType = Response::HTTP_OK;
                 break;
             case 'PUT':
@@ -771,7 +802,7 @@ class EavService
         // its a collection endpoint
         switch ($request->getMethod()) {
             case 'GET':
-                $result = $this->handleSearch($info['entity']->getName(), $request, $info['fields'], $info['extension']);
+                $result = $this->handleSearch($info['entity'], $request, $info['fields'], null, $info['extension']);
                 $responseType = Response::HTTP_OK;
                 break;
             case 'POST':
@@ -907,33 +938,42 @@ class EavService
             $this->validationService->notify($notification['objectEntity'], $notification['method']);
         }
 
-        return $this->responseService->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields, null);
     }
 
     /**
      * Handles a get item api call.
      *
      * @param ObjectEntity $object
-     * @param $fields
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param string       $acceptType
+     *
+     * @throws CacheException|InvalidArgumentException
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, ?array $fields): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
     {
-        return $this->responseService->renderResult($object, $fields);
+        return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
     }
 
     /**
      * Handles a search (collection) api call.
      *
-     * @param string  $entityName
-     * @param Request $request
-     * @param $fields
+     * @param Entity     $entity
+     * @param Request    $request
+     * @param array|null $fields
      * @param $extension
+     * @param null   $filters
+     * @param string $acceptType
+     *
+     * @throws CacheException
+     * @throws InvalidArgumentException
      *
      * @return array|array[]
      */
-    public function handleSearch(string $entityName, Request $request, ?array $fields, $extension, $filters = null): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
         $query = $request->query->all();
         unset($query['limit']);
@@ -948,18 +988,6 @@ class EavService
         } else {
             $offset = ($page - 1) * $limit;
         }
-
-        /* @todo we might want some filtering here, also this should be in the entity repository */
-        $this->stopwatch->start('FindEntity', 'handleSearch');
-        $entity = $this->em->getRepository('App:Entity')->findOneBy(['name' => $entityName]);
-        $this->stopwatch->stop('FindEntity');
-
-        $this->stopwatch->start('updateGatewayPool', 'handleSearch');
-        if ($request->query->get('updateGatewayPool') == 'true') { // TODO: remove this when we have a better way of doing this?!
-            $this->convertToGatewayService->convertEntityObjects($entity, $query);
-        }
-        unset($query['updateGatewayPool']);
-        $this->stopwatch->stop('updateGatewayPool');
 
         // Allowed order by
         $this->stopwatch->start('orderParametersCheck', 'handleSearch');
@@ -999,6 +1027,7 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
+        $filterCheck[] = 'search';
 
         foreach ($query as $param => $value) {
             $param = str_replace(['_'], ['.'], $param);
@@ -1047,6 +1076,7 @@ class EavService
         }
 
         // Lets see if we need to flatten te responce (for example csv use)
+        // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
         $flat = false;
         if (in_array($request->headers->get('accept'), ['text/csv']) || in_array($extension, ['csv'])) {
             $flat = true;
@@ -1055,28 +1085,95 @@ class EavService
         $results = [];
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
-            // Old $MaxDepth in renderResult
-//            $results[] = $this->responseService->renderResult($object, $fields, null, $flat);
-            $results[] = $this->responseService->renderResult($object, $fields, $flat);
+            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
 
         // If we need a flattend responce we are al done
+        // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
         if ($flat) {
             return $results;
         }
 
         // If not lets make it pritty
-        $results = ['results' => $results];
-        $results['total'] = $repositoryResult['total'];
-        $results['limit'] = $limit;
-        $results['pages'] = ceil($repositoryResult['total'] / $limit);
-        $results['pages'] = $results['pages'] == 0 ? 1 : $results['pages'];
-        $results['page'] = floor($offset / $limit) + 1;
-        $results['start'] = $offset + 1;
+        return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
 
-        return $results;
+    /**
+     * Returns a response array including pagination for handleSearch function. This response is different depending on the acceptType.
+     *
+     * @param string $acceptType
+     * @param Entity $entity
+     * @param array  $results
+     * @param int    $total
+     * @param int    $limit
+     * @param int    $offset
+     *
+     * @return array[]
+     */
+    private function handlePagination(string $acceptType, Entity $entity, array $results, int $total, int $limit, int $offset): array
+    {
+        $pages = ceil($total / $limit);
+        $pages = $pages == 0 ? 1 : $pages;
+        $page = floor($offset / $limit) + 1;
+
+        switch ($acceptType) {
+            case 'jsonhal':
+                $paginationResult = $this->handleJsonHal($entity, [
+                    'results' => $results, 'limit' => $limit, 'total' => $total,
+                    'offset'  => $offset, 'page' => $page, 'pages' => $pages,
+                ]);
+                break;
+            case 'jsonld':
+                // todo: try and match api-platform ? https://api-platform.com/docs/core/pagination/
+            case 'json':
+            default:
+                $paginationResult = ['results' => $results];
+                $paginationResult = $this->handleDefaultPagination($paginationResult, [
+                    'results' => $results, 'limit' => $limit, 'total' => $total,
+                    'offset'  => $offset, 'page' => $page, 'pages' => $pages,
+                ]);
+                break;
+        }
+
+        return $paginationResult;
+    }
+
+    private function handleJsonHal(Entity $entity, array $data): array
+    {
+        $path = $entity->getName();
+        if ($this->session->get('endpoint')) {
+            $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['id' => $this->session->get('endpoint')]);
+            $path = implode('/', $endpoint->getPath());
+        }
+        $paginationResult['_links'] = [
+            'self'  => ['href' => '/api/'.$path.($data['page'] == 1 ? '' : '?page='.$data['page'])],
+            'first' => ['href' => '/api/'.$path],
+        ];
+        if ($data['page'] > 1) {
+            $paginationResult['_links']['prev']['href'] = '/api/'.$path.($data['page'] == 2 ? '' : '?page='.($data['page'] - 1));
+        }
+        if ($data['page'] < $data['pages']) {
+            $paginationResult['_links']['next']['href'] = '/api/'.$path.'?page='.($data['page'] + 1);
+        }
+        $paginationResult['_links']['last']['href'] = '/api/'.$path.($data['pages'] == 1 ? '' : '?page='.$data['pages']);
+        $paginationResult = $this->handleDefaultPagination($paginationResult, $data);
+        $paginationResult['_embedded'] = [$path => $data['results']]; //todo replace $path with $entity->getName() ?
+
+        return $paginationResult;
+    }
+
+    private function handleDefaultPagination(array $paginationResult, array $data): array
+    {
+        $paginationResult['count'] = count($data['results']);
+        $paginationResult['limit'] = $data['limit'];
+        $paginationResult['total'] = $data['total'];
+        $paginationResult['start'] = $data['offset'] + 1;
+        $paginationResult['page'] = $data['page'];
+        $paginationResult['pages'] = $data['pages'];
+
+        return $paginationResult;
     }
 
     /**
@@ -1084,6 +1181,8 @@ class EavService
      *
      * @param ObjectEntity         $object
      * @param ArrayCollection|null $maxDepth
+     *
+     * @throws InvalidArgumentException
      *
      * @return array
      */
