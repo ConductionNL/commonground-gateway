@@ -6,9 +6,9 @@ Anyways, you can read the full sales pitch on the product page.
 
 This however is the technical documentation where we can read a bit more about
 
--   Features
--   Roadmap
--   Security
--   Installation
--   Design Decisions
--   Contributing
+- Features
+- Roadmap
+- Security
+- Installation
+- Design Decisions
+- Contributing
