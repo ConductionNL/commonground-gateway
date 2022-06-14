@@ -1,21 +1,21 @@
 # Getting started
 
-The Common Gateway is designed to be developer-friendly, providing a local development environment is an essential part of that experience. Since the Common Gateway is developed [Kubernetes first](https://kubernetes.io/docs/tutorials/kubernetes-basics/) we will assume that you have [Docker Desktop](https://docs.docker.com/desktop/) installed. If you want to play around with the API we also recommend using [Postman](https://www.postman.com/downloads/) or running a local application through [Node.js](https://nodejs.org/en/download/)
+The Common Gateway is designed to be developer-friendly and provides a local development environment is an essential part of that experience. Since the Common Gateway is developed [Kubernetes first](https://kubernetes.io/docs/tutorials/kubernetes-basics/) we will assume that you have [Docker Desktop](https://docs.docker.com/desktop/) installed. If you want to play around with the API we also recommend using [Postman](https://www.postman.com/downloads/) or running a local application through [Node.js](https://nodejs.org/en/download/)
 __________________________________________________________________________________________________________
 
 ## Basic setup
 
 _________________________________________________________________________________________________________
 
-The Common Gateway supplies a (progressive) web-based app, or PWA, with an AJAX endpoint that handles all the application's actions. In other words, it's the engine under your application. The gateway itself doesn't provide an interface. You can, however, also deploy the getaways dashboard. To handle and store information, the gateway will also need a database, additionally, it uses a separate NGINX container to service web traffic (you can read a bit more about the why under security). Generally speaking, this means that your local setup would look something like this.
+The Common Gateway supplies a (progressive) web-based app, or PWA, with an AJAX endpoint that handles all the application's actions. In other words, it's the engine under your application. The Gateway itself doesn't provide an interface. You can, however, also deploy a dashboard. To handle and store information, the Gateway will also need a database. Additionally, it uses a separate NGINX container to service web traffic (you can read a bit more about the why under security). Generally speaking, your local setup would look something like this:
 
-Okay, that might sound a bit complex, but keep in mind that containers are just Kubernetes slang for virtual machines, and volumes are comparable to drives. Fortunately, Docker Desktop handles all the complexities of this setup, so let's take a look at getting it all up and running.
+Okay, that might sound a bit complex, but keep in mind that containers are just Kubernetes slang for virtual machines, and volumes are comparable to drives. Fortunately, Docker Desktop handles all the complexities of this setup, so let's look at getting it all up and running.
 __________________________________________________________________________________________________________
 
-## Spinning up the gateway
+## Spinning up the Gateway
 
 __________________________________________________________________________________________________________
-As a Kubernetes open-source software project, all the Gateway's images are publicly available for download, this means that we don't need to build any code locally. We simply tell Docker Desktop to pull the images, connect them, attach volumes and spin them up.
+As a Kubernetes open-source software project, all the Gateway's images are publicly available for download, which means that we don't need to build any code locally. We simply tell Docker Desktop to pull the images, connect them, attach volumes and spin them up.
 
 This is done through a `docker-compose` file (example below). The latest version is pulled automatically with your repository.
 
@@ -88,4 +88,4 @@ ________________________________________________________________________________
 
 __________________________________________________________________________________________________________
 
-Now that we have our Web Gateway up and running, let's start by creating some objects to turn it into a working API. The Web Gateway supports three different ways of [configuring]().
+Now that we have our Web Gateway up and running let's start by creating some objects to turn it into a working API. The Gateway supports three different ways of configuring:
