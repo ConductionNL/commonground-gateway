@@ -18,16 +18,21 @@ class OasDocumentationService
 {
     private ParameterBagInterface $params;
     private EntityManagerInterface $em;
-    private CommonGroundService $commonGroundService;
-    private ValidationService $validationService;
+    private TranslationService $translationService;
+    private HandlerService $handlerService;
     private array $supportedValidators;
 
-    public function __construct(ParameterBagInterface $params, EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
+    public function __construct(
+        ParameterBagInterface $params,
+        EntityManagerInterface $em,
+        TranslationService $translationService,
+        HandlerService $handlerService
+    )
     {
         $this->params = $params;
         $this->em = $em;
-        $this->commonGroundService = $commonGroundService;
-        $this->validationService = $validationService;
+        $this->translationService = $translationService;
+        $this->handlerService = $handlerService;
 
         // Let's define the validator that we support for documentation right now
         $this->supportedValidators = $this->supportedValidators();
@@ -324,7 +329,7 @@ class OasDocumentationService
      */
     public function getResponseSchema(Handler $handler, $responseType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), $handler->getMappingOut());
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
         return $this->serializeSchema($schema, $responseType, $handler->getEntity());
     }
 
@@ -337,7 +342,7 @@ class OasDocumentationService
      */
     public function getRequestSchema(Handler $handler, string $requestType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null);
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
         return $this->serializeSchema($schema, $requestType, $handler->getEntity());
     }
 
@@ -610,11 +615,10 @@ class OasDocumentationService
      * Generates an OAS schema from an entity
      *
      * @param Entity $entity
-     * @param array $mappingIn
-     * @param array|null $mappingOut
+     * @param array $mapping
      * @return array
      */
-    public function getSchema(Entity $entity, array $mappingIn, ?array $mappingOut): array
+    public function getSchema(Entity $entity, array $mapping): array
     {
         $schema = [
             'type' => 'object',
@@ -646,19 +650,31 @@ class OasDocumentationService
             // The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
 
-                // If mappingIn then change property name
-                if ($mappingIn) {
-                    $schema = $this->generateMappingIn($attribute, $mappingIn, $schema);
+                # @todo fix mapping
+//                if ($mapping) {
+//                    $newSchema = [];
+//                    $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
+//                    foreach ($newSchema as $key => $value) {
+//                        $newSchema[$key] = [
+//                            'example' => 'string'
+//                        ];
+//                    }
+//
+//                    #@todo here mapping
+//                    # object is still there -> request body
+//                    # object is not showing -> response body
+//                    $schema = $this->unsetProperties($attribute, $mapping, $schema);
+//                    $schema['properties'] = $newSchema;
+//                } else {
+//                    // Else add schema
+//                    $schema['properties'][$attribute->getName()] = [
+//                        '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))
+//                    ];
+//                }
 
-                    if ($mappingOut) {
-                        $schema = $this->generateMappingOut($mappingIn, $mappingOut, $schema);
-                    }
-                } else {
-                    // Else add schema
-                    $schema['properties'][$attribute->getName()] = [
-                        '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))
-                    ];
-                }
+                $schema['properties'][$attribute->getName()] = [
+                    '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))
+                ];
 
                 // Schema's dont have validators so
                 continue;
@@ -692,11 +708,30 @@ class OasDocumentationService
                 ];
             }
 
-            $schema = $this->generateMappingIn($attribute, $mappingIn, $schema);
-
-            if ($mappingOut) {
-                $schema = $this->generateMappingOut($mappingIn, $mappingOut, $schema);
-            }
+//            # @todo fix mapping
+//            $newSchema = [];
+//            $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
+//            foreach ($newSchema as $key => $value) {
+////                if($value !== null) {
+////                    #check if there is an object in the array -> if there is no example
+////                    # this does not work
+////                    if (!key_exists('example', $value)) {
+////                        $newSchema[$key] = [
+////                            'type' => 'object',
+////                            'example' => $value
+////                        ];
+////                    }
+////                }
+//                $newSchema[$key] = [
+//                    'example' => 'string'
+//                ];
+//            }
+//
+//            #@todo here mapping
+//            # object is still there -> request body
+//            # object is not showing -> response body
+//            $schema = $this->unsetProperties($attribute, $mapping, $schema);
+//            $schema['properties'] = $newSchema;
         }
         return $schema;
     }
@@ -705,14 +740,14 @@ class OasDocumentationService
      * Generates an OAS example (data) for an attribute
      *
      * @param Attribute $attribute
-     * @param array $mappingIn
+     * @param array $mapping
      * @param array $schema
      * @return array
      */
-    public function generateMappingIn(Attribute $attribute, array $mappingIn, array $schema): array
+    public function unsetProperties(Attribute $attribute, array $mapping, array $schema): array
     {
         // Let do mapping (changing of property names)
-        foreach ($mappingIn as $key => $value) {
+        foreach ($mapping as $key => $value) {
 
             // Get first and last part of the string
             $last_part = substr(strrchr($value, "."), 1);
@@ -723,45 +758,15 @@ class OasDocumentationService
 
                 if ($attribute->getName() === $firstPart) {
                     unset($schema['properties'][$firstPart]);
-                    $schema['properties'][$key]['example'] = $value;
                 }
             }
 
             if ($attribute->getName() === $value) {
-                $schema['properties'][$key] = $schema['properties'][$attribute->getName()];
-                $schema['properties'][$key]['example'] = $value;
                 unset($schema['properties'][$attribute->getName()]);
             }
         }
         return $schema;
     }
-
-    /**
-     * Generates an OAS example (data) for an attribute
-     *
-     * @param array $mappingIn
-     * @param array $mappingOut
-     * @param array $schema
-     * @return array
-     */
-    public function generateMappingOut(array $mappingIn, array $mappingOut, array $schema): array
-    {
-        // Setup a mappingIn array
-        $mappingArray = [];
-        foreach ($mappingIn as $key => $value) {
-            $mappingArray[] = $key;
-        }
-
-        // Let do mapping (changing of property names)
-        foreach ($mappingOut as $key => $value) {
-            if (in_array($value, $mappingArray)) {
-                unset($schema['properties'][$value]);
-                $schema['properties'][$key]['example'] = $value;
-            }
-        }
-        return $schema;
-    }
-
 
     /**
      * Generates attribute examples for format and type
