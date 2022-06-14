@@ -45,7 +45,7 @@ class EavOasCommand extends Command
 
         // return this if there was no problem running the command
         // (it's equivalent to returning int(0))
-        $this->oasDocumentationService->getRenderDocumentation(null);
+        $this->oasDocumentationService->writeRedoc(null);
 //        $this->eavDocumentationService->write();
 
         return Command::SUCCESS;
