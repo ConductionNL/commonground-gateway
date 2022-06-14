@@ -38,14 +38,15 @@ class ConvertToGatewayService
     /**
      * Gets all objects from entity->gateway (/source) and converts them to ObjectEntities,
      * will also remove ObjectEntities that should no longer exist, because they got removed from the source api.
+     *
      * @TODO: use Promises and MessageQueue for this process! One promise per page from source? (see $this->getExternObjects())
      *
      * @param Entity $entity
      * @param $query
      *
-     * @return void|null
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return void|null
      */
     public function convertEntityObjects(Entity $entity, $query)
     {
@@ -122,14 +123,14 @@ class ConvertToGatewayService
     }
 
     /**
-     * Get all objects for this Entity that exist outside the gateway. (todo: note: will only get the first 25 pages for now!)
+     * Get all objects for this Entity that exist outside the gateway. (todo: note: will only get the first 25 pages for now!).
      *
-     * @param array $config array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
-     * @param array $component
+     * @param array  $config             array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
+     * @param array  $component
      * @param string $url
-     * @param array $query
-     * @param array $totalExternObjects
-     * @param int $page
+     * @param array  $query
+     * @param array  $totalExternObjects
+     * @param int    $page
      *
      * @return array
      */
@@ -174,16 +175,16 @@ class ConvertToGatewayService
     /**
      * Convert an object from outside the gateway into an ObjectEntity in the gateway.
      *
-     * @param Entity $entity
-     * @param array|null $body
-     * @param string|null $id
-     * @param Value|null $subresourceOf
-     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
-     * @param string|null $url
-     *
-     * @return ObjectEntity|null
+     * @param Entity            $entity
+     * @param array|null        $body
+     * @param string|null       $id
+     * @param Value|null        $subresourceOf
+     * @param ObjectEntity|null $objectEntity  a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * @param string|null       $url
      *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity|null
      */
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null): ?ObjectEntity
     {
@@ -319,9 +320,9 @@ class ConvertToGatewayService
      *
      * @param string $id
      *
-     * @return ObjectEntity|null
-     *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity|null
      */
     public function syncObjectEntity(string $id): ?ObjectEntity
     {
@@ -384,13 +385,13 @@ class ConvertToGatewayService
     /**
      * @TODO docs
      *
-     * @param ObjectEntity $newObject
-     * @param array $body
+     * @param ObjectEntity      $newObject
+     * @param array             $body
      * @param ObjectEntity|null $objectEntity
      *
-     * @return ObjectEntity
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     private function checkAttributes(ObjectEntity $newObject, array $body, ?ObjectEntity $objectEntity): ObjectEntity
     {
@@ -475,9 +476,9 @@ class ConvertToGatewayService
      * @param ObjectEntity      $newObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @return string|null
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return string|null
      */
     private function checkAttribute($value, Attribute $attribute, ObjectEntity $newObject, ?ObjectEntity $objectEntity)
     {
@@ -557,9 +558,9 @@ class ConvertToGatewayService
      * @param Value             $valueObject
      * @param ObjectEntity|null $objectEntity
      *
-     * @return array|false|string|null
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return array|false|string|null
      */
     private function addObjectToValue(Attribute $attribute, $value, Value $valueObject, ?ObjectEntity $objectEntity)
     {

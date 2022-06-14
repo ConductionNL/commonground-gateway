@@ -61,7 +61,7 @@ class ZZController extends AbstractController
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
             $acceptType = $handlerService->getRequestType('accept');
-            in_array($acceptType, ['form.io', 'jsonhal'])  && $acceptType = 'json';
+            in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
 
             return new Response(
                 $serializer->serialize(['message' =>  'Could not find an Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),
