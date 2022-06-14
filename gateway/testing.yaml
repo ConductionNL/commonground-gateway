@@ -1,14 +1,14 @@
 ## Parameters for endpoint regex
 #parameters:
-#    weerItemRegex: "#^(weer/[^/]*)$#"
-#    weekendItemRegex: "#^(weer/[^/]*)$#"
+#    weerItemRegex: "^(weer/[^/]*)$"
+#    weekendItemRegex: "^(weer/[^/]*)$"
 #
 #App\Entity\Endpoint:
 #    weerEndpointGet:
 #        name: Weer endpoint get collection
 #        description: endpoint voor dingen rondom weer
 #        path: ['weer']
-#        pathRegex: "#^(weer)$#"
+#        pathRegex: "^(weer)$"
 #        method: GET
 #        operationType: collection
 #
@@ -24,7 +24,7 @@
 #        name: Weer endpoint post
 #        description: endpoint voor dingen rondom weer
 #        path: ['weer']
-#        pathRegex: "#^(weer)$#"
+#        pathRegex: "^(weer)$"
 #        method: POST
 #        operationType: collection
 #
@@ -48,16 +48,14 @@
 #        name: Weekend GET collection
 #        description: endpoint voor weekend
 #        path: ['weekend']
-#        pathRegex: "#^(weekend)$#"
-#        method: GET
+#        pathRegex: "^(weekend)$"
 #        operationType: collection
 #
 #    weekendEndpointGetItem:
 #        name: Weekend GET item
-#        description: endpoint voor weekend
+#        description: endpoint voor dingen rondom weer
 #        path: ['weekend', '{id}']
 #        pathRegex: <{weekendItemRegex}>
-#        method: GET
 #        operationType: item
 #
 #    # peopleEndpoint:
@@ -77,7 +75,6 @@
 #        description: Dit entity behandeld weer.
 #
 #    weekendEntity:
-#        route: "/api/weekend"
 #        name: weekend
 #        description: Dit entity behandeld weekend.
 #
@@ -97,7 +94,7 @@
 #App\Entity\Attribute:
 #    # weekWeather Attributes
 #    weekWeather_monday:
-#        name: maandag
+#        name: monday
 #        description: Weather of this day.
 #        type: string
 #        maxLength: 255
@@ -105,33 +102,34 @@
 #        entity: "@weekWeather"
 #        nullable: true
 #    weekWeather_tuesday:
-#        name: dinsdag
+#        name: tuesday
 #        description: Weather of this day.
 #        type: string
 #        maxLength: 255
 #        required: true
 #        entity: "@weekWeather"
 #    weekWeather_wednesday:
-#        name: woensdag
+#        name: wednesday
 #        description: Weather of this day.
 #        type: string
 #        maxLength: 255
 #        required: true
 #        entity: "@weekWeather"
 #    weekWeather_thursday:
-#        name: donderdag
+#        name: thursday
 #        description: Weather of this day.
 #        type: string
 #        maxLength: 255
 #        required: true
 #        entity: "@weekWeather"
 #    weekWeather_friday:
-#        name: vrijdag
+#        name: friday
 #        description: Weather of this day.
 #        type: string
 #        maxLength: 255
 #        required: true
 #        entity: "@weekWeather"
+#
 #    weekWeather_weekend:
 #        name: weekend
 #        description: Weekend of this weer.
@@ -146,6 +144,7 @@
 #        type: string
 #        maxLength: 255
 #        entity: "@weekendEntity"
+#
 #    weekend_sunday:
 #        name: sunday
 #        description: Sunday of this weekend.
@@ -304,8 +303,9 @@
 #        # template: "<html><body><h1>Test</h1></body></html>"
 #        # templateType: twig
 #
+#
 #    weekendHandler:
-#        name: Weekend handler
+#        name: Weather handler
 #        methods: ["*"]
 #        sequence: 0
 #        conditions: "{}"
