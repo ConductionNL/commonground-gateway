@@ -93,11 +93,13 @@ class OasDocumentationService
      * Generates an OAS3 documentation for the exposed eav entities in the form of an array.
      *
      * @param string|null $applicationId
+     *
      * @return bool
      */
     public function writeRedoc(?string $applicationId): bool
     {
         $docs = $this->getRenderDocumentation($applicationId);
+
         return $this->write($docs);
     }
 
