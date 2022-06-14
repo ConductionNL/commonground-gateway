@@ -85,6 +85,8 @@ services:
     security_opt:
       - no-new-privileges
     read_only: true
+    tmpfs:
+        - /tmp:uid=101,gid=101
 
   api:
     &nginx
@@ -98,6 +100,7 @@ services:
       - php
     volumes:
       - ./api/public:/srv/api/public:ro
+      - ./api/docker/nginx/conf.d/generated:/etc/nginx/conf.d
     ports:
       - "80:80"
     environment:
@@ -113,7 +116,7 @@ services:
       - net_bind_service
     security_opt:
       - no-new-privileges
-    read_only: true
+#    read_only: true
 
   # helmPackage:
   #   image: alpine/helm:3.2.1

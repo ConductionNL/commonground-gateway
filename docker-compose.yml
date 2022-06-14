@@ -112,7 +112,6 @@ services:
       - net_bind_service
     security_opt:
       - no-new-privileges
-    read_only: true
 
   # helmPackage:
   #   image: alpine/helm:3.2.1
