@@ -12,7 +12,7 @@ Here is where you can configure access and communicate with those sources. You c
 
 The fields with \* are mandatory. Special mention to the documentation field where you can specify the URL to your API documentation. They are recommended for working in developers working in teams.
 
-```json
+```bash
 Properties
 _name_:
 _location_:
