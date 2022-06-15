@@ -185,6 +185,11 @@ class OasDocumentationService
             return $docs;
         }
 
+        // If there is no entity return docs
+        if (!$handler->getEntity()) {
+            return $docs;
+        }
+
         // Get path and loop through the array
         $paths = $endpoint->getPath();
 
