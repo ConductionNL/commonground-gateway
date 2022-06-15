@@ -1,0 +1,4 @@
+name: docs
+dependencies:
+  - pip:
+    - jinja2==3.0.0
