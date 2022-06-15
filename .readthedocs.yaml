@@ -6,3 +6,8 @@ formats: all
 mkdocs:
   configuration: mkdocs.yml
   fail_on_warning: false
+
+python:
+  install:
+    - requirements: redoc/requirements.txt
+    

@@ -41,7 +41,7 @@ Default is set to `false`.
 ## `Object`
 
 This Validation is used for type: `object`
-If the attribute expects one or more objects as values, the expected Object Type (also [_Entity_](./MOD_object_types.md)) is defined like this.
+If the attribute expects one or more objects as values, the expected Object Type (also [_Entity_](./object_types.md)) is defined like this.
 The config used for `Object` is a reference to another Object Type.
 
 ## `InversedBy`
