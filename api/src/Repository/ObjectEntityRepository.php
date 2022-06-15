@@ -186,7 +186,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $array = $this->handleValueScopeFilters($array);
 
         foreach ($array as $key => $value) {
-            $key = str_replace(['_', '..'], ['.', '._'], $key);
+            $key = str_replace(['__', '_', '..'], ['__','.', '._'], $key);
             if (substr($key, 0, 1) == '.') {
                 $key = '_'.ltrim($key, $key[0]);
             }
