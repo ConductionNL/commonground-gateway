@@ -6,7 +6,7 @@ The Conductor Gateway is designed as a feature-rich solution to quickly develop 
 
 Sources form the beating heart of the gateway. A source represents an external API (registered or microservice in nature) possibly exposed through the web gateway.
 
-[Read more about sources](./MOD_sources.md)
+[Read more about sources](./sources.md)
 
 ## Authentication
 
@@ -62,12 +62,12 @@ The web gateway supports two different approaches to pagination, allowing the de
 
 ```json
 {
- “results”: .. ,#array containing 125 items
- “total”:125
- “start”:1,
- “limit”:25,
- “page”:1
- “pages”:5
+ "results": [],
+ "total":125,
+ "start":1,
+ "limit":25,
+ "page":1,
+ "pages":5
 }
 ```
 
@@ -75,12 +75,12 @@ Let's say you are displaying the data in a table and want more results to begin 
 
 ```json
 {
- “results”: .. , #array containing 100 items
- “total”:125
- “start”:1,
- “limit”:100,
- “page”:1
- “pages”:2
+ "results": [],
+ "total":125,
+ "start":1,
+ "limit":100,
+ "page":1,
+ "pages":2
 }
 ```
 
@@ -88,12 +88,12 @@ You can now provide pagination buttons to your users based directly on the pages
 
 ```json
 {
- “results”: .. , #array containing 25 items
- “total”:125
- “start”:101,
- “limit”:100,
- “page”:2
- “pages”:2
+ "results": [],
+ "total":125,
+ "start":101,
+ "limit":100,
+ "page":2,
+ "pages":2
 }
 ```
 
@@ -105,7 +105,7 @@ The download option for exporting a file containing a data set, for GDPR reasons
 
 All the collection endpoints support returning downloadable files, besides JSON objects. Select the 'accept' head to the preferred file format. We currently support `text/csv`,`application/ms-excel`,`application/pdf`. You can use the field, extend, and pagination query functionality to influence the result/data set.
 
-[Read more about export configurations here](./MOD_configurations.md)
+[Read more about export configurations here](./configurations.md)
 
 ## Entities and Attributes
 
