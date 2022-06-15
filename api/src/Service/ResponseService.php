@@ -377,7 +377,7 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) || !array_key_exists($attribute->getName(), $extend)))) {
+                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
                     continue;
                 }
 
