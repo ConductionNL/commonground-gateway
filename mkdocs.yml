@@ -17,6 +17,6 @@ theme:
     name: readthedocs
 
 dependencies:
-  - mkdocs: 1.2.3
+  - mkdocs== 1.3.0
   - pip:
-    - jinja2: 3.0.0
+    - jinja2==3.0.0
