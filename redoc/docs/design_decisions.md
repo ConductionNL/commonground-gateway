@@ -1,8 +1,8 @@
 # Design Decisions
 
-## API First
+An up-to-date DESIGN.md is kept in the Common Gateway repository and can be found [here](https://github.com/CommonGateway/.github/blob/main/DESIGN.md)
 
-We develop our API's through the API-first strategy. This means ...
+## API First
 
 An API-first approach means that for any given development project, your APIs are treated as "first-class citizens." An API-first approach involves developing APIs that are consistent and reusable, which can be accomplished by using an API description language to establish a contract for how the API is supposed to behave. The specification we use is the [OpenAPI Specification](https://github.com/OAI/OpenAPI-Specification). You can view the latest version of this specification (3.0.1) on [GitHub](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md).
 

@@ -2,7 +2,7 @@
 
 To understand what the Commonground API does, we need to know how to use it and its intended use.
 
-The Commonground Gateway is built to solve a problem: as users want to take care of certain things like moving, applying for passports, etc. - they need to submit or verify the information. The information (data) goes through a PWA (Progressive Web App), better known as a website to most people, in both ways - from the user to where it needs to be and back.
+The Common Gateway is built to solve a problem: as users want to take care of certain things like moving, applying for passports, etc. - they need to submit or verify the information. The information (data) goes through a PWA (Progressive Web App), better known as a website to most people, in both ways - from the user to where it needs to be and back.
 
 This data may be classified or needs a data quality check before organizations can work with the data. This requires data handling. It MUST send this data elsewhere because it can't do anything else with the information itself. That's what we mean by the PWA is dumb.
 
@@ -32,7 +32,17 @@ The incoming data is sent in objects. These objects can be sent in different for
 To explain it briefly, we will provide you with a "week/weather" analogy.
 
 Let's picture a JSON object(although handlers also accept XML /SOAP):
-`{ "monday" : "rain", "tuesday" : "sunny", "wednesday" : "cloudy", "thursday" : "blizzard", "friday" : "hurricane", }`
+
+```json
+{ 
+    "monday" : "rain", 
+    "tuesday" : "sunny", 
+    "wednesday" : "cloudy", 
+    "thursday" : "blizzard", 
+    "friday" : "hurricane", 
+}
+```
+
 It would be lovely if everyone knew this format and stuck to it, but in reality, the values may change, and even the properties may come in under different names. Instead of "Monday" as a property name, the object may come in with "Maandag" or "Lundi" as a given property name. Luckily, this is where handlers come in; handlers do what their name implies and handle a specific functionality. In this situation, handlers would use mapping. Similarly, if the property values need translation, well, the handlers use just that: translation.
 
 Once the mapping/ translation is done correctly, the handlers send the object data to the EAV storage (more below).
