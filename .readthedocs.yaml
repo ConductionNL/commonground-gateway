@@ -9,6 +9,6 @@ mkdocs:
 
 python:
   install:
-    - requirements: redoc/requirements/docs.txt
+    - requirements: /redoc/requirements.txt
     - method: pip
       path: .
