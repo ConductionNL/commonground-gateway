@@ -195,23 +195,32 @@ class OasDocumentationService
 
         foreach ($paths as $path) {
             // Paths -> entity route / {id}
-            if ($path == '{id}') {
-                $docs['paths'][$handler->getEntity()->getRoute().'/'.$path][$method] = $this->getEndpointMethod($method, $handler, true);
-            }
 
-            // Paths -> entity route
-            if (in_array($method, ['get', 'post'])) {
-                $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
+
+            // @todo Paths worden niet toegevoegd bij de kiss-apis.yaml
+            // add entity name as path
+//            if ($handler->getEntity()->getRoute() === null) {
+//                $docs['paths']['/' . $handler->getEntity()->getName()][$method] = $this->getEndpointMethod($method, $handler, false);
+//            } else {
+                if ($path == '{id}') {
+                    $docs['paths'][$handler->getEntity()->getRoute() . '/' . $path][$method] = $this->getEndpointMethod($method, $handler, true);
+                }
+
+                // Paths -> entity route
+                if (in_array($method, ['get', 'post'])) {
+                    $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
+                }
             }
-        }
+//        }
 
         // components -> schemas
-        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), $handler->getMappingOut());
+        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
+
 
         // @todo remove duplicates from array
         // Tags
-        $docs['tags'][] = [
-            'name'        => ucfirst($handler->getEntity()->getName()),
+        $tags = [
+            'name' => ucfirst($handler->getEntity()->getName()),
             'description' => $endpoint->getDescription(),
         ];
 
@@ -372,7 +381,7 @@ class OasDocumentationService
      */
     public function getResponseSchema(Handler $handler, $responseType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut());
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null);
 
         return $this->serializeSchema($schema, $responseType, $handler->getEntity());
     }
@@ -381,13 +390,13 @@ class OasDocumentationService
      * Gets an OAS description for a specific method.
      *
      * @param Handler $handler
-     * @param string  $requestType
+     * @param string $requestType
      *
      * @return array
      */
     public function getRequestSchema(Handler $handler, string $requestType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn());
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null);
 
         return $this->serializeSchema($schema, $requestType, $handler->getEntity());
     }
@@ -721,15 +730,15 @@ class OasDocumentationService
      * Generates an OAS schema from an entity.
      *
      * @param Entity $entity
-     * @param array  $mapping
+     * @param array $mapping
      *
      * @return array
      */
-    public function getSchema(Entity $entity, array $mapping): array
+    public function getSchema(Entity $entity, array $mapping, ?array $docs): array
     {
         $schema = [
-            'type'       => 'object',
-            'required'   => [],
+            'type' => 'object',
+            'required' => [],
             'properties' => [],
         ];
 
