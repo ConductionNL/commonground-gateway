@@ -140,7 +140,7 @@ So what does that mean for EAV mapping? Our objects become entities, and our pro
 
 Entities represent objects you want to communicate to underlaying sources. To do this, they require a source and an endpoint on that source to send the object to. You may choose to ignore this. And just 'store' your objects with the gateway, this might be an excellent way to mock API's in development environments, but it's not recommended for production environments.
 
-[Read more about entities](./MOD_object_types.md)
+[Read more about entities](./object_types.md)
 
 ### Attribute
 
