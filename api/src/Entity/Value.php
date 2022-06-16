@@ -233,7 +233,7 @@ class Value
     public function setIntegerValue(?int $integerValue): self
     {
         $this->integerValue = $integerValue;
-        $this->stringValue = $integerValue !== null ? (string) $integerValue : null;
+        $this->stringValue = $integerValue !== null ? "$integerValue" : null;
 
         return $this;
     }
