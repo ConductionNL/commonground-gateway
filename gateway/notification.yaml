@@ -16,7 +16,7 @@
 #        pathRegex: "^(notifications)$"
 #        method: POST
 #        operationType: collection
-#        
+#
 #    # Event get endpoint
 #    # todo: This endpoint needs to be connected to the Event handler after loading in fixtures, 
 #    # todo: this handler also needs post & get in handler->methods.
@@ -38,10 +38,29 @@
 #        asynchronous: false
 #        entity: '@notification'
 #        mappingIn:
+#            type: event_name
 #            data.id: case_uuid
-#            data.name: event_name
 #            data.description: description
 #            data.number: case_number
+#        translationsIn: ["eventTypesTable"]
+#            
+#App\Entity\Translation:
+#    eventTypeTranslation1:
+#        translationTable: eventTypesTable
+#        translateFrom: CaseCreated
+#        translateTo: nl.vng.zaken.zaak_aangemaakt
+#        language: en
+#    eventTypeTranslation2:
+#        translationTable: eventTypesTable
+#        translateFrom: CaseChanged
+#        translateTo: nl.vng.zaken.zaak_gewijzigd
+#        language: en
+#    eventTypeTranslation3:
+#        translationTable: eventTypesTable
+#        translateFrom: CaseClosed
+#        translateTo: nl.vng.zaken.zaak_gesloten
+#        language: en
+#    # todo: etc...
 #
 #App\Entity\Entity:
 #    # Notification Object
