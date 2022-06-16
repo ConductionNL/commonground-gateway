@@ -138,10 +138,11 @@ class OasDocumentationService
             $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
-        while(count($this->indirectEntities) > 1) {
+        while (count($this->indirectEntities) > 1) {
             $entity = array_pop($this->indirectEntities);
             $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs);
         }
+
         return $docs;
     }
 
@@ -203,19 +204,18 @@ class OasDocumentationService
 //        var_dump($endpoint->getPath());
 
 //        foreach ($paths as $path) {
-            // Paths -> entity route / {id}
+        // Paths -> entity route / {id}
 
-
-            // @todo Paths worden niet toegevoegd bij de kiss-apis.yaml
-            // add entity name as path
+        // @todo Paths worden niet toegevoegd bij de kiss-apis.yaml
+        // add entity name as path
 //            if ($handler->getEntity()->getRoute() === null) {
 //                $docs['paths']['/' . $handler->getEntity()->getName()][$method] = $this->getEndpointMethod($method, $handler, false);
 //            } else {
 //                if ($path == '{id}') {
-                    $docs['paths']['/api/'. implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
+        $docs['paths']['/api/'.implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
 //                }
 
-                // Paths -> entity route
+        // Paths -> entity route
 //                if (in_array($method, ['get', 'post'])) {
 //                    $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
 //                }
@@ -225,17 +225,16 @@ class OasDocumentationService
         // components -> schemas
         $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
 
-
         // @todo remove duplicates from array
         // Tags
-         $tag = [
-            'name' => ucfirst($handler->getEntity()->getName()),
-            'description' => (string)$endpoint->getDescription(),
+        $tag = [
+            'name'        => ucfirst($handler->getEntity()->getName()),
+            'description' => (string) $endpoint->getDescription(),
         ];
 
-         if(!in_array($tag, $docs['tags'])){
-             $docs['tags'][] = $tag;
-         }
+        if (!in_array($tag, $docs['tags'])) {
+            $docs['tags'][] = $tag;
+        }
 
         return $docs;
     }
@@ -403,7 +402,7 @@ class OasDocumentationService
      * Gets an OAS description for a specific method.
      *
      * @param Handler $handler
-     * @param string $requestType
+     * @param string  $requestType
      *
      * @return array
      */
@@ -743,18 +742,18 @@ class OasDocumentationService
      * Generates an OAS schema from an entity.
      *
      * @param Entity $entity
-     * @param array $mapping
+     * @param array  $mapping
      *
      * @return array
      */
     public function getSchema(Entity $entity, array $mapping, ?array $docs): array
     {
         $schema = [
-            'type' => 'object',
-            'required' => [],
+            'type'       => 'object',
+            'required'   => [],
             'properties' => [],
         ];
-        while(in_array($entity, $this->indirectEntities)) {
+        while (in_array($entity, $this->indirectEntities)) {
             unset($this->indirectEntities[array_search($entity, $this->indirectEntities)]);
         }
 
