@@ -1490,7 +1490,7 @@ class ValidationService
     private function validateAttributeFormat(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
         // if no format is provided we dont validate TODO validate uri
-        if ($attribute->getFormat() == null || in_array($attribute->getFormat(), ['uri', 'duration'])) {
+        if ($attribute->getFormat() == null || in_array($attribute->getFormat(), ['date', 'duration', 'uri', 'int64', 'byte', 'urn', 'reverse-dns'])) {
             return $objectEntity;
         }
 
