@@ -1030,7 +1030,11 @@ class EavService
         $filterCheck[] = 'search';
 
         foreach ($query as $param => $value) {
-            $param = str_replace(['__'], ['.'], $param);
+            if (str_contains($param, '__')) {
+                unset($query[$param]);
+                $param = str_replace(['__'], ['.'], $param);
+                $query[$param] = $value;
+            }
             $param = str_replace(['_'], ['.'], $param);
             $param = str_replace(['..'], ['._'], $param);
 
