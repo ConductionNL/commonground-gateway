@@ -1,0 +1,92 @@
+#App\Entity\CollectionEntity:
+#    notificationCollection:
+#        name: Notification collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/notification_publiccode/main/OAS.yaml
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/notification_publiccode/main/data/notifications.json
+#        loadTestData: true
+#        autoLoad: true
+#
+#App\Entity\Endpoint:
+#    # Notification Endpoint
+#    notificationEndpointPost:
+#        name: Notification endpoint post
+#        description: Endpoint for creating notifications
+#        path: [ 'notifications' ]
+#        pathRegex: "^(notifications)$"
+#        method: POST
+#        operationType: collection
+#        
+#    # Event get endpoint
+#    # todo: This endpoint needs to be connected to the Event handler after loading in fixtures, 
+#    # todo: this handler also needs post & get in handler->methods.
+#    notificationEndpointGet:
+#        name: Event endpoint get
+#        description: Endpoint for getting all events
+#        path: [ 'events' ]
+#        pathRegex: "^(events)$"
+#        method: GET
+#        operationType: collection
+#
+#App\Entity\Subscriber:
+#    notificationToEvent:
+#        name: notificationToEvent
+#        description: A subscriber on a notification that converts a Exxellence case to a VNG notification event.
+#        type: internGateway
+#        # todo: entityOut should be set to the Event entity after loading in fixtures.
+##        entityOut: '@event'
+#        asynchronous: false
+#        entity: '@notification'
+#        mappingIn:
+#            data.id: case_uuid
+#            data.name: event_name
+#            data.description: description
+#            data.number: case_number
+#
+#App\Entity\Entity:
+#    # Notification Object
+#    notification:
+#        name: notifications
+#        route: "/api/notification"
+#        description: Holds information about a case
+#        endpoint: "notifications"
+#
+#App\Entity\Attribute:
+#    # Notification attributes
+#    notification_caseNumber:
+#        name: case_number
+#        description: Number of the case of this notification.
+#        type: integer
+#        required: true
+#        entity: "@notification"
+#
+#    notification_eventName:
+#        name: event_name
+#        description: Event name of this notification.
+#        type: string
+#        required: true
+#        entity: "@notification"
+#
+#    notification_description:
+#        name: description
+#        description: Description of this notification.
+#        type: string
+#        required: true
+#        entity: "@notification"
+#
+#    notification_caseUuid:
+#        name: case_uuid
+#        description: Uuid of the case of this notification.
+#        type: string
+#        format: uuid
+#        required: true
+#        entity: "@notification"
+#
+#App\Entity\Handler:
+#    notificationHandler:
+#        name: Notification handler
+#        methods: ["*"]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: ["@notificationEndpointPost"]
+#        entity: "@notification"
