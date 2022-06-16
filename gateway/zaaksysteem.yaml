@@ -1,3 +1,12 @@
+#App\Entity\CollectionEntity:
+#    notificationCollection:
+#        name: Notification collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/notification_publiccode/main/OAS.yaml
+##        testDataLocation: https://raw.githubusercontent.com/CommonGateway/notification_publiccode/main/data/notifications.json
+##        loadTestData: true
+#        autoLoad: true
+#
 #App\Entity\Application:
 #    application:
 #        domains:
@@ -86,7 +95,7 @@
 #        pathRegex: "^(zaken)$"
 #        method: GET
 #        operationType: collection
-#        
+#
 #    zakenEndpointGetItem:
 #        name: Zaken endpoint get item
 #        description: endpoint for getting a single zaak
