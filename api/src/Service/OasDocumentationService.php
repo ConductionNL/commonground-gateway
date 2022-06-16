@@ -19,6 +19,9 @@ class OasDocumentationService
     private EntityManagerInterface $em;
     private TranslationService $translationService;
     private HandlerService $handlerService;
+
+    public array $indirectEntities;
+
     // Let's define the validator that we support for documentation right now
     private const SUPPORTED_TYPES = [
         'string',
@@ -66,6 +69,7 @@ class OasDocumentationService
         $this->em = $em;
         $this->translationService = $translationService;
         $this->handlerService = $handlerService;
+        $this->indirectEntities = [];
     }
 
     /**
@@ -134,6 +138,10 @@ class OasDocumentationService
             $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
+        while(count($this->indirectEntities) > 1) {
+            $entity = array_pop($this->indirectEntities);
+            $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs);
+        }
         return $docs;
     }
 
@@ -191,9 +199,10 @@ class OasDocumentationService
         }
 
         // Get path and loop through the array
-        $paths = $endpoint->getPath();
+        $path = $endpoint->getPath();
+//        var_dump($endpoint->getPath());
 
-        foreach ($paths as $path) {
+//        foreach ($paths as $path) {
             // Paths -> entity route / {id}
 
 
@@ -202,15 +211,15 @@ class OasDocumentationService
 //            if ($handler->getEntity()->getRoute() === null) {
 //                $docs['paths']['/' . $handler->getEntity()->getName()][$method] = $this->getEndpointMethod($method, $handler, false);
 //            } else {
-                if ($path == '{id}') {
-                    $docs['paths'][$handler->getEntity()->getRoute() . '/' . $path][$method] = $this->getEndpointMethod($method, $handler, true);
-                }
+//                if ($path == '{id}') {
+                    $docs['paths']['/api/'. implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
+//                }
 
                 // Paths -> entity route
-                if (in_array($method, ['get', 'post'])) {
-                    $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
-                }
-            }
+//                if (in_array($method, ['get', 'post'])) {
+//                    $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
+//                }
+//            }
 //        }
 
         // components -> schemas
@@ -219,10 +228,14 @@ class OasDocumentationService
 
         // @todo remove duplicates from array
         // Tags
-        $tags = [
+         $tag = [
             'name' => ucfirst($handler->getEntity()->getName()),
-            'description' => $endpoint->getDescription(),
+            'description' => (string)$endpoint->getDescription(),
         ];
+
+         if(!in_array($tag, $docs['tags'])){
+             $docs['tags'][] = $tag;
+         }
 
         return $docs;
     }
@@ -741,6 +754,9 @@ class OasDocumentationService
             'required' => [],
             'properties' => [],
         ];
+        while(in_array($entity, $this->indirectEntities)) {
+            unset($this->indirectEntities[array_search($entity, $this->indirectEntities)]);
+        }
 
         foreach ($entity->getAttributes() as $attribute) {
             // Handle required fields
@@ -791,6 +807,7 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()] = [
                     '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
                 ];
+                $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
 
                 // Schema's dont have validators so
                 continue;
