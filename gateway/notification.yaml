@@ -20,7 +20,7 @@
 #    # Event get endpoint
 #    # todo: This endpoint needs to be connected to the Event handler after loading in fixtures, 
 #    # todo: this handler also needs post & get in handler->methods.
-#    notificationEndpointGet:
+#    eventEndpointGet:
 #        name: Event endpoint get
 #        description: Endpoint for getting all events
 #        path: [ 'events' ]
@@ -43,7 +43,7 @@
 #            data.description: description
 #            data.number: case_number
 #        translationsIn: ["eventTypesTable"]
-#            
+#
 #App\Entity\Translation:
 #    eventTypeTranslation1:
 #        translationTable: eventTypesTable
