@@ -67,7 +67,7 @@
 #    notification:
 #        name: notifications
 #        route: "/api/notification"
-#        description: Holds information about a case
+#        description: Holds information about a notification
 #        endpoint: "notifications"
 #
 #App\Entity\Attribute:
