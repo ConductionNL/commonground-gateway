@@ -138,7 +138,7 @@ class OasDocumentationService
             $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
-        while (count($this->indirectEntities) > 1) {
+        while (count($this->indirectEntities) > 0) {
             $entity = array_pop($this->indirectEntities);
             $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs);
         }
@@ -201,31 +201,13 @@ class OasDocumentationService
 
         // Get path and loop through the array
         $path = $endpoint->getPath();
-//        var_dump($endpoint->getPath());
 
-//        foreach ($paths as $path) {
-        // Paths -> entity route / {id}
-
-        // @todo Paths worden niet toegevoegd bij de kiss-apis.yaml
-        // add entity name as path
-//            if ($handler->getEntity()->getRoute() === null) {
-//                $docs['paths']['/' . $handler->getEntity()->getName()][$method] = $this->getEndpointMethod($method, $handler, false);
-//            } else {
-//                if ($path == '{id}') {
+        // Add the paths
         $docs['paths']['/api/'.implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
-//                }
-
-        // Paths -> entity route
-//                if (in_array($method, ['get', 'post'])) {
-//                    $docs['paths'][$handler->getEntity()->getRoute()][$method] = $this->getEndpointMethod($method, $handler, false);
-//                }
-//            }
-//        }
 
         // components -> schemas
         $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
 
-        // @todo remove duplicates from array
         // Tags
         $tag = [
             'name'        => ucfirst($handler->getEntity()->getName()),
@@ -806,7 +788,9 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()] = [
                     '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
                 ];
-                $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
+                if (!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())])) {
+                    $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
+                }
 
                 // Schema's dont have validators so
                 continue;
