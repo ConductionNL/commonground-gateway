@@ -788,8 +788,9 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()] = [
                     '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
                 ];
-                if(!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())]))
+                if (!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())])) {
                     $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
+                }
 
                 // Schema's dont have validators so
                 continue;
