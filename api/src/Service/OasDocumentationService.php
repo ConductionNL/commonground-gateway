@@ -138,7 +138,7 @@ class OasDocumentationService
             $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
-        while (count($this->indirectEntities) > 1) {
+        while (count($this->indirectEntities) > 0) {
             $entity = array_pop($this->indirectEntities);
             $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs);
         }
@@ -806,7 +806,8 @@ class OasDocumentationService
                 $schema['properties'][$attribute->getName()] = [
                     '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
                 ];
-                $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
+                if(!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())]))
+                    $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
 
                 // Schema's dont have validators so
                 continue;
