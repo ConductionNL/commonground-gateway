@@ -1,6 +1,10 @@
 # Getting started
 
+Overview:
+TEST
+
 The Common Gateway is designed to be developer-friendly and provides a local development environment is an essential part of that experience. Since the Common Gateway is developed [Kubernetes first](https://kubernetes.io/docs/tutorials/kubernetes-basics/) we will assume that you have [Docker Desktop](https://docs.docker.com/desktop/) installed. If you want to play around with the API we also recommend using [Postman](https://www.postman.com/downloads/) or running a local application through [Node.js](https://nodejs.org/en/download/)
+
 __________________________________________________________________________________________________________
 
 ## Basic setup
