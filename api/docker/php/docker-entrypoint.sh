@@ -52,6 +52,10 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 			#echo "Updating publiccode charts"
 			#bin/console app:publiccode:update --location=/srv/api/public/schema/ --spec-version=0.2
 		#fi
+
+    # Load PUBLICCODE from .env and create Collections
+		echo "Loading publiccode collections"
+		bin/console hautelook:fixtures:load -n --no-bundles
 	fi
 fi
 
