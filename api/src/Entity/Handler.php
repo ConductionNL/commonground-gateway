@@ -36,7 +36,8 @@ use Symfony\Component\Validator\Constraints\Json;
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  * @ApiFilter(SearchFilter::class, properties={
  *     "name": "exact",
- *     "endpoints.id": "exact"
+ *     "endpoints.id": "exact",
+ *     "entity.id": "exact"
  * })
  */
 class Handler
