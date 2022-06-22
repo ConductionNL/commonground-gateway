@@ -55,7 +55,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
     # Load PUBLICCODE from .env and create Collections
 		echo "Loading publiccode collections"
-		bin/console hautelook:fixtures:load -n --no-bundles
+		bin/console app:load-publiccodes
 	fi
 fi
 
