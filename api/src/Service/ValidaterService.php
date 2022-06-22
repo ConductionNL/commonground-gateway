@@ -530,6 +530,12 @@ class ValidaterService
                 // For now..
             case 'int64':
                 // For now..
+            case 'byte':
+                // For now..
+            case 'urn':
+                // For now..
+            case 'reverse-dns':
+                // For now..
             case null:
                 // If attribute has no format return alwaysValid
                 return new Rules\AlwaysValid();

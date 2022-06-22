@@ -5,6 +5,7 @@
 namespace App\Command;
 
 use App\Service\EavDocumentationService;
+use App\Service\OasDocumentationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,10 +14,12 @@ class EavOasCommand extends Command
 {
     // the name of the command (the part after "bin/console")
     protected static $defaultName = 'eav:documentation';
-    protected EavDocumentationService $eavDocumentationService;
+    protected OasDocumentationService $oasDocumentationService;
+    private EavDocumentationService $eavDocumentationService;
 
-    public function __construct(EavDocumentationService $eavDocumentationService)
+    public function __construct(OasDocumentationService $oasDocumentationService, EavDocumentationService $eavDocumentationService)
     {
+        $this->oasDocumentationService = $oasDocumentationService;
         $this->eavDocumentationService = $eavDocumentationService;
 
         parent::__construct();
@@ -42,7 +45,8 @@ class EavOasCommand extends Command
 
         // return this if there was no problem running the command
         // (it's equivalent to returning int(0))
-        $this->eavDocumentationService->write();
+        $this->oasDocumentationService->writeRedoc(null);
+//        $this->eavDocumentationService->write();
 
         return Command::SUCCESS;
 

@@ -86,7 +86,7 @@
 #        pathRegex: "^(zaken)$"
 #        method: GET
 #        operationType: collection
-#        
+#
 #    zakenEndpointGetItem:
 #        name: Zaken endpoint get item
 #        description: endpoint for getting a single zaak

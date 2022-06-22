@@ -3,50 +3,74 @@
 namespace App\Controller;
 
 use App\Service\AuthorizationService;
-use App\Service\EavDocumentationService;
 use App\Service\EavService;
+use App\Service\OasDocumentationService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Cache\CacheInterface;
 
 class EavController extends AbstractController
 {
-    /**
-     * @Route("/admin/openapi.{extension}")
-     */
-    public function OasAction(EavDocumentationService $eavDocumentationService, CacheInterface $customThingCache, $extension): Response
-    {
-        // Let default an id while we grap it
-        /* @todo pull this from session */
-        $application = 666;
+    private SerializerInterface $serializer;
 
-        // Lets scheck the cashe
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ParameterBagInterface $params,
+        SerializerInterface $serializer
+    ) {
+        $this->entityManager = $entityManager;
+        $this->serializer = $serializer;
+    }
+
+    /**
+     * @Route("/openapi.{extension}")
+     */
+    public function OasAction(OasDocumentationService $oasDocumentationService, CacheInterface $customThingCache, Request $request, string $extension): Response
+    {
+        /* accept only json an yaml as extensions or throw error */
+        if ($extension !== 'yaml' && $extension !== 'json') {
+            return new Response(
+                $this->serializer->serialize(['message' => 'The extension '.$extension.' is not valid. We only support yaml and json'], 'json'),
+                400,
+                ['content-type' => 'json']
+            );
+        }
+
+        /* Get application id from query parameter */
+        $application = $request->query->get('application');
+
+//         Let's check the cache
         $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
+
         if ($item->isHit()) {
-            $docs = $item->get();
+            $oas = $item->get();
         } else {
-            $docs = $eavDocumentationService->getRenderDocumentation();
+            $oas = $oasDocumentationService->getRenderDocumentation($application !== null ? $application : null);
 
             if ($extension == 'json') {
-                $docs = json_encode($docs);
+                $oas = json_encode($oas);
             } else {
-                $docs = Yaml::dump($docs);
+                $oas = Yaml::dump($oas);
             }
 
-            // Lets stuf it into the cashe
-            $item->set($docs);
+            // Let's stuff it into the cache
+            $item->set($oas);
             $customThingCache->save($item);
         }
 
-        $response = new Response($docs, 200, [
-            'Content-type'=> 'application/'.$extension,
+        $response = new Response($oas, 200, [
+            'Content-type' => 'application/'.$extension,
         ]);
+
         $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'openapi.'.$extension);
         $response->headers->set('Content-Disposition', $disposition);
 

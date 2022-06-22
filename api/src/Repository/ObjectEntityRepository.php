@@ -186,7 +186,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $array = $this->handleValueScopeFilters($array);
 
         foreach ($array as $key => $value) {
-            $key = str_replace(['_', '..'], ['.', '._'], $key);
+            $key = str_replace(['__', '_', '..'], ['__','.', '._'], $key);
             if (substr($key, 0, 1) == '.') {
                 $key = '_'.ltrim($key, $key[0]);
             }
@@ -545,7 +545,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime']) && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));

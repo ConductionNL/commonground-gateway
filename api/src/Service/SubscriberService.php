@@ -91,7 +91,18 @@ class SubscriberService
         }
         $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingIn());
 
-        // todo: translation
+        // Translation
+        if (!empty($subscriber->getTranslationsIn())) {
+            // Then we want to do translations on the incomming request
+            $transRepo = $this->entityManager->getRepository('App:Translation');
+
+            $translations = $transRepo->getTranslations($subscriber->getTranslationsIn());
+
+            if (!empty($translations)) {
+                $data = $this->translationService->parse($data, true, $translations);
+            }
+        }
+
         //todo: use translationService to change datetime format
         if (array_key_exists('startdatum', $data)) {
             $startdatum = new \DateTime($data['startdatum']);
@@ -100,6 +111,12 @@ class SubscriberService
         if (array_key_exists('registratiedatum', $data)) {
             $registratiedatum = new \DateTime($data['registratiedatum']);
             $data['registratiedatum'] = $registratiedatum->format('Y-m-d');
+        }
+
+        foreach ($data as $key => $value) {
+            if (str_starts_with($key, '@') || str_starts_with($key, '_') || $key === 'id') {
+                unset($data[$key]);
+            }
         }
 
 //        var_dump('InternGatewaySubscriber for entity: '.$subscriber->getEntity()->getName().' -> '.$subscriber->getEntityOut()->getName());
@@ -144,12 +161,24 @@ class SubscriberService
 //                var_dump($data['validationServiceErrors']);
             }
 
-            // todo mapping out & translation out?
+            // todo mapping out?
 //            $skeleton = $subscriber->getSkeletonOut();
 //            if (empty($skeleton)) {
 //                $skeleton = $data;
 //            }
 //            $data = $this->translationService->dotHydrator($skeleton, $data, $subscriber->getMappingOut());
+
+            // todo translation out?
+//            if (!empty($subscriber->getTranslationsOut())) {
+//                // Then we want to do  translations on the outgoing response
+//                $transRepo = $transRepo ?? $this->entityManager->getRepository('App:Translation');
+//
+//                $translations = $transRepo->getTranslations($subscriber->getTranslationsOut());
+//
+//                if (!empty($translations)) {
+//                    $data = $this->translationService->parse($data, true, $translations);
+//                }
+//            }
         }
 
         // todo: Create a log at the end of every subscriber trigger? (add config for this?)

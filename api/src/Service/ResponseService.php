@@ -393,11 +393,15 @@ class ResponseService
 
                 // Let's deal with subExtend extending
                 $subExtend = null;
-                if (is_array($extend) && array_key_exists($attribute->getName(), $extend)) {
-                    if (is_array($extend[$attribute->getName()])) {
-                        $subExtend = $extend[$attribute->getName()];
-                    } elseif ($extend[$attribute->getName()] == false) {
-                        continue;
+                if (is_array($extend)) {
+                    if (array_key_exists('all', $extend)) {
+                        $subExtend = $extend;
+                    } elseif (array_key_exists($attribute->getName(), $extend)) {
+                        if (is_array($extend[$attribute->getName()])) {
+                            $subExtend = $extend[$attribute->getName()];
+                        } elseif ($extend[$attribute->getName()] == false) {
+                            continue;
+                        }
                     }
                 }
 
