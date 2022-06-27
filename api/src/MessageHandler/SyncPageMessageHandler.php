@@ -39,7 +39,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         }
         $entity = $this->entityRepository->find($message->getEntityId());
         $page = $message->getPage();
-        var_dump('Page: '.$page);
+//        var_dump('Page: '.$page);
 
         $response = $this->commonGroundService->callService(
             $callServiceData['component'],
@@ -90,6 +90,6 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             }
         }
 
-        var_dump('New gateway objects = '.count($newGatewayObjects));
+        var_dump('Entity: '.$entity->getName().' - Page: '.$page.' - New gateway objects = '.count($newGatewayObjects));
     }
 }
