@@ -48,13 +48,24 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function findAndCountByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
-        $baseQuery = $this->createQuery($entity, $filters, $order);
+        // Only use createQuery once, because doing it for both findByEntity & countByEntity will take longer! Do not use $order here.
+        $baseQuery = $this->createQuery($entity, $filters);
+        // Clone the baseQuery into a new QueryBuilder.
+        // (because OrderBy or setFirstResult($offset) on the $baseQuery in findByEntity function will break countByEntity if $baseQuery is re-used)
+        $countQuery = clone $baseQuery;
 
-        // Any changes to the $baseQuery in findByEntity function seem to influence the same query used for countByEntity.
-        // Doing setFirstResult($offset) or using orderBy ($order) on the query will result in a sql error because of this.
+        // If we have to order do it only for the findByEntity QueryBuilder.
+        if (!empty($order)) {
+            $orderCheck = $this->getOrderParameters($entity);
+
+            if (in_array(array_keys($order)[0], $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
+                $baseQuery = $this->getObjectEntityOrder($baseQuery, array_keys($order)[0], array_values($order)[0]);
+            }
+        }
+
         return [
             'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $baseQuery),
-            'total'   => $this->countByEntity($entity, [], $baseQuery),
+            'total'   => $this->countByEntity($entity, [], $countQuery),
         ];
     }
 
