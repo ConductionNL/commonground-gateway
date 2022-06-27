@@ -50,6 +50,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $baseQuery = $this->createQuery($entity, $filters, $order);
 
+        // Any changes to the $baseQuery in findByEntity function seem to influence the same query used for countByEntity.
+        // Doing setFirstResult($offset) or using orderBy ($order) on the query will result in a sql error because of this.
         return [
             'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $baseQuery),
             'total'   => $this->countByEntity($entity, [], $baseQuery),
