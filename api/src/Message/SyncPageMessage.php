@@ -9,13 +9,23 @@ class SyncPageMessage
 {
     private array $callServiceData;
     private int $page;
-    private Entity $entity;
+    private string $entityId;
+    private array $sessionData;
 
-    public function __construct(array $callServiceData, int $page, Entity $entity)
+    /**
+     * @TODO
+     *
+     * @param array $callServiceData Must contain the following keys: 'component', 'url', 'query', 'headers'
+     * @param int $page
+     * @param string $entityId
+     * @param array $sessionData
+     */
+    public function __construct(array $callServiceData, int $page, string $entityId, array $sessionData)
     {
         $this->callServiceData = $callServiceData;
         $this->page = $page;
-        $this->entity = $entity;
+        $this->entityId = $entityId;
+        $this->sessionData = $sessionData;
     }
 
     public function getCallServiceData(): array
@@ -28,8 +38,13 @@ class SyncPageMessage
         return $this->page;
     }
 
-    public function getEntity(): Entity
+    public function getEntityId(): string
     {
-        return $this->entity;
+        return $this->entityId;
+    }
+
+    public function getSessionData(): array
+    {
+        return $this->sessionData;
     }
 }

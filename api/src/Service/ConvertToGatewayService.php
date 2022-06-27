@@ -40,6 +40,15 @@ class ConvertToGatewayService
         $this->messageBus = $messageBus;
     }
 
+    /**
+     * Gets all objects from entity->gateway (/source) and converts them to ObjectEntities,
+     * todo: will also remove ObjectEntities that should no longer exist, because they got removed from the source api.
+     *
+     * @param Entity $entity
+     * @param $query
+     *
+     * @return void|null
+     */
     public function convertEntityObjects(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
@@ -76,94 +85,47 @@ class ConvertToGatewayService
 
 //        var_dump($amountOfPages . ' pages');
 
-        // todo loop, for each page create a message:
-        $this->messageBus->dispatch(new SyncPageMessage(
-            [
-                'component' => $component,
-                'url' => $url,
-                'query' => $query,
-                'headers' => $entity->getGateway()->getHeaders()
-            ],
-            1,
-            $entity
-        ));
-    }
+        $application = $this->session->get('application');
+        $activeOrganization = $this->session->get('activeOrganization');
 
-    /**
-     * Gets all objects from entity->gateway (/source) and converts them to ObjectEntities,
-     * will also remove ObjectEntities that should no longer exist, because they got removed from the source api.
-     *
-     * @TODO: use Promises and MessageQueue for this process! One promise per page from source? (see $this->getExternObjects())
-     *
-     * @param Entity $entity
-     * @param $query
-     *
-     * @throws Exception|InvalidArgumentException
-     *
-     * @return void|null
-     */
-    public function convertEntityObjectsOld(Entity $entity, $query)
-    {
-        // Make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
-            return null; //Or false or error?
+        // todo: make this a message in order to compare and handle gateway objects that need to be deleted? see old code below this for.
+        // Loop, for each page create a message:
+        for ($page = 1; $page <= $amountOfPages; $page++) {
+            $this->messageBus->dispatch(new SyncPageMessage(
+                [
+                    'component' => $component,
+                    'url' => $url,
+                    'query' => $query,
+                    'headers' => $entity->getGateway()->getHeaders()
+                ],
+                $page,
+                $entity->getId(),
+                [
+                    'application' => $application,
+                    'activeOrganization' => $activeOrganization
+                ]
+            ));
         }
 
-        // Get all objects for this Entity that exist outside the gateway
-        $collectionConfigResults = explode('.', $entity->getCollectionConfig()['results']);
-        if (array_key_exists('paginationNext', $entity->getCollectionConfig())) {
-            $collectionConfigPaginationNext = explode('.', $entity->getCollectionConfig()['paginationNext']);
-        }
-        $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-        $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
-        $totalExternObjects = $this->getExternObjects(['collectionConfigResults' => $collectionConfigResults, 'collectionConfigPaginationNext' => $collectionConfigPaginationNext, 'headers' => $entity->getGateway()->getHeaders()], $component, $url, $query);
-//        var_dump('Found total extern objects = '.count($totalExternObjects));
-
-        // Loop through all extern objects and check if they have an object in the gateway, if not create one.
-        $newGatewayObjects = new ArrayCollection();
-        $collectionConfigEnvelope = [];
-        if (array_key_exists('envelope', $entity->getCollectionConfig())) {
-            $collectionConfigEnvelope = explode('.', $entity->getCollectionConfig()['envelope']);
-        }
-        $collectionConfigId = explode('.', $entity->getCollectionConfig()['id']);
-        foreach ($totalExternObjects as $externObject) {
-            $id = $externObject;
-            // Make sure to get this item from the correct place in $externObject
-            foreach ($collectionConfigEnvelope as $item) {
-                $externObject = $externObject[$item];
-            }
-            // Make sure to get id of this item from the correct place in $externObject
-            foreach ($collectionConfigId as $item) {
-                $id = $id[$item];
-            }
-            if (!$this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
-                // Convert this object to a gateway object
-                $object = $this->convertToGatewayObject($entity, $externObject, $id);
-                if ($object) {
-                    $newGatewayObjects->add($object);
-                }
-            }
-        }
-//        var_dump('New gateway objects = '.count($newGatewayObjects));
-
-        // Now also find all objects that exist in the gateway but not outside the gateway in the extern component.
-        $externObjectIds = $totalExternObjects;
-        foreach ($collectionConfigId as $item) {
-            $externObjectIds = array_column($externObjectIds, $item);
-        }
-//        var_dump('ExternObjectIds:', $externObjectIds);
-        $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
-            return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
-        });
-
-        // Delete these $onlyInGateway objectEntities ?
-        foreach ($onlyInGateway as $item) {
-//            var_dump($item->getId()->toString());
-            $this->em->remove($item);
-        }
-//        var_dump('Deleted gateway objects = '.count($onlyInGateway));
-
-        $this->em->flush();
+        // todo: old code for deleting existing ObjectEntities that should no longer exist
+////        var_dump('New gateway objects = '.count($newGatewayObjects));
+//
+//        // Now also find all objects that exist in the gateway but not outside the gateway in the extern component.
+//        $externObjectIds = $totalExternObjects;
+//        foreach ($collectionConfigId as $item) {
+//            $externObjectIds = array_column($externObjectIds, $item);
+//        }
+////        var_dump('ExternObjectIds:', $externObjectIds);
+//        $onlyInGateway = $entity->getObjectEntities()->filter(function (ObjectEntity $object) use ($externObjectIds) {
+//            return !in_array($object->getExternalId(), $externObjectIds) && !in_array($this->commonGroundService->getUuidFromUrl($object->getUri()), $externObjectIds);
+//        });
+//
+//        // Delete these $onlyInGateway objectEntities ?
+//        foreach ($onlyInGateway as $item) {
+////            var_dump($item->getId()->toString());
+//            $this->em->remove($item);
+//        }
+////        var_dump('Deleted gateway objects = '.count($onlyInGateway));
     }
 
     private function stripAt(array $in)
@@ -177,70 +139,21 @@ class ConvertToGatewayService
     }
 
     /**
-     * Get all objects for this Entity that exist outside the gateway. (todo: note: will only get the first 25 pages for now!).
-     *
-     * @param array  $config             array with collectionConfigResults, collectionConfigPaginationNext & headers TODO: also add query params?
-     * @param array  $component
-     * @param string $url
-     * @param array  $query
-     * @param array  $totalExternObjects
-     * @param int    $page
-     *
-     * @return array
-     */
-    private function getExternObjects(array $config, array $component, string $url, array $query, array $totalExternObjects = [], int $page = 1): array
-    {
-        $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
-        $response = $this->commonGroundService->callService($component, $url, '', array_merge($query, ['page'=>$page]), $config['headers'], false, 'GET');
-        if (is_array($response)) {
-//            var_dump($response); //Throw error? //todo?
-        }
-        $firstResponse = $response = json_decode($response->getBody()->getContents(), true);
-        // Now get response from the correct place in the response
-        foreach ($config['collectionConfigResults'] as $item) {
-            $response = $response[$item];
-        }
-
-        // Add it to total result
-        $totalExternObjects = array_merge($totalExternObjects, $response);
-
-        // Check if we have pagination and should repeat for the next page
-        if (isset($config['collectionConfigPaginationNext'])) {
-            $paginationNext = $firstResponse;
-            foreach ($config['collectionConfigPaginationNext'] as $item) {
-                if (!isset($paginationNext[$item])) {
-                    $paginationNext = false;
-                } else {
-                    $paginationNext = $paginationNext[$item];
-                }
-            }
-        }
-        // Repeat if we have pagination and if there is a next page
-        // TODO: to many pages will break and throw a 504 timeout if not done async!
-        // TODO: remove "&& $page < 25" when we do this async with promises!
-        if (isset($paginationNext) && $paginationNext && $page < 25) {
-            return $this->getExternObjects($config, $component, $url, $query, $totalExternObjects, $page + 1);
-        }
-//        var_dump('pages: '. $page);
-
-        return $totalExternObjects;
-    }
-
-    /**
      * Convert an object from outside the gateway into an ObjectEntity in the gateway.
      *
-     * @param Entity            $entity
-     * @param array|null        $body
-     * @param string|null       $id
-     * @param Value|null        $subresourceOf
-     * @param ObjectEntity|null $objectEntity  a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
-     * @param string|null       $url
-     *
-     * @throws InvalidArgumentException
+     * @param Entity $entity
+     * @param array|null $body
+     * @param string|null $id
+     * @param Value|null $subresourceOf
+     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * @param string|null $url
+     * @param array $sessionData
      *
      * @return ObjectEntity|null
+     *
+     * @throws InvalidArgumentException
      */
-    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null): ?ObjectEntity
+    public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null, array $sessionData = []): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
         if (!$url && (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint())) {
@@ -324,8 +237,8 @@ class ConvertToGatewayService
         }
 
         // Set application for this object
-        if ($this->session->get('application')) {
-            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+        if ($this->session->get('application') || array_key_exists('application', $sessionData)) {
+            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application') ?? $sessionData['application']]);
             $object->setApplication(!empty($application) ? $application : null); // Default application (can be changed after this if needed)
         }
 
@@ -343,7 +256,7 @@ class ConvertToGatewayService
                     $object->setApplication($object->getSubresourceOf()->first()->getObjectEntity()->getApplication());
                 }
             } else {
-                $object->setOrganization($this->session->get('activeOrganization'));
+                $object->setOrganization($this->session->get('activeOrganization') ?? (array_key_exists('activeOrganization', $sessionData) ? $sessionData['activeOrganization'] : null));
             }
         }
 
