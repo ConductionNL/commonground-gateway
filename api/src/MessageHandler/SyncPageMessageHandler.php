@@ -28,6 +28,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         $this->entityRepository = $entityRepository;
     }
 
+    // todo: cleanup code, use more functions?
     public function __invoke(SyncPageMessage $message): void
     {
         $callServiceData = $message->getCallServiceData();
