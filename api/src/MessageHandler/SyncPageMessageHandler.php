@@ -28,6 +28,12 @@ class SyncPageMessageHandler implements MessageHandlerInterface
     public function __invoke(SyncPageMessage $message): void
     {
         $callServiceData = $message->getCallServiceData();
+        $requiredKeys = ['component', 'url', 'query', 'headers'];
+        if (count(array_intersect_key($callServiceData, array_flip($requiredKeys))) !== count($requiredKeys)) {
+            // todo: throw error or something
+//            var_dump('SyncPageMessageHandler->CallServiceData is missing one of the following keys: '.implode(', ', $requiredKeys));
+            return;
+        }
         $entity = $message->getEntity();
 
         $response = $this->commonGroundService->callService(
@@ -40,11 +46,12 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             'GET'
         );
         if (is_array($response)) {
-//            var_dump($response); //Throw error? //todo?
+//            var_dump('callService error: '.$response); //Throw error? //todo?
         }
         $response = json_decode($response->getBody()->getContents(), true);
-        $collectionConfigResults = explode('.', $entity->getCollectionConfig()['results']);
+
         // Now get response from the correct place in the response
+        $collectionConfigResults = explode('.', $entity->getCollectionConfig()['results']);
         foreach ($collectionConfigResults as $item) {
             $response = $response[$item];
         }
@@ -66,6 +73,8 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             foreach ($collectionConfigId as $item) {
                 $id = $id[$item];
             }
+
+            // todo: what if this object got changed, than we need to update the gateway object as well?
             if (!$this->objectEntityRepository->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                 // Convert this object to a gateway object
                 $object = $this->convertToGatewayService->convertToGatewayObject($entity, $externObject, $id);
@@ -74,5 +83,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
                 }
             }
         }
+
+//        var_dump('New gateway objects = '.count($newGatewayObjects));
     }
 }

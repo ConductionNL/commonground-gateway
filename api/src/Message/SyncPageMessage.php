@@ -13,17 +13,6 @@ class SyncPageMessage
 
     public function __construct(array $callServiceData, int $page, Entity $entity)
     {
-        $requiredKeys = [
-            "component",
-            "url",
-            "query",
-            "headers"
-        ];
-        if (empty(array_intersect_key($callServiceData, array_flip($requiredKeys)))) {
-            // todo: throw error or something
-            var_dump('CallServiceData is missing one of the following keys: '.implode(', ', $requiredKeys));
-            return;
-        }
         $this->callServiceData = $callServiceData;
         $this->page = $page;
         $this->entity = $entity;

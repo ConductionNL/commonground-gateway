@@ -6,6 +6,8 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use App\Message\PromiseMessage;
+use App\Message\SyncPageMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -15,6 +17,7 @@ use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class ConvertToGatewayService
 {
@@ -24,8 +27,9 @@ class ConvertToGatewayService
     private GatewayService $gatewayService;
     private FunctionService $functionService;
     private LogService $logService;
+    private MessageBusInterface $messageBus;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
@@ -33,6 +37,56 @@ class ConvertToGatewayService
         $this->gatewayService = $gatewayService;
         $this->functionService = $functionService;
         $this->logService = $logService;
+        $this->messageBus = $messageBus;
+    }
+
+    public function convertEntityObjects(Entity $entity, $query)
+    {
+        // Make sure we have a gateway and endpoint on this Entity.
+        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+            return null; //Or false or error?
+        }
+
+        // Get all objects for this Entity that exist outside the gateway
+        $collectionConfigPaginationPages = explode('.', $entity->getCollectionConfig()['paginationPages']);
+        $component = $this->gatewayService->gatewayToArray($entity->getGateway());
+        $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
+
+        $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
+        $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getGateway()->getHeaders(), false, 'GET');
+        if (is_array($response)) {
+//            var_dump('callService error: '.$response); //Throw error? //todo?
+        }
+
+        // Now get the total amount of pages from the correct place in the response
+        $amountOfPages = json_decode($response->getBody()->getContents(), true);
+        foreach ($collectionConfigPaginationPages as $item) {
+            $amountOfPages = $amountOfPages[$item];
+        }
+        if (!is_int($amountOfPages)) {
+            $matchesCount = preg_match('/\?page=([0-9]+)/', $amountOfPages, $matches);
+            if ($matchesCount == 1) {
+                $amountOfPages = (int) $matches[1];
+            } else {
+                // todo: throw error or something...
+//                var_dump('Could not find the total amount of pages');
+                return;
+            }
+        }
+
+//        var_dump($amountOfPages . ' pages');
+
+        // todo loop, for each page create a message:
+        $this->messageBus->dispatch(new SyncPageMessage(
+            [
+                'component' => $component,
+                'url' => $url,
+                'query' => $query,
+                'headers' => $entity->getGateway()->getHeaders()
+            ],
+            1,
+            $entity
+        ));
     }
 
     /**
@@ -48,7 +102,7 @@ class ConvertToGatewayService
      *
      * @return void|null
      */
-    public function convertEntityObjects(Entity $entity, $query)
+    public function convertEntityObjectsOld(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
         if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
