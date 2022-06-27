@@ -3,12 +3,10 @@
 namespace App\MessageHandler;
 
 use App\Entity\ObjectEntity;
-use App\Message\NotificationMessage;
 use App\Message\SyncPageMessage;
 use App\Repository\EntityRepository;
 use App\Repository\ObjectEntityRepository;
 use App\Service\ConvertToGatewayService;
-use App\Service\ObjectEntityService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
@@ -36,6 +34,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         if (count(array_intersect_key($callServiceData, array_flip($requiredKeys))) !== count($requiredKeys)) {
             // todo: throw error or something
             var_dump('SyncPageMessageHandler->CallServiceData is missing one of the following keys: '.implode(', ', $requiredKeys));
+
             return;
         }
         $entity = $this->entityRepository->find($message->getEntityId());
