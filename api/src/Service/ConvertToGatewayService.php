@@ -6,11 +6,9 @@ use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
-use App\Message\PromiseMessage;
 use App\Message\SyncPageMessage;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Cache\InvalidArgumentException;
@@ -94,15 +92,15 @@ class ConvertToGatewayService
             $this->messageBus->dispatch(new SyncPageMessage(
                 [
                     'component' => $component,
-                    'url' => $url,
-                    'query' => $query,
-                    'headers' => $entity->getGateway()->getHeaders()
+                    'url'       => $url,
+                    'query'     => $query,
+                    'headers'   => $entity->getGateway()->getHeaders(),
                 ],
                 $page,
                 $entity->getId(),
                 [
-                    'application' => $application,
-                    'activeOrganization' => $activeOrganization
+                    'application'        => $application,
+                    'activeOrganization' => $activeOrganization,
                 ]
             ));
         }
@@ -141,17 +139,17 @@ class ConvertToGatewayService
     /**
      * Convert an object from outside the gateway into an ObjectEntity in the gateway.
      *
-     * @param Entity $entity
-     * @param array|null $body
-     * @param string|null $id
-     * @param Value|null $subresourceOf
-     * @param ObjectEntity|null $objectEntity a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
-     * @param string|null $url
-     * @param array $sessionData
-     *
-     * @return ObjectEntity|null
+     * @param Entity            $entity
+     * @param array|null        $body
+     * @param string|null       $id
+     * @param Value|null        $subresourceOf
+     * @param ObjectEntity|null $objectEntity  a main objectEntity this new OE will be part of, used to check for errors before flushing new OE.
+     * @param string|null       $url
+     * @param array             $sessionData
      *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity|null
      */
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null, array $sessionData = []): ?ObjectEntity
     {

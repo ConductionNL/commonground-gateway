@@ -2,9 +2,6 @@
 
 namespace App\Message;
 
-use App\Entity\Entity;
-use Ramsey\Uuid\UuidInterface;
-
 class SyncPageMessage
 {
     private array $callServiceData;
@@ -15,10 +12,10 @@ class SyncPageMessage
     /**
      * @TODO
      *
-     * @param array $callServiceData Must contain the following keys: 'component', 'url', 'query', 'headers'
-     * @param int $page
+     * @param array  $callServiceData Must contain the following keys: 'component', 'url', 'query', 'headers'
+     * @param int    $page
      * @param string $entityId
-     * @param array $sessionData
+     * @param array  $sessionData
      */
     public function __construct(array $callServiceData, int $page, string $entityId, array $sessionData)
     {
