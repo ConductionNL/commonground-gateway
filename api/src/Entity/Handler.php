@@ -195,7 +195,7 @@ class Handler
      *
      * @MaxDepth(1)
      * @Groups({"read", "write"})
-     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers")
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers", cascade={"persist"})
      */
     private ?Collection $endpoints;
 
