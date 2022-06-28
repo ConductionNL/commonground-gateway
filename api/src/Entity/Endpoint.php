@@ -79,7 +79,7 @@ class Endpoint
      * @var string|null A description of this Endpoint.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="text", nullable=true, options={"default":null})
      */
     private ?string $description = null;
 
@@ -87,7 +87,7 @@ class Endpoint
      * @var string|null A regex description of this path.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
     private ?string $pathRegex = null;
 
@@ -95,7 +95,7 @@ class Endpoint
      * @var string|null The method.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
     private ?string $method = null;
 
@@ -103,9 +103,9 @@ class Endpoint
      * @var string|null The (OAS) tag of this Endpoint.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
-    private ?string $tag;
+    private ?string $tag = null;
 
     // @TODO remove totally?
     // /**
