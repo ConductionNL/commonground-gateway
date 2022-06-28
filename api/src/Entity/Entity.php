@@ -228,8 +228,7 @@ class Entity
      * @ORM\Column(type="array", nullable=true)
      */
     private array $translationConfig = [];
-
-    // todo: remove paginationNext if we only use paginationPages after all changes for syncing?
+    
     /**
      * @var array Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationPages" for where to find the total amount of pages or a reference to the last page (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
