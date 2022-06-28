@@ -54,12 +54,12 @@ class ConvertToGatewayService
             return null; //Or false or error?
         }
 
-        // Get all objects for this Entity that exist outside the gateway
+        // Get the first page of objects for this entity that exist outside the gateway
         $collectionConfigPaginationPages = explode('.', $entity->getCollectionConfig()['paginationPages']);
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
-
         $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
+
         $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getGateway()->getHeaders(), false, 'GET');
         if (is_array($response)) {
 //            var_dump('callService error: '.$response); //Throw error? //todo?
