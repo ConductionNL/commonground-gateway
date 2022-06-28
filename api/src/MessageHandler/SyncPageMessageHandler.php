@@ -33,9 +33,9 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      *
      * @param SyncPageMessage $message
      *
-     * @return void
-     *
      * @throws InvalidArgumentException
+     *
+     * @return void
      */
     public function __invoke(SyncPageMessage $message): void
     {
@@ -63,7 +63,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      * Uses callService with info from the SyncPageMessage to get all objects from an extern api for one specific page.
      *
      * @param SyncPageMessage $message
-     * @param Entity $entity
+     * @param Entity          $entity
      *
      * @return array
      */
@@ -99,7 +99,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      * Loop through all extern objects and check if they have an object in the gateway, if not create one.
      *
      * @param array $externObjects
-     * @param array $messageData Must contain key 'message' (SyncPageMessage) and key 'entity' (Entity)
+     * @param array $messageData   Must contain key 'message' (SyncPageMessage) and key 'entity' (Entity)
      *
      * @return ArrayCollection
      */
@@ -116,7 +116,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
                 $externObject,
                 [
                     'collectionConfigEnvelope' => $collectionConfigEnvelope,
-                    'collectionConfigId' => $collectionConfigId
+                    'collectionConfigId'       => $collectionConfigId,
                 ],
                 $messageData
             );
