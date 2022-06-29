@@ -49,7 +49,7 @@ class EavController extends AbstractController
         $application = $request->query->get('application');
 
 //         Let's check the cache
-        $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
+        $item = $customThingCache->getItem('oas_'.base64_encode($application).'_'.$extension);
 
         if ($item->isHit()) {
             $oas = $item->get();

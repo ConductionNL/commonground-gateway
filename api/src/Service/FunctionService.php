@@ -84,14 +84,14 @@ class FunctionService
             }
             // Invalidate all changed & related organizations from cache
             if (!empty($organization)) {
-                $tags = ['organization_'.md5($uri)];
+                $tags = ['organization_'.base64_encode($uri)];
                 if (array_key_exists('subOrganizations', $organization) && count($organization['subOrganizations']) > 0) {
                     foreach ($organization['subOrganizations'] as $subOrganization) {
-                        $tags[] = 'organization_'.md5($subOrganization['@id']);
+                        $tags[] = 'organization_'.base64_encode($subOrganization['@id']);
                     }
                 }
                 if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null) {
-                    $tags[] = 'organization_'.md5($organization['parentOrganization']['@id']);
+                    $tags[] = 'organization_'.base64_encode($organization['parentOrganization']['@id']);
                 }
                 $this->cache->invalidateTags($tags);
             }
@@ -131,7 +131,7 @@ class FunctionService
      */
     public function getOrganizationFromCache($url): array
     {
-        $item = $this->cache->getItem('organizations_'.md5("$url"));
+        $item = $this->cache->getItem('organizations_'.base64_encode("$url"));
         if ($item->isHit()) {
             return $item->get();
         }
@@ -144,7 +144,7 @@ class FunctionService
         }
         if (!empty($organization)) {
             $item->set($organization);
-            $item->tag('organization_'.md5("$url"));
+            $item->tag('organization_'.base64_encode("$url"));
 
             $this->cache->save($item);
 
@@ -191,7 +191,7 @@ class FunctionService
                 }
             }
 
-            return $this->cache->invalidateTags(['object_'.md5($objectEntity->getId()->toString())]) && $this->cache->commit();
+            return $this->cache->invalidateTags(['object_'.base64_encode($objectEntity->getId()->toString())]) && $this->cache->commit();
         }
 
         return false;

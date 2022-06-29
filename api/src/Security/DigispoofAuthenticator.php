@@ -113,7 +113,7 @@ class DigispoofAuthenticator extends AbstractGuardAuthenticator
 
         $this->tokenStorage->setToken();
 
-        $item = $this->cache->getItem('code_'.md5($bsn));
+        $item = $this->cache->getItem('code_'.base64_encode($bsn));
         $item->set($bsn);
         $this->cache->save($item);
 
