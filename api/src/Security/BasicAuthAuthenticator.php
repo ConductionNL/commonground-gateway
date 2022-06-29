@@ -142,7 +142,7 @@ class BasicAuthAuthenticator extends AbstractGuardAuthenticator
         if ($this->params->get('app_subpath') && $this->params->get('app_subpath') != 'false') {
             return new RedirectResponse('/'.$this->params->get('app_subpath').$this->router->generate('app_user_digispoof', []));
         } else {
-            return new RedirectResponse(filter_var($this->router->generate('app_user_digispoof', ['response' => $request->request->get('back_url'), 'back_url' => $request->request->get('back_url')]),FILTER_SANITIZE_URL));
+            return new RedirectResponse(filter_var($this->router->generate('app_user_digispoof', ['response' => $request->request->get('back_url'), 'back_url' => $request->request->get('back_url')]), FILTER_SANITIZE_URL));
         }
     }
 
