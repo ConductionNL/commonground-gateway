@@ -1,0 +1,13 @@
+name: Unit testing PHP
+on:
+  push:
+    branches:
+      - feature/php-unit-tests
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: php-actions/composer@v5 # or alternative dependency management
+    - uses: php-actions/phpunit@v3
