@@ -1066,20 +1066,9 @@ class EavService
         $query = array_merge($query, $this->authorizationService->valueScopesToFilters($entity));
         $this->stopwatch->stop('valueScopesToFilters');
 
-        // todo: remove this if and only use findAndCountByEntity(), when $order is not empty findAndCountByEntity() throws a sql error (must appear in the GROUP BY clause or be used in an aggregate function)
-        if ($order) {
-            $this->stopwatch->start('countByEntity', 'handleSearch');
-            $repositoryResult['total'] = $this->em->getRepository('App:ObjectEntity')->countByEntity($entity, $query);
-            $this->stopwatch->stop('countByEntity');
-
-            $this->stopwatch->start('findByEntity', 'handleSearch');
-            $repositoryResult['objects'] = $this->em->getRepository('App:ObjectEntity')->findByEntity($entity, $query, $order, $offset, $limit);
-            $this->stopwatch->stop('findByEntity');
-        } else {
-            $this->stopwatch->start('findAndCountByEntity', 'handleSearch');
-            $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
-            $this->stopwatch->stop('findAndCountByEntity');
-        }
+        $this->stopwatch->start('findAndCountByEntity', 'handleSearch');
+        $repositoryResult = $this->em->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, $query, $order, $offset, $limit);
+        $this->stopwatch->stop('findAndCountByEntity');
 
         // Lets see if we need to flatten te responce (for example csv use)
         // todo: $flat and $acceptType = 'json' should have the same result, so remove $flat?
