@@ -326,7 +326,7 @@ class UserController extends AbstractController
     public function LogoutAction(Request $request)
     {
         if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {
-            return $this->redirect(filter_var($request->headers->get('referer'),FILTER_SANITIZE_URL));
+            return $this->redirect(filter_var($request->headers->get('referer'), FILTER_SANITIZE_URL));
         } else {
             return $this->redirect($request->getSchemeAndHttpHost());
         }
@@ -338,7 +338,7 @@ class UserController extends AbstractController
     public function RedirectAction(Request $request)
     {
         if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {
-            return $this->redirect(filter_var($request->headers->get('referer'),FILTER_SANITIZE_URL));
+            return $this->redirect(filter_var($request->headers->get('referer'), FILTER_SANITIZE_URL));
         } else {
             return $this->redirect($request->getSchemeAndHttpHost());
         }
