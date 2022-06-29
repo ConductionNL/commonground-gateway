@@ -47,11 +47,12 @@ class EavController extends AbstractController
 
         /* Get application id from query parameter */
         $application = $request->query->get('application');
+        $useCache = !($request->query->has('noCache') || $request->query->has('nocache'));
 
 //         Let's check the cache
         $item = $customThingCache->getItem('oas_'.md5($application).'_'.$extension);
 
-        if ($item->isHit()) {
+        if ($item->isHit() && $useCache) {
             $oas = $item->get();
         } else {
             $oas = $oasDocumentationService->getRenderDocumentation($application !== null ? $application : null);
