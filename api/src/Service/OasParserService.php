@@ -9,6 +9,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\Handler;
 use App\Entity\Property;
+// use App\Entity\QueryParameter;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Client;
@@ -556,8 +557,37 @@ class OasParserService
 
         $this->parseResponses($method, $methodName, $endpoint);
 
+        // foreach ($method['parameters'] as $oasParameter) {
+        //     $this->createQueryParameter($oasParameter, $endpoint);
+        // }
+
         return $endpoint;
     }
+
+    // /**
+    //  * Creates an QueryParameter object from the OAS specification for the given $endpoint.
+    //  *
+    //  * @param string           $path     A parameter for the given $endpoint
+    //  * @param string           $endpoint The endpoint this queryParameter belongs ti
+    //  *
+    //  * @return void
+    //  */
+    // private function createQueryParameter(array $oasParameter, Endpoint $endpoint): void
+    // {
+    //     // If we have no name or type return
+    //     if (!isset($oasParameter['name']) || !isset($oasParameter['schema']['type']) || (isset($oasParameter['in'])) && $oasParameter['in'] === 'query') {
+    //         return;
+    //     }
+
+    //     $queryParameter = new QueryParameter();
+    //     $queryParameter->setName($oasParameter['name']);
+    //     isset($oasParameter['description']) && $queryParameter->setDescription($oasParameter['description']);
+    //     isset($oasParameter['required']) && $queryParameter->setRequired($oasParameter['required']);
+    //     isset($oasParameter['schema']['type']) && $queryParameter->setType($oasParameter['schema']['type']);
+    //     isset($oasParameter['schema']['enum']) && $queryParameter->setEnum($oasParameter['schema']['enum']);
+    //     isset($oasParameter['schema']['minimum']) && $queryParameter->setMinimum($oasParameter['schema']['minimum']);
+    //     isset($oasParameter['schema']['maximum']) && $queryParameter->setMaximum($oasParameter['schema']['maximum']);
+    // }
 
     /**
      * Creates an entity from a schema.
