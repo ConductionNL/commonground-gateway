@@ -484,7 +484,7 @@ class OasParserService
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName() . $propertyName . 'Entity';
+            $targetEntity = $entity->getName().$propertyName.'Entity';
         }
 
         if (!isset($property['type']) || $property['type'] == 'object') {
