@@ -476,8 +476,8 @@ class OasParserService
      */
     private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
-        // Ignore this attribute if its id, because the gateway generates this itself
-        if ($propertyName == 'id') {
+        // Ignore this attribute if its id or empty, because the gateway generates this itself
+        if ($propertyName == 'id' || empty($propertyName)) {
             return null;
         }
 
