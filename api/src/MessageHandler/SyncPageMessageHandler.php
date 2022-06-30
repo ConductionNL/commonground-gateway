@@ -141,12 +141,12 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             $id = $id[$item];
         }
 
-        // todo: what if this object got changed, than we need to update the gateway object as well?
-        if (!$this->objectEntityRepository->findOneBy(['entity' => $messageData['entity'], 'externalId' => $id])) {
+        // We want to update all objects, unless specified not to, needs config option:
+//        if (!$this->objectEntityRepository->findOneBy(['entity' => $messageData['entity'], 'externalId' => $id])) {
             // Convert this object to a gateway object
             $object = $this->convertToGatewayService->convertToGatewayObject($messageData['entity'], $externObject, $id, null, null, null, $messageData['message']->getSessionData());
             // todo: We could use the handleOwner function here to set the owner of this object, but should we set the owner to the person/user that uses the /sync api-call?
-        }
+//        }
 
         return $object ?? null;
     }
