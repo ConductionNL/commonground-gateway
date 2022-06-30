@@ -476,10 +476,15 @@ class OasParserService
      */
     private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
+        // Ignore this attribute if its id, because the gateway generates this itself
+        if ($propertyName == 'id') {
+            return null;
+        }
+
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName().$propertyName.'Entity';
+            $targetEntity = $entity->getName() . $propertyName . 'Entity';
         }
 
         if (!isset($property['type']) || $property['type'] == 'object') {
