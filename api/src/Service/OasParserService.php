@@ -248,8 +248,7 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (
-                    isset($response['content']['application/json']['schema']['properties']) ?
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (isset($response['content']['application/json']['schema']['properties']) ?
                     substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
                     substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
                 );
@@ -310,6 +309,14 @@ class OasParserService
 
         (isset($schema['required']) && $schema['required'] === true) && $attribute->setRequired(true);
         isset($schema['description']) && $attribute->setDescription($schema['description']);
+        isset($schema['readOnly']) && $attribute->setReadOnly($schema['readOnly']);
+
+        if (
+            isset($schema['format']) && $schema['format'] == 'uri' && isset($schema['type']) &&
+            $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true
+        ) {
+            $attribute->setFunction('self');
+        }
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);
@@ -455,7 +462,7 @@ class OasParserService
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
         }
         $pathRegex .= '$';
 
@@ -484,7 +491,7 @@ class OasParserService
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName().$propertyName.'Entity';
+            $targetEntity = $entity->getName() . $propertyName . 'Entity';
         }
 
         if (!isset($property['type']) || $property['type'] == 'object') {
@@ -549,7 +556,7 @@ class OasParserService
         $pathArray = array_values(array_filter(explode('/', $path)));
         $endpoint = new Endpoint();
         $endpoint->addCollection($collection);
-        $endpoint->setName($path.' '.$methodName);
+        $endpoint->setName($path . ' ' . $methodName);
         $endpoint->setMethod($methodName);
         $endpoint->setPath($pathArray);
 
