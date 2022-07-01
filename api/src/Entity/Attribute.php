@@ -1361,6 +1361,7 @@ class Attribute
         $validations['cascade'] = $this->getCascade();
         $validations['immutable'] = $this->getImmutable();
         $validations['unsetable'] = $this->getUnsetable();
+        $validations['readOnly'] = $this->getReadOnly();
 
         return $validations;
     }
@@ -1451,6 +1452,9 @@ class Attribute
         }
         if (array_key_exists('unsetable', $validations)) {
             $this->setUnsetable($validations['unsetable']);
+        }
+        if (array_key_exists('readOnly', $validations)) {
+            $this->setReadOnly($validations['readOnly']);
         }
 
         return $this;
