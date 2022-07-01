@@ -73,18 +73,20 @@ services:
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
       - GITHUB_KEY=${GITHUB_KEY}
-      - PUBLICCODE=${PUBLICCODE}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - READ_ONLY=false
+      - READ_ONLY=true
     ports:
       - "82:80"
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges
+    read_only: true
+    tmpfs:
+        - /tmp:uid=101,gid=101
 
   api:
     &nginx
@@ -113,6 +115,7 @@ services:
       - net_bind_service
     security_opt:
       - no-new-privileges
+#    read_only: true
 
   # helmPackage:
   #   image: alpine/helm:3.2.1

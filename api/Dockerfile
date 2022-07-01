@@ -1,5 +1,8 @@
 FROM php:7.4-fpm-alpine AS api_platform_php
 
+# Create a user
+RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway
+
 RUN apk add --no-cache \
 		acl \
 		file \
@@ -94,6 +97,18 @@ RUN set -eux; \
 	composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --no-scripts; \
 	composer clear-cache
 
+RUN apk add --no-cache $PHPIZE_DEPS \
+	&& pecl install xdebug-2.9.2 \
+	&& docker-php-ext-enable xdebug;\
+	echo -e "xdebug.overload_var_dump=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+RUN mkdir -p /cert
+COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chown -R commonground-gateway:commonground-gateway /usr/local/bin/docker-entrypoint
+RUN chown -R commonground-gateway:commonground-gateway /usr/local/etc/php
+
+
+
 # copy only specifically what we need
 COPY .env ./
 COPY bin bin/
@@ -104,20 +119,19 @@ COPY templates templates/
 COPY migrations migrations/
 COPY fixtures fixtures/
 
-RUN apk add --no-cache $PHPIZE_DEPS \
-	&& pecl install xdebug-2.9.2 \
-	&& docker-php-ext-enable xdebug;\
-	echo -e "xdebug.overload_var_dump=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
-	chmod +x bin/console; sync
+    sync
 
+RUN chown -R commonground-gateway:commonground-gateway bin
+RUN chown -R commonground-gateway:commonground-gateway var
+RUN chown -R commonground-gateway:commonground-gateway /cert
 VOLUME /srv/api/var
+USER commonground-gateway
 
-COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-RUN chmod +x /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint; \
+	chmod +x bin/console
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]

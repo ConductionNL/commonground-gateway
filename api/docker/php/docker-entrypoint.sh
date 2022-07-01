@@ -10,16 +10,16 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-production"
 	if [ "$APP_ENV" != 'prod' ]; then
 		PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-development"
+		ln -sf "$PHP_INI_RECOMMENDED" "$PHP_INI_DIR/php.ini"
 	fi
-	ln -sf "$PHP_INI_RECOMMENDED" "$PHP_INI_DIR/php.ini"
 
 	mkdir -p var/cache var/log
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
 	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 
-	composer install --prefer-dist --no-progress --no-suggest --no-interaction
-
-	mkdir -p /cert
+	if [ "$READ_ONLY" != 'true' ]; then
+		composer install --prefer-dist --no-progress --no-suggest --no-interaction
+	fi
 
 	echo "Waiting for db to be ready..."
 	until bin/console doctrine:query:sql "SELECT 1" > /dev/null 2>&1; do
@@ -58,5 +58,4 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		bin/console app:load-publiccodes
 	fi
 fi
-
 exec docker-php-entrypoint "$@"

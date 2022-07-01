@@ -235,6 +235,7 @@ class EavService
         if ($request->getContent()) {
             //@todo support xml messages
             $body = json_decode($request->getContent(), true);
+            $body = filter_var_array($body, FILTER_SANITIZE_ENCODED);
         }
         //        // If we have no body but are using form-data with a POST or PUT call instead: //TODO find a better way to deal with form-data?
         //        elseif ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') {

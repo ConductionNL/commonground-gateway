@@ -114,7 +114,7 @@ class ResponseService
 
         $item = $this->cache->getItem(
             'object_'
-            .md5(
+            .base64_encode(
                 $result->getId()
                 .$acceptType
                 .$level
@@ -126,7 +126,7 @@ class ResponseService
 //            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
-        $item->tag('object_'.md5($result->getId()->toString()));
+        $item->tag('object_'.base64_encode($result->getId()->toString()));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
