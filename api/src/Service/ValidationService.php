@@ -117,12 +117,12 @@ class ValidationService
                 $attribute->getName() == 'url'
             ) {
                 $post[$attribute->getName()] = $objectEntity->getSelf() ?? $this->createSelf($objectEntity);
-            }
-
-            // Skip if readOnly
-            if ($attribute->getReadOnly()) {
+                // Skip if readOnly
+            } elseif ($attribute->getReadOnly()) {
                 continue;
             }
+
+
 
             // Only save the attributes that are used.
             if (!is_null($objectEntity->getEntity()->getUsedProperties()) && !in_array($attribute->getName(), $objectEntity->getEntity()->getUsedProperties())) {
