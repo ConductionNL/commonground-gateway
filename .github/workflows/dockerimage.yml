@@ -32,6 +32,8 @@ jobs:
           export RELEASE=$VERSION.$(date --utc +%y%m%d)
           echo "RELEASE=$RELEASE" >> $GITHUB_ENV
           echo "##[set-output name=releasename]$RELEASE"
+      - name: Create vendor folder
+        run: mkdir api/vendor
       - name: Setting APP_NAME
         run: |
           export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
