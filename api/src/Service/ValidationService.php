@@ -135,7 +135,7 @@ class ValidationService
             } // Do not post 'unsetable' attributes!
             elseif ($this->request->getMethod() == 'POST' && $attribute->getUnsetable()) {
                 if (key_exists($attribute->getName(), $post)) {
-                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: [' . $attribute->getEntity()->getName() . ']');
+                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: ['.$attribute->getEntity()->getName().']');
                     unset($post[$attribute->getName()]);
                 }
                 continue;
