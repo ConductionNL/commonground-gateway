@@ -35,7 +35,7 @@ jobs:
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
-          chmod -777 api/vendor
+          chmod +777 api/vendor
       - name: Setting APP_NAME
         run: |
           export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
