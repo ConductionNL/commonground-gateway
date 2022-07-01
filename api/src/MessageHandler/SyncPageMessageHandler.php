@@ -52,11 +52,11 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         // Get objects from extern api
         $externObjects = $this->getExternObjects($message, $entity);
 
-        // Loop through all extern objects and check if they have an object in the gateway, if not create one.
-        $newGatewayObjects = $this->createNewObjects($externObjects, ['message' => $message, 'entity' => $entity]);
+        // Loop through all extern objects and update or create an ObjectEntity for it in the gateway.
+        $newGatewayObjects = $this->saveObjects($externObjects, ['message' => $message, 'entity' => $entity]);
 
         // Dump so we can see what's happening in the worker pod online.
-        var_dump('Entity: '.$entity->getName().' - Page: '.$message->getPage().' - New gateway objects = '.count($newGatewayObjects));
+        var_dump('Entity: '.$entity->getName().' - Page: '.$message->getPage().' - New / changed gateway objects = '.count($newGatewayObjects));
     }
 
     /**
@@ -96,14 +96,14 @@ class SyncPageMessageHandler implements MessageHandlerInterface
     }
 
     /**
-     * Loop through all extern objects and check if they have an object in the gateway, if not create one.
+     * Loop through all extern objects and update or create an ObjectEntity for it in the gateway.
      *
      * @param array $externObjects
      * @param array $messageData   Must contain key 'message' (SyncPageMessage) and key 'entity' (Entity)
      *
      * @return ArrayCollection
      */
-    private function createNewObjects(array $externObjects, array $messageData): ArrayCollection
+    private function saveObjects(array $externObjects, array $messageData): ArrayCollection
     {
         $newGatewayObjects = new ArrayCollection();
         $collectionConfigEnvelope = [];
@@ -112,7 +112,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         }
         $collectionConfigId = explode('.', $messageData['entity']->getCollectionConfig()['id']);
         foreach ($externObjects as $externObject) {
-            $object = $this->createNewObject(
+            $object = $this->saveObject(
                 $externObject,
                 [
                     'collectionConfigEnvelope' => $collectionConfigEnvelope,
@@ -129,7 +129,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         return $newGatewayObjects;
     }
 
-    private function createNewObject(array $externObject, array $config, array $messageData): ?ObjectEntity
+    private function saveObject(array $externObject, array $config, array $messageData): ?ObjectEntity
     {
         $id = $externObject;
         // Make sure to get this item from the correct place in $externObject
