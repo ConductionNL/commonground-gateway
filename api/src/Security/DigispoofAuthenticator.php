@@ -113,7 +113,7 @@ class DigispoofAuthenticator extends AbstractGuardAuthenticator
 
         $this->tokenStorage->setToken();
 
-        $item = $this->cache->getItem('code_'.md5($bsn));
+        $item = $this->cache->getItem('code_'.base64_encode($bsn));
         $item->set($bsn);
         $this->cache->save($item);
 
@@ -126,7 +126,7 @@ class DigispoofAuthenticator extends AbstractGuardAuthenticator
             return new RedirectResponse('/'.$this->params->get('app_subpath').$this->router->generate('app_user_digispoof', []));
         }
 
-        return new RedirectResponse($this->router->generate('app_user_digispoof', ['response' => $request->request->get('back_url'), 'back_url' => $request->request->get('back_url')]));
+        return new RedirectResponse(filter_var($this->router->generate('app_user_digispoof', ['response' => $request->request->get('back_url'), 'back_url' => $request->request->get('back_url')]), FILTER_SANITIZE_URL));
     }
 
     /**

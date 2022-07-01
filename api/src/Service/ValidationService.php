@@ -1728,11 +1728,11 @@ class ValidationService
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
 
-                    $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
+                    $item = $this->cache->getItem('commonground_'.base64_encode($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
-                    $item = $this->cache->getItem('commonground_'.md5($url));
+                    $item = $this->cache->getItem('commonground_'.base64_encode($url));
                 }
 
                 // Set organization for this object

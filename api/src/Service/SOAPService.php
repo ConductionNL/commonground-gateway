@@ -776,7 +776,7 @@ class SOAPService
 
     public function processEdcLk01(array $data, array $namespaces, Request $request): string
     {
-        $item = $this->cache->getItem(md5($request->getClientIp()));
+        $item = $this->cache->getItem(base64_encode($request->getClientIp()));
         $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 's:Envelope']);
         if (
             !($stufNamespace = array_search('http://www.egem.nl/StUF/StUF0301', $namespaces)) ||
@@ -900,7 +900,7 @@ class SOAPService
         $message = $data["$env:Body"]["$caseNamespace:{$type}_Di02"];
 
         if ($message["$caseNamespace:stuurgegevens"]["$stufNamespace:functie"] == 'genereerDocumentidentificatie') {
-            $item = $this->cache->getItem(md5($request->getClientIp()));
+            $item = $this->cache->getItem(base64_encode($request->getClientIp()));
             if ($item->isHit()) {
                 return $xmlEncoder->encode($this->generateDu02($item->get(), $type, 'document'), 'xml');
             } else {
