@@ -558,7 +558,7 @@ class ObjectEntityService
                 $attribute->getName() == 'url'
             ) {
                 $post[$attribute->getName()] = $objectEntity->getSelf() ?? $this->createSelf($objectEntity);
-                // Skip if readOnly
+            // Skip if readOnly
             } elseif ($attribute->getReadOnly()) {
                 continue;
             }
