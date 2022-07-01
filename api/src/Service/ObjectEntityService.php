@@ -550,8 +550,6 @@ class ObjectEntityService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            // todo make sure we never have key+value in $post for readOnly, immutable & unsetable attributes, through the validaterService
-
             // Check attribute function
             if ($attribute->getFunction() !== 'noFunction') {
                 switch ($attribute->getFunction()) {
