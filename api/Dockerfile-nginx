@@ -8,6 +8,3 @@ FROM nginx:alpine AS api_platform_nginx
 COPY docker/nginx/conf.d/default.conf.template /etc/nginx/templates/default.conf.template
 WORKDIR /srv/api
 COPY public public/
-
-RUN apt update; \
-  apt upgrade -y
