@@ -314,7 +314,8 @@ class OasParserService
 
         if (
             isset($schema['format']) && $schema['format'] == 'uri' && isset($schema['type']) &&
-            $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true
+            $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true &&
+            $propertyName == 'url'
         ) {
             $attribute->setFunction('self');
         }
