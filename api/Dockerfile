@@ -103,6 +103,7 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 	echo -e "xdebug.overload_var_dump=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN mkdir -p /cert
+RUN mkdir -p vendor
 COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/etc/php
@@ -127,6 +128,7 @@ RUN set -eux; \
 RUN chown -R commonground-gateway:commonground-gateway bin
 RUN chown -R commonground-gateway:commonground-gateway var
 RUN chown -R commonground-gateway:commonground-gateway /cert
+RUN chown -R commonground-gateway:commonground-gateway vendor
 VOLUME /srv/api/var
 USER commonground-gateway
 
