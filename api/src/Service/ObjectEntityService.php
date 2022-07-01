@@ -552,14 +552,13 @@ class ObjectEntityService
         foreach ($entity->getAttributes() as $attribute) {
             // todo make sure we never have key+value in $post for readOnly, immutable & unsetable attributes, through the validaterService
 
-            if (
-                $attribute->getReadOnly() !== null && $attribute->getReadOnly() == true &&
-                $attribute->getFunction() !== null && $attribute->getFunction() == 'self' &&
-                $attribute->getName() == 'url'
-            ) {
-                $post[$attribute->getName()] = $objectEntity->getSelf() ?? $this->createSelf($objectEntity);
-            // Skip if readOnly
-            } elseif ($attribute->getReadOnly()) {
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                switch ($attribute->getFunction()) {
+                    case 'self':
+                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        break;
+                }
                 continue;
             }
 
