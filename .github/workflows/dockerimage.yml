@@ -102,7 +102,7 @@ jobs:
           chmod +x ./local-php-security-checker
           ./local-php-security-checker --path ./api/composer.lock
       - name: Run PHPUnit
-        run: php bin/phpunit --coverage-clover coverage.xml
+        run: bin/phpunit --coverage-clover coverage.xml
       - uses: codecov/codecov-action@v1
         with:
             token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
