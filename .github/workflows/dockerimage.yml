@@ -101,14 +101,14 @@ jobs:
           curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
           chmod +x ./local-php-security-checker
           ./local-php-security-checker --path ./api/composer.lock
-#      - name: Run PHPUnit
-#        run: bin/phpunit --coverage-clover coverage.xml
-#      - uses: codecov/codecov-action@v1
-#        with:
-#            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#            name: codecov-umbrella
-#            fail_ci_if_error: true
-#            verbose: true
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --coverage-clover coverage.xml
+      - uses: codecov/codecov-action@v1
+        with:
+            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+            name: codecov-umbrella
+            fail_ci_if_error: true
+            verbose: true
       #- name: Run Postman Tests
       #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
       #  run: newman run api/public/schema/*.postman_collection.json
