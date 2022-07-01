@@ -550,7 +550,16 @@ class ObjectEntityService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            // todo make sure we never have key+value in $post for readOnly, immutable & unsetable attributes, through the validaterService
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                switch ($attribute->getFunction()) {
+                    case 'self':
+                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        // Note: attributes with function = self should also be readOnly (ReadOnly should be validated with the ValidaterService)
+                        break;
+                }
+                continue;
+            }
 
             // Check if we have a value ( a value is given in the post body for this attribute, can be null)
             // If no value is present in the post body for this attribute check for defaultValue and nullable.

@@ -310,6 +310,15 @@ class OasParserService
 
         (isset($schema['required']) && $schema['required'] === true) && $attribute->setRequired(true);
         isset($schema['description']) && $attribute->setDescription($schema['description']);
+        isset($schema['readOnly']) && $attribute->setReadOnly($schema['readOnly']);
+
+        if (
+            isset($schema['format']) && $schema['format'] == 'uri' && isset($schema['type']) &&
+            $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true &&
+            $propertyName == 'url'
+        ) {
+            $attribute->setFunction('self');
+        }
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);

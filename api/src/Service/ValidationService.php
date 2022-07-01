@@ -110,7 +110,18 @@ class ValidationService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            // Skip if readOnly
+
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                switch ($attribute->getFunction()) {
+                    case 'self':
+                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        // Note: attributes with function = self should also be readOnly
+                        break;
+                }
+            }
+
+            // Skip readOnly's
             if ($attribute->getReadOnly()) {
                 continue;
             }
@@ -144,11 +155,6 @@ class ValidationService
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()], $dontCheckAuth);
             }
-            //TODO: do we want this? ;
-            //            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
-            //            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
-            //                continue;
-            //            }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
                 //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
@@ -344,9 +350,9 @@ class ValidationService
     {
         $values = $attribute->getAttributeValues()->filter(function (Value $valueObject) use ($value) {
             switch ($valueObject->getAttribute()->getType()) {
-                //TODO:
-                //                case 'object':
-                //                    return $valueObject->getObjects() == $value;
+                    //TODO:
+                    //                case 'object':
+                    //                    return $valueObject->getObjects() == $value;
                 case 'string':
                     if (!$valueObject->getAttribute()->getCaseSensitive()) {
                         return strtolower($valueObject->getStringValue()) == strtolower($value);
@@ -1699,7 +1705,7 @@ class ValidationService
         $this->logService->saveLog($this->logService->makeRequest(), null, 12, $logPost, null, 'out');
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
-        // $onFulfilled
+            // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
@@ -1736,21 +1742,21 @@ class ValidationService
                 }
 
                 // Set organization for this object
-//                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-//                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-//                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-//                } else {
-//                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
-//                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-//                    $objectEntity->setApplication(!empty($application) ? $application : null);
-//                }
-//                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-//                    'method' => $method,
-//                    'uri'    => $objectEntity->getUri(),
-//                ]);
-//                if (isset($setOrganization)) {
-//                    $objectEntity->setOrganization($setOrganization);
-//                }
+                //                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+                //                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                //                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+                //                } else {
+                //                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                //                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                //                    $objectEntity->setApplication(!empty($application) ? $application : null);
+                //                }
+                //                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+                //                    'method' => $method,
+                //                    'uri'    => $objectEntity->getUri(),
+                //                ]);
+                //                if (isset($setOrganization)) {
+                //                    $objectEntity->setOrganization($setOrganization);
+                //                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1885,8 +1891,7 @@ class ValidationService
         $endpoint = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
         if ($endpoint instanceof Endpoint) {
             $pathArray = $endpoint->getPath();
-            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
-                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() : (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
                 $path = implode('/', $pathArray);
 

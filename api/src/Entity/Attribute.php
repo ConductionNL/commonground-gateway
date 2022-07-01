@@ -127,6 +127,17 @@ class Attribute
     private Entity $entity;
 
     /**
+     * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently
+     *
+     * @example self
+     *
+     * @Assert\Choice({"noFunction","self"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", options={"default":"noFunction"})
+     */
+    private string $function = 'noFunction';
+
+    /**
      * Null, or the Entity this attribute is part of, if it is allowed to partial search on this attribute using the search query parameter.
      *
      * @Groups({"write"})
@@ -769,6 +780,18 @@ class Attribute
         return $this;
     }
 
+    public function getFunction(): ?string
+    {
+        return $this->function;
+    }
+
+    public function setFunction(?string $function): self
+    {
+        $this->function = $function;
+
+        return $this;
+    }
+
     public function getSearchPartial(): ?Entity
     {
         return $this->searchPartial;
@@ -1338,6 +1361,7 @@ class Attribute
         $validations['cascade'] = $this->getCascade();
         $validations['immutable'] = $this->getImmutable();
         $validations['unsetable'] = $this->getUnsetable();
+        $validations['readOnly'] = $this->getReadOnly();
 
         return $validations;
     }
@@ -1428,6 +1452,9 @@ class Attribute
         }
         if (array_key_exists('unsetable', $validations)) {
             $this->setUnsetable($validations['unsetable']);
+        }
+        if (array_key_exists('readOnly', $validations)) {
+            $this->setReadOnly($validations['readOnly']);
         }
 
         return $this;
