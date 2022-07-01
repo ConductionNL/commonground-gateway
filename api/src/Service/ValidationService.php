@@ -111,6 +111,16 @@ class ValidationService
 
         foreach ($entity->getAttributes() as $attribute) {
 
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                switch ($attribute->getFunction()) {
+                    case 'self':
+                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        // Note: attributes with function = self should also be readOnly
+                        break;
+                }
+            }
+
             // Skip readOnly's
             if ($attribute->getReadOnly()) {
                 continue;
@@ -141,23 +151,10 @@ class ValidationService
                 continue;
             }
 
-            // if ($attribute->getFunction() !== 'noFunction') {
-            //     switch ($attribute->getFunction()) {
-            //         case 'self':
-            //             $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
-            //             break;
-            //     }
-            // } else
-
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()], $dontCheckAuth);
             }
-            //TODO: do we want this? ;
-            //            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
-            //            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
-            //                continue;
-            //            }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
                 //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());

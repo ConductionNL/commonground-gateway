@@ -555,6 +555,7 @@ class ObjectEntityService
                 switch ($attribute->getFunction()) {
                     case 'self':
                         $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        // Note: attributes with function = self should also be readOnly (ReadOnly should be validated with the ValidaterService)
                         break;
                 }
                 continue;
