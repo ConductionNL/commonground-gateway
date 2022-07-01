@@ -191,6 +191,13 @@
 #        required: true
 #        entity: "@note"
 #        
+#    note_contact:
+#        name: contact
+#        description: The contact that needs to be notified.
+#        type: string
+#        format: uuid
+#        entity: "@note"
+#
 #    # Search Attributes
 #    search_agent:
 #        name: agent
