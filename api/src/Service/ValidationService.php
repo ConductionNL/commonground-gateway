@@ -110,14 +110,9 @@ class ValidationService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            if (
-                $attribute->getReadOnly() !== null && $attribute->getReadOnly() == true &&
-                $attribute->getFunction() !== null && $attribute->getFunction() == 'self' &&
-                $attribute->getName() == 'url'
-            ) {
-                $post[$attribute->getName()] = $objectEntity->getSelf() ?? $this->createSelf($objectEntity);
-            // Skip if readOnly
-            } elseif ($attribute->getReadOnly()) {
+
+            // Skip readOnly's
+            if ($attribute->getReadOnly()) {
                 continue;
             }
 
@@ -163,6 +158,12 @@ class ValidationService
             // Check if this field is nullable
             elseif ($attribute->getNullable() === true) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            } elseif ($attribute->getFunction() !== 'noFunction') {
+                switch ($attribute->getFunction()) {
+                    case 'self':
+                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                        break;
+                }
             }
             // Check if this field is required
             elseif ($attribute->getRequired()) {
