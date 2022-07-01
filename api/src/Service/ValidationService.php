@@ -135,11 +135,19 @@ class ValidationService
             } // Do not post 'unsetable' attributes!
             elseif ($this->request->getMethod() == 'POST' && $attribute->getUnsetable()) {
                 if (key_exists($attribute->getName(), $post)) {
-                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: ['.$attribute->getEntity()->getName().']');
+                    $objectEntity->addError($attribute->getName(), 'This attribute is not allowed to be set on creation, it can only be set or changed after creation of: [' . $attribute->getEntity()->getName() . ']');
                     unset($post[$attribute->getName()]);
                 }
                 continue;
             }
+
+            // if ($attribute->getFunction() !== 'noFunction') {
+            //     switch ($attribute->getFunction()) {
+            //         case 'self':
+            //             $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+            //             break;
+            //     }
+            // } else
 
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
@@ -158,12 +166,6 @@ class ValidationService
             // Check if this field is nullable
             elseif ($attribute->getNullable() === true) {
                 $objectEntity->getValueByAttribute($attribute)->setValue(null);
-            } elseif ($attribute->getFunction() !== 'noFunction') {
-                switch ($attribute->getFunction()) {
-                    case 'self':
-                        $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
-                        break;
-                }
             }
             // Check if this field is required
             elseif ($attribute->getRequired()) {
