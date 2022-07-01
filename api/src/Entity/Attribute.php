@@ -126,7 +126,6 @@ class Attribute
      */
     private Entity $entity;
 
-
     /**
      * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently
      *
@@ -667,21 +666,21 @@ class Attribute
     {
         if ($this->getEntity() !== null) {
             $entity = $this->getEntity()->getId()->toString();
-            $entity = '@' . $entity;
+            $entity = '@'.$entity;
         } else {
             $entity = null;
         }
 
         if ($this->getObject() !== null) {
             $object = $this->getObject()->getId()->toString();
-            $object = '@' . $object;
+            $object = '@'.$object;
         } else {
             $object = null;
         }
 
         if ($this->getInversedBy() !== null) {
             $inversed = $this->getInversedBy()->getId()->toString();
-            $inversed = '@' . $inversed;
+            $inversed = '@'.$inversed;
         } else {
             $inversed = null;
         }
