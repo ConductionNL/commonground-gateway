@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use App\Entity\CollectionEntity;
+use App\Entity\Entity;
+use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
@@ -10,6 +12,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -22,23 +25,44 @@ class PubliccodeService
     private ?Client $github;
     private array $query;
     private SerializerInterface $serializer;
+    private ParseDataService $parseDataService;
+    private EavService $eavService;
+    private ValidationService $validationService;
+    private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params,
-        SerializerInterface $serializer
-    ) {
+        ParameterBagInterface  $params,
+        SerializerInterface    $serializer,
+        ParseDataService       $parseDataService,
+        EavService             $eavService,
+        ValidationService      $validationService,
+        ObjectEntityService $objectEntityService
+    )
+    {
         $this->entityManager = $entityManager;
         $this->params = $params;
         $this->serializer = $serializer;
-        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->params->get('github_key')]]) : null;
+        $this->parseDataService = $parseDataService;
+        $this->eavService = $eavService;
+        $this->validationService = $validationService;
+        $this->objectEntityService = $objectEntityService;
+        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer ' . $this->params->get('github_key')]]) : null;
         $this->query = [
-            'page'     => 1,
+            'page' => 1,
             'per_page' => 200,
-            'order'    => 'desc',
-            'sort'     => 'author-date',
-            'q'        => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
+            'order' => 'desc',
+            'sort' => 'author-date',
+            'q' => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
         ];
+    }
+
+    /**
+     * @param Request $request
+     */
+    public function setRequest(Request $request)
+    {
+        $this->request = $request;
     }
 
     /**
@@ -46,21 +70,21 @@ class PubliccodeService
      *
      * @param array $item a repository from github with a publicclode.yaml file
      *
+     * @return array
      * @throws GuzzleException
      *
-     * @return array
      */
     public function getGithubOwnerInfo(array $item): array
     {
         return [
-            'id'                => $item['owner']['id'],
-            'type'              => $item['owner']['type'],
-            'login'             => $item['owner']['login'] ?? null,
-            'html_url'          => $item['owner']['html_url'] ?? null,
+            'id' => $item['owner']['id'],
+            'type' => $item['owner']['type'],
+            'login' => $item['owner']['login'] ?? null,
+            'html_url' => $item['owner']['html_url'] ?? null,
             'organizations_url' => $item['owner']['organizations_url'] ?? null,
-            'avatar_url'        => $item['owner']['avatar_url'] ?? null,
-            'publiccode'        => $this->findPubliccode($item),
-            'repos'             => json_decode($this->getGithubOwnerRepositories($item['owner']['login'])),
+            'avatar_url' => $item['owner']['avatar_url'] ?? null,
+            'publiccode' => $this->findPubliccode($item),
+            'repos' => json_decode($this->getGithubOwnerRepositories($item['owner']['login'])),
         ];
     }
 
@@ -69,37 +93,37 @@ class PubliccodeService
      *
      * @param array $item a repository from github with a publicclode.yaml file
      *
+     * @return array
      * @throws GuzzleException
      *
-     * @return array
      */
     public function getGithubRepositoryInfo(array $item): array
     {
         return [
-            'id'          => $item['id'],
-            'name'        => $item['name'],
-            'full_name'   => $item['full_name'],
+            'id' => $item['id'],
+            'name' => $item['name'],
+            'full_name' => $item['full_name'],
             'description' => $item['description'],
-            'html_url'    => $item['html_url'],
-            'private'     => $item['private'],
-            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item) : null,
-            'tags'        => $this->requestFromUrl($item['tags_url']),
-            'languages'   => $this->requestFromUrl($item['languages_url']),
-            'downloads'   => $this->requestFromUrl($item['downloads_url']),
+            'html_url' => $item['html_url'],
+            'private' => $item['private'],
+            'owner' => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item) : null,
+            'tags' => $this->requestFromUrl($item['tags_url']),
+            'languages' => $this->requestFromUrl($item['languages_url']),
+            'downloads' => $this->requestFromUrl($item['downloads_url']),
             //            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
-            'labels'      => $this->requestFromUrl($item['labels_url'], '{/name}'),
+            'labels' => $this->requestFromUrl($item['labels_url'], '{/name}'),
         ];
     }
 
     /**
      * This function gets the content of the given url.
      *
-     * @param string      $url
+     * @param string $url
      * @param string|null $path
      *
+     * @return array|null
      * @throws GuzzleException
      *
-     * @return array|null
      */
     public function requestFromUrl(string $url, ?string $path = null): ?array
     {
@@ -120,13 +144,13 @@ class PubliccodeService
      *
      * @param string $owner the name of the owner of a repository
      *
+     * @return string|false
      * @throws GuzzleException
      *
-     * @return string|false
      */
     public function getGithubOwnerRepositories(string $owner): ?string
     {
-        if ($response = $this->github->request('GET', '/orgs/'.$owner.'/repos')) {
+        if ($response = $this->github->request('GET', '/orgs/' . $owner . '/repos')) {
             return $response->getBody()->getContents();
         }
 
@@ -136,17 +160,17 @@ class PubliccodeService
     /**
      * This function gets the content of a github file.
      *
-     * @param array  $repository a github repository
-     * @param string $file       the file that we want to search
-     *
-     * @throws GuzzleException
+     * @param array $repository a github repository
+     * @param string $file the file that we want to search
      *
      * @return string|null
+     * @throws GuzzleException
+     *
      */
     public function getGithubFileContent(array $repository, string $file): ?string
     {
         $path = $this->getRepoPath($repository['html_url']);
-        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/'.$path.'/main/', 'http_errors' => false]);
+        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/' . $path . '/main/', 'http_errors' => false]);
         $response = $client->get($file);
 
         if ($response->getStatusCode() == 200) {
@@ -167,9 +191,9 @@ class PubliccodeService
      *
      * @param array $repository a github repository
      *
+     * @return array|null
      * @throws GuzzleException
      *
-     * @return array|null
      */
     public function findPubliccode(array $repository): ?array
     {
@@ -226,16 +250,16 @@ class PubliccodeService
      *
      * @param string $id
      *
+     * @return Response
      * @throws GuzzleException
      *
-     * @return Response
      */
     public function getGithubRepositoryContent(string $id): Response
     {
         if ($this->checkGithubKey()) {
             return $this->checkGithubKey();
         }
-        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
+        $response = $this->github->request('GET', 'https://api.github.com/repositories/' . $id);
 
         return new Response(json_encode($this->getGithubRepositoryInfo(json_decode($response->getBody()->getContents(), true))), 200, ['content-type' => 'json']);
     }
@@ -245,16 +269,16 @@ class PubliccodeService
      *
      * @param string $id id of the github repository
      *
+     * @return Response Uuid of created Collection
      * @throws GuzzleException
      *
-     * @return Response Uuid of created Collection
      */
     public function createCollection(string $id): Response
     {
         if ($this->checkGithubKey()) {
             return $this->checkGithubKey();
         }
-        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
+        $response = $this->github->request('GET', 'https://api.github.com/repositories/' . $id);
         $repository = json_decode($response->getBody()->getContents(), true);
         $publiccode = $this->findPubliccode($repository);
 
@@ -272,7 +296,7 @@ class PubliccodeService
 
         return new Response(
             $this->serializer->serialize(
-                ['message' => 'Repository: '.$id.' successfully created into a '.'Collection with id: '.$collection->getId()->toString()],
+                ['message' => 'Repository: ' . $id . ' successfully created into a ' . 'Collection with id: ' . $collection->getId()->toString()],
                 'json'
             ),
             200,
@@ -283,9 +307,9 @@ class PubliccodeService
     /**
      * This function is searching for repositories containing a publiccode.yaml file.
      *
+     * @return Response
      * @throws GuzzleException
      *
-     * @return Response
      */
     public function discoverGithub(): Response
     {
@@ -303,6 +327,128 @@ class PubliccodeService
             );
         }
 
-        return new Response($response->getBody()->getContents(), 200, ['content-type'=>'json']);
+        $repositories = json_decode($response->getBody()->getContents(), true);
+
+        foreach ($repositories['items'] as $repository) {
+
+            $publiccode = $this->findPubliccode($repository);
+
+//            var_dump($repository);
+
+            $collectionEntity = $this->findCollectionEntity($repository, $publiccode);
+
+        }
+
+        return 'einde';
+    }
+
+    /**
+     * This function returns or creates a CollectionEntity.
+     *
+     * @param $repository
+     * @param $publiccode
+     * @return array|mixed|object
+     * @throws GuzzleException|\Exception
+     */
+    public function findCollectionEntity($repository, $publiccode)
+    {
+        $collectionEntity = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['sourceUrl' => isset($publiccode['html_url'])]);
+
+        if ($collectionEntity) {
+            return $collectionEntity;
+        } else {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
+            $schema['properties'] = $this->createComponentObject($repository['repository'], $publiccode);
+            return $this->createObjects($entity, $schema);
+        }
+    }
+
+    /**
+     * Creates objects related to an entity.
+     *
+     * @param Entity $entity The entity the objects should relate to
+     * @param array $schema The data in the object
+     *
+     * @return array The resulting objects
+     * @throws Exception|\Exception
+     *
+     */
+    public function createObjects(Entity $entity, array $schema, ?bool $dontCheckAuth = false): array
+    {
+        $result = [];
+        $object = $this->eavService->getObject(null, 'POST', $entity);
+        //TODO: add admin scopes to grantedScopes in the session so this validateEntity function doesn't fail on missing scopes
+        // todo use new validation and saveObject function instead of validateEntity
+
+        $mockRequest = new Request();
+        $mockRequest->setMethod('POST');
+        $this->validationService->setRequest($mockRequest);
+
+        $object = $this->validationService->validateEntity($object, $schema['properties'], $dontCheckAuth);
+
+
+        $this->entityManager->persist($object);
+        $result[] = $object;
+
+        return $result;
+    }
+
+    /**
+     * This function gets all the github repository details.
+     *
+     * @param array $repository
+     * @param $publiccode
+     * @return array
+     */
+    public function createComponentObject(array $repository, $publiccode): array
+    {
+//        var_dump('nieuw');
+//        var_dump($publiccode);
+        return [
+            'id' => $repository['id'],
+            'name' => $repository['name'],
+            'description' => $repository['description'],
+            'applicationSuite' => [
+                'id' => '',
+                'name' => ''
+            ],
+            'url' => $repository['html_url'],
+            'landingURL' => $repository['url'],
+            'isBasedOn' => $repository['fork'],
+            'softwareVersion' => '',
+            'releaseDate' => '',
+            'logo' => $repository['owner']['avatar_url'] ?? null,
+            'platforms' => '',
+            'categories' => '',
+//            'usedBy' => $this->requestFromUrl($repository['forks_url']),
+            'roadmap' => '',
+            'developmentStatus' => '',
+            'softwareType' => '',
+            'legal' => [
+                'license' => '',
+                'mainCopyrightOwner' => '',
+                'repoOwner' => $repository['owner']['html_url'],
+                'authorsFile' => ''
+            ],
+            'maintenance' => [
+                'type' => $repository['owner']['type'],
+                'contractors' => '',
+                'contacts' => ''
+            ],
+            'localisation' => [
+                'localisationReady' => '',
+//                'availableLanguages' => $this->requestFromUrl($repository['languages_url']),
+            ],
+            'dependsOn' => [
+                'open' => '',
+                'proprietary' => '',
+                'hardware' => '',
+            ],
+            'nl' => [
+                'installationType' => '',
+                'layerType' => '',
+            ]
+
+        ];
     }
 }

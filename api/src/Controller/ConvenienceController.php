@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\CollectionEntity;
+use App\Service\EavService;
 use App\Service\OasParserService;
+use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeService;
+use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,17 +27,23 @@ class ConvenienceController extends AbstractController
     private SerializerInterface $serializer;
     private ParseDataService $dataService;
     private PackagesService $packagesService;
+    private EavService $eavService;
+    private ValidationService $validationService;
+    private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $params,
         SerializerInterface $serializer,
-        ParseDataService $dataService
+        ParseDataService $dataService,
+        EavService $eavService,
+        ValidationService $validationService,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer);
+        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer, $dataService, $eavService, $validationService, $objectEntityService);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
     }
