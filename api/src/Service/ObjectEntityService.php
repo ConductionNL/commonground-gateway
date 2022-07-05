@@ -86,7 +86,7 @@ class ObjectEntityService
         $this->gatewayService = $gatewayService;
         $this->translationService = $translationService;
         $this->logService = $logService;
-        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService);
+        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus);
         $this->notifications = [];
     }
 
