@@ -1323,16 +1323,16 @@ class ObjectEntityService
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
         $this->entityManager->persist($objectEntity);
         if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getExternalId()) {
-            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+            return $objectEntity->getEntity()->getGateway()->getLocation() . '/' . $objectEntity->getEntity()->getEndpoint() . '/' . $objectEntity->getExternalId();
         }
 
-        $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
+        $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://' . $_SERVER['HTTP_HOST'] : 'http://localhost';
 
         if ($objectEntity->getEntity()->getRoute()) {
-            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+            return $uri . '/api' . $objectEntity->getEntity()->getRoute() . '/' . $objectEntity->getId();
         }
 
-        return $uri.'/admin/object_entities/'.$objectEntity->getId();
+        return $uri . '/admin/object_entities/' . $objectEntity->getId();
     }
 
     /**
