@@ -8,6 +8,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 
 // todo: Test if subscriber is reached
 // todo: Only trigger subscriber on POST review endpoint
@@ -99,9 +102,40 @@ class EmailSubscriber implements EventSubscriberInterface
         ]);
     }
 
+    private function sendEmail(array $mail): bool
+    {
+        //todo: add symfony/mailer and symfony/mailgun-mailer to composer.json
+        $transport = Transport::fromDsn($mail['service']['authorization']);
+        $mailer = new Mailer($transport);
+
+        $html = $mail['content'];
+        $text = strip_tags(preg_replace('#<br\s*/?>#i', "\n", $html), '\n');
+        $sender = "wilco@conduction.nl";
+        $reciever = "wilco@conduction.nl";
+
+        $email = (new Email())
+            ->from($sender)
+            ->to($reciever)
+            //->cc('cc@example.com')
+            //->bcc('bcc@example.com')
+            //->replyTo('fabien@example.com')
+            //->priority(Email::PRIORITY_HIGH)
+            ->subject($mail['subject'] ?? $mail['content']['name'])
+            ->html($html)
+            ->text($text);
+
+        // todo: attachments
+
+        /** @var Symfony\Component\Mailer\SentMessage $sentEmail */
+        $mailer->send($email);
+
+        return true;
+    }
+
     public function handleEvent(EndpointTriggeredEvent $event): EndpointTriggeredEvent
     {
-        if(
+        var_dump('test');
+        if (
             $event->getRequest()->getMethod() == 'GET'
             // @TODO: add extra conditions
         ) {
