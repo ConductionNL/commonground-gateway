@@ -50,6 +50,18 @@ class PublicCodeCommand extends Command
     {
         // ... put here the code to create the user
         $publicCodeLinks = $this->parameterBag->get('PUBLICCODE');
+
+        // Check if PUBLICCODE is not empty
+        if (empty($publicCodeLinks)) {
+            $output->writeln([
+                '',
+                'PUBLICCODE is not set. There are no API\'s to load.',
+                '',
+            ]);
+
+            return Command::SUCCESS;
+        }
+
         $publicCodeLinks = explode(',', $publicCodeLinks);
 
         $httpClient = new Client(['base_uri' => '']);
