@@ -99,12 +99,12 @@ class ValidationService
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
-     * @param array $post
-     * @param bool|null $dontCheckAuth
-     *
-     * @return ObjectEntity
+     * @param array        $post
+     * @param bool|null    $dontCheckAuth
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function validateEntity(ObjectEntity $objectEntity, array $post, ?bool $dontCheckAuth = false): ObjectEntity
     {
@@ -246,11 +246,11 @@ class ValidationService
      * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     *
-     * @return ObjectEntity
+     * @param Attribute    $attribute
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
     {
@@ -288,13 +288,13 @@ class ValidationService
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
+     * @param Attribute    $attribute
      * @param $value
      * @param bool $dontCheckAuth
      *
-     * @return ObjectEntity
-     *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function validateAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value, bool $dontCheckAuth = false): ObjectEntity
     {
