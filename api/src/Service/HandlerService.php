@@ -105,7 +105,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new EndpointTriggeredEvent($endpoint, $this->request);
+        $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'PRE_HANDLER']);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -145,6 +145,9 @@ class HandlerService
                 $result = $this->handleHandler($handler, $endpoint);
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
+
+                $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'POST_HANDLER']);
+                $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
 
                 return $result;
             }
