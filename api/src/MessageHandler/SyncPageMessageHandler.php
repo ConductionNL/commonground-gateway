@@ -10,6 +10,7 @@ use App\Repository\ObjectEntityRepository;
 use App\Service\ConvertToGatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Exception;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 class SyncPageMessageHandler implements MessageHandlerInterface
@@ -33,16 +34,15 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      * @param SyncPageMessage $message
      *
      * @return void
+     *
+     * @throws Exception
      */
     public function __invoke(SyncPageMessage $message): void
     {
         $callServiceData = $message->getCallServiceData();
         $requiredKeys = ['component', 'url', 'query', 'headers'];
         if (count(array_intersect_key($callServiceData, array_flip($requiredKeys))) !== count($requiredKeys)) {
-            // todo: throw error or something
-            var_dump('SyncPageMessageHandler->CallServiceData is missing one of the following keys: '.implode(', ', $requiredKeys));
-
-            return;
+            throw new Exception('CallServiceData is missing one of the following keys: '.implode(', ', $requiredKeys));
         }
         $entity = $this->entityRepository->find($message->getEntityId());
 

@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -514,6 +515,15 @@ class Entity
         return $this->searchPartial;
     }
 
+    /**
+     * @todo docs
+     *
+     * @param Attribute $attribute
+     *
+     * @return $this
+     *
+     * @throws Exception
+     */
     public function addSearchPartial(Attribute $attribute): self
     {
         // Only allow adding to searchPartial if the attribute is part of this Entity.
@@ -523,8 +533,9 @@ class Entity
         ) {
             $this->searchPartial[] = $attribute;
             $attribute->setSearchPartial($this);
+        } else {
+            throw new Exception('You are not allowed to set searchPartial of an Entity to an Attribute that is not part of this Entity.');
         }
-        //todo: else throw error?
 
         return $this;
     }

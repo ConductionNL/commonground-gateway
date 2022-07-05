@@ -388,9 +388,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query = $this->getDateTimeFilter($query, 'dateModified', $value, $prefix);
                 break;
             default:
-                //todo: error?
-//                var_dump('Not supported filter for ObjectEntity: '.$key);
-                break;
+                throw new Exception('Not supported filter for ObjectEntity: '.$key);
         }
 
         return $query;
