@@ -10,7 +10,6 @@ use App\Repository\ObjectEntityRepository;
 use App\Service\ConvertToGatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
-use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 class SyncPageMessageHandler implements MessageHandlerInterface
