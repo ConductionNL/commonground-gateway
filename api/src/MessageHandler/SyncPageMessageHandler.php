@@ -33,8 +33,6 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      *
      * @param SyncPageMessage $message
      *
-     * @throws InvalidArgumentException
-     *
      * @return void
      */
     public function __invoke(SyncPageMessage $message): void
@@ -70,7 +68,6 @@ class SyncPageMessageHandler implements MessageHandlerInterface
     private function getExternObjects(SyncPageMessage $message, Entity $entity): array
     {
         $callServiceData = $message->getCallServiceData();
-//        var_dump('Page: '.$message->getPage());
 
         $response = $this->commonGroundService->callService(
             $callServiceData['component'],
