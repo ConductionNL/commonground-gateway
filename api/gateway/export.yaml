@@ -45,69 +45,69 @@ App\Entity\Entity:
         name: casetypes
         description: 'Every action related to listing and retrieving casetypes.'
         extend: false
-        route: /api/casetypes
+        route: /casetypes
     b282c718-d447-43f2-ae4b-388d87b4ab14:
         gateway: '@6a55d68e-ee78-475c-ac14-03cd4ae39d73'
         endpoint: case
         name: cases
         description: 'Every action related to creating and maintaining cases.'
         extend: false
-        route: /api/cases
+        route: /cases
     098a6e7d-c29e-4da9-ad73-e91f7e860dad:
         name: intra-municipal_relocations
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/test
+        route: /test
     29ad54f8-2b76-46ff-ad61-b49122a6b1aa:
         name: relocations
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/relocations
+        route: /relocations
     32efd566-9c38-45dd-a1be-4c06e8b33f55:
         name: deaths_in_municipality
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/deaths-in-municipality
+        route: /deaths-in-municipality
     34ed5f74-89b9-448b-b012-60c9e3c24653:
         name: birth
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/birth
+        route: /birth
     43d764a9-b3cb-4354-a22c-8dc2c2f82f59:
         name: commitment
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/commitment
+        route: /commitment
     5806419f-7748-421f-ad6f-a3d2d0699540:
         name: inter-municipal_relocations
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/test
+        route: /test
     5c4abdbe-ada6-4cac-a1d8-99602eadfe24:
         name: dossiers
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/dossiers
+        route: /dossiers
     856393a7-735e-452e-926b-154eba92c508:
         name: soap_test
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/test
+        route: /test
     97603b46-281d-4354-ad2a-1e5a174f1bba:
         name: deaths_discovered_body
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/deaths-discovered-body
+        route: /deaths-discovered-body
     e77c8028-d2ff-4fb0-baa2-1f44f7d4ae86:
         name: tasks
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/tasks
+        route: /tasks
     ee83987a-00d2-4e80-8518-148177afa948:
         name: relatives
         description: 'A test entity for Soap translations'
         extend: false
-        route: /api/relatives
+        route: /relatives
 App\Entity\Attribute:
     0ede605f-e1f2-4f48-b97c-4247164f9006:
         name: status

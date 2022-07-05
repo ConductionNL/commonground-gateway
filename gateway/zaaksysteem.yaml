@@ -130,13 +130,13 @@
 #    # Notification Object
 #    notification:
 #        name: notifications
-#        route: "/api/notification"
+#        route: "/notification"
 #        description: Holds information about a case
 #        endpoint: "notifications"
 #
 #    # Case Object
 #    case:
-#        route: '/api/cases'
+#        route: '/cases'
 #        name: cases
 #        description: Every action related to creating and maintaining cases.
 #        gateway: '@zaaksysteem'
@@ -160,7 +160,7 @@
 #
 #    # Casetype Object
 #    caseType:
-#        route: '/api/casetypes'
+#        route: '/casetypes'
 #        name: casetypes
 #        description: Every action related to listing and retrieving casetypes.
 #        gateway: '@zaaksysteem'
@@ -180,7 +180,7 @@
 #        name: zgwCase
 #        description: A case on the ZGW endpoints
 #        gateway: '@openzaak_zrc'
-#        route: '/api/zaken'
+#        route: '/zaken'
 #
 #    zgwGeoJSONGeometry:
 #        name: zgwGeoJSONGeometry
