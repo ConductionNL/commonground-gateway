@@ -128,8 +128,8 @@ class Attribute
 
     /**
      * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently.
-     * Note that the following options also expect the attribute to be readOnly: "self", "uri", "externalId", "dateCreated", "dateModified".
-     * And the type of this attribute must be string (or date/datetime for dateCreated/dateModified) or the function can not be set/changed!
+     *             Note that the following options also expect the attribute to be readOnly: "self", "uri", "externalId", "dateCreated", "dateModified".
+     *             And the type of this attribute must be string (or date/datetime for dateCreated/dateModified) or the function can not be set/changed!
      *
      * @example self
      *
@@ -789,8 +789,8 @@ class Attribute
 
     public function setFunction(?string $function): self
     {
-        if (in_array($function, ["id", "self", "uri", "externalId", "dateCreated", "dateModified"])) {
-            if ($this->getType() !== "string" && (!str_contains($function, "date") || !str_contains($this->getType(), "date"))) {
+        if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified'])) {
+            if ($this->getType() !== 'string' && (!str_contains($function, 'date') || !str_contains($this->getType(), 'date'))) {
                 // Do not allow function to be set if the type does not allow it! todo: throw error for user feedback?
                 // todo: or just always set the type to the correct one?
                 return $this;

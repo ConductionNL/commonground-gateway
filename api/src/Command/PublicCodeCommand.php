@@ -58,9 +58,9 @@ class PublicCodeCommand extends Command
                 'PUBLICCODE is not set. There are no API\'s to load.',
                 '',
             ]);
+
             return Command::SUCCESS;
         }
-
 
         $publicCodeLinks = explode(',', $publicCodeLinks);
 
@@ -143,7 +143,7 @@ class PublicCodeCommand extends Command
 
         // Parse and load testdata
         $collection = $this->oasParser->parseOas($collection);
-        $message = 'Succesfully created collection ' . $publicCodeParsed['name'] . ' and config loaded';
+        $message = 'Succesfully created collection '.$publicCodeParsed['name'].' and config loaded';
         if ($collection->getLoadTestData()) {
             $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true);
             $message .= ' with testdata';
