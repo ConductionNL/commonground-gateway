@@ -86,7 +86,7 @@ class ObjectEntityService
         $this->gatewayService = $gatewayService;
         $this->translationService = $translationService;
         $this->logService = $logService;
-        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService);
+        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus);
         $this->notifications = [];
     }
 
@@ -540,9 +540,9 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      * @param array        $post
      *
-     * @return ObjectEntity
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     public function saveObject(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
@@ -596,11 +596,11 @@ class ObjectEntityService
      * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     *
-     * @return ObjectEntity
+     * @param Attribute    $attribute
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
     {
@@ -641,9 +641,9 @@ class ObjectEntityService
      * @param Attribute    $attribute
      * @param $value
      *
-     * @return ObjectEntity
-     *
      * @throws Exception|InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     private function saveAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
@@ -702,13 +702,13 @@ class ObjectEntityService
      * @TODO
      *
      * @param ObjectEntity $objectEntity
-     * @param Attribute $attribute
-     * @param Value $valueObject
+     * @param Attribute    $attribute
+     * @param Value        $valueObject
      * @param $value
      *
-     * @return ObjectEntity
-     *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     private function saveAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {

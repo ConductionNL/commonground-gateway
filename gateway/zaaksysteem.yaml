@@ -146,7 +146,7 @@
 #            results: 'result.instance.rows'
 #            envelope: 'instance'
 #            id: 'instance.id'
-#            paginationNext: 'result.instance.pager.next'
+#            paginationPages: 'result.instance.pager.pages'
 #        #TODO: move itemConfig to endpoint object later
 #        itemConfig:
 #            envelope: 'result.instance'
@@ -170,7 +170,7 @@
 #            results: 'result.instance.rows'
 #            envelope: 'instance'
 #            id: 'instance.id'
-#            paginationNext: 'result.instance.pager.next'
+#            paginationPages: 'result.instance.pager.pages'
 #        #TODO: move itemConfig to endpoint object later
 #        itemConfig:
 #            envelope: 'result.instance'
