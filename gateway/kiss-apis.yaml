@@ -441,3 +441,31 @@
 #        conditions: "{}"
 #        endpoints: [ "@searchEndpointGet", "@searchEndpointPost", "@searchEndpointGetItem", "@searchEndpointPut", "@searchEndpointDelete" ]
 #        entity: "@search"
+#        
+## EmailTemplates
+#App\Entity\EmailTemplate:
+#    newReviewTemplate:
+#        name: newReviewTemplate
+#        description: "email template for the new review email."
+#        # todo for content find another way to configure email templates, so we don't need to add files inside the gateway
+#        content: "emails/kiss/new-review-e-mail.html.twig"
+#        variables:
+#            subject: name
+#            author: author
+#            topic: topic
+#            rating: rating
+#            description: description
+#        subject: "test {name}"
+#        sender: wilco@conduction.nl
+#        receiver: wilco@conduction.nl
+#            
+## EmailTriggers
+#App\Entity\EmailTrigger:
+#    newReviewTrigger:
+#        name: newReviewTrigger
+#        description: "trigger for the new review email."
+#        request:
+#            methods: ['POST'] # todo: example, not required
+#        hooks: ['POST_HANDLER']
+#        endpoints: ["@reviewEndpointPost"]
+#        templates: ["@newReviewTemplate"]

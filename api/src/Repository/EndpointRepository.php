@@ -81,9 +81,9 @@ class EndpointRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param string $application The Application.
+     * @param Application $application The Application.
      *
-     * @return Endpoint Returns a Endpoint object
+     * @return array Returns a Endpoint object
      */
     public function findByApplication(Application $application): array
     {
