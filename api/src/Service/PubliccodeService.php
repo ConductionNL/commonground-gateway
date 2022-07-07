@@ -25,32 +25,32 @@ class PubliccodeService
     private ?Client $github;
     private array $query;
     private SerializerInterface $serializer;
-    private ParseDataService $parseDataService;
+    private ResponseService $responseService;
     private EavService $eavService;
-    private ValidationService $validationService;
+    private ValidaterService $validaterService;
     private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface  $params,
         SerializerInterface    $serializer,
-        ParseDataService       $parseDataService,
+        ResponseService $responseService,
         EavService             $eavService,
-        ValidationService      $validationService,
+        ValidaterService $validaterService,
         ObjectEntityService $objectEntityService
     )
     {
         $this->entityManager = $entityManager;
         $this->params = $params;
         $this->serializer = $serializer;
-        $this->parseDataService = $parseDataService;
+        $this->responseService = $responseService;
         $this->eavService = $eavService;
-        $this->validationService = $validationService;
+        $this->validaterService = $validaterService;
         $this->objectEntityService = $objectEntityService;
         $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer ' . $this->params->get('github_key')]]) : null;
         $this->query = [
             'page' => 1,
-            'per_page' => 200,
+            'per_page' => 1,
             'order' => 'desc',
             'sort' => 'author-date',
             'q' => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
@@ -311,7 +311,7 @@ class PubliccodeService
      * @throws GuzzleException
      *
      */
-    public function discoverGithub(): Response
+    public function discoverGithub()
     {
         if ($this->checkGithubKey()) {
             return $this->checkGithubKey();
@@ -329,68 +329,62 @@ class PubliccodeService
 
         $repositories = json_decode($response->getBody()->getContents(), true);
 
+        $objectEntities = [];
         foreach ($repositories['items'] as $repository) {
-
             $publiccode = $this->findPubliccode($repository);
-
-//            var_dump($repository);
-
-            $collectionEntity = $this->findCollectionEntity($repository, $publiccode);
-
+            $objectEntities[] = $this->findCollectionEntity($repository, $publiccode);
         }
 
-        return 'einde';
+        return new Response(
+            json_encode($objectEntities),
+            200,
+            ['content-type' => 'json']
+        );
     }
 
     /**
-     * This function returns or creates a CollectionEntity.
+     * This function returns or creates an ObjectEntity.
      *
      * @param $repository
      * @param $publiccode
-     * @return array|mixed|object
+     * @return array
      * @throws GuzzleException|\Exception
      */
     public function findCollectionEntity($repository, $publiccode)
     {
-        $collectionEntity = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['sourceUrl' => isset($publiccode['html_url'])]);
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
+        $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findAndCountByEntity($entity, ['uri' => isset($publiccode['html_url'])]);
 
-        if ($collectionEntity) {
-            return $collectionEntity;
-        } else {
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
-            $schema['properties'] = $this->createComponentObject($repository['repository'], $publiccode);
+//        if (count($objectEntity) >= 1) {
+////            var_dump($entity->getName());
+//            return $objectEntity;
+//        } else {
+
+            $schema = $this->createComponentObject($repository['repository'], $publiccode);
+
+//            $object = $this->createObjects($entity, $schema);
+//            var_dump($object->getExternalId());die();
             return $this->createObjects($entity, $schema);
-        }
+//        }
     }
 
     /**
      * Creates objects related to an entity.
      *
-     * @param Entity $entity The entity the objects should relate to
+     * @param Entity $entity The entity the object should relate to
      * @param array $schema The data in the object
      *
-     * @return array The resulting objects
-     * @throws Exception|\Exception
-     *
+     * @throws GuzzleException|\Exception
      */
-    public function createObjects(Entity $entity, array $schema, ?bool $dontCheckAuth = false): array
+    public function createObjects(Entity $entity, array $schema)
     {
-        $result = [];
         $object = $this->eavService->getObject(null, 'POST', $entity);
-        //TODO: add admin scopes to grantedScopes in the session so this validateEntity function doesn't fail on missing scopes
-        // todo use new validation and saveObject function instead of validateEntity
-
-        $mockRequest = new Request();
-        $mockRequest->setMethod('POST');
-        $this->validationService->setRequest($mockRequest);
-
-        $object = $this->validationService->validateEntity($object, $schema['properties'], $dontCheckAuth);
-
+        $object = $this->objectEntityService->saveObject($object, $schema);
 
         $this->entityManager->persist($object);
-        $result[] = $object;
+        $this->entityManager->flush();
 
-        return $result;
+        return $this->responseService->renderResult($object, null, null);
     }
 
     /**
@@ -402,8 +396,7 @@ class PubliccodeService
      */
     public function createComponentObject(array $repository, $publiccode): array
     {
-//        var_dump('nieuw');
-//        var_dump($publiccode);
+//        var_dump($repository['html_url']);
         return [
             'id' => $repository['id'],
             'name' => $repository['name'],
@@ -420,7 +413,7 @@ class PubliccodeService
             'logo' => $repository['owner']['avatar_url'] ?? null,
             'platforms' => '',
             'categories' => '',
-//            'usedBy' => $this->requestFromUrl($repository['forks_url']),
+            'usedBy' => $this->requestFromUrl($repository['forks_url']),
             'roadmap' => '',
             'developmentStatus' => '',
             'softwareType' => '',

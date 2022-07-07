@@ -9,6 +9,8 @@ use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeService;
+use App\Service\ResponseService;
+use App\Service\ValidaterService;
 use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
@@ -28,8 +30,9 @@ class ConvenienceController extends AbstractController
     private ParseDataService $dataService;
     private PackagesService $packagesService;
     private EavService $eavService;
-    private ValidationService $validationService;
+    private ValidaterService $validaterService;
     private ObjectEntityService $objectEntityService;
+    private ResponseService $responseService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -37,13 +40,14 @@ class ConvenienceController extends AbstractController
         SerializerInterface $serializer,
         ParseDataService $dataService,
         EavService $eavService,
-        ValidationService $validationService,
-        ObjectEntityService $objectEntityService
+        ValidaterService $validaterService,
+        ObjectEntityService $objectEntityService,
+        ResponseService $responseService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer, $dataService, $eavService, $validationService, $objectEntityService);
+        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer, $responseService, $eavService, $validaterService, $objectEntityService);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
     }
@@ -148,7 +152,7 @@ class ConvenienceController extends AbstractController
      *
      * @throws GuzzleException
      */
-    public function getRepositories(): Response
+    public function getRepositories()
     {
         return $this->publiccodeService->discoverGithub();
     }
