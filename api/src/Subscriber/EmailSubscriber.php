@@ -23,6 +23,10 @@ use Twig\Error\SyntaxError;
 // todo: (optional) configuration for email template, maybe add to other config^
 // done: Send email, will need email template
 // todo: Add sendTo email to configuration / env variable
+
+// todo: move this to an email plugin with the following packages from composer.json: symfony/mailer, symfony/mailgun-mailer & symfony/http-client
+// todo ... and (re)move api/config/packages/mailer.yaml and api/.env variables symfony/mailer & symfony/mailgun-mailer
+// todo ... and (re)move the Entities EmailTrigger & EmailTemplate
 class EmailSubscriber implements EventSubscriberInterface
 {
     private SessionInterface $session;
