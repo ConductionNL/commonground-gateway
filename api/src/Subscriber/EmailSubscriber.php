@@ -136,22 +136,23 @@ class EmailSubscriber implements EventSubscriberInterface
      */
     private function replaceWithObjectValues(string $source, array $object): string
     {
-        // Find {attributeName.attributeName} in $source string
-        preg_match('/{([#A-Za-z0-9.]+)}/', $source, $matches); // todo: do match_all instead
-        if (!empty($matches)) {
-            // If we find matches, get the value for {attributeName.attributeName} from $object.
-            $objectAttribute = explode('.', $matches[1]);
-            $replacement = $object;
-            foreach ($objectAttribute as $item) {
-                $replacement = $replacement[$item];
-            }
+        $destination = $source;
 
-            // Replace {attributeName.attributeName} in $source with the corresponding value from $object.
-            $pattern = '/'.$matches[0].'/';
-            $destination = preg_replace($pattern, $replacement, $source);
-        } else {
-            // Nothing to replace
-            $destination = $source;
+        // Find {attributeName.attributeName} in $source string
+        preg_match_all('/{([#A-Za-z0-9.]+)}/', $source, $matches);
+        if (!empty($matches)) {
+            for ($i = 0; $i < count($matches[0]); $i++) {
+                // If we find matches, get the value for {attributeName.attributeName} from $object.
+                $objectAttribute = explode('.', $matches[1][$i]);
+                $replacement = $object;
+                foreach ($objectAttribute as $item) {
+                    $replacement = $replacement[$item];
+                }
+
+                // Replace {attributeName.attributeName} in $source with the corresponding value from $object.
+                $pattern = '/'.$matches[0][$i].'/';
+                $destination = preg_replace($pattern, $replacement, $destination);
+            }
         }
 
         return $destination;
