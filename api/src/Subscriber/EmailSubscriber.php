@@ -8,6 +8,7 @@ use App\Entity\ObjectEntity;
 use App\Event\EndpointTriggeredEvent;
 use App\Repository\EmailTriggerRepository;
 use App\Service\ObjectEntityService;
+use Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -44,6 +45,15 @@ class EmailSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @param SessionInterface $session
+     * @param ObjectEntityService $objectEntityService
+     * @param Environment $twig
+     * @param EmailTriggerRepository $emailTriggerRepository
+     * @param ParameterBagInterface $parameterBag
+     *
+     * @throws Exception
+     */
     public function __construct(SessionInterface $session, ObjectEntityService $objectEntityService, Environment $twig, EmailTriggerRepository $emailTriggerRepository, ParameterBagInterface $parameterBag)
     {
         $this->session = $session;
@@ -51,6 +61,11 @@ class EmailSubscriber implements EventSubscriberInterface
         $this->twig = $twig;
         $this->emailTriggerRepository = $emailTriggerRepository;
         $this->mailgun = $parameterBag->get('mailgun');
+        if (empty($this->mailgun) ||
+            $this->mailgun === "mailgun+api://code:domain@api.eu.mailgun.net"
+        ) {
+            throw new Exception("The MAILGUN env variable is not set (or still on it's default value).");
+        }
     }
 
     /**
