@@ -310,6 +310,15 @@ class OasParserService
 
         (isset($schema['required']) && $schema['required'] === true) && $attribute->setRequired(true);
         isset($schema['description']) && $attribute->setDescription($schema['description']);
+        isset($schema['readOnly']) && $attribute->setReadOnly($schema['readOnly']);
+
+        if (
+            isset($schema['format']) && $schema['format'] == 'uri' && isset($schema['type']) &&
+            $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true &&
+            $propertyName == 'url'
+        ) {
+            $attribute->setFunction('self');
+        }
 
         $attribute = $this->setSchemaForAttribute($schema, $attribute);
         $attribute->setMultiple($multiple);
@@ -476,6 +485,11 @@ class OasParserService
      */
     private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
+        // Ignore this attribute if its id or empty, because the gateway generates this itself
+        if ($propertyName == 'id' || empty($propertyName)) {
+            return null;
+        }
+
         if (isset($property['$ref'])) {
             $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
         } else {

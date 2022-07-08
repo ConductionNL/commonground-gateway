@@ -86,7 +86,7 @@ class ObjectEntityService
         $this->gatewayService = $gatewayService;
         $this->translationService = $translationService;
         $this->logService = $logService;
-        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService);
+        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus);
         $this->notifications = [];
     }
 
@@ -416,7 +416,6 @@ class ObjectEntityService
                     if ($object instanceof ObjectEntity) {
                         if (!$object->getSelf()) {
                             // Lets make sure we always set the self (@id)
-                            $this->entityManager->persist($object);
                             $object->setSelf($this->createSelf($object));
                         }
 
@@ -536,12 +535,12 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
      * @param ObjectEntity $objectEntity
      * @param array        $post
      *
-     * @throws Exception
+     * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
      */
@@ -550,7 +549,11 @@ class ObjectEntityService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            // todo make sure we never have key+value in $post for readOnly, immutable & unsetable attributes, through the validaterService
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                $objectEntity = $this->handleAttributeFunction($objectEntity, $attribute);
+                continue; // Do not save this attribute(/value) in any other way!
+            }
 
             // Check if we have a value ( a value is given in the post body for this attribute, can be null)
             // If no value is present in the post body for this attribute check for defaultValue and nullable.
@@ -570,12 +573,10 @@ class ObjectEntityService
 
         if (!$objectEntity->getUri()) {
             // Lets make sure we always set the uri
-            $this->entityManager->persist($objectEntity); // So the object has an id to set with createUri...
             $objectEntity->setUri($this->createUri($objectEntity));
         }
         if (!$objectEntity->getSelf()) {
             // Lets make sure we always set the self (@id)
-            $this->entityManager->persist($objectEntity);
             $objectEntity->setSelf($this->createSelf($objectEntity));
         }
 
@@ -592,13 +593,55 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param Attribute    $attribute
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
+    {
+        switch ($attribute->getFunction()) {
+            case 'id':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getId()->toString());
+                // Note: attributes with function = id should also be readOnly and type=string
+                break;
+            case 'self':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                // Note: attributes with function = self should also be readOnly and type=string
+                break;
+            case 'uri':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $this->createUri($objectEntity));
+                // Note: attributes with function = uri should also be readOnly and type=string
+                break;
+            case 'externalId':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getExternalId());
+                // Note: attributes with function = externalId should also be readOnly and type=string
+                break;
+            case 'dateCreated':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
+                // Note: attributes with function = dateCreated should also be readOnly and type=string||date||datetime
+                break;
+            case 'dateModified':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
+                // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
+                break;
+        }
+
+        return $objectEntity;
+    }
+
+    /**
+     * Saves a Value for an Attribute (of the Entity) of an ObjectEntity.
      *
      * @param ObjectEntity $objectEntity
      * @param Attribute    $attribute
      * @param $value
      *
-     * @throws Exception
+     * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
      */
@@ -662,6 +705,8 @@ class ObjectEntityService
      * @param Attribute    $attribute
      * @param Value        $valueObject
      * @param $value
+     *
+     * @throws InvalidArgumentException
      *
      * @return ObjectEntity
      */
@@ -751,9 +796,7 @@ class ObjectEntityService
                     $subObject = $this->saveObject($subObject, $object);
                     $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
-                    // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
                     // todo: i think we can remove this because in saveObject uri is already set, test it first!
-                    $this->entityManager->persist($subObject);
                     $subObject->setUri($this->createUri($subObject));
 
                     // Set organization for this object
@@ -905,7 +948,6 @@ class ObjectEntityService
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
                     if ($attribute->getObject()->getFunction() === 'organization') {
-                        $this->entityManager->persist($subObject);
                         $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
@@ -1278,6 +1320,8 @@ class ObjectEntityService
      */
     public function createUri(ObjectEntity $objectEntity): string
     {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
+        $this->entityManager->persist($objectEntity);
         if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getExternalId()) {
             return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
@@ -1285,7 +1329,7 @@ class ObjectEntityService
         $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
 
         if ($objectEntity->getEntity()->getRoute()) {
-            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+            return $uri.'/api'.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();
@@ -1301,6 +1345,8 @@ class ObjectEntityService
      */
     public function createSelf(ObjectEntity $objectEntity): string
     {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
+        $this->entityManager->persist($objectEntity);
         $endpoint = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
         if ($endpoint instanceof Endpoint) {
             $pathArray = $endpoint->getPath();

@@ -62,14 +62,14 @@ App\Entity\Gateway:
 
 App\Entity\Entity:
     user:
-        route: '/api/users'
+        route: '/users'
         name: users
         description: apikey
         gateway: '@uc_api'
         endpoint: 'users'   
 #Student stuff
     student:
-        route: '/api/students'
+        route: '/students'
         name: students
         description: apikey
         gateway: '@edu_api'
@@ -106,13 +106,13 @@ App\Entity\Entity:
         description: the availability details of this person
     #regitration is basically a student clone
 #    registration:
-#        route: '/api/registrations'
+#        route: '/registrations'
 #        name: registrations
 #        description: apikey
 #        gateway: '@edu_api'
 #        endpoint: 'participants'
     person:
-        route: '/api/persons'
+        route: '/persons'
         name: persons
         description: apikey
         gateway: '@contacten_api'
@@ -127,7 +127,7 @@ App\Entity\Entity:
         endpoint: 'memos'
 #Employee stuff
     employee:
-        route: '/api/employees'
+        route: '/employees'
         name: employees
         description: apikey
         gateway: '@mrc_api'
@@ -136,42 +136,42 @@ App\Entity\Entity:
 #            followingCourse: education
 #StudentDossier stuff
     student_dosier_event:
-        route: '/api/student_dosier_events'
+        route: '/student_dosier_events'
         name: student dosier events
         description: apikey
         gateway: '@edu_api'
         endpoint: 'student_dosier_events'
 #Document stuff
     document:
-        route: '/api/documents'
+        route: '/documents'
         name: documents
         description: apikey
         gateway: '@wrc_api'
         endpoint: 'documents'
 #TestResult stuff
     test_result:
-        route: '/api/test_results'
+        route: '/test_results'
         name: test results
         description: apikey
         gateway: '@edu_api'
         endpoint: 'test_results' #TODO results not test_results?
 #LearningNeed stuff
     learning_needs:
-        route: '/api/learning_needs'
+        route: '/learning_needs'
         name: learning needs
         description: apikey
         gateway: '@edu_api' #TODO eav not edu?
         endpoint: 'learning_needs'
 #Participation stuff
     participation:
-        route: '/api/participations'
+        route: '/participations'
         name: participations
         description: apikey
         gateway: '@edu_api'
         endpoint: 'participations'
     # Organization stuff
     organization:
-        route: '/api/organizations'
+        route: '/organizations'
         name: organizations
         description: apikey
         gateway: '@contacten_api'

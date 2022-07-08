@@ -68,7 +68,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
         }
 
         if ($action == 'load') {
-            $item = $this->cache->getItem('commonground_'.md5($objectEntity->getUri()));
+            $item = $this->cache->getItem('commonground_'.base64_encode($objectEntity->getUri()));
             // lets try to hit the cach
             if ($item->isHit()) {
                 $objectEntity->setExternalResult($item->get());
@@ -88,9 +88,9 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
             /* @todo we need to do some abstraction to log these calls, something like an callWrapper at the eav service  */
             $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '', [], [], false, 'DELETE');
             // Lets see if we need to clear the cache
-            $item = $this->cache->getItem('commonground_'.md5($objectEntity->getUri()));
+            $item = $this->cache->getItem('commonground_'.base64_encode($objectEntity->getUri()));
             if ($item->isHit()) {
-                $this->cache->delete('commonground_'.md5($objectEntity->getUri()));
+                $this->cache->delete('commonground_'.base64_encode($objectEntity->getUri()));
             }
         } else {
             /* @todo throe execption */

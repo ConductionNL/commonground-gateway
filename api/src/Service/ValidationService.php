@@ -100,6 +100,7 @@ class ValidationService
      *
      * @param ObjectEntity $objectEntity
      * @param array        $post
+     * @param bool|null    $dontCheckAuth
      *
      * @throws Exception
      *
@@ -110,7 +111,13 @@ class ValidationService
         $entity = $objectEntity->getEntity();
 
         foreach ($entity->getAttributes() as $attribute) {
-            // Skip if readOnly
+            // Check attribute function
+            if ($attribute->getFunction() !== 'noFunction') {
+                $objectEntity = $this->handleAttributeFunction($objectEntity, $attribute);
+                // Attributes with a function should (always?) have readOnly set to true, making sure to not save this attribute(/value) in any other way.
+            }
+
+            // Skip readOnly's
             if ($attribute->getReadOnly()) {
                 continue;
             }
@@ -144,11 +151,6 @@ class ValidationService
             if (key_exists($attribute->getName(), $post)) {
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $post[$attribute->getName()], $dontCheckAuth);
             }
-            //TODO: do we want this? ;
-            //            // Lets make sure that if (we are doing a put, and) we already have a value we just skip validation for this attribute without changing its value.
-            //            elseif ($objectEntity->getValueByAttribute($attribute)->getValue()) {
-            //                continue;
-            //            }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
                 //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
@@ -219,7 +221,6 @@ class ValidationService
             } else {
                 if (!$objectEntity->getUri()) {
                     // Lets make sure we always set the uri
-                    $this->em->persist($objectEntity); // So the object has an id to set with createUri...
                     $objectEntity->setUri($this->createUri($objectEntity));
                 }
                 // Notify notification component
@@ -230,7 +231,6 @@ class ValidationService
             }
             if (!$objectEntity->getSelf()) {
                 // Lets make sure we always set the self (@id)
-                $this->em->persist($objectEntity);
                 $objectEntity->setSelf($this->createSelf($objectEntity));
             }
         }
@@ -243,11 +243,54 @@ class ValidationService
     }
 
     /**
+     * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param Attribute    $attribute
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
+    {
+        switch ($attribute->getFunction()) {
+            case 'id':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getId()->toString());
+                // Note: attributes with function = id should also be readOnly and type=string
+                break;
+            case 'self':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                // Note: attributes with function = self should also be readOnly and type=string
+                break;
+            case 'uri':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $this->createUri($objectEntity));
+                // Note: attributes with function = uri should also be readOnly and type=string
+                break;
+            case 'externalId':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getExternalId());
+                // Note: attributes with function = externalId should also be readOnly and type=string
+                break;
+            case 'dateCreated':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
+                // Note: attributes with function = dateCreated should also be readOnly and type=string||date||datetime
+                break;
+            case 'dateModified':
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
+                // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
+                break;
+        }
+
+        return $objectEntity;
+    }
+
+    /**
      * TODO: docs.
      *
      * @param ObjectEntity $objectEntity
      * @param Attribute    $attribute
      * @param $value
+     * @param bool $dontCheckAuth
      *
      * @throws Exception
      *
@@ -344,9 +387,9 @@ class ValidationService
     {
         $values = $attribute->getAttributeValues()->filter(function (Value $valueObject) use ($value) {
             switch ($valueObject->getAttribute()->getType()) {
-                //TODO:
-                //                case 'object':
-                //                    return $valueObject->getObjects() == $value;
+                    //TODO:
+                    //                case 'object':
+                    //                    return $valueObject->getObjects() == $value;
                 case 'string':
                     if (!$valueObject->getAttribute()->getCaseSensitive()) {
                         return strtolower($valueObject->getStringValue()) == strtolower($value);
@@ -517,7 +560,6 @@ class ValidationService
                 !$dontCheckAuth && $this->objectEntityService->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
                 // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
-                $this->em->persist($subObject);
                 $subObject->setUri($this->createUri($subObject));
                 // Set organization for this object
                 if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
@@ -1016,7 +1058,6 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
                     if ($attribute->getObject()->getFunction() === 'organization') {
-                        $this->em->persist($subObject);
                         $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
@@ -1699,7 +1740,7 @@ class ValidationService
         $this->logService->saveLog($this->logService->makeRequest(), null, 12, $logPost, null, 'out');
 
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
-        // $onFulfilled
+            // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
                 if ($objectEntity->getEntity()->getGateway()->getLogging()) {
                 }
@@ -1728,29 +1769,29 @@ class ValidationService
                     $objectEntity->setUri($url.'/'.$result['id']);
                     $objectEntity->setExternalId($result['id']);
 
-                    $item = $this->cache->getItem('commonground_'.md5($url.'/'.$result['id']));
+                    $item = $this->cache->getItem('commonground_'.base64_encode($url.'/'.$result['id']));
                 } else {
                     $objectEntity->setUri($url);
                     $objectEntity->setExternalId($this->commonGroundService->getUuidFromUrl($url));
-                    $item = $this->cache->getItem('commonground_'.md5($url));
+                    $item = $this->cache->getItem('commonground_'.base64_encode($url));
                 }
 
                 // Set organization for this object
-//                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-//                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-//                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-//                } else {
-//                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
-//                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-//                    $objectEntity->setApplication(!empty($application) ? $application : null);
-//                }
-//                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-//                    'method' => $method,
-//                    'uri'    => $objectEntity->getUri(),
-//                ]);
-//                if (isset($setOrganization)) {
-//                    $objectEntity->setOrganization($setOrganization);
-//                }
+                //                if (count($objectEntity->getSubresourceOf()) > 0 && !empty($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+                //                    $objectEntity->setOrganization($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+                //                    $objectEntity->setApplication($objectEntity->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+                //                } else {
+                //                    $objectEntity->setOrganization($this->session->get('activeOrganization'));
+                //                    $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+                //                    $objectEntity->setApplication(!empty($application) ? $application : null);
+                //                }
+                //                $objectEntity = $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
+                //                    'method' => $method,
+                //                    'uri'    => $objectEntity->getUri(),
+                //                ]);
+                //                if (isset($setOrganization)) {
+                //                    $objectEntity->setOrganization($setOrganization);
+                //                }
 
                 // Only show/use the available properties for the external response/result
                 if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1859,6 +1900,8 @@ class ValidationService
      */
     public function createUri(ObjectEntity $objectEntity): string
     {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
+        $this->em->persist($objectEntity);
         if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getGateway() && $objectEntity->getExternalId()) {
             return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
@@ -1882,11 +1925,12 @@ class ValidationService
      */
     public function createSelf(ObjectEntity $objectEntity): string
     {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
+        $this->em->persist($objectEntity);
         $endpoint = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
         if ($endpoint instanceof Endpoint) {
             $pathArray = $endpoint->getPath();
-            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
-                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() : (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
                 $path = implode('/', $pathArray);
 

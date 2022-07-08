@@ -127,6 +127,19 @@ class Attribute
     private Entity $entity;
 
     /**
+     * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently.
+     *             Note that the following options also expect the attribute to be readOnly: "self", "uri", "externalId", "dateCreated", "dateModified".
+     *             And the type of this attribute must be string (or date/datetime for dateCreated/dateModified) or the function can not be set/changed!
+     *
+     * @example self
+     *
+     * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", options={"default":"noFunction"})
+     */
+    private string $function = 'noFunction';
+
+    /**
      * Null, or the Entity this attribute is part of, if it is allowed to partial search on this attribute using the search query parameter.
      *
      * @Groups({"write"})
@@ -769,6 +782,27 @@ class Attribute
         return $this;
     }
 
+    public function getFunction(): ?string
+    {
+        return $this->function;
+    }
+
+    public function setFunction(?string $function): self
+    {
+        if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified'])) {
+            if ($this->getType() !== 'string' && (!str_contains($function, 'date') || !str_contains($this->getType(), 'date'))) {
+                // Do not allow function to be set if the type does not allow it! todo: throw error for user feedback?
+                // todo: or just always set the type to the correct one?
+                return $this;
+            }
+            // These functions require this attribute to be readOnly!
+            $this->setReadOnly(true);
+        }
+        $this->function = $function;
+
+        return $this;
+    }
+
     public function getSearchPartial(): ?Entity
     {
         return $this->searchPartial;
@@ -1338,6 +1372,7 @@ class Attribute
         $validations['cascade'] = $this->getCascade();
         $validations['immutable'] = $this->getImmutable();
         $validations['unsetable'] = $this->getUnsetable();
+        $validations['readOnly'] = $this->getReadOnly();
 
         return $validations;
     }
@@ -1428,6 +1463,9 @@ class Attribute
         }
         if (array_key_exists('unsetable', $validations)) {
             $this->setUnsetable($validations['unsetable']);
+        }
+        if (array_key_exists('readOnly', $validations)) {
+            $this->setReadOnly($validations['readOnly']);
         }
 
         return $this;

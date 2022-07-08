@@ -9,6 +9,8 @@ use App\Service\OasDocumentationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Yaml\Yaml;
+use Symfony\Contracts\Cache\CacheInterface;
 
 class EavOasCommand extends Command
 {
@@ -16,11 +18,13 @@ class EavOasCommand extends Command
     protected static $defaultName = 'eav:documentation';
     protected OasDocumentationService $oasDocumentationService;
     private EavDocumentationService $eavDocumentationService;
+    private CacheInterface $customThingCache;
 
-    public function __construct(OasDocumentationService $oasDocumentationService, EavDocumentationService $eavDocumentationService)
+    public function __construct(OasDocumentationService $oasDocumentationService, EavDocumentationService $eavDocumentationService, CacheInterface $customThingCache)
     {
         $this->oasDocumentationService = $oasDocumentationService;
         $this->eavDocumentationService = $eavDocumentationService;
+        $this->customThingCache = $customThingCache;
 
         parent::__construct();
     }
@@ -45,8 +49,17 @@ class EavOasCommand extends Command
 
         // return this if there was no problem running the command
         // (it's equivalent to returning int(0))
-        $this->oasDocumentationService->writeRedoc(null);
-//        $this->eavDocumentationService->write();
+        $itemJson = $this->customThingCache->getItem('oas_'.md5(null).'_json');
+        $itemYaml = $this->customThingCache->getItem('oas_'.md5(null).'_yaml');
+        $oas = $this->eavDocumentationService->getRenderDocumentation();
+        $json = json_encode($oas);
+        $yaml = Yaml::dump($oas);
+
+        // Let's stuff it into the cache
+        $itemJson->set($json);
+        $itemYaml->set($yaml);
+        $this->customThingCache->save($itemJson);
+        $this->customThingCache->save($itemYaml);
 
         return Command::SUCCESS;
 
