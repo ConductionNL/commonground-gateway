@@ -48,11 +48,11 @@ class PubliccodeService
         $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer ' . $this->params->get('github_key')]]) : null;
         $this->query = [
             'page' => 1,
-            'per_page' => 1,
+            'per_page' => 200,
             'order' => 'desc',
             'sort' => 'author-date',
             'q' => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
-        ];
+        ]; // @todo get new query params for a better result
     }
 
     /**
