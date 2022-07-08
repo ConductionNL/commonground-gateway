@@ -1,5 +1,4 @@
 # todo: move this to an email plugin (see EmailSubscriber.php)
 
-framework:
-    mailer:
-        dsn: '%env(MAILER_DSN)%'
+parameters:
+    mailgun: "%env(MAILGUN)%"

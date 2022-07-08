@@ -10,6 +10,7 @@ use App\Repository\EmailTriggerRepository;
 use App\Service\ObjectEntityService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -22,16 +23,16 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 // todo: move this to an email plugin with the following packages from composer.json: symfony/mailer, symfony/mailgun-mailer & symfony/http-client
-// todo ... and (re)move api/config/packages/mailer.yaml and api/.env variables symfony/mailer & symfony/mailgun-mailer
+// todo ... and (re)move api/config/packages/mailer.yaml
 // todo ... and (re)move the Entities EmailTrigger & EmailTemplate
+// todo ... and (re)move the mailgun .env variable (see mailgun in the following files: .env, docker-compose.yaml, helm/values.yaml, helm/templates/deployment.yaml & helm/templates/secrets.yaml)
 class EmailSubscriber implements EventSubscriberInterface
 {
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
     private Environment $twig;
     private EmailTriggerRepository $emailTriggerRepository;
-    // todo: add mailgun to env variables / secrets
-    private string $mailgun = "mailgun+api://code:domain@api.eu.mailgun.net";
+    private string $mailgun;
 
     /**
      * @inheritDoc
@@ -43,16 +44,17 @@ class EmailSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function __construct(SessionInterface $session, ObjectEntityService $objectEntityService, Environment $twig, EmailTriggerRepository $emailTriggerRepository)
+    public function __construct(SessionInterface $session, ObjectEntityService $objectEntityService, Environment $twig, EmailTriggerRepository $emailTriggerRepository, ParameterBagInterface $parameterBag)
     {
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
         $this->twig = $twig;
         $this->emailTriggerRepository = $emailTriggerRepository;
+        $this->mailgun = $parameterBag->get('mailgun');
     }
 
     /**
-     * @TODO: docs
+     * Sends and email using an EmailTemplate with configuration for it. It is possible to use $object data in the email if configured right.
      *
      * @param EmailTemplate $template
      * @param array $object
@@ -77,41 +79,15 @@ class EmailSubscriber implements EventSubscriberInterface
         $html = $this->twig->render($template->getContent(), $variables);
         $text = strip_tags(preg_replace('#<br\s*/?>#i', "\n", $html), '\n');
 
-        // Get the sender, receiver and subject
-        $sender = $template->getSender(); // todo: also make it possible to use {attributeName.attributeName} for sender
-        // todo: move this to function (duplicate):
-        // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the $template->getReceiver().
-        preg_match('/{([#A-Za-z0-9.]+)}/', $template->getReceiver(), $matches); // todo: do match_all instead
-        if (!empty($matches)) {
-            $objectAttribute = explode('.', $matches[1]);
-            $replacement = $object;
-            foreach ($objectAttribute as $item) {
-                $replacement = $replacement[$item];
-            }
-            $pattern = '/'.$matches[0].'/';
-            $receiver = preg_replace($pattern, $replacement, $template->getReceiver());
-        } else {
-            $receiver = $template->getReceiver();
-        }
+        // Get the subject, receiver and sender
+        // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the these^ strings.
+        $subject = $this->replaceWithObjectValues($template->getSubject(), $object);
+        $receiver = $this->replaceWithObjectValues($template->getReceiver(), $object);
+        $sender = $this->replaceWithObjectValues($template->getSender(), $object);
 
         // If we have no sender, set sender to receiver
         if (!$sender) {
             $sender = $receiver;
-        }
-
-        // todo: move this to function (duplicate):
-        // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the $template->getSubject().
-        preg_match('/{([#A-Za-z0-9.]+)}/', $template->getSubject(), $matches); // todo: do match_all instead
-        if (!empty($matches)) {
-            $objectAttribute = explode('.', $matches[1]);
-            $replacement = $object;
-            foreach ($objectAttribute as $item) {
-                $replacement = $replacement[$item];
-            }
-            $pattern = '/'.$matches[0].'/';
-            $subject = preg_replace($pattern, $replacement, $template->getSubject());
-        } else {
-            $subject = $template->getSubject();
         }
 
         // Create the email
@@ -136,7 +112,38 @@ class EmailSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @TODO: docs
+     * Replaces {attributeName.attributeName} in given $source string with values from the object Created/Updated.
+     *
+     * @param string $source
+     * @param array $object
+     *
+     * @return string
+     */
+    private function replaceWithObjectValues(string $source, array $object): string
+    {
+        // Find {attributeName.attributeName} in $source string
+        preg_match('/{([#A-Za-z0-9.]+)}/', $source, $matches); // todo: do match_all instead
+        if (!empty($matches)) {
+            // If we find matches, get the value for {attributeName.attributeName} from $object.
+            $objectAttribute = explode('.', $matches[1]);
+            $replacement = $object;
+            foreach ($objectAttribute as $item) {
+                $replacement = $replacement[$item];
+            }
+
+            // Replace {attributeName.attributeName} in $source with the corresponding value from $object.
+            $pattern = '/'.$matches[0].'/';
+            $destination = preg_replace($pattern, $replacement, $source);
+        } else {
+            // Nothing to replace
+            $destination = $source;
+        }
+
+        return $destination;
+    }
+
+    /**
+     * Handles an EndpointTriggeredEvent, checks all EmailTriggers, if event->endpoint, ->request and ->hooks match send email(s) per EmailTemplate.
      *
      * @param EndpointTriggeredEvent $event
      *
@@ -150,16 +157,8 @@ class EmailSubscriber implements EventSubscriberInterface
         $emailTriggers = $this->emailTriggerRepository->findByEndpoint($event->getEndpoint());
         foreach ($emailTriggers as $emailTrigger) {
             // Check if request and event hooks match this EmailTrigger
-            if ($emailTrigger->getRequest()) {
-                // todo move this to a function
-                // Example, method is already checked by the Endpoint. But we could, for example, check for queryParams with this.
-                if (array_key_exists('methods', $emailTrigger->getRequest()) &&
-                    !in_array($event->getRequest()->getMethod(), $emailTrigger->getRequest()['methods'])
-                ) {
-                    continue;
-                }
-            }
-            if (empty(array_intersect($emailTrigger->getHooks(), $event->getHooks()))) {
+            if (($emailTrigger->getRequest() && !$this->checkTriggerRequest($event, $emailTrigger)) ||
+                empty(array_intersect($emailTrigger->getHooks(), $event->getHooks()))) {
                 continue;
             }
 
@@ -168,11 +167,36 @@ class EmailSubscriber implements EventSubscriberInterface
 
             // Send an email per template this EmailTrigger has.
             foreach ($emailTrigger->getTemplates() as $template) {
-                // todo: do this async? (see EndpointTriggeredEvent)
+                // todo: do this async? (see Event/EndpointTriggeredEvent.php)
                 $send = $this->sendEmail($template, $object);
             }
         }
 
         return $event;
+    }
+
+    /**
+     * Compares EndpointTriggeredEvent Request with EmailTrigger request, returns false if there is a mismatch and the trigger should not go off (and send one or more emails)
+     *
+     * @param EndpointTriggeredEvent $event
+     * @param EmailTrigger $emailTrigger
+     *
+     * @return bool
+     */
+    private function checkTriggerRequest(EndpointTriggeredEvent $event, EmailTrigger $emailTrigger): bool
+    {
+        $triggerRequest = $emailTrigger->getRequest();
+        $eventRequest = $event->getRequest();
+
+        // Example, we can use this to check for specific queryParams.
+        if (array_key_exists('query', $triggerRequest)) {
+            $queries = $eventRequest->query->all();
+            foreach ($triggerRequest['query'] as $key => $value) {
+                if (!array_key_exists($key, $queries) || $queries[$key] !== $value) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
