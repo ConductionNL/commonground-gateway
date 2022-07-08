@@ -30,7 +30,6 @@ class ConvenienceController extends AbstractController
     private ParseDataService $dataService;
     private PackagesService $packagesService;
     private EavService $eavService;
-    private ValidaterService $validaterService;
     private ObjectEntityService $objectEntityService;
     private ResponseService $responseService;
 
@@ -40,14 +39,13 @@ class ConvenienceController extends AbstractController
         SerializerInterface $serializer,
         ParseDataService $dataService,
         EavService $eavService,
-        ValidaterService $validaterService,
         ObjectEntityService $objectEntityService,
         ResponseService $responseService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer, $responseService, $eavService, $validaterService, $objectEntityService);
+        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer, $responseService, $eavService, $objectEntityService);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
     }
