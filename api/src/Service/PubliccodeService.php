@@ -257,7 +257,8 @@ class PubliccodeService
 
         $objectEntities = [];
         foreach ($repositories['items'] as $repository) {
-            $publiccode = $this->findPubliccode($repository);
+            $publiccode = $originalPubliccode = $this->findPubliccode($repository);
+//            var_dump($publiccode);
             $objectEntities[] = $this->findObjectEntity($repository, $publiccode);
         }
 
@@ -279,8 +280,10 @@ class PubliccodeService
     public function findObjectEntity($repository, $publiccode): array
     {
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
-        $schema = $this->createComponentObject($repository['repository'], $publiccode);
-        return $this->createOrUpdateObject($entity, $schema);
+        $publiccode = $this->createComponentObject($repository['repository'], $publiccode);
+
+//        var_dump($schema);die();
+        return $this->createOrUpdateObject($entity, $publiccode);
     }
 
     /**
@@ -295,17 +298,17 @@ class PubliccodeService
     {
         $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $entity, 'uri' => isset($publiccode['html_url'])]);
 
-        if ($objectEntity instanceof ObjectEntity) {
-            $object = $this->eavService->getObject($objectEntity->getId(), 'POST', $entity);
-        } else {
+//        if ($objectEntity instanceof ObjectEntity) {
+//            $object = $this->eavService->getObject($objectEntity->getId(), 'POST', $entity);
+//        } else {
             $object = $this->eavService->getObject(null, 'POST', $entity);
-        }
+//        }
 
         $object = $this->objectEntityService->saveObject($object, $schema);
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
-        return $this->responseService->renderResult($object, null, null);
+        return $this->responseService->renderResult($object, null, ['all']);
     }
 
     /**
@@ -316,15 +319,27 @@ class PubliccodeService
      * @return array
      * @throws GuzzleException
      */
-    public function createComponentObject(array $repository, $publiccode): array
+    public function createComponentObject(array $repository, &$publiccode): array
     {
+
+//        is_array($repository['name']) && $repository['name']
         // @todo:
         // default_branch
         // locationOAS
         // testDataLocation
-        return [
-            'name' => $repository['name'],
-            'description' => $repository['description'], // doesn't work
+        return array_merge($publiccode, [
+            'name' => $repository['full_name'],
+            'description' => [
+                'localisedName' => $publiccode['description']['nl']['genericName'] ?? null,
+                'shortDescription' => $publiccode['description']['nl']['shortDescription'] ?? null,
+                'longDescription' => $publiccode['description']['nl']['longDescription'] ?? null,
+                'documentation' => $publiccode['description']['nl']['documentation'] ?? null,
+                'apiDocumentation' => $publiccode['description']['nl']['apiDocumentation'] ?? null,
+                'features' => $publiccode['description']['nl']['features'] ?? null,
+                'screenshots' => $publiccode['description']['nl']['screenshots'] ?? null,
+                'videos' => $publiccode['description']['nl']['videos'] ?? null,
+                'awards' => $publiccode['description']['nl']['awards'] ?? null
+            ],
             'applicationSuite' => [
                 'applicationId' => $repository['id'],
                 'name' => $repository['name']
@@ -332,42 +347,68 @@ class PubliccodeService
             'url' => $repository['html_url'],
             'landingURL' => $repository['url'],
             'isBasedOn' => $repository['fork'],
-            'softwareVersion' => '',
-            'releaseDate' => $publiccode['releaseDate'],
+//            'softwareVersion' => '',
+            'releaseDate' => $publiccode['releaseDate'], // TBA -> check of het een datetime is anders null
             'logo' => $repository['owner']['avatar_url'] ?? null,
-            'platforms' => $publiccode['platforms'],
-            'categories' => $publiccode['categories'],
+//            'platforms' => $publiccode['platforms'],
+//            'categories' => $publiccode['categories'],
             'usedBy' => $this->requestFromUrl($repository['forks_url']),
-            'roadmap' => '',
-            'developmentStatus' => $publiccode['developmentStatus'],
-            'softwareType' => $publiccode['softwareType'],
-            'inputTypes' => $publiccode['inputTypes'],
-            'outputTypes' => $publiccode['outputTypes'],
-            'legal' => [
-                'license' => '',
-                'mainCopyrightOwner' => '',
-                'repoOwner' => $repository['owner']['html_url'],
-                'authorsFile' => ''
-            ],
-            'maintenance' => [
-                'type' => $repository['owner']['type'],
-                'contractors' => '',
-                'contacts' => ''
-            ],
-            'localisation' => [
-                'localisationReady' => '',
-                'availableLanguages' => $this->requestFromUrl($repository['languages_url']),
-            ],
-            'dependsOn' => [
-                'open' => $publiccode['dependsOn']['open'],
-                'proprietary' => '',
-                'hardware' => '',
-            ],
+//            'roadmap' => '',
+//            'developmentStatus' => $publiccode['developmentStatus'],
+//            'softwareType' => $publiccode['softwareType'],
+//            'inputTypes' => $publiccode['inputTypes'],
+//            'outputTypes' => $publiccode['outputTypes'],
             'nl' => [
-                'installationType' => '',
-                'layerType' => '',
-            ]
-
-        ];
+//                'commonground' => [
+//                    'intendedOrganizations' => '',
+//                    'installationType' => '',
+//                    'layerType' => '',
+//                ],
+                'gemma' => [
+                    'bedrijfsfuncties' => [''],
+                    'bedrijfsservices' => [''],
+                    'applicatiefunctie' => '',
+                    'referentieComponenten' => ['']
+                ],
+                'upl' => [''],
+                'apm' => '',
+            ],
+//            'intendedAudience' => [
+//                'countries' => $publiccode['intendedAudience']['countries'],
+//                'unsupportedCountries' => $publiccode['intendedAudience']['unsupportedCountries'],
+//                'scope' => $publiccode['intendedAudience']['scope']
+//            ],
+//            'legal' => [
+//                'license' => $publiccode['legal']['license'],
+//                'mainCopyrightOwner' => $publiccode['legal']['mainCopyrightOwner'],
+//                'repoOwner' => $publiccode['legal']['repoOwner'],
+//                'authorsFile' => $publiccode['legal']['authorsFile']
+//            ],
+//            'maintenance' => [
+//                'type' => $repository['owner']['type'],
+//                'contractors' => [
+//                    'name' => $publiccode['contractors']['name'],
+//                    'until' => $publiccode['contractors']['until'],
+//                    'email' => $publiccode['contractors']['name'],
+//                    'website' => $publiccode['contractors']['name'],
+//                    'phone' => $publiccode['contractors']['name']
+//                ],
+//                'contacts' => [
+//                    'name' => $publiccode['contacts']['name'],
+//                    'email' => $publiccode['contacts']['email'],
+//                    'phone' => $publiccode['contacts']['phone'],
+//                    'affiliation' => $publiccode['contacts']['affiliation']
+//                ],
+//            ],
+//            'localisation' => [
+//                'localisationReady' => $publiccode['localisation']['localisationReady'],
+//                'availableLanguages' => $publiccode['localisation']['availableLanguages'],
+//            ],
+//            'dependsOn' => [
+//                'open' => $publiccode['dependsOn']['open'],
+//                'proprietary' => '',
+//                'hardware' => '',
+//            ],
+        ]);
     }
 }
