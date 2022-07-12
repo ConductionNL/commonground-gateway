@@ -13,8 +13,7 @@ ou: People
 dn: cn=jane,ou=People,dc=example,dc=org
 objectClass: person
 objectClass: inetOrgPerson
-sn: doe
-cn: jane
+cn: test01
 mail: janedoe@example.com
 userpassword: foo
 
@@ -32,13 +31,23 @@ dn: ou=Groups,dc=example,dc=org
 objectClass: organizationalUnit
 ou: Groups
 
-dn: cn=admins,ou=Groups,dc=example,dc=org
+dn: cn=GET.admin,ou=Groups,dc=example,dc=org
 objectClass: groupOfNames
-cn: admins
+cn: GET.admin
 member: cn=john,ou=People,dc=example,dc=org
 member: cn=jane,ou=People,dc=example,dc=org
 
-dn: cn=developers,ou=Groups,dc=example,dc=org
+dn: cn=POST.admin,ou=Groups,dc=example,dc=org
 objectClass: groupOfNames
-cn: developers
+cn: POST.admin
+member: cn=jane,ou=People,dc=example,dc=org
+
+dn: cn=DELETE.admin,ou=Groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: DELETE.admin
+member: cn=jane,ou=People,dc=example,dc=org
+
+dn: cn=PUT.admin,ou=Groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: PUT.admin
 member: cn=jane,ou=People,dc=example,dc=org

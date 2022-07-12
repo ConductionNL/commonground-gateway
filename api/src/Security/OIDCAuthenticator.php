@@ -43,7 +43,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
         return new Passport(
             new UserBadge($result['email'], function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
-                    'a',
+                    $userIdentifier,
                     $result['email'],
                     '',
                     $result['givenName'] ?? '',

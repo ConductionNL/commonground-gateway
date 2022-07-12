@@ -60,6 +60,8 @@ connectors:
               idAttr: DN
               emailAttr: mail
               nameAttr: cn
+              firstNameAttr: cn
+              lastNameAttr: sn
 
           groupSearch:
               baseDN: ou=Groups,dc=example,dc=org
@@ -75,10 +77,4 @@ connectors:
               nameAttr: cn
 
 enablePasswordDB: true
-
-staticPasswords:
-    - email: "admin@example.com"
-      hash: "$2y$10$ltjIVgvfu66H/FRv2.t2JOYrBXGQ8jRYJ0GeOKSHTPcXubtSl4BYq" #!ChangeMe!
-      username: "admin"
-      userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
       
