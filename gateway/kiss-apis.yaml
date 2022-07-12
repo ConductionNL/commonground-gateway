@@ -122,6 +122,20 @@
 #        route: "/searches"
 #        endpoint: "searches"
 
+#    # Taxanomy Entity
+#    taxanomy:
+#        name: Taxanomy
+#        description: The taxanomy object is lously based on wordpress taxanomies
+#        route: "/taxanomies"
+#        endpoint: "taxanomies"
+
+#    # Medewerker Entity
+#    medewerker:
+#        name: Medewerker
+#        description: Dit ORC medewerker object vang kiss specifieke wensen af.
+#        route: "/medewerkers"
+#        endpoint: "medewerkers"
+
 # # Attributes
 # App\Entity\Attribute:
 #    # Review Attributes
@@ -289,11 +303,87 @@
 #        format: url
 #        entity: "@search"
 
+#    taxanomy_name:
+#        name: name
+#        description: Name of this taxanomy
+#        type: string
+#        required: true
+#        searchable: true
+#        entity: "@taxanomy"
+
+#    taxanomy_description:
+#        name: description
+#        description: The textual description of this taxanomy
+#        type: string
+#        required: true
+#        searchable: true
+#        entity: "@taxanomy"
+
+#    taxanomy_parent:
+#        name: parent
+#        description: The parent taxanomy of this taxanomy
+#        type: object
+#        cascade: true
+#        object: "@taxanomy"
+#        entity: "@taxanomy"
+   
+#    medewerker_user:
+#        name: user
+#        description: The user uri of this medewerker
+#        type: string
+#        required: true
+#        entity: "@medewerker"
+   
+#    medewerker_contact:
+#        name: contact
+#        description: The contact uri to the klanten api 
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_description:
+#        name: description
+#        description: The description of this medewerker 
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_department:
+#        name: department
+#        description: The department of this medewerker
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_function:
+#        name: function
+#        description: The function of this medewerker
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_calendar:
+#        name: calendar
+#        description: The calendar uri to the agenda api 
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_replacement:
+#        name: replacement
+#        description: The replacement uri to another medewerker 
+#        type: string
+#        entity: "@medewerker"
+
+#    medewerker_skills:
+#        name: skills
+#        description: The skills of this medewerker 
+#        type: string
+#        multiple: true
+#        entity: "@medewerker"
+       
 # # Parameters for endpoint regex
 # parameters:
 #    reviewItemRegex: "^reviews/[a-z0-9-]{36}$"
 #    noteItemRegex: "^notes/[a-z0-9-]{36}$"
 #    searchItemRegex: "^searches/[a-z0-9-]{36}$"
+#    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
+#    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
    
 # # Endpoints        
 # App\Entity\Endpoint:
@@ -420,6 +510,88 @@
 #        method: DELETE
 #        operationType: item
 
+#    # Taxanomy Endpoints
+#    taxanomyEndpointGet:
+#        name: Taxanomy endpoint get collection
+#        description: endpoint for taxanomies
+#        path: [ 'taxanomies' ]
+#        pathRegex: "^(taxanomies)$"
+#        method: GET
+#        operationType: collection
+
+#    taxanomyEndpointPost:
+#        name: Taxanomy endpoint post
+#        description: endpoint for taxanomies
+#        path: [ 'taxanomies' ]
+#        pathRegex: "^(taxanomies)$"
+#        method: POST
+#        operationType: collection
+
+#    taxanomyEndpointGetItem:
+#        name: Taxanomy endpoint get item
+#        description: endpoint for taxanomies
+#        path: [ 'taxanomies', '{id}' ]
+#        pathRegex: <{taxanomyItemRegex}>
+#        method: GET
+#        operationType: item
+
+#    taxanomyEndpointPut:
+#        name: Taxanomy endpoint put
+#        description: endpoint for taxanomies
+#        path: [ 'taxanomies', '{id}' ]
+#        pathRegex: <{taxanomyItemRegex}>
+#        method: PUT
+#        operationType: item
+
+#    taxanomyEndpointDelete:
+#        name: Taxanomy endpoint delete
+#        description: endpoint for taxanomies
+#        path: [ 'taxanomies', '{id}' ]
+#        pathRegex: <{taxanomyItemRegex}>
+#        method: DELETE
+#        operationType: item
+
+#    # Medewerker Endpoints
+#    medewerkerEndpointGet:
+#        name: Medewerker endpoint get collection
+#        description: endpoint for medewerkers
+#        path: [ 'medewerkers' ]
+#        pathRegex: "^(medewerkers)$"
+#        method: GET
+#        operationType: collection
+
+#    medewerkerEndpointPost:
+#        name: Medewerker endpoint post
+#        description: endpoint for medewerkers
+#        path: [ 'medewerkers' ]
+#        pathRegex: "^(medewerkers)$"
+#        method: POST
+#        operationType: collection
+
+#    medewerkerEndpointGetItem:
+#        name: Medewerker endpoint get item
+#        description: endpoint for medewerkers
+#        path: [ 'medewerkers', '{id}' ]
+#        pathRegex: <{medewerkerItemRegex}>
+#        method: GET
+#        operationType: item
+
+#    medewerkerEndpointPut:
+#        name: Medewerker endpoint put
+#        description: endpoint for medewerkers
+#        path: [ 'medewerkers', '{id}' ]
+#        pathRegex: <{medewerkerItemRegex}>
+#        method: PUT
+#        operationType: item
+
+#    medewerkerEndpointDelete:
+#        name: Medewerker endpoint delete
+#        description: endpoint for medewerkers
+#        path: [ 'medewerkers', '{id}' ]
+#        pathRegex: <{medewerkerItemRegex}>
+#        method: DELETE
+#        operationType: item
+
 # # Handlers
 # App\Entity\Handler:
 #    # Review Handler
@@ -448,3 +620,21 @@
 #        conditions: "{}"
 #        endpoints: [ "@searchEndpointGet", "@searchEndpointPost", "@searchEndpointGetItem", "@searchEndpointPut", "@searchEndpointDelete" ]
 #        entity: "@search"
+       
+#    # Taxanomy Handler
+#    taxanomyHandler:
+#        name: Search handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
+#        entity: "@taxanomy"
+
+#    # Medewerker Handler
+#    medewerkerHandler:
+#        name: Medewerker handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
+#        entity: "@medewerker"
