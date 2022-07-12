@@ -50,7 +50,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
                     $result['familyName'] ?? '',
                     $result['name'] ?? '',
                     null,
-                    $result['groups'] ?? [],
+                    array_merge($result['groups'] ?? [], ['ROLE_USER']),
                     $result['email']
                 );
             }),
@@ -65,7 +65,6 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-//        die;
         return new RedirectResponse($request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
     }
 
