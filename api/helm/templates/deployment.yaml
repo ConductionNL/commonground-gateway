@@ -251,9 +251,6 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
             {{- end }}
-            #Temporary value until the mailing function is pluginified
-            - name: MAILGUN
-              value: {{ .Values.security.mailgunUrl }}
 
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
