@@ -31,6 +31,15 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $request->isMethod('GET') && $request->query->has('code');
     }
 
+    private function prefixGroups(array $groups): array
+    {
+        $newGroups = [];
+        foreach($groups as $group) {
+            $newGroups[] = 'ROLE_scope.'.$group;
+        }
+        return $newGroups;
+    }
+
     public function authenticate(Request $request): PassportInterface
     {
         $code = $request->query->get('code');
@@ -50,7 +59,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
                     $result['familyName'] ?? '',
                     $result['name'] ?? '',
                     null,
-                    array_merge($result['groups'] ?? [], ['ROLE_USER']),
+                    array_merge($this->prefixGroups($result['groups']) ?? [], ['ROLE_USER']),
                     $result['email']
                 );
             }),
