@@ -4,7 +4,6 @@ namespace App\Subscriber;
 
 use App\Entity\EmailTemplate;
 use App\Entity\EmailTrigger;
-use App\Entity\ObjectEntity;
 use App\Event\EndpointTriggeredEvent;
 use App\Repository\EmailTriggerRepository;
 use App\Service\ObjectEntityService;
@@ -46,11 +45,11 @@ class EmailSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param SessionInterface $session
-     * @param ObjectEntityService $objectEntityService
-     * @param Environment $twig
+     * @param SessionInterface       $session
+     * @param ObjectEntityService    $objectEntityService
+     * @param Environment            $twig
      * @param EmailTriggerRepository $emailTriggerRepository
-     * @param ParameterBagInterface $parameterBag
+     * @param ParameterBagInterface  $parameterBag
      *
      * @throws Exception
      */
@@ -62,7 +61,7 @@ class EmailSubscriber implements EventSubscriberInterface
         $this->emailTriggerRepository = $emailTriggerRepository;
         $this->mailgun = $parameterBag->get('mailgun');
         if (empty($this->mailgun) ||
-            $this->mailgun === "mailgun+api://code:domain@api.eu.mailgun.net"
+            $this->mailgun === 'mailgun+api://code:domain@api.eu.mailgun.net'
         ) {
             throw new Exception("The MAILGUN env variable is not set (or still on it's default value).");
         }
@@ -72,11 +71,11 @@ class EmailSubscriber implements EventSubscriberInterface
      * Sends and email using an EmailTemplate with configuration for it. It is possible to use $object data in the email if configured right.
      *
      * @param EmailTemplate $template
-     * @param array $object
-     *
-     * @return bool
+     * @param array         $object
      *
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
+     *
+     * @return bool
      */
     private function sendEmail(EmailTemplate $template, array $object): bool
     {
@@ -130,7 +129,7 @@ class EmailSubscriber implements EventSubscriberInterface
      * Replaces {attributeName.attributeName} in given $source string with values from the object Created/Updated.
      *
      * @param string $source
-     * @param array $object
+     * @param array  $object
      *
      * @return string
      */
@@ -163,9 +162,9 @@ class EmailSubscriber implements EventSubscriberInterface
      *
      * @param EndpointTriggeredEvent $event
      *
-     * @return EndpointTriggeredEvent
-     *
      * @throws CacheException|InvalidArgumentException|TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
+     *
+     * @return EndpointTriggeredEvent
      */
     public function handleEvent(EndpointTriggeredEvent $event): EndpointTriggeredEvent
     {
@@ -192,10 +191,10 @@ class EmailSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * Compares EndpointTriggeredEvent Request with EmailTrigger request, returns false if there is a mismatch and the trigger should not go off (and send one or more emails)
+     * Compares EndpointTriggeredEvent Request with EmailTrigger request, returns false if there is a mismatch and the trigger should not go off (and send one or more emails).
      *
      * @param EndpointTriggeredEvent $event
-     * @param EmailTrigger $emailTrigger
+     * @param EmailTrigger           $emailTrigger
      *
      * @return bool
      */
@@ -213,6 +212,7 @@ class EmailSubscriber implements EventSubscriberInterface
                 }
             }
         }
+
         return true;
     }
 }

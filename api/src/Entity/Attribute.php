@@ -792,9 +792,10 @@ class Attribute
      * @todo docs
      *
      * @param string|null $function
-     * @return $this
      *
      * @throws Exception
+     *
+     * @return $this
      */
     public function setFunction(?string $function): self
     {
@@ -821,9 +822,9 @@ class Attribute
      *
      * @param Entity|null $searchPartial
      *
-     * @return $this
-     *
      * @throws Exception
+     *
+     * @return $this
      */
     public function setSearchPartial(?Entity $searchPartial): self
     {
