@@ -60,11 +60,6 @@ class EmailSubscriber implements EventSubscriberInterface
         $this->twig = $twig;
         $this->emailTriggerRepository = $emailTriggerRepository;
         $this->mailgun = $parameterBag->get('mailgun');
-        if (empty($this->mailgun) ||
-            $this->mailgun === 'mailgun+api://code:domain@api.eu.mailgun.net'
-        ) {
-            throw new Exception("The MAILGUN env variable is not set (or still on it's default value).");
-        }
     }
 
     /**
