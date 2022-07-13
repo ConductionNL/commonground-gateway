@@ -57,6 +57,8 @@ security:
       apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
       auth: apikey
       location: http://user-component
+  #temporary value until the Mail function is pluginified
+  mailgunUrl: ''
 
 php:
   repository: ghcr.io/conductionnl/commonground-gateway-php
