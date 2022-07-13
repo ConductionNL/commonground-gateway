@@ -40,10 +40,6 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $accessToken = $this->authenticationService->authenticate($method, $identifier, $code);
         $result = json_decode(base64_decode(explode('.', $accessToken['access_token'])[1]), true);
 
-
-        var_dump($result['groups']);
-        die;
-        
         return new Passport(
             new UserBadge($result['email'], function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
