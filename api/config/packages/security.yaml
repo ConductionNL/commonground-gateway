@@ -3,7 +3,7 @@ security:
     enable_authenticator_manager: true
     providers:
         authenticationProvider:
-            id: Conduction\SamlBundle\Security\User\AuthenticationProvider
+            id: App\Security\User\AuthenticationProvider
     firewalls:
         main:
             logout:
