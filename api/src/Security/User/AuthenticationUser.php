@@ -7,7 +7,6 @@ namespace App\Security\User;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-
 class AuthenticationUser implements UserInterface, EquatableInterface
 {
     /* The username display */
