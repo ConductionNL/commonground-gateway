@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -19,10 +20,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 class OIDCAuthenticator extends AbstractAuthenticator
 {
     private AuthenticationService $authenticationService;
+    private SessionInterface $session;
 
-    public function __construct(AuthenticationService $authenticationService)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
     {
         $this->authenticationService = $authenticationService;
+        $this->session = $session;
     }
 
     public function supports(Request $request): ?bool
@@ -65,7 +68,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return new RedirectResponse($request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        return new RedirectResponse($this->session->get('backUrl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
