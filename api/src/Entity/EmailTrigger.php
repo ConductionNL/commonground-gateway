@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * An entity that defines triggers for when to send an email.
- * todo: move this to an email plugin (see EmailSubscriber.php)
+ * todo: move this to an email plugin (see EmailSubscriber.php).
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
