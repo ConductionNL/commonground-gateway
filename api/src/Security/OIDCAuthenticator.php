@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -19,16 +20,28 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 class OIDCAuthenticator extends AbstractAuthenticator
 {
     private AuthenticationService $authenticationService;
+    private SessionInterface $session;
 
-    public function __construct(AuthenticationService $authenticationService)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
     {
         $this->authenticationService = $authenticationService;
+        $this->session = $session;
     }
 
     public function supports(Request $request): ?bool
     {
         return 'app_user_authenticate' === $request->attributes->get('_route') &&
             $request->isMethod('GET') && $request->query->has('code');
+    }
+
+    private function prefixGroups(array $groups): array
+    {
+        $newGroups = [];
+        foreach ($groups as $group) {
+            $newGroups[] = 'ROLE_scope.'.$group;
+        }
+
+        return $newGroups;
     }
 
     public function authenticate(Request $request): PassportInterface
@@ -50,7 +63,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
                     $result['familyName'] ?? '',
                     $result['name'] ?? '',
                     null,
-                    array_merge($result['groups'] ?? [], ['ROLE_USER']),
+                    array_merge($this->prefixGroups($result['groups']) ?? [], ['ROLE_USER']),
                     $result['email']
                 );
             }),
@@ -65,7 +78,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return new RedirectResponse($request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        return new RedirectResponse($this->session->get('backUrl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
