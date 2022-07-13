@@ -13,6 +13,7 @@ use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -787,13 +788,21 @@ class Attribute
         return $this->function;
     }
 
+    /**
+     * @todo docs
+     *
+     * @param string|null $function
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
     public function setFunction(?string $function): self
     {
         if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified'])) {
             if ($this->getType() !== 'string' && (!str_contains($function, 'date') || !str_contains($this->getType(), 'date'))) {
-                // Do not allow function to be set if the type does not allow it! todo: throw error for user feedback?
+                throw new Exception('This function expects this attribute to have a different type! string or date/datetime, depending on the function (not: '.$this->getType().')');
                 // todo: or just always set the type to the correct one?
-                return $this;
             }
             // These functions require this attribute to be readOnly!
             $this->setReadOnly(true);
@@ -808,14 +817,24 @@ class Attribute
         return $this->searchPartial;
     }
 
+    /**
+     * @todo docs
+     *
+     * @param Entity|null $searchPartial
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
     public function setSearchPartial(?Entity $searchPartial): self
     {
         // Only allow null or the entity of this Attribute when setting searchPartial.
         // Allow setting searchPartial when entity is not set, because of loading in fixtures.
         if ($searchPartial === null || !isset($this->entity) || $searchPartial === $this->entity) {
             $this->searchPartial = $searchPartial;
+        } else {
+            throw new Exception('You are not allowed to set searchPartial of an Attribute to any other Entity than the Entity of the Attribute.');
         }
-        //todo: else throw error?
 
         return $this;
     }

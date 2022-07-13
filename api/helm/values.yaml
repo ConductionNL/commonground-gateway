@@ -106,6 +106,9 @@ rabbitmq:
       password: '!changeMe!'
   service:
       port: 5672
+      
+# todo: move this to an email plugin (see EmailSubscriber.php)
+mailgun: 'mailgun+api://code:domain@api.eu.mailgun.net'
 
 imagePullSecrets: []
 nameOverride: ""
