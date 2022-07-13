@@ -1,0 +1,4 @@
+# todo: move this to an email plugin (see EmailSubscriber.php)
+
+parameters:
+    mailgun: "%env(MAILGUN)%"

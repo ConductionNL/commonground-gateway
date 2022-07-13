@@ -2,10 +2,10 @@
 
 namespace App\Security;
 
+use App\Security\User\AuthenticationUser;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

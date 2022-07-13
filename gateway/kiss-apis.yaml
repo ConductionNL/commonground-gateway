@@ -114,7 +114,7 @@
 #        description: Biedt de generieke mogelijkheid om gebruikers notities te laten aanmaken of resources (bijvoorbeeld Common Ground resources). Deze functionaliteit is bewust abstract opgezet.
 #        route: "/notes"
 #        endpoint: "notes"
-       
+#
 #    # Search Entity
 #    search:
 #        name: Search
@@ -144,40 +144,37 @@
 #        description: The user that made this review.
 #        type: string
 #        format: uuid
-#        required: true
 #        entity: "@review"
 #        searchable: true
-       
+#
 #    review_topic:
 #        name: topic
 #        description: The object that this review is about.
 #        type: string
 #        format: url
-#        required: true
 #        entity: "@review"
 #        searchable: true
-       
+#
 #    review_name:
 #        name: name
 #        description: The name of this review.
 #        type: string
-#        required: true
 #        entity: "@review"
 #        searchable: true
-       
+#
 #    review_description:
 #        name: description
 #        description: The description of this review.
 #        type: string
 #        required: true
 #        entity: "@review"
-       
+#
 #    review_rating:
 #        name: rating
 #        description: The rating of this review.
 #        type: integer
 #        entity: "@review"
-       
+#
 #    # Note Attributes
 #    note_author:
 #        name: author
@@ -187,7 +184,7 @@
 #        required: true
 #        entity: "@note"
 #        searchable: true
-       
+#
 #    note_topic:
 #        name: topic
 #        description: The object that this note is about.
@@ -196,7 +193,7 @@
 #        required: true
 #        entity: "@note"
 #        searchable: true
-       
+#
 #    note_name:
 #        name: name
 #        description: The name of this note.
@@ -211,7 +208,7 @@
 #        type: string
 #        required: true
 #        entity: "@note"
-       
+#
 #    note_contact:
 #        name: contact
 #        description: The contact that needs to be notified.
@@ -228,7 +225,7 @@
 #        required: true
 #        entity: "@search"
 #        searchable: true
-   
+#
 #    search_object:
 #        name: object
 #        description: The object upon which the action is carried out, whose state is kept intact or changed. Also known as the semantic roles patient, affected or undergoer (which change their state) or theme (which doesn't). e.g. John read a book.
@@ -237,7 +234,7 @@
 #        required: true
 #        entity: "@search"
 #        searchable: true
-       
+#
 #    search_actionStatus:
 #        name: actionStatus
 #        description: Indicates the current disposition of the Action. Based on ActionStatusType (https://schema.org/ActionStatusType)
@@ -245,57 +242,57 @@
 #        enum: ["Active", "Completed", "Failed", "Potential"]
 #        entity: "@search"
 #        searchable: true
-       
+#
 #    search_instrument:
 #        name: instrument
 #        description: The object that helped the agent perform the action. e.g. John searched with the generic search feature.
 #        type: string
 #        entity: "@search"
-       
+#
 #    search_location:
 #        name: location
 #        description: The location of, for example, where an event is happening, where an organization is located, or where an action takes place.
 #        type: string
 #        entity: "@search"
-   
+#
 #    search_participants:
 #        name: participants
 #        description: Other co-agents that participated in the action indirectly. e.g. John wrote a book with Steve.
 #        type: string
 #        multiple: true
 #        entity: "@search"
-   
+#
 #    search_provider:
 #        name: provider
 #        description: The service provider, service operator, or service performer; e.g ElasticSearch
 #        example: ElasticSearch
 #        type: string
 #        entity: "@search"
-       
+#
 #    search_result:
 #        name: result
 #        description: The result produced in the action. e.g. John wrote a book.
 #        type: array
 #        entity: "@search"
-       
+#
 #    search_error:
 #        name: error
 #        description: For failed actions, more information on the cause of the failure.
 #        type: string
 #        entity: "@search"
-       
+#
 #    search_endTime:
 #        name: endTime
 #        description: The endTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to end. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the end of a clip within a larger file.
 #        type: datetime
 #        entity: "@search"
-       
+#
 #    search_startTime:
 #        name: startTime
 #        description: The startTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to start. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the start of a clip within a larger file.
 #        type: datetime
 #        entity: "@search"
-       
+#
 #    search_target:
 #        name: target
 #        description: Indicates a target EntryPoint for an Action. Based on EntryPoint (https://schema.org/EntryPoint)
@@ -427,7 +424,7 @@
 #        pathRegex: <{reviewItemRegex}>
 #        method: DELETE
 #        operationType: item
-   
+#
 #    # Note Endpoints
 #    noteEndpointGet:
 #        name: Note endpoint get collection
@@ -468,7 +465,7 @@
 #        pathRegex: <{noteItemRegex}>
 #        method: DELETE
 #        operationType: item
-       
+#
 #    # Search Endpoints
 #    searchEndpointGet:
 #        name: Search endpoint get collection
@@ -602,7 +599,7 @@
 #        conditions: "{}"
 #        endpoints: ["@reviewEndpointGet", "@reviewEndpointPost", "@reviewEndpointGetItem", "@reviewEndpointPut", "@reviewEndpointDelete"]
 #        entity: "@review"
-       
+#
 #    # Note Handler
 #    noteHandler:
 #        name: Note handler
@@ -611,7 +608,7 @@
 #        conditions: "{}"
 #        endpoints: [ "@noteEndpointGet", "@noteEndpointPost", "@noteEndpointGetItem", "@noteEndpointPut", "@noteEndpointDelete" ]
 #        entity: "@note"
-       
+#
 #    # Search Handler
 #    searchHandler:
 #        name: Search handler
@@ -630,6 +627,7 @@
 #        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
 #        entity: "@taxanomy"
 
+
 #    # Medewerker Handler
 #    medewerkerHandler:
 #        name: Medewerker handler
@@ -638,3 +636,34 @@
 #        conditions: "{}"
 #        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
 #        entity: "@medewerker"
+
+
+## EmailTemplates
+#App\Entity\EmailTemplate:
+#    newReviewTemplate:
+#        name: newReviewTemplate
+#        description: "email template for the new review email."
+#        # todo for content find another way to configure email templates, so we don't need to add files inside the gateway
+#        content: "emails/kiss/new-review-e-mail.html.twig"
+#        variables:
+#            subject: name
+#            author: author
+#            topic: topic
+#            rating: rating
+#            description: description
+#        subject: "test {name}"
+#        sender: icatttest+kiss@gmail.com
+#        receiver: icatttest+kiss@gmail.com
+#
+## EmailTriggers
+#App\Entity\EmailTrigger:
+#    newReviewTrigger:
+#        name: newReviewTrigger
+#        description: "trigger for the new review email."
+#        # todo: request is an example, not required
+##        request:
+##            query:
+##                test: test123
+#        hooks: ['POST_HANDLER']
+#        endpoints: ["@reviewEndpointPost"]
+#        templates: ["@newReviewTemplate"]
