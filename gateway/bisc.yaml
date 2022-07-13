@@ -42,7 +42,7 @@
 #App\Entity\Entity:
 #    # User object
 #    user:
-#        route: "/api/users"
+#        route: "/users"
 #        name: users
 #        description: Dit endpoint behandeld alle functionaliteit rondom users of gebruikers.
 #        gateway: "@uc_api"
@@ -68,7 +68,7 @@
 #    # UserGroup (security) object
 #    usergroup:
 #        function: "userGroup"
-#        route: "/api/user_groups"
+#        route: "/user_groups"
 #        name: user_groups
 #        description: Dit endpoint behandeld alle functionaliteit rondom groepen van gebruikers. Zo kan je met deze groepen onderscheid wat een gebruiker wel mag en de andere niet.
 #        gateway: "@uc_api"
@@ -84,7 +84,7 @@
 #    # Organization Object
 #    organization:
 #        function: "organization"
-#        route: "/api/organizations"
+#        route: "/organizations"
 #        name: organizations
 #        description: Dit endpoint behandeld alle functionaliteit rondom organisaties. Binnen TOP hebben organisaties een belangrijke rol, taalhuizen en aanbieders zijn bijvoorbeeld organisaties.
 #        gateway: "@contacten_api" # todo: remove:
@@ -209,7 +209,7 @@
 #
 #    # Employee Object
 #    employee:
-#        route: "/api/employees"
+#        route: "/employees"
 #        name: employees
 #        description: Dit object beschrijft een medewerker en alleen eigenschappen die specifiek bij een medewerker horen.
 #        gateway: "@mrc_api"
@@ -218,7 +218,7 @@
 #
 #    #Student Object
 #    student:
-#        route: "/api/students"
+#        route: "/students"
 #        name: students
 #        description: Dit object beschrijft een student en alleen eigenschappen die specifiek bij een student horen. Binnen taalhuizen wordt student ook wel deelnemer genoemd.
 #        gateway: "@edu_api"
@@ -247,49 +247,49 @@
 #
 #    # LearningNeed object
 #    learningNeed:
-#        route: "/api/learning_needs"
+#        route: "/learning_needs"
 #        name: LearningNeed
 #        description: Het learningNeed object beschrijft de leerbehoefte van de student.
 #
 #    # LearningResult object
 #    learningResult:
-#        route: "/api/learning_results"
+#        route: "/learning_results"
 #        name: LearningResult
 #        description: Het learningResult object beschrijft de leerresultaten van de student.
 #
 #    # participation object
 #    participation:
-#        route: "/api/participations"
+#        route: "/participations"
 #        name: participation
 #        description: Een deelname...
 #
 #    # TestResult object
 #    testResult:
-#        route: "/api/test_results"
+#        route: "/test_results"
 #        name: testResult
 #        description: Een toetsresultaat...
 #
 #    # Document object
 #    document:
-#        route: "/api/documents"
+#        route: "/documents"
 #        name: document
 #        description: Een document...
 #
 #    # ContactMoment object
 #    contactMoment:
-#        route: "/api/contact_moments"
+#        route: "/contact_moments"
 #        name: contactMoment
 #        description: Een dossier (gebeurtenis)...
 #
 #    # PostalCode object
 #    postalCode:
-#        route: "/api/postal_codes"
+#        route: "/postal_codes"
 #        name: postalCode
 #        description: Een combinatie van een 1000 code van een postcode, en een taalhuis
 #    
 #    # shareStudent object
 #    shareStudent:
-#        route: "/api/share_students"
+#        route: "/share_students"
 #        name: shareStudent
 #        description: Het delen van een student met een specifiek email adres
 #    

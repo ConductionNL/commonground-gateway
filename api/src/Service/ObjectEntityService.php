@@ -1329,7 +1329,7 @@ class ObjectEntityService
         $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
 
         if ($objectEntity->getEntity()->getRoute()) {
-            return $uri.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
+            return $uri.'/api'.$objectEntity->getEntity()->getRoute().'/'.$objectEntity->getId();
         }
 
         return $uri.'/admin/object_entities/'.$objectEntity->getId();

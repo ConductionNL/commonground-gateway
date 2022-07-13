@@ -1,5 +1,5 @@
-## Collections
-#App\Entity\CollectionEntity:
+# # Collections
+# App\Entity\CollectionEntity:
 #    brcCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -91,32 +91,39 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
 #        loadTestData: true
 #        autoLoad: true
-#
-## Entities
-#App\Entity\Entity:
+#    medewerkersCollection:
+#        name: Medewerkers collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/MRC_publiccode/main/OAS.yaml
+#       #  testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
+#       #  loadTestData: true
+#        autoLoad: true
+
+# # Entities
+# App\Entity\Entity:
 #    # Review Entity
 #    review:
 #        name: Review
 #        description: Biedt de generieke mogelijkheid om gebruikers reviews te geven over objecten
-#        route: "/api/reviews"
+#        route: "/reviews"
 #        endpoint: "reviews"
-#
+
 #    # Note Entity
 #    note:
 #        name: Note
 #        description: Biedt de generieke mogelijkheid om gebruikers notities te laten aanmaken of resources (bijvoorbeeld Common Ground resources). Deze functionaliteit is bewust abstract opgezet.
-#        route: "/api/notes"
+#        route: "/notes"
 #        endpoint: "notes"
 #
 #    # Search Entity
 #    search:
 #        name: Search
 #        description: The search object is based on https://schema.org/SearchAction and is meant to hold search actions perfermoed by users, with other words it preserfec a search history.
-#        route: "/api/searches"
+#        route: "/searches"
 #        endpoint: "searches"
-#
-## Attributes
-#App\Entity\Attribute:
+
+# # Attributes
+# App\Entity\Attribute:
 #    # Review Attributes
 #    review_author:
 #        name: author
@@ -180,7 +187,7 @@
 #        required: true
 #        entity: "@note"
 #        searchable: true
-#
+
 #    note_description:
 #        name: description
 #        description: The description of this note.
@@ -194,7 +201,7 @@
 #        type: string
 #        format: uuid
 #        entity: "@note"
-#
+
 #    # Search Attributes
 #    search_agent:
 #        name: agent
@@ -278,9 +285,9 @@
 #        type: string
 #        format: url
 #        entity: "@search"
-#
-## Parameters for endpoint regex
-#parameters:
+
+# # Parameters for endpoint regex
+# parameters:
 #    reviewItemRegex: "^reviews/[a-z0-9-]{36}$"
 #    noteItemRegex: "^notes/[a-z0-9-]{36}$"
 #    searchItemRegex: "^searches/[a-z0-9-]{36}$"
@@ -295,7 +302,7 @@
 #        pathRegex: "^(reviews)$"
 #        method: GET
 #        operationType: collection
-#
+
 #    reviewEndpointPost:
 #        name: Review endpoint post
 #        description: endpoint for reviews
@@ -303,7 +310,7 @@
 #        pathRegex: "^(reviews)$"
 #        method: POST
 #        operationType: collection
-#
+
 #    reviewEndpointGetItem:
 #        name: Review endpoint get item
 #        description: endpoint for reviews
@@ -311,7 +318,7 @@
 #        pathRegex: <{reviewItemRegex}>
 #        method: GET
 #        operationType: item
-#
+
 #    reviewEndpointPut:
 #        name: Review endpoint put
 #        description: endpoint for reviews
@@ -319,7 +326,7 @@
 #        pathRegex: <{reviewItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+
 #    reviewEndpointDelete:
 #        name: Review endpoint delete
 #        description: endpoint for reviews
@@ -336,7 +343,7 @@
 #        pathRegex: "^(notes)$"
 #        method: GET
 #        operationType: collection
-#
+
 #    noteEndpointPost:
 #        name: Note endpoint post
 #        description: endpoint for notes
@@ -344,7 +351,7 @@
 #        pathRegex: "^(notes)$"
 #        method: POST
 #        operationType: collection
-#
+
 #    noteEndpointGetItem:
 #        name: Note endpoint get item
 #        description: endpoint for notes
@@ -352,7 +359,7 @@
 #        pathRegex: <{noteItemRegex}>
 #        method: GET
 #        operationType: item
-#
+
 #    noteEndpointPut:
 #        name: Note endpoint put
 #        description: endpoint for notes
@@ -360,7 +367,7 @@
 #        pathRegex: <{noteItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+
 #    noteEndpointDelete:
 #        name: Note endpoint delete
 #        description: endpoint for notes
@@ -377,7 +384,7 @@
 #        pathRegex: "^(searches)$"
 #        method: GET
 #        operationType: collection
-#
+
 #    searchEndpointPost:
 #        name: Search endpoint post
 #        description: endpoint for searches
@@ -385,7 +392,7 @@
 #        pathRegex: "^(searches)$"
 #        method: POST
 #        operationType: collection
-#
+
 #    searchEndpointGetItem:
 #        name: Search endpoint get item
 #        description: endpoint for searches
@@ -393,7 +400,7 @@
 #        pathRegex: <{searchItemRegex}>
 #        method: GET
 #        operationType: item
-#
+
 #    searchEndpointPut:
 #        name: Search endpoint put
 #        description: endpoint for searches
@@ -401,7 +408,7 @@
 #        pathRegex: <{searchItemRegex}>
 #        method: PUT
 #        operationType: item
-#
+
 #    searchEndpointDelete:
 #        name: Search endpoint delete
 #        description: endpoint for searches
@@ -409,9 +416,9 @@
 #        pathRegex: <{searchItemRegex}>
 #        method: DELETE
 #        operationType: item
-#
-## Handlers
-#App\Entity\Handler:
+
+# # Handlers
+# App\Entity\Handler:
 #    # Review Handler
 #    reviewHandler:
 #        name: Review handler
