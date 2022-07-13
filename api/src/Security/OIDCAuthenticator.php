@@ -37,9 +37,10 @@ class OIDCAuthenticator extends AbstractAuthenticator
     private function prefixGroups(array $groups): array
     {
         $newGroups = [];
-        foreach($groups as $group) {
+        foreach ($groups as $group) {
             $newGroups[] = 'ROLE_scope.'.$group;
         }
+
         return $newGroups;
     }
 
