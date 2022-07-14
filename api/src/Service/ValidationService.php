@@ -250,7 +250,7 @@ class ValidationService
     {
         $user = $this->security->getUser();
 
-        if($user instanceof AuthenticationUser){
+        if ($user instanceof AuthenticationUser) {
             return $user->getName();
         }
 
