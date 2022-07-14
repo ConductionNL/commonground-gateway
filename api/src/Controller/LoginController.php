@@ -55,7 +55,7 @@ class LoginController extends AbstractController
             ];
             $result = json_encode($result);
         } else {
-            $result = null;
+            $result = json_encode([]);
         }
 
         return new Response(
