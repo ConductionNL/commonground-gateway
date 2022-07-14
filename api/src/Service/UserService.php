@@ -21,7 +21,6 @@ class UserService
     public function getPersonForUser(UserInterface $user): array
     {
         if (!($user instanceof AuthenticationUser)) {
-
             return [];
         }
         if ($user->getPerson() && $person = $this->objectEntityService->getObjectByUri($user->getPerson())) {
