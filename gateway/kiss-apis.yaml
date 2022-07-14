@@ -99,13 +99,13 @@
 #       #  loadTestData: true
 #        autoLoad: true
 
-#    vraagantwoordregisterCollection:
-#        name: AgendaService collection
-#        sourceType: GitHub
-#        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/VraagAntwoordRegister/main/OAS.yaml
-#       #  testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/VraagAntwoordRegister/main/data/testdata.json
-#       #  loadTestData: true
-#        autoLoad: true
+  #  handelsregisterbevragenCollection:
+  #      name: HandelsRegisterBevragen collection
+  #      sourceType: GitHub
+  #      locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/genereervariant/openapi.yaml
+  #      testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
+  #      loadTestData: true
+  #      autoLoad: true
 
 # # Entities
 # App\Entity\Entity:
