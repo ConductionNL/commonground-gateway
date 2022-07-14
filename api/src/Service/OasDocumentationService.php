@@ -807,21 +807,15 @@ class OasDocumentationService
             // Add the validators
             foreach ($attribute->getValidations() as $validator => $validation) {
                 if (!array_key_exists($validator, OasDocumentationService::SUPPORTED_VALIDATORS) && $validation != null) {
-                    $schema['properties'][$attribute->getName()] = [
-                        $validator => $validation,
-                    ];
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }
             }
 
             // Set example data
             if ($attribute->getExample()) {
-                $schema['properties'][$attribute->getName()] = [
-                    'example' => $attribute->getExample(),
-                ];
+                $schema['properties'][$attribute->getName()]['example'] = $attribute->getExample();
             } else {
-                $schema['properties'][$attribute->getName()] = [
-                    'example' => $this->generateAttributeExample($attribute),
-                ];
+                $schema['properties'][$attribute->getName()]['example'] = $this->generateAttributeExample($attribute);
             }
 
 //            # @todo fix mapping
