@@ -11,6 +11,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
+use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -28,6 +29,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -592,6 +594,17 @@ class ObjectEntityService
         return $objectEntity;
     }
 
+    private function getUserName(): string
+    {
+        $user = $this->security->getUser();
+
+        if($user instanceof AuthenticationUser){
+            return $user->getName();
+        }
+
+        return '';
+    }
+
     /**
      * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
      *
@@ -628,6 +641,9 @@ class ObjectEntityService
             case 'dateModified':
                 $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
+                break;
+            case 'userName':
+                $objectEntity->getValueByAttribute($attribute)->getValue() ?? $objectEntity->getValueByAttribute($attribute)->setValue($this->getUserName());
                 break;
         }
 
