@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,6 +28,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Csrf\TokenStorage\TokenStorageInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ValidationService
@@ -51,6 +53,7 @@ class ValidationService
     private ParameterBagInterface $parameterBag;
     private FunctionService $functionService;
     private LogService $logService;
+    private TokenStorageInterface $tokenStorage;
     private bool $ignoreErrors;
 
     public function __construct(
@@ -65,7 +68,8 @@ class ValidationService
         TranslationService $translationService,
         ParameterBagInterface $parameterBag,
         FunctionService $functionService,
-        LogService $logService
+        LogService $logService,
+        TokenStorageInterface $tokenStorage
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
@@ -242,6 +246,17 @@ class ValidationService
         return $objectEntity;
     }
 
+    private function getUserName(): string
+    {
+        $user = $this->security->getUser();
+
+        if ($user instanceof AuthenticationUser) {
+            return $user->getName();
+        }
+
+        return '';
+    }
+
     /**
      * Handles saving the value for an Attribute when the Attribute has a function set. A function makes it 'function' (/behave) differently.
      *
@@ -278,6 +293,9 @@ class ValidationService
             case 'dateModified':
                 $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
+                break;
+            case 'userName':
+                $objectEntity->getValueByAttribute($attribute)->getValue() ?? $objectEntity->getValueByAttribute($attribute)->setValue($this->getUserName());
                 break;
         }
 
