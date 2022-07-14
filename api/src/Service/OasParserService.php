@@ -491,11 +491,9 @@ class OasParserService
             return null;
         }
 
-        $propertyName == 'activiteiten' && var_dump($originalProperty);
         if (isset($originalProperty['$ref'])) {
             $originalProperty = $this->getSchemaFromRef($originalProperty['$ref'], $targetEntity);
         } elseif (isset($originalProperty['items']['$ref']) && isset($originalProperty['type']) && $originalProperty['type'] == 'array') {
-            // $propertyName == 'activiteiten' && var_dump($this->getSchemaFromRef($property['items']['$ref'], $targetEntity));
             $newProperty = $this->getSchemaFromRef($originalProperty['items']['$ref'], $targetEntity);
         } else {
             $targetEntity = $entity->getName() . $propertyName . 'Entity';
