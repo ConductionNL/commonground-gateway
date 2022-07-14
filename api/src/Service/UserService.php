@@ -21,7 +21,6 @@ class UserService
     public function getPersonForUser(UserInterface $user): array
     {
         if (!($user instanceof AuthenticationUser)) {
-            var_dump(get_class($user));
 
             return [];
         }
