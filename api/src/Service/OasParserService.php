@@ -350,7 +350,7 @@ class OasParserService
             return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
         }
 
-        if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array')  && isset($targetEntity)) {
+        if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array') && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
@@ -496,12 +496,11 @@ class OasParserService
         } elseif (isset($originalProperty['items']['$ref']) && isset($originalProperty['type']) && $originalProperty['type'] == 'array') {
             $newProperty = $this->getSchemaFromRef($originalProperty['items']['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName() . $propertyName . 'Entity';
+            $targetEntity = $entity->getName().$propertyName.'Entity';
         }
 
         if ((!isset($originalProperty['type']) || $originalProperty['type'] == 'object') || (isset($originalProperty['type']) &&
             $originalProperty['type'] == 'array' && isset($originalProperty['items']['$ref']))) {
-
             $targetEntity = $this->getEntity($targetEntity, $newProperty ?? $originalProperty, $collectionEntity);
             $multiple = (isset($originalProperty['type']) && $originalProperty['type'] == 'array');
             $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity, $multiple);
