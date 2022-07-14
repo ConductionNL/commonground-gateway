@@ -349,7 +349,8 @@ class OasParserService
         } else {
             return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
         }
-        if (isset($itemSchema['type']) && $itemSchema['type'] == 'object' && isset($targetEntity)) {
+
+        if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array')  && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
@@ -483,26 +484,33 @@ class OasParserService
      *
      * @return Attribute|null The resulting attribute
      */
-    private function createAttribute(array $property, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
+    private function createAttribute(array $originalProperty, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
         // Ignore this attribute if its id or empty, because the gateway generates this itself
         if ($propertyName == 'id' || empty($propertyName)) {
             return null;
         }
 
-        if (isset($property['$ref'])) {
-            $property = $this->getSchemaFromRef($property['$ref'], $targetEntity);
+        $propertyName == 'activiteiten' && var_dump($originalProperty);
+        if (isset($originalProperty['$ref'])) {
+            $originalProperty = $this->getSchemaFromRef($originalProperty['$ref'], $targetEntity);
+        } elseif (isset($originalProperty['items']['$ref']) && isset($originalProperty['type']) && $originalProperty['type'] == 'array') {
+            // $propertyName == 'activiteiten' && var_dump($this->getSchemaFromRef($property['items']['$ref'], $targetEntity));
+            $newProperty = $this->getSchemaFromRef($originalProperty['items']['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName().$propertyName.'Entity';
+            $targetEntity = $entity->getName() . $propertyName . 'Entity';
         }
 
-        if (!isset($property['type']) || $property['type'] == 'object') {
-            $targetEntity = $this->getEntity($targetEntity, $property, $collectionEntity);
-            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity);
-        } elseif ($property['type'] == 'array') {
-            $attribute = $this->createArrayAttribute($propertyName, $property, $entity, $collectionEntity);
+        if ((!isset($originalProperty['type']) || $originalProperty['type'] == 'object') || (isset($originalProperty['type']) &&
+            $originalProperty['type'] == 'array' && isset($originalProperty['items']['$ref']))) {
+
+            $targetEntity = $this->getEntity($targetEntity, $newProperty ?? $originalProperty, $collectionEntity);
+            $multiple = (isset($originalProperty['type']) && $originalProperty['type'] == 'array');
+            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity, $multiple);
+        } elseif ($originalProperty['type'] == 'array') {
+            $attribute = $this->createArrayAttribute($propertyName, $originalProperty, $entity, $collectionEntity);
         } else {
-            $attribute = $this->createFlatAttribute($propertyName, $property, $entity);
+            $attribute = $this->createFlatAttribute($propertyName, $originalProperty, $entity);
         }
         $this->entityManager->persist($attribute);
 
