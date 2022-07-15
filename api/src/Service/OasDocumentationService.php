@@ -212,7 +212,6 @@ class OasDocumentationService
         // Tags
         !$tagArray && $tagArray = [];
 
-
         $entityTag = [
             'name'        => ucfirst($handler->getEntity()->getName()),
             'description' => (string) $endpoint->getDescription(),
@@ -233,13 +232,11 @@ class OasDocumentationService
         return $docs;
     }
 
-
-
     /**
      * Creates a tag for a Collection with a Handler.
      *
      * @param Handler $handler
-     * @param string  $type    Type of tag (collection or endpoint)     
+     * @param string  $type    Type of tag (collection or endpoint)
      *
      * @return array|string|null
      */
@@ -254,7 +251,6 @@ class OasDocumentationService
                     return $collection->getName();
             }
         }
-
 
         return null;
     }
@@ -281,7 +277,7 @@ class OasDocumentationService
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
             'description' => $handler->getEntity()->getDescription(),
-            'operationId' => $item ? $handler->getEntity()->getName() . '_' . $method . 'Id' : $handler->getEntity()->getName() . '_' . $method,
+            'operationId' => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
             'tags'        => $tags,
             'summary'     => $handler->getEntity()->getDescription(),
             'parameters'  => [],
@@ -1095,8 +1091,8 @@ class OasDocumentationService
             'required'    => false,
             'style'       => 'simple',
             'schema'      => [
-                'type' => 'string'
-            ]
+                'type' => 'string',
+            ],
         ];
         $parameters[] = [
             'name'        => 'limit',
@@ -1105,8 +1101,8 @@ class OasDocumentationService
             'required'    => false,
             'style'       => 'simple',
             'schema'      => [
-                'type' => 'string'
-            ]
+                'type' => 'string',
+            ],
         ];
         $parameters[] = [
             'name'        => 'page',
@@ -1115,8 +1111,8 @@ class OasDocumentationService
             'required'    => false,
             'style'       => 'simple',
             'schema'      => [
-                'type' => 'string'
-            ]
+                'type' => 'string',
+            ],
         ];
 
         return $parameters;
@@ -1143,8 +1139,8 @@ class OasDocumentationService
                     'style'       => 'simple',
                     'schema'      => [
                         'default' => $attribute->getObject()->getName(),
-                        'type'    => 'string'
-                    ]
+                        'type'    => 'string',
+                    ],
                 ];
             }
         }
@@ -1173,8 +1169,8 @@ class OasDocumentationService
                     'required'    => false,
                     'style'       => 'simple',
                     'schema'      => [
-                        'type' => $attribute->getType() ?? 'string'
-                    ]
+                        'type' => $attribute->getType() ?? 'string',
+                    ],
                 ];
             }
 
