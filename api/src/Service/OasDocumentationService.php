@@ -271,7 +271,7 @@ class OasDocumentationService
         $collectionTag && $tags[] = $collectionTag;
         // $tags[] = $entityTag;
         if (!isset($tags)) {
-            $tags = ['NoCollection'];
+            $tags = ['OverigeObjecten'];
         }
 
         /* @todo name should be cleaned before being used like this */
