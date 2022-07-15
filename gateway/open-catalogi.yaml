@@ -1,0 +1,8 @@
+# App\Entity\CollectionEntity:
+#     opencatalogiCollection:
+#       name: OpenCatalogi collection
+#       sourceType: GitHub
+#       locationOAS: https://raw.githubusercontent.com/OpenCatalogi/api/master/OAS.yaml
+#       testDataLocation: https://raw.githubusercontent.com/OpenCatalogi/api/master/data/opencatalogi.json
+#       loadTestData: true
+#       autoLoad: true

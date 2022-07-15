@@ -375,6 +375,7 @@ class OasParserService
         $newAttribute->setCascade(true);
         $newAttribute->setMultiple($multiple);
         $newAttribute->setSearchable(true);
+        $newAttribute->setExtend(true);
 
         $newAttribute->setObject($targetEntity);
 
