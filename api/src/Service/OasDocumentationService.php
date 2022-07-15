@@ -135,7 +135,7 @@ class OasDocumentationService
         }
 
         foreach ($endpoints as $endpoint) {
-            $docs = $this->addEndpointToDocs($endpoint, $docs);
+            $docs = $this->addEndpointToDocs($endpoint, $docs, $tagArray);
         }
 
         while (count($this->indirectEntities) > 0) {
@@ -175,10 +175,11 @@ class OasDocumentationService
      *
      * @param Endpoint $endpoint
      * @param array    $docs
+     * @param array    $tagArray Array with tags as string to easily prevent duplicates
      *
      * @return array
      */
-    public function addEndpointToDocs(Endpoint $endpoint, array &$docs): array
+    public function addEndpointToDocs(Endpoint $endpoint, array &$docs, ?array &$tagArray = []): array
     {
         // Let's only add the main entities as root
         if (!$endpoint->getPath()) {
@@ -209,16 +210,53 @@ class OasDocumentationService
         $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
 
         // Tags
-        $tag = [
+        !$tagArray && $tagArray = [];
+
+
+        $entityTag = [
             'name'        => ucfirst($handler->getEntity()->getName()),
             'description' => (string) $endpoint->getDescription(),
         ];
 
-        if (!in_array($tag, $docs['tags'])) {
-            $docs['tags'][] = $tag;
+        $collectionTag = $this->createCollectionTagWithHandler($handler, 'collection');
+
+        if ($collectionTag && !in_array($collectionTag['name'], $tagArray)) {
+            $docs['tags'][] = $collectionTag;
+            $tagArray[] = $collectionTag['name'];
         }
 
+        // if (!in_array($entityTag['name'], $tagArray)) {
+        //     $docs['tags'][] = $entityTag;
+        //     $tagArray[] = $entityTag['name'];
+        // }
+
         return $docs;
+    }
+
+
+
+    /**
+     * Creates a tag for a Collection with a Handler.
+     *
+     * @param Handler $handler
+     * @param string  $type    Type of tag (collection or endpoint)     
+     *
+     * @return array|string|null
+     */
+    public function createCollectionTagWithHandler(Handler $handler, string $type = 'collection')
+    {
+        $collection = $handler->getEntity()->getCollections()[0] ?? null;
+        if ($collection) {
+            switch ($type) {
+                case 'collection':
+                    return ['name' => $collection->getName(), 'description' => $collection->getDescription() ?? 'Collection'];
+                case 'endpoint':
+                    return $collection->getName();
+            }
+        }
+
+
+        return null;
     }
 
     /**
@@ -232,11 +270,19 @@ class OasDocumentationService
      */
     public function getEndpointMethod(string $method, Handler $handler, bool $item): array
     {
+        $collectionTag = $this->createCollectionTagWithHandler($handler, 'endpoint');
+        $entityTag = ucfirst($handler->getEntity()->getName());
+        $collectionTag && $tags[] = $collectionTag;
+        // $tags[] = $entityTag;
+        if (!isset($tags)) {
+            $tags = ['NoCollection'];
+        }
+
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
             'description' => $handler->getEntity()->getDescription(),
-            'operationId' => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
-            'tags'        => [ucfirst($handler->getEntity()->getName())],
+            'operationId' => $item ? $handler->getEntity()->getName() . '_' . $method . 'Id' : $handler->getEntity()->getName() . '_' . $method,
+            'tags'        => $tags,
             'summary'     => $handler->getEntity()->getDescription(),
             'parameters'  => [],
             'responses'   => [],
@@ -742,7 +788,7 @@ class OasDocumentationService
         foreach ($entity->getAttributes() as $attribute) {
             // Handle required fields
             if ($attribute->getRequired() and $attribute->getRequired() !== null) {
-                $schema['required'][] = ucfirst($attribute->getName());
+                $schema['required'][] = $attribute->getName();
             }
 
             // Add id to properties
@@ -1048,6 +1094,9 @@ class OasDocumentationService
             'description' => 'The start number or offset of you list',
             'required'    => false,
             'style'       => 'simple',
+            'schema'      => [
+                'type' => 'string'
+            ]
         ];
         $parameters[] = [
             'name'        => 'limit',
@@ -1055,6 +1104,9 @@ class OasDocumentationService
             'description' => 'the total items pe list/page that you want returned',
             'required'    => false,
             'style'       => 'simple',
+            'schema'      => [
+                'type' => 'string'
+            ]
         ];
         $parameters[] = [
             'name'        => 'page',
@@ -1062,6 +1114,9 @@ class OasDocumentationService
             'description' => 'The page that you want returned',
             'required'    => false,
             'style'       => 'simple',
+            'schema'      => [
+                'type' => 'string'
+            ]
         ];
 
         return $parameters;
@@ -1088,7 +1143,8 @@ class OasDocumentationService
                     'style'       => 'simple',
                     'schema'      => [
                         'default' => $attribute->getObject()->getName(),
-                    ],
+                        'type'    => 'string'
+                    ]
                 ];
             }
         }
@@ -1116,6 +1172,9 @@ class OasDocumentationService
                     'description' => 'Search '.$prefix.$attribute->getName().' on an exact match of the string',
                     'required'    => false,
                     'style'       => 'simple',
+                    'schema'      => [
+                        'type' => $attribute->getType() ?? 'string'
+                    ]
                 ];
             }
 
