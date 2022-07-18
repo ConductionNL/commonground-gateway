@@ -1378,7 +1378,7 @@ class ObjectEntityService
     }
 
     /**
-     * TODO: docs.
+     * Create a NRC notification for the given ObjectEntity.
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method
@@ -1419,6 +1419,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * When rendering a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway,
+     * and when the type of this attribute is object and cascading on this attribute is not allowed,
+     * try and render/use the entire object for all subresources of this attribute.
+     *
+     * @param Collection $objects
+     * @param Attribute $attribute
+     *
+     * @return array|mixed|null
+     */
     public function renderSubObjects(Collection $objects, Attribute $attribute)
     {
         $results = [];
@@ -1440,6 +1450,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * When rendering a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway,
+     * and when the type of this attribute is object and cascading on this attribute is not allowed,
+     * only render/use the uri for all subresources of this attribute.
+     *
+     * @param Collection $objects
+     * @param Attribute $attribute
+     *
+     * @return array|mixed|string|null
+     */
     public function getSubObjectIris(Collection $objects, Attribute $attribute)
     {
         $results = [];
@@ -1460,6 +1480,14 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Render a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway (before doing the api-call).
+     *
+     * @param Value $value
+     * @param Attribute $attribute
+     *
+     * @return File[]|Value[]|array|bool|Collection|float|int|mixed|string|void|null
+     */
     public function renderValue(Value $value, Attribute $attribute)
     {
         $rendered = '';
@@ -1479,6 +1507,13 @@ class ObjectEntityService
         return $rendered;
     }
 
+    /**
+     * Render the post body, with all attributes to update/send with the api-call/promise to update an object in a source outside the gateway (before doing the api-call).
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return array
+     */
     public function renderPostBody(ObjectEntity $objectEntity): array
     {
         $body = [];
@@ -1494,6 +1529,17 @@ class ObjectEntityService
         return $body;
     }
 
+    /**
+     * Encode body for the api-call/promise to update an object in a source outside the gateway, before doing the api-call.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array $body
+     * @param array $headers
+     *
+     * @return string
+     *
+     * @throws Exception
+     */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
@@ -1516,6 +1562,17 @@ class ObjectEntityService
         return $body;
     }
 
+    /**
+     * If there is special translation config for the api-calls/promises to update an object in a source outside the gateway, before doing the api-call.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string $method
+     * @param array $headers
+     * @param array $query
+     * @param string $url
+     *
+     * @return void
+     */
     public function getTranslationConfig(ObjectEntity $objectEntity, string &$method, array &$headers, array &$query, string &$url): void
     {
         $oldMethod = $method;
@@ -1528,6 +1585,15 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Decide what method and url to use for a promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string $url
+     * @param string $method
+     *
+     * @return void
+     */
     public function decideMethodAndUrl(ObjectEntity $objectEntity, string &$url, string &$method): void
     {
         if ($method == 'POST' && $objectEntity->getUri() != $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId()) {
@@ -1541,6 +1607,13 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Makes sure if an ObjectEntity has any subresources these wil also result in promises to update those objects in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
     private function settleSubPromises(ObjectEntity $objectEntity): void
     {
         foreach ($objectEntity->getSubresources() as $sub) {
@@ -1552,6 +1625,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Decodes the response of a successful promise to update an object in a source outside the gateway.
+     *
+     * @param $response
+     * @param ObjectEntity $objectEntity
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
     private function decodeResponse($response, ObjectEntity $objectEntity): array
     {
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
@@ -1576,6 +1659,16 @@ class ObjectEntityService
         return $result;
     }
 
+    /**
+     * Set externalId of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array $result
+     * @param string $url
+     * @param string $method
+     *
+     * @return ObjectEntity
+     */
     private function setExternalId(ObjectEntity $objectEntity, array $result, string $url, string $method): ObjectEntity
     {
         if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
@@ -1595,6 +1688,14 @@ class ObjectEntityService
         ]);
     }
 
+    /**
+     * Set externalResult of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array $result
+     *
+     * @return ObjectEntity
+     */
     private function setExternalResult(ObjectEntity $objectEntity, array $result): ObjectEntity
     {
         if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1607,6 +1708,19 @@ class ObjectEntityService
         return $objectEntity->setExternalResult($result);
     }
 
+    /**
+     * Handle successful/ok response of a promise to update an object in a source outside the gateway.
+     * Includes updating the Gateway ObjectEntity, Gateway Cache and sending an async notification.
+     *
+     * @param $response
+     * @param ObjectEntity $objectEntity
+     * @param string $url
+     * @param string $method
+     *
+     * @return ObjectEntity
+     *
+     * @throws InvalidArgumentException
+     */
     private function onFulfilled($response, ObjectEntity $objectEntity, string $url, string $method)
     {
         $result = $this->decodeResponse($response, $objectEntity);
@@ -1627,6 +1741,14 @@ class ObjectEntityService
         return $this->setExternalResult($objectEntity, $result);
     }
 
+    /**
+     * Handle error response of a promise to update an object in a source outside the gateway.
+     *
+     * @param $error
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
     private function onError($error, ObjectEntity $objectEntity)
     {
         /* @todo lelijke code */
@@ -1655,6 +1777,16 @@ class ObjectEntityService
         $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/') for a full error report');
     }
 
+    /**
+     * Creates a promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string $method
+     *
+     * @return PromiseInterface
+     *
+     * @throws Exception
+     */
     public function createPromise(ObjectEntity $objectEntity, string &$method): PromiseInterface
     {
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());

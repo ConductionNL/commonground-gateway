@@ -251,6 +251,7 @@ class ResponseService
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
+        $gatewayContext['@dateRead'] = null;
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
         $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
@@ -299,6 +300,7 @@ class ResponseService
             '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
             '_dateCreated'  => $result->getDateCreated(),
             '_dateModified' => $result->getDateModified(),
+            '_dateRead'     => null,
             '_owner'        => $result->getOwner(),
             '_organization' => $result->getOrganization(),
             '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
@@ -567,11 +569,11 @@ class ResponseService
      * @TODO
      *
      * @param array $result
-     * @param $responseType
+     * @param int $responseType
      *
      * @return bool
      */
-    public function checkForErrorResponse(array $result, $responseType = Response::HTTP_BAD_REQUEST): bool
+    public function checkForErrorResponse(array $result, int $responseType = Response::HTTP_BAD_REQUEST): bool
     {
         if (
             $responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT
