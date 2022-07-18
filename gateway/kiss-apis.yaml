@@ -660,8 +660,8 @@
 #            rating: rating
 #            description: description
 #        subject: "test {name}"
-#        sender: icatttest+kiss@gmail.com
-#        receiver: icatttest+kiss@gmail.com
+#        sender: kiss@commonground.nu
+#        receiver: kiss@commonground.nu
 #
 ## EmailTriggers
 #App\Entity\EmailTrigger:
