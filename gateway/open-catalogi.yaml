@@ -1,8 +1,99 @@
-# App\Entity\CollectionEntity:
-#     opencatalogiCollection:
-#       name: OpenCatalogi collection
-#       sourceType: GitHub
-#       locationOAS: https://raw.githubusercontent.com/OpenCatalogi/api/master/OAS.yaml
-#       testDataLocation: https://raw.githubusercontent.com/OpenCatalogi/api/master/data/opencatalogi.json
-#       loadTestData: true
-#       autoLoad: true
+#App\Entity\CollectionEntity:
+#    opencatalogiCollection:
+#        name: OpenCatalogi collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/OpenCatalogi/api/master/OAS.yaml
+#        testDataLocation: https://raw.githubusercontent.com/OpenCatalogi/api/master/data/opencatalogi.json
+#        loadTestData: true
+#        autoLoad: true
+#
+#App\Entity\Gateway:
+#    overheidUpl:
+#        name: overheidUpl
+#        location: https://standaarden.overheid.nl
+#
+## Entities
+#App\Entity\Entity:
+#    # UPL Entity
+#    upl:
+#        name: UPL
+#        description: UPL ...
+#        route: "/upls"
+#        endpoint: "owms/oquery/UPL-actueel.json"
+#        gateway: "@overheidUpl"
+#        collectionConfig:
+#            results: 'results.bindings'
+#            paginationPages: ''
+#
+## Attributes
+#App\Entity\Attribute:
+#    # UPL Attributes
+#    upl_name:
+#        name: name
+#        description: The name of this upl.
+#        type: string
+#        entity: "@upl"
+#        
+#    upl_grondslagLabel:
+#        name: grondslagLabel
+#        description: The grondslagLabel of this upl.
+#        type: string
+#        entity: "@upl"
+#
+## Parameters for endpoint regex
+#parameters:
+#    uplItemRegex: '^upls/[a-z0-9-]{36}$'
+#
+## Endpoints        
+#App\Entity\Endpoint:
+#    # UPL Endpoints
+#    uplEndpointGet:
+#        name: UPL endpoint get collection
+#        description: endpoint for upls
+#        path: [ 'upls' ]
+#        pathRegex: "^(upls)$"
+#        method: GET
+#        operationType: collection
+#    
+#    uplEndpointPost:
+#        name: UPL endpoint post
+#        description: endpoint for upls
+#        path: [ 'upls' ]
+#        pathRegex: "^(upls)$"
+#        method: POST
+#        operationType: collection
+#    
+#    uplEndpointGetItem:
+#        name: UPL endpoint get item
+#        description: endpoint for upls
+#        path: [ 'upls', '{id}' ]
+#        pathRegex: <{uplItemRegex}>
+#        method: GET
+#        operationType: item
+#    
+#    uplEndpointPut:
+#        name: UPL endpoint put
+#        description: endpoint for upls
+#        path: [ 'upls', '{id}' ]
+#        pathRegex: <{uplItemRegex}>
+#        method: PUT
+#        operationType: item
+#    
+#    uplEndpointDelete:
+#        name: UPL endpoint delete
+#        description: endpoint for upls
+#        path: [ 'upls', '{id}' ]
+#        pathRegex: <{uplItemRegex}>
+#        method: DELETE
+#        operationType: item
+#
+## Handlers
+#App\Entity\Handler:
+#    # UPL Handler
+#    uplHandler:
+#        name: UPL handler
+#        methods: ["*"]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: ["@uplEndpointGet", "@uplEndpointPost", "@uplEndpointGetItem", "@uplEndpointPut", "@uplEndpointDelete"]
+#        entity: "@upl"

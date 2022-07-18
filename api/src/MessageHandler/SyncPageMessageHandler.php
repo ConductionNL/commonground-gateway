@@ -72,7 +72,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             $callServiceData['component'],
             $callServiceData['url'],
             '',
-            array_merge($callServiceData['query'], ['page' => $message->getPage()]),
+            array_merge($callServiceData['query'], $message->getPage() !== 1 ? ['page' => $message->getPage()] : []),
             $callServiceData['headers'],
             false,
             'GET'
@@ -106,7 +106,10 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         if (array_key_exists('envelope', $messageData['entity']->getCollectionConfig())) {
             $collectionConfigEnvelope = explode('.', $messageData['entity']->getCollectionConfig()['envelope']);
         }
-        $collectionConfigId = explode('.', $messageData['entity']->getCollectionConfig()['id']);
+        $collectionConfigId = [];
+        if (array_key_exists('id', $messageData['entity']->getCollectionConfig())) {
+            $collectionConfigId = explode('.', $messageData['entity']->getCollectionConfig()['id']);
+        }
         foreach ($externObjects as $externObject) {
             $object = $this->saveObject(
                 $externObject,
@@ -127,7 +130,7 @@ class SyncPageMessageHandler implements MessageHandlerInterface
 
     private function saveObject(array $externObject, array $config, array $messageData): ?ObjectEntity
     {
-        $id = $externObject;
+        $id = $config['collectionConfigId'] !== [] ? $externObject : null;
         // Make sure to get this item from the correct place in $externObject
         foreach ($config['collectionConfigEnvelope'] as $item) {
             $externObject = $externObject[$item];

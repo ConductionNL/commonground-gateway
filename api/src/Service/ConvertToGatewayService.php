@@ -68,7 +68,7 @@ class ConvertToGatewayService
         // Now get the total amount of pages from the correct place in the response
         $amountOfPages = json_decode($response->getBody()->getContents(), true);
         foreach ($collectionConfigPaginationPages as $item) {
-            $amountOfPages = $amountOfPages[$item];
+            $amountOfPages = $amountOfPages[$item] ?? 1;
         }
         if (!is_int($amountOfPages)) {
             $matchesCount = preg_match('/\?page=([0-9]+)/', $amountOfPages, $matches);
