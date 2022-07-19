@@ -260,7 +260,7 @@ class OasDocumentationService
                 $key = 0;
                 $groups = $this->getOtherObjects($docs['x-tagGroups'], $key);
                 isset($groups['tags']) && in_array(ucfirst($handler->getEntity()->getName().'Overige-objecten'), $groups['tags']) ? null : $groups['tags'][] = ucfirst($handler->getEntity()->getName().'Overige-objecten');
-                $docs['x-tagGroups'][$key] = $groups;
+                $docs['x-tagGroups'][$key ?? count($docs['x-tagGroups'])] = $groups;
             }
         }
 
@@ -274,6 +274,7 @@ class OasDocumentationService
                 return $group;
             }
         }
+        $key = null;
 
         return ['name' => 'Overige objecten'];
     }
