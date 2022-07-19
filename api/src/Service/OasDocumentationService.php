@@ -60,11 +60,12 @@ class OasDocumentationService
     ];
 
     public function __construct(
-        ParameterBagInterface $params,
+        ParameterBagInterface  $params,
         EntityManagerInterface $em,
-        TranslationService $translationService,
-        HandlerService $handlerService
-    ) {
+        TranslationService     $translationService,
+        HandlerService         $handlerService
+    )
+    {
         $this->params = $params;
         $this->em = $em;
         $this->translationService = $translationService;
@@ -122,6 +123,7 @@ class OasDocumentationService
         $docs['openapi'] = '3.0.3';
         $docs['info'] = $this->getDocumentationInfo();
         $docs['tags'] = [];
+        $docs['x-tagGroups'] = [];
         /* @todo the server should include the base url */
         $docs['servers'] = [
             ['url' => 'localhost:', 'description' => 'Gateway server'],
@@ -135,7 +137,7 @@ class OasDocumentationService
         }
 
         foreach ($endpoints as $endpoint) {
-            $docs = $this->addEndpointToDocs($endpoint, $docs, $tagArray);
+            $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
         while (count($this->indirectEntities) > 0) {
@@ -154,17 +156,17 @@ class OasDocumentationService
     private function getDocumentationInfo(): array
     {
         return [
-            'title'          => $this->params->get('documentation_title'),
-            'description'    => $this->params->get('documentation_description'),
+            'title' => $this->params->get('documentation_title'),
+            'description' => $this->params->get('documentation_description'),
             'termsOfService' => $this->params->get('documentation_terms_of_service'),
-            'contact'        => [
-                'name'  => $this->params->get('documentation_contact_name'),
-                'url'   => $this->params->get('documentation_contact_url'),
+            'contact' => [
+                'name' => $this->params->get('documentation_contact_name'),
+                'url' => $this->params->get('documentation_contact_url'),
                 'email' => $this->params->get('documentation_contact_email'),
             ],
             'license' => [
                 'name' => $this->params->get('documentation_licence_name'),
-                'url'  => $this->params->get('documentation_licence_url'),
+                'url' => $this->params->get('documentation_licence_url'),
             ],
             'version' => $this->params->get('documentation_version'),
         ];
@@ -174,12 +176,12 @@ class OasDocumentationService
      * Generates an OAS3 path for a specific endpoint.
      *
      * @param Endpoint $endpoint
-     * @param array    $docs
-     * @param array    $tagArray Array with tags as string to easily prevent duplicates
+     * @param array $docs
+     * @param array $tagArray Array with tags as string to easily prevent duplicates
      *
      * @return array
      */
-    public function addEndpointToDocs(Endpoint $endpoint, array &$docs, ?array &$tagArray = []): array
+    public function addEndpointToDocs(Endpoint $endpoint, array &$docs): array
     {
         // Let's only add the main entities as root
         if (!$endpoint->getPath()) {
@@ -201,87 +203,142 @@ class OasDocumentationService
         }
 
         // Get path and loop through the array
-        $path = $endpoint->getPath();
+        $paths = $endpoint->getPath();
+        $path = implode('/', $paths);
 
         // Add the paths
-        $docs['paths']['/api/'.implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
+        $docs['paths']['/api/' . $path][$method] = $this->getEndpointMethod($method, $handler, $path);
 
         // components -> schemas
         $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
 
-        // Tags
-        !$tagArray && $tagArray = [];
+        $collection = $handler->getEntity()->getCollections()[0] ?? null;
+        if ($collection) {
+            $collectionName = preg_replace('/\s+/', '-', $collection->getName());
 
-        $entityTag = [
-            'name'        => ucfirst($handler->getEntity()->getName()),
-            'description' => (string) $endpoint->getDescription(),
-        ];
+            $tag = [
+                'name' => ucfirst($handler->getEntity()->getName()) . ' ' . $collectionName,
+                'x-displayName' => ucfirst($handler->getEntity()->getName()),
+                'description' => (string)$endpoint->getDescription(),
+            ];
 
-        $collectionTag = $this->createCollectionTagWithHandler($handler, 'collection');
+            if (!in_array($tag, $docs['tags'])) {
+                $docs['tags'][] = $tag;
+            }
 
-        if ($collectionTag && !in_array($collectionTag['name'], $tagArray)) {
-            $docs['tags'][] = $collectionTag;
-            $tagArray[] = $collectionTag['name'];
+            $groupTags = [];
+            foreach ($collection->getEntities() as $entity) {
+                $groupTags[] = ucfirst($entity->getName()) . ' ' . $collectionName;
+            }
+
+            $group = [
+                'name' => $collection->getName(),
+                'tags' => $groupTags
+            ];
+
+            if (!in_array($group, $docs['x-tagGroups'])) {
+                $docs['x-tagGroups'][] = $group;
+            }
+        } else {
+            $tag = [
+                'name' => ucfirst($handler->getEntity()->getName().'Overige-objecten'),
+                'x-displayName' => ucfirst($handler->getEntity()->getName()),
+                'description' => (string)$endpoint->getDescription(),
+            ];
+
+            if (!in_array($tag, $docs['tags'])) {
+                $docs['tags'][] = $tag;
+            }
+
+//            $groupTags = [];
+//            foreach ($handler->getEndpoints() as $endpoint) {
+//                $groupTags[] = ucfirst($endpoint->getE) . ' ' . $collectionName;
+//            }
+//
+            $group[] = ucfirst($handler->getEntity()->getName().'Overige-objecten');
+
+            if (!in_array($group, $docs['x-tagGroups'])) {
+                $key = 0;
+                $groups = $this->getOtherObjects($docs['x-tagGroups'], $key);
+                isset($groups['tags']) && in_array(ucfirst($handler->getEntity()->getName().'Overige-objecten'), $groups['tags']) ? null : $groups['tags'][] = ucfirst($handler->getEntity()->getName().'Overige-objecten');
+                $docs['x-tagGroups'][$key] = $groups;
+            }
         }
-
-        // if (!in_array($entityTag['name'], $tagArray)) {
-        //     $docs['tags'][] = $entityTag;
-        //     $tagArray[] = $entityTag['name'];
-        // }
 
         return $docs;
     }
 
-    /**
-     * Creates a tag for a Collection with a Handler.
-     *
-     * @param Handler $handler
-     * @param string  $type    Type of tag (collection or endpoint)
-     *
-     * @return array|string|null
-     */
-    public function createCollectionTagWithHandler(Handler $handler, string $type = 'collection')
+    public function getOtherObjects(array $xTagGroups, int &$key)
     {
-        $collection = $handler->getEntity()->getCollections()[0] ?? null;
-        if ($collection) {
-            switch ($type) {
-                case 'collection':
-                    return ['name' => $collection->getName(), 'description' => $collection->getDescription() ?? 'Collection'];
-                case 'endpoint':
-                    return $collection->getName();
-            }
-        }
-
-        return null;
+      foreach ($xTagGroups as $key => $group) {
+          if ($group['name'] == 'Overige objecten') {
+              return $group;
+          }
+      }
+      return ['name' => 'Overige objecten'];
     }
 
     /**
      * Gets an OAS description for a specific method.
      *
-     * @param string  $method
+     * @param string $method
      * @param Handler $handler
-     * @param bool    $item
-     *
+     * @param string $path
      * @return array
      */
-    public function getEndpointMethod(string $method, Handler $handler, bool $item): array
+    public function getEndpointMethod(string $method, Handler $handler, string $path): array
     {
-        $collectionTag = $this->createCollectionTagWithHandler($handler, 'endpoint');
-        $entityTag = ucfirst($handler->getEntity()->getName());
-        $collectionTag && $tags[] = $collectionTag;
-        // $tags[] = $entityTag;
-        if (!isset($tags)) {
-            $tags = ['NoCollection'];
+        $pathArray = explode('/', $path);
+        $methodName = null;
+        switch ($method) {
+            case 'get':
+                $methodName = [
+                    'summary' => 'Get a list of ' . strtolower($path),
+                    'summaryId' => 'Get a single ' . strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'post':
+                $methodName = [
+                    'summary' => 'Create a ' . strtolower($handler->getEntity()->getName()),
+                    'summaryId' => 'Create a ' . strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'put':
+                $methodName = [
+                    'summary' => null,
+                    'summaryId' => 'Replace a ' . strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'patch':
+                $methodName = [
+                    'summary' => 'Update a ' . strtolower($handler->getEntity()->getName()),
+                    'summaryId' => 'Update a ' . strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'delete':
+                $methodName = [
+                    'summary' => null,
+                    'summaryId' => 'Delete a ' . strtolower($pathArray[0]) . ' ' . strtolower($handler->getEntity()->getName()),
+                ];
+                break;
         }
 
-        /* @todo name should be cleaned before being used like this */
+        $collection = $handler->getEntity()->getCollections()[0] ?? null;
+        $collectionName = null;
+        if ($collection) {
+            $collectionName = preg_replace('/\s+/', '-', $collection->getName());
+        }
+
+            /* @todo name should be cleaned before being used like this */
         $methodArray = [
             'description' => $handler->getEntity()->getDescription(),
-            'operationId' => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
-            'tags'        => $tags,
-            'summary'     => $handler->getEntity()->getDescription(),
-            'parameters'  => [],
-            'responses'   => [],
+            'operationId' => str_contains($path, '{') ?
+                strtolower($path) . ' ' . $handler->getEntity()->getName() . '_' . $method.'Id' :
+                strtolower($path) . ' ' . $handler->getEntity()->getName() . '_' . $method,
+            'tags' => [$collectionName ? ucfirst($handler->getEntity()->getName()).' '.$collectionName : ucfirst($handler->getEntity()->getName().'Overige-objecten')],
+            'summary' => str_contains($path, '{') ? $methodName['summaryId'] : $methodName['summary'],
+            'parameters' => [],
+            'responses' => [],
         ];
 
         // Parameters
@@ -298,8 +355,8 @@ class OasDocumentationService
      * Gets a handler for an endpoint method combination.
      *
      * @param Handler $handler
-     * @param array   $methodArray
-     * @param string  $method
+     * @param array $methodArray
+     * @param string $method
      *
      * @return array
      */
@@ -309,7 +366,7 @@ class OasDocumentationService
         if ($response) {
             $methodArray['responses'][$response['statusCode']] = [
                 'description' => $response['description'],
-                'content'     => [],
+                'content' => [],
             ];
 
 //          $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
@@ -327,8 +384,8 @@ class OasDocumentationService
      * Gets a handler for an endpoint method combination.
      *
      * @param Handler $handler
-     * @param array   $methodArray
-     * @param string  $method
+     * @param array $methodArray
+     * @param string $method
      *
      * @return array
      */
@@ -336,7 +393,7 @@ class OasDocumentationService
     {
         //        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ['application/json']; // @todo this is a short cut, lets focus on json first */
-        if (in_array($method, ['put', 'post'])) {
+        if (in_array($method, ['patch', 'put', 'post'])) {
             foreach ($requestTypes as $requestType) {
                 $schema = $this->getRequestSchema($handler, $requestType);
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
@@ -351,7 +408,7 @@ class OasDocumentationService
      * Gets a handler for an endpoint method combination.
      *
      * @param Endpoint $endpoint
-     * @param string   $method
+     * @param string $method
      *
      * @return Handler|bool
      *
@@ -386,20 +443,27 @@ class OasDocumentationService
         switch ($method) {
             case 'get':
                 $response = [
-                    'statusCode'  => 200,
+                    'statusCode' => 200,
                     'description' => 'OK',
                 ];
                 break;
             case 'post':
                 $response = [
-                    'statusCode'  => 201,
+                    'statusCode' => 201,
                     'description' => 'Created',
                 ];
                 break;
             case 'put':
                 $response = [
-                    'statusCode'  => 202,
+                    'statusCode' => 202,
                     'description' => 'Accepted',
+                ];
+                break;
+            case 'patch':
+                //
+                $response = [
+                    'statusCode' => 200,
+                    'description' => 'OK',
                 ];
                 break;
         }
@@ -426,7 +490,7 @@ class OasDocumentationService
      * Gets an OAS description for a specific method.
      *
      * @param Handler $handler
-     * @param string  $requestType
+     * @param string $requestType
      *
      * @return array
      */
@@ -440,7 +504,7 @@ class OasDocumentationService
     /**
      * Serializes a schema (array) to standard e.g. application/json.
      *
-     * @param array  $schema
+     * @param array $schema
      * @param string $type
      * @param Entity $entity
      *
@@ -450,16 +514,16 @@ class OasDocumentationService
     {
         // Basic schema setup
         $items = [
-            'id'           => 'uuid',
-            'type'         => 'string',
-            'context'      => 'string',
-            'dateCreated'  => date('d-m-Y H:s'),
+            'id' => 'uuid',
+            'type' => 'string',
+            'context' => 'string',
+            'dateCreated' => date('d-m-Y H:s'),
             'dateModified' => date('d-m-Y H:s'),
-            'owner'        => 'string',
+            'owner' => 'string',
             'organization' => 'string',
-            'application'  => 'string',
-            'uri'          => 'string',
-            'gateway/id'   => 'string',
+            'application' => 'string',
+            'uri' => 'string',
+            'gateway/id' => 'string',
         ];
 
         // add schema properties to array
@@ -505,9 +569,9 @@ class OasDocumentationService
      * Generates the attribute objects as name and type.
      *
      * @param Entity $entity
-     * @param array  $schema
-     * @param array  $oldArray
-     * @param array  $items
+     * @param array $schema
+     * @param array $oldArray
+     * @param array $items
      *
      * @return array
      */
@@ -532,9 +596,9 @@ class OasDocumentationService
             if (key_exists('$ref', $value)) {
                 unset($oldArray[$key]['$ref']);
                 $oldArray[$key] = [
-                    'type'    => 'string',
-                    'format'  => 'uuid',
-                    'title'   => 'The uuid of the '.$key,
+                    'type' => 'string',
+                    'format' => 'uuid',
+                    'title' => 'The uuid of the ' . $key,
                     'example' => 'uuid', //@todo here the uuid of the object
                 ];
             }
@@ -547,15 +611,15 @@ class OasDocumentationService
      * Generates the attribute objects as name and type.
      *
      * @param Entity $entity
-     * @param array  $items
+     * @param array $items
      *
      * @return array
      */
     public function getJsonHalEmbeddedSchema(Entity $entity, array $items): array
     {
         $embedded['__embedded'] = [
-            'type'    => 'object',
-            'title'   => 'The parameter extend',
+            'type' => 'object',
+            'title' => 'The parameter extend',
             'example' => $this->addEmbeddedToBody($entity, $items),
         ];
 
@@ -601,7 +665,7 @@ class OasDocumentationService
         // add items to metadata
         foreach ($items as $key => $value) {
             if ($key !== 'id') {
-                $example['__'.$key] = 'string';
+                $example['__' . $key] = 'string';
             }
         }
 
@@ -663,8 +727,8 @@ class OasDocumentationService
     /**
      * Generates an OAS schema from an entity.
      *
-     * @param array  $schema
-     * @param array  $items
+     * @param array $schema
+     * @param array $items
      * @param Entity $entity
      *
      * @return array
@@ -672,16 +736,16 @@ class OasDocumentationService
     public function getJsonLdSchema(array $schema, array $items, Entity $entity): array
     {
         foreach ($items as $key => $value) {
-            $schema['properties']['@'.$key] = [
-                'type'    => 'string',
-                'title'   => 'The id of ',
+            $schema['properties']['@' . $key] = [
+                'type' => 'string',
+                'title' => 'The id of ',
                 'example' => $value,
             ];
         }
 
         $schema['properties']['@extend'] = [
-            'type'    => 'object',
-            'title'   => 'The parameter extend',
+            'type' => 'object',
+            'title' => 'The parameter extend',
             'example' => $this->getExtendProperties($entity),
         ];
 
@@ -717,17 +781,17 @@ class OasDocumentationService
         // add items to metadata
         foreach ($items as $key => $value) {
             if ($key !== 'id') {
-                $schema['properties']['__'.$key] = [
-                    'type'    => 'string',
-                    'title'   => 'The id of ',
+                $schema['properties']['__' . $key] = [
+                    'type' => 'string',
+                    'title' => 'The id of ',
                     'example' => $value,
                 ];
             }
         }
 
         $schema['properties']['__extend'] = [
-            'type'    => 'object',
-            'title'   => 'The parameter extend',
+            'type' => 'object',
+            'title' => 'The parameter extend',
             'example' => $this->getExtendProperties($entity),
         ];
 
@@ -766,15 +830,15 @@ class OasDocumentationService
      * Generates an OAS schema from an entity.
      *
      * @param Entity $entity
-     * @param array  $mapping
+     * @param array $mapping
      *
      * @return array
      */
     public function getSchema(Entity $entity, array $mapping, ?array $docs): array
     {
         $schema = [
-            'type'       => 'object',
-            'required'   => [],
+            'type' => 'object',
+            'required' => [],
             'properties' => [],
         ];
         while (in_array($entity, $this->indirectEntities)) {
@@ -789,16 +853,16 @@ class OasDocumentationService
 
             // Add id to properties
             $schema['properties']['id'] = [
-                'type'        => 'string',
-                'format'      => 'uuid',
-                'title'       => 'The id of '.$attribute->getName(),
-                'description' => 'The uuid of the '.$attribute->getName(),
+                'type' => 'string',
+                'format' => 'uuid',
+                'title' => 'The id of ' . $attribute->getName(),
+                'description' => 'The uuid of the ' . $attribute->getName(),
             ];
 
             // Add the attribute
             $schema['properties'][$attribute->getName()] = [
-                'type'        => $attribute->getType(),
-                'title'       => $attribute->getName(),
+                'type' => $attribute->getType(),
+                'title' => $attribute->getName(),
                 'description' => $attribute->getDescription(),
             ];
 
@@ -828,7 +892,7 @@ class OasDocumentationService
 //                }
 
                 $schema['properties'][$attribute->getName()] = [
-                    '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
+                    '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName())),
                 ];
                 if (!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())])) {
                     $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
@@ -838,9 +902,9 @@ class OasDocumentationService
                 continue;
             } elseif ($attribute->getObject() && !$attribute->getCascade()) {
                 $schema['properties'][$attribute->getName()] = [
-                    'type'        => 'string',
-                    'format'      => 'uuid',
-                    'description' => $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null',
+                    'type' => 'string',
+                    'format' => 'uuid',
+                    'description' => $schema['properties'][$attribute->getName()]['description'] . 'The uuid of the [' . $attribute->getObject()->getName() . ']() object that you want to link, you can unlink objects by setting this field to null',
                 ];
                 // uuids dont have validators so
                 continue;
@@ -893,8 +957,8 @@ class OasDocumentationService
      * Generates an OAS example (data) for an attribute.
      *
      * @param Attribute $attribute
-     * @param array     $mapping
-     * @param array     $schema
+     * @param array $mapping
+     * @param array $schema
      *
      * @return array
      */
@@ -920,7 +984,7 @@ class OasDocumentationService
      * Generates an OAS example (data) for an attribute.
      *
      * @param Attribute $attribute
-     * @param array     $schema
+     * @param array $schema
      * @param $last_part
      * @param $value
      *
@@ -1049,7 +1113,7 @@ class OasDocumentationService
                 break;
             case 'json':
                 $example = [
-                    'string'  => 'string',
+                    'string' => 'string',
                     'string1' => 'string1',
                 ];
                 $example = json_encode($example);
@@ -1085,32 +1149,32 @@ class OasDocumentationService
     {
         $parameters = [];
         $parameters[] = [
-            'name'        => 'start',
-            'in'          => 'query',
+            'name' => 'start',
+            'in' => 'query',
             'description' => 'The start number or offset of you list',
-            'required'    => false,
-            'style'       => 'simple',
-            'schema'      => [
+            'required' => false,
+            'style' => 'simple',
+            'schema' => [
                 'type' => 'string',
             ],
         ];
         $parameters[] = [
-            'name'        => 'limit',
-            'in'          => 'query',
+            'name' => 'limit',
+            'in' => 'query',
             'description' => 'the total items pe list/page that you want returned',
-            'required'    => false,
-            'style'       => 'simple',
-            'schema'      => [
+            'required' => false,
+            'style' => 'simple',
+            'schema' => [
                 'type' => 'string',
             ],
         ];
         $parameters[] = [
-            'name'        => 'page',
-            'in'          => 'query',
+            'name' => 'page',
+            'in' => 'query',
             'description' => 'The page that you want returned',
-            'required'    => false,
-            'style'       => 'simple',
-            'schema'      => [
+            'required' => false,
+            'style' => 'simple',
+            'schema' => [
                 'type' => 'string',
             ],
         ];
@@ -1132,14 +1196,14 @@ class OasDocumentationService
         foreach ($Entity->getAttributes() as $attribute) {
             if ($attribute->getObject()) {
                 $parameters[] = [
-                    'name'        => 'extend[] for '.$attribute->getObject()->getName(),
-                    'in'          => 'query',
+                    'name' => 'extend[] for ' . $attribute->getObject()->getName(),
+                    'in' => 'query',
                     'description' => 'The object you want to extend',
-                    'required'    => false,
-                    'style'       => 'simple',
-                    'schema'      => [
+                    'required' => $attribute->getRequired(),
+                    'style' => 'simple',
+                    'schema' => [
                         'default' => $attribute->getObject()->getName(),
-                        'type'    => 'string',
+                        'type' => 'string',
                     ],
                 ];
             }
@@ -1153,7 +1217,7 @@ class OasDocumentationService
      *
      * @param Entity $Entity
      * @param string $prefix
-     * @param int    $level
+     * @param int $level
      *
      * @return array
      */
@@ -1163,19 +1227,20 @@ class OasDocumentationService
         foreach ($Entity->getAttributes() as $attribute) {
             if (in_array($attribute->getType(), ['string', 'date', 'datetime']) and $attribute->getSearchable()) {
                 $parameters[] = [
-                    'name'        => $prefix.$attribute->getName(),
-                    'in'          => 'query',
-                    'description' => 'Search '.$prefix.$attribute->getName().' on an exact match of the string',
-                    'required'    => false,
-                    'style'       => 'simple',
-                    'schema'      => [
+                    'name' => $prefix . $attribute->getName(),
+                    'in' => 'query',
+                    'description' => 'Search ' . $prefix . $attribute->getName() . ' on an exact match of the string',
+                    'required' => $attribute->getRequired(),
+                    'style' => 'simple',
+                    'schema' => [
                         'type' => $attribute->getType() ?? 'string',
+                        'required' => $attribute->getRequired()
                     ],
                 ];
             }
 
             if ($attribute->getObject() && $level < 3) {
-                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+                $parameters = array_merge($parameters, $this->getFilterParameters($attribute->getObject(), $prefix . $attribute->getName() . '.', $level + 1));
             }
         }
 
@@ -1196,6 +1261,6 @@ class OasDocumentationService
          * it, so it capitalizes the first letter in all words separated by a space then it
          * turns and deletes all spaces.
          */
-        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9'.implode('', $dontStrip).']+/', ' ', $string))));
+        return lcfirst(str_replace(' ', '', ucwords(preg_replace('/^a-z0-9' . implode('', $dontStrip) . ']+/', ' ', $string))));
     }
 }
