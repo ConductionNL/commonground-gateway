@@ -213,7 +213,6 @@ class ConvertToGatewayService
             return $entity->getAttributeByName($propertyName);
         }, ARRAY_FILTER_USE_KEY);
 
-
         if ($entity->getExternMappingIn()) {
             $availableBody = $this->translationService->dotHydrator($availableBody, $availableBody, $entity->getExternMappingIn());
         }
