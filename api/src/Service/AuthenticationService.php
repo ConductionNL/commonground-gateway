@@ -206,9 +206,7 @@ class AuthenticationService
 
         $accessToken = json_decode($response->getBody()->getContents(), true);
 
-        $json = base64_decode(explode('.', $accessToken['access_token'])[1]);
-
-        return json_decode($json, true);
+        return $accessToken;
     }
 
     public function handleAuthenticationUrl(string $method, string $identifier, string $redirectUrl): string

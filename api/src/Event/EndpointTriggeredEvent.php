@@ -19,11 +19,11 @@ class EndpointTriggeredEvent extends Event
 //    protected bool $async = false; // todo: support async
 
     /**
-     * Construct
+     * Construct.
      *
      * @param Endpoint $endpoint
-     * @param Request $request
-     * @param array $hooks
+     * @param Request  $request
+     * @param array    $hooks
      *
      * @throws Exception
      */
@@ -34,7 +34,7 @@ class EndpointTriggeredEvent extends Event
         if (count($hooks) == count(array_intersect($hooks, $this->allowedHooks))) {
             $this->hooks = $hooks;
         } else {
-            throw new Exception("Invalid input for hooks: [".implode(', ', $hooks)."] allowed options: [".implode(', ', $this->allowedHooks)."]");
+            throw new Exception('Invalid input for hooks: ['.implode(', ', $hooks).'] allowed options: ['.implode(', ', $this->allowedHooks).']');
         }
     }
 

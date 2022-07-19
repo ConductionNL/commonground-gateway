@@ -520,9 +520,9 @@ class Entity
      *
      * @param Attribute $attribute
      *
-     * @return $this
-     *
      * @throws Exception
+     *
+     * @return $this
      */
     public function addSearchPartial(Attribute $attribute): self
     {

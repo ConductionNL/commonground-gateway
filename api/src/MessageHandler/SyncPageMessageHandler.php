@@ -33,9 +33,9 @@ class SyncPageMessageHandler implements MessageHandlerInterface
      *
      * @param SyncPageMessage $message
      *
-     * @return void
-     *
      * @throws Exception
+     *
+     * @return void
      */
     public function __invoke(SyncPageMessage $message): void
     {

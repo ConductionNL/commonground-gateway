@@ -134,7 +134,7 @@ class Attribute
      *
      * @example self
      *
-     * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified"})
+     * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", options={"default":"noFunction"})
      */
@@ -792,13 +792,14 @@ class Attribute
      * @todo docs
      *
      * @param string|null $function
-     * @return $this
      *
      * @throws Exception
+     *
+     * @return $this
      */
     public function setFunction(?string $function): self
     {
-        if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified'])) {
+        if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified', 'userName'])) {
             if ($this->getType() !== 'string' && (!str_contains($function, 'date') || !str_contains($this->getType(), 'date'))) {
                 throw new Exception('This function expects this attribute to have a different type! string or date/datetime, depending on the function (not: '.$this->getType().')');
                 // todo: or just always set the type to the correct one?
@@ -821,9 +822,9 @@ class Attribute
      *
      * @param Entity|null $searchPartial
      *
-     * @return $this
-     *
      * @throws Exception
+     *
+     * @return $this
      */
     public function setSearchPartial(?Entity $searchPartial): self
     {

@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * An entity that functions as template for sending an email.
- * todo: move this to an email plugin (see EmailSubscriber.php)
+ * todo: move this to an email plugin (see EmailSubscriber.php).
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -85,7 +85,7 @@ class EmailTemplate
 
     /**
      * @var string The Content of this EmailTemplate, for now a reference to a .htlm.twig file stored inside the gateway (see api\templates\emails).
-     * # todo find another way to configure email templates, so we don't need to add files inside the gateway
+     *             # todo find another way to configure email templates, so we don't need to add files inside the gateway
      *
      * @Gedmo\Versioned
      * @Assert\NotNull
