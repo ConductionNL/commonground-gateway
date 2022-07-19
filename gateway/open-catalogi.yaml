@@ -24,6 +24,16 @@
 #        collectionConfig:
 #            results: 'results.bindings'
 #            paginationPages: ''
+#        availableProperties:
+#            - UniformeProductnaam
+#            - Grondslaglabel
+#        externMappingIn:
+#            name: UniformeProductnaam.value
+#            grondslagLabel: Grondslaglabel.value
+##        todo: this doesn't do anything yet:
+##        externMappingOut:
+##            UniformeProductnaam.value: name
+##            Grondslaglabel.value: grondslagLabel
 #
 ## Attributes
 #App\Entity\Attribute:
@@ -33,7 +43,7 @@
 #        description: The name of this upl.
 #        type: string
 #        entity: "@upl"
-#        
+#
 #    upl_grondslagLabel:
 #        name: grondslagLabel
 #        description: The grondslagLabel of this upl.
@@ -54,7 +64,7 @@
 #        pathRegex: "^(upls)$"
 #        method: GET
 #        operationType: collection
-#    
+#
 #    uplEndpointPost:
 #        name: UPL endpoint post
 #        description: endpoint for upls
@@ -62,7 +72,7 @@
 #        pathRegex: "^(upls)$"
 #        method: POST
 #        operationType: collection
-#    
+#
 #    uplEndpointGetItem:
 #        name: UPL endpoint get item
 #        description: endpoint for upls
@@ -70,7 +80,7 @@
 #        pathRegex: <{uplItemRegex}>
 #        method: GET
 #        operationType: item
-#    
+#
 #    uplEndpointPut:
 #        name: UPL endpoint put
 #        description: endpoint for upls
@@ -78,7 +88,7 @@
 #        pathRegex: <{uplItemRegex}>
 #        method: PUT
 #        operationType: item
-#    
+#
 #    uplEndpointDelete:
 #        name: UPL endpoint delete
 #        description: endpoint for upls

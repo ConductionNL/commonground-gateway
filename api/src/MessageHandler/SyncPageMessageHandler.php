@@ -136,8 +136,10 @@ class SyncPageMessageHandler implements MessageHandlerInterface
             $externObject = $externObject[$item];
         }
         // Make sure to get id of this item from the correct place in $externObject
-        foreach ($config['collectionConfigId'] as $item) {
-            $id = $id[$item];
+        if ($id !== null) {
+            foreach ($config['collectionConfigId'] as $item) {
+                $id = $id[$item];
+            }
         }
 
         // We want to update all objects, unless specified not to, needs config option:
