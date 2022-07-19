@@ -269,13 +269,14 @@ class OasDocumentationService
 
     public function getOtherObjects(array $xTagGroups, int &$key)
     {
-      foreach ($xTagGroups as $key => $group) {
-          if ($group['name'] == 'Overige objecten') {
-              return $group;
-          }
-      }
-      $key = null;
-      return ['name' => 'Overige objecten'];
+        foreach ($xTagGroups as $key => $group) {
+            if ($group['name'] == 'Overige objecten') {
+                return $group;
+            }
+        }
+        $key = null;
+
+        return ['name' => 'Overige objecten'];
     }
 
     /**
