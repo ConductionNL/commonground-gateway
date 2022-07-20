@@ -31,6 +31,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/collections/{id}"},
+ *      "get_sync"={
+ *          "method"="GET",
+ *          "path"="/admin/collections/{id}/sync"
+ *      },
  *      "put"={"path"="/admin/collections/{id}"},
  *      "delete"={"path"="/admin/collections/{id}"}
  *  },
