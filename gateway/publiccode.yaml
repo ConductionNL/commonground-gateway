@@ -1,0 +1,15 @@
+App\Entity\CollectionEntity:
+    openCatalogiCollection:
+        name: Open Catalogi collection
+        sourceType: GitHub
+        locationOAS: https://raw.githubusercontent.com/OpenCatalogi/api/master/OAS.yaml
+        testDataLocation: https://raw.githubusercontent.com/OpenCatalogi/api/master/data/opencatalogi.json
+        loadTestData: true
+        autoLoad: true
+
+
+App\Entity\Gateway:
+    componentenCatalogus_api:
+        name: componenten catalogus
+        auth: none
+        location: https://componentencatalogus.commonground.nl/api
