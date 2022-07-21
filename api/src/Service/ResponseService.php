@@ -55,6 +55,18 @@ class ResponseService
     }
 
     /**
+     * @param ObjectEntity $objectEntity
+     * @return \DateTime
+     */
+    private function getDateRead(ObjectEntity $objectEntity): \DateTime
+    {
+        $user = $this->security->getUser();
+
+        // todo: use sql to find last get item log of the current user for the given object.
+        $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity, $user->getUserIdentifier());
+    }
+
+    /**
      * Filters fields that should not be displayed.
      *
      * @param array        $response      The full response

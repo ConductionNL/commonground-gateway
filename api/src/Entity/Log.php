@@ -210,6 +210,17 @@ class Log
     private $responseContent;
 
     /**
+     * @var string The user that did the request.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $user;
+
+    /**
      * @var string The session of this Log.
      *
      * @Assert\NotNull
@@ -281,10 +292,10 @@ class Log
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
      * @MaxDepth(1)
      */
-    private $handler;
+    private $object;
 
     /**
      * @var Datetime The moment this resource was created
@@ -465,6 +476,18 @@ class Log
         return $this;
     }
 
+    public function getUser(): ?string
+    {
+        return $this->user;
+    }
+
+    public function setUser(string $user): self
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
     public function getSession(): ?string
     {
         return $this->session;
@@ -557,6 +580,18 @@ class Log
     public function setGateway(?Gateway $gateway): self
     {
         $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getObject(): ?ObjectEntity
+    {
+        return $this->object;
+    }
+
+    public function setObject(?ObjectEntity $object): self
+    {
+        $this->object = $object;
 
         return $this;
     }

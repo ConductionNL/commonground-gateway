@@ -8,6 +8,7 @@ use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 class LogService
@@ -15,15 +16,18 @@ class LogService
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private Stopwatch $stopwatch;
+    private Security $security;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         SessionInterface $session,
-        Stopwatch $stopwatch
+        Stopwatch $stopwatch,
+        Security $security
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->stopwatch = $stopwatch;
+        $this->security = $security;
     }
 
     /**
@@ -111,6 +115,14 @@ class LogService
             }
             $callLog->setHandler(!empty($handler) ? $handler : null);
             $this->stopwatch->stop('setHandler(getHandlerFromSession)'.$stopWatchNumber);
+
+            if ($this->session->get('object')) {
+                $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => $this->session->get('object')]);
+            }
+            $callLog->setObject(!empty($object) ? $object : null);
+
+            $user = $this->security->getUser();
+            $callLog->setUser($user->getUserIdentifier());
 
             // remove before setting the session values
 //            if ($finalSave === true) {
