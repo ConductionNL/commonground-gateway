@@ -485,12 +485,12 @@ class ConvertToGatewayService
                 break;
             case 'date':
             case 'datetime':
-            try {
-                new DateTime($value);
-            } catch (Exception $e) {
-//                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
-                $value = null;
-            }
+                try {
+                    new DateTime($value);
+                } catch (Exception $e) {
+    //                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+                    $value = null;
+                }
             break;
             case 'boolean':
                 if (!is_bool($value)) {
