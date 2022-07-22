@@ -210,7 +210,7 @@ class Log
     private $responseContent;
 
     /**
-     * @var string The user that did the request.
+     * @var string The userId of the user that did the request.
      *
      * @Assert\Length(
      *     max = 255
@@ -218,7 +218,7 @@ class Log
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $user;
+    private $userId;
 
     /**
      * @var string The session of this Log.
@@ -476,14 +476,14 @@ class Log
         return $this;
     }
 
-    public function getUser(): ?string
+    public function getUserId(): ?string
     {
-        return $this->user;
+        return $this->userId;
     }
 
-    public function setUser(string $user): self
+    public function setUserId(?string $userId): self
     {
-        $this->user = $user;
+        $this->userId = $userId;
 
         return $this;
     }

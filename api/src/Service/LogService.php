@@ -122,7 +122,7 @@ class LogService
             $callLog->setObject(!empty($object) ? $object : null);
 
             $user = $this->security->getUser();
-            $callLog->setUser($user->getUserIdentifier());
+            $callLog->setUserId($user !== null ? $user->getUserIdentifier() : null);
 
             // remove before setting the session values
 //            if ($finalSave === true) {

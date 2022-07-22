@@ -21,7 +21,7 @@ class LogRepository extends ServiceEntityRepository
     }
 
     /**
-     * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log.
+     * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log. (and only logs where response was a 200)
      *
      * @param ObjectEntity $objectEntity
      * @param string $userId
@@ -32,7 +32,7 @@ class LogRepository extends ServiceEntityRepository
     {
         $query = $this->createQueryBuilder('l')
             ->leftJoin('l.endpoint', 'e')
-            ->where('l.entity = :entity AND l.responseStatusCode = :responseStatusCode AND l.user = :userId')
+            ->where('l.entity = :entity AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
             ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
             ->setParameters(['entity' => $objectEntity->getEntity(), 'responseStatusCode' => 200, 'userId' => $userId, 'method' => 'get', 'operationType' => 'item'])
             ->orderBy('l.dateCreated', 'DESC')

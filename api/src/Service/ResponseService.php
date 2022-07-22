@@ -6,10 +6,12 @@ use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
+use App\Entity\Log;
 use App\Entity\ObjectEntity;
 use App\Entity\RequestLog;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -42,6 +44,7 @@ class ResponseService
     }
 
     // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
+    // todo if we do this^ maybe move the getDateRead function to ObjectEntityService as well
     private function checkOwner(ObjectEntity $result): bool
     {
         // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
@@ -55,15 +58,25 @@ class ResponseService
     }
 
     /**
+     * Get the last date read for the given ObjectEntity, for the current user. (uses sql to search in logs)
+     *
      * @param ObjectEntity $objectEntity
-     * @return \DateTime
+     * @return DateTimeInterface|null
      */
-    private function getDateRead(ObjectEntity $objectEntity): \DateTime
+    private function getDateRead(ObjectEntity $objectEntity): ?DateTimeInterface
     {
         $user = $this->security->getUser();
+        if ($user === null) {
+            return null;
+        }
 
-        // todo: use sql to find last get item log of the current user for the given object.
+        // Use sql to find last get item log of the current user for the given object.
         $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity, $user->getUserIdentifier());
+
+        if (!empty($logs) and $logs[0] instanceof Log) {
+            return $logs[0]->getDateCreated();
+        }
+        return null;
     }
 
     /**
@@ -263,7 +276,7 @@ class ResponseService
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
-        $gatewayContext['@dateRead'] = null;
+        $gatewayContext['@dateRead'] = $this->getDateRead($result);
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
         $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
@@ -312,7 +325,7 @@ class ResponseService
             '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
             '_dateCreated'  => $result->getDateCreated(),
             '_dateModified' => $result->getDateModified(),
-            '_dateRead'     => null,
+            '_dateRead'     => $this->getDateRead($result),
             '_owner'        => $result->getOwner(),
             '_organization' => $result->getOrganization(),
             '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
