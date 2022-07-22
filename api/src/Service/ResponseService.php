@@ -404,20 +404,16 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-//                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
-//                    $object = $valueObject->getValue();
-//                    if ($attribute->getMultiple()) {
-//
-//                    } else {
-//                        if ($acceptType === 'jsonld') {
-//                            $response[$attribute->getName()] = [
-//                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-//                            ];
-//                        }
-//                        $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-//                    }
-//                    continue;
-//                }
+                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
+                    $object = $valueObject->getValue();
+                    if ($acceptType === 'jsonld') {
+                        $response[$attribute->getName()] = [
+                            '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                        ];
+                    }
+                    $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+                    continue;
+                }
 
                 // Let's deal with subFields filtering
                 $subFields = null;
@@ -445,8 +441,7 @@ class ResponseService
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
                 $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
-                if (is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects) &&
-                    ($attribute->getExtend() === true || (is_array($extend) && (array_key_exists('all', $extend) || array_key_exists($attribute->getName(), $extend))))) {
+                if (is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects)) {
                     $embedded = $renderObjects['renderObjectsEmbedded'];
                 }
 
