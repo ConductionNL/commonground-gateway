@@ -122,6 +122,7 @@ class OasDocumentationService
         $docs['openapi'] = '3.0.3';
         $docs['info'] = $this->getDocumentationInfo();
         $docs['tags'] = [];
+        $docs['x-tagGroups'] = [];
         /* @todo the server should include the base url */
         $docs['servers'] = [
             ['url' => 'localhost:', 'description' => 'Gateway server'],
@@ -135,7 +136,7 @@ class OasDocumentationService
         }
 
         foreach ($endpoints as $endpoint) {
-            $docs = $this->addEndpointToDocs($endpoint, $docs, $tagArray);
+            $docs = $this->addEndpointToDocs($endpoint, $docs);
         }
 
         while (count($this->indirectEntities) > 0) {
@@ -179,7 +180,7 @@ class OasDocumentationService
      *
      * @return array
      */
-    public function addEndpointToDocs(Endpoint $endpoint, array &$docs, ?array &$tagArray = []): array
+    public function addEndpointToDocs(Endpoint $endpoint, array &$docs): array
     {
         // Let's only add the main entities as root
         if (!$endpoint->getPath()) {
@@ -201,58 +202,81 @@ class OasDocumentationService
         }
 
         // Get path and loop through the array
-        $path = $endpoint->getPath();
+        $paths = $endpoint->getPath();
+        $path = implode('/', $paths);
 
         // Add the paths
-        $docs['paths']['/api/'.implode('/', $path)][$method] = $this->getEndpointMethod($method, $handler, true);
+        $docs['paths']['/api/'.$path][$method] = $this->getEndpointMethod($method, $handler, $path);
 
         // components -> schemas
         $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
 
-        // Tags
-        !$tagArray && $tagArray = [];
+        $collection = $handler->getEntity()->getCollections()[0] ?? null;
+        if ($collection) {
+            $collectionName = preg_replace('/\s+/', '-', $collection->getName());
 
-        $entityTag = [
-            'name'        => ucfirst($handler->getEntity()->getName()),
-            'description' => (string) $endpoint->getDescription(),
-        ];
+            $tag = [
+                'name'          => ucfirst($handler->getEntity()->getName()).' '.$collectionName,
+                'x-displayName' => ucfirst($handler->getEntity()->getName()),
+                'description'   => (string) $endpoint->getDescription(),
+            ];
 
-        $collectionTag = $this->createCollectionTagWithHandler($handler, 'collection');
+            if (!in_array($tag, $docs['tags'])) {
+                $docs['tags'][] = $tag;
+            }
 
-        if ($collectionTag && !in_array($collectionTag['name'], $tagArray)) {
-            $docs['tags'][] = $collectionTag;
-            $tagArray[] = $collectionTag['name'];
+            $groupTags = [];
+            foreach ($collection->getEntities() as $entity) {
+                $groupTags[] = ucfirst($entity->getName()).' '.$collectionName;
+            }
+
+            $group = [
+                'name' => $collection->getName(),
+                'tags' => $groupTags,
+            ];
+
+            if (!in_array($group, $docs['x-tagGroups'])) {
+                $docs['x-tagGroups'][] = $group;
+            }
+        } else {
+            $tag = [
+                'name'          => ucfirst($handler->getEntity()->getName().'Overige-objecten'),
+                'x-displayName' => ucfirst($handler->getEntity()->getName()),
+                'description'   => (string) $endpoint->getDescription(),
+            ];
+
+            if (!in_array($tag, $docs['tags'])) {
+                $docs['tags'][] = $tag;
+            }
+
+//            $groupTags = [];
+//            foreach ($handler->getEndpoints() as $endpoint) {
+//                $groupTags[] = ucfirst($endpoint->getE) . ' ' . $collectionName;
+//            }
+//
+            $group[] = ucfirst($handler->getEntity()->getName().'Overige-objecten');
+
+            if (!in_array($group, $docs['x-tagGroups'])) {
+                $key = 0;
+                $groups = $this->getOtherObjects($docs['x-tagGroups'], $key);
+                isset($groups['tags']) && in_array(ucfirst($handler->getEntity()->getName().'Overige-objecten'), $groups['tags']) ? null : $groups['tags'][] = ucfirst($handler->getEntity()->getName().'Overige-objecten');
+                $docs['x-tagGroups'][$key ?? count($docs['x-tagGroups'])] = $groups;
+            }
         }
-
-        // if (!in_array($entityTag['name'], $tagArray)) {
-        //     $docs['tags'][] = $entityTag;
-        //     $tagArray[] = $entityTag['name'];
-        // }
 
         return $docs;
     }
 
-    /**
-     * Creates a tag for a Collection with a Handler.
-     *
-     * @param Handler $handler
-     * @param string  $type    Type of tag (collection or endpoint)
-     *
-     * @return array|string|null
-     */
-    public function createCollectionTagWithHandler(Handler $handler, string $type = 'collection')
+    public function getOtherObjects(array $xTagGroups, int &$key)
     {
-        $collection = $handler->getEntity()->getCollections()[0] ?? null;
-        if ($collection) {
-            switch ($type) {
-                case 'collection':
-                    return ['name' => $collection->getName(), 'description' => $collection->getDescription() ?? 'Collection'];
-                case 'endpoint':
-                    return $collection->getName();
+        foreach ($xTagGroups as $key => $group) {
+            if ($group['name'] == 'Overige objecten') {
+                return $group;
             }
         }
+        $key = null;
 
-        return null;
+        return ['name' => 'Overige objecten'];
     }
 
     /**
@@ -260,28 +284,63 @@ class OasDocumentationService
      *
      * @param string  $method
      * @param Handler $handler
-     * @param bool    $item
+     * @param string  $path
      *
      * @return array
      */
-    public function getEndpointMethod(string $method, Handler $handler, bool $item): array
+    public function getEndpointMethod(string $method, Handler $handler, string $path): array
     {
-        $collectionTag = $this->createCollectionTagWithHandler($handler, 'endpoint');
-        $entityTag = ucfirst($handler->getEntity()->getName());
-        $collectionTag && $tags[] = $collectionTag;
-        // $tags[] = $entityTag;
-        if (!isset($tags)) {
-            $tags = ['NoCollection'];
+        $pathArray = explode('/', $path);
+        $methodName = null;
+        switch ($method) {
+            case 'get':
+                $methodName = [
+                    'summary'   => 'Get a list of '.strtolower($path),
+                    'summaryId' => 'Get a single '.strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'post':
+                $methodName = [
+                    'summary'   => 'Create a '.strtolower($handler->getEntity()->getName()),
+                    'summaryId' => 'Create a '.strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'put':
+                $methodName = [
+                    'summary'   => null,
+                    'summaryId' => 'Replace a '.strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'patch':
+                $methodName = [
+                    'summary'   => 'Update a '.strtolower($handler->getEntity()->getName()),
+                    'summaryId' => 'Update a '.strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+            case 'delete':
+                $methodName = [
+                    'summary'   => null,
+                    'summaryId' => 'Delete a '.strtolower($pathArray[0]).' '.strtolower($handler->getEntity()->getName()),
+                ];
+                break;
+        }
+
+        $collection = $handler->getEntity()->getCollections()[0] ?? null;
+        $collectionName = null;
+        if ($collection) {
+            $collectionName = preg_replace('/\s+/', '-', $collection->getName());
         }
 
         /* @todo name should be cleaned before being used like this */
         $methodArray = [
             'description' => $handler->getEntity()->getDescription(),
-            'operationId' => $item ? $handler->getEntity()->getName().'_'.$method.'Id' : $handler->getEntity()->getName().'_'.$method,
-            'tags'        => $tags,
-            'summary'     => $handler->getEntity()->getDescription(),
-            'parameters'  => [],
-            'responses'   => [],
+            'operationId' => str_contains($path, '{') ?
+                strtolower($path).' '.$handler->getEntity()->getName().'_'.$method.'Id' :
+                strtolower($path).' '.$handler->getEntity()->getName().'_'.$method,
+            'tags'       => [$collectionName ? ucfirst($handler->getEntity()->getName()).' '.$collectionName : ucfirst($handler->getEntity()->getName().'Overige-objecten')],
+            'summary'    => str_contains($path, '{') ? $methodName['summaryId'] : $methodName['summary'],
+            'parameters' => [],
+            'responses'  => [],
         ];
 
         // Parameters
@@ -336,7 +395,7 @@ class OasDocumentationService
     {
         //        $requestTypes = ["application/json","application/xml","application/yaml"];
         $requestTypes = ['application/json']; // @todo this is a short cut, lets focus on json first */
-        if (in_array($method, ['put', 'post'])) {
+        if (in_array($method, ['patch', 'put', 'post'])) {
             foreach ($requestTypes as $requestType) {
                 $schema = $this->getRequestSchema($handler, $requestType);
                 $methodArray['requestBody']['content'][$requestType]['schema'] = $schema;
@@ -400,6 +459,13 @@ class OasDocumentationService
                 $response = [
                     'statusCode'  => 202,
                     'description' => 'Accepted',
+                ];
+                break;
+            case 'patch':
+                //
+                $response = [
+                    'statusCode'  => 200,
+                    'description' => 'OK',
                 ];
                 break;
         }
@@ -1135,7 +1201,7 @@ class OasDocumentationService
                     'name'        => 'extend[] for '.$attribute->getObject()->getName(),
                     'in'          => 'query',
                     'description' => 'The object you want to extend',
-                    'required'    => false,
+                    'required'    => $attribute->getRequired(),
                     'style'       => 'simple',
                     'schema'      => [
                         'default' => $attribute->getObject()->getName(),
@@ -1166,10 +1232,11 @@ class OasDocumentationService
                     'name'        => $prefix.$attribute->getName(),
                     'in'          => 'query',
                     'description' => 'Search '.$prefix.$attribute->getName().' on an exact match of the string',
-                    'required'    => false,
+                    'required'    => $attribute->getRequired(),
                     'style'       => 'simple',
                     'schema'      => [
-                        'type' => $attribute->getType() ?? 'string',
+                        'type'     => $attribute->getType() ?? 'string',
+                        'required' => $attribute->getRequired(),
                     ],
                 ];
             }
