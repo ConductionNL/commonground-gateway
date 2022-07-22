@@ -378,6 +378,13 @@ class ResponseService
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
                 if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
+                    $object = $valueObject->getValue();
+                    if ($acceptType === 'jsonld') {
+                        $response[$attribute->getName()] = [
+                            '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                        ];
+                    }
+                    $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
                     continue;
                 }
 

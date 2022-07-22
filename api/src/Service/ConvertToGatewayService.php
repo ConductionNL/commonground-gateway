@@ -26,8 +26,9 @@ class ConvertToGatewayService
     private FunctionService $functionService;
     private LogService $logService;
     private MessageBusInterface $messageBus;
+    private TranslationService $translationService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->em = $entityManager;
@@ -36,6 +37,7 @@ class ConvertToGatewayService
         $this->functionService = $functionService;
         $this->logService = $logService;
         $this->messageBus = $messageBus;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -59,16 +61,11 @@ class ConvertToGatewayService
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
         $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
-
         $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getGateway()->getHeaders(), false, 'GET');
-        if (is_array($response)) {
-//            var_dump('callService error: '.$response); //Throw error? //todo?
-        }
-
         // Now get the total amount of pages from the correct place in the response
         $amountOfPages = json_decode($response->getBody()->getContents(), true);
         foreach ($collectionConfigPaginationPages as $item) {
-            $amountOfPages = $amountOfPages[$item];
+            $amountOfPages = $amountOfPages[$item] ?? 1;
         }
         if (!is_int($amountOfPages)) {
             $matchesCount = preg_match('/\?page=([0-9]+)/', $amountOfPages, $matches);
@@ -158,7 +155,6 @@ class ConvertToGatewayService
 //            var_dump('No url or gateway+endpoint');
             return null; //Or false or error? //todo?
         }
-
         // If we have no $body we should use id to look for an extern object, if it exists get it and convert it to ObjectEntity in the gateway
         if (!$body) {
             if (!$id) {
@@ -190,10 +186,15 @@ class ConvertToGatewayService
                 }
             }
         } elseif (!$id) {
-            $id = $body;
-            $itemConfigEnvelope = explode('.', $entity->getCollectionConfig()['id']);
-            foreach ($itemConfigEnvelope as $item) {
-                $id = $id[$item];
+            if (array_key_exists('id', $entity->getCollectionConfig())) {
+                $id = $body;
+                $itemConfigEnvelope = explode('.', $entity->getCollectionConfig()['id']);
+                foreach ($itemConfigEnvelope as $item) {
+                    $id = $id[$item];
+                }
+            } else {
+                // todo: use another way to find the extern object by a primary key other than id. (maybe multiple fields together)
+                $id = 'ThisObjectHasNoExternalId';
             }
         }
 
@@ -206,15 +207,21 @@ class ConvertToGatewayService
             return $entity->getAttributeByName($propertyName);
         }, ARRAY_FILTER_USE_KEY);
 
+        if ($entity->getExternMappingIn()) {
+            $availableBody = $this->translationService->dotHydrator($availableBody, $availableBody, $entity->getExternMappingIn());
+        }
+
         // These following if check has no effect if this function (convertToGatewayObject) is called from the (old) ValidationService. Because there we already checked if an ObjectEntity exists with the given id and if so, this convertToGatewayObject function is never called!
         // Check if there already exists an objectEntity with this id as externalId
         if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
             $object = new ObjectEntity();
             $object->setEntity($entity);
 
-            // Set the externalId, uri, organization and application.
-            $object->setExternalId($id);
-            $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+            // Set the externalId & uri if we have an externalId.
+            if ($id !== 'ThisObjectHasNoExternalId') {
+                $object->setExternalId($id);
+                $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+            }
         }
         if (!is_null($subresourceOf)) {
             $object->addSubresourceOf($subresourceOf);
@@ -264,7 +271,6 @@ class ConvertToGatewayService
 //        if ($object->getHasErrors()) {
 //            var_dump($object->getErrors());
 //        }
-
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
@@ -272,6 +278,10 @@ class ConvertToGatewayService
 //            var_dump('persist and flush');
             // todo: set owner with: $this->objectEntityService->handleOwner($newObject); // Do this after all CheckAuthorization function calls
             $this->em->persist($object);
+            if ($id === 'ThisObjectHasNoExternalId' || !$object->getUri()) {
+                $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
+                $object->setUri($uri.'/admin/object_entities/'.$object->getId());
+            }
             $this->em->flush(); // Needed here! read comment above if statement!
             $this->functionService->removeResultFromCache($object);
             $this->notify($object, 'Create'); // TODO: use promises instead of this function?
@@ -380,7 +390,6 @@ class ConvertToGatewayService
                     $newObject->getValueByAttribute($attribute)->setValue(null);
                     continue;
                 }
-
                 // Check for array of unique items TODO: is setting it to null the correct solution here?
                 if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
                     // TODOmaybe:check this in another way so all kinds of arrays work with it.
@@ -479,10 +488,10 @@ class ConvertToGatewayService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-//                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+    //                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
                     $value = null;
                 }
-                break;
+            break;
             case 'boolean':
                 if (!is_bool($value)) {
                     $value = null;
