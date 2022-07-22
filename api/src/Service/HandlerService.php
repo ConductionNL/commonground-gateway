@@ -628,10 +628,9 @@ class HandlerService
      * Gets a handler for an endpoint method combination.
      *
      * @param Endpoint $endpoint
-     * @param string $method
+     * @param string   $method
      *
      * @return Handler|bool
-     *
      */
     public function getHandler(Endpoint $endpoint, string $method)
     {
