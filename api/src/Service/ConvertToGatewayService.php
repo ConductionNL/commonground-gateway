@@ -61,12 +61,7 @@ class ConvertToGatewayService
         $component = $this->gatewayService->gatewayToArray($entity->getGateway());
         $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
         $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
-
         $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getGateway()->getHeaders(), false, 'GET');
-        if (is_array($response)) {
-//            var_dump('callService error: '.$response); //Throw error? //todo?
-        }
-
         // Now get the total amount of pages from the correct place in the response
         $amountOfPages = json_decode($response->getBody()->getContents(), true);
         foreach ($collectionConfigPaginationPages as $item) {
@@ -160,7 +155,6 @@ class ConvertToGatewayService
 //            var_dump('No url or gateway+endpoint');
             return null; //Or false or error? //todo?
         }
-
         // If we have no $body we should use id to look for an extern object, if it exists get it and convert it to ObjectEntity in the gateway
         if (!$body) {
             if (!$id) {
@@ -277,7 +271,6 @@ class ConvertToGatewayService
 //        if ($object->getHasErrors()) {
 //            var_dump($object->getErrors());
 //        }
-
         // For in the rare case that a body contains the same uuid of an extern object more than once we need to persist and flush this ObjectEntity in the gateway.
         // Because if we do not do this, multiple ObjectEntities will be created for the same extern object.
         // Or if we run convertEntityObjects and multiple extern objects have the same (not yet in gateway) subresource.
@@ -397,7 +390,6 @@ class ConvertToGatewayService
                     $newObject->getValueByAttribute($attribute)->setValue(null);
                     continue;
                 }
-
                 // Check for array of unique items TODO: is setting it to null the correct solution here?
                 if ($attribute->getUniqueItems() && count(array_filter(array_keys($value), 'is_string')) == 0) {
                     // TODOmaybe:check this in another way so all kinds of arrays work with it.
@@ -496,10 +488,10 @@ class ConvertToGatewayService
                 try {
                     new DateTime($value);
                 } catch (Exception $e) {
-//                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
+    //                    'Expects '.$attribute->getType().' (ISO 8601 datetime standard), failed to parse string to DateTime. ('.$value.')'
                     $value = null;
                 }
-                break;
+            break;
             case 'boolean':
                 if (!is_bool($value)) {
                     $value = null;
