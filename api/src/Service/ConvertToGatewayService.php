@@ -520,6 +520,7 @@ class ConvertToGatewayService
         if ($attribute->getFormat() != null) {
             // todo? validate / check AttributeFormat ?
         }
+
         return $value;
     }
 

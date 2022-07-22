@@ -75,10 +75,9 @@ class TranslationService
                 $search = trim($searches[0]);
                 $format = trim($searches[1]);
             }
-            if(isset($source[$search]['@xsi:nil'])) {
+            if (isset($source[$search]['@xsi:nil'])) {
                 unset($destination[$search]);
-            }
-            elseif (!isset($format)) {
+            } elseif (!isset($format)) {
                 // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
                 $destination[$replace] = $source[$search] ?? ($destination[$replace]) ?? null;
                 unset($destination[$search]);
@@ -100,7 +99,7 @@ class TranslationService
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
                 $destination[$replace] = $sourceSub;
-            } elseif($format = 'date') {
+            } elseif ($format = 'date') {
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
             }
