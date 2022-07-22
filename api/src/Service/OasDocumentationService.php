@@ -211,7 +211,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets a handler for an endpoint method combination.
+     * This function adds the groups and tags to the schema
      *
      * @param Handler  $handler
      * @param Endpoint $endpoint
@@ -250,7 +250,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets a handler for an endpoint method combination.
+     * This function returns the tags
      *
      * @param Handler  $handler
      * @param Endpoint $endpoint
@@ -268,7 +268,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets a handler for an endpoint method combination.
+     * This function returns the collection group tags
      *
      * @param CollectionEntity $collection
      * @param string           $collectionName
@@ -288,7 +288,14 @@ class OasDocumentationService
         ];
     }
 
-    public function getOtherObjects(array $xTagGroups, int &$key)
+    /**
+     * This function gets the other objects
+     *
+     * @param array $xTagGroups
+     * @param int $key
+     * @return array
+     */
+    public function getOtherObjects(array $xTagGroups, int &$key): array
     {
         foreach ($xTagGroups as $key => $group) {
             if ($group['name'] == 'Overige objecten') {
@@ -301,7 +308,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an OAS description for a specific method.
+     * This function returns a summary
      *
      * @param string  $method
      * @param Handler $handler
@@ -350,7 +357,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an OAS description for a specific method.
+     * This function returns the method array
      *
      * @param string  $method
      * @param Handler $handler
@@ -381,7 +388,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an OAS description for a specific method.
+     * This function returns the endpoint method
      *
      * @param string  $method
      * @param Handler $handler
@@ -399,7 +406,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets a handler for an endpoint method combination.
+     * This function returns the response
      *
      * @param Handler $handler
      * @param array   $methodArray
@@ -428,7 +435,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets a handler for an endpoint method combination.
+     * This function returns the request
      *
      * @param Handler $handler
      * @param array   $methodArray
@@ -493,7 +500,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an OAS description for a specific method.
+     * This function returns the serialized response schema
      *
      * @param Handler $handler
      * @param $responseType
@@ -508,7 +515,7 @@ class OasDocumentationService
     }
 
     /**
-     * Gets an OAS description for a specific method.
+     * This function returns the serialized request schema
      *
      * @param Handler $handler
      * @param string  $requestType
@@ -592,7 +599,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates the attribute objects as name and type.
+     * This function returns a json-hal schema
      *
      * @param Entity $entity
      * @param array  $schema
@@ -610,7 +617,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates the attribute objects as name and type.
+     * This function changes the object to an uuid
      *
      * @param array $oldArray
      *
@@ -634,7 +641,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates the attribute objects as name and type.
+     * This function returns a json-hal embedded array
      *
      * @param Entity $entity
      * @param array  $items
@@ -659,7 +666,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates the attribute objects as name and type.
+     * This function adds the properties to metadata
      *
      * @param $attributes
      *
@@ -751,7 +758,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates an OAS schema from an entity.
+     * This function returns a json-ld schema
      *
      * @param array  $schema
      * @param array  $items
@@ -785,7 +792,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates an OAS schema from an entity.
+     * This function adds the properties to metadata
      *
      * @param array $schema
      * @param $items
@@ -831,7 +838,7 @@ class OasDocumentationService
     }
 
     /**
-     * Generates an OAS schema from an entity.
+     * This function returns the links array
      *
      * @param array $schema
      * @param array $schemaProperties
