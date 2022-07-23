@@ -551,12 +551,16 @@ class Value
                         return $this;
                     }
                     $this->files->clear();
+                    // Set a string reprecentation of the object
+                    $this->stringValue = $value->getId();
                     return $this->addFile($value);
                 case 'object':
                     if ($value === null) {
                         return $this;
                     }
                     $this->objects->clear();
+                    // Set a string reprecentation of the object
+                    $this->stringValue = $value->getId();
                     return $this->addObject($value);
                 case 'array':
                     return $this->setArrayValue($value);
