@@ -351,11 +351,11 @@ class ObjectEntityService
         $this->session->set('entitySource', $sessionInfo);
         $this->stopwatch->stop('saveEntity+SourceInSession');
 
-        // Check ID
+        // Get filters from query parameters
         $this->stopwatch->start('getFilterFromParameters', 'handleObject');
         $filters = $this->getFilterFromParameters();
-
         $this->stopwatch->stop('getFilterFromParameters');
+
         array_key_exists('id', ($filters)) && $id = $filters['id'];
         !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
@@ -407,6 +407,10 @@ class ObjectEntityService
         $this->stopwatch->start('getRequestExtend', 'handleObject');
         $extend = $this->eavService->getRequestExtend($this->request);
         $this->stopwatch->stop('getRequestExtend');
+
+        // Check for dateRead query parameter
+        $dateRead = $this->request->query->get('dateRead');
+        $fields['dateRead'] = $dateRead ?? false; // Use fields array for this, will be removed from the array later
 
         switch ($method) {
             case 'GET':
