@@ -372,6 +372,8 @@ class Value
 
         $this->simpleArrayValue = $outputArray;
 
+        $this->stringValue = !empty($this->simpleArrayValue) ? implode(',',$this->simpleArrayValue) : null;
+
         return $this;
     }
 
@@ -622,7 +624,6 @@ class Value
                     if (count($objects) == 0) {
                         return null;
                     }
-
                     return $objects;
                 default:
                     throw new \UnexpectedValueException("Could not return a value for the attribute type of: ".$this->getAttribute()->getType());
