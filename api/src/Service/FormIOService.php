@@ -410,6 +410,7 @@ class FormIOService
         $formIOArray['entity'] = $entity->getName();
 
         $formIOArray['custom']['readOnly'] = $readOnlyArray;
+
         return $formIOArray;
     }
 }
