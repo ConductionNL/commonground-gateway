@@ -410,7 +410,8 @@ class ObjectEntityService
 
         // Check for dateRead query parameter
         $dateRead = $this->request->query->get('dateRead');
-        $fields['dateRead'] = $dateRead === 'true'; // Use fields array for this, will be removed from the array later
+        // Use fields array to store this dateRead value for now, will be removed from the array later.
+        $fields['dateRead'] = $method !== 'POST' && $dateRead === 'true';
 
         switch ($method) {
             case 'GET':
