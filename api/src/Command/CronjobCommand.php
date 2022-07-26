@@ -1,0 +1,73 @@
+<?php
+
+// src/Command/CreateUserCommand.php
+
+namespace App\Command;
+
+use App\Event\ActionEvent;
+use Cron\CronExpression;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
+class CronjobCommand extends Command
+{
+    // the name of the command (the part after "bin/console")
+    protected static $defaultName = 'cronjob:command';
+    private EntityManagerInterface $entityManager;
+    private EventDispatcherInterface $eventDispatcher;
+
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        EventDispatcher $eventDispatcher
+    )
+    {
+        $this->entityManager = $entityManager;
+        $this->eventDispatcher = $eventDispatcher;
+
+        parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this
+            // the short description shown while running "php bin/console list"
+            ->setDescription('Creates a the OAS files for EAV entities.')
+
+            // the full command description shown when running the command with
+            // the "--help" option
+            ->setHelp('This command allows you to create a OAS files for your EAV entities');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+
+        $cronjobs = $this->entityManager->getRepository("App:CronJob")->getRunnableCronjobs();
+
+        foreach($cronjobs as $cronjob){
+            foreach($cronjob->getTriggers() as $trigger) {
+                $actionEvent = new ActionEvent($trigger, ($cronjob->getData()));
+                $this->eventDispatcher->dispatch($actionEvent, 'commongateway.handler.pre');
+
+                // Get crontab expression and set the nextRun property
+                // Save cronjob in the database
+//                $crontab = $cronjob->getCrontab()->getNextRunDate();
+//                $nextRun = CronExpression::
+            }
+        }
+
+        return Command::SUCCESS;
+
+        // or return this if some error happened during the execution
+        // (it's equivalent to returning int(1))
+        // return Command::FAILURE;
+
+        // or return this to indicate incorrect command usage; e.g. invalid options
+        // or missing arguments (it's equivalent to returning int(2))
+        // return Command::INVALID
+    }
+}
