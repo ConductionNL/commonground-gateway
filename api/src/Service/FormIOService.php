@@ -302,7 +302,7 @@ class FormIOService
         $component['placeholder'] = $attr->getExample() ?? '';
         $component['unique'] = $attr->getMustBeUnique() ?? '';
         $attr->getReadOnly() !== null && $component['disabled'] = true;
-        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'].+' (read only)';
+        $attr->getReadOnly() !== null && $attr->getReadOnly() == true && $component['label'] .= ' (read only)';
 
         $component['validate'] = [
             'required'      => $attr->getRequired() ?? false,
