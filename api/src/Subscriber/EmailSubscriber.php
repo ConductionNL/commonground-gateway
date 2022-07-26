@@ -164,6 +164,7 @@ class EmailSubscriber implements EventSubscriberInterface
      */
     public function handleEvent(ActionEvent $event): ActionEvent
     {
+        return $event;
         // Find EmailTriggers by Endpoint
         $emailTriggers = $this->emailTriggerRepository->findByEndpoint($event->getEndpoint());
         foreach ($emailTriggers as $emailTrigger) {
