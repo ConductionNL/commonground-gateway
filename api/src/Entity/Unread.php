@@ -68,7 +68,6 @@ class Unread
     private $userId;
 
     /**
-     *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
      * @ORM\JoinColumn(nullable=false)

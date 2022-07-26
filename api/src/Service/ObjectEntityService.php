@@ -1431,7 +1431,7 @@ class ObjectEntityService
      * try and render/use the entire object for all subresources of this attribute.
      *
      * @param Collection $objects
-     * @param Attribute $attribute
+     * @param Attribute  $attribute
      *
      * @return array|mixed|null
      */
@@ -1462,7 +1462,7 @@ class ObjectEntityService
      * only render/use the uri for all subresources of this attribute.
      *
      * @param Collection $objects
-     * @param Attribute $attribute
+     * @param Attribute  $attribute
      *
      * @return array|mixed|string|null
      */
@@ -1489,7 +1489,7 @@ class ObjectEntityService
     /**
      * Render a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway (before doing the api-call).
      *
-     * @param Value $value
+     * @param Value     $value
      * @param Attribute $attribute
      *
      * @return File[]|Value[]|array|bool|Collection|float|int|mixed|string|void|null
@@ -1539,12 +1539,12 @@ class ObjectEntityService
      * Encode body for the api-call/promise to update an object in a source outside the gateway, before doing the api-call.
      *
      * @param ObjectEntity $objectEntity
-     * @param array $body
-     * @param array $headers
-     *
-     * @return string
+     * @param array        $body
+     * @param array        $headers
      *
      * @throws Exception
+     *
+     * @return string
      */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {
@@ -1572,10 +1572,10 @@ class ObjectEntityService
      * If there is special translation config for the api-calls/promises to update an object in a source outside the gateway, before doing the api-call.
      *
      * @param ObjectEntity $objectEntity
-     * @param string $method
-     * @param array $headers
-     * @param array $query
-     * @param string $url
+     * @param string       $method
+     * @param array        $headers
+     * @param array        $query
+     * @param string       $url
      *
      * @return void
      */
@@ -1595,8 +1595,8 @@ class ObjectEntityService
      * Decide what method and url to use for a promise to update an object in a source outside the gateway.
      *
      * @param ObjectEntity $objectEntity
-     * @param string $url
-     * @param string $method
+     * @param string       $url
+     * @param string       $method
      *
      * @return void
      */
@@ -1637,9 +1637,9 @@ class ObjectEntityService
      * @param $response
      * @param ObjectEntity $objectEntity
      *
-     * @return array
-     *
      * @throws Exception
+     *
+     * @return array
      */
     private function decodeResponse($response, ObjectEntity $objectEntity): array
     {
@@ -1669,9 +1669,9 @@ class ObjectEntityService
      * Set externalId of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
      *
      * @param ObjectEntity $objectEntity
-     * @param array $result
-     * @param string $url
-     * @param string $method
+     * @param array        $result
+     * @param string       $url
+     * @param string       $method
      *
      * @return ObjectEntity
      */
@@ -1698,7 +1698,7 @@ class ObjectEntityService
      * Set externalResult of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
      *
      * @param ObjectEntity $objectEntity
-     * @param array $result
+     * @param array        $result
      *
      * @return ObjectEntity
      */
@@ -1720,12 +1720,12 @@ class ObjectEntityService
      *
      * @param $response
      * @param ObjectEntity $objectEntity
-     * @param string $url
-     * @param string $method
-     *
-     * @return ObjectEntity
+     * @param string       $url
+     * @param string       $method
      *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     private function onFulfilled($response, ObjectEntity $objectEntity, string $url, string $method)
     {
@@ -1787,11 +1787,11 @@ class ObjectEntityService
      * Creates a promise to update an object in a source outside the gateway.
      *
      * @param ObjectEntity $objectEntity
-     * @param string $method
-     *
-     * @return PromiseInterface
+     * @param string       $method
      *
      * @throws Exception
+     *
+     * @return PromiseInterface
      */
     public function createPromise(ObjectEntity $objectEntity, string &$method): PromiseInterface
     {

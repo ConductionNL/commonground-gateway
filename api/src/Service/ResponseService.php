@@ -59,9 +59,10 @@ class ResponseService
     }
 
     /**
-     * Get the last date read for the given ObjectEntity, for the current user. (uses sql to search in logs)
+     * Get the last date read for the given ObjectEntity, for the current user. (uses sql to search in logs).
      *
      * @param ObjectEntity $objectEntity
+     *
      * @return DateTimeInterface|null
      */
     private function getDateRead(ObjectEntity $objectEntity): ?DateTimeInterface
@@ -83,6 +84,7 @@ class ResponseService
         if (!empty($logs) and $logs[0] instanceof Log) {
             return $logs[0]->getDateCreated();
         }
+
         return null;
     }
 
@@ -134,7 +136,7 @@ class ResponseService
     public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
-        $dateRead =  false;
+        $dateRead = false;
         if (is_array($fields) && array_key_exists('dateRead', $fields)) {
             $dateRead = $fields['dateRead']; // Can be string = 'getItem' in case of a get item call.
             unset($fields['dateRead']);
@@ -239,13 +241,13 @@ class ResponseService
      * Returns a response array for renderResult function. This response is different depending on the acceptType.
      *
      * @param ObjectEntity $result
-     * @param array|null $fields
-     * @param array|null $extend
-     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
-     * @param string $acceptType
-     * @param int $level
-     * @param array $response
-     * @param array $embedded
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param bool|string  $dateRead   can be true, false or 'getItem' in case of a get item call.
+     * @param string       $acceptType
+     * @param int          $level
+     * @param array        $response
+     * @param array        $embedded
      *
      * @return array
      */
@@ -281,7 +283,7 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
+     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
@@ -332,7 +334,7 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
+     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
@@ -647,7 +649,7 @@ class ResponseService
      * @TODO
      *
      * @param array $result
-     * @param int $responseType
+     * @param int   $responseType
      *
      * @return bool
      */

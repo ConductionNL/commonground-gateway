@@ -21,10 +21,10 @@ class LogRepository extends ServiceEntityRepository
     }
 
     /**
-     * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log. (and only logs where response was a 200)
+     * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log. (and only logs where response was a 200).
      *
      * @param ObjectEntity $objectEntity
-     * @param string $userId
+     * @param string       $userId
      *
      * @return array
      */
