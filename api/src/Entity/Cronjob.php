@@ -8,6 +8,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Cron\CronExpression;
+use Setono\CronExpressionBundle\Doctrine\DBAL\Types\CronExpressionType;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -83,17 +85,14 @@ class Cronjob
     private ?string $description;
 
     /**
-     * @var string The crontab that determines the interval https://crontab.guru/
-     * defaulted at  every 5 minutes * / 5 * * * *
+     * @var CronExpression The crontab that determines the interval https://crontab.guru/
+     * defaulted at  every 5 minutes * / 5  *  *  *  *
      *
      * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="cron_expression")
      */
-    private string $crontab;
+    private CronExpression $crontab;
 
     /**
      * @var array The actions that put on the stack by the crontab.
@@ -127,6 +126,11 @@ class Cronjob
      */
     private $nextRun;
 
+//    public function __construct()
+//    {
+//        $this->crontab = CronExpression::factory("@daily");
+//    }
+
     public function getId()
     {
         return $this->id;
@@ -156,12 +160,19 @@ class Cronjob
         return $this;
     }
 
-    public function getCrontab(): ?string
+    /**
+     * @return CronExpression|null
+     */
+    public function getCrontab(): ?CronExpression
     {
         return $this->crontab;
     }
 
-    public function setCrontab(string $crontab): self
+    /**
+     * @param CronExpression $crontab
+     * @return Cronjob
+     */
+    public function setCrontab(CronExpression $crontab): self
     {
         $this->crontab = $crontab;
 
