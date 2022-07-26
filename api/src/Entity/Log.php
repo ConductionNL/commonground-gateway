@@ -292,6 +292,13 @@ class Log
 
     /**
      * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @MaxDepth(1)
+     */
+    private $handler;
+
+    /**
+     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
      * @MaxDepth(1)
      */
