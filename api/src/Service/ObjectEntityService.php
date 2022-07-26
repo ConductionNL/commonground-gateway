@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Handler;
 use App\Entity\ObjectEntity;
+use App\Entity\Unread;
 use App\Entity\Value;
 use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
@@ -592,12 +593,40 @@ class ObjectEntityService
             $objectEntity->setOrganization($post['@organization']);
         }
 
-        // If we change an ObjectEntity we should remove it from the result cache
+        // Only do this if we are changing an object, not when creating one.
         if ($this->request->getMethod() != 'POST') {
+            // Handle setting an object as unread.
+            if (array_key_exists('@dateRead', $post) && $post['@dateRead'] == false) {
+                $this->setUnread($objectEntity);
+            }
+
+            // If we change an ObjectEntity we should remove it from the result cache
             $this->functionService->removeResultFromCache($objectEntity);
         }
 
         return $objectEntity;
+    }
+
+    /**
+     * Checks if there exists an unread object for the given ObjectEntity + current UserId. If not, creation one.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
+    private function setUnread(ObjectEntity $objectEntity) {
+        // First, check if there is an Unread object for this Object+User. If so, do nothing.
+        $user = $this->security->getUser();
+        if ($user !== null) {
+            $unreads = $this->entityManager->getRepository('App:Unread')->findBy(['object' => $objectEntity, 'userId' => $user->getUserIdentifier()]);
+            if (empty($unreads)) {
+                $unread = new Unread();
+                $unread->setObject($objectEntity);
+                $unread->setUserId($user->getUserIdentifier());
+                $this->entityManager->persist($unread);
+                // Do not flush, will always be done after the api-call that triggers this function, if that api-call doesn't throw an exception.
+            }
+        }
     }
 
     private function getUserName(): string
