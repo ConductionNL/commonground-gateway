@@ -6,7 +6,7 @@ use App\Entity\Action;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use App\Repository\ObjectEntityRepository;
 use App\Service\ObjectEntityService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,7 +32,7 @@ class ZaaktypeSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            EndpointTriggeredEvent::NAME => 'handleEvent',
+            'commongateway.handler.pre' => 'handleEvent',
         ];
     }
 
@@ -85,16 +85,18 @@ class ZaaktypeSubscriber implements EventSubscriberInterface
         return $this->objectEntityRepository->findByEntity($zaakTypeEntity, ['identificatie' => $identifier])[0];
     }
 
-    public function handleEvent(EndpointTriggeredEvent $event): EndpointTriggeredEvent
+    public function handleEvent(ActionEvent $event): ActionEvent
     {
-        if(
-            $event->getRequest()->getMethod() != 'POST' &&
-            !$action = $this->getAction($event->getEndpoint())
-        ) {
-            return $event;
-        }
-        $zaakTypeEntity = $this->getZaakTypeEntity($action);
-        $zaakType = $this->findObjectEntity($zaakTypeEntity, $this->getIdentifier($event->getRequest(), $action))->getSelf();
+        var_dump('test');
         return $event;
+//        if(
+//            $event->getRequest()->getMethod() != 'POST' &&
+//            !$action = $this->getAction($event->getEndpoint())
+//        ) {
+//            return $event;
+//        }
+//        $zaakTypeEntity = $this->getZaakTypeEntity($action);
+//        $zaakType = $this->findObjectEntity($zaakTypeEntity, $this->getIdentifier($event->getRequest(), $action))->getSelf();
+//        return $event;
     }
 }

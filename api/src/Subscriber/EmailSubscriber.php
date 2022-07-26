@@ -4,7 +4,7 @@ namespace App\Subscriber;
 
 use App\Entity\EmailTemplate;
 use App\Entity\EmailTrigger;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use App\Repository\EmailTriggerRepository;
 use App\Service\ObjectEntityService;
 use Exception;
@@ -40,7 +40,8 @@ class EmailSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            EndpointTriggeredEvent::NAME => 'handleEvent',
+            'commongateway.handler.pre' => 'handleEvent',
+            'commongateway.handler.post' => 'handleEvent',
         ];
     }
 
@@ -155,13 +156,13 @@ class EmailSubscriber implements EventSubscriberInterface
     /**
      * Handles an EndpointTriggeredEvent, checks all EmailTriggers, if event->endpoint, ->request and ->hooks match send email(s) per EmailTemplate.
      *
-     * @param EndpointTriggeredEvent $event
+     * @param ActionEvent $event
      *
-     * @throws CacheException|InvalidArgumentException|TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
+     * @return ActionEvent
+     *@throws CacheException|InvalidArgumentException|TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
      *
-     * @return EndpointTriggeredEvent
      */
-    public function handleEvent(EndpointTriggeredEvent $event): EndpointTriggeredEvent
+    public function handleEvent(ActionEvent $event): ActionEvent
     {
         // Find EmailTriggers by Endpoint
         $emailTriggers = $this->emailTriggerRepository->findByEndpoint($event->getEndpoint());
@@ -188,12 +189,12 @@ class EmailSubscriber implements EventSubscriberInterface
     /**
      * Compares EndpointTriggeredEvent Request with EmailTrigger request, returns false if there is a mismatch and the trigger should not go off (and send one or more emails).
      *
-     * @param EndpointTriggeredEvent $event
+     * @param ActionEvent $event
      * @param EmailTrigger           $emailTrigger
      *
      * @return bool
      */
-    private function checkTriggerRequest(EndpointTriggeredEvent $event, EmailTrigger $emailTrigger): bool
+    private function checkTriggerRequest(ActionEvent $event, EmailTrigger $emailTrigger): bool
     {
         $triggerRequest = $emailTrigger->getRequest();
         $eventRequest = $event->getRequest();

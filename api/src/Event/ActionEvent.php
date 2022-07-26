@@ -3,15 +3,13 @@
 namespace App\Event;
 
 use App\Entity\Action;
-use App\Entity\Endpoint;
-use Exception;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\EventDispatcher\Event;
 
 class ActionEvent extends Event
 {
     public const EVENTS = [
-        'commongateway.endpoint.triggered'
+        'commongateway.handler.pre',
+        'commongateway.handler.post'
     ];
 
     protected string $type;
