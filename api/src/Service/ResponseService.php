@@ -381,6 +381,9 @@ class ResponseService
                 if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
                     if (!$attribute->getMultiple()) {
                         $object = $valueObject->getValue();
+                        if (!$object instanceof ObjectEntity) {
+                            continue;
+                        }
                         if ($acceptType === 'jsonld') {
                             $response[$attribute->getName()] = [
                                 '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
@@ -390,6 +393,9 @@ class ResponseService
                         continue;
                     }
                     $objects = $valueObject->getValue();
+                    if (!is_array($objects)) {
+                        continue;
+                    }
                     foreach ($objects as $object) {
                         if ($acceptType === 'jsonld') {
                             $response[$attribute->getName()][] = [
