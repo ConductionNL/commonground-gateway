@@ -60,7 +60,7 @@ spec:
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-php
           securityContext:
-            {{- toYaml .Values.securityContext.php | nindent 12 }}
+            {{- toYaml .Values.securityContextPhp | nindent 12 }}
           image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.php.pullPolicy }}
           ports:
@@ -256,7 +256,7 @@ spec:
             {{- toYaml .Values.php.resources | nindent 12 }}
         - name: {{ include "commonground-gateway.fullname" . }}-nginx
           securityContext:
-          {{- toYaml .Values.securityContext.nginx | nindent 12 }}
+          {{- toYaml .Values.securityContextNginx | nindent 12 }}
           image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
           env:

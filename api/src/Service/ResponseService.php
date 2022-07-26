@@ -377,7 +377,34 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
+                // todo: move this to a function, or re-use $this->renderObjects for this somehow:
                 if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
+                    if (!$attribute->getMultiple()) {
+                        $object = $valueObject->getValue();
+                        if (!$object instanceof ObjectEntity) {
+                            continue;
+                        }
+                        if ($acceptType === 'jsonld') {
+                            $response[$attribute->getName()] = [
+                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                            ];
+                        }
+                        $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+                        continue;
+                    }
+                    $objects = $valueObject->getValue();
+                    if (!is_array($objects)) {
+                        continue;
+                    }
+                    foreach ($objects as $object) {
+                        if ($acceptType === 'jsonld') {
+                            $response[$attribute->getName()][] = [
+                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                            ];
+                        } else {
+                            $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+                        }
+                    }
                     continue;
                 }
 
