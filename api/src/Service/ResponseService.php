@@ -11,6 +11,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\RequestLog;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
@@ -135,7 +136,7 @@ class ResponseService
         $response = [];
         $dateRead =  false;
         if (is_array($fields) && array_key_exists('dateRead', $fields)) {
-            $dateRead = $fields['dateRead'];
+            $dateRead = $fields['dateRead']; // Can be string = 'now' in case of a get item call.
             unset($fields['dateRead']);
             if (empty($fields)) {
                 $fields = null;
@@ -238,16 +239,17 @@ class ResponseService
      * Returns a response array for renderResult function. This response is different depending on the acceptType.
      *
      * @param ObjectEntity $result
-     * @param array|null   $fields
-     * @param array|null   $extend
-     * @param string       $acceptType
-     * @param int          $level
-     * @param array        $response
-     * @param array        $embedded
+     * @param array|null $fields
+     * @param array|null $extend
+     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
+     * @param string $acceptType
+     * @param int $level
+     * @param array $response
+     * @param array $embedded
      *
      * @return array
      */
-    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, bool $dateRead, string $acceptType, int $level, array $response, array $embedded): array
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
         switch ($acceptType) {
@@ -279,13 +281,14 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
+     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, bool $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
     {
         $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
@@ -293,7 +296,7 @@ class ResponseService
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
         if ($dateRead) {
-            $gatewayContext['@dateRead'] = $this->getDateRead($result);
+            $gatewayContext['@dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
         }
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -329,13 +332,14 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
+     * @param bool|string $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, bool $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
     {
         $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['_metadata'] = [
@@ -345,7 +349,7 @@ class ResponseService
             '_dateModified' => $result->getDateModified(),
         ];
         if ($dateRead) {
-            $gatewayContext['_metadata']['_dateRead'] = $this->getDateRead($result);
+            $gatewayContext['_metadata']['_dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
         }
         $gatewayContext['_metadata'] = array_merge($gatewayContext['_metadata'], [
             '_owner'        => $result->getOwner(),
