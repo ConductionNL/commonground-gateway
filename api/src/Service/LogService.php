@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Endpoint;
 use App\Entity\Log;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionClass;
@@ -144,12 +145,38 @@ class LogService
             // unset($sessionValues['applications']);
             // $callLog->setSessionValues($sessionValues);
         }
+
+        // Make sure to remove unreads when we logged a successful get item call by a logged-in user.
+        $this->stopwatch->start('RemoveUnreads'.$stopWatchNumber, "saveLog$stopWatchNumber");
+        $this->removeUnreads($callLog);
+        $this->stopwatch->stop('RemoveUnreads'.$stopWatchNumber);
+
         $this->stopwatch->start('PersistFlush'.$stopWatchNumber, "saveLog$stopWatchNumber");
         $this->entityManager->persist($callLog);
         $this->entityManager->flush();
         $this->stopwatch->stop('PersistFlush'.$stopWatchNumber);
 
         return $callLog;
+    }
+
+    /**
+     * If a log is created for a successful get item call by a logged-in user, remove al unread objects for this user+object.
+     *
+     * @param Log $callLog
+     *
+     * @return void
+     */
+    private function removeUnreads(Log $callLog)
+    {
+        if ($callLog->getResponseStatusCode() === 200 && !empty($callLog->getEndpoint()) &&
+            $callLog->getEndpoint()->getOperationType() === 'item' && $callLog->getUserId() !== null &&
+            strtolower($callLog->getEndpoint()->getMethod()) === 'get' && !empty($callLog->getObject())) {
+            // Check if there exist Unread objects for this Object+User. If so, delete them.
+            $unreads = $this->entityManager->getRepository('App:Unread')->findBy(['object' => $callLog->getObject(), 'userId' => $callLog->getUserId()]);
+            foreach ($unreads as $unread) {
+                $this->entityManager->remove($unread);
+            }
+        }
     }
 
     public function makeRequest(): Request

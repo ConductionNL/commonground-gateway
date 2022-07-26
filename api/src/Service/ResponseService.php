@@ -70,6 +70,12 @@ class ResponseService
             return null;
         }
 
+        // First, check if there is an Unread object for this Object+User. If so, return null.
+        $unreads = $this->em->getRepository('App:Unread')->findBy(['object' => $objectEntity, 'userId' => $user->getUserIdentifier()]);
+        if (!empty($unreads)) {
+            return null;
+        }
+
         // Use sql to find last get item log of the current user for the given object.
         $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity, $user->getUserIdentifier());
 
