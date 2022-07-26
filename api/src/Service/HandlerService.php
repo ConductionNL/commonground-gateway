@@ -5,7 +5,7 @@ namespace App\Service;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
@@ -105,7 +105,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'PRE_HANDLER']);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->request]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -115,7 +115,7 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
-        $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+        $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -146,8 +146,8 @@ class HandlerService
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
-                $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'POST_HANDLER']);
-                $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+                $event = new ActionEvent('commongateway.handler.post', ['request' => $this->request]);
+                $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
             }

@@ -4,7 +4,7 @@ namespace App\Subscriber;
 
 use App\Entity\Action;
 use App\Entity\Endpoint;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
@@ -25,7 +25,7 @@ class EndpointSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            EndpointTriggeredEvent::NAME => 'handleEvent',
+            'commongateway.handler.pre' => 'handleEvent',
         ];
     }
 
@@ -120,7 +120,7 @@ class EndpointSubscriber implements EventSubscriberInterface
         ]);
     }
 
-    public function handleEvent(EndpointTriggeredEvent $event): EndpointTriggeredEvent
+    public function handleEvent(ActionEvent $event): ActionEvent
     {
 //        if(
 //            $event->getRequest()->getMethod() == 'GET'
