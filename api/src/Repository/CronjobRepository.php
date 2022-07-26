@@ -47,4 +47,13 @@ class CronjobRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getRunnableCronjobs()
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.nextRun <= NOW()')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 }
