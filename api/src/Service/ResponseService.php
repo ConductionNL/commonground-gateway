@@ -136,7 +136,7 @@ class ResponseService
         $response = [];
         $dateRead =  false;
         if (is_array($fields) && array_key_exists('dateRead', $fields)) {
-            $dateRead = $fields['dateRead']; // Can be string = 'now' in case of a get item call.
+            $dateRead = $fields['dateRead']; // Can be string = 'getItem' in case of a get item call.
             unset($fields['dateRead']);
             if (empty($fields)) {
                 $fields = null;
