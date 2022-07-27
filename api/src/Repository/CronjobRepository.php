@@ -51,7 +51,8 @@ class CronjobRepository extends ServiceEntityRepository
     public function getRunnableCronjobs()
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.nextRun <= NOW()')
+            ->andWhere('c.nextRun <= :val OR c.nextRun is NULL')
+            ->setParameter('val', new \DateTime('now'))
             ->getQuery()
             ->getResult()
         ;
