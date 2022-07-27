@@ -52,13 +52,13 @@ class CronjobCommand extends Command
             foreach($cronjobs as $cronjob){
                 foreach($cronjob->getThrows() as $throw) {
                     $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
-                    $this->eventDispatcher->dispatch($actionEvent, 'commongateway.handler.pre');
+                    $this->eventDispatcher->dispatch($actionEvent, $throw);
 
                     // Get crontab expression and set the next and last run properties
                     // Save cronjob in the database
                     $cronExpression = new CronExpression($cronjob->getCrontab());
                     $cronjob->setNextRun($cronExpression->getNextRunDate());
-                    $cronjob->setLastRun($cronExpression->getPreviousRunDate());
+                    $cronjob->setLastRun(new \DateTime('now'));
 
                     $this->entityManager->persist($cronjob);
                     $this->entityManager->flush();
