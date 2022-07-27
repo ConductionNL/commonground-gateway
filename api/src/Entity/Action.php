@@ -5,6 +5,9 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\ActionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ApiResource()
@@ -13,38 +16,89 @@ use Doctrine\ORM\Mapping as ORM;
 class Action
 {
     /**
+     * @var UuidInterface The UUID identifier of this resource
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    private UuidInterface $id;
 
     /**
+     * @var string The name of the action
+     *
+     * @Assert\NotNull
+     * @Assert\Length(max=255)
+     *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
+     * @var string|null The description of the action
+     *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private ?string $description = null;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @var array The event names the action should listen to
+     *
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="simple_array")
      */
-    private $endpointId;
+    private array $listens;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @var array The event names the action should trigger
+     *
+     * @ORM\Column(type="simple_array", nullable=true)
      */
-    private $configuration = [];
+    private array $throws = [];
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @var array The conditions that the data object should match for the action to be triggered
+     *
+     * @ORM\Column(type="json", nullable=true)
      */
-    private $type;
+    private array $conditions = [];
 
-    public function getId(): ?int
+    /**
+     * @var string|null The function that should be run when the action is triggered
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $function = null;
+
+    /**
+     * @var int The priority of the action
+     *
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="integer")
+     */
+    private int $priority;
+
+    /**
+     * @var bool Whether the action should be run asynchronous
+     *
+     * @ORM\Column(type="boolean")
+     */
+    private bool $async;
+
+
+
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
@@ -73,39 +127,77 @@ class Action
         return $this;
     }
 
-    public function getEndpointId(): ?string
+    public function getListens(): ?array
     {
-        return $this->endpointId;
+        return $this->listens;
     }
 
-    public function setEndpointId(string $endpointId): self
+    public function setListens(?array $listens): self
     {
-        $this->endpointId = $endpointId;
+        $this->listens = $listens;
 
         return $this;
     }
 
-    public function getConfiguration(): ?array
+    public function getThrows(): ?array
     {
-        return $this->configuration;
+        return $this->throws;
     }
 
-    public function setConfiguration(?array $configuration): self
+    public function setThrows(?array $throws): self
     {
-        $this->configuration = $configuration;
+        $this->throws = $throws;
 
         return $this;
     }
 
-    public function getType(): ?string
+    public function getConditions(): ?array
     {
-        return $this->type;
+        return $this->conditions;
     }
 
-    public function setType(string $type): self
+    public function setConditions(?array $conditions): self
     {
-        $this->type = $type;
+        $this->conditions = $conditions;
 
         return $this;
     }
+
+    public function getFunction(): ?string
+    {
+        return $this->function;
+    }
+
+    public function setFunction(?string $function): self
+    {
+        $this->function = $function;
+
+        return $this;
+    }
+
+    public function getPriority(): ?int
+    {
+        return $this->priority;
+    }
+
+    public function setPriority(int $priority): self
+    {
+        $this->priority = $priority;
+
+        return $this;
+    }
+
+    public function getAsync(): ?bool
+    {
+        return $this->async;
+    }
+
+    public function setAsync(bool $async): self
+    {
+        $this->async = $async;
+
+        return $this;
+    }
+
+
 }
