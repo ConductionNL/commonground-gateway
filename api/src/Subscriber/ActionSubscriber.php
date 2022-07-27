@@ -33,11 +33,39 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->entityManager = $entityManager;
     }
 
+    public function throwEvent(string $throw): void
+    {
+
+    }
+
+    public function triggerActions(Action $action): void
+    {
+        foreach ($action->getThrows() as $throw) {
+            $this->throwEvent($throw);
+        }
+    }
+
+    public function checkConditions(Action $action, array $data): bool
+    {
+        return true;
+    }
+
+    public function handleAction(Action $action, ActionEvent $event): ActionEvent
+    {
+        if($this->checkConditions($action, $event->getData())){
+            $event->setData($this->runFunction($action, $event->getData()));
+            $this->triggerActions($action);
+        }
+
+        return $event;
+    }
+
     public function handleEvent(ActionEvent $event): ActionEvent
     {
         $actions = $this->entityManager->getRepository("App:Action")->findByListens($event->getType());
+
         foreach($actions as $action) {
-            
+            $this->handleAction($action, $event);
         }
 
         return $event;
