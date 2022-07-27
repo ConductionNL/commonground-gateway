@@ -8,8 +8,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use Cron\CronExpression;
-use Setono\CronExpressionBundle\Doctrine\DBAL\Types\CronExpressionType;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -85,14 +83,19 @@ class Cronjob
     private ?string $description;
 
     /**
-     * @var CronExpression The crontab that determines the interval https://crontab.guru/
-     * defaulted at  every 5 minutes * / 5  *  *  *  *
+     * @var string The crontab that determines the interval https://crontab.guru/
+     * defaulted at every 5 minutes * / 5  *  *  *  *
      *
+     * @Assert\Regex(
+     *     pattern="/(^((\*\/)?([0-5]?[0-9])((\,|\-|\/)([0-5]?[0-9]))*|\*)\s+((\*\/)?((2[0-3]|1[0-9]|[0-9]|00))((\,|\-|\/)(2[0-3]|1[0-9]|[0-9]|00))*|\*)\s+((\*\/)?([1-9]|[12][0-9]|3[01])((\,|\-|\/)([1-9]|[12][0-9]|3[01]))*|\*)\s+((\*\/)?([1-9]|1[0-2])((\,|\-|\/)([1-9]|1[0-2]))*|\*|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|des))\s+((\*\/)?[0-6]((\,|\-|\/)[0-6])*|\*|00|(sun|mon|tue|wed|thu|fri|sat))\s*$)|@(annually|yearly|monthly|weekly|daily|hourly|reboot)/",
+     *     match=true,
+     *     message="This is an invalid crontab, see https://crontab.guru/ to create an interval"
+     * )
      * @Gedmo\Versioned
      * @Groups({"read","write"})
-     * @ORM\Column(type="cron_expression")
+     * @ORM\Column(type="string")
      */
-    private CronExpression $crontab;
+    private string $crontab;
 
     /**
      * @var array The actions that put on the stack by the crontab.
@@ -114,7 +117,7 @@ class Cronjob
      * @var Datetime The last run of this Cronjob
      *
      * @Groups({"read"})
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $lastRun;
 
@@ -122,14 +125,9 @@ class Cronjob
      * @var Datetime The next run of this Cronjob
      *
      * @Groups({"read"})
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $nextRun;
-
-//    public function __construct()
-//    {
-//        $this->crontab = CronExpression::factory("@daily");
-//    }
 
     public function getId()
     {
@@ -160,19 +158,12 @@ class Cronjob
         return $this;
     }
 
-    /**
-     * @return CronExpression|null
-     */
-    public function getCrontab(): ?CronExpression
+    public function getCrontab(): ?string
     {
         return $this->crontab;
     }
 
-    /**
-     * @param CronExpression $crontab
-     * @return Cronjob
-     */
-    public function setCrontab(CronExpression $crontab): self
+    public function setCrontab(string $crontab): self
     {
         $this->crontab = $crontab;
 
@@ -208,7 +199,7 @@ class Cronjob
         return $this->lastRun;
     }
 
-    public function setLastRun(DateTimeInterface $lastRun): self
+    public function setLastRun(?DateTimeInterface $lastRun): self
     {
         $this->lastRun = $lastRun;
 
@@ -220,7 +211,7 @@ class Cronjob
         return $this->nextRun;
     }
 
-    public function setNextRun(DateTimeInterface $nextRun): self
+    public function setNextRun(?DateTimeInterface $nextRun): self
     {
         $this->nextRun = $nextRun;
 
