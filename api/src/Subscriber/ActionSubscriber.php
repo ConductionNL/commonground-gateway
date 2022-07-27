@@ -15,9 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 class ActionSubscriber implements EventSubscriberInterface
 {
 
-    private Client $client;
     private EntityManagerInterface $entityManager;
-    private Request $request;
 
     /**
      * @inheritDoc
@@ -30,18 +28,17 @@ class ActionSubscriber implements EventSubscriberInterface
         ];
     }
 
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-//        if(
-//            $event->getRequest()->getMethod() == 'GET'
-//            // @TODO: add extra conditions
-//        ) {
-//            return $event;
-//        }
-//        $this->request = $event->getRequest();
-//        $eventContent = $this->getEvent($event->getEndpoint());
-//        $result = $this->sendEvent($eventContent);
-
+        $actions = $this->entityManager->getRepository("App:Action")->findByListens($event->getType());
+        foreach($actions as $action) {
+            
+        }
 
         return $event;
     }
