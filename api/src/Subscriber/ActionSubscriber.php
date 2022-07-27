@@ -2,6 +2,7 @@
 
 namespace App\Subscriber;
 
+use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Entity\Endpoint;
 use App\Event\ActionEvent;
@@ -36,6 +37,15 @@ class ActionSubscriber implements EventSubscriberInterface
     public function throwEvent(string $throw): void
     {
 
+    }
+
+    public function runFunction(Action $action, array $data): array
+    {
+        $class = $action->getFunction();
+        $object = new $class();
+        if($object instanceof ActionHandlerInterface)
+            $data = $object->__run($data);
+        return $data;
     }
 
     public function triggerActions(Action $action): void

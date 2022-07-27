@@ -87,7 +87,6 @@ class ZaaktypeSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        var_dump('test');
         return $event;
 //        if(
 //            $event->getRequest()->getMethod() != 'POST' &&
