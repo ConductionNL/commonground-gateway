@@ -36,27 +36,33 @@ class CronjobCommand extends Command
     {
         $this
             // the short description shown while running "php bin/console list"
-            ->setDescription('Creates a the OAS files for EAV entities.')
+            ->setDescription('Creates a cronjob and set the action events on the stack')
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command allows you to create a OAS files for your EAV entities');
+            ->setHelp('This command allows you to create a cronjob');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
 
-        $cronjobs = $this->entityManager->getRepository("App:CronJob")->getRunnableCronjobs();
+        $cronjobs = $this->entityManager->getRepository("App:Cronjob")->getRunnableCronjobs();
 
-        foreach($cronjobs as $cronjob){
-            foreach($cronjob->getTriggers() as $trigger) {
-                $actionEvent = new ActionEvent($trigger, ($cronjob->getData()));
-                $this->eventDispatcher->dispatch($actionEvent, 'commongateway.handler.pre');
+        if ($cronjobs !== null) {
+            foreach($cronjobs as $cronjob){
+                foreach($cronjob->getThrows() as $throw) {
+                    $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
+                    $this->eventDispatcher->dispatch($actionEvent, 'commongateway.handler.pre');
 
-                // Get crontab expression and set the nextRun property
-                // Save cronjob in the database
-//                $crontab = $cronjob->getCrontab()->getNextRunDate();
-//                $nextRun = CronExpression::
+                    // Get crontab expression and set the next and last run properties
+                    // Save cronjob in the database
+                    $cronExpression = new CronExpression($cronjob->getCrontab());
+                    $cronjob->setNextRun($cronExpression->getNextRunDate());
+                    $cronjob->setLastRun($cronExpression->getPreviousRunDate());
+
+                    $this->entityManager->persist($cronjob);
+                    $this->entityManager->flush();
+                }
             }
         }
 
