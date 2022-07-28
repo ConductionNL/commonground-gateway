@@ -62,6 +62,8 @@ class Action
     /**
      * @var array The event names the action should trigger
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="simple_array", nullable=true)
      */
     private array $throws = [];
@@ -69,12 +71,16 @@ class Action
     /**
      * @var array The conditions that the data object should match for the action to be triggered
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="json", nullable=true)
      */
     private array $conditions = [];
 
     /**
      * @var string|null The function that should be run when the action is triggered
+     *
+     * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -84,6 +90,7 @@ class Action
      * @var int The priority of the action
      *
      * @Assert\NotNull
+     * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="integer")
      */
@@ -92,9 +99,18 @@ class Action
     /**
      * @var bool Whether the action should be run asynchronous
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="boolean")
      */
-    private bool $async;
+    private bool $async = false;
+
+    /**
+     * @var array The configuration of the action
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="simple_array", nullable=true)
+     */
+    private array $configuration = [];
 
 
 
@@ -195,6 +211,18 @@ class Action
     public function setAsync(bool $async): self
     {
         $this->async = $async;
+
+        return $this;
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(?array $configuration): self
+    {
+        $this->configuration = $configuration;
 
         return $this;
     }
