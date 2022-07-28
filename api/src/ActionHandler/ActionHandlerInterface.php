@@ -8,5 +8,5 @@ interface ActionHandlerInterface
 {
     public function __construct();
 
-    public function __run(array $data): array;
+    public function __run(array $data, array $configuration): array;
 }

@@ -44,7 +44,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $class = $action->getFunction();
         $object = new $class();
         if($object instanceof ActionHandlerInterface)
-            $data = $object->__run($data);
+            $data = $object->__run($data, $action->getConfiguration());
         return $data;
     }
 
