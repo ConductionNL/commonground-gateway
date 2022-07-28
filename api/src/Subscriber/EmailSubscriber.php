@@ -40,7 +40,7 @@ class EmailSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'commongateway.handler.pre' => 'handleEvent',
+            'commongateway.handler.pre'  => 'handleEvent',
             'commongateway.handler.post' => 'handleEvent',
         ];
     }
@@ -158,9 +158,9 @@ class EmailSubscriber implements EventSubscriberInterface
      *
      * @param ActionEvent $event
      *
-     * @return ActionEvent
      *@throws CacheException|InvalidArgumentException|TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
      *
+     * @return ActionEvent
      */
     public function handleEvent(ActionEvent $event): ActionEvent
     {
@@ -190,8 +190,8 @@ class EmailSubscriber implements EventSubscriberInterface
     /**
      * Compares EndpointTriggeredEvent Request with EmailTrigger request, returns false if there is a mismatch and the trigger should not go off (and send one or more emails).
      *
-     * @param ActionEvent $event
-     * @param EmailTrigger           $emailTrigger
+     * @param ActionEvent  $event
+     * @param EmailTrigger $emailTrigger
      *
      * @return bool
      */

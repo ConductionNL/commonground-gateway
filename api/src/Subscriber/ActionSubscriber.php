@@ -3,18 +3,12 @@
 namespace App\Subscriber;
 
 use App\Entity\Action;
-use App\Entity\Endpoint;
 use App\Event\ActionEvent;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 class ActionSubscriber implements EventSubscriberInterface
 {
-
     private EntityManagerInterface $entityManager;
 
     /**
@@ -23,7 +17,7 @@ class ActionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'commongateway.handler.pre' => 'handleEvent',
+            'commongateway.handler.pre'  => 'handleEvent',
             'commongateway.handler.post' => 'handleEvent',
         ];
     }
@@ -35,7 +29,6 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function throwEvent(string $throw): void
     {
-
     }
 
     public function triggerActions(Action $action): void
@@ -52,7 +45,7 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
-        if($this->checkConditions($action, $event->getData())){
+        if ($this->checkConditions($action, $event->getData())) {
             $event->setData($this->runFunction($action, $event->getData()));
             $this->triggerActions($action);
         }
@@ -62,9 +55,9 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        $actions = $this->entityManager->getRepository("App:Action")->findByListens($event->getType());
+        $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
 
-        foreach($actions as $action) {
+        foreach ($actions as $action) {
             $this->handleAction($action, $event);
         }
 
