@@ -1867,7 +1867,7 @@ class ValidationService
     }
 
     /**
-     * TODO: docs.
+     * Create a NRC notification for the given ObjectEntity.
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method
