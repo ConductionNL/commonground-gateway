@@ -1029,7 +1029,7 @@ class EavService
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
         $filterCheck[] = 'search';
-        $filterCheck[] = 'dateRead';
+        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (str_contains($param, '__')) {

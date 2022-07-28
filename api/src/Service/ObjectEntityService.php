@@ -410,9 +410,9 @@ class ObjectEntityService
         $this->stopwatch->stop('getRequestExtend');
 
         // Check for dateRead query parameter
-        $dateRead = $this->request->query->get('dateRead');
+        $dateRead = $this->request->query->get('_dateRead');
         // Use fields array to store this dateRead value for now, will be removed from the array later.
-        $fields['dateRead'] = $method !== 'POST' && $dateRead === 'true';
+        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
 
         switch ($method) {
             case 'GET':
@@ -426,7 +426,7 @@ class ObjectEntityService
                             $object->setSelf($this->createSelf($object));
                         }
 
-                        $fields['dateRead'] = $fields['dateRead'] ? 'getItem' : false;
+                        $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
 
                         $this->stopwatch->start('handleGet', 'handleObject');
                         $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
