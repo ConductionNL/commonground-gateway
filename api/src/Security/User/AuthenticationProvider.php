@@ -37,24 +37,26 @@ class AuthenticationProvider implements UserProviderInterface
             );
         }
 
+        $userIdentifier = $user->getUserIdentifier();
         $username = $user->getUsername();
         $password = $user->getPassword();
         $firstName = $user->getFirstName();
         $lastName = $user->getLastName();
         $name = $user->getName();
         $email = $user->getEmail();
+        $roles = $user->getRoles();
 
-        return $this->fetchUser($username, $password, $firstName, $lastName, $name, $email);
+        return $this->fetchUser($userIdentifier, $username, $password, $firstName, $lastName, $name, $roles, $email);
     }
 
-    public function supportsClass($class)
+    public function supportsClass($class): bool
     {
         return AuthenticationUser::class === $class;
     }
 
-    private function fetchUser($username, $password, $firstName, $lastName, $name, $email)
+    private function fetchUser($userIdentifier, $username, $password, $firstName, $lastName, $name, $roles, $email)
     {
-        return new AuthenticationUser($username, $password, $firstName, $lastName, $name, null, ['ROLE_USER'], $email);
+        return new AuthenticationUser($userIdentifier, $username, $password, $firstName, $lastName, $name, null, $roles, $email);
     }
 
     public function __call($name, $arguments)

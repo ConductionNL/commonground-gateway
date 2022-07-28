@@ -73,6 +73,11 @@ services:
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
       - GITHUB_KEY=${GITHUB_KEY}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - MAILGUN=${MAILGUN}
     ports:
       - "82:80"
 
@@ -165,6 +170,33 @@ services:
         - "5556:5556"
     volumes:
         -  ./dex:/etc/dex:rw,cached
+  ldap:
+      image: osixia/openldap:1.4.0
+      # Copying is required because the entrypoint modifies the *.ldif files.
+      # For verbose output, use:  command: ["--copy-service", "--loglevel", "debug"]
+      command: ["--copy-service"]
+      environment:
+          # Required if using LDAPS:
+          # Since Dex doesn't use a client TLS certificate, downgrade from "demand" to "try".
+          LDAP_TLS_VERIFY_CLIENT: try
+      # The hostname is required if using LDAPS with certificate validation.
+      # In Dex, use the same hostname (with port) for `connectors[].config.host`.
+      #hostname: YOUR-HOSTNAME
+      #
+      # https://github.com/osixia/docker-openldap#seed-ldap-database-with-ldif
+      # Option 1: Add custom seed file -> mount to         /container/service/slapd/assets/config/bootstrap/ldif/custom/
+      # Option 2: Overwrite default seed file -> mount to  /container/service/slapd/assets/config/bootstrap/ldif/
+      volumes:
+          - ./dex/config-ldap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config-ldap.ldif
+      ports:
+          - 389:389
+          - 636:636
+
+  rabbitmq:
+      image: rabbitmq:latest
+      environment:
+          - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+          - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     
 
 networks:

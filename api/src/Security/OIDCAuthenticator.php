@@ -5,8 +5,10 @@ namespace App\Security;
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -18,10 +20,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 class OIDCAuthenticator extends AbstractAuthenticator
 {
     private AuthenticationService $authenticationService;
+    private SessionInterface $session;
 
-    public function __construct(AuthenticationService $authenticationService)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
     {
         $this->authenticationService = $authenticationService;
+        $this->session = $session;
     }
 
     public function supports(Request $request): ?bool
@@ -30,24 +34,36 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $request->isMethod('GET') && $request->query->has('code');
     }
 
+    private function prefixGroups(array $groups): array
+    {
+        $newGroups = [];
+        foreach ($groups as $group) {
+            $newGroups[] = 'ROLE_scope.'.$group;
+        }
+
+        return $newGroups;
+    }
+
     public function authenticate(Request $request): PassportInterface
     {
         $code = $request->query->get('code');
         $method = $request->attributes->get('method');
         $identifier = $request->attributes->get('identifier');
 
-        $result = $this->authenticationService->authenticate($method, $identifier, $code);
+        $accessToken = $this->authenticationService->authenticate($method, $identifier, $code);
+        $result = json_decode(base64_decode(explode('.', $accessToken['access_token'])[1]), true);
 
         return new Passport(
             new UserBadge($result['email'], function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
+                    $userIdentifier,
                     $result['email'],
                     '',
                     $result['givenName'] ?? '',
                     $result['familyName'] ?? '',
                     $result['name'] ?? '',
                     null,
-                    $result['groups'] ?? [],
+                    array_merge($this->prefixGroups($result['groups']) ?? [], ['ROLE_USER']),
                     $result['email']
                 );
             }),
@@ -62,7 +78,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return null;
+        return new RedirectResponse($this->session->get('backUrl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response

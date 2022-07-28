@@ -56,11 +56,17 @@ spec:
             name: {{ include "commonground-gateway.fullname" . }}-fixtures
             defaultMode: 420
         {{- end }}
+        {{- if .Values.config.samesiteCookie}}
+        - name: framework
+          configMap:
+            name: {{ include "commonground-gateway.fullname" . }}-framework
+            defaultMode: 420
+        {{- end }}
 
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-php
           securityContext:
-            {{- toYaml .Values.securityContext.php | nindent 12 }}
+            {{- toYaml .Values.securityContextPhp | nindent 12 }}
           image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.php.pullPolicy }}
           ports:
@@ -81,6 +87,12 @@ spec:
             {{- if .Values.fixtures }}
             - mountPath: /srv/api/fixtures
               name: fixtures
+              readOnly: true
+            {{- end }}
+            {{- if .Values.config.samesiteCookie}}
+            - mountPath: /srv/api/config/packages/prod/framework.additions.yaml
+              subPath: framework.yaml
+              name: framework
               readOnly: true
             {{- end }}
           env:
@@ -157,6 +169,12 @@ spec:
                   secretKeyRef:
                       name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-password
+          #Mailgun # todo: move this to an email plugin (see EmailSubscriber.php)
+            - name: MAILGUN
+              valueFrom:
+                  secretKeyRef:
+                      key: mailgun
+                      name: {{ include "commonground-gateway.fullname" . }}
             {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
             - name: APP_CERT
               value: '/var/run/certs/tls.crt'
@@ -250,7 +268,7 @@ spec:
             {{- toYaml .Values.php.resources | nindent 12 }}
         - name: {{ include "commonground-gateway.fullname" . }}-nginx
           securityContext:
-          {{- toYaml .Values.securityContext.nginx | nindent 12 }}
+          {{- toYaml .Values.securityContextNginx | nindent 12 }}
           image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
           env:

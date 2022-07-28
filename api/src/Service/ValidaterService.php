@@ -138,6 +138,12 @@ class ValidaterService
                 // Skip any other validations
                 continue;
             }
+            if ($attribute->getValidations()['readOnly']) {
+                // If readOnly this attribute should not be present.
+                $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
+                // Skip any other validations
+                continue;
+            }
 
             // If we need to check conditional Rules add these Rules in one AllOf Rule, else $conditionals = AlwaysValid Rule.
             $conditionals = $this->getConditionalsRule($attribute);

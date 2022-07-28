@@ -17,6 +17,7 @@ config:
   debug: 0
   cache: true
   githubKey: ''
+  samesiteCookie: lax
 
 security:
   authEnabled: true
@@ -106,6 +107,9 @@ rabbitmq:
       password: '!changeMe!'
   service:
       port: 5672
+      
+# todo: move this to an email plugin (see EmailSubscriber.php)
+mailgun: 'mailgun+api://code:domain@api.eu.mailgun.net'
 
 imagePullSecrets: []
 nameOverride: ""
@@ -140,32 +144,31 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContext:
-  php:
-    privileged: false
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    capabilities:
-      drop:
-          - all
-    runAsUser: 101
-    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
-    readOnlyRootFilesystem: false
-  nginx:
-    privileged: false
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    capabilities:
-      drop:
-        - all
-      add:
-        - chown
-        - dac_override
-        - setgid
-        - setuid
-        - net_bind_service
-    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
-    readOnlyRootFilesystem: false
+securityContextPhp:
+#    privileged: false
+#    allowPrivilegeEscalation: false
+#    runAsNonRoot: false
+#    capabilities:
+#      drop:
+#          - all
+#    runAsUser: 101
+#    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
+#    readOnlyRootFilesystem: false
+securityContextNginx:
+#    privileged: false
+#    allowPrivilegeEscalation: false
+#    runAsNonRoot: false
+#    capabilities:
+#      drop:
+#        - all
+#      add:
+#        - chown
+#        - dac_override
+#        - setgid
+#        - setuid
+#        - net_bind_service
+#    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
+#    readOnlyRootFilesystem: false
 
 service:
   type: ClusterIP

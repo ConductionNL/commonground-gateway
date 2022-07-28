@@ -13,7 +13,7 @@ App\Entity\Entity:
     # Organization Entity
     organization:
         function: "organization"
-        route: "/api/organizations"
+        route: "/organizations"
         name: organization
         description: Entity Organisation exists of an id, a name, a description, a kvk number, one or more telephones, one or more addresses, one or more emails and one or more persons.
         endpoint: "organizations"
@@ -22,28 +22,28 @@ App\Entity\Entity:
     # Person Entity
     person:
         function: "person"
-        route: "/api/people"
+        route: "/people"
         name: person
         description: Entity Person exists of an id, a givenName, a additionalName, a familyName, one or more telephones, one or more addresses, one or more emails and one or more organisations.
         endpoint: "people"
 
     #Email Entity
     email:
-        route: "/api/emails"
+        route: "/emails"
         name: email
         description: Entity Email exists of an id, a name, an email, one or more people and one or more organisations.
         endpoint: "emails"
 
     #Telefoon Entity
     telephone:
-        route: "/api/telephones"
+        route: "/telephones"
         name: telephone
         description: Entity Telephone exists of an id, a name and a telephone, one or more people and one or more organisations.
         endpoint: "telephones"
 
     #Address Entity
     address:
-        route: "/api/addresses"
+        route: "/addresses"
         name: address
         description: Entity Address exists of an id, a name, a bagnummeraanduiding, a street, a houseNumber, a houseNumberSufix, a postalCode, a region, a locality and country, one or more people and one or more organisations.
         endpoint: "addresses"
