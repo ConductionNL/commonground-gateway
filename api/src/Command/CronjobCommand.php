@@ -4,9 +4,11 @@
 
 namespace App\Command;
 
+use App\Entity\Cronjob;
 use App\Event\ActionEvent;
 use Cron\CronExpression;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -41,25 +43,36 @@ class CronjobCommand extends Command
             ->setHelp('This command allows you to create a cronjob');
     }
 
+    /**
+     * This function makes action events
+     *
+     * @param Cronjob $cronjob
+     * @throws Exception
+     */
+    public function makeActionEvent(Cronjob $cronjob): void
+    {
+        foreach ($cronjob->getThrows() as $throw) {
+            $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
+            $this->eventDispatcher->dispatch($actionEvent, $throw);
+
+            // Get crontab expression and set the next and last run properties
+            // Save cronjob in the database
+            $cronExpression = new CronExpression($cronjob->getCrontab());
+            $cronjob->setNextRun($cronExpression->getNextRunDate());
+            $cronjob->setLastRun(new \DateTime('now'));
+
+            $this->entityManager->persist($cronjob);
+            $this->entityManager->flush();
+        }
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cronjobs = $this->entityManager->getRepository('App:Cronjob')->getRunnableCronjobs();
 
         if ($cronjobs !== null) {
             foreach ($cronjobs as $cronjob) {
-                foreach ($cronjob->getThrows() as $throw) {
-                    $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
-                    $this->eventDispatcher->dispatch($actionEvent, $throw);
-
-                    // Get crontab expression and set the next and last run properties
-                    // Save cronjob in the database
-                    $cronExpression = new CronExpression($cronjob->getCrontab());
-                    $cronjob->setNextRun($cronExpression->getNextRunDate());
-                    $cronjob->setLastRun(new \DateTime('now'));
-
-                    $this->entityManager->persist($cronjob);
-                    $this->entityManager->flush();
-                }
+               $this->makeActionEvent($cronjob);
             }
         }
 
