@@ -6,7 +6,6 @@ namespace App\Command;
 
 use App\Event\ActionEvent;
 use Cron\CronExpression;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,8 +23,7 @@ class CronjobCommand extends Command
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcher $eventDispatcher
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
 
@@ -45,12 +43,11 @@ class CronjobCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-
-        $cronjobs = $this->entityManager->getRepository("App:Cronjob")->getRunnableCronjobs();
+        $cronjobs = $this->entityManager->getRepository('App:Cronjob')->getRunnableCronjobs();
 
         if ($cronjobs !== null) {
-            foreach($cronjobs as $cronjob){
-                foreach($cronjob->getThrows() as $throw) {
+            foreach ($cronjobs as $cronjob) {
+                foreach ($cronjob->getThrows() as $throw) {
                     $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
                     $this->eventDispatcher->dispatch($actionEvent, $throw);
 

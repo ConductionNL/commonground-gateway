@@ -96,8 +96,6 @@ class Action
      */
     private bool $async;
 
-
-
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -198,6 +196,4 @@ class Action
 
         return $this;
     }
-
-
 }

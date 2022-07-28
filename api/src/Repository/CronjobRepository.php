@@ -54,7 +54,6 @@ class CronjobRepository extends ServiceEntityRepository
             ->andWhere('c.nextRun <= :val OR c.nextRun is NULL')
             ->setParameter('val', new \DateTime('now'))
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
 }
