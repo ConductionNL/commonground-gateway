@@ -17,6 +17,7 @@ config:
   debug: 0
   cache: true
   githubKey: ''
+  samesiteCookie: lax
   crontab: '*/5 * * * *'
 
 security:
