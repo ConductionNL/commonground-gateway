@@ -297,12 +297,25 @@ class Log
      */
     private $handler;
 
+    // todo: It would be nice if we could use a relation here instead of $objectId...
+    // todo: ...but this will have the side-effect that we have to delete all logs of an Object if we delete the Object.
+//    /**
+//     * @Groups({"read", "write"})
+//     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="logs")
+//     * @MaxDepth(1)
+//     */
+//    private $object;
+
     /**
-     * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="logs")
-     * @MaxDepth(1)
+     * @var string|null The object the api-call was for, in case of a PUT, GET ITEM or DELETE.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $object;
+    private ?string $objectId;
 
     /**
      * @var Datetime The moment this resource was created
@@ -591,14 +604,14 @@ class Log
         return $this;
     }
 
-    public function getObject(): ?ObjectEntity
+    public function getObjectId(): ?string
     {
-        return $this->object;
+        return $this->objectId;
     }
 
-    public function setObject(?ObjectEntity $object): self
+    public function setObjectId(?string $objectId): self
     {
-        $this->object = $object;
+        $this->objectId = $objectId;
 
         return $this;
     }

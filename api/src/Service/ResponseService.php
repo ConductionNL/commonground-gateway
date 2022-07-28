@@ -79,7 +79,7 @@ class ResponseService
         }
 
         // Use sql to find last get item log of the current user for the given object.
-        $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity, $user->getUserIdentifier());
+        $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity->getId()->toString(), $user->getUserIdentifier());
 
         if (!empty($logs) and $logs[0] instanceof Log) {
             return $logs[0]->getDateCreated();

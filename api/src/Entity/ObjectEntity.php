@@ -192,12 +192,6 @@ class ObjectEntity
     private Collection $requestLogs;
 
     /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=Log::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $logs;
-
-    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -221,7 +215,6 @@ class ObjectEntity
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
-        $this->logs = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -832,36 +825,6 @@ class ObjectEntity
             // set the owning side to null (unless already changed)
             if ($requestLog->getObjectEntity() === $this) {
                 $requestLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Log[]
-     */
-    public function getLogs(): Collection
-    {
-        return $this->logs;
-    }
-
-    public function addLog(Log $log): self
-    {
-        if (!$this->logs->contains($log)) {
-            $this->logs[] = $log;
-            $log->setObject($this);
-        }
-
-        return $this;
-    }
-
-    public function removeLog(Log $log): self
-    {
-        if ($this->logs->removeElement($log)) {
-            // set the owning side to null (unless already changed)
-            if ($log->getObject() === $this) {
-                $log->setObject(null);
             }
         }
 
