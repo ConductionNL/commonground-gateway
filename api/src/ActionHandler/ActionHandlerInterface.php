@@ -3,10 +3,11 @@
 namespace App\ActionHandler;
 
 use App\Entity\Action;
+use Doctrine\ORM\EntityManagerInterface;
 
 interface ActionHandlerInterface
 {
-    public function __construct();
+    public function __construct(EntityManagerInterface $entityManager);
 
     public function __run(array $data, array $configuration): array;
 }

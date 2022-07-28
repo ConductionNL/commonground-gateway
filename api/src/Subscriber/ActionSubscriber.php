@@ -42,7 +42,7 @@ class ActionSubscriber implements EventSubscriberInterface
     public function runFunction(Action $action, array $data): array
     {
         $class = $action->getFunction();
-        $object = new $class();
+        $object = new $class($this->entityManager);
         if($object instanceof ActionHandlerInterface)
             $data = $object->__run($data, $action->getConfiguration());
         return $data;
