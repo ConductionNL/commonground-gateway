@@ -299,7 +299,7 @@ class Log
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="logs")
      * @MaxDepth(1)
      */
     private $object;
