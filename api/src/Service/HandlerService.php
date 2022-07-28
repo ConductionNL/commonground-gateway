@@ -105,7 +105,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->request]);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->getDataFromRequest(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
