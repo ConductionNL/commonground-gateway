@@ -44,9 +44,10 @@ class CronjobCommand extends Command
     }
 
     /**
-     * This function makes action events
+     * This function makes action events.
      *
      * @param Cronjob $cronjob
+     *
      * @throws Exception
      */
     public function makeActionEvent(Cronjob $cronjob): void
@@ -72,7 +73,7 @@ class CronjobCommand extends Command
 
         if ($cronjobs !== null) {
             foreach ($cronjobs as $cronjob) {
-               $this->makeActionEvent($cronjob);
+                $this->makeActionEvent($cronjob);
             }
         }
 
