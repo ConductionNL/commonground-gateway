@@ -23,18 +23,24 @@ class LogRepository extends ServiceEntityRepository
     /**
      * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log. (and only logs where response was a 200).
      *
-     * @param ObjectEntity $objectEntity
-     * @param string       $userId
+     * @param string $objectId
+     * @param string $userId
      *
      * @return array
      */
-    public function findDateRead(ObjectEntity $objectEntity, string $userId): array
+    public function findDateRead(string $objectId, string $userId): array
     {
         $query = $this->createQueryBuilder('l')
             ->leftJoin('l.endpoint', 'e')
-            ->where('l.object = :object AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
+            ->where('l.objectId = :objectId AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
             ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
-            ->setParameters(['object' => $objectEntity, 'responseStatusCode' => 200, 'userId' => $userId, 'method' => 'get', 'operationType' => 'item'])
+            ->setParameters([
+                    'objectId' => $objectId,
+                    'responseStatusCode' => 200,
+                    'userId' => $userId,
+                    'method' => 'get',
+                    'operationType' => 'item'
+                ])
             ->orderBy('l.dateCreated', 'DESC')
             ->distinct();
 

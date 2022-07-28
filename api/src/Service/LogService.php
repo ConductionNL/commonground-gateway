@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Endpoint;
 use App\Entity\Log;
+use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
@@ -120,7 +121,7 @@ class LogService
             if ($this->session->get('object')) {
                 $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => $this->session->get('object')]);
             }
-            $callLog->setObject(!empty($object) ? $object : null);
+            $callLog->setObjectId(!empty($object) ? $this->session->get('object') : null);
 
             $user = $this->security->getUser();
             $callLog->setUserId($user !== null ? $user->getUserIdentifier() : null);
@@ -170,11 +171,14 @@ class LogService
     {
         if ($callLog->getResponseStatusCode() === 200 && !empty($callLog->getEndpoint()) &&
             $callLog->getEndpoint()->getOperationType() === 'item' && $callLog->getUserId() !== null &&
-            strtolower($callLog->getEndpoint()->getMethod()) === 'get' && !empty($callLog->getObject())) {
+            strtolower($callLog->getEndpoint()->getMethod()) === 'get' && !empty($callLog->getObjectId())) {
             // Check if there exist Unread objects for this Object+User. If so, delete them.
-            $unreads = $this->entityManager->getRepository('App:Unread')->findBy(['object' => $callLog->getObject(), 'userId' => $callLog->getUserId()]);
-            foreach ($unreads as $unread) {
-                $this->entityManager->remove($unread);
+            $object = $this->entityManager->getRepository('App:ObjectEntity')->find($callLog->getObjectId());
+            if ($object instanceof ObjectEntity) {
+                $unreads = $this->entityManager->getRepository('App:Unread')->findBy(['object' => $object, 'userId' => $callLog->getUserId()]);
+                foreach ($unreads as $unread) {
+                    $this->entityManager->remove($unread);
+                }
             }
         }
     }
