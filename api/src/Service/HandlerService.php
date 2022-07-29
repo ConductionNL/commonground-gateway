@@ -8,6 +8,7 @@ use App\Entity\Handler;
 use App\Event\EndpointTriggeredEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -123,10 +124,8 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-                $methods = [];
-                foreach ($handler->getMethods() as $method) {
-                    $methods[] = strtoupper($method);
-                }
+                $methods = $handler->getMethods();
+                array_map('strtoupper', $methods);
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
                 $this->stopwatch->lap('handleHandlers');
@@ -136,7 +135,7 @@ class HandlerService
             // Check the JSON logic (voorbeeld van json logic in de validatie service)
             /* @todo acctualy check for json logic */
 
-            if (true) {
+            if (JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
