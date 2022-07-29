@@ -124,18 +124,13 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-                $methods = $handler->getMethods();
-                array_map('strtoupper', $methods);
+                $methods = array_map('strtoupper', $handler->getMethods());
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-
-            // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            /* @todo acctualy check for json logic */
-
-            if (JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
