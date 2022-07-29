@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Log;
+use App\Entity\ObjectEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,6 +18,35 @@ class LogRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Log::class);
+    }
+
+    /**
+     * Returns all get item logs on the given ObjectEntity by the given user, ordered by creation date of the log. (and only logs where response was a 200).
+     *
+     * @param string $objectId
+     * @param string $userId
+     *
+     * @return array
+     */
+    public function findDateRead(string $objectId, string $userId): array
+    {
+        $query = $this->createQueryBuilder('l')
+            ->leftJoin('l.endpoint', 'e')
+            ->where('l.objectId = :objectId AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
+            ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
+            ->setParameters([
+                'objectId'           => $objectId,
+                'responseStatusCode' => 200,
+                'userId'             => $userId,
+                'method'             => 'get',
+                'operationType'      => 'item',
+            ])
+            ->orderBy('l.dateCreated', 'DESC')
+            ->distinct();
+
+        return $query
+            ->getQuery()
+            ->getResult();
     }
 
     // /**
