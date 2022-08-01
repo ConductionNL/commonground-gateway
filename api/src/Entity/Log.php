@@ -210,6 +210,17 @@ class Log
     private $responseContent;
 
     /**
+     * @var string The userId of the user that did the request.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $userId;
+
+    /**
      * @var string The session of this Log.
      *
      * @Assert\NotNull
@@ -285,6 +296,26 @@ class Log
      * @MaxDepth(1)
      */
     private $handler;
+
+    // todo: It would be nice if we could use a relation here instead of $objectId...
+    // todo: ...but this will have the side-effect that we have to delete all logs of an Object if we delete the Object.
+//    /**
+//     * @Groups({"read", "write"})
+//     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="logs")
+//     * @MaxDepth(1)
+//     */
+//    private $object;
+
+    /**
+     * @var string|null The object the api-call was for, in case of a PUT, GET ITEM or DELETE.
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $objectId;
 
     /**
      * @var Datetime The moment this resource was created
@@ -465,6 +496,18 @@ class Log
         return $this;
     }
 
+    public function getUserId(): ?string
+    {
+        return $this->userId;
+    }
+
+    public function setUserId(?string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
     public function getSession(): ?string
     {
         return $this->session;
@@ -557,6 +600,18 @@ class Log
     public function setGateway(?Gateway $gateway): self
     {
         $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getObjectId(): ?string
+    {
+        return $this->objectId;
+    }
+
+    public function setObjectId(?string $objectId): self
+    {
+        $this->objectId = $objectId;
 
         return $this;
     }

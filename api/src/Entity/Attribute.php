@@ -13,6 +13,7 @@ use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -125,6 +126,19 @@ class Attribute
      * @MaxDepth(1)
      */
     private Entity $entity;
+
+    /**
+     * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently.
+     *             Note that the following options also expect the attribute to be readOnly: "self", "uri", "externalId", "dateCreated", "dateModified".
+     *             And the type of this attribute must be string (or date/datetime for dateCreated/dateModified) or the function can not be set/changed!
+     *
+     * @example self
+     *
+     * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", options={"default":"noFunction"})
+     */
+    private string $function = 'noFunction';
 
     /**
      * Null, or the Entity this attribute is part of, if it is allowed to partial search on this attribute using the search query parameter.
@@ -769,19 +783,58 @@ class Attribute
         return $this;
     }
 
+    public function getFunction(): ?string
+    {
+        return $this->function;
+    }
+
+    /**
+     * @todo docs
+     *
+     * @param string|null $function
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
+    public function setFunction(?string $function): self
+    {
+        if (in_array($function, ['id', 'self', 'uri', 'externalId', 'dateCreated', 'dateModified', 'userName'])) {
+            if ($this->getType() !== 'string' && (!str_contains($function, 'date') || !str_contains($this->getType(), 'date'))) {
+                throw new Exception('This function expects this attribute to have a different type! string or date/datetime, depending on the function (not: '.$this->getType().')');
+                // todo: or just always set the type to the correct one?
+            }
+            // These functions require this attribute to be readOnly!
+            $this->setReadOnly(true);
+        }
+        $this->function = $function;
+
+        return $this;
+    }
+
     public function getSearchPartial(): ?Entity
     {
         return $this->searchPartial;
     }
 
+    /**
+     * @todo docs
+     *
+     * @param Entity|null $searchPartial
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
     public function setSearchPartial(?Entity $searchPartial): self
     {
         // Only allow null or the entity of this Attribute when setting searchPartial.
         // Allow setting searchPartial when entity is not set, because of loading in fixtures.
         if ($searchPartial === null || !isset($this->entity) || $searchPartial === $this->entity) {
             $this->searchPartial = $searchPartial;
+        } else {
+            throw new Exception('You are not allowed to set searchPartial of an Attribute to any other Entity than the Entity of the Attribute.');
         }
-        //todo: else throw error?
 
         return $this;
     }
@@ -1338,6 +1391,7 @@ class Attribute
         $validations['cascade'] = $this->getCascade();
         $validations['immutable'] = $this->getImmutable();
         $validations['unsetable'] = $this->getUnsetable();
+        $validations['readOnly'] = $this->getReadOnly();
 
         return $validations;
     }
@@ -1428,6 +1482,9 @@ class Attribute
         }
         if (array_key_exists('unsetable', $validations)) {
             $this->setUnsetable($validations['unsetable']);
+        }
+        if (array_key_exists('readOnly', $validations)) {
+            $this->setReadOnly($validations['readOnly']);
         }
 
         return $this;

@@ -81,6 +81,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
 RUN set -eux; \
+    composer global config allow-plugins.symfony/flex true; \
 	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative --no-scripts; \
 	composer clear-cache
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
@@ -103,6 +104,7 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 	echo -e "xdebug.overload_var_dump=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 RUN mkdir -p /cert
+RUN mkdir -p /srv/api/vendor
 COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/etc/php
@@ -127,6 +129,7 @@ RUN set -eux; \
 RUN chown -R commonground-gateway:commonground-gateway bin
 RUN chown -R commonground-gateway:commonground-gateway var
 RUN chown -R commonground-gateway:commonground-gateway /cert
+RUN chown -R commonground-gateway:commonground-gateway vendor
 VOLUME /srv/api/var
 USER commonground-gateway
 

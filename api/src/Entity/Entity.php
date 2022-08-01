@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -222,7 +223,7 @@ class Entity
     private Collection $requestLogs;
 
     /**
-     * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
+     * @var array Used for ConvertToGatewayService. Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
@@ -230,20 +231,36 @@ class Entity
     private array $translationConfig = [];
 
     /**
-     * @var array Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationNext" for where to find the next page if pagination (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
+     * @var array Used for ConvertToGatewayService. Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationPages" for where to find the total amount of pages or a reference to the last page (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationNext' => 'hydra:view.hydra:next'];
+    private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationPages' => 'hydra:view.hydra:last'];
 
     /**
-     * @var array Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
+     * @var array Used for ConvertToGatewayService. Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
     private array $itemConfig = [];
+
+    /**
+     * @var array|null Used for ConvertToGatewayService. The mapping in from extern source to gateway.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $externMappingIn = [];
+
+    /**
+     * @var array|null Used for ConvertToGatewayService. The mapping out from gateway to extern source.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $externMappingOut = [];
 
     /**
      * @var array|null The handlers used for this entity.
@@ -514,6 +531,15 @@ class Entity
         return $this->searchPartial;
     }
 
+    /**
+     * @todo docs
+     *
+     * @param Attribute $attribute
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
     public function addSearchPartial(Attribute $attribute): self
     {
         // Only allow adding to searchPartial if the attribute is part of this Entity.
@@ -523,8 +549,9 @@ class Entity
         ) {
             $this->searchPartial[] = $attribute;
             $attribute->setSearchPartial($this);
+        } else {
+            throw new Exception('You are not allowed to set searchPartial of an Entity to an Attribute that is not part of this Entity.');
         }
-        //todo: else throw error?
 
         return $this;
     }
@@ -753,6 +780,30 @@ class Entity
     public function setItemConfig(?array $itemConfig): self
     {
         $this->itemConfig = $itemConfig;
+
+        return $this;
+    }
+
+    public function getExternMappingIn(): ?array
+    {
+        return $this->externMappingIn;
+    }
+
+    public function setExternMappingIn(?array $externMappingIn): self
+    {
+        $this->externMappingIn = $externMappingIn;
+
+        return $this;
+    }
+
+    public function getExternMappingOut(): ?array
+    {
+        return $this->externMappingOut;
+    }
+
+    public function setExternMappingOut(?array $externMappingOut): self
+    {
+        $this->externMappingOut = $externMappingOut;
 
         return $this;
     }

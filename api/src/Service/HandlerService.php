@@ -5,9 +5,11 @@ namespace App\Service;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
+use App\Event\EndpointTriggeredEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -32,6 +34,7 @@ class HandlerService
     private CacheInterface $cache;
     private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
+    private EventDispatcherInterface $eventDispatcher;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -70,7 +73,8 @@ class HandlerService
         SubscriberService $subscriberService,
         CacheInterface $cache,
         GatewayService $gatewayService,
-        Stopwatch $stopwatch
+        Stopwatch $stopwatch,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -89,6 +93,7 @@ class HandlerService
         $this->cache = $cache;
         $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -100,6 +105,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
+        $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'PRE_HANDLER']);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -109,6 +115,7 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
+        $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -138,6 +145,9 @@ class HandlerService
                 $result = $this->handleHandler($handler, $endpoint);
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
+
+                $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'POST_HANDLER']);
+                $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
 
                 return $result;
             }
