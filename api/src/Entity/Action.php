@@ -108,11 +108,9 @@ class Action
     /**
      * @var array The configuration of the action
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="simple_array", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
     private array $configuration = [];
-
-
 
     public function getId(): ?UuidInterface
     {
@@ -226,6 +224,4 @@ class Action
 
         return $this;
     }
-
-
 }
