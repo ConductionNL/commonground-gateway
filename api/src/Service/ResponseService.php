@@ -437,6 +437,7 @@ class ResponseService
                     if (!$attribute->getMultiple()) {
                         $object = $valueObject->getValue();
                         if (!$object instanceof ObjectEntity) {
+                            $response[$attribute->getName()] = null;
                             continue;
                         }
                         if ($acceptType === 'jsonld') {
@@ -449,6 +450,7 @@ class ResponseService
                     }
                     $objects = $valueObject->getValue();
                     if (!is_array($objects)) {
+                        $response[$attribute->getName()] = null;
                         continue;
                     }
                     foreach ($objects as $object) {
