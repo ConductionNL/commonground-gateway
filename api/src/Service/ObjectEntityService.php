@@ -378,10 +378,8 @@ class ObjectEntityService
                 }
             }
             $this->stopwatch->stop('checkOwner+organization');
-            if ($object instanceof ObjectEntity) {
-                if ($object->getId()) {
-                    $this->session->set('object', $object->getId()->toString());
-                }
+            if ($object instanceof ObjectEntity && $object->getId()) {
+                $this->session->set('object', $object->getId()->toString());
             }
         }
 
