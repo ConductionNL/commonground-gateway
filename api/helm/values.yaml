@@ -18,6 +18,7 @@ config:
   cache: true
   githubKey: ''
   samesiteCookie: lax
+  crontab: '*/5 * * * *'
 
 security:
   authEnabled: true

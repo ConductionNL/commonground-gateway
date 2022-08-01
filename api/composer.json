@@ -28,6 +28,7 @@
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpword": "^0.18.2",
         "respect/validation": "^2.2",
+        "setono/cron-expression-bundle": "^1.5",
         "symfony/asset": "5.3.*",
         "symfony/console": "5.3.*",
         "symfony/contracts": "^2.4.0",
