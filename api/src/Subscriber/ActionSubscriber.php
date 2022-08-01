@@ -6,6 +6,7 @@ use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ActionSubscriber implements EventSubscriberInterface
@@ -34,9 +35,9 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function runFunction(Action $action, array $data): array
     {
-        $class = $action->getFunction();
+        $class = $action->getClass();
         $object = new $class($this->entityManager);
-        if ($object instanceof ActionHandlerInterface) {
+        if($object instanceof ActionHandlerInterface)
             $data = $object->__run($data, $action->getConfiguration());
         }
 
@@ -52,7 +53,11 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function checkConditions(Action $action, array $data): bool
     {
-        return true;
+        $conditions = $action->getConditions();
+
+        $result = JsonLogic::apply($conditions, $data);
+
+        return (bool) $result;
     }
 
     public function handleAction(Action $action, ActionEvent $event): ActionEvent

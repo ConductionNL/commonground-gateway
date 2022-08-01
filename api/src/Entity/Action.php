@@ -78,13 +78,13 @@ class Action
     private array $conditions = [];
 
     /**
-     * @var string|null The function that should be run when the action is triggered
+     * @var string|null The class that should be run when the action is triggered
      *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $function = null;
+    private ?string $class = null;
 
     /**
      * @var int The priority of the action
@@ -177,14 +177,14 @@ class Action
         return $this;
     }
 
-    public function getFunction(): ?string
+    public function getClass(): ?string
     {
-        return $this->function;
+        return $this->class;
     }
 
-    public function setFunction(?string $function): self
+    public function setClass(?string $class): self
     {
-        $this->function = $function;
+        $this->class = $class;
 
         return $this;
     }
