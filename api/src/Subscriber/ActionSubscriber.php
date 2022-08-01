@@ -37,7 +37,7 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         $class = $action->getClass();
         $object = new $class($this->entityManager);
-        if($object instanceof ActionHandlerInterface)
+        if($object instanceof ActionHandlerInterface) {
             $data = $object->__run($data, $action->getConfiguration());
         }
 
