@@ -21,6 +21,7 @@ class ActionRepository extends ServiceEntityRepository
 
     /**
      * @param string $listen
+     *
      * @return Action[] The resulting actions
      */
     public function findByListens(string $listen): array

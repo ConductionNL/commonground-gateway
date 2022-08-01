@@ -14,7 +14,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 class EndpointSubscriber implements EventSubscriberInterface
 {
-
     private Client $client;
     private EntityManagerInterface $entityManager;
     private Request $request;
@@ -33,24 +32,24 @@ class EndpointSubscriber implements EventSubscriberInterface
     {
         $this->entityManager = $entityManager;
         $this->client = new Client([
-            'http_errors'   =>  false,
-            'timeout'       =>  4000.0,
-            'verify'        =>  false,
+            'http_errors'   => false,
+            'timeout'       => 4000.0,
+            'verify'        => false,
         ]);
     }
 
     public function getAction(Endpoint $endpoint): ?Action
     {
-        $actions = $this->entityManager->getRepository("App:Action")->findBy(['endpointId' => $endpoint->getId()]);
-        foreach($actions as $action)
-        {
-            if(
+        $actions = $this->entityManager->getRepository('App:Action')->findBy(['endpointId' => $endpoint->getId()]);
+        foreach ($actions as $action) {
+            if (
                 $action instanceof Action &&
                 $action->getType() == 'Life-Event-Notification'
-            ){
+            ) {
                 return $action;
             }
         }
+
         return null;
     }
 
@@ -72,6 +71,7 @@ class EndpointSubscriber implements EventSubscriberInterface
 
         $oin = $action->getConfiguration()['metadata']['oin'];
         $system = $action->getConfiguration()['metadata']['system'];
+
         return "urn:nld:oin:$oin:systeem:$system";
     }
 
@@ -86,6 +86,7 @@ class EndpointSubscriber implements EventSubscriberInterface
     {
         $action = $this->getAction($endpoint);
         $basePath = $action->getConfiguration()['metadata']['haalCentraal-base-path'];
+
         return "$basePath/{$this->getSubject($endpoint)}";
     }
 
@@ -93,13 +94,13 @@ class EndpointSubscriber implements EventSubscriberInterface
     {
         $dateTime = new \DateTime();
         $result = [
-            'specversion'   =>  '1.0',
-            'type'          =>  $this->getEventType($endpoint),
-            'source'        =>  $this->getSource($endpoint),
-            'subject'       =>  $this->getSubject($endpoint),
-            'id'            =>  Uuid::uuid4(),
-            'time'          =>  $dateTime->format('Y-m-d\TH:i:s\Z'),
-            'dataref'       =>  $this->getDataRef($endpoint),
+            'specversion'   => '1.0',
+            'type'          => $this->getEventType($endpoint),
+            'source'        => $this->getSource($endpoint),
+            'subject'       => $this->getSubject($endpoint),
+            'id'            => Uuid::uuid4(),
+            'time'          => $dateTime->format('Y-m-d\TH:i:s\Z'),
+            'dataref'       => $this->getDataRef($endpoint),
         ];
 
         return json_encode($result);
@@ -108,15 +109,14 @@ class EndpointSubscriber implements EventSubscriberInterface
     public function sendEvent(string $event): Response
     {
         // @TODO use the commonground service here with a gateway resource
-        $endpoint   =   "";
-        $apikey     =   "";
+        $endpoint = '';
+        $apikey = '';
 
         return $this->client->post($endpoint, [
             'body'      => $event,
-            'headers'   =>
-                [
-                    'X-Api-Key' => $apikey,
-                ],
+            'headers'   => [
+                'X-Api-Key' => $apikey,
+            ],
         ]);
     }
 
@@ -131,7 +131,6 @@ class EndpointSubscriber implements EventSubscriberInterface
 //        $this->request = $event->getRequest();
 //        $eventContent = $this->getEvent($event->getEndpoint());
 //        $result = $this->sendEvent($eventContent);
-
 
         return $event;
     }
