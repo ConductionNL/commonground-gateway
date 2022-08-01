@@ -250,7 +250,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping in from extern source to gateway.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true, options={"default":"[]"})
+     * @ORM\Column(type="array", nullable=true)
      */
     private ?array $externMappingIn = [];
 
@@ -258,7 +258,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping out from gateway to extern source.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="array", nullable=true, options={"default":"[]"})
+     * @ORM\Column(type="array", nullable=true)
      */
     private ?array $externMappingOut = [];
 

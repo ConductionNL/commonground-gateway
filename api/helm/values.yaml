@@ -17,6 +17,7 @@ config:
   debug: 0
   cache: true
   githubKey: ''
+  samesiteCookie: lax
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 
 # Authentication
