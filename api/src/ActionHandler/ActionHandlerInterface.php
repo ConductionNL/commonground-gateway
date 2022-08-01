@@ -2,7 +2,6 @@
 
 namespace App\ActionHandler;
 
-use App\Entity\Action;
 use Doctrine\ORM\EntityManagerInterface;
 
 interface ActionHandlerInterface

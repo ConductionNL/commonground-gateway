@@ -112,8 +112,6 @@ class Action
      */
     private array $configuration = [];
 
-
-
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -226,6 +224,4 @@ class Action
 
         return $this;
     }
-
-
 }
