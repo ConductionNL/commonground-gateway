@@ -4,8 +4,6 @@ namespace App\ActionHandler;
 
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ZaakTypeHandler implements ActionHandlerInterface
 {
