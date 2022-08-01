@@ -158,10 +158,10 @@ class ResponseService
             'object_'
             .base64_encode(
                 $result->getId()
-                .$acceptType
-                .$level
-                .http_build_query($fields ?? [], '', ',')
-                .http_build_query($extend ?? [], '', ',')
+                .'acceptType_'.$acceptType
+                .'level_'.$level
+                .'fields_'.http_build_query($fields ?? [], '', ',')
+                .'extend_'.http_build_query($extend ?? [], '', ',')
             )
         );
         if ($item->isHit() && !$dateRead) {
