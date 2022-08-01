@@ -21,6 +21,14 @@ class ZaakTypeHandler implements ActionHandlerInterface
         return $dotData->get($configuration['identifierPath']);
     }
 
+    public function overridePath(string $value, string $path, array $data): array
+    {
+        $dotData = new \Adbar\Dot($data);
+        $dotData->set($path, $value);
+
+        return $dotData->jsonSerialize();
+    }
+
     public function __run(array $data, array $configuration): array
     {
         $identifier = $this->getIdentifier($data['request'], $configuration);
@@ -31,7 +39,7 @@ class ZaakTypeHandler implements ActionHandlerInterface
             $objectEntity = $objectEntities[0];
 
             $url = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
-            $data['result'] = $url;
+            $data['request'] = $this->overridePath($url, $configuration['identifierPath'], $data['request']);
         }
 
         return $data;

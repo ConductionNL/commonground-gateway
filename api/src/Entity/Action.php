@@ -2,16 +2,38 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\ActionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource()
+ * This entity holds the information about an Application.
+ *
+ * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/actions/{id}"},
+ *      "put"={"path"="/admin/actions/{id}"},
+ *      "delete"={"path"="/admin/actions/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/actions"},
+ *      "post"={"path"="/admin/actions"}
+ *  })
+ * )
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=ActionRepository::class)
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "name": "exact"
+ * })
  */
 class Action
 {
