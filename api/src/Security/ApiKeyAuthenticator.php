@@ -125,21 +125,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         return $organizations;
     }
 
-    private function setOrganizations(array $user): void
-    {
-        $organizations = $user['organizations'] ?? [];
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
-        }
-        $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
-        $this->session->set('ActiveOrganization', $user['organization']);
-    }
-
     private function prefixRoles(array $roles): array
     {
         foreach ($roles as $key => $value) {
