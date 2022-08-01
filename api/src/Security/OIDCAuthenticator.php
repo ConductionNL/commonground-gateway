@@ -4,6 +4,7 @@ namespace App\Security;
 
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,11 +22,13 @@ class OIDCAuthenticator extends AbstractAuthenticator
 {
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager)
     {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
+        $this->entityManager = $entityManager;
     }
 
     public function supports(Request $request): ?bool
@@ -53,6 +56,14 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $accessToken = $this->authenticationService->authenticate($method, $identifier, $code);
         $result = json_decode(base64_decode(explode('.', $accessToken['access_token'])[1]), true);
 
+        // Set default organization in session for multitenancy (see how this is done in other Authenticators, this can be different for each one!)
+        $defaultOrganization = $this->getDefaultOrganization();
+        $organizations = [$defaultOrganization, 'localhostOrganization'];
+        $parentOrganizations[] = 'localhostOrganization';
+        $this->session->set('organizations', $organizations);
+        $this->session->set('parentOrganizations', $parentOrganizations);
+        $this->session->set('ActiveOrganization', $defaultOrganization);
+
         return new Passport(
             new UserBadge($result['email'], function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
@@ -74,6 +85,24 @@ class OIDCAuthenticator extends AbstractAuthenticator
                 ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
             )
         );
+    }
+
+    private function getDefaultOrganization(): string
+    {
+        // Find application->organization
+        if ($this->session->get('application')) {
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            if (!empty($application) && $application->getOrganization()) {
+                return $application->getOrganization();
+            }
+        }
+        // Else find and return 'the' default organization
+        $organization = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => 'a1c8e0b6-2f78-480d-a9fb-9792142f4761']);
+        if (!empty($organization) && $organization->getOrganization()) {
+            return $organization->getOrganization();
+        }
+
+        return 'http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761';
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

@@ -97,7 +97,7 @@ class ValidaterService
         // Try and get a validator for this Entity(+method) from cache.
         $item = $this->cache->getItem('entityValidators_'.$entity->getId()->toString().'_'.$this->method);
         if ($item->isHit()) {
-//            return $item->get(); // TODO: put this back so that we use caching
+//            return $item->get(); // TODO: put this back so that we use caching, after https://conduction.atlassian.net/browse/GW-183 is fixed.
         }
 
         // No Validator found in cache for this Entity(+method), so create a new Validator and cache that.

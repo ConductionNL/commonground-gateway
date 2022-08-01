@@ -99,7 +99,7 @@ class EmailTemplate
      *
      * @Gedmo\Versioned
      * @Groups({"read","write"})
-     * @ORM\Column(type="array", nullable=true, options={"default":"[]"})
+     * @ORM\Column(type="array", nullable=true, options={"default":null})
      */
     private ?array $variables = [];
 

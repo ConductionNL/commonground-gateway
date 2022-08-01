@@ -87,7 +87,7 @@ class EmailTrigger
      *
      * @Gedmo\Versioned
      * @Groups({"read","write"})
-     * @ORM\Column(type="array", nullable=true, options={"default":"[]"})
+     * @ORM\Column(type="array", nullable=true, options={"default":null})
      */
     private ?array $request = [];
 
@@ -96,7 +96,7 @@ class EmailTrigger
      *
      * @Gedmo\Versioned
      * @Groups({"read","write"})
-     * @ORM\Column(type="array", options={"default":"['DEFAULT']"})
+     * @ORM\Column(type="array")
      */
     private array $hooks = ['DEFAULT'];
 
