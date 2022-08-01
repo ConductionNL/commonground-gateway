@@ -9,6 +9,7 @@ use App\Event\ActionEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use JWadhams\JsonLogic;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,8 +42,8 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function runFunction(Action $action, array $data): array
     {
-        $class = $action->getFunction();
-        $object = new $class();
+        $class = $action->getClass();
+        $object = new $class($this->entityManager);
         if($object instanceof ActionHandlerInterface)
             $data = $object->__run($data, $action->getConfiguration());
         return $data;
@@ -57,7 +58,11 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function checkConditions(Action $action, array $data): bool
     {
-        return true;
+        $conditions = $action->getConditions();
+
+        $result = JsonLogic::apply($conditions, $data);
+
+        return (bool) $result;
     }
 
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
