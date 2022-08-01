@@ -277,10 +277,11 @@ class OasDocumentationService
     }
 
     /**
-     * This function gets the other objects
+     * This function gets the other objects.
      *
      * @param array $xTagGroups
-     * @param int $key
+     * @param int   $key
+     *
      * @return array
      */
     public function getOtherObjects(array $xTagGroups, int &$key): array
@@ -296,7 +297,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the collection group tags
+     * This function returns the collection group tags.
      *
      * @param CollectionEntity $collection
      * @param string           $collectionName
@@ -317,7 +318,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the tags
+     * This function returns the tags.
      *
      * @param Handler  $handler
      * @param Endpoint $endpoint
@@ -335,7 +336,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function adds the groups and tags to the schema
+     * This function adds the groups and tags to the schema.
      *
      * @param Handler  $handler
      * @param Endpoint $endpoint
@@ -394,7 +395,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the links array
+     * This function returns the links array.
      *
      * @param array $schema
      * @param array $schemaProperties
@@ -416,7 +417,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function adds the properties to metadata
+     * This function adds the properties to metadata.
      *
      * @param array $schema
      * @param $items
@@ -462,7 +463,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns a json-hal schema
+     * This function returns a json-hal schema.
      *
      * @param Entity $entity
      * @param array  $schema
@@ -480,7 +481,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function changes the object to an uuid
+     * This function changes the object to an uuid.
      *
      * @param array $oldArray
      *
@@ -504,7 +505,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function adds the properties to metadata
+     * This function adds the properties to metadata.
      *
      * @param $attributes
      *
@@ -627,7 +628,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns a json-hal embedded array
+     * This function returns a json-hal embedded array.
      *
      * @param Entity $entity
      * @param array  $items
@@ -652,7 +653,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns a json-ld schema
+     * This function returns a json-ld schema.
      *
      * @param array  $schema
      * @param array  $items
@@ -862,7 +863,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the serialized response schema
+     * This function returns the serialized response schema.
      *
      * @param Handler $handler
      * @param $responseType
@@ -877,7 +878,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the serialized request schema
+     * This function returns the serialized request schema.
      *
      * @param Handler $handler
      * @param string  $requestType
@@ -892,7 +893,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the response
+     * This function returns the response.
      *
      * @param Handler $handler
      * @param array   $methodArray
@@ -921,7 +922,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the request
+     * This function returns the request.
      *
      * @param Handler $handler
      * @param array   $methodArray
@@ -1064,7 +1065,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns a summary
+     * This function returns a summary.
      *
      * @param string  $method
      * @param Handler $handler
@@ -1113,7 +1114,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the method array
+     * This function returns the method array.
      *
      * @param string  $method
      * @param Handler $handler
@@ -1144,7 +1145,7 @@ class OasDocumentationService
     }
 
     /**
-     * This function returns the endpoint method
+     * This function returns the endpoint method.
      *
      * @param string  $method
      * @param Handler $handler
