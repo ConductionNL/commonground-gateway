@@ -16,10 +16,8 @@ class ZaakTypeHandler implements ActionHandlerInterface
         $this->entityManager = $entityManager;
     }
 
-    public function getIdentifier(Request $request, $configuration): string
+    public function getIdentifier(array $data, $configuration): string
     {
-        $xmlEncoder = new XmlEncoder();
-        $data = $xmlEncoder->decode($request->getContent(), 'xml');
         $dotData = new \Adbar\Dot($data);
 
         return $dotData->get($configuration['identifierPath']);
