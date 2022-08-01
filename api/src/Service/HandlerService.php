@@ -617,4 +617,28 @@ class HandlerService
 
         return $data;
     }
+
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Endpoint $endpoint
+     * @param string   $method
+     *
+     * @return Handler|bool
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array('*', $handler->getMethods())) {
+                return $handler;
+            }
+
+            // Check if handler should be used for this method
+            if (in_array($method, $handler->getMethods())) {
+                return $handler;
+            }
+        }
+
+        return false;
+    }
 }
