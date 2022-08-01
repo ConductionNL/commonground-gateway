@@ -196,9 +196,6 @@ class EavService
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
 
-            // @TODO Persist might not be needed here. Added now for the ObjectEntityService line 216 that sets this object into session with ID
-            $this->em->persist($object);
-
             return $object;
         }
 

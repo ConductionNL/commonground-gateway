@@ -378,7 +378,7 @@ class ObjectEntityService
                 }
             }
             $this->stopwatch->stop('checkOwner+organization');
-            if ($object instanceof ObjectEntity) {
+            if ($object instanceof ObjectEntity && $object->getId()) {
                 $this->session->set('object', $object->getId()->toString());
             }
         }
@@ -481,6 +481,8 @@ class ObjectEntityService
                 $this->functionService->removeResultFromCache = [];
                 $object = $this->saveObject($object, $data);
                 $this->stopwatch->stop('saveObject');
+
+                $this->session->set('object', $object->getId()->toString());
 
                 // Handle Entity Function (note that this might be overwritten when handling the promise later!)
                 $this->stopwatch->start('handleFunction', 'handleObject');
