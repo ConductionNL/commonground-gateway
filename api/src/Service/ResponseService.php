@@ -166,7 +166,7 @@ class ResponseService
         );
         if ($item->isHit() && !$dateRead) {
 //            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
-            return $this->filterResult($item->get(), $result, $skipAuthCheck);
+//            return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
 
