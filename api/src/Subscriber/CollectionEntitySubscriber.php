@@ -8,6 +8,7 @@ use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\CollectionEntity;
+use App\Entity\Endpoint;
 
 class CollectionEntitySubscriber implements EventSubscriberInterface
 {
@@ -30,10 +31,7 @@ class CollectionEntitySubscriber implements EventSubscriberInterface
      */
     public function request(ViewEvent $event)
     {
-        // $responseContent = json_decode($event->getResponse()->getContent());
         $requestContent = json_decode($event->getRequest()->getContent());
-
-        // var_dump($responseContent->id);
 
         if (
             $event->getRequest()->attributes->get('_route') !== 'api_collection_entities_put_item' || !isset($requestContent->prefix)
@@ -41,22 +39,44 @@ class CollectionEntitySubscriber implements EventSubscriberInterface
             return;
         }
 
-        // var_dump($);
+        $oldObject = $event->getRequest()->get('previous_data');
+        $collectionEntity = $this->entityManager->getRepository(CollectionEntity::class)->find($oldObject->getId()->toString());
 
-        $object = $event->getControllerResult();
-        // var_dump($object);
-        var_dump($object->getPrefix());
-        $collectionEntity = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId()->toString());
-
-        $oldPrefix = $collectionEntity->getPrefix();
-        $newPrefix = $requestContent->prefix;
-        var_dump('oldPrefix: ' . $oldPrefix);
-        var_dump('newPrefix: ' . $newPrefix);
-        var_dump('dateModified: ' . $collectionEntity->getDateModified()->format('d M Y H:i:s'));
-
-        foreach ($object->getEndpoints() as $endpoint) {
+        // Replace endpoints paths
+        if (isset($collectionEntity)) {
+            foreach ($collectionEntity->getEndpoints() as $endpoint) {
+                $this->setNewPath($endpoint, $requestContent->prefix, $oldObject->getPrefix());
+            }
+            $this->entityManager->flush();
         }
+    }
 
-        var_dump('success');
+    /**
+     * Sets a new path and pathRegex for given Endpoint
+     * 
+     * @param Endpoint  $endpoint  This is the endpoint which path we update.
+     * @param string    $newPrefix This is the new prefix that will be set.
+     * @param ?string   $oldPrefix This is the old prefix which will be replaced by the new prefix.
+     */
+    private function setNewPath(Endpoint $endpoint, string $newPrefix, ?string $oldPrefix): void
+    {
+        if ($oldPrefix && str_contains($endpoint->getPathRegex(), $oldPrefix)) {
+            // Remove old prefix with new
+            $endpoint->setPathRegex(str_replace($oldPrefix, $newPrefix, $endpoint->getPathRegex()));
+            $endpoint->setPath(str_replace($oldPrefix, $newPrefix, $endpoint->getPath()));
+        } else {
+            // Set prefix for first time
+            $newPath = $endpoint->getPath();
+            $endpointPathRegex = $endpoint->getPathRegex();
+            array_unshift($newPath, $newPrefix);
+            $endpoint->setPath($newPath);
+
+            str_contains($endpointPathRegex, '^(') ?
+                $strToReplace = '^(' :
+                $strToReplace = '^';
+            $newPrefix = $strToReplace . $newPrefix . '/';
+            $endpoint->setPathRegex(str_replace($strToReplace, $newPrefix, $endpointPathRegex));
+        }
+        $this->entityManager->persist($endpoint);
     }
 }
