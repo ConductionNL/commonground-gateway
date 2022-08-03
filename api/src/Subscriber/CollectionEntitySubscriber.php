@@ -2,13 +2,13 @@
 
 namespace App\Subscriber;
 
+use ApiPlatform\Core\EventListener\EventPriorities;
+use App\Entity\CollectionEntity;
+use App\Entity\Endpoint;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\CollectionEntity;
-use App\Entity\Endpoint;
 
 class CollectionEntitySubscriber implements EventSubscriberInterface
 {
@@ -52,11 +52,11 @@ class CollectionEntitySubscriber implements EventSubscriberInterface
     }
 
     /**
-     * Sets a new path and pathRegex for given Endpoint
-     * 
-     * @param Endpoint  $endpoint  This is the endpoint which path we update.
-     * @param string    $newPrefix This is the new prefix that will be set.
-     * @param ?string   $oldPrefix This is the old prefix which will be replaced by the new prefix.
+     * Sets a new path and pathRegex for given Endpoint.
+     *
+     * @param Endpoint $endpoint  This is the endpoint which path we update.
+     * @param string   $newPrefix This is the new prefix that will be set.
+     * @param ?string  $oldPrefix This is the old prefix which will be replaced by the new prefix.
      */
     private function setNewPath(Endpoint $endpoint, string $newPrefix, ?string $oldPrefix): void
     {
@@ -74,7 +74,7 @@ class CollectionEntitySubscriber implements EventSubscriberInterface
             str_contains($endpointPathRegex, '^(') ?
                 $strToReplace = '^(' :
                 $strToReplace = '^';
-            $newPrefix = $strToReplace . $newPrefix . '/';
+            $newPrefix = $strToReplace.$newPrefix.'/';
             $endpoint->setPathRegex(str_replace($strToReplace, $newPrefix, $endpointPathRegex));
         }
         $this->entityManager->persist($endpoint);
