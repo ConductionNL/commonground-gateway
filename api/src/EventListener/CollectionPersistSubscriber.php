@@ -3,11 +3,9 @@
 namespace App\EventListener;
 
 use App\Entity\CollectionEntity;
-use App\Entity\ObjectEntity;
 use App\Service\OasParserService;
 use App\Service\ParseDataService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
@@ -64,9 +62,6 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
         $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId());
 
         if ($collection->getSyncedAt()) {
-            if ($collection->getPrefix() && $collection->getEndpoints()) {
-                $this->updateEndpointPaths($collection->getEndpoints(), $collection->getPrefix());
-            }
             return;
         }
         if (!$collection->getLocationOAS()) {
@@ -77,18 +72,6 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
         }
 
         $this->loadCollection($collection, $object);
-    }
-
-
-    private function updateEndpointPaths(Collection $endpoints, string $prefix)
-    {
-        foreach ($endpoints as $endpoint) {
-            $path = $endpoint->getPath();
-            array_unshift($path, $prefix);
-            $endpoint->setPath($path);
-            $this->entityManager->persist($endpoint);
-        }
-        $this->entityManager->flush();
     }
 
     private function loadCollection(CollectionEntity $collection, object $object)
