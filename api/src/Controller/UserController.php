@@ -337,8 +337,10 @@ class UserController extends AbstractController
      */
     public function RedirectAction(Request $request)
     {
-        if (!empty($request->headers->get('referer')) && $request->headers->get('referer') !== null) {
-            return $this->redirect(filter_var($request->headers->get('referer'), FILTER_SANITIZE_URL));
+        $url = parse_url($request->headers->get('referer'));
+        parse_str($url['query'], $query);
+        if (isset($query['redirectUrl'])) {
+            return $this->redirect(filter_var($query['redirectUrl'], FILTER_SANITIZE_URL));
         } else {
             return $this->redirect($request->getSchemeAndHttpHost());
         }

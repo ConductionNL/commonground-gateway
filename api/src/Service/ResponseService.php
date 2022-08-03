@@ -6,10 +6,13 @@ use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
+use App\Entity\Log;
 use App\Entity\ObjectEntity;
 use App\Entity\RequestLog;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -42,6 +45,7 @@ class ResponseService
     }
 
     // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
+    // todo if we do this^ maybe move the getDateRead function to ObjectEntityService as well
     private function checkOwner(ObjectEntity $result): bool
     {
         // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
@@ -52,6 +56,36 @@ class ResponseService
         }
 
         return false;
+    }
+
+    /**
+     * Get the last date read for the given ObjectEntity, for the current user. (uses sql to search in logs).
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return DateTimeInterface|null
+     */
+    private function getDateRead(ObjectEntity $objectEntity): ?DateTimeInterface
+    {
+        $user = $this->security->getUser();
+        if ($user === null) {
+            return null;
+        }
+
+        // First, check if there is an Unread object for this Object+User. If so, return null.
+        $unreads = $this->em->getRepository('App:Unread')->findBy(['object' => $objectEntity, 'userId' => $user->getUserIdentifier()]);
+        if (!empty($unreads)) {
+            return null;
+        }
+
+        // Use sql to find last get item log of the current user for the given object.
+        $logs = $this->em->getRepository('App:Log')->findDateRead($objectEntity->getId()->toString(), $user->getUserIdentifier());
+
+        if (!empty($logs) and $logs[0] instanceof Log) {
+            return $logs[0]->getDateCreated();
+        }
+
+        return null;
     }
 
     /**
@@ -102,6 +136,14 @@ class ResponseService
     public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
+        $dateRead = false;
+        if (is_array($fields) && array_key_exists('_dateRead', $fields)) {
+            $dateRead = $fields['_dateRead']; // Can be string = 'getItem' in case of a get item call.
+            unset($fields['_dateRead']);
+            if (empty($fields)) {
+                $fields = null;
+            }
+        }
 
         if (
             $result->getEntity()->getGateway() !== null &&
@@ -116,14 +158,14 @@ class ResponseService
             'object_'
             .base64_encode(
                 $result->getId()
-                .$acceptType
-                .$level
-                .http_build_query($fields ?? [], '', ',')
-                .http_build_query($extend ?? [], '', ',')
+                .'acceptType_'.$acceptType
+                .'level_'.$level
+                .'fields_'.http_build_query($fields ?? [], '', ',')
+                .'extend_'.http_build_query($extend ?? [], '', ',')
             )
         );
-        if ($item->isHit()) {
-//            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
+        if ($item->isHit() && !$dateRead) {
+//            var_dump('FromCache: '.$result->getId().'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
@@ -185,10 +227,12 @@ class ResponseService
             return $response;
         }
 
-        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
+        $response = $this->handleAcceptType($result, $fields, $extend, $dateRead, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
 
-        $item->set($response);
-        $this->cache->save($item);
+        if (!$dateRead) {
+            $item->set($response);
+            $this->cache->save($item);
+        }
 
         return $response;
     }
@@ -199,6 +243,7 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
+     * @param bool|string  $dateRead   can be true, false or 'getItem' in case of a get item call.
      * @param string       $acceptType
      * @param int          $level
      * @param array        $response
@@ -206,17 +251,17 @@ class ResponseService
      *
      * @return array
      */
-    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
         switch ($acceptType) {
             case 'jsonld':
-                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $level, $response, $embedded);
+                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $dateRead, $level, $response, $embedded);
                 $gatewayContext = $jsonLd['gatewayContext'];
                 $embedded = $jsonLd['embedded'];
                 break;
             case 'jsonhal':
-                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $level, $response, $embedded);
+                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $dateRead, $level, $response, $embedded);
                 $gatewayContext = $jsonHal['gatewayContext'];
                 $embedded = $jsonHal['embedded'];
                 break;
@@ -238,19 +283,23 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
+     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
+    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
     {
         $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
+        if ($dateRead) {
+            $gatewayContext['@dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        }
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
         $gatewayContext['@application'] = $result->getApplication() !== null ? $result->getApplication()->getId() : null;
@@ -285,13 +334,14 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
+     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
+    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
     {
         $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['_metadata'] = [
@@ -299,12 +349,17 @@ class ResponseService
             '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
             '_dateCreated'  => $result->getDateCreated(),
             '_dateModified' => $result->getDateModified(),
+        ];
+        if ($dateRead) {
+            $gatewayContext['_metadata']['_dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        }
+        $gatewayContext['_metadata'] = array_merge($gatewayContext['_metadata'], [
             '_owner'        => $result->getOwner(),
             '_organization' => $result->getOrganization(),
             '_application'  => $result->getApplication() !== null ? $result->getApplication()->getId() : null,
             '_uri'          => $result->getUri(),
             '_gateway/id'   => $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null),
-        ];
+        ]);
         if (array_key_exists('@type', $response)) {
             $gatewayContext['_metadata']['_gateway/type'] = $response['@type'];
         }
@@ -382,6 +437,7 @@ class ResponseService
                     if (!$attribute->getMultiple()) {
                         $object = $valueObject->getValue();
                         if (!$object instanceof ObjectEntity) {
+                            $response[$attribute->getName()] = null;
                             continue;
                         }
                         if ($acceptType === 'jsonld') {
@@ -394,6 +450,7 @@ class ResponseService
                     }
                     $objects = $valueObject->getValue();
                     if (!is_array($objects)) {
+                        $response[$attribute->getName()] = null;
                         continue;
                     }
                     foreach ($objects as $object) {
@@ -594,11 +651,11 @@ class ResponseService
      * @TODO
      *
      * @param array $result
-     * @param $responseType
+     * @param int   $responseType
      *
      * @return bool
      */
-    public function checkForErrorResponse(array $result, $responseType = Response::HTTP_BAD_REQUEST): bool
+    public function checkForErrorResponse(array $result, int $responseType = Response::HTTP_BAD_REQUEST): bool
     {
         if (
             $responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT

@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Handler;
 use App\Entity\ObjectEntity;
+use App\Entity\Unread;
 use App\Entity\Value;
 use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
@@ -351,11 +352,11 @@ class ObjectEntityService
         $this->session->set('entitySource', $sessionInfo);
         $this->stopwatch->stop('saveEntity+SourceInSession');
 
-        // Check ID
+        // Get filters from query parameters
         $this->stopwatch->start('getFilterFromParameters', 'handleObject');
         $filters = $this->getFilterFromParameters();
-
         $this->stopwatch->stop('getFilterFromParameters');
+
         array_key_exists('id', ($filters)) && $id = $filters['id'];
         !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
@@ -377,7 +378,7 @@ class ObjectEntityService
                 }
             }
             $this->stopwatch->stop('checkOwner+organization');
-            if ($object instanceof ObjectEntity) {
+            if ($object instanceof ObjectEntity && $object->getId()) {
                 $this->session->set('object', $object->getId()->toString());
             }
         }
@@ -408,6 +409,11 @@ class ObjectEntityService
         $extend = $this->eavService->getRequestExtend($this->request);
         $this->stopwatch->stop('getRequestExtend');
 
+        // Check for dateRead query parameter
+        $dateRead = $this->request->query->get('_dateRead');
+        // Use fields array to store this dateRead value for now, will be removed from the array later.
+        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+
         switch ($method) {
             case 'GET':
                 //todo: -start- old code...
@@ -419,6 +425,8 @@ class ObjectEntityService
                             // Lets make sure we always set the self (@id)
                             $object->setSelf($this->createSelf($object));
                         }
+
+                        $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
 
                         $this->stopwatch->start('handleGet', 'handleObject');
                         $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
@@ -473,6 +481,8 @@ class ObjectEntityService
                 $this->functionService->removeResultFromCache = [];
                 $object = $this->saveObject($object, $data);
                 $this->stopwatch->stop('saveObject');
+
+                $this->session->set('object', $object->getId()->toString());
 
                 // Handle Entity Function (note that this might be overwritten when handling the promise later!)
                 $this->stopwatch->start('handleFunction', 'handleObject');
@@ -585,12 +595,41 @@ class ObjectEntityService
             $objectEntity->setOrganization($post['@organization']);
         }
 
-        // If we change an ObjectEntity we should remove it from the result cache
+        // Only do this if we are changing an object, not when creating one.
         if ($this->request->getMethod() != 'POST') {
+            // Handle setting an object as unread.
+            if (array_key_exists('@dateRead', $post) && $post['@dateRead'] == false) {
+                $this->setUnread($objectEntity);
+            }
+
+            // If we change an ObjectEntity we should remove it from the result cache
             $this->functionService->removeResultFromCache($objectEntity);
         }
 
         return $objectEntity;
+    }
+
+    /**
+     * Checks if there exists an unread object for the given ObjectEntity + current UserId. If not, creation one.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
+    private function setUnread(ObjectEntity $objectEntity)
+    {
+        // First, check if there is an Unread object for this Object+User. If so, do nothing.
+        $user = $this->security->getUser();
+        if ($user !== null) {
+            $unreads = $this->entityManager->getRepository('App:Unread')->findBy(['object' => $objectEntity, 'userId' => $user->getUserIdentifier()]);
+            if (empty($unreads)) {
+                $unread = new Unread();
+                $unread->setObject($objectEntity);
+                $unread->setUserId($user->getUserIdentifier());
+                $this->entityManager->persist($unread);
+                // Do not flush, will always be done after the api-call that triggers this function, if that api-call doesn't throw an exception.
+            }
+        }
     }
 
     private function getUserName(): string
@@ -1378,7 +1417,7 @@ class ObjectEntityService
     }
 
     /**
-     * TODO: docs.
+     * Create a NRC notification for the given ObjectEntity.
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method
@@ -1419,6 +1458,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * When rendering a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway,
+     * and when the type of this attribute is object and cascading on this attribute is not allowed,
+     * try and render/use the entire object for all subresources of this attribute.
+     *
+     * @param Collection $objects
+     * @param Attribute  $attribute
+     *
+     * @return array|mixed|null
+     */
     public function renderSubObjects(Collection $objects, Attribute $attribute)
     {
         $results = [];
@@ -1440,6 +1489,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * When rendering a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway,
+     * and when the type of this attribute is object and cascading on this attribute is not allowed,
+     * only render/use the uri for all subresources of this attribute.
+     *
+     * @param Collection $objects
+     * @param Attribute  $attribute
+     *
+     * @return array|mixed|string|null
+     */
     public function getSubObjectIris(Collection $objects, Attribute $attribute)
     {
         $results = [];
@@ -1460,6 +1519,14 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Render a single attribute value for the post body of the api-call/promise to update an object in a source outside the gateway (before doing the api-call).
+     *
+     * @param Value     $value
+     * @param Attribute $attribute
+     *
+     * @return File[]|Value[]|array|bool|Collection|float|int|mixed|string|void|null
+     */
     public function renderValue(Value $value, Attribute $attribute)
     {
         $rendered = '';
@@ -1479,6 +1546,13 @@ class ObjectEntityService
         return $rendered;
     }
 
+    /**
+     * Render the post body, with all attributes to update/send with the api-call/promise to update an object in a source outside the gateway (before doing the api-call).
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return array
+     */
     public function renderPostBody(ObjectEntity $objectEntity): array
     {
         $body = [];
@@ -1494,6 +1568,17 @@ class ObjectEntityService
         return $body;
     }
 
+    /**
+     * Encode body for the api-call/promise to update an object in a source outside the gateway, before doing the api-call.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array        $body
+     * @param array        $headers
+     *
+     * @throws Exception
+     *
+     * @return string
+     */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
@@ -1516,6 +1601,17 @@ class ObjectEntityService
         return $body;
     }
 
+    /**
+     * If there is special translation config for the api-calls/promises to update an object in a source outside the gateway, before doing the api-call.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string       $method
+     * @param array        $headers
+     * @param array        $query
+     * @param string       $url
+     *
+     * @return void
+     */
     public function getTranslationConfig(ObjectEntity $objectEntity, string &$method, array &$headers, array &$query, string &$url): void
     {
         $oldMethod = $method;
@@ -1528,6 +1624,15 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Decide what method and url to use for a promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string       $url
+     * @param string       $method
+     *
+     * @return void
+     */
     public function decideMethodAndUrl(ObjectEntity $objectEntity, string &$url, string &$method): void
     {
         if ($method == 'POST' && $objectEntity->getUri() != $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId()) {
@@ -1541,6 +1646,13 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Makes sure if an ObjectEntity has any subresources these wil also result in promises to update those objects in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
     private function settleSubPromises(ObjectEntity $objectEntity): void
     {
         foreach ($objectEntity->getSubresources() as $sub) {
@@ -1552,6 +1664,16 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * Decodes the response of a successful promise to update an object in a source outside the gateway.
+     *
+     * @param $response
+     * @param ObjectEntity $objectEntity
+     *
+     * @throws Exception
+     *
+     * @return array
+     */
     private function decodeResponse($response, ObjectEntity $objectEntity): array
     {
         switch ($objectEntity->getEntity()->getGateway()->getType()) {
@@ -1576,6 +1698,16 @@ class ObjectEntityService
         return $result;
     }
 
+    /**
+     * Set externalId of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array        $result
+     * @param string       $url
+     * @param string       $method
+     *
+     * @return ObjectEntity
+     */
     private function setExternalId(ObjectEntity $objectEntity, array $result, string $url, string $method): ObjectEntity
     {
         if (array_key_exists('id', $result) && !strpos($url, $result['id'])) {
@@ -1595,6 +1727,14 @@ class ObjectEntityService
         ]);
     }
 
+    /**
+     * Set externalResult of an ObjectEntity after a successful promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param array        $result
+     *
+     * @return ObjectEntity
+     */
     private function setExternalResult(ObjectEntity $objectEntity, array $result): ObjectEntity
     {
         if (!is_null($objectEntity->getEntity()->getAvailableProperties())) {
@@ -1607,6 +1747,19 @@ class ObjectEntityService
         return $objectEntity->setExternalResult($result);
     }
 
+    /**
+     * Handle successful/ok response of a promise to update an object in a source outside the gateway.
+     * Includes updating the Gateway ObjectEntity, Gateway Cache and sending an async notification.
+     *
+     * @param $response
+     * @param ObjectEntity $objectEntity
+     * @param string       $url
+     * @param string       $method
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
+     */
     private function onFulfilled($response, ObjectEntity $objectEntity, string $url, string $method)
     {
         $result = $this->decodeResponse($response, $objectEntity);
@@ -1627,6 +1780,14 @@ class ObjectEntityService
         return $this->setExternalResult($objectEntity, $result);
     }
 
+    /**
+     * Handle error response of a promise to update an object in a source outside the gateway.
+     *
+     * @param $error
+     * @param ObjectEntity $objectEntity
+     *
+     * @return void
+     */
     private function onError($error, ObjectEntity $objectEntity)
     {
         /* @todo lelijke code */
@@ -1655,6 +1816,16 @@ class ObjectEntityService
         $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/') for a full error report');
     }
 
+    /**
+     * Creates a promise to update an object in a source outside the gateway.
+     *
+     * @param ObjectEntity $objectEntity
+     * @param string       $method
+     *
+     * @throws Exception
+     *
+     * @return PromiseInterface
+     */
     public function createPromise(ObjectEntity $objectEntity, string &$method): PromiseInterface
     {
         $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
