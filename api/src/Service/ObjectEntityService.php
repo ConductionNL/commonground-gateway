@@ -366,19 +366,17 @@ class ObjectEntityService
      *
      * @param Endpoint $endpoint
      * @param Entity   $entity
-     * @param $data
+     * @param array    $data
      *
      * @throws GatewayException
      *
      * @return ObjectEntity|string[]|void
      */
-    public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, &$data)
+    public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
             $data = $data['results'][0];
-            if (isset($data['id']) && Uuid::isValid($data['id'])) {
-                $this->session->set('object', $data['id']);
-            }
+            isset($data['id']) && Uuid::isValid($data['id']) ?? $this->session->set('object', $data['id']);
         } elseif ((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') {
             throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -389,32 +387,27 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param $data
-     * @param $object
-     * @param $fields
-     * @param $extend
-     * @param $acceptType
-     *
-     * @throws CacheException
-     * @throws InvalidArgumentException
+     * @param array $data
+     * @param ObjectEntity|null $object
+     * @param array $fields
+     * @param array $extend
+     * @param string $acceptType
      *
      * @return string[]
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
-    public function checkGetObjectExceptions(&$data, $object, $fields, $extend, $acceptType): array
+    public function checkGetObjectExceptions(array &$data, ?ObjectEntity $object, array $fields, array $extend, string $acceptType): array
     {
         if ($object instanceof ObjectEntity) {
-            if (!$object->getSelf()) {
-                // Lets make sure we always set the self (@id)
-                $object->setSelf($this->createSelf($object));
-            }
-
+            !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
             $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
-
             $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
-            if ($object->getHasErrors()) {
-                $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
-                $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-            }
+
+            $object->getHasErrors() ?? $data['validationServiceErrors'] = [
+                'Warning' => 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!',
+                'Errors' => $object->getAllErrors()
+            ];
         } else {
             $data['error'] = $object;
         }
@@ -460,9 +453,7 @@ class ObjectEntityService
             $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
             //todo: -end- old code...
 
-            if ($this->session->get('endpoint')) {
-                $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
-            }
+            $this->session->get('endpoint') ??  $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
 
         return $data;
@@ -471,11 +462,11 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param $data
+     * @param array $data
      *
      * @return string
      */
-    public function checkAndUnsetOwner(&$data): string
+    public function checkAndUnsetOwner(array &$data): string
     {
         // todo: what about @organization? (See saveObject function, test it first, look at and compare with old code!)
         // Check if @owner is present in the body and if so unset it.
@@ -580,20 +571,19 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param $data
-     * @param $endpoint
-     * @param $entity
-     * @param $method
-     * @param $acceptType
+     * @param array $data
+     * @param Endpoint $endpoint
+     * @param Entity $entity
+     * @param string $method
+     * @param string $acceptType
      *
+     * @return string[]|void
      * @throws CacheException
      * @throws ComponentException
      * @throws GatewayException
      * @throws InvalidArgumentException
-     *
-     * @return string[]|void
      */
-    public function switchMethod(&$data, $endpoint, $entity, $method, $acceptType)
+    public function switchMethod(array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
     {
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
