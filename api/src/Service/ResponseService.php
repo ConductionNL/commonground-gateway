@@ -165,7 +165,7 @@ class ResponseService
             )
         );
         if ($item->isHit() && !$dateRead) {
-//            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
+//            var_dump('FromCache: '.$result->getId().'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
@@ -437,6 +437,7 @@ class ResponseService
                     if (!$attribute->getMultiple()) {
                         $object = $valueObject->getValue();
                         if (!$object instanceof ObjectEntity) {
+                            $response[$attribute->getName()] = null;
                             continue;
                         }
                         if ($acceptType === 'jsonld') {
@@ -449,6 +450,7 @@ class ResponseService
                     }
                     $objects = $valueObject->getValue();
                     if (!is_array($objects)) {
+                        $response[$attribute->getName()] = null;
                         continue;
                     }
                     foreach ($objects as $object) {

@@ -233,7 +233,7 @@ class HandlerService
 
         // To start it al off we need the data from the incomming request
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && ($data == null || empty($data))) {
-                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
+            throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // Update current Log
