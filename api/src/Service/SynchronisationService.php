@@ -36,49 +36,45 @@ class SynchronisationService
 
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
     // todo: rondom pagination, en locatie van de results vandaan komt).
-    public function getFromSource(Gateway $gateway): array
+    public function getFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
     {
         $component = $this->gatewayService->gatewayToArray($gateway);
-        $url = $this->getUrlForSource($gateway);
+        $url = $this->getUrlForSource($gateway, $location);
 
-        // todo: use callService with url
-        $response = $this->commonGroundService->callService($component, $url, '', [], [], false, 'GET');
+        // todo: get amount of pages
+        $amountOfPages = $this->getAmountOfPages($component, $url);
 
         // todo: asyn messages? for each page
 
         return [];
     }
 
-    private function getUrlForSource(Gateway $gateway): string
+    private function getUrlForSource(Gateway $gateway, string $location): string
     {
         // todo: generate url with correct query params etc.
 
         return '';
     }
 
-    // todo: Een functie die kijkt of  er al een synchronistie object is aan de hand van de source
-    // todo: (dus zoekt op source + endpoint + externeid) onderdeel van de EntityRepository
-    public function findSyncBySource(Gateway $gateway)//: ?Sync $sync
+    private function getAmountOfPages(array $component, string $url): int
     {
+        // todo: use callService with url
+        $response = $this->commonGroundService->callService($component, $url, '', [], [], false, 'GET');
 
-        return null;
-    }
-
-    // todo: Een functie die kijkt of er al een synchronisatie object is aan de hand van een objectEntity
-    // todo: (dus zoekt op object + source + endooint) onderdeel van de EntityRepository
-    public function findSyncByObject(ObjectEntity $objectEntity, Gateway $gateway)//: ?Sync $sync
-    {
-
-        return null;
+        return 1;
     }
 
     // todo: Een functie die aan de hand van een synchronisatie object een sync uitvoert, om dubbele bevragingen
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
-    public function handleSync(Sync $sync, array $externObject): ObjectEntity
+    public function handleSync(Sync $sync, array $sourceObject): ObjectEntity
     {
+        // todo: if $sourceObject array is given continue, else get it from the source.
+        // todo: check if hash of $sourceObject matches the already existing hash
+        // todo: if so, update syncDatum and return
+        // todo: else: sync (check if ObjectEntity exists, if not create one, else update it)
 
         $entity = new Entity(); // todo $sync->getEntity() ?
-        return $this->saveAsGatewayObject($entity, $externObject);
+        return $this->saveAsGatewayObject($entity, $sourceObject);
     }
 
 
