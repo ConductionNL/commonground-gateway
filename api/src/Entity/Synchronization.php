@@ -33,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/synchronizations"},
  *      "post"={"path"="/admin/synchronizations"}
  *  })
- * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
+ * @ORM\Entity(repositoryClass="App\Repository\SynchronizationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
