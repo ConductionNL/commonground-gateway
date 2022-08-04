@@ -11,14 +11,15 @@ App\Entity\Action:
         async: false
         configuration:
             eavObject: 04b8f5ec-65f0-4fed-aff4-57228e373614
-            source: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/zrc/1.2.x/openapi.yaml
-            location: /admin/object_entities
+            source: /admin/gateways/{uuid}
+            location: /zaken
             apiSource:
-                locationObjects:
-                locationTotalCount:
-                nameId:
-                nameDateChanged:
-                results:
-                queryMethod:
-                syncFromList:
+                locationObjects: '#'
+                locationTotalCount: '#'
+                idField: id
+                dateChangedField: dateModified
+                results: 30
+                queryMethod: page
+                syncFromList: true
+                sourceLeading: true
                 
