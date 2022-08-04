@@ -5,7 +5,7 @@ namespace App\Service;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
@@ -106,7 +106,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'PRE_HANDLER']);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->getDataFromRequest(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -116,7 +116,7 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
-        $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+        $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -136,12 +136,12 @@ class HandlerService
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-                $result = $this->handleHandler($handler, $endpoint);
+                $result = $this->handleHandler($handler, $endpoint, $event->getData());
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
-                $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'POST_HANDLER']);
-                $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+                $event = new ActionEvent('commongateway.handler.post', ['request' => $this->request]);
+                $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
             }
@@ -211,7 +211,7 @@ class HandlerService
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
-    public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
+    public function handleHandler(Handler $handler = null, Endpoint $endpoint, array $data = []): Response
     {
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
@@ -232,12 +232,8 @@ class HandlerService
         // }
 
         // To start it al off we need the data from the incomming request
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $data = $this->getDataFromRequest($this->request);
-
-            if ($data == null || empty($data)) {
+        if (in_array($method, ['POST', 'PUT', 'PATCH']) && ($data == null || empty($data))) {
                 throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-            }
         }
 
         // Update current Log
