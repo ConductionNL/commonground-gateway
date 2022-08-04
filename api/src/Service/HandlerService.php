@@ -8,6 +8,7 @@ use App\Entity\Handler;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -105,7 +106,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->request]);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->getDataFromRequest(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -123,26 +124,19 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-                $methods = [];
-                foreach ($handler->getMethods() as $method) {
-                    $methods[] = strtoupper($method);
-                }
+                $methods = array_map('strtoupper', $handler->getMethods());
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-
-            // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            /* @todo acctualy check for json logic */
-
-            if (true) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-                $result = $this->handleHandler($handler, $endpoint);
+                $result = $this->handleHandler($handler, $endpoint, $event->getData());
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
@@ -217,7 +211,7 @@ class HandlerService
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
-    public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
+    public function handleHandler(Handler $handler = null, Endpoint $endpoint, array $data = []): Response
     {
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
@@ -238,12 +232,8 @@ class HandlerService
         // }
 
         // To start it al off we need the data from the incomming request
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $data = $this->getDataFromRequest($this->request);
-
-            if ($data == null || empty($data)) {
-                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-            }
+        if (in_array($method, ['POST', 'PUT', 'PATCH']) && ($data == null || empty($data))) {
+            throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // Update current Log
@@ -622,5 +612,29 @@ class HandlerService
         }
 
         return $data;
+    }
+
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Endpoint $endpoint
+     * @param string   $method
+     *
+     * @return Handler|bool
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array('*', $handler->getMethods())) {
+                return $handler;
+            }
+
+            // Check if handler should be used for this method
+            if (in_array($method, $handler->getMethods())) {
+                return $handler;
+            }
+        }
+
+        return false;
     }
 }

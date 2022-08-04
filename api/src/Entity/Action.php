@@ -2,16 +2,38 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\ActionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource()
+ * This entity holds the information about an Application.
+ *
+ * @ApiResource(
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/actions/{id}"},
+ *      "put"={"path"="/admin/actions/{id}"},
+ *      "delete"={"path"="/admin/actions/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/actions"},
+ *      "post"={"path"="/admin/actions"}
+ *  })
+ * )
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=ActionRepository::class)
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "name": "exact"
+ * })
  */
 class Action
 {
@@ -62,6 +84,8 @@ class Action
     /**
      * @var array The event names the action should trigger
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="simple_array", nullable=true)
      */
     private array $throws = [];
@@ -69,21 +93,26 @@ class Action
     /**
      * @var array The conditions that the data object should match for the action to be triggered
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="json", nullable=true)
      */
     private array $conditions = [];
 
     /**
-     * @var string|null The function that should be run when the action is triggered
+     * @var string|null The class that should be run when the action is triggered
+     *
+     * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $function = null;
+    private ?string $class = null;
 
     /**
      * @var int The priority of the action
      *
      * @Assert\NotNull
+     * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="integer")
      */
@@ -92,9 +121,18 @@ class Action
     /**
      * @var bool Whether the action should be run asynchronous
      *
+     * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="boolean")
      */
-    private bool $async;
+    private bool $async = false;
+
+    /**
+     * @var array The configuration of the action
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $configuration = [];
 
     public function getId(): ?UuidInterface
     {
@@ -161,14 +199,14 @@ class Action
         return $this;
     }
 
-    public function getFunction(): ?string
+    public function getClass(): ?string
     {
-        return $this->function;
+        return $this->class;
     }
 
-    public function setFunction(?string $function): self
+    public function setClass(?string $class): self
     {
-        $this->function = $function;
+        $this->class = $class;
 
         return $this;
     }
@@ -193,6 +231,18 @@ class Action
     public function setAsync(bool $async): self
     {
         $this->async = $async;
+
+        return $this;
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(?array $configuration): self
+    {
+        $this->configuration = $configuration;
 
         return $this;
     }

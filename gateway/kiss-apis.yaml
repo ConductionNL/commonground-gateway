@@ -659,8 +659,7 @@
 #        variables:
 #            subject: name
 #            author: author
-#            topic: topic
-#            rating: rating
+#            topic: name
 #            description: description
 #        subject: "test {name}"
 #        sender: kiss@commonground.nu
