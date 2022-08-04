@@ -1,0 +1,24 @@
+App\Entity\Action:
+    syncAction:
+        name: SyncAction
+        description: This is a synchronisation action
+        listens:
+            - 'commongateway.handler.pre'
+        throws: []
+        conditions: []
+        class: App\ActionHandler\SynchronisationHandler
+        priority: 0
+        async: false
+        configuration:
+            eavObject: 04b8f5ec-65f0-4fed-aff4-57228e373614
+            source: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/zrc/1.2.x/openapi.yaml
+            location: /admin/object_entities
+            apiSource:
+                locationObjects:
+                locationTotalCount:
+                nameId:
+                nameDateChanged:
+                results:
+                queryMethod:
+                syncFromList:
+                
