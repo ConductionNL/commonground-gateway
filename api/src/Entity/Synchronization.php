@@ -25,15 +25,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/synchronization/{id}"},
- *      "put"={"path"="/admin/synchronization/{id}"},
- *      "delete"={"path"="/admin/synchronization/{id}"}
+ *      "get"={"path"="/admin/synchronizations/{id}"},
+ *      "put"={"path"="/admin/synchronizations/{id}"},
+ *      "delete"={"path"="/admin/synchronizations/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/synchronization"},
- *      "post"={"path"="/admin/synchronization"}
+ *      "get"={"path"="/admin/synchronizations"},
+ *      "post"={"path"="/admin/synchronizations"}
  *  })
- * )
  * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -61,11 +60,11 @@ class Synchronization
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private string $id;
+    private UuidInterface $id;
 
     /**
      * @var Entity The entity of this resource
-     * 
+     *
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=Entity::class, cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
@@ -73,71 +72,71 @@ class Synchronization
     private entity $entity;
 
     /**
-     * @var Entity The object of this resource
-     * 
+     * @var ?ObjectEntity The object of this resource
+     *
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=ObjectEntity::class, cascade={"persist", "remove"})
      */
-    private entity $object;
+    private ?ObjectEntity $object;
 
     /**
-     * @var Entity The action of this resource
-     * 
+     * @var Action The action of this resource
+     *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Action::class)
      * @ORM\JoinColumn(nullable=false)
      */
-    private entity $action;
+    private Action $action;
 
     /**
      * @var String The id of the related source
-     * 
+     *
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
     private string $sourceId;
 
     /**
-     * @var Text The hash of this resource
-     * 
+     * @var ?string The hash of this resource
+     *
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private text $hash;
+    private ?string $hash;
 
     /**
-     * @var Datetime The moment this resource was last checked
-     * 
+     * @var ?DateTimeInterface The moment this resource was last checked
+     *
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private datetime $lastChecked;
+    private ?DateTimeInterface $lastChecked;
 
     /**
-     * @var Datetime The moment this resource was last synced
-     * 
+     * @var ?DateTimeInterface The moment this resource was last synced
+     *
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private datetime $lastSynced;
-                                                                                                                      
+    private ?DateTimeInterface $lastSynced;
+
     /**
-     * @var Datetime The moment this resource was created
+     * @var ?DateTimeInterface The moment this resource was created
      *
      * @Groups({"read","write"})
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private datetime $dateCreated;
+    private ?DateTimeInterface $dateCreated;
 
     /**
-     * @var Datetime The moment this resource last Modified
+     * @var ?DateTimeInterface The moment this resource last Modified
      *
      * @Groups({"read","write"})
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private datetime $dateModified;
+    private ?DateTimeInterface $dateModified;
 
     public function getId(): ?UuidInterface
     {
