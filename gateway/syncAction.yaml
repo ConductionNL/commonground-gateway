@@ -22,4 +22,7 @@ App\Entity\Action:
                 queryMethod: page
                 syncFromList: true
                 sourceLeading: true
-                
+                mappingIn: {}
+                mappingOut: {}
+                translationIn: {}
+                translationOut: {}
