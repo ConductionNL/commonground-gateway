@@ -39,15 +39,35 @@ class SynchronisationService
     // todo: rondom pagination, en locatie van de results vandaan komt).
     public function getAllFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
     {
+        // Get the first page of objects for exist outside the gateway to get the total amount of pages.
         $component = $this->gatewayService->gatewayToArray($gateway);
         $url = $this->getUrlForSource($gateway, $location);
-
-        // todo: get amount of pages
         $amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
 
         // todo: asyn messages? for each page
+        $application = $this->session->get('application');
+        $activeOrganization = $this->session->get('activeOrganization');
 
-        return [];
+        // todo: make this a message in order to compare and handle gateway objects that need to be deleted? see old code in ConvertToGatewayService.
+        // Loop, for each page create a message:
+        for ($page = 1; $page <= $amountOfPages; $page++) {
+            $this->messageBus->dispatch(new SyncPageMessage(
+                [
+                    'component' => $component,
+                    'url'       => $url,
+                    'query'     => [], //todo?
+                    'headers'   => $entity->getGateway()->getHeaders(),
+                ],
+                $page,
+                $entity->getId(),
+                [
+                    'application'        => $application,
+                    'activeOrganization' => $activeOrganization,
+                ]
+            ));
+        }
+
+        return []; //todo: nothing to return?
     }
 
     // todo: Een functie die één enkel object uit de source trekt
@@ -146,12 +166,15 @@ class SynchronisationService
         // This gives us three options
         if($sync->getSourcelastChanged() > $sync->getObject->getDateModiefied() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDateModiefied() < $sync->getsyncDatum()){
             // The source is newer
-            $sync = $this->syncToSource($sync);
+//            $sync = $this->syncToSource($sync);
+            
+            // Save object
+            //$entity = new Entity(); // todo $sync->getEntity() ?
+            $object = $this->saveAsGatewayObject($entity, $sourceObject);
         }
         elseif($sync->getSourcelastChanged() < $sync->getObject()->getDateModiefied() && $sync->getObject()->getDateModiefied() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
             // The gateway is newer
             $sync = $this->syncToGate($sync);
-
         }
         else{
             // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
@@ -159,16 +182,6 @@ class SynchronisationService
         }
 
         return $sync;
-        // RLI: Onderstaande kan volgens mij weg
-
-
-        // todo: if $sourceObject array is given continue, else get it from the source.
-        // todo: check if hash of $sourceObject matches the already existing hash
-        // todo: if so, update syncDatum and return
-        // todo: else: sync (check if ObjectEntity exists, if not create one, else update it)
-
-        //$entity = new Entity(); // todo $sync->getEntity() ?
-        //return $this->saveAsGatewayObject($entity, $sourceObject);
     }
 
     //RLI: Ik zou dre seperate functies verwachten source->gateway,gateway->source,bidirectional
