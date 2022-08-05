@@ -460,9 +460,9 @@ class ObjectEntityService
      *
      * @param array $data
      *
-     * @return string
+     * @return string|null
      */
-    public function checkAndUnsetOwner(array &$data): string
+    public function checkAndUnsetOwner(array &$data): ?string
     {
         // todo: what about @organization? (See saveObject function, test it first, look at and compare with old code!)
         // Check if @owner is present in the body and if so unset it.
