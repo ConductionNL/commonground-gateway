@@ -461,7 +461,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // Check the actual value (example: key = value)
             // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
             $query->andWhere("$prefix$key.stringValue LIKE :$key")
-                ->setParameter($key, $value);
+                ->setParameter($key, "%$value%");
         }
 
         return $query;
