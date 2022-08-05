@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Adbar\Dot;
 use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
@@ -42,7 +43,7 @@ class SynchronisationService
         $url = $this->getUrlForSource($gateway, $location);
 
         // todo: get amount of pages
-        $amountOfPages = $this->getAmountOfPages($component, $url);
+        $amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
 
         // todo: asyn messages? for each page
 
@@ -50,15 +51,12 @@ class SynchronisationService
     }
 
     // todo: Een functie die één enkel object uit de source trekt
-    public function getSinleFromSource(Sync $sync): array
+    public function getSingleFromSource(Sync $sync): array
     {
         $component = $this->gatewayService->gatewayToArray($gateway);
         $url = $this->getUrlForSource($gateway, $location);
 
-        // todo: get amount of pages
-        $amountOfPages = $this->getAmountOfPages($component, $url);
-
-        // todo: asyn messages? for each page
+        // todo: get object form source with callservice
 
         return [];
     }
@@ -70,21 +68,49 @@ class SynchronisationService
         return '';
     }
 
-    private function getAmountOfPages(array $component, string $url): int
+    /**
+     * Does a get call to determine how many pages we need to synchronise.
+     *
+     * @param array $component Component for callService
+     * @param string $url Url for callService
+     * @param string $locationTotalCount Where to find the amoung of pages in the response of the callService (use dot notation)
+     *
+     * @return int The amount of pages we need to synchronise
+     */
+    private function getAmountOfPages(array $component, string $url, string $locationTotalCount): int
     {
-        // todo: use callService with url
+        // Use callService with url to get the total amount of pages
         $response = $this->commonGroundService->callService($component, $url, '', [], [], false, 'GET');
+        if (is_array($response)) {
+            //todo: error, user feedback and log this
+//            var_dump('Callservice error, maybe $component or $url is incorrect?');
+            return 0; // Do not get and sync pages
+        }
 
-        // Lets turn the source into a dot so that we can grap values
-        $dot = new \Adbar\Dot($response);
+        // Lets turn the source into a dot so that we can grab values
+        $response = json_decode($response->getBody()->getContents(), true);
+        $dot = new Dot($response);
+        $amountOfPages = $dot->get($locationTotalCount, 1);
 
-        return 1;
+        // Make sure we return an integer, look for amount of pages if string
+        if (!is_int($amountOfPages)) {
+            $matchesCount = preg_match('/\?page=([0-9]+)/', $amountOfPages, $matches);
+            if ($matchesCount == 1) {
+                $amountOfPages = (int) $matches[1];
+            } else {
+                //todo: error, user feedback and log this
+//                var_dump('Could not find the total amount of pages');
+                return 1; // Only get and sync the first page
+            }
+        }
+
+        return $amountOfPages;
     }
 
     // todo: Een functie die aan de hand van een synchronisatie object een sync uitvoert, om dubbele bevragingen
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
     // RL: ik zou verwachten dat handle syn een sync ontvange en terug geeft
-    public function handleSync(Sync $sync, array $sourceObject): Sync
+    public function handleSync(Sync $sync, ?array $sourceObject): Sync
     {
         // We need an object on the gateway side
         if(!$sync->getObject()){
@@ -93,14 +119,14 @@ class SynchronisationService
         }
 
         // We need an object source side
-        if(!$sourceObject || empty($sourceObject)){
+        if(empty($sourceObject)){
             $sourceObject = $this->getSingleFromSource($sync);
         }
 
         // Now that we have a source object we can create a hash of it
         $hash = hash('sha384', $sourceObject);
         // Lets turn the source into a dot so that we can grap values
-        $dot = new \Adbar\Dot($sourceObject);
+        $dot = new Dot($sourceObject);
 
         // Now we need to establish the last time the source was changed
         if(in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
