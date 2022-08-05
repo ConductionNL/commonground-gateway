@@ -71,6 +71,11 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $this->loadCollection($collection, $object);
+    }
+
+    private function loadCollection(CollectionEntity $collection, object $object)
+    {
         $collection = $this->oasParser->parseOas($collection);
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true) : null;
 

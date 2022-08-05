@@ -39,7 +39,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class ObjectEntityService
 {
     private Security $security;
-    private ValidaterService $validaterService;
+    private ValidatorService $validaterService;
     private SessionInterface $session;
     private ?ValidationService $validationService;
     private ?EavService $eavService;
@@ -58,21 +58,21 @@ class ObjectEntityService
     private TranslationService $translationService;
 
     public function __construct(
-        Security $security,
-        RequestStack $requestStack,
-        AuthorizationService $authorizationService,
-        ApplicationService $applicationService,
-        ValidaterService $validaterService,
-        SessionInterface $session,
+        Security               $security,
+        RequestStack           $requestStack,
+        AuthorizationService   $authorizationService,
+        ApplicationService     $applicationService,
+        ValidatorService       $validaterService,
+        SessionInterface       $session,
         EntityManagerInterface $entityManager,
-        CommonGroundService $commonGroundService,
-        ResponseService $responseService,
-        Stopwatch $stopwatch,
-        CacheInterface $cache,
-        MessageBusInterface $messageBus,
-        GatewayService $gatewayService,
-        TranslationService $translationService,
-        LogService $logService
+        CommonGroundService    $commonGroundService,
+        ResponseService        $responseService,
+        Stopwatch              $stopwatch,
+        CacheInterface         $cache,
+        MessageBusInterface    $messageBus,
+        GatewayService         $gatewayService,
+        TranslationService     $translationService,
+        LogService             $logService
     ) {
         $this->security = $security;
         $this->request = $requestStack->getCurrentRequest();
