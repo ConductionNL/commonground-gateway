@@ -75,6 +75,9 @@ class SynchronisationService
         // todo: use callService with url
         $response = $this->commonGroundService->callService($component, $url, '', [], [], false, 'GET');
 
+        // Lets turn the source into a dot so that we can grap values
+        $dot = new \Adbar\Dot($response);
+
         return 1;
     }
 
@@ -96,6 +99,8 @@ class SynchronisationService
 
         // Now that we have a source object we can create a hash of it
         $hash = hash('sha384', $sourceObject);
+        // Lets turn the source into a dot so that we can grap values
+        $dot = new \Adbar\Dot($sourceObject);
 
         // Now we need to establish the last time the source was changed
         if(in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
