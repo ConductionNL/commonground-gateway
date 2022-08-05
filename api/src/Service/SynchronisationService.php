@@ -80,7 +80,8 @@ class SynchronisationService
 
     // todo: Een functie die aan de hand van een synchronisatie object een sync uitvoert, om dubbele bevragingen
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
-    public function handleSync(Sync $sync, array $sourceObject): ObjectEntity
+    // RL: ik zou verwachten dat handle syn een sync ontvange en terug geeft
+    public function handleSync(Sync $sync, array $sourceObject): Sync
     {
         // We need an object on the gateway side
         if(!$sync->getObject()){
@@ -112,19 +113,22 @@ class SynchronisationService
         $sourceObject->setHash($hash);
 
         // This gives us three options
-        if($sync->getSourcelastChanged() > $sync->getObject->getDateModiefied){
+        if($sync->getSourcelastChanged() > $sync->getObject->getDateModiefied() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDateModiefied() < $sync->getsyncDatum()){
             // The source is newer
+            $sync = $this->syncToSource($sync);
         }
-        elseif($sync->getSourcelastChanged() < $sync->getObject->getDateModiefied){
+        elseif($sync->getSourcelastChanged() < $sync->getObject()->getDateModiefied() && $sync->getObject()->getDateModiefied() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
             // The gateway is newer
+            $sync = $this->syncToGate($sync);
 
         }
         else{
-            // we are in trouble
+            // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
+            $sync = $this->syncTroughComparing($sync);
         }
 
-
-
+        return $sync;
+        // RLI: Onderstaande kan volgens mij weg
 
 
         // todo: if $sourceObject array is given continue, else get it from the source.
@@ -132,11 +136,11 @@ class SynchronisationService
         // todo: if so, update syncDatum and return
         // todo: else: sync (check if ObjectEntity exists, if not create one, else update it)
 
-        $entity = new Entity(); // todo $sync->getEntity() ?
-        return $this->saveAsGatewayObject($entity, $sourceObject);
+        //$entity = new Entity(); // todo $sync->getEntity() ?
+        //return $this->saveAsGatewayObject($entity, $sourceObject);
     }
 
-
+    //RLI: Ik zou dre seperate functies verwachten source->gateway,gateway->source,bidirectional
     private function saveAsGatewayObject(Entity $entity, array $externObject): ObjectEntity
     {
         // todo: mapping and translation
