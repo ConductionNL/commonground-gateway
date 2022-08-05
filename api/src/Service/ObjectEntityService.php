@@ -314,17 +314,16 @@ class ObjectEntityService
     }
 
     /**
-     * A function to handle calls to eav.
+     * This function handles the check for an object
      *
      * @param string|null $id
      * @param string|null $method Method from request if there is a request
-     * @param Entity      $entity
+     * @param Entity $entity
      *
+     * @return ObjectEntity|array|mixed|null
      * @throws GatewayException
-     *
-     * @return ObjectEntity $data
      */
-    public function checkGetObject(?string $id, string $method, Entity $entity): ObjectEntity
+    public function checkGetObject(?string $id, string $method, Entity $entity)
     {
         // todo: re-used old code for getting an objectEntity
         $object = $this->eavService->getObject($method === 'POST' ? null : $id, $method, $entity);
@@ -340,7 +339,7 @@ class ObjectEntityService
             }
         }
 
-        if ($object instanceof ObjectEntity) {
+        if ($object instanceof ObjectEntity && $object->getId() !== null) {
             $this->session->set('object', $object->getId()->toString());
         }
 
@@ -362,15 +361,14 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * This function handles the check on operation types exceptions
      *
      * @param Endpoint $endpoint
      * @param Entity   $entity
      * @param array    $data
      *
-     * @throws GatewayException
-     *
      * @return ObjectEntity|string[]|void
+     * @throws GatewayException
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
@@ -385,8 +383,7 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
-     *
+     * This function handles the object entity exceptions
      * @param array $data
      * @param ObjectEntity|null $object
      * @param array $fields
@@ -416,22 +413,21 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * This function handles the get case of an object entity
      *
-     * @param $id
-     * @param $data
-     * @param $method
-     * @param Entity   $entity
+     * @param string|null $id
+     * @param array $data
+     * @param string $method
+     * @param Entity $entity
      * @param Endpoint $endpoint
-     * @param $acceptType
+     * @param string $acceptType
      *
+     * @return array
      * @throws CacheException
      * @throws GatewayException
      * @throws InvalidArgumentException
-     *
-     * @return array
      */
-    public function getCase($id, &$data, $method, Entity $entity, Endpoint $endpoint, $acceptType): array
+    public function getCase(?string $id, array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
@@ -460,7 +456,7 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * This function checks and unsets the owner
      *
      * @param array $data
      *
@@ -481,20 +477,19 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * This function handles creating, updating and patching the object
      *
-     * @param $data
-     * @param $object
+     * @param array $data
+     * @param ObjectEntity $object
      * @param $owner
-     * @param $method
-     * @param $acceptType
-     *
-     * @throws CacheException
-     * @throws InvalidArgumentException
+     * @param string $method
+     * @param string $acceptType
      *
      * @return string[]
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
-    public function createOrUpdateCase(&$data, $object, $owner, $method, $acceptType): array
+    public function createOrUpdateCase(array &$data, ObjectEntity $object, $owner, string $method, string $acceptType): array
     {
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
@@ -537,19 +532,18 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * This function handles deleting the object
      *
-     * @param $id
-     * @param $data
-     * @param $method
-     * @param $entity
-     *
-     * @throws GatewayException
-     * @throws InvalidArgumentException
+     * @param string $id
+     * @param array $data
+     * @param string $method
+     * @param Entity $entity
      *
      * @return string[]
+     * @throws GatewayException
+     * @throws InvalidArgumentException
      */
-    public function deleteCase($id, &$data, $method, $entity): array
+    public function deleteCase(string $id, array &$data, string $method, Entity $entity): array
     {
         $object = $this->checkGetObject($id, $method, $entity);
         //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
