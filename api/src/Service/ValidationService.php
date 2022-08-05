@@ -491,15 +491,15 @@ class ValidationService
                         if (Uuid::isValid($object) == false) {
                             // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($object == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
-                                $object = $this->commonGroundService->getUuidFromUrl($object);
-                            } else {
-                                if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
-                                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array, uuid or uri).');
-                                }
-                                $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
-                                continue;
-                            }
+                            // if ($object == $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($object)) {
+                            $object = $this->commonGroundService->getUuidFromUrl($object);
+                            // } else {
+                            //     if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
+                            //         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array, uuid or uri).');
+                            //     }
+                            //     $objectEntity->addError($attribute->getName() . '[' . $key . ']', 'The given value (' . $object . ') is not a valid object, a valid uuid or a valid uri (' . $attribute->getObject()->getGateway()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/uuid).');
+                            //     continue;
+                            // }
                         }
                         // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
                         // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet. (see convertToGatewayObject)
@@ -1867,7 +1867,7 @@ class ValidationService
     }
 
     /**
-     * TODO: docs.
+     * Create a NRC notification for the given ObjectEntity.
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method

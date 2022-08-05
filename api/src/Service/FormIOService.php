@@ -334,6 +334,7 @@ class FormIOService
         isset($object['id']) && $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($object['id']);
 
         $formIOArray['components'] = [];
+        $readOnlyArray = [];
 
         // If we have a id set it as disabled component
         isset($object['id']) &&
@@ -343,6 +344,7 @@ class FormIOService
         foreach ($entity->getAttributes() as $attr) {
             isset($object[$attr->getName()]) ? $defaultValue = $object[$attr->getName()] : $defaultValue = null;
             $formIOArray['components'][] = $this->createAttribute($attr, null, $defaultValue);
+            $attr->getReadOnly() && $readOnlyArray[] = $attr->getName();
         }
 
         // Add advanced configuration
@@ -406,6 +408,8 @@ class FormIOService
         $formIOArray['display'] = 'form';
         $formIOArray['page'] = 0;
         $formIOArray['entity'] = $entity->getName();
+
+        $formIOArray['custom']['readOnly'] = $readOnlyArray;
 
         return $formIOArray;
     }

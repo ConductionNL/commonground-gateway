@@ -8,6 +8,7 @@ use App\Entity\Handler;
 use App\Event\EndpointTriggeredEvent;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -123,20 +124,13 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-                $methods = [];
-                foreach ($handler->getMethods() as $method) {
-                    $methods[] = strtoupper($method);
-                }
+                $methods = array_map('strtoupper', $handler->getMethods());
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-
-            // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            /* @todo acctualy check for json logic */
-
-            if (true) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
@@ -622,5 +616,29 @@ class HandlerService
         }
 
         return $data;
+    }
+
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Endpoint $endpoint
+     * @param string   $method
+     *
+     * @return Handler|bool
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array('*', $handler->getMethods())) {
+                return $handler;
+            }
+
+            // Check if handler should be used for this method
+            if (in_array($method, $handler->getMethods())) {
+                return $handler;
+            }
+        }
+
+        return false;
     }
 }
