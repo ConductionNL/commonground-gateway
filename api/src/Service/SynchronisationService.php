@@ -36,7 +36,21 @@ class SynchronisationService
 
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
     // todo: rondom pagination, en locatie van de results vandaan komt).
-    public function getFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
+    public function getAllFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
+    {
+        $component = $this->gatewayService->gatewayToArray($gateway);
+        $url = $this->getUrlForSource($gateway, $location);
+
+        // todo: get amount of pages
+        $amountOfPages = $this->getAmountOfPages($component, $url);
+
+        // todo: asyn messages? for each page
+
+        return [];
+    }
+
+    // todo: Een functie die één enkel object uit de source trekt
+    public function getSinleFromSource(Sync $sync): array
     {
         $component = $this->gatewayService->gatewayToArray($gateway);
         $url = $this->getUrlForSource($gateway, $location);
@@ -68,6 +82,51 @@ class SynchronisationService
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
     public function handleSync(Sync $sync, array $sourceObject): ObjectEntity
     {
+        // We need an object on the gateway side
+        if(!$sync->getObject()){
+            $object = new ObjectEntity();
+            $object->setEntity($sync->getEnity);
+        }
+
+        // We need an object source side
+        if(!$sourceObject || empty($sourceObject)){
+            $sourceObject = $this->getSingleFromSource($sync);
+        }
+
+        // Now that we have a source object we can create a hash of it
+        $hash = hash('sha384', $sourceObject);
+
+        // Now we need to establish the last time the source was changed
+        if(in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
+            // todo: get the laste chage date from object array
+            $lastchagne = '';
+            $sourceObject->setSourcelastChanged($lastchagne);
+        }
+        // What if the source has no propertity that alows us to determine the last change
+        elseif($sync->getHash() != $hash){
+            $lastchagne = new \DateTime();
+            $sourceObject->setSourcelastChanged($lastchagne);
+        }
+
+        // Now that we know the lastchange date we can update the hash
+        $sourceObject->setHash($hash);
+
+        // This gives us three options
+        if($sync->getSourcelastChanged() > $sync->getObject->getDateModiefied){
+            // The source is newer
+        }
+        elseif($sync->getSourcelastChanged() < $sync->getObject->getDateModiefied){
+            // The gateway is newer
+
+        }
+        else{
+            // we are in trouble
+        }
+
+
+
+
+
         // todo: if $sourceObject array is given continue, else get it from the source.
         // todo: check if hash of $sourceObject matches the already existing hash
         // todo: if so, update syncDatum and return
