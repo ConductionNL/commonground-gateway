@@ -352,27 +352,29 @@ class Value
     public function setSimpleArrayValue(?array $inputArray): self
     {
         // Lets cast everything to string
-        $outputArray = [];
-        foreach ($inputArray as $input) {
-            // Lets catch files and objects
-            switch ($this->getAttribute()->getType()) {
-                case 'file':
-                    // if file
-                    $this->addFile($input);
-                    $input = $input->getId();
-                    break;
-                case 'object':
-                    // if object
-                    $this->addObject($input);
-                    $input = $input->getId();
-                    break;
+        if ($inputArray) {
+            $outputArray = [];
+            foreach ($inputArray as $input) {
+                // Lets catch files and objects
+                switch ($this->getAttribute()->getType()) {
+                    case 'file':
+                        // if file
+                        $this->addFile($input);
+                        $input = $input->getId();
+                        break;
+                    case 'object':
+                        // if object
+                        $this->addObject($input);
+                        $input = $input->getId();
+                        break;
+                }
+                $outputArray[] = strval($input);
             }
-            $outputArray[] = strval($input);
+
+            $this->simpleArrayValue = $outputArray;
+
+            $this->stringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
         }
-
-        $this->simpleArrayValue = $outputArray;
-
-        $this->stringValue = !empty($this->simpleArrayValue) ? implode(',',$this->simpleArrayValue) : null;
 
         return $this;
     }
