@@ -133,13 +133,13 @@ class SynchronisationService
     public function handleSync(Sync $sync, ?array $sourceObject): Sync
     {
         // We need an object on the gateway side
-        if(!$sync->getObject()){
+        if (!$sync->getObject()){
             $object = new ObjectEntity();
             $object->setEntity($sync->getEnity);
         }
 
         // We need an object source side
-        if(empty($sourceObject)){
+        if (empty($sourceObject)){
             $sourceObject = $this->getSingleFromSource($sync);
         }
 
@@ -149,13 +149,13 @@ class SynchronisationService
         $dot = new Dot($sourceObject);
 
         // Now we need to establish the last time the source was changed
-        if(in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
+        if (in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
             // todo: get the laste chage date from object array
             $lastchagne = '';
             $sourceObject->setSourcelastChanged($lastchagne);
         }
         // What if the source has no propertity that alows us to determine the last change
-        elseif($sync->getHash() != $hash){
+        elseif ($sync->getHash() != $hash){
             $lastchagne = new \DateTime();
             $sourceObject->setSourcelastChanged($lastchagne);
         }
@@ -164,19 +164,19 @@ class SynchronisationService
         $sourceObject->setHash($hash);
 
         // This gives us three options
-        if($sync->getSourcelastChanged() > $sync->getObject->getDateModiefied() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDateModiefied() < $sync->getsyncDatum()){
+        if ($sync->getSourcelastChanged() > $sync->getObject->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
             // The source is newer
-//            $sync = $this->syncToSource($sync);
-            
+            $sync = $this->syncToSource($sync);
+        }
+        elseif ($sync->getSourcelastChanged() < $sync->getObject()->getDatemodified() && $sync->getObject()->getDatemodified() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
+            // The gateway is newer
+//            $sync = $this->syncToGateway($sync);
+
             // Save object
             //$entity = new Entity(); // todo $sync->getEntity() ?
-            $object = $this->saveAsGatewayObject($entity, $sourceObject);
+            $object = $this->syncToGateway($entity, $sourceObject);
         }
-        elseif($sync->getSourcelastChanged() < $sync->getObject()->getDateModiefied() && $sync->getObject()->getDateModiefied() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
-            // The gateway is newer
-            $sync = $this->syncToGate($sync);
-        }
-        else{
+        else {
             // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
             $sync = $this->syncTroughComparing($sync);
         }
@@ -184,8 +184,14 @@ class SynchronisationService
         return $sync;
     }
 
-    //RLI: Ik zou dre seperate functies verwachten source->gateway,gateway->source,bidirectional
-    private function saveAsGatewayObject(Entity $entity, array $externObject): ObjectEntity
+    // todo: docs
+    private function syncToSource(Sync $sync): Sync
+    {
+        return $sync;
+    }
+
+    // todo: docs
+    private function syncToGateway(Entity $entity, array $externObject): ObjectEntity
     {
         // todo: mapping and translation
         // todo: validate object
@@ -193,5 +199,11 @@ class SynchronisationService
         // todo: log?
 
         return new ObjectEntity();
+    }
+
+    // todo: docs
+    private function syncThroughComparing(Sync $sync): Sync
+    {
+        return $sync;
     }
 }
