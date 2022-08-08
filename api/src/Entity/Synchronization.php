@@ -63,7 +63,7 @@ class Synchronization
      * @var Entity The entity of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=Entity::class, cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity=Entity::class)
      * @ORM\JoinColumn(nullable=false)
      */
     private entity $entity;
@@ -72,7 +72,8 @@ class Synchronization
      * @var ?ObjectEntity The object of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=ObjectEntity::class, cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
+     * @ORM\JoinColumn(nullable=false)
      */
     private ?ObjectEntity $object;
 
@@ -86,7 +87,16 @@ class Synchronization
     private Action $action;
 
     /**
-     * @var string The id of the related source
+     * @var Gateway The gateway (source) of this resource
+     *
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private Gateway $gateway;
+
+    /**
+     * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
@@ -172,6 +182,18 @@ class Synchronization
     public function setAction(?Action $action): self
     {
         $this->action = $action;
+
+        return $this;
+    }
+
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
 
         return $this;
     }

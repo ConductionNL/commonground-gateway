@@ -1,13 +1,13 @@
 App\Entity\Action:
     syncAction:
         name: SyncAction
-        description: This is a synchronisation action
+        description: This is a synchronization action
         listens:
             - 'commongateway.handler.pre'
         throws: []
         conditions: 
             '==': [1, 1]
-        class: App\ActionHandler\SynchronisationHandler
+        class: App\ActionHandler\SynchronizationHandler
         priority: 0
         async: false
         configuration:
