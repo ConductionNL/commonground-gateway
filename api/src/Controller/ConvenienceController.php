@@ -61,7 +61,7 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -77,7 +77,7 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to update
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif ($collection->getSyncedAt() === null) {
             return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         } elseif (!$collection->getTestDataLocation()) {
@@ -91,7 +91,7 @@ class ConvenienceController extends AbstractController
         $dataLoaded = $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Testdata succesfully loaded from: ' . $collection->getTestDataLocation()], 'json'),
+            $this->serializer->serialize(['message' => 'Testdata succesfully loaded from: '.$collection->getTestDataLocation()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -107,14 +107,14 @@ class ConvenienceController extends AbstractController
 
         // Check if collection is egligible to update
         if (!isset($collection) || !$collection instanceof CollectionEntity) {
-            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
         // Wipe current data for this collection
         $this->dataService->wipeDataForCollection($collection);
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Testdata wiped for ' . $collection->getName()], 'json'),
+            $this->serializer->serialize(['message' => 'Testdata wiped for '.$collection->getName()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
