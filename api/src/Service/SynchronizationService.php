@@ -44,31 +44,26 @@ class SynchronizationService
         $gateway = $this->getSourceFromAction($configuration);
         $entity = $this->getEntityFromAction($configuration);
 
-        // Get the first page of objects for exist outside the gateway to get the total amount of pages.
-        $component = $this->gatewayService->gatewayToArray($gateway);
-        $url = $this->getUrlForSource($gateway, $configuration['location']);
-        // RLI:  Dit weet je niet  vooraf hé
-        //$amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
+        // Get results based on the type of source
+        $results = $this->getObjectsFromSource($configuration, $gateway);
 
-        // @todo This should be its own funtion that gets results based on the type of source (could als be an excel over ftp etc).
-        // right now there are two options, eitherapi  source is paginated or it isnt
-        if (in_array('sourcePaginated', $configuration) && $configuration['sourcePaginated']){
-            $results = $this->getObjectsFromPagedSource($configuration);
-        }
-        else {
-            $results = $this->getObjectsFromApiSource($configuration);
-        }
+        foreach ($results as $result) {
+            $dot = new Dot($result);
+            $id = $dot->get($configuration['sourceIdFieldLocation']);
+            $result = $dot->get($configuration['sourceObjectLocation'], $result);
 
-        foreach ($results as $result){
             // @todo this could and should be async
-            // Lets graph the sync object
-            $sync = $this
-            // Lets syn
+            // Lets grab the sync object
+            $sync = $this->findSyncBySource($gateway, $entity, $id);
+//            $sync = $this->findSyncByObject($object, $gateway, $entity);
+            // todo, what if we don't find a $sync object? should we create one inside the findSyncBySource() function?
+            // Lets sync
             $result = $this->handleSync($sync, $result);
             $this->entityManager->persist($result);
+            // todo flush here? or after foreach?
         }
 
-        return []; //todo: nothing to return?
+        return $results;
     }
 
     // todo: docs
@@ -93,88 +88,98 @@ class SynchronizationService
         return null;
     }
 
-    // Door paes heen lopen zonder total result
-    private function getObjectsFromPagedSource(array $configuration, int $page = 0): array
+    // todo: docs
+    private function getObjectsFromSource(array $configuration, Gateway $gateway): array
     {
-        // RLI  what if a source dosnt have  a limit
-        $limit = $configuration['sourceLimit'];
+        $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
 
-        $pageResult = []; // get a page
-
-        $dot = new Dot($pageResult);
-        $results = $dot->get($configuration['sourceObjectLocation'], 1);
-        // Let see if we need to pull annother page (e.g. this page is full so there might be a next one
-        if (count($results) >= $limit) {
-            $page ++;
-            $results = array_merge($results, $this->getObjectsFromPage($sync, $page , ));
+        // todo switch?
+        // Right now there are two options, either api source is paginated or it is not
+        if (in_array('sourcePaginated', $configuration) && $configuration['sourcePaginated']){
+            $results = $this->getObjectsFromPagedSource($configuration, $callServiceConfig);
+        } else {
+            $results = $this->getObjectsFromApiSource($configuration, $callServiceConfig);
         }
 
         return $results;
     }
 
-    // todo: Een functie die één enkel object uit de source trekt
-    private function getSingleFromSource(Synchronization $sync): array
+    private function getCallServiceConfig(array $configuration, Gateway $gateway): array
     {
-        $component = $this->gatewayService->gatewayToArray($gateway);
-        $url = $this->getUrlForSource($gateway, $location);
-
-        // todo: get object form source with callservice
-
-        return [];
+        return [
+            'component' => $this->gatewayService->gatewayToArray($gateway),
+            'url' => $this->getUrlForSource($gateway, $configuration),
+            'query' => [],
+            'headers' => $gateway->getHeaders()
+        ];
     }
 
     // todo: docs
-    private function getUrlForSource(Gateway $gateway, string $location): string
+    private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        // todo: generate url with correct query params etc.
-
-        return '';
+        return $gateway->getLocation().'/'.$configuration['location'].$id ? '/'.$id : '';
     }
 
-    /**
-     * Does a get call to determine how many pages we need to synchronise.
-     *
-     * @param array $component Component for callService
-     * @param string $url Url for callService
-     * @param string $locationTotalCount Where to find the amoung of pages in the response of the callService (use dot notation)
-     *
-     * @return int The amount of pages we need to synchronise
-     */
-    private function getAmountOfPages(array $component, string $url, string $locationTotalCount): int
+    // Door pages heen lopen zonder total result
+    // todo: docs
+    private function getObjectsFromPagedSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
-        // Use callService with url to get the total amount of pages
-        $response = $this->commonGroundService->callService($component, $url, '', [], [], false, 'GET');
+        // RLI  what if a source doesn't have a limit
+        // WL   check for pagination?
+        $limit = $configuration['sourceLimit'];
+
+        // Get a single page
+        $response = $this->commonGroundService->callService($callServiceConfig['component'], $callServiceConfig['url'],
+            '', array_merge($callServiceConfig['query'], ['limit' => $limit], $page !== 1 ? ['page' => $page] : []),
+            $callServiceConfig['headers'], false, 'GET');
+        // If no next page with this $page exists... (callservice returns array on error)
         if (is_array($response)) {
-            //todo: error, user feedback and log this
-//            var_dump('Callservice error, maybe $component or $url is incorrect?');
-            return 0; // Do not get and sync pages
+            //todo: error, user feedback and log this?
+            return [];
+        }
+        $pageResult = json_decode($response->getBody()->getContents(), true);
+
+        $dot = new Dot($pageResult);
+        $results = $dot->get($configuration['sourceObjectsLocation'], []);
+        // Let see if we need to pull another page (e.g. this page is full so there might be a next one)
+        if (count($results) >= $limit) {
+            $page ++;
+            $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page));
         }
 
-        // Lets turn the source into a dot so that we can grab values
-        $response = json_decode($response->getBody()->getContents(), true);
-        $dot = new Dot($response);
-        $amountOfPages = $dot->get($locationTotalCount, 1);
+        return $results;
+    }
 
-        // Make sure we return an integer, look for amount of pages if string
-        if (!is_int($amountOfPages)) {
-            $matchesCount = preg_match('/\?page=([0-9]+)/', $amountOfPages, $matches);
-            if ($matchesCount == 1) {
-                $amountOfPages = (int) $matches[1];
-            } else {
-                //todo: error, user feedback and log this
-//                var_dump('Could not find the total amount of pages');
-                return 1; // Only get and sync the first page
-            }
+    // todo: docs
+    private function getObjectsFromApiSource(array $configuration, array $callServiceConfig): array
+    {
+        return [];
+    }
+
+    // todo: Een functie die één enkel object uit de source trekt
+    private function getSingleFromSource(Synchronization $sync): ?array
+    {
+        $component = $this->gatewayService->gatewayToArray($sync->getGateway());
+        $url = $this->getUrlForSource($sync->getGateway(), ['location' => $sync->getAction()->getConfiguration()['location']], $sync->getSourceId());
+
+        // Get object form source with callservice
+        $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
+        if (is_array($response)) {
+            //todo: error, user feedback and log this?
+            return null;
         }
+        $result = json_decode($response->getBody()->getContents(), true);
+        $dot = new Dot($result);
+//        $id = $dot->get($sync->getAction()->getConfiguration()['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
 
-        return $amountOfPages;
+        return $dot->get($sync->getAction()->getConfiguration()['sourceObjectLocation'], $result);
     }
 
     // todo: Een functie die kijkt of  er al een synchronistie object is aan de hand van de source
     // todo: (dus zoekt op source + endpoint + externeid)
-    private function findSyncBySource(Gateway $source, Endpoint $endpoint, string $sourceId): ?Synchronization
+    private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
-        $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $source, 'endpoint' => $endpoint, 'sourceId' => $sourceId]);
+        $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $source, 'entity' => $entity, 'sourceId' => $sourceId]);
 
         if ($sync instanceof Synchronization) {
             return $sync;
@@ -184,9 +189,9 @@ class SynchronizationService
 
     // todo: Een functie die kijkt of er al een synchronisatie object is aan de hand van een objectEntity
     // todo: (dus zoekt op object + source + endooint)
-    private function findSyncByObject(ObjectEntity $objectEntity, Gateway $source, Endpoint $endpoint): ?Synchronization
+    private function findSyncByObject(ObjectEntity $objectEntity, Gateway $source, Entity $entity): ?Synchronization
     {
-        $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['object' => $objectEntity, 'gateway' => $source, 'endpoint' => $endpoint]);
+        $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['object' => $objectEntity, 'gateway' => $source, 'entity' => $entity]);
 
         if ($sync instanceof Synchronization) {
             return $sync;
@@ -211,24 +216,24 @@ class SynchronizationService
         }
 
         // Now that we have a source object we can create a hash of it
-        $hash = hash('sha384', $sourceObject);
+        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow? implode?
         // Lets turn the source into a dot so that we can grap values
         $dot = new Dot($sourceObject);
 
         // Now we need to establish the last time the source was changed
-        if (in_array('modifiedDateLocation',$sync->getAction()->getConfig())){
+        if (in_array('modifiedDateLocation', $sync->getAction()->getConfiguration())){
             // todo: get the laste chage date from object array
             $lastchagne = '';
-            $sourceObject->setSourcelastChanged($lastchagne);
+            $sync->setSourcelastChanged($lastchagne);
         }
         // What if the source has no propertity that alows us to determine the last change
         elseif ($sync->getHash() != $hash){
             $lastchagne = new \DateTime();
-            $sourceObject->setSourcelastChanged($lastchagne);
+            $sync->setSourcelastChanged($lastchagne);
         }
 
         // Now that we know the lastchange date we can update the hash
-        $sourceObject->setHash($hash);
+        $sync->setHash($hash);
 
         // This gives us three options
         if ($sync->getSourcelastChanged() > $sync->getObject->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
