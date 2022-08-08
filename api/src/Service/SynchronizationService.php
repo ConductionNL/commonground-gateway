@@ -117,7 +117,7 @@ class SynchronizationService
     // todo: docs
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().'/'.$configuration['location'].$id ? '/'.$id : '';
+        return $gateway->getLocation().'/'.$configuration['sourceLocation'].$id ? '/'.$id : '';
     }
 
     // Door pages heen lopen zonder total result
@@ -160,7 +160,7 @@ class SynchronizationService
     private function getSingleFromSource(Synchronization $sync): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
-        $url = $this->getUrlForSource($sync->getGateway(), ['location' => $sync->getAction()->getConfiguration()['location']], $sync->getSourceId());
+        $url = $this->getUrlForSource($sync->getGateway(), ['sourceLocation' => $sync->getAction()->getConfiguration()['sourceLocation']], $sync->getSourceId());
 
         // Get object form source with callservice
         $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
