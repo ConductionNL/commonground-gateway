@@ -27,34 +27,10 @@ class SynchronisationHandler implements ActionHandlerInterface
 
     }
 
-    public function getGateway($configuration): ?Gateway
-    {
-        $gateway = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $configuration['source']]);
-
-        if($gateway instanceof Gateway) {
-            return $gateway;
-        } else {
-            return null;
-        }
-    }
-
-    public function getEntity($configuration): ?Entity
-    {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $configuration['eavObject']]);
-
-        if($entity instanceof Entity) {
-            return $entity;
-        } else {
-            return null;
-        }
-    }
-
     public function __run(array $data, array $configuration): array
     {
-        $gateway =  $this->getGateway($configuration);
-        $entity =   $this->getEntity($configuration);
 
-        $result = $this->synchronisationService->getFromSource($gateway, $entity, $configuration['location'], $configuration['apiSource']);
+        $result = $this->synchronisationService->getFromSource($data, $configuration);
 
         return $data;
     }
