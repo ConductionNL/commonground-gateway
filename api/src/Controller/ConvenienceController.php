@@ -61,7 +61,60 @@ class ConvenienceController extends AbstractController
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS()) : null;
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
+            $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: ' . $collection->getLocationOAS()], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
+     * @Route("/admin/load-testdata/{collectionId}")
+     */
+    public function loadTestDataAction(Request $request, string $collectionId): Response
+    {
+        // Get CollectionEntity to retrieve OAS from
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+
+        // Check if collection is egligible to update
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        } elseif ($collection->getSyncedAt() === null) {
+            return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        } elseif (!$collection->getTestDataLocation()) {
+            return new Response($this->serializer->serialize(['message' => 'No testdata location found for this collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
+        // Wipe current data for this collection
+        // $request->get('wipeData') !== null && $this->dataService->wipeDataForCollection($collection);
+
+        // Load testdata
+        $dataLoaded = $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Testdata succesfully loaded from: ' . $collection->getTestDataLocation()], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
+     * @Route("/admin/wipe-testdata/{collectionId}")
+     */
+    public function wipeData(Request $request, string $collectionId): Response
+    {
+        // Get CollectionEntity to retrieve OAS from
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+
+        // Check if collection is egligible to update
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: ' . $collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
+        // Wipe current data for this collection
+        $this->dataService->wipeDataForCollection($collection);
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Testdata wiped for ' . $collection->getName()], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
