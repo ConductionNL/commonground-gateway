@@ -18,4 +18,5 @@ return [
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class                  => ['all' => true],
     Conduction\SamlBundle\SamlBundle::class                                    => ['all' => true],
     Conduction\DigidBundle\DigidBundle::class                                  => ['all' => true],
+    Setono\CronExpressionBundle\SetonoCronExpressionBundle::class              => ['all' => true],
 ];
