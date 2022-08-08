@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
@@ -38,11 +39,14 @@ class SynchronisationService
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
     // todo: rondom pagination, en locatie van de results vandaan komt).
     // RLI: beetje veel wat we hier mee geven,  volgensmij heb je alleen de action nodig
-    public function getAllFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
+    public function getAllFromSource(Action $action): array
     {
+        $gateway = $this->getSourceFromAction($action);
+        $entity = $this->getEntityFromAction($action);
+
         // Get the first page of objects for exist outside the gateway to get the total amount of pages.
         $component = $this->gatewayService->gatewayToArray($gateway);
-        $url = $this->getUrlForSource($gateway, $location);
+        $url = $this->getUrlForSource($gateway, $action->getConfig()['location']);
         // RLI:  Dit weet je niet  vooraf hé
         //$amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
 
@@ -52,10 +56,10 @@ class SynchronisationService
 
         // @todo This should be its own funtion that gets results based on the type of source (could als be an excel over ftp etc).
         // right now there are two options, eitherapi  source is paginated or it isnt
-        if(in_array('sourcePaginated', $action->getConfig()) && $action->getConfig()['sourcePaginated']){
+        if (in_array('sourcePaginated', $action->getConfig()) && $action->getConfig()['sourcePaginated']){
             $results = $this->getObjectsFromPagedSource($action);
         }
-        else{
+        else {
             $results = $this->getObjectsFromApiSource($action);
         }
 
@@ -94,8 +98,30 @@ class SynchronisationService
         return []; //todo: nothing to return?
     }
 
+    // todo: docs
+    private function getSourceFromAction(Action $action): ?Gateway
+    {
+        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $action->getConfig()['source']]);
+
+        if ($source instanceof Gateway) {
+            return $source;
+        }
+        return null;
+    }
+
+    // todo: docs
+    private function getEntityFromAction(Action $action): ?Entity
+    {
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $action->getConfig()['eavObject']]);
+
+        if ($entity instanceof Entity) {
+            return $entity;
+        }
+        return null;
+    }
+
     // Door paes heen lopen zonder total result
-    public function getObjectsFromPagedSource(Action $action, int $page = 0): array
+    private function getObjectsFromPagedSource(Action $action, int $page = 0): array
     {
         // RLI  what if a source dosnt have  a limit
         $limit = $action->getConfig()['sourceLimit'];
@@ -114,7 +140,7 @@ class SynchronisationService
     }
 
     // todo: Een functie die één enkel object uit de source trekt
-    public function getSingleFromSource(Sync $sync): array
+    private function getSingleFromSource(Sync $sync): array
     {
         $component = $this->gatewayService->gatewayToArray($gateway);
         $url = $this->getUrlForSource($gateway, $location);
@@ -124,6 +150,7 @@ class SynchronisationService
         return [];
     }
 
+    // todo: docs
     private function getUrlForSource(Gateway $gateway, string $location): string
     {
         // todo: generate url with correct query params etc.
@@ -170,10 +197,34 @@ class SynchronisationService
         return $amountOfPages;
     }
 
+    // todo: Een functie die kijkt of  er al een synchronistie object is aan de hand van de source
+    // todo: (dus zoekt op source + endpoint + externeid)
+    private function findSyncBySource(Gateway $source, Endpoint $endpoint, string $externalId): ?Sync
+    {
+        $sync = $this->entityManager->getRepository('App:Synchronisation')->findBy(['source' => $source, 'endpoint' => $endpoint, 'externalId' => $externalId]);
+
+        if ($sync instanceof Sync) {
+            return $sync;
+        }
+        return null;
+    }
+
+    // todo: Een functie die kijkt of er al een synchronisatie object is aan de hand van een objectEntity
+    // todo: (dus zoekt op object + source + endooint)
+    private function findSyncByObject(ObjectEntity $objectEntity, Gateway $source, Endpoint $endpoint): ?Sync
+    {
+        $sync = $this->entityManager->getRepository('App:Synchronisation')->findBy(['object' => $objectEntity, 'source' => $source, 'endpoint' => $endpoint]);
+
+        if ($sync instanceof Sync) {
+            return $sync;
+        }
+        return null;
+    }
+
     // todo: Een functie die aan de hand van een synchronisatie object een sync uitvoert, om dubbele bevragingen
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
     // RL: ik zou verwachten dat handle syn een sync ontvange en terug geeft
-    public function handleSync(Sync $sync, ?array $sourceObject): Sync
+    private function handleSync(Sync $sync, ?array $sourceObject): Sync
     {
         // We need an object on the gateway side
         if (!$sync->getObject()){
