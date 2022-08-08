@@ -37,19 +37,42 @@ class SynchronisationService
 
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
     // todo: rondom pagination, en locatie van de results vandaan komt).
+    // RLI: beetje veel wat we hier mee geven,  volgensmij heb je alleen de action nodig
     public function getAllFromSource(Gateway $gateway, Entity $entity, string $location, array $configuration): array
     {
         // Get the first page of objects for exist outside the gateway to get the total amount of pages.
         $component = $this->gatewayService->gatewayToArray($gateway);
         $url = $this->getUrlForSource($gateway, $location);
-        $amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
+        // RLI:  Dit weet je niet  vooraf hé
+        //$amountOfPages = $this->getAmountOfPages($component, $url, $configuration['locationTotalCount']);
 
-        // todo: asyn messages? for each page
+        // todo: asyn messages? for each page //RLI Nope
         $application = $this->session->get('application');
         $activeOrganization = $this->session->get('activeOrganization');
 
+        // @todo This should be its own funtion that gets results based on the type of source (could als be an excel over ftp etc).
+        // right now there are two options, eitherapi  source is paginated or it isnt
+        if(in_array('sourcePaginated', $action->getConfig()) && $action->getConfig()['sourcePaginated']){
+            $results = $this->getObjectsFromPagedSource($action);
+        }
+        else{
+            $results = $this->getObjectsFromApiSource($action);
+        }
+
+        foreach ($results as $result){
+            // @todo this could and should be async
+            // Lets graph the sync object
+            $sync = $this
+            // Lets syn
+            $result = $this->handleSync($sync, $result);
+            $this->entityManager->persist($result);
+        }
+
+
         // todo: make this a message in order to compare and handle gateway objects that need to be deleted? see old code in ConvertToGatewayService.
         // Loop, for each page create a message:
+        // RLI: Je kan pages niet asynchroon inladen, dan mis je objecten die in de tussentijd worden ingeladen
+        /*
         for ($page = 1; $page <= $amountOfPages; $page++) {
             $this->messageBus->dispatch(new SyncPageMessage(
                 [
@@ -66,8 +89,28 @@ class SynchronisationService
                 ]
             ));
         }
+        */
 
         return []; //todo: nothing to return?
+    }
+
+    // Door paes heen lopen zonder total result
+    public function getObjectsFromPagedSource(Action $action, int $page = 0): array
+    {
+        // RLI  what if a source dosnt have  a limit
+        $limit = $action->getConfig()['sourceLimit'];
+
+        $pageResult = []; // get a page
+
+        $dot = new Dot($pageResult);
+        $results = $dot->get($action->getConfig()['sourceObjectLocation'], 1);
+        // Let see if we need to pull annother page (e.g. this page is full so there might be a next one
+        if(count($results) >= $limit){
+            $page ++;
+            $results = array_merge($results, $this->getObjectsFromPage($sync, $page , ));
+        }
+
+        return $results;
     }
 
     // todo: Een functie die één enkel object uit de source trekt
