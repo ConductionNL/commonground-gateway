@@ -480,27 +480,83 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // Check if this filter has an array of values (example1: key = value,value2) (example2: key[a] = value, key[b] = value2)
         if (is_array($value) && $filterKey['arrayValue']) {
-            // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
-            if ($filterKey['compareDateTime']) {
-                $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
-            } else {
-                $query->andWhere("$prefix$key.stringValue IN (:$key)")
-                    ->setParameter($key, $value);
+            $query = $this->arrayValueFilter($query, $filterKey, $value, $prefix);
+        } else {
+            $query = $this->normalValueFilter($query, $filterKey, $value, $prefix);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with a OR filter.
+     * Example: &platforms[]=android&platforms[]=linux. In this case platforms must be android or linux.
+     *
+     * @param QueryBuilder $query
+     * @param array $filterKey
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     *
+     * @throws Exception
+     */
+    private function arrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    {
+        $key = $filterKey['key'];
+
+        // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
+        if ($filterKey['compareDateTime']) {
+            $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
+        } elseif ($filterKey['multiple']) {
+            // If the attribute we filter on is multiple=true
+            $andWhere = "(";
+            foreach ($value as $i => $item) {
+                $andWhere .= "$prefix$key.stringValue LIKE :$key$i";
+                if ($i !== array_key_last($value)) {
+                    $andWhere .= " OR ";
+                }
+            }
+            $query->andWhere($andWhere.')');
+            foreach ($value as $i => $item) {
+                $query->setParameter("$key$i", "%$item%");
             }
         } else {
-            // If a date value is given, make sure we transform it into a dateTime string
-            if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
-                $value = $value.' 00:00:00';
-            }
-            // Check the actual value (example: key = value)
-            // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
-            if ($filterKey['multiple']) {
-                $query->andWhere("$prefix$key.stringValue LIKE :$key")
-                    ->setParameter($key, "%$value%");
-            } else {
-                $query->andWhere("$prefix$key.stringValue = :$key")
-                    ->setParameter($key, "$value");
-            }
+            $query->andWhere("$prefix$key.stringValue IN (:$key)")
+                ->setParameter($key, $value);
+        }
+
+        return $query;
+    }
+
+    /**
+     *  Expands a QueryBuilder with a 'normal' filter. This can be a filter for example a string or a datetime Attribute/Value.
+     *  Example query/filter: ?name=anExampleName
+     *
+     * @param QueryBuilder $query
+     * @param array $filterKey
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function normalValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    {
+        $key = $filterKey['key'];
+
+        // If a date value is given, make sure we transform it into a dateTime string
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
+            $value = $value.' 00:00:00';
+        }
+        // Check the actual value (example: key = value)
+        // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
+        if ($filterKey['multiple']) {
+            // If the attribute we filter on is multiple=true
+            $query->andWhere("$prefix$key.stringValue LIKE :$key")
+                ->setParameter($key, "%$value%");
+        } else {
+            $query->andWhere("$prefix$key.stringValue = :$key")
+                ->setParameter($key, "$value");
         }
 
         return $query;
