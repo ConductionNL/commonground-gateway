@@ -84,9 +84,6 @@ class ConvenienceController extends AbstractController
             return new Response($this->serializer->serialize(['message' => 'No testdata location found for this collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
         }
 
-        // Wipe current data for this collection
-        // $request->get('wipeData') !== null && $this->dataService->wipeDataForCollection($collection);
-
         // Load testdata
         $dataLoaded = $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
 
