@@ -111,9 +111,8 @@ class Synchronization
      */
     private ?string $hash;
 
-    //todo SourceLastChanged
     /**
-     * @var ?DateTimeInterface The moment this resource was last checked
+     * @var ?DateTimeInterface The moment the source of this resource was last changed
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
@@ -227,6 +226,18 @@ class Synchronization
     public function setHash(?string $hash): self
     {
         $this->hash = $hash;
+
+        return $this;
+    }
+
+    public function getSourceLastChanged(): ?\DateTimeInterface
+    {
+        return $this->sourceLastChanged;
+    }
+
+    public function setSourceLastChanged(?\DateTimeInterface $sourceLastChanged): self
+    {
+        $this->sourceLastChanged = $sourceLastChanged;
 
         return $this;
     }

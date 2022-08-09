@@ -51,8 +51,9 @@ class SynchronizationService
             // @todo this could and should be async (nice to have)
 
             $dot = new Dot($result);
+            // The place where we can find the id field when looping through the list of objects, from root, by object (dot notation)
             $id = $dot->get($configuration['sourceIdFieldLocation']);
-            //todo comment:
+            // The place where we can find an object when we walk through the list of objects, from root, by object (dot notation)
             $result = $dot->get($configuration['sourceObjectLocation'], $result);
 
             // Lets grab the sync object
@@ -95,7 +96,6 @@ class SynchronizationService
     {
         $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
 
-        // todo switch?
         // Right now there are two options, either api source is paginated or it is not
         if (in_array('sourcePaginated', $configuration) && $configuration['sourcePaginated']){
             $results = $this->getObjectsFromPagedSource($configuration, $callServiceConfig);
