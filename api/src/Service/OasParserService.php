@@ -239,17 +239,19 @@ class OasParserService
     /**
      * Creates a special type of property for an endpoint.
      *
-     * @param array $endpoints
+     * @param array  $endpoints
      * @param string $pathRegex
+     *
      * @return bool The created property
      */
     private function findEntityByPath(array $endpoints, string $pathRegex): bool
     {
-        foreach ($endpoints as $endpoint){
+        foreach ($endpoints as $endpoint) {
             if ($endpoint->getPathRegex() == $pathRegex) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -257,6 +259,7 @@ class OasParserService
      * Creates a special type of property for an endpoint.
      *
      * @param string $pathRegex
+     *
      * @return ?string The created property
      */
     private function findEndpointByHandler(string $pathRegex): ?string
@@ -270,6 +273,7 @@ class OasParserService
                 }
             }
         }
+
         return null;
     }
 
@@ -517,13 +521,14 @@ class OasParserService
     /**
      * This function creates an Attribute from an OAS property.
      *
-     * @param array $originalProperty
-     * @param string $propertyName The name of the property
-     * @param Entity $entity The entity the attribute belongs to
+     * @param array            $originalProperty
+     * @param string           $propertyName     The name of the property
+     * @param Entity           $entity           The entity the attribute belongs to
      * @param CollectionEntity $collectionEntity The collection the entities that are parsed belong to (for recursion)
      *
-     * @return Attribute|null The resulting attribute
      * @throws Exception Thrown when the attribute cannot be parsed
+     *
+     * @return Attribute|null The resulting attribute
      */
     private function createAttribute(array $originalProperty, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
     {
