@@ -44,23 +44,25 @@ class SynchronizationService
         $gateway = $this->getSourceFromAction($configuration);
         $entity = $this->getEntityFromAction($configuration);
 
-        // Get results based on the type of source
+        // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($configuration, $gateway);
 
         foreach ($results as $result) {
+            // @todo this could and should be async (nice to have)
+
             $dot = new Dot($result);
             $id = $dot->get($configuration['sourceIdFieldLocation']);
+            //todo comment:
             $result = $dot->get($configuration['sourceObjectLocation'], $result);
 
-            // @todo this could and should be async
             // Lets grab the sync object
-            $sync = $this->findSyncBySource($gateway, $entity, $id);
+            $sync = $this->findSyncBySource($gateway, $entity, $id); // todo, what if we don't find a $sync object? create one inside the findSyncBySource() function
 //            $sync = $this->findSyncByObject($object, $gateway, $entity);
-            // todo, what if we don't find a $sync object? should we create one inside the findSyncBySource() function?
+            // todo: 3de zoek functie voor sync object. Geen sync object kunnen vinden, kijken aan de hand van matchende properties het eav object kunnen vinden. En dan sync aanmaken op dat object. (nice to have)
             // Lets sync
             $result = $this->handleSync($sync, $result);
             $this->entityManager->persist($result);
-            // todo flush here? or after foreach?
+            // todo flush here
         }
 
         return $results;
@@ -109,7 +111,7 @@ class SynchronizationService
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url' => $this->getUrlForSource($gateway, $configuration),
-            'query' => [],
+            'query' => [], //todo limit query configurable (nice to have)
             'headers' => $gateway->getHeaders()
         ];
     }
@@ -130,7 +132,7 @@ class SynchronizationService
 
         // Get a single page
         $response = $this->commonGroundService->callService($callServiceConfig['component'], $callServiceConfig['url'],
-            '', array_merge($callServiceConfig['query'], ['limit' => $limit], $page !== 1 ? ['page' => $page] : []),
+            '', array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
             $callServiceConfig['headers'], false, 'GET');
         // If no next page with this $page exists... (callservice returns array on error)
         if (is_array($response)) {
@@ -142,10 +144,12 @@ class SynchronizationService
         $dot = new Dot($pageResult);
         $results = $dot->get($configuration['sourceObjectsLocation'], []);
         // Let see if we need to pull another page (e.g. this page is full so there might be a next one)
+        // todo, if limit is set:
         if (count($results) >= $limit) {
             $page ++;
             $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page));
         }
+        // todo: if no limit set, just go to next page, no results stop recursion
 
         return $results;
     }
@@ -216,7 +220,7 @@ class SynchronizationService
         }
 
         // Now that we have a source object we can create a hash of it
-        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow? implode?
+        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow? Serialize
         // Lets turn the source into a dot so that we can grap values
         $dot = new Dot($sourceObject);
 
@@ -246,9 +250,8 @@ class SynchronizationService
 
             // Save object
             //$entity = new Entity(); // todo $sync->getEntity() ?
-            $object = $this->syncToGateway($entity, $sourceObject);
-        }
-        else {
+            $object = $this->syncToGateway($sync, $sourceObject);
+        } else {
             // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
             $sync = $this->syncTroughComparing($sync);
         }
@@ -263,7 +266,7 @@ class SynchronizationService
     }
 
     // todo: docs
-    private function syncToGateway(Entity $entity, array $externObject): ObjectEntity
+    private function syncToGateway(Synchronization $sync, array $externObject): ObjectEntity
     {
         // todo: mapping and translation
         // todo: validate object

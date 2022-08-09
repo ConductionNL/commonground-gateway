@@ -111,6 +111,15 @@ class Synchronization
      */
     private ?string $hash;
 
+    //todo SourceLastChanged
+    /**
+     * @var ?DateTimeInterface The moment this resource was last checked
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?DateTimeInterface $sourceLastChanged;
+
     /**
      * @var ?DateTimeInterface The moment this resource was last checked
      *
