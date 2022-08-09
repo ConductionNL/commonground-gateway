@@ -232,9 +232,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
-                if (array_key_exists($key, $multipleAttributes)) {
-                    $key = $key.'|multiple';
-                }
+                $key = array_key_exists($key, $multipleAttributes) ? $key.'|multiple' : $key;
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
