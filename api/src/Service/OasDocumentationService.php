@@ -147,6 +147,11 @@ class OasDocumentationService
                     'statusCode'  => 200,
                     'description' => 'OK',
                 ];
+            case 'delete':
+                $response = [
+                    'statusCode'  => 204,
+                    'description' => 'No Content',
+                ];
                 break;
         }
 
@@ -903,8 +908,7 @@ class OasDocumentationService
      */
     public function getResponse(Handler $handler, array $methodArray, string $method): array
     {
-        $response = $this->getResponseType($method);
-        if ($response) {
+        if ($response = $this->getResponseType($method)) {
             $methodArray['responses'][$response['statusCode']] = [
                 'description' => $response['description'],
                 'content'     => [],
@@ -913,8 +917,10 @@ class OasDocumentationService
 //          $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
             $responseTypes = ['application/json', 'application/json+ld', 'application/json+hal']; // @todo this is a short cut, lets focus on json first */
             foreach ($responseTypes as $responseType) {
-                $schema = $this->getResponseSchema($handler, $responseType);
-                $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
+                if ($method !== 'delete') {
+                    $schema = $this->getResponseSchema($handler, $responseType);
+                    $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
+                }
             }
         }
 
@@ -1156,7 +1162,7 @@ class OasDocumentationService
     public function getEndpointMethod(string $method, Handler $handler, string $path): array
     {
         $methodArray = $this->getMethodArray($method, $handler, $path);
-        $methodArray['parameters'] = $this->getParameters($handler);
+        $method !== 'delete' && $methodArray['parameters'] = $this->getParameters($handler);
         $methodArray = $this->getResponse($handler, $methodArray, $method);
 
         return $this->getRequest($handler, $methodArray, $method);
