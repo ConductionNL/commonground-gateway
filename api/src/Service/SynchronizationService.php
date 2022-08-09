@@ -258,7 +258,7 @@ class SynchronizationService
             $sync->setSourcelastChanged($lastChanged);
         }
         // What if the source has no property that allows us to determine the last change
-        elseif ($sync->getHash() != $hash){
+        elseif ($sync->getHash() != $hash) {
             $lastChanged = new \DateTime();
             $sync->setSourcelastChanged($lastChanged);
         }
@@ -335,6 +335,8 @@ class SynchronizationService
         // todo: ^... handle owner
         // todo: what to do with validationErrors?
         // todo: log? (nice to have)
+
+        $this->entityManager->persist($object);
 
         return $sync->setObject($object);
     }
