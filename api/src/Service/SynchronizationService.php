@@ -182,8 +182,10 @@ class SynchronizationService
         }
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
+        // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
 //        $id = $dot->get($configuration['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
 
+        // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
         return $dot->get($configuration['sourceObjectLocation'], $result);
     }
 
@@ -243,41 +245,40 @@ class SynchronizationService
         }
 
         // Now that we have a source object we can create a hash of it
-        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow? Serialize
-        // Lets turn the source into a dot so that we can grap values
+        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow: Serialize!
+        // Lets turn the source into a dot so that we can grab values
         $dot = new Dot($sourceObject);
 
         // Now we need to establish the last time the source was changed
-        if (in_array('modifiedDateLocation', $sync->getAction()->getConfiguration())){
-            // todo: get the laste chage date from object array
-            $lastchagne = '';
-            $sync->setSourcelastChanged($lastchagne);
+        if (array_key_exists('modifiedDateLocation', $configuration)) {
+            $lastChanged = $dot->get($configuration['modifiedDateLocation']);
+            $sync->setSourcelastChanged($lastChanged);
         }
-        // What if the source has no propertity that alows us to determine the last change
+        // What if the source has no property that allows us to determine the last change
         elseif ($sync->getHash() != $hash){
-            $lastchagne = new \DateTime();
-            $sync->setSourcelastChanged($lastchagne);
+            $lastChanged = new \DateTime();
+            $sync->setSourcelastChanged($lastChanged);
         }
 
-        // Now that we know the lastchange date we can update the hash
+        // Now that we know the lastChange date we can update the hash
         $sync->setHash($hash);
 
         // This gives us three options
-        if ($sync->getSourcelastChanged() > $sync->getObject->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
+        //todo: fix if statements...
+        if ($sync->getSourcelastChanged() > $sync->getObject()->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
             // The source is newer
             $sync = $this->syncToSource($sync);
         }
         elseif ($sync->getSourcelastChanged() < $sync->getObject()->getDatemodified() && $sync->getObject()->getDatemodified() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
             // The gateway is newer
-//            $sync = $this->syncToGateway($sync);
-
             // Save object
-            //$entity = new Entity(); // todo $sync->getEntity() ?
             $object = $this->syncToGateway($sync, $sourceObject);
         } else {
             // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
-            $sync = $this->syncTroughComparing($sync);
+            $sync = $this->syncThroughComparing($sync);
         }
+
+        $sync->setObject($object ?? null); // todo: will we always have an ObjectEntity at this point?
 
         return $sync;
     }
@@ -291,9 +292,11 @@ class SynchronizationService
     // todo: docs
     private function syncToGateway(Synchronization $sync, array $externObject): ObjectEntity
     {
+        // todo: see ConvertToGatewayService->convertToGatewayObject()
+
         // todo: mapping and translation
-        // todo: validate object
-        // todo: save object
+        // todo: validate object with $validaterService
+        // todo: save object with $objectEntityService
         // todo: log?
 
         return new ObjectEntity();
