@@ -355,18 +355,8 @@ class Value
             $outputArray = [];
             foreach ($inputArray as $input) {
                 // Lets catch files and objects
-                switch ($this->getAttribute()->getType()) {
-                    case 'file':
-                        // if file
-                        $this->addFile($input);
-                        $input = $input->getId();
-                        break;
-                    case 'object':
-                        // if object
-                        $this->addObject($input);
-                        $input = $input->getId();
-                        break;
-                }
+                $input = $this->simpleArraySwitch($input);
+
                 $outputArray[] = strval($input);
             }
 
@@ -376,6 +366,22 @@ class Value
         }
 
         return $this;
+    }
+
+    private function simpleArraySwitch($input)
+    {
+        switch ($this->getAttribute()->getType()) {
+            case 'file':
+                // if file
+                $this->addFile($input);
+                return $input->getId();
+            case 'object':
+                // if object
+                $this->addObject($input);
+                return $input->getId();
+        }
+
+        return $input;
     }
 
     public function getDateTimeValue(): ?DateTimeInterface
@@ -587,7 +593,7 @@ class Value
                 if (!empty($this->getSimpleArrayValue())) {
                     return $this->getSimpleArrayValue();
                 }
-                // If simple array value is epty we want the normal array value
+                // If simple array value is empty we want the normal array value
                 return $this->getArrayValue();
             }
 
