@@ -299,7 +299,6 @@ class Value
         return $this;
     }
 
-
     public function getSimpleArrayValue(): ?array
     {
         // Lets cast everything to the correct type
@@ -342,7 +341,7 @@ class Value
                     //@todo get object from uuid
                     break;
                 default:
-                    throw new \UnexpectedValueException("Could not parse to array the attribute type of: ".$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not parse to array the attribute type of: '.$this->getAttribute()->getType());
             }
         }
 
@@ -533,6 +532,7 @@ class Value
                         // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
                     }
+
                     return $this->setBooleanValue($value);
                 case 'number':
                     return $this->setNumberValue($value);
@@ -555,6 +555,7 @@ class Value
                     $this->files->clear();
                     // Set a string reprecentation of the object
                     $this->stringValue = $value->getId();
+
                     return $this->addFile($value);
                 case 'object':
                     if ($value === null) {
@@ -563,11 +564,12 @@ class Value
                     $this->objects->clear();
                     // Set a string reprecentation of the object
                     $this->stringValue = $value->getId();
+
                     return $this->addObject($value);
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException("Could not create a value for the attribute type of: ".$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
@@ -582,7 +584,7 @@ class Value
             $doNotGetArrayTypes = ['object', 'file'];
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 // Lets be backwards compatable
-                if(!empty($this->getSimpleArrayValue())){
+                if (!empty($this->getSimpleArrayValue())) {
                     return $this->getSimpleArrayValue();
                 }
                 // If simple array value is epty we want the normal array value
@@ -612,6 +614,7 @@ class Value
                     }
 
                     $datetime = $this->getDateTimeValue();
+
                     return $datetime->format($format);
                 case 'file':
                     $files = $this->getFiles();
@@ -621,6 +624,7 @@ class Value
                     if (count($files) == 0) {
                         return null;
                     }
+
                     return $files;
                 case 'object':
                     $objects = $this->getObjects();
@@ -630,9 +634,10 @@ class Value
                     if (count($objects) == 0) {
                         return null;
                     }
+
                     return $objects;
                 default:
-                    throw new \UnexpectedValueException("Could not return a value for the attribute type of: ".$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not return a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling

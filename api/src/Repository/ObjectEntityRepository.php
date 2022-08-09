@@ -190,7 +190,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity $entity
      * @param string $prefix
-     * @param int $level
+     * @param int    $level
      *
      * @return array An array with all attributes that have multiple set to true.
      */
@@ -205,6 +205,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $multipleAttributes = array_merge($multipleAttributes, $this->getMultipleAttributes($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
         }
+
         return $multipleAttributes;
     }
 
@@ -378,7 +379,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             'key'             => $key,
             'arrayValue'      => $arrayValue ?? false,
             'compareDateTime' => $compareDateTime ?? false,
-            'multiple'        => $multiple ?? false
+            'multiple'        => $multiple ?? false,
         ];
     }
 
@@ -493,13 +494,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Example: &platforms[]=android&platforms[]=linux. In this case platforms must be android or linux.
      *
      * @param QueryBuilder $query
-     * @param array $filterKey
+     * @param array        $filterKey
      * @param $value
      * @param string $prefix
      *
-     * @return QueryBuilder
-     *
      * @throws Exception
+     *
+     * @return QueryBuilder
      */
     private function arrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
@@ -510,11 +511,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
         } elseif ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
-            $andWhere = "(";
+            $andWhere = '(';
             foreach ($value as $i => $item) {
                 $andWhere .= "$prefix$key.stringValue LIKE :$key$i";
                 if ($i !== array_key_last($value)) {
-                    $andWhere .= " OR ";
+                    $andWhere .= ' OR ';
                 }
             }
             $query->andWhere($andWhere.')');
@@ -531,10 +532,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      *  Expands a QueryBuilder with a 'normal' filter. This can be a filter for example a string or a datetime Attribute/Value.
-     *  Example query/filter: ?name=anExampleName
+     *  Example query/filter: ?name=anExampleName.
      *
      * @param QueryBuilder $query
-     * @param array $filterKey
+     * @param array        $filterKey
      * @param $value
      * @param string $prefix
      *
