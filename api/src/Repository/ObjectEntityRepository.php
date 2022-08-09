@@ -561,10 +561,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder with an OR filter for an attribute with multiple=true.
      * Example: &platforms[]=android&platforms[]=linux. In this case platforms must be android or linux.
-     * And attribute platforms is an array (multiple=true)
+     * And attribute platforms is an array (multiple=true).
      *
      * @param QueryBuilder $query
-     * @param string $key
+     * @param string       $key
      * @param $value
      * @param string $prefix
      *
