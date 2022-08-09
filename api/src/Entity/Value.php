@@ -374,10 +374,12 @@ class Value
             case 'file':
                 // if file
                 $this->addFile($input);
+
                 return $input->getId();
             case 'object':
                 // if object
                 $this->addObject($input);
+
                 return $input->getId();
         }
 
