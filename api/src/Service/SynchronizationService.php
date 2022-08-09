@@ -38,9 +38,10 @@ class SynchronizationService
 
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
     // todo: rondom pagination, en locatie van de results vandaan komt).
-    // RLI: beetje veel wat we hier mee geven,  volgensmij heb je alleen de action nodig
     public function getAllFromSource(array $data, array $configuration): array
     {
+        // todo: i think we need the Action here, because we need to set it with $sync->setAction($action) later...
+        // todo: if we do this, some functions that have $sync no longer need $configuration because we can do: $sync->getAction()->getConfiguration()
         $gateway = $this->getSourceFromAction($configuration);
         $entity = $this->getEntityFromAction($configuration);
 
@@ -50,20 +51,23 @@ class SynchronizationService
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
 
+            // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
-            // The place where we can find the id field when looping through the list of objects, from root, by object (dot notation)
+            // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
             $id = $dot->get($configuration['sourceIdFieldLocation']);
-            // The place where we can find an object when we walk through the list of objects, from root, by object (dot notation)
+            // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
             $result = $dot->get($configuration['sourceObjectLocation'], $result);
 
-            // Lets grab the sync object
-            $sync = $this->findSyncBySource($gateway, $entity, $id); // todo, what if we don't find a $sync object? create one inside the findSyncBySource() function
+            // Lets grab the sync object, if we don't find an existing one, this will create a new one:
+            $sync = $this->findSyncBySource($gateway, $entity, $id);
+            // todo: Another search function for sync object. If no sync object is found, look for matching properties in $result and an ObjectEntity in db. And then create sync for an ObjectEntity if we find one this way. (nice to have)
+            // Other option to find a sync object, currently not used:
 //            $sync = $this->findSyncByObject($object, $gateway, $entity);
-            // todo: 3de zoek functie voor sync object. Geen sync object kunnen vinden, kijken aan de hand van matchende properties het eav object kunnen vinden. En dan sync aanmaken op dat object. (nice to have)
-            // Lets sync
-            $result = $this->handleSync($sync, $result);
+
+            // Lets sync (returns the Synchronization object)
+            $result = $this->handleSync($sync, $result, $configuration);
             $this->entityManager->persist($result);
-            // todo flush here
+            $this->entityManager->flush();
         }
 
         return $results;
@@ -111,7 +115,8 @@ class SynchronizationService
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url' => $this->getUrlForSource($gateway, $configuration),
-            'query' => [], //todo limit query configurable (nice to have)
+            // todo: maybe use sourceLimitQuery instead of sourceLimit for this in $configuration?
+            'query' => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
             'headers' => $gateway->getHeaders()
         ];
     }
@@ -122,14 +127,9 @@ class SynchronizationService
         return $gateway->getLocation().'/'.$configuration['sourceLocation'].$id ? '/'.$id : '';
     }
 
-    // Door pages heen lopen zonder total result
     // todo: docs
     private function getObjectsFromPagedSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
-        // RLI  what if a source doesn't have a limit
-        // WL   check for pagination?
-        $limit = $configuration['sourceLimit'];
-
         // Get a single page
         $response = $this->commonGroundService->callService($callServiceConfig['component'], $callServiceConfig['url'],
             '', array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
@@ -142,14 +142,20 @@ class SynchronizationService
         $pageResult = json_decode($response->getBody()->getContents(), true);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($configuration['sourceObjectsLocation'], []);
+        // The place where we can find the list of objects from the root after a get collection on a source (dot notation)
+        $results = $dot->get($configuration['sourceObjectsLocation'], $pageResult);
+
         // Let see if we need to pull another page (e.g. this page is full so there might be a next one)
-        // todo, if limit is set:
-        if (count($results) >= $limit) {
-            $page ++;
-            $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page));
+        // sourceLimit = The limit per page for the collection call on the source.
+        if (array_key_exists('sourceLimit', $configuration)) {
+            // If limit is set
+            if (count($results) >= $configuration['sourceLimit']) {
+                $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page + 1));
+            }
+        } elseif (!empty($results)) {
+            // If no limit is set, just go to the next page, unless we have no results.
+            $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page + 1));
         }
-        // todo: if no limit set, just go to next page, no results stop recursion
 
         return $results;
     }
@@ -157,14 +163,16 @@ class SynchronizationService
     // todo: docs
     private function getObjectsFromApiSource(array $configuration, array $callServiceConfig): array
     {
+        // todo...
+
         return [];
     }
 
     // todo: Een functie die één enkel object uit de source trekt
-    private function getSingleFromSource(Synchronization $sync): ?array
+    private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
-        $url = $this->getUrlForSource($sync->getGateway(), ['sourceLocation' => $sync->getAction()->getConfiguration()['sourceLocation']], $sync->getSourceId());
+        $url = $this->getUrlForSource($sync->getGateway(), ['sourceLocation' => $configuration['sourceLocation']], $sync->getSourceId());
 
         // Get object form source with callservice
         $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
@@ -174,9 +182,9 @@ class SynchronizationService
         }
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
-//        $id = $dot->get($sync->getAction()->getConfiguration()['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
+//        $id = $dot->get($configuration['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
 
-        return $dot->get($sync->getAction()->getConfiguration()['sourceObjectLocation'], $result);
+        return $dot->get($configuration['sourceObjectLocation'], $result);
     }
 
     // todo: Een functie die kijkt of  er al een synchronistie object is aan de hand van de source
@@ -188,7 +196,15 @@ class SynchronizationService
         if ($sync instanceof Synchronization) {
             return $sync;
         }
-        return null;
+
+        $sync = new Synchronization();
+        $sync->setGateway($source);
+        $sync->setEntity($entity);
+        $sync->setSourceId($sourceId);
+        $this->entityManager->persist($sync);
+        // We flush later
+
+        return $sync;
     }
 
     // todo: Een functie die kijkt of er al een synchronisatie object is aan de hand van een objectEntity
@@ -200,13 +216,20 @@ class SynchronizationService
         if ($sync instanceof Synchronization) {
             return $sync;
         }
-        return null;
+
+        $sync = new Synchronization();
+        $sync->setObject($objectEntity);
+        $sync->setGateway($source);
+        $sync->setEntity($entity);
+        $this->entityManager->persist($sync);
+        // We flush later
+
+        return $sync;
     }
 
     // todo: Een functie die aan de hand van een synchronisatie object een sync uitvoert, om dubbele bevragingen
     // todo: van externe bronnen te voorkomen zou deze ook als propertie het externe object al array moeten kunnen accepteren.
-    // RL: ik zou verwachten dat handle syn een sync ontvange en terug geeft
-    private function handleSync(Synchronization $sync, ?array $sourceObject): Synchronization
+    private function handleSync(Synchronization $sync, ?array $sourceObject, array $configuration): Synchronization
     {
         // We need an object on the gateway side
         if (!$sync->getObject()){
@@ -216,7 +239,7 @@ class SynchronizationService
 
         // We need an object source side
         if (empty($sourceObject)){
-            $sourceObject = $this->getSingleFromSource($sync);
+            $sourceObject = $this->getSingleFromSource($sync, $configuration);
         }
 
         // Now that we have a source object we can create a hash of it
