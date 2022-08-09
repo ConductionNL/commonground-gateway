@@ -3,12 +3,12 @@
 namespace App\Service;
 
 use Adbar\Dot;
-use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -237,6 +237,7 @@ class SynchronizationService
         if (!$sync->getObject()){
             $object = new ObjectEntity();
             $object->setEntity($sync->getEntity());
+            $sync->setObject($object);
         }
 
         // We need an object source side
@@ -245,7 +246,7 @@ class SynchronizationService
         }
 
         // Now that we have a source object we can create a hash of it
-        $hash = hash('sha384', $sourceObject); // todo, this needs to be string somehow: Serialize!
+        $hash = hash('sha384', serialize($sourceObject));
         // Lets turn the source into a dot so that we can grab values
         $dot = new Dot($sourceObject);
 
@@ -264,7 +265,7 @@ class SynchronizationService
         $sync->setHash($hash);
 
         // This gives us three options
-        //todo: fix if statements...
+        //todo: check and test if statements are correct... might need change?
         if ($sync->getSourcelastChanged() > $sync->getObject()->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
             // The source is newer
             $sync = $this->syncToSource($sync);
@@ -272,13 +273,11 @@ class SynchronizationService
         elseif ($sync->getSourcelastChanged() < $sync->getObject()->getDatemodified() && $sync->getObject()->getDatemodified() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
             // The gateway is newer
             // Save object
-            $object = $this->syncToGateway($sync, $sourceObject);
+            $object = $this->syncToGateway($sync, $sourceObject, $configuration);
         } else {
             // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
             $sync = $this->syncThroughComparing($sync);
         }
-
-        $sync->setObject($object ?? null); // todo: will we always have an ObjectEntity at this point?
 
         return $sync;
     }
@@ -290,16 +289,48 @@ class SynchronizationService
     }
 
     // todo: docs
-    private function syncToGateway(Synchronization $sync, array $externObject): ObjectEntity
+    private function syncToGateway(Synchronization $sync, array $externObject, array $configuration): Synchronization
     {
-        // todo: see ConvertToGatewayService->convertToGatewayObject()
+        $object = $sync->getObject();
 
-        // todo: mapping and translation
-        // todo: validate object with $validaterService
-        // todo: save object with $objectEntityService
-        // todo: log?
+        // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
+        // todo: turn all or some of the following todo's and there code into functions?
 
-        return new ObjectEntity();
+        // todo: availableProperties, maybe move this to foreach in getAllFromSource() (nice to have)
+//        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+//        $availableBody = array_filter($body, function ($propertyName) use ($entity) {
+//            if ($entity->getAvailableProperties()) {
+//                return in_array($propertyName, $entity->getAvailableProperties());
+//            }
+//
+//            return $entity->getAttributeByName($propertyName);
+//        }, ARRAY_FILTER_USE_KEY);
+
+        // todo: mapping, mappingIn, sourceMappingIn or externMappingIn?
+        if (array_key_exists('mappingIn', $configuration)) {
+            $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['mappingIn']);
+        }
+        // todo: translation
+        if (array_key_exists('translationsIn', $configuration)) {
+            $translationsRepo = $this->entityManager->getRepository('App:Translation');
+            $translations = $translationsRepo->getTranslations($configuration['translationsIn']);
+            if (!empty($translations)) {
+                $externObject = $this->translationService->parse($externObject, true, $translations);
+            }
+        }
+
+        // todo: if dateCreated/modified in source, set it on ObjectEntity (nice to have)
+        // If extern object has dateCreated & dateModified, set them for this new ObjectEntity
+        key_exists('dateCreated', $externObject) && $object->setDateCreated(new DateTime($externObject['dateCreated']));
+        key_exists('date_created', $externObject) && $object->setDateCreated(new DateTime($externObject['date_created']));
+        key_exists('dateModified', $externObject) && $object->setDateModified(new DateTime($externObject['dateModified']));
+        key_exists('date_modified', $externObject) && $object->setDateModified(new DateTime($externObject['date_modified']));
+
+        // todo: validate object with $validaterService->validateData()
+        // todo: save object with $objectEntityService->saveObject()
+        // todo: log? (nice to have)
+
+        return $sync->setObject($object);
     }
 
     // todo: docs
