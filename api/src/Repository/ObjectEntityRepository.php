@@ -139,8 +139,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
+            $multipleAttributes = $this->getMultipleAttributes($entity);
 
-            $filters = $this->cleanArray($filters, $filterCheck);
+            $filters = $this->cleanArray($filters, $filterCheck, $multipleAttributes);
 
             $this->buildQuery($filters, $query)->distinct();
         }
@@ -184,14 +185,39 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Gets and returns an array with all attributes names (as array key, dot notation) that have multiple set to true.
+     * Works for subresources as well.
+     *
+     * @param Entity $entity
+     * @param string $prefix
+     * @param int $level
+     *
+     * @return array An array with all attributes that have multiple set to true.
+     */
+    private function getMultipleAttributes(Entity $entity, string $prefix = '', int $level = 1): array
+    {
+        $multipleAttributes = [];
+        foreach ($entity->getAttributes() as $attribute) {
+            if ($attribute->getMultiple()) {
+                $multipleAttributes[$prefix.$attribute->getName()] = true;
+            }
+            if ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $multipleAttributes = array_merge($multipleAttributes, $this->getMultipleAttributes($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+            }
+        }
+        return $multipleAttributes;
+    }
+
+    /**
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
+     * Also checks for filters used on multiple attributes and handles these.
      *
      * @param array $array       The array of query params / filters.
      * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
      * @return array A 'clean' array. And transformed array.
      */
-    private function cleanArray(array $array, array $filterCheck): array
+    private function cleanArray(array $array, array $filterCheck, array $multipleAttributes): array
     {
         $result = [];
 
@@ -205,6 +231,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
+                if (array_key_exists($key, $multipleAttributes)) {
+                    $key = $key.'|multiple';
+                }
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
@@ -283,7 +312,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query
             ->leftJoin('o.objectValues', 'valueSearch')
             ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
-            ->andWhere('valueSearch.stringValue LIKE :search AND (valueSearchAttribute.searchPartial IS NOT NULL OR valueSearchAttribute.multiple IS NOT NULL)')
+            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
             ->setParameter('search', '%'.$search.'%');
 
         return $query;
@@ -340,11 +369,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $key = str_replace('|compareDateTime', '', $key);
             }
         }
+        if (str_contains($key, '|multiple')) {
+            $multiple = true;
+            $key = str_replace('|multiple', '', $key);
+        }
 
         return [
             'key'             => $key,
             'arrayValue'      => $arrayValue ?? false,
             'compareDateTime' => $compareDateTime ?? false,
+            'multiple'        => $multiple ?? false
         ];
     }
 
@@ -460,8 +494,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
             // Check the actual value (example: key = value)
             // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
-            $query->andWhere("$prefix$key.stringValue LIKE :$key")
-                ->setParameter($key, "%$value%");
+            if ($filterKey['multiple']) {
+                $query->andWhere("$prefix$key.stringValue LIKE :$key")
+                    ->setParameter($key, "%$value%");
+            } else {
+                $query->andWhere("$prefix$key.stringValue = :$key")
+                    ->setParameter($key, "$value");
+            }
         }
 
         return $query;
