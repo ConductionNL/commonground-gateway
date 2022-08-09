@@ -238,6 +238,8 @@ class SynchronizationService
             $object = new ObjectEntity();
             $object->setEntity($sync->getEntity());
             $sync->setObject($object);
+
+            // todo: set organization and application for $object, see eavService->getObject() function.
         }
 
         // We need an object source side
@@ -326,8 +328,12 @@ class SynchronizationService
         key_exists('dateModified', $externObject) && $object->setDateModified(new DateTime($externObject['dateModified']));
         key_exists('date_modified', $externObject) && $object->setDateModified(new DateTime($externObject['date_modified']));
 
+        // todo: for validation and saving an object, see example code $objectEntityService->handleObject() switch, case: POST
         // todo: validate object with $validaterService->validateData()
         // todo: save object with $objectEntityService->saveObject()
+        // todo: ^... handle function
+        // todo: ^... handle owner
+        // todo: what to do with validationErrors?
         // todo: log? (nice to have)
 
         return $sync->setObject($object);
