@@ -178,6 +178,14 @@ class CollectionEntity
     private bool $autoLoad = false;
 
     /**
+     * @var ?string The prefix for all endpoints on this Collection
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $prefix = null;
+
+    /**
      * @var ?Collection The applications of this Collection
      *
      * @Groups({"write"})
@@ -381,6 +389,18 @@ class CollectionEntity
     public function setAutoLoad(bool $autoLoad): self
     {
         $this->autoLoad = $autoLoad;
+
+        return $this;
+    }
+
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(?string $prefix): self
+    {
+        $this->prefix = $prefix;
 
         return $this;
     }
