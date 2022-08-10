@@ -18,7 +18,7 @@ use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidaterService
+class ValidatorService
 {
     public CacheInterface $cache;
     private string $method;

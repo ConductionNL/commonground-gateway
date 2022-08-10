@@ -38,7 +38,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class ObjectEntityService
 {
     private Security $security;
-    private ValidaterService $validaterService;
+    private ValidatorService $validaterService;
     private SessionInterface $session;
     private ?ValidationService $validationService;
     private ?EavService $eavService;
@@ -61,7 +61,7 @@ class ObjectEntityService
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
-        ValidaterService $validaterService,
+        ValidatorService $validaterService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,

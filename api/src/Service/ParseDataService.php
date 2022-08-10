@@ -211,4 +211,20 @@ class ParseDataService
 
         return true;
     }
+
+    /**
+     * Wipes data for collection.
+     *
+     * @param CollectionEntity $collection The collection which objectEntities will be purged
+     *
+     * @return void
+     */
+    public function wipeDataForCollection(CollectionEntity $collection): void
+    {
+        foreach ($collection->getEntities() as $entity) {
+            foreach ($entity->getObjectEntities() as $object) {
+                $this->eavService->handleDelete($object);
+            }
+        }
+    }
 }

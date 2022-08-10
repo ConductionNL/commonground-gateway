@@ -102,8 +102,8 @@ class OasParserService
      */
     private function parseFirstContent(array $response): ?string
     {
-        foreach ($response['content'] as $content) {
-            if (isset($content['schema']['$ref'])) {
+        foreach ($response['content'] as $key => $content) {
+            if (isset($content['schema']['$ref']) && $key !== 'application/problem+json') {
                 $entityNameToLinkTo = substr($content['schema']['$ref'], strrpos($content['schema']['$ref'], '/') + 1);
                 isset($this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName']) ? $entityNameToLinkTo = $this->replaceHalWithJsonEntity($entityNameToLinkTo)['entityName'] : null;
 
@@ -237,6 +237,47 @@ class OasParserService
     }
 
     /**
+     * Creates a special type of property for an endpoint.
+     *
+     * @param array  $endpoints
+     * @param string $pathRegex
+     *
+     * @return bool The created property
+     */
+    private function findEntityByPath(array $endpoints, string $pathRegex): bool
+    {
+        foreach ($endpoints as $endpoint) {
+            if ($endpoint->getPathRegex() == $pathRegex) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Creates a special type of property for an endpoint.
+     *
+     * @param string $pathRegex
+     *
+     * @return ?string The created property
+     */
+    private function findEndpointByHandler(string $pathRegex): ?string
+    {
+        foreach ($this->handlersToCreate as $entityName => $handler) {
+            if (isset($handler['endpoints'])) {
+                $endpoint = $this->findEntityByPath($handler['endpoints'], $pathRegex);
+
+                if ($endpoint) {
+                    return $entityName;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Parses content for responses in the OpenAPI Specification.
      *
      * @param array    $response   The response the content relates to
@@ -255,6 +296,10 @@ class OasParserService
                 );
         } else {
             $entityNameToLinkTo = $this->parseFirstContent($response);
+        }
+
+        if ($entityNameToLinkTo == null) {
+            $entityNameToLinkTo = $this->findEndpointByHandler($endpoint->getPathRegex());
         }
 
         if (isset($this->handlersToCreate[$entityNameToLinkTo])) {
@@ -476,7 +521,7 @@ class OasParserService
     /**
      * This function creates an Attribute from an OAS property.
      *
-     * @param array            $property         The definition of the property
+     * @param array            $originalProperty
      * @param string           $propertyName     The name of the property
      * @param Entity           $entity           The entity the attribute belongs to
      * @param CollectionEntity $collectionEntity The collection the entities that are parsed belong to (for recursion)
@@ -566,6 +611,7 @@ class OasParserService
         $endpoint->addCollection($collection);
         $endpoint->setName($path.' '.$methodName);
         $endpoint->setMethod($methodName);
+        $collection->getPrefix() && array_unshift($pathArray, $collection->getPrefix());
         $endpoint->setPath($pathArray);
 
         isset($method['description']) && $endpoint->setDescription($method['description']);
