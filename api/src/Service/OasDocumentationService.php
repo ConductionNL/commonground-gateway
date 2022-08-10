@@ -917,10 +917,8 @@ class OasDocumentationService
 //          $responseTypes = ["application/json","application/json-ld","application/json-hal","application/xml","application/yaml","text/csv"];
             $responseTypes = ['application/json', 'application/json+ld', 'application/json+hal']; // @todo this is a short cut, lets focus on json first */
             foreach ($responseTypes as $responseType) {
-                if ($method !== 'delete') {
-                    $schema = $this->getResponseSchema($handler, $responseType);
-                    $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
-                }
+                $method !== 'delete' ? $schema = $this->getResponseSchema($handler, $responseType) : $schema = null;
+                $methodArray['responses'][$response['statusCode']]['content'][$responseType]['schema'] = $schema;
             }
         }
 
