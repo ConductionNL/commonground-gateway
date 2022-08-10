@@ -140,7 +140,7 @@ class HandlerService
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
-                $event = new ActionEvent('commongateway.handler.post', ['request' => $this->request]);
+                $event = new ActionEvent('commongateway.handler.post', $event->getData());
                 $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
