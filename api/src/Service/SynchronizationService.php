@@ -85,6 +85,7 @@ class SynchronizationService
         if ($source instanceof Gateway) {
             return $source;
         }
+
         return null;
     }
 
@@ -96,6 +97,7 @@ class SynchronizationService
         if ($entity instanceof Entity) {
             return $entity;
         }
+
         return null;
     }
 
@@ -115,10 +117,10 @@ class SynchronizationService
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
-            'url' => $this->getUrlForSource($gateway, $configuration),
+            'url'       => $this->getUrlForSource($gateway, $configuration),
             // todo: maybe use sourceLimitQuery instead of sourceLimit for this in $configuration?
-            'query' => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
-            'headers' => $gateway->getHeaders()
+            'query'   => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
+            'headers' => $gateway->getHeaders(),
         ];
     }
 
@@ -132,9 +134,15 @@ class SynchronizationService
     private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
-        $response = $this->commonGroundService->callService($callServiceConfig['component'], $callServiceConfig['url'],
-            '', array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
-            $callServiceConfig['headers'], false, 'GET');
+        $response = $this->commonGroundService->callService(
+            $callServiceConfig['component'],
+            $callServiceConfig['url'],
+            '',
+            array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
+            $callServiceConfig['headers'],
+            false,
+            'GET'
+        );
         // If no next page with this $page exists... (callservice returns array on error)
         if (is_array($response)) {
             //todo: error, user feedback and log this?
@@ -220,7 +228,7 @@ class SynchronizationService
     private function handleSync(Synchronization $sync, ?array $sourceObject, array $configuration): Synchronization
     {
         // We need an object on the gateway side
-        if (!$sync->getObject()){
+        if (!$sync->getObject()) {
             $object = new ObjectEntity();
             $object->setEntity($sync->getEntity());
             $sync->setObject($object);
@@ -229,7 +237,7 @@ class SynchronizationService
         }
 
         // We need an object source side
-        if (empty($sourceObject)){
+        if (empty($sourceObject)) {
             $sourceObject = $this->getSingleFromSource($sync, $configuration);
         }
         $hash = hash('sha384', serialize($sourceObject));
@@ -238,19 +246,16 @@ class SynchronizationService
         if (isset($configuration['apiSource']['dateChangedField'])) {
             $lastChanged = $dot->get($configuration['apiSource']['dateChangedField']);
             $sync->setSourcelastChanged(new \DateTime($lastChanged));
-        }
-
-        elseif ($sync->getHash() != $hash) {
+        } elseif ($sync->getHash() != $hash) {
             $lastChanged = new \DateTime();
             $sync->setSourcelastChanged($lastChanged);
         }
 
         $sync->setHash($hash);
 
-        if (!$sync->getLastSynced() || ($sync->getLastSynced() < $sync->getSourceLastChanged() && $sync->getSourceLastChanged() > $sync->getObject()->getDateModified())){
+        if (!$sync->getLastSynced() || ($sync->getLastSynced() < $sync->getSourceLastChanged() && $sync->getSourceLastChanged() > $sync->getObject()->getDateModified())) {
             $object = $this->syncToGateway($sync, $sourceObject, $configuration);
-        }
-        elseif ((!$sync->getLastSynced() || $sync->getLastSynced() < $sync->getObject()->getDateModified()) && $sync->getSourceLastChanged() < $sync->getObject()->getDateModified()){
+        } elseif ((!$sync->getLastSynced() || $sync->getLastSynced() < $sync->getObject()->getDateModified()) && $sync->getSourceLastChanged() < $sync->getObject()->getDateModified()) {
             $sync = $this->syncToSource($sync);
         } else {
             $sync = $this->syncThroughComparing($sync);
@@ -262,7 +267,6 @@ class SynchronizationService
     // todo: docs
     private function syncToSource(Synchronization $sync): Synchronization
     {
-
         return $sync;
     }
 
@@ -317,10 +321,11 @@ class SynchronizationService
 
         $externObjectDot = new Dot($externObject);
 
-        if(isset($configuration['apiSource']['dateChangedField'])){
+        if (isset($configuration['apiSource']['dateChangedField'])) {
             $object->setDateModified(new DateTime($externObjectDot->get($configuration['apiSource']['dateChangedField'])));
         }
         $this->populateObject($externObject, $object);
+
         return $sync->setObject($object);
     }
 

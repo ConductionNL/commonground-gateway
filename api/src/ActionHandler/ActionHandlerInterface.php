@@ -2,7 +2,6 @@
 
 namespace App\ActionHandler;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 interface ActionHandlerInterface
