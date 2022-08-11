@@ -18,6 +18,7 @@ config:
   cache: true
   githubKey: ''
   samesiteCookie: lax
+  crontab: '*/5 * * * *'
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 
 # Authentication
