@@ -541,10 +541,10 @@ class ObjectEntityService
     /**
      * This function handles deleting the object.
      *
-     * @param string        $id     the id of the object
-     * @param array|null    $data   Data to be set into the eav
-     * @param string        $method The method of the call
-     * @param Entity        $entity The entity of the object
+     * @param string     $id     the id of the object
+     * @param array|null $data   Data to be set into the eav
+     * @param string     $method The method of the call
+     * @param Entity     $entity The entity of the object
      *
      * @throws GatewayException
      * @throws InvalidArgumentException
@@ -573,11 +573,11 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array|null    $data       Data to be set into the eav
-     * @param Endpoint      $endpoint   The endpoint of the object
-     * @param Entity        $entity     The entity of the object
-     * @param string        $method     The method of the call
-     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
+     * @param array|null $data       Data to be set into the eav
+     * @param Endpoint   $endpoint   The endpoint of the object
+     * @param Entity     $entity     The entity of the object
+     * @param string     $method     The method of the call
+     * @param string     $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws ComponentException
