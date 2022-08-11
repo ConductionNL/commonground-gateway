@@ -384,17 +384,17 @@ class ObjectEntityService
 
     /**
      * This function handles the object entity exceptions
-     * @param array $data
+     * @param array|null $data
      * @param ObjectEntity|null $object
-     * @param array $fields
-     * @param array $extend
+     * @param array|null $fields
+     * @param array|null $extend
      * @param string $acceptType
      *
      * @return string[]
      * @throws CacheException
      * @throws InvalidArgumentException
      */
-    public function checkGetObjectExceptions(array &$data, ?ObjectEntity $object, array $fields, array $extend, string $acceptType): array
+    public function checkGetObjectExceptions(?array &$data, ?ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType): array
     {
         if ($object instanceof ObjectEntity) {
             !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
@@ -416,7 +416,7 @@ class ObjectEntityService
      * This function handles the get case of an object entity
      *
      * @param string|null $id
-     * @param array $data
+     * @param array|null $data
      * @param string $method
      * @param Entity $entity
      * @param Endpoint $endpoint
@@ -427,7 +427,7 @@ class ObjectEntityService
      * @throws GatewayException
      * @throws InvalidArgumentException
      */
-    public function getCase(?string $id, array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
+    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
@@ -535,7 +535,7 @@ class ObjectEntityService
      * This function handles deleting the object
      *
      * @param string $id
-     * @param array $data
+     * @param array|null $data
      * @param string $method
      * @param Entity $entity
      *
@@ -543,7 +543,7 @@ class ObjectEntityService
      * @throws GatewayException
      * @throws InvalidArgumentException
      */
-    public function deleteCase(string $id, array &$data, string $method, Entity $entity): array
+    public function deleteCase(string $id, ?array &$data, string $method, Entity $entity): array
     {
         $object = $this->checkGetObject($id, $method, $entity);
         //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
@@ -565,7 +565,7 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array $data
+     * @param array|null $data
      * @param Endpoint $endpoint
      * @param Entity $entity
      * @param string $method
@@ -577,7 +577,7 @@ class ObjectEntityService
      * @throws GatewayException
      * @throws InvalidArgumentException
      */
-    public function switchMethod(array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
+    public function switchMethod(?array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
     {
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
@@ -628,7 +628,7 @@ class ObjectEntityService
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, Endpoint $endpoint, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
         // If type is array application is an error
         $application = $this->applicationService->getApplication();
