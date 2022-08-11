@@ -58,21 +58,21 @@ class ObjectEntityService
     private TranslationService $translationService;
 
     public function __construct(
-        Security               $security,
-        RequestStack           $requestStack,
-        AuthorizationService   $authorizationService,
-        ApplicationService     $applicationService,
-        ValidatorService       $validaterService,
-        SessionInterface       $session,
+        Security $security,
+        RequestStack $requestStack,
+        AuthorizationService $authorizationService,
+        ApplicationService $applicationService,
+        ValidatorService $validaterService,
+        SessionInterface $session,
         EntityManagerInterface $entityManager,
-        CommonGroundService    $commonGroundService,
-        ResponseService        $responseService,
-        Stopwatch              $stopwatch,
-        CacheInterface         $cache,
-        MessageBusInterface    $messageBus,
-        GatewayService         $gatewayService,
-        TranslationService     $translationService,
-        LogService             $logService
+        CommonGroundService $commonGroundService,
+        ResponseService $responseService,
+        Stopwatch $stopwatch,
+        CacheInterface $cache,
+        MessageBusInterface $messageBus,
+        GatewayService $gatewayService,
+        TranslationService $translationService,
+        LogService $logService
     ) {
         $this->security = $security;
         $this->request = $requestStack->getCurrentRequest();
@@ -314,14 +314,15 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the check for an object
+     * This function handles the check for an object.
      *
      * @param string|null $id The id of the object
      * @param string|null $method Method from request if there is a request
      * @param Entity $entity The entity of the object
      *
-     * @return ObjectEntity|array|mixed|null
      * @throws GatewayException
+     *
+     * @return ObjectEntity|array|mixed|null
      */
     public function checkGetObject(?string $id, string $method, Entity $entity)
     {
@@ -361,14 +362,15 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the check on operation types exceptions
+     * This function handles the check on operation types exceptions.
      *
      * @param Endpoint $endpoint The endpoint of the object
      * @param Entity $entity The entity of the object
      * @param array    $data Data to be set into the eav
      *
-     * @return ObjectEntity|string[]|void
      * @throws GatewayException
+     *
+     * @return ObjectEntity|string[]|void
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
@@ -390,9 +392,10 @@ class ObjectEntityService
      * @param array $extend The extend array that can be extended
      * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
-     * @return string[]
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function checkGetObjectExceptions(array &$data, ?ObjectEntity $object, array $fields, array $extend, string $acceptType): array
     {
@@ -403,7 +406,7 @@ class ObjectEntityService
 
             $object->getHasErrors() ?? $data['validationServiceErrors'] = [
                 'Warning' => 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!',
-                'Errors' => $object->getAllErrors()
+                'Errors'  => $object->getAllErrors(),
             ];
         } else {
             $data['error'] = $object;
@@ -413,7 +416,7 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the get case of an object entity
+     * This function handles the get case of an object entity.
      *
      * @param string|null $id The id of the object
      * @param array $data Data to be set into the eav
@@ -422,10 +425,11 @@ class ObjectEntityService
      * @param Entity $entity The entity of the object
      * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
-     * @return array
      * @throws CacheException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return array
      */
     public function getCase(?string $id, array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
@@ -449,7 +453,7 @@ class ObjectEntityService
             $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
             //todo: -end- old code...
 
-            $this->session->get('endpoint') ??  $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
 
         return $data;
@@ -477,7 +481,7 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles creating, updating and patching the object
+     * This function handles creating, updating and patching the object.
      *
      * @param array $data Data to be set into the eav
      * @param ObjectEntity $object The objects that needs to be created/updated
@@ -485,9 +489,10 @@ class ObjectEntityService
      * @param string $method The method of the call
      * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
-     * @return string[]
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
@@ -532,16 +537,17 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles deleting the object
+     * This function handles deleting the object.
      *
      * @param string $id the id of the object
      * @param array $data Data to be set into the eav
      * @param string $method The method of the call
      * @param Entity $entity The entity of the object
      *
-     * @return string[]
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function deleteCase(string $id, array &$data, string $method, Entity $entity): array
     {
@@ -571,11 +577,12 @@ class ObjectEntityService
      * @param string $method The method of the call
      * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
-     * @return string[]|void
      * @throws CacheException
      * @throws ComponentException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return string[]|void
      */
     public function switchMethod(array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
     {
