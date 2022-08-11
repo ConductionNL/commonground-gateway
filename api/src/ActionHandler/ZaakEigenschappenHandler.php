@@ -22,30 +22,38 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
         return $dotData->get($configuration['identifierPath']);
     }
 
-    public function overridePath(string $value, string $path, array $data): array
+    public function createZaakEigenschap(?ObjectEntity $objectEntity): \App\Entity\Value
     {
-        $dotData = new \Adbar\Dot($data);
-        $dotData->set($path, $value);
+        if ($objectEntity instanceof ObjectEntity) {
 
-        return $dotData->jsonSerialize();
+            $eigenschap = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'));
+
+            var_dump($eigenschap);
+
+            // eigenschap matchen met een van de velden van extra elementen
+            // als we een match hebben pak url eigenschap
+            // maak zaakeigenschap aan met url van eigenschap en de waarde van extra element
+//            var_dump($objectEntity->toArray());
+        }
+
+        return $eigenschap;
     }
 
     public function __run(array $data, array $configuration): array
     {
         $identifier = $this->getIdentifier($data['request'], $configuration);
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Eigenschap']);
-        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['identificatie' => $identifier]);
+        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['zaaktype' => $identifier]);
 
-        if (count($objectEntities) > 0 ) {
-
-//            foreach ($objectEntities as $objectEntity) {
-//                if ($objectEntity instanceof ObjectEntity) {
-//                    var_dump($objectEntity->toArray());
-//                }
-//            }
+        var_dump($entity->getId()->toString());
+        var_dump(count($objectEntities));
+        if (count($objectEntities) > 0) {
+            // get extra element velden naam en kijk of die overeenkomt met de naam van de eigenschap
+            foreach ($objectEntities as $objectEntity) {
+                $objectEntity = $this->createZaakEigenschap($objectEntity);
+            }
         }
         var_dump($identifier);
-        var_dump($entity->getName());
 
         return $data;
     }
