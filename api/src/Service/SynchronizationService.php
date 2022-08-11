@@ -256,8 +256,6 @@ class SynchronizationService
             $sync = $this->syncThroughComparing($sync);
         }
 
-        die;
-
         return $sync;
     }
 
@@ -272,17 +270,23 @@ class SynchronizationService
     {
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
 
-
-        // validate
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
-            var_dump($validationErrors);
-            die;
         }
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
 
-        var_dump($this->objectEntityService->renderPostBody($objectEntity));
         return $objectEntity;
+    }
+
+    private function translateInput($configuration, $externObject): array
+    {
+        $translationsRepo = $this->entityManager->getRepository('App:Translation');
+        $translations = $translationsRepo->getTranslations($configuration['apiSource']['translationsIn']);
+        if (!empty($translations)) {
+            $externObject = $this->translationService->parse($externObject, true, $translations);
+        }
+
+        return $externObject;
     }
 
     // todo: docs
@@ -304,16 +308,11 @@ class SynchronizationService
 //        }, ARRAY_FILTER_USE_KEY);
 
         if (array_key_exists('mappingIn', $configuration['apiSource'])) {
-            var_dump($configuration['apiSource']['mappingIn']);
             $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $configuration['apiSource'])) {
-            $translationsRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $translationsRepo->getTranslations($configuration['apiSource']['translationsIn']);
-            if (!empty($translations)) {
-                $externObject = $this->translationService->parse($externObject, true, $translations);
-            }
+            $externObject = $this->translateInput($configuration, $externObject);
         }
 
         $externObjectDot = new Dot($externObject);
@@ -322,7 +321,6 @@ class SynchronizationService
             $object->setDateModified(new DateTime($externObjectDot->get($configuration['apiSource']['dateChangedField'])));
         }
         $this->populateObject($externObject, $object);
-        die;
         return $sync->setObject($object);
     }
 
