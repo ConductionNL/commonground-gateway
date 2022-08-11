@@ -196,9 +196,6 @@ class EavService
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
 
-            // @TODO Persist might not be needed here. Added now for the ObjectEntityService line 216 that sets this object into session with ID
-            $this->em->persist($object);
-
             return $object;
         }
 
@@ -1029,6 +1026,7 @@ class EavService
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
         $filterCheck[] = 'search';
+        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (str_contains($param, '__')) {
@@ -1092,7 +1090,7 @@ class EavService
             return $results;
         }
 
-        // If not lets make it pritty
+        // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
     }
 

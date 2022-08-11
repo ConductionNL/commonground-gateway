@@ -23,7 +23,7 @@ class ApplicationService
     }
 
     /**
-     * A function that finds a application or creates one.
+     * A function that finds an application or creates one.
      */
     public function getApplication()
     {
@@ -53,8 +53,7 @@ class ApplicationService
                     break;
                 }
             }
-        }
-        if (!$application) {
+
             if (str_contains($host, 'localhost')) {
                 $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
             } else {
@@ -69,16 +68,15 @@ class ApplicationService
                 $public && $data = ['public' => $public];
                 $host && $data = ['host' => $host];
 
-                $result = [
-                    'message' => $message,
+                // todo: maybe just throw a gatewayException?
+//            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
+
+                return [
+                    'message' => $message ?? null,
                     'type'    => 'Forbidden',
                     'path'    => $public ?? $host ?? 'Header',
                     'data'    => $data ?? null,
                 ];
-                // todo: maybe just throw a gatewayException?
-//            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
-
-                return $result;
             }
         }
 

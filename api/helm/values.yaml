@@ -17,6 +17,17 @@ config:
   debug: 0
   cache: true
   githubKey: ''
+  samesiteCookie: lax
+  documentation_description: "This documentation contains the endpoints on your commonground gateway.
+
+# Authentication
+
+The gateway offers three forms of authentication:
+- API Key
+- Cookies
+- Bearer Token
+
+Bearer Token - Bearer Tokens are the predominant type of access token used with OAuth 2.0. A Bearer Token is an opaque string, not intended to have any meaning to clients using it."
 
 security:
   authEnabled: true
@@ -143,32 +154,31 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContext:
-  php:
-    privileged: false
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    capabilities:
-      drop:
-          - all
-    runAsUser: 101
-    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
-    readOnlyRootFilesystem: false
-  nginx:
-    privileged: false
-    allowPrivilegeEscalation: false
-    runAsNonRoot: true
-    capabilities:
-      drop:
-        - all
-      add:
-        - chown
-        - dac_override
-        - setgid
-        - setuid
-        - net_bind_service
-    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
-    readOnlyRootFilesystem: false
+securityContextPhp:
+#    privileged: false
+#    allowPrivilegeEscalation: false
+#    runAsNonRoot: false
+#    capabilities:
+#      drop:
+#          - all
+#    runAsUser: 101
+#    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
+#    readOnlyRootFilesystem: false
+securityContextNginx:
+#    privileged: false
+#    allowPrivilegeEscalation: false
+#    runAsNonRoot: false
+#    capabilities:
+#      drop:
+#        - all
+#      add:
+#        - chown
+#        - dac_override
+#        - setgid
+#        - setuid
+#        - net_bind_service
+#    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
+#    readOnlyRootFilesystem: false
 
 service:
   type: ClusterIP
