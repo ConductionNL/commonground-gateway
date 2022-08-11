@@ -10,6 +10,7 @@ class ActionEvent extends Event
     public const EVENTS = [
         'commongateway.handler.pre',
         'commongateway.handler.post',
+        'commongateway.response.pre',
     ];
 
     protected string $type;
