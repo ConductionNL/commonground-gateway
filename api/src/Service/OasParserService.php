@@ -566,6 +566,7 @@ class OasParserService
         $endpoint->addCollection($collection);
         $endpoint->setName($path.' '.$methodName);
         $endpoint->setMethod($methodName);
+        $collection->getPrefix() && array_unshift($pathArray, $collection->getPrefix());
         $endpoint->setPath($pathArray);
 
         isset($method['description']) && $endpoint->setDescription($method['description']);
