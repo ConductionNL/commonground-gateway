@@ -21,6 +21,7 @@ class ActionSubscriber implements EventSubscriberInterface
         return [
             'commongateway.handler.pre'  => 'handleEvent',
             'commongateway.handler.post' => 'handleEvent',
+            'commongateway.response.pre' => 'handleEvent',
         ];
     }
 

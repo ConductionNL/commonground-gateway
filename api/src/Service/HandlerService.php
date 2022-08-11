@@ -136,11 +136,11 @@ class HandlerService
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-                $result = $this->handleHandler($handler, $endpoint, $event->getData());
+                $result = $this->handleHandler($handler, $endpoint, $event->getData()['request']);
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
-                $event = new ActionEvent('commongateway.handler.post', $event->getData());
+                $event = new ActionEvent('commongateway.handler.post', array_merge($event->getData(), ['result' => $result]));
                 $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
@@ -213,6 +213,7 @@ class HandlerService
      */
     public function handleHandler(Handler $handler = null, Endpoint $endpoint, array $data = []): Response
     {
+        $originalData = $data;
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
 
@@ -280,6 +281,9 @@ class HandlerService
             $this->stopwatch->start('saveLog2', 'handleHandler');
             $this->logService->saveLog($this->request, null, 2, json_encode($data));
             $this->stopwatch->stop('saveLog2');
+
+            $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data]);
+            $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
 
             $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
