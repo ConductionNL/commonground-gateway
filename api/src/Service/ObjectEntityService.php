@@ -314,14 +314,15 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the check for an object
+     * This function handles the check for an object.
      *
      * @param string|null $id
      * @param string|null $method Method from request if there is a request
-     * @param Entity $entity
+     * @param Entity      $entity
+     *
+     * @throws GatewayException
      *
      * @return ObjectEntity|array|mixed|null
-     * @throws GatewayException
      */
     public function checkGetObject(?string $id, string $method, Entity $entity)
     {
@@ -361,14 +362,15 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the check on operation types exceptions
+     * This function handles the check on operation types exceptions.
      *
      * @param Endpoint $endpoint
      * @param Entity   $entity
      * @param array    $data
      *
-     * @return ObjectEntity|string[]|void
      * @throws GatewayException
+     *
+     * @return ObjectEntity|string[]|void
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
@@ -383,16 +385,18 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the object entity exceptions
-     * @param array $data
-     * @param ObjectEntity|null $object
-     * @param array $fields
-     * @param array $extend
-     * @param string $acceptType
+     * This function handles the object entity exceptions.
      *
-     * @return string[]
+     * @param array             $data
+     * @param ObjectEntity|null $object
+     * @param array             $fields
+     * @param array             $extend
+     * @param string            $acceptType
+     *
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function checkGetObjectExceptions(array &$data, ?ObjectEntity $object, array $fields, array $extend, string $acceptType): array
     {
@@ -403,7 +407,7 @@ class ObjectEntityService
 
             $object->getHasErrors() ?? $data['validationServiceErrors'] = [
                 'Warning' => 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!',
-                'Errors' => $object->getAllErrors()
+                'Errors'  => $object->getAllErrors(),
             ];
         } else {
             $data['error'] = $object;
@@ -413,19 +417,20 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles the get case of an object entity
+     * This function handles the get case of an object entity.
      *
      * @param string|null $id
-     * @param array $data
-     * @param string $method
-     * @param Entity $entity
-     * @param Endpoint $endpoint
-     * @param string $acceptType
+     * @param array       $data
+     * @param string      $method
+     * @param Entity      $entity
+     * @param Endpoint    $endpoint
+     * @param string      $acceptType
      *
-     * @return array
      * @throws CacheException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return array
      */
     public function getCase(?string $id, array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
@@ -449,14 +454,14 @@ class ObjectEntityService
             $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
             //todo: -end- old code...
 
-            $this->session->get('endpoint') ??  $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
 
         return $data;
     }
 
     /**
-     * This function checks and unsets the owner
+     * This function checks and unsets the owner.
      *
      * @param array $data
      *
@@ -477,17 +482,18 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles creating, updating and patching the object
+     * This function handles creating, updating and patching the object.
      *
-     * @param array $data
+     * @param array        $data
      * @param ObjectEntity $object
      * @param $owner
      * @param string $method
      * @param string $acceptType
      *
-     * @return string[]
      * @throws CacheException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, $owner, string $method, string $acceptType): array
     {
@@ -532,16 +538,17 @@ class ObjectEntityService
     }
 
     /**
-     * This function handles deleting the object
+     * This function handles deleting the object.
      *
      * @param string $id
-     * @param array $data
+     * @param array  $data
      * @param string $method
      * @param Entity $entity
      *
-     * @return string[]
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return string[]
      */
     public function deleteCase(string $id, array &$data, string $method, Entity $entity): array
     {
@@ -565,17 +572,18 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array $data
+     * @param array    $data
      * @param Endpoint $endpoint
-     * @param Entity $entity
-     * @param string $method
-     * @param string $acceptType
+     * @param Entity   $entity
+     * @param string   $method
+     * @param string   $acceptType
      *
-     * @return string[]|void
      * @throws CacheException
      * @throws ComponentException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return string[]|void
      */
     public function switchMethod(array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
     {
