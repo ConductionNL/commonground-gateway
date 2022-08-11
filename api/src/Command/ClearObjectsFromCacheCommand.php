@@ -43,9 +43,7 @@ class ClearObjectsFromCacheCommand extends Command
             ->setName('cache:clear:objects')
             // the short description shown while running "php bin/console list"
             ->setDescription('Resets cache for objects')
-            ->setHelp('This command will remove all stored responses for the given object from the cache (or all objects for a specific entity or collection, or just all objects), useful if, for example, an entity is changed.');
-//            ->addArgument('type', InputArgument::REQUIRED, 'What type of entity are you going to give id\'s for? (Object, Entity or Collection)')
-//            ->addArgument('ids', InputArgument::REQUIRED);
+            ->setHelp('This command will remove all stored responses for the given objects from the cache (or all objects for a specific entity or collection, or just all objects that exist), useful if, for example, an entity is changed.');
     }
 
     /**
