@@ -172,6 +172,7 @@ class ResponseService
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
+        $item->tag('object_userId_'.base64_encode($userId));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
