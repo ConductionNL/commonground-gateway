@@ -2,8 +2,6 @@
 
 namespace App\ActionHandler;
 
-use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,12 +22,10 @@ class SynchronizationHandler implements ActionHandlerInterface
         } else {
             throw new GatewayException('The service container does not contain the required services for this handler');
         }
-
     }
 
     public function __run(array $data, array $configuration): array
     {
-
         $result = $this->synchronizationService->getAllFromSource($data, $configuration);
 
         return $data;

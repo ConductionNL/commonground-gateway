@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
@@ -59,10 +58,10 @@ class ClearObjectsFromCacheCommand extends Command
         );
         $question->setErrorMessage('Type %s is invalid.');
         $type = $helper->ask($input, $output, $question);
-        $output->writeln('You have just selected: ' . $type);
+        $output->writeln('You have just selected: '.$type);
 
         if ($type !== 'AllObjects') {
-            $question = new Question('Now please give one or more uuids for Type ' . $type . ' (Use Enter to start adding one more id and Ctrl+D to stop adding more)', 'NO UUID INPUT');
+            $question = new Question('Now please give one or more uuids for Type '.$type.' (Use Enter to start adding one more id and Ctrl+D to stop adding more)', 'NO UUID INPUT');
             $question->setMultiline(true);
             $ids = $helper->ask($input, $output, $question);
             $ids = explode(PHP_EOL, $ids);
@@ -70,7 +69,7 @@ class ClearObjectsFromCacheCommand extends Command
 
             $io = new SymfonyStyle($input, $output);
             $io->title('Clear Objects from cache');
-            $io->section('Removing Objects from cache for Type: ' . $type . ' (' . $total . ' id\'s given)');
+            $io->section('Removing Objects from cache for Type: '.$type.' ('.$total.' id\'s given)');
             $io->progressStart($total);
             $io->text('');
         }
@@ -96,7 +95,7 @@ class ClearObjectsFromCacheCommand extends Command
 
                 $io = new SymfonyStyle($input, $output);
                 $io->title('Clear Objects from cache');
-                $io->section('Removing all Objects from cache (' . $total . ' objects found)');
+                $io->section('Removing all Objects from cache ('.$total.' objects found)');
                 $io->progressStart($total);
                 $io->text('');
 
@@ -107,7 +106,7 @@ class ClearObjectsFromCacheCommand extends Command
         }
         $io->progressFinish();
 
-        $errors = round($errorCount/$total*100) == 0 && $errorCount > 0 ? 1 : round($errorCount/$total*100);
+        $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
         $typeString = $type !== 'Object' && $type !== 'AllObjects' ? 'for Type'.$type : '';
         if ($errors == 0) {
             $io->success("All Objects $typeString have been removed from cache");
@@ -115,6 +114,7 @@ class ClearObjectsFromCacheCommand extends Command
             $io->warning("Some Objects $typeString could not be removed from cache. Failure rate (per $type) is $errors%");
         } else {
             $io->error("A lot of Objects $typeString could not be removed from cache. Failure rate (per $type) is $errors%");
+
             return Command::FAILURE;
         }
 
@@ -125,10 +125,10 @@ class ClearObjectsFromCacheCommand extends Command
     {
         $errorCount = 0;
         foreach ($ids as $id) {
-            $io->text("");
+            $io->text('');
             $io->section("Removing Object from cache with id: {$id}");
             if (!Uuid::isValid($id)) {
-                $io->error($id. ' is not a valid uuid!');
+                $io->error($id.' is not a valid uuid!');
                 $errorCount++;
                 $io->progressAdvance();
                 continue;
@@ -156,10 +156,10 @@ class ClearObjectsFromCacheCommand extends Command
     {
         $errorCount = 0;
         foreach ($ids as $id) {
-            $io->text("");
+            $io->text('');
             $io->section("Removing Objects from cache for Entity with id: {$id}");
             if (!Uuid::isValid($id)) {
-                $io->error($id. ' is not a valid uuid!');
+                $io->error($id.' is not a valid uuid!');
                 $errorCount++;
                 $io->progressAdvance();
                 continue;
@@ -190,10 +190,10 @@ class ClearObjectsFromCacheCommand extends Command
         $errorCount = 0;
 
         foreach ($ids as $id) {
-            $io->text("");
+            $io->text('');
             $io->section("Removing Objects from cache for Collection with id: {$id}");
             if (!Uuid::isValid($id)) {
-                $io->error($id. ' is not a valid uuid!');
+                $io->error($id.' is not a valid uuid!');
                 $errorCount++;
                 $io->progressAdvance();
                 continue;
@@ -223,7 +223,7 @@ class ClearObjectsFromCacheCommand extends Command
     {
         foreach ($objectEntities as $objectEntity) {
             $id = $objectEntity->getId()->toString();
-            $io->text("");
+            $io->text('');
             $io->section("Removing Object from cache with id: {$id}");
             $this->removeObjectFromCache($io, $objectEntity, $id);
             $io->progressAdvance();

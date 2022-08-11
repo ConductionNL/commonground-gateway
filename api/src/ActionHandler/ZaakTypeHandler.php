@@ -50,6 +50,7 @@ class ZaakTypeHandler implements ActionHandlerInterface
             $url = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
             $data['request'] = $this->overridePath($url, $configuration['identifierPath'], $data['request']);
         }
+
         return $data;
     }
 }
