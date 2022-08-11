@@ -23,8 +23,10 @@ class SynchronizationService
     private LogService $logService;
     private MessageBusInterface $messageBus;
     private TranslationService $translationService;
+    private ObjectEntityService $objectEntityService;
+    private ValidatorService $validatorService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
@@ -34,6 +36,8 @@ class SynchronizationService
         $this->logService = $logService;
         $this->messageBus = $messageBus;
         $this->translationService = $translationService;
+        $this->objectEntityService = $objectEntityService;
+        $this->validatorService = $validatorService;
     }
 
     // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
@@ -54,9 +58,9 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($configuration['sourceIdFieldLocation']);
+            $id = $dot->get($configuration['apiSource']['idField']);
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            $result = $dot->get($configuration['sourceObjectLocation'], $result);
+            $result = $dot->get($configuration['apiSource']['locationObjects'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $sync = $this->findSyncBySource($gateway, $entity, $id);
@@ -99,13 +103,10 @@ class SynchronizationService
     private function getObjectsFromSource(array $configuration, Gateway $gateway): array
     {
         $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
+//        var_dump($callServiceConfig);
 
         // Right now there are two options, either api source is paginated or it is not
-        if (in_array('sourcePaginated', $configuration) && $configuration['sourcePaginated']){
-            $results = $this->getObjectsFromPagedSource($configuration, $callServiceConfig);
-        } else {
-            $results = $this->getObjectsFromApiSource($configuration, $callServiceConfig);
-        }
+        $results = $this->fetchObjectsFromSource($configuration, $callServiceConfig);
 
         return $results;
     }
@@ -124,11 +125,11 @@ class SynchronizationService
     // todo: docs
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().'/'.$configuration['sourceLocation'].$id ? '/'.$id : '';
+        return $gateway->getLocation().'/'.$configuration['sourceLocation'].($id ? '/'.$id : '');
     }
 
     // todo: docs
-    private function getObjectsFromPagedSource(array $configuration, array $callServiceConfig, int $page = 1): array
+    private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
         $response = $this->commonGroundService->callService($callServiceConfig['component'], $callServiceConfig['url'],
@@ -142,30 +143,15 @@ class SynchronizationService
         $pageResult = json_decode($response->getBody()->getContents(), true);
 
         $dot = new Dot($pageResult);
-        // The place where we can find the list of objects from the root after a get collection on a source (dot notation)
-        $results = $dot->get($configuration['sourceObjectsLocation'], $pageResult);
+        $results = $dot->get($configuration['apiSource']['locationObjects'], $pageResult);
 
-        // Let see if we need to pull another page (e.g. this page is full so there might be a next one)
-        // sourceLimit = The limit per page for the collection call on the source.
-        if (array_key_exists('sourceLimit', $configuration)) {
-            // If limit is set
-            if (count($results) >= $configuration['sourceLimit']) {
-                $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page + 1));
-            }
-        } elseif (!empty($results)) {
-            // If no limit is set, just go to the next page, unless we have no results.
-            $results = array_merge($results, $this->getObjectsFromPagedSource($configuration, $callServiceConfig, $page + 1));
+        if (array_key_exists('limit', $configuration['apiSource']) && count($results) >= $configuration['apiSource']['limit']) {
+            $results = array_merge($results, $this->fetchObjectsFromSource($configuration, $callServiceConfig, $page + 1));
+        } elseif (!empty($results) && isset($callServiceConfig['apiSource']['sourcePaginated']) && $callServiceConfig['apiSource']['sourcePaginated']) {
+            $results = array_merge($results, $this->fetchObjectsFromSource($configuration, $callServiceConfig, $page + 1));
         }
 
         return $results;
-    }
-
-    // todo: docs
-    private function getObjectsFromApiSource(array $configuration, array $callServiceConfig): array
-    {
-        // todo...
-
-        return [];
     }
 
     // todo: Een functie die één enkel object uit de source trekt
@@ -238,7 +224,7 @@ class SynchronizationService
             $object = new ObjectEntity();
             $object->setEntity($sync->getEntity());
             $sync->setObject($object);
-
+            $this->entityManager->persist($object);
             // todo: set organization and application for $object, see eavService->getObject() function.
         }
 
@@ -246,40 +232,31 @@ class SynchronizationService
         if (empty($sourceObject)){
             $sourceObject = $this->getSingleFromSource($sync, $configuration);
         }
-
-        // Now that we have a source object we can create a hash of it
         $hash = hash('sha384', serialize($sourceObject));
-        // Lets turn the source into a dot so that we can grab values
         $dot = new Dot($sourceObject);
 
-        // Now we need to establish the last time the source was changed
-        if (array_key_exists('modifiedDateLocation', $configuration)) {
-            $lastChanged = $dot->get($configuration['modifiedDateLocation']);
-            $sync->setSourcelastChanged($lastChanged);
+        if (isset($configuration['apiSource']['dateChangedField'])) {
+            $lastChanged = $dot->get($configuration['apiSource']['dateChangedField']);
+            $sync->setSourcelastChanged(new \DateTime($lastChanged));
         }
-        // What if the source has no property that allows us to determine the last change
+
         elseif ($sync->getHash() != $hash) {
             $lastChanged = new \DateTime();
             $sync->setSourcelastChanged($lastChanged);
         }
 
-        // Now that we know the lastChange date we can update the hash
         $sync->setHash($hash);
 
-        // This gives us three options
-        //todo: check and test if statements are correct... might need change?
-        if ($sync->getSourcelastChanged() > $sync->getObject()->getDateModified() && $sync->getSourcelastChanged() > $sync->getLastSynced() && $sync->getObject()->getDatemodified() < $sync->getsyncDatum()){
-            // The source is newer
-            $sync = $this->syncToSource($sync);
-        }
-        elseif ($sync->getSourcelastChanged() < $sync->getObject()->getDatemodified() && $sync->getObject()->getDatemodified() > $sync->getLastSynced() && $sync->getSourcelastChanged() < $sync->syncDatum()){
-            // The gateway is newer
-            // Save object
+        if (!$sync->getLastSynced() || ($sync->getLastSynced() < $sync->getSourceLastChanged() && $sync->getSourceLastChanged() > $sync->getObject()->getDateModified())){
             $object = $this->syncToGateway($sync, $sourceObject, $configuration);
+        }
+        elseif ((!$sync->getLastSynced() || $sync->getLastSynced() < $sync->getObject()->getDateModified()) && $sync->getSourceLastChanged() < $sync->getObject()->getDateModified()){
+            $sync = $this->syncToSource($sync);
         } else {
-            // we are in trouble, both the gateway object AND soure object have cahnged afther the last sync
             $sync = $this->syncThroughComparing($sync);
         }
+
+        die;
 
         return $sync;
     }
@@ -287,7 +264,25 @@ class SynchronizationService
     // todo: docs
     private function syncToSource(Synchronization $sync): Synchronization
     {
+
         return $sync;
+    }
+
+    private function populateObject(array $data, ObjectEntity $objectEntity): ObjectEntity
+    {
+        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
+
+
+        // validate
+        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
+            var_dump($validationErrors);
+            die;
+        }
+
+        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
+
+        var_dump($this->objectEntityService->renderPostBody($objectEntity));
+        return $objectEntity;
     }
 
     // todo: docs
@@ -308,36 +303,26 @@ class SynchronizationService
 //            return $entity->getAttributeByName($propertyName);
 //        }, ARRAY_FILTER_USE_KEY);
 
-        // todo: mapping, mappingIn, sourceMappingIn or externMappingIn?
-        if (array_key_exists('mappingIn', $configuration)) {
-            $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['mappingIn']);
+        if (array_key_exists('mappingIn', $configuration['apiSource'])) {
+            var_dump($configuration['apiSource']['mappingIn']);
+            $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['apiSource']['mappingIn']);
         }
-        // todo: translation
-        if (array_key_exists('translationsIn', $configuration)) {
+
+        if (array_key_exists('translationsIn', $configuration['apiSource'])) {
             $translationsRepo = $this->entityManager->getRepository('App:Translation');
-            $translations = $translationsRepo->getTranslations($configuration['translationsIn']);
+            $translations = $translationsRepo->getTranslations($configuration['apiSource']['translationsIn']);
             if (!empty($translations)) {
                 $externObject = $this->translationService->parse($externObject, true, $translations);
             }
         }
 
-        // todo: if dateCreated/modified in source, set it on ObjectEntity (nice to have)
-        // If extern object has dateCreated & dateModified, set them for this new ObjectEntity
-        key_exists('dateCreated', $externObject) && $object->setDateCreated(new DateTime($externObject['dateCreated']));
-        key_exists('date_created', $externObject) && $object->setDateCreated(new DateTime($externObject['date_created']));
-        key_exists('dateModified', $externObject) && $object->setDateModified(new DateTime($externObject['dateModified']));
-        key_exists('date_modified', $externObject) && $object->setDateModified(new DateTime($externObject['date_modified']));
+        $externObjectDot = new Dot($externObject);
 
-        // todo: for validation and saving an object, see example code $objectEntityService->handleObject() switch, case: POST
-        // todo: validate object with $validaterService->validateData()
-        // todo: save object with $objectEntityService->saveObject()
-        // todo: ^... handle function
-        // todo: ^... handle owner
-        // todo: what to do with validationErrors?
-        // todo: log? (nice to have)
-
-        $this->entityManager->persist($object);
-
+        if(isset($configuration['apiSource']['dateChangedField'])){
+            $object->setDateModified(new DateTime($externObjectDot->get($configuration['apiSource']['dateChangedField'])));
+        }
+        $this->populateObject($externObject, $object);
+        die;
         return $sync->setObject($object);
     }
 

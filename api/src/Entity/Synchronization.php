@@ -73,16 +73,14 @@ class Synchronization
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
-     * @ORM\JoinColumn(nullable=false)
      */
-    private ?ObjectEntity $object;
+    private ?ObjectEntity $object = null;
 
     /**
      * @var Action The action of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Action::class)
-     * @ORM\JoinColumn(nullable=false)
      */
     private Action $action;
 
@@ -109,7 +107,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $hash;
+    private ?string $hash = '';
 
     /**
      * @var ?DateTimeInterface The moment the source of this resource was last changed
@@ -125,7 +123,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $lastChecked;
+    private ?DateTimeInterface $lastChecked = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last synced
@@ -133,7 +131,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $lastSynced;
+    private ?DateTimeInterface $lastSynced = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was created
