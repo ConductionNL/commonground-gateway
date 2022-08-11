@@ -51,6 +51,8 @@ class ClearObjectsFromCacheCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // todo: cleanup and split into more functions?
+
         $helper = $this->getHelper('question');
         $question = new ChoiceQuestion(
             'What type of entity are you going to give id\'s for? (Object, Entity, Collection or AllObjects. Default = Object. AllObjects will remove all objects from cache)',
@@ -75,6 +77,7 @@ class ClearObjectsFromCacheCommand extends Command
             $io->text('');
         }
 
+        $this->functionService->removeResultFromCache = [];
         switch ($type) {
             case 'Object':
                 $errorCount = $this->handleTypeObject($io, $ids);

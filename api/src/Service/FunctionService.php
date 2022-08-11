@@ -173,7 +173,9 @@ class FunctionService
     }
 
     /**
-     * @TODO
+     * Removes all responses saved for the given ObjectEntity from the cache. Also does the same for all parent objects of the given object.
+     * Always use $this->functionService->removeResultFromCache = []; before using this function to reset the list of objects that already got removed from cache.
+     * If this function is called multiple times in a row it might be better to do this before a loop or starting a recursive function.
      *
      * @param ObjectEntity $objectEntity
      *
