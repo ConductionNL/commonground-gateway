@@ -108,7 +108,7 @@ class ClearObjectsFromCacheCommand extends Command
         $io->progressFinish();
 
         $errors = round($errorCount/$total*100) == 0 && $errorCount > 0 ? 1 : round($errorCount/$total*100);
-        $typeString = $type !== 'Object' ? 'for Type'.$type : '';
+        $typeString = $type !== 'Object' && $type !== 'AllObjects' ? 'for Type'.$type : '';
         if ($errors == 0) {
             $io->success("All Objects $typeString have been removed from cache");
         } elseif ($errors < 20) {
