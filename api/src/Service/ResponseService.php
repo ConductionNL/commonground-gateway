@@ -532,7 +532,10 @@ class ResponseService
         $attribute = $value->getAttribute();
 
         if ($value->getValue() == null) {
-            return null;
+            return [
+                'renderObjectsObjectsArray' => null,
+                'renderObjectsEmbedded'     => $embedded,
+            ];
         }
 
         // If we have only one Object (because multiple = false)
