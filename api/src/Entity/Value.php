@@ -127,7 +127,7 @@ class Value
      * @Groups({"read", "write"})
      * @ORM\Column(type="simple_array", nullable=true)
      */
-    private $simpleArrayValue;
+    private $simpleArrayValue = [];
 
     /**
      * @var DateTime DateTime if the value is type DateTime
