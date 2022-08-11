@@ -253,6 +253,7 @@ class SynchronizationService
 
         $sync->setHash($hash);
 
+        //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         if (!$sync->getLastSynced() || ($sync->getLastSynced() < $sync->getSourceLastChanged() && $sync->getSourceLastChanged() > $sync->getObject()->getDateModified())) {
             $object = $this->syncToGateway($sync, $sourceObject, $configuration);
         } elseif ((!$sync->getLastSynced() || $sync->getLastSynced() < $sync->getObject()->getDateModified()) && $sync->getSourceLastChanged() < $sync->getObject()->getDateModified()) {
