@@ -115,8 +115,8 @@ class ObjectEntityService
     /**
      * A function we want to call when doing a post or put, to set the owner of an ObjectEntity, if it hasn't one already.
      *
-     * @param ObjectEntity $result
-     * @param string|null  $owner
+     * @param ObjectEntity $result The object entity
+     * @param string|null  $owner The owner of the object - defaulted to owner
      *
      * @return ObjectEntity|array
      */
@@ -152,9 +152,9 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function checks the owner of the object
      *
-     * @param ObjectEntity $result
+     * @param ObjectEntity $result The object entity
      *
      * @return bool
      */
@@ -171,11 +171,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets the object by its uri
      *
-     * @param string     $uri
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $uri The uri of the object
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -192,12 +192,12 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets the object with its id and the related entity
      *
-     * @param Entity     $entity
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param Entity     $entity The entity the object relates to
+     * @param string     $id The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -214,11 +214,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets an object with the function set to person
      *
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $id The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -235,11 +235,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets an object with the function set to organization
      *
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $id The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -258,9 +258,9 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $username
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $username The username of the person
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -289,7 +289,7 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function get the filters array from the parameters
      *
      * @return array
      */
@@ -316,9 +316,9 @@ class ObjectEntityService
     /**
      * This function handles the check for an object
      *
-     * @param string|null $id
+     * @param string|null $id The id of the object
      * @param string|null $method Method from request if there is a request
-     * @param Entity $entity
+     * @param Entity $entity The entity of the object
      *
      * @return ObjectEntity|array|mixed|null
      * @throws GatewayException
@@ -363,9 +363,9 @@ class ObjectEntityService
     /**
      * This function handles the check on operation types exceptions
      *
-     * @param Endpoint $endpoint
-     * @param Entity   $entity
-     * @param array    $data
+     * @param Endpoint $endpoint The endpoint of the object
+     * @param Entity $entity The entity of the object
+     * @param array    $data Data to be set into the eav
      *
      * @return ObjectEntity|string[]|void
      * @throws GatewayException
@@ -384,11 +384,11 @@ class ObjectEntityService
 
     /**
      * This function handles the object entity exceptions
-     * @param array $data
-     * @param ObjectEntity|null $object
-     * @param array $fields
-     * @param array $extend
-     * @param string $acceptType
+     * @param array $data Data to be set into the eav
+     * @param ObjectEntity|null $object The objects that is being checked on exceptions
+     * @param array $fields The fields array that can be filtered on
+     * @param array $extend The extend array that can be extended
+     * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @return string[]
      * @throws CacheException
@@ -415,12 +415,12 @@ class ObjectEntityService
     /**
      * This function handles the get case of an object entity
      *
-     * @param string|null $id
-     * @param array $data
-     * @param string $method
-     * @param Entity $entity
-     * @param Endpoint $endpoint
-     * @param string $acceptType
+     * @param string|null $id The id of the object
+     * @param array $data Data to be set into the eav
+     * @param string $method The method of the call
+     * @param Endpoint $endpoint The endpoint of the object
+     * @param Entity $entity The entity of the object
+     * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @return array
      * @throws CacheException
@@ -456,9 +456,9 @@ class ObjectEntityService
     }
 
     /**
-     * This function checks and unsets the owner
+     * This function checks and unsets the owner of the body of the call
      *
-     * @param array $data
+     * @param array $data Data to be set into the eav
      *
      * @return string|null
      */
@@ -479,17 +479,17 @@ class ObjectEntityService
     /**
      * This function handles creating, updating and patching the object
      *
-     * @param array $data
-     * @param ObjectEntity $object
-     * @param $owner
-     * @param string $method
-     * @param string $acceptType
+     * @param array $data Data to be set into the eav
+     * @param ObjectEntity $object The objects that needs to be created/updated
+     * @param string $owner  The owner of the object
+     * @param string $method The method of the call
+     * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @return string[]
      * @throws CacheException
      * @throws InvalidArgumentException
      */
-    public function createOrUpdateCase(array &$data, ObjectEntity $object, $owner, string $method, string $acceptType): array
+    public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
@@ -534,10 +534,10 @@ class ObjectEntityService
     /**
      * This function handles deleting the object
      *
-     * @param string $id
-     * @param array $data
-     * @param string $method
-     * @param Entity $entity
+     * @param string $id the id of the object
+     * @param array $data Data to be set into the eav
+     * @param string $method The method of the call
+     * @param Entity $entity The entity of the object
      *
      * @return string[]
      * @throws GatewayException
@@ -565,11 +565,11 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array $data
-     * @param Endpoint $endpoint
-     * @param Entity $entity
-     * @param string $method
-     * @param string $acceptType
+     * @param array $data Data to be set into the eav
+     * @param Endpoint $endpoint The endpoint of the object
+     * @param Entity $entity The entity of the object
+     * @param string $method The method of the call
+     * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @return string[]|void
      * @throws CacheException
@@ -617,12 +617,12 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler     $handler
-     * @param Endpoint    $endpoint
+     * @param Handler     $handler The handler the object relates to
+     * @param Endpoint    $endpoint The endpoint of the object
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
-     * @param string|null $operationType
-     * @param string      $acceptType
+     * @param string|null $operationType The operation type of the object
+     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
