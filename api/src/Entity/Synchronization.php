@@ -63,16 +63,16 @@ class Synchronization
      * @var Entity The entity of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=Entity::class, cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity=Entity::class)
      * @ORM\JoinColumn(nullable=false)
      */
-    private entity $entity;
+    private Entity $entity;
 
     /**
      * @var ?ObjectEntity The object of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=ObjectEntity::class, cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
      */
     private ?ObjectEntity $object;
 
