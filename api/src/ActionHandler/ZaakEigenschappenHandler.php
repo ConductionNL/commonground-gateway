@@ -23,7 +23,7 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
      *
      * @param array $data
      * @param $configuration
-     * @return array
+     * @return string
      */
     public function getIdentifier(array $data, $configuration): string
     {
