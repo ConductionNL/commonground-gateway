@@ -225,9 +225,11 @@ class SynchronizationService
     }
 
     /**
-     * Adds a new ObjectEntity to an synchronisation object
-     * @param   Synchronization $synchronization    The synchronisation object without object
-     * @return  Synchronization                     The update synchronisation object with object
+     * Adds a new ObjectEntity to an synchronisation object.
+     *
+     * @param Synchronization $synchronization The synchronisation object without object
+     *
+     * @return Synchronization The update synchronisation object with object
      */
     private function checkObjectEntity(Synchronization $synchronization): Synchronization
     {
@@ -243,13 +245,15 @@ class SynchronizationService
     }
 
     /**
-     * Sets the last changed date from the source object and creates a hash for the source object
+     * Sets the last changed date from the source object and creates a hash for the source object.
      *
-     * @param   Synchronization $synchronization    The synchronisation object to update
-     * @param   array           $configuration      The configuration from the action
-     * @param   array           $sourceObject       The object returned from the source
-     * @return  Synchronization                     The updated source object
+     * @param Synchronization $synchronization The synchronisation object to update
+     * @param array           $configuration   The configuration from the action
+     * @param array           $sourceObject    The object returned from the source
+     *
      * @throws \Exception
+     *
+     * @return Synchronization The updated source object
      */
     private function setLastChangedDate(Synchronization $synchronization, array $configuration, array $sourceObject): Synchronization
     {
@@ -268,17 +272,18 @@ class SynchronizationService
     }
 
     /**
-     * Executes the synchronisation between source and gateway
+     * Executes the synchronisation between source and gateway.
      *
-     * @param   Synchronization $synchronization    The synchronisation object before synchronisation
-     * @param   array           $configuration      The configuration from the action
-     * @param   array           $sourceObject       The object in the source
-     * @return  Synchronization                     The updated synchronisation object
+     * @param Synchronization $synchronization The synchronisation object before synchronisation
+     * @param array           $configuration   The configuration from the action
+     * @param array           $sourceObject    The object in the source
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return Synchronization The updated synchronisation object
      */
     private function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
     {
@@ -305,17 +310,17 @@ class SynchronizationService
     }
 
     /**
-     * This function populates a pre-existing objectEntity with data that has been validated
+     * This function populates a pre-existing objectEntity with data that has been validated.
      *
-     * @param   array           $data The data that has to go into the objectEntity
-     * @param   ObjectEntity    $objectEntity The ObjectEntity to populate
-     *
-     * @return  ObjectEntity    The populated ObjectEntity
+     * @param array        $data         The data that has to go into the objectEntity
+     * @param ObjectEntity $objectEntity The ObjectEntity to populate
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return ObjectEntity The populated ObjectEntity
      */
     private function populateObject(array $data, ObjectEntity $objectEntity): ObjectEntity
     {
@@ -331,11 +336,12 @@ class SynchronizationService
     }
 
     /**
-     * Translates the input according to the translation table referenced in the configuration of the action
+     * Translates the input according to the translation table referenced in the configuration of the action.
      *
-     * @param   array   $configuration  The configuration of the action, refers to the translationTable to use
-     * @param   array   $externObject   The external object found in the source
-     * @return  array                   The translated external object
+     * @param array $configuration The configuration of the action, refers to the translationTable to use
+     * @param array $externObject  The external object found in the source
+     *
+     * @return array The translated external object
      */
     private function translateInput($configuration, $externObject): array
     {
@@ -349,35 +355,36 @@ class SynchronizationService
     }
 
     /**
-     * Sets an application and organization for new ObjectEntities
+     * Sets an application and organization for new ObjectEntities.
      *
-     * @param   ObjectEntity    $objectEntity   The ObjectEntity to update
-     * @return  ObjectEntity                    The updated ObjectEntity
+     * @param ObjectEntity $objectEntity The ObjectEntity to update
+     *
+     * @return ObjectEntity The updated ObjectEntity
      */
     private function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
     {
-        $application = $this->entityManager->getRepository("App:Application")->findOneBy(['name' => 'main application']);
-        if($application instanceof Application)
-        {
+        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
+        if ($application instanceof Application) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getObjectEntities());
         }
+
         return $objectEntity;
     }
 
     /**
-     * Synchronises data from an external source to the internal database of the gateway
+     * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param   Synchronization $sync           The synchronisation object to update
-     * @param   array           $externObject   The external object to synchronise from
-     * @param   array           $configuration  The configuration of the action to handle
-     *
-     * @return  Synchronization The updated synchronisation object containing an updated objectEntity
+     * @param Synchronization $sync          The synchronisation object to update
+     * @param array           $externObject  The external object to synchronise from
+     * @param array           $configuration The configuration of the action to handle
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return Synchronization The updated synchronisation object containing an updated objectEntity
      */
     private function syncToGateway(Synchronization $sync, array $externObject, array $configuration): Synchronization
     {
