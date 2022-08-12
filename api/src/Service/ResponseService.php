@@ -432,36 +432,7 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-                // todo: move this to a function, or re-use $this->renderObjects for this somehow:
-                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
-                    if (!$attribute->getMultiple()) {
-                        $object = $valueObject->getValue();
-                        if (!$object instanceof ObjectEntity) {
-                            $response[$attribute->getName()] = null;
-                            continue;
-                        }
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        }
-                        $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        continue;
-                    }
-                    $objects = $valueObject->getValue();
-                    if (!is_array($objects)) {
-                        $response[$attribute->getName()] = null;
-                        continue;
-                    }
-                    foreach ($objects as $object) {
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()][] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        } else {
-                            $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        }
-                    }
+                if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {
                     continue;
                 }
 
@@ -476,17 +447,9 @@ class ResponseService
                 }
 
                 // Let's deal with subExtend extending
-                $subExtend = null;
-                if (is_array($extend)) {
-                    if (array_key_exists('all', $extend)) {
-                        $subExtend = $extend;
-                    } elseif (array_key_exists($attribute->getName(), $extend)) {
-                        if (is_array($extend[$attribute->getName()])) {
-                            $subExtend = $extend[$attribute->getName()];
-                        } elseif ($extend[$attribute->getName()] == false) {
-                            continue;
-                        }
-                    }
+                $subExtend = $this->attributeSubExtend($extend, $attribute);
+                if ($subExtend === []) {
+                    continue;
                 }
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
@@ -507,6 +470,82 @@ class ResponseService
             'renderValuesResponse' => $response,
             'renderValuesEmbedded' => isset($renderObjects) && is_array($renderObjects) && array_key_exists('renderObjectsEmbedded', $renderObjects) ? $renderObjects['renderObjectsEmbedded'] : [],
         ];
+    }
+
+    /**
+     * Checks if a given attribute should be extended. Will return true if it should be extended and false if not.
+     * Will also add a reference to an object to the response if the attribute should not be extended. Or null if there is no value.
+     *
+     * @param array $response
+     * @param Attribute $attribute
+     * @param Value $valueObject
+     * @param array|null $extend
+     * @param string $acceptType
+     *
+     * @return bool Will return true if the attribute should be extended and false if not.
+     */
+    private function checkExtendAttribute(array &$response, Attribute $attribute, Value $valueObject, ?array $extend, string $acceptType): bool
+    {
+        if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
+            if (!$attribute->getMultiple()) {
+                $object = $valueObject->getValue();
+                if (!$object instanceof ObjectEntity) {
+                    $response[$attribute->getName()] = null;
+                    return false;
+                }
+                if ($acceptType === 'jsonld') {
+                    $response[$attribute->getName()] = [
+                        '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                    ];
+                }
+                $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+                return false;
+            }
+            $objects = $valueObject->getValue();
+            if (!is_array($objects)) {
+                $response[$attribute->getName()] = null;
+                return false;
+            }
+            foreach ($objects as $object) {
+                if ($acceptType === 'jsonld') {
+                    $response[$attribute->getName()][] = [
+                        '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                    ];
+                } else {
+                    $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
+     *
+     * @param array|null $extend
+     * @param Attribute $attribute
+     *
+     * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
+     */
+    private function attributeSubExtend(?array $extend, Attribute $attribute): ?array
+    {
+        $subExtend = null;
+
+        if (is_array($extend)) {
+            if (array_key_exists('all', $extend)) {
+                $subExtend = $extend;
+            } elseif (array_key_exists($attribute->getName(), $extend)) {
+                if (is_array($extend[$attribute->getName()])) {
+                    $subExtend = $extend[$attribute->getName()];
+                } elseif ($extend[$attribute->getName()] == false) {
+                    return [];
+                }
+            }
+        }
+
+        return $subExtend;
     }
 
     /**
