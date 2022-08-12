@@ -476,11 +476,11 @@ class ResponseService
      * Checks if a given attribute should be extended. Will return true if it should be extended and false if not.
      * Will also add a reference to an object to the response if the attribute should not be extended. Or null if there is no value.
      *
-     * @param array $response
-     * @param Attribute $attribute
-     * @param Value $valueObject
+     * @param array      $response
+     * @param Attribute  $attribute
+     * @param Value      $valueObject
      * @param array|null $extend
-     * @param string $acceptType
+     * @param string     $acceptType
      *
      * @return bool Will return true if the attribute should be extended and false if not.
      */
@@ -491,6 +491,7 @@ class ResponseService
                 $object = $valueObject->getValue();
                 if (!$object instanceof ObjectEntity) {
                     $response[$attribute->getName()] = null;
+
                     return false;
                 }
                 if ($acceptType === 'jsonld') {
@@ -499,11 +500,13 @@ class ResponseService
                     ];
                 }
                 $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+
                 return false;
             }
             $objects = $valueObject->getValue();
             if (!is_array($objects)) {
                 $response[$attribute->getName()] = null;
+
                 return false;
             }
             foreach ($objects as $object) {
@@ -515,6 +518,7 @@ class ResponseService
                     $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
                 }
             }
+
             return false;
         }
 
@@ -525,7 +529,7 @@ class ResponseService
      * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
      *
      * @param array|null $extend
-     * @param Attribute $attribute
+     * @param Attribute  $attribute
      *
      * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
      */
