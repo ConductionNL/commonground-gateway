@@ -447,7 +447,7 @@ class ResponseService
                 }
 
                 // Let's deal with subExtend extending
-                $subExtend = $this->attributeSubExtend($extend, $attribute);
+                $subExtend = is_array($extend) ? $this->attributeSubExtend($extend, $attribute) : null;
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
                 $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
@@ -565,24 +565,19 @@ class ResponseService
      * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
      * This function will decide how the subExtend array for this attribute should look like.
      *
-     * @param array|null $extend
-     * @param Attribute  $attribute
+     * @param array      $extend    The extend array used in the api-call.
+     * @param Attribute  $attribute The attribute we are checking if it needs extending.
      *
      * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
      */
-    private function attributeSubExtend(?array $extend, Attribute $attribute): ?array
+    private function attributeSubExtend(array $extend, Attribute $attribute): ?array
     {
-        $subExtend = null;
-
-        if (is_array($extend)) {
-            if (array_key_exists('all', $extend)) {
-                $subExtend = $extend;
-            } elseif (array_key_exists($attribute->getName(), $extend) && is_array($extend[$attribute->getName()])) {
-                $subExtend = $extend[$attribute->getName()];
-            }
+        if (array_key_exists('all', $extend)) {
+            return $extend;
+        } elseif (array_key_exists($attribute->getName(), $extend) && is_array($extend[$attribute->getName()])) {
+            return $extend[$attribute->getName()];
         }
-
-        return $subExtend;
+        return null;
     }
 
     /**
