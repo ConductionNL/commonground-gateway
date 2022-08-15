@@ -38,6 +38,7 @@ services:
             $logService: '@App\Service\LogService'
             $translationService: '@App\Service\TranslationService'
             $messageBus: '@messenger.bus.default'
+            $eavService: '@App\Service\EavService'
             
 
     Redis:

@@ -77,12 +77,12 @@ class Synchronization
     private ?ObjectEntity $object = null;
 
     /**
-     * @var Action The action of this resource
+     * @var Action|null The action of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Action::class)
      */
-    private Action $action;
+    private ?Action $action = null;
 
     /**
      * @var Gateway The gateway (source) of this resource

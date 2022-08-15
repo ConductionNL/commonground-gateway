@@ -31,7 +31,7 @@ class SynchronizationService
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
@@ -42,6 +42,7 @@ class SynchronizationService
         $this->messageBus = $messageBus;
         $this->translationService = $translationService;
         $this->objectEntityService = $objectEntityService;
+        $this->objectEntityService->addServices($eavService->getValidationService(), $eavService);
         $this->validatorService = $validatorService;
     }
 
@@ -64,6 +65,7 @@ class SynchronizationService
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
             $id = $dot->get($configuration['apiSource']['idField']);
+
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
             $result = $dot->get($configuration['apiSource']['locationObjects'], $result);
 
@@ -138,6 +140,7 @@ class SynchronizationService
     // todo: docs
     private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
+
         // Get a single page
         $response = $this->commonGroundService->callService(
             $callServiceConfig['component'],
@@ -192,7 +195,7 @@ class SynchronizationService
     // todo: (dus zoekt op source + endpoint + externeid)
     private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
-        $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $source, 'entity' => $entity, 'sourceId' => $sourceId]);
+        $sync = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source->getId(), 'entity' => $entity->getId(), 'sourceId' => $sourceId]);
 
         if ($sync instanceof Synchronization) {
             return $sync;
@@ -334,6 +337,7 @@ class SynchronizationService
             //@TODO: Write errors to logs
             return $objectEntity;
         }
+
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
 

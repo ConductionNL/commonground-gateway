@@ -24,7 +24,7 @@ class CronjobCommand extends Command
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        EventDispatcher $eventDispatcher
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;

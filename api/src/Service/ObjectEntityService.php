@@ -27,6 +27,7 @@ use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -75,7 +76,7 @@ class ObjectEntityService
         LogService $logService
     ) {
         $this->security = $security;
-        $this->request = $requestStack->getCurrentRequest();
+        $this->request = $requestStack->getCurrentRequest() ?: new Request();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
         $this->validaterService = $validaterService;
