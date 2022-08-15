@@ -448,9 +448,6 @@ class ResponseService
 
                 // Let's deal with subExtend extending
                 $subExtend = $this->attributeSubExtend($extend, $attribute);
-                if ($subExtend === []) {
-                    continue;
-                }
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
                 $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
@@ -486,13 +483,12 @@ class ResponseService
      */
     private function checkExtendAttribute(array &$response, Attribute $attribute, Value $valueObject, ?array $extend, string $acceptType): bool
     {
-        if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
-            if (!$attribute->getMultiple()) {
+        if ($attribute->getExtend() !== true &&
+            (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))
+        ) {
+            $attribute->getMultiple() ?
+                $this->renderObjectReferences($response, $attribute, $valueObject, $acceptType) :
                 $this->renderObjectReference($response, $attribute, $valueObject, $acceptType);
-
-                return false;
-            }
-            $this->renderObjectReferences($response, $attribute, $valueObject, $acceptType);
 
             return false;
         }
@@ -567,6 +563,7 @@ class ResponseService
 
     /**
      * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
+     * This function will decide how the subExtend array for this attribute should look like.
      *
      * @param array|null $extend
      * @param Attribute  $attribute
@@ -580,12 +577,8 @@ class ResponseService
         if (is_array($extend)) {
             if (array_key_exists('all', $extend)) {
                 $subExtend = $extend;
-            } elseif (array_key_exists($attribute->getName(), $extend)) {
-                if (is_array($extend[$attribute->getName()])) {
-                    $subExtend = $extend[$attribute->getName()];
-                } elseif ($extend[$attribute->getName()] == false) {
-                    return [];
-                }
+            } elseif (array_key_exists($attribute->getName(), $extend) && is_array($extend[$attribute->getName()])) {
+                $subExtend = $extend[$attribute->getName()];
             }
         }
 
