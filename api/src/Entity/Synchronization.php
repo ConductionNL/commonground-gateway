@@ -66,7 +66,7 @@ class Synchronization
      * @ORM\ManyToOne(targetEntity=Entity::class)
      * @ORM\JoinColumn(nullable=false)
      */
-    private entity $entity;
+    private Entity $entity;
 
     /**
      * @var ?ObjectEntity The object of this resource
