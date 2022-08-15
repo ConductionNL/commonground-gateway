@@ -372,7 +372,7 @@ class SynchronizationService
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
-        } elseif(
+        } elseif (
             ($application = $this->entityManager->getRepository('App:Application')->findAll()[0]) && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
