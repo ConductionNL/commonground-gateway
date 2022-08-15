@@ -476,11 +476,11 @@ class ResponseService
      * Checks if a given attribute should be extended. Will return true if it should be extended and false if not.
      * Will also add a reference to an object to the response if the attribute should not be extended. Or null if there is no value.
      *
-     * @param array      $response The response array we will be adding object references to, if needed.
-     * @param Attribute  $attribute The attribute we are checking if it needs extending.
+     * @param array      $response    The response array we will be adding object references to, if needed.
+     * @param Attribute  $attribute   The attribute we are checking if it needs extending.
      * @param Value      $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
-     * @param array|null $extend The extend array used in the api-call.
-     * @param string     $acceptType The acceptType used in the api-call.
+     * @param array|null $extend      The extend array used in the api-call.
+     * @param string     $acceptType  The acceptType used in the api-call.
      *
      * @return bool Will return true if the attribute should be extended and false if not.
      */
@@ -489,9 +489,11 @@ class ResponseService
         if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
             if (!$attribute->getMultiple()) {
                 $this->renderObjectReference($response, $attribute, $valueObject, $acceptType);
+
                 return false;
             }
             $this->renderObjectReferences($response, $attribute, $valueObject, $acceptType);
+
             return false;
         }
 
@@ -502,10 +504,10 @@ class ResponseService
      * For a multiple=false attribute, add a reference to a single object to the response if that attribute should not be extended.
      * Or adds null instead if there is no value at all.
      *
-     * @param array $response The response array we will be adding an object references (or null) to.
-     * @param Attribute $attribute The attribute that does not need to be extended for the current result we are rendering.
-     * @param Value $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
-     * @param string $acceptType The acceptType used in the api-call.
+     * @param array     $response    The response array we will be adding an object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
      *
      * @return void
      */
@@ -514,6 +516,7 @@ class ResponseService
         $object = $valueObject->getValue();
         if (!$object instanceof ObjectEntity) {
             $response[$attribute->getName()] = null;
+
             return;
         }
         $response[$attribute->getName()] = $this->renderObjectSelf($object, $acceptType);
@@ -523,10 +526,10 @@ class ResponseService
      * For a multiple=true attribute, add one or more references to one or more objects to the response if that attribute should not be extended.
      * Or adds null instead if there is no value at all.
      *
-     * @param array $response The response array we will be adding one or more object references (or null) to.
-     * @param Attribute $attribute The attribute that does not need to be extended for the current result we are rendering.
-     * @param Value $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
-     * @param string $acceptType The acceptType used in the api-call.
+     * @param array     $response    The response array we will be adding one or more object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
      *
      * @return void
      */
@@ -535,6 +538,7 @@ class ResponseService
         $objects = $valueObject->getValue();
         if (!is_array($objects)) {
             $response[$attribute->getName()] = null;
+
             return;
         }
         foreach ($objects as $object) {
@@ -545,8 +549,8 @@ class ResponseService
     /**
      * Renders the 'self' of a given object, result will differ depending on the acceptType.
      *
-     * @param ObjectEntity $object The object to render 'self' for.
-     * @param string $acceptType The acceptType that will influence the way this 'self' is rendered.
+     * @param ObjectEntity $object     The object to render 'self' for.
+     * @param string       $acceptType The acceptType that will influence the way this 'self' is rendered.
      *
      * @return string|string[] The 'self' string or array with this string in it, depending on acceptType.
      */
@@ -557,6 +561,7 @@ class ResponseService
         if ($acceptType === 'jsonld') {
             return ['@id' => $objectSelf];
         }
+
         return $objectSelf;
     }
 
