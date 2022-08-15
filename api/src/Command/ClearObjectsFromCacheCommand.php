@@ -72,9 +72,9 @@ class ClearObjectsFromCacheCommand extends Command
 
             $io = new SymfonyStyle($input, $output);
             $io->title('Clear Objects from cache');
-            $io->section('Removing Objects from cache for Type: ' . $type . ' (' . $total . ' id\'s given)');
+            $io->section('Removing Objects from cache for Type: ' . $type . ' (' . $total . ($total !== 1 ? ' id\'s given)' : ' id given)'));
             $io->progressStart($total);
-            $io->text('');
+            $io->newLine();
         }
 
         $this->functionService->removeResultFromCache = [];
@@ -101,7 +101,7 @@ class ClearObjectsFromCacheCommand extends Command
                 $io->title('Clear Objects from cache');
                 $io->section('Removing all Objects from cache (' . $total . ' objects found)');
                 $io->progressStart($total);
-                $io->text('');
+                $io->newLine();
 
                 $errorCount = $this->handleAllObjects($io, $objectEntities);
                 break;
@@ -111,13 +111,13 @@ class ClearObjectsFromCacheCommand extends Command
         $io->progressFinish();
 
         $errors = round($errorCount/$total*100) == 0 && $errorCount > 0 ? 1 : round($errorCount/$total*100);
-        $typeString = $type !== 'Object' && $type !== 'AllObjects' ? 'for Type'.$type : '';
+        $typeString = $type !== 'Object' && $type !== 'AllObjects' ? ' for Type'.$type : '';
         if ($errors == 0) {
-            $io->success("All Objects $typeString have been removed from cache");
+            $io->success("All Objects$typeString have been removed from cache");
         } elseif ($errors < 20) {
-            $io->warning("Some Objects $typeString could not be removed from cache. Failure rate (per $type) is $errors%");
+            $io->warning("Some Objects$typeString could not be removed from cache. Failure rate (per $type) is $errors%");
         } else {
-            $io->error("A lot of Objects $typeString could not be removed from cache. Failure rate (per $type) is $errors%");
+            $io->error("A lot of Objects$typeString could not be removed from cache. Failure rate (per $type) is $errors%");
             return Command::FAILURE;
         }
 
@@ -128,7 +128,7 @@ class ClearObjectsFromCacheCommand extends Command
     {
         $errorCount = 0;
         foreach ($ids as $id) {
-            $io->text("");
+            $io->newLine();
             $io->section("Removing Object from cache with id: {$id}");
             if (!Uuid::isValid($id)) {
                 $io->error($id. ' is not a valid uuid!');
@@ -159,7 +159,7 @@ class ClearObjectsFromCacheCommand extends Command
     {
         $errorCount = 0;
         foreach ($ids as $id) {
-            $io->text("");
+            $io->newLine();
             $io->section("Removing Objects from cache for Entity with id: {$id}");
             if (!Uuid::isValid($id)) {
                 $io->error($id. ' is not a valid uuid!');
@@ -193,7 +193,7 @@ class ClearObjectsFromCacheCommand extends Command
         $errorCount = 0;
 
         foreach ($ids as $id) {
-            $io->text("");
+            $io->newLine();
             $io->section("Removing Objects from cache for Collection with id: {$id}");
             if (!Uuid::isValid($id)) {
                 $io->error($id. ' is not a valid uuid!');
@@ -224,10 +224,10 @@ class ClearObjectsFromCacheCommand extends Command
 
     private function handleAllObjects(SymfonyStyle $io, array $objectEntities): int
     {
+        $io->newLine();
         foreach ($objectEntities as $objectEntity) {
             $id = $objectEntity->getId()->toString();
-            $io->text("");
-            $io->section("Removing Object from cache with id: {$id}");
+            $io->text("Removing Object from cache with id: {$id}");
             $this->removeObjectFromCache($io, $objectEntity, $id);
             $io->progressAdvance();
         }
