@@ -9,7 +9,7 @@ class ActionEvent extends Event
 {
     public const EVENTS = [
         'commongateway.handler.pre',
-        'commongateway.handler.post'
+        'commongateway.handler.post',
     ];
 
     protected string $type;
@@ -21,11 +21,11 @@ class ActionEvent extends Event
      * Construct.
      *
      * @param string $type The type of event, must be in the EVENTS constant
-     * @param array $data The data from the request or elsewhere
+     * @param array  $data The data from the request or elsewhere
      */
     public function __construct(string $type, array $data)
     {
-        if(in_array($type, self::EVENTS)) {
+        if (in_array($type, self::EVENTS)) {
             $this->type = $type;
         } else {
             return;
@@ -41,5 +41,12 @@ class ActionEvent extends Event
     public function getData(): array
     {
         return $this->data;
+    }
+
+    public function setData(array $data): self
+    {
+        $this->data = $data;
+
+        return $this;
     }
 }

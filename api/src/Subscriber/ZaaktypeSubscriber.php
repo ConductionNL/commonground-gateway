@@ -8,20 +8,14 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Event\ActionEvent;
 use App\Repository\ObjectEntityRepository;
-use App\Service\ObjectEntityService;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ZaaktypeSubscriber implements EventSubscriberInterface
 {
-
     private ObjectEntityRepository $objectEntityRepository;
     private EntityManagerInterface $entityManager;
     private Request $request;
@@ -44,30 +38,30 @@ class ZaaktypeSubscriber implements EventSubscriberInterface
 
     public function getAction(Endpoint $endpoint): ?Action
     {
-        $actions = $this->entityManager->getRepository("App:Action")->findBy(['endpointId' => $endpoint->getId()]);
-        foreach($actions as $action)
-        {
-            if(
+        $actions = $this->entityManager->getRepository('App:Action')->findBy(['endpointId' => $endpoint->getId()]);
+        foreach ($actions as $action) {
+            if (
                 $action instanceof Action &&
                 $action->getType() == 'zds-zaaktype-to-zgw-zaaktype'
-            ){
+            ) {
                 return $action;
             }
         }
+
         return null;
     }
 
     public function getZaakTypeEntity(Action $action): Entity
     {
-        $entity = $this->entityManager->getRepository("App:Entity")->findOneBy([
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy([
             'collections'   => $action['ztc_collection'],
             'name'          => $action['zaakTypeName'],
         ]);
 
-        if($entity instanceof Entity){
+        if ($entity instanceof Entity) {
             return $entity;
         } else {
-            throw new BadRequestException('The entity of the ZTC collection with name ' . $action['zaakTypeName'] . 'does not exist');
+            throw new BadRequestException('The entity of the ZTC collection with name '.$action['zaakTypeName'].'does not exist');
         }
     }
 
@@ -87,7 +81,6 @@ class ZaaktypeSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        var_dump('test');
         return $event;
 //        if(
 //            $event->getRequest()->getMethod() != 'POST' &&
