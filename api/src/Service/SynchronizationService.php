@@ -8,9 +8,13 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Exception\GatewayException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -278,10 +282,10 @@ class SynchronizationService
      * @param array           $configuration   The configuration from the action
      * @param array           $sourceObject    The object in the source
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return Synchronization The updated synchronisation object
      */
@@ -315,10 +319,10 @@ class SynchronizationService
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return ObjectEntity The populated ObjectEntity
      */
@@ -385,10 +389,7 @@ class SynchronizationService
      * @param array           $externObject  The external object to synchronise from
      * @param array           $configuration The configuration of the action to handle
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
      */
