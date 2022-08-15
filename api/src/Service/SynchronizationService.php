@@ -327,6 +327,7 @@ class SynchronizationService
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
+            //@TODO: Write errors to logs
             return $objectEntity;
         }
 
@@ -366,7 +367,7 @@ class SynchronizationService
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
-            $objectEntity->setOrganization($application->getObjectEntities());
+            $objectEntity->setOrganization($application->getOrganization());
         }
 
         return $objectEntity;
