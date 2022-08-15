@@ -1090,7 +1090,7 @@ class EavService
             return $results;
         }
 
-        // If not lets make it pritty
+        // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
     }
 
