@@ -20,12 +20,14 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
+use phpDocumentor\Reflection\Types\This;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -74,7 +76,7 @@ class ObjectEntityService
         LogService $logService
     ) {
         $this->security = $security;
-        $this->request = $requestStack->getCurrentRequest();
+        $this->request = $requestStack->getCurrentRequest() ?: new Request();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
         $this->validaterService = $validaterService;
@@ -114,8 +116,8 @@ class ObjectEntityService
     /**
      * A function we want to call when doing a post or put, to set the owner of an ObjectEntity, if it hasn't one already.
      *
-     * @param ObjectEntity $result
-     * @param string|null  $owner
+     * @param ObjectEntity $result The object entity
+     * @param string|null  $owner  The owner of the object - defaulted to owner
      *
      * @return ObjectEntity|array
      */
@@ -151,9 +153,9 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function checks the owner of the object.
      *
-     * @param ObjectEntity $result
+     * @param ObjectEntity $result The object entity
      *
      * @return bool
      */
@@ -170,11 +172,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets the object by its uri.
      *
-     * @param string     $uri
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $uri    The uri of the object
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -191,12 +193,12 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets the object with its id and the related entity.
      *
-     * @param Entity     $entity
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param Entity     $entity The entity the object relates to
+     * @param string     $id     The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -213,11 +215,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets an object with the function set to person.
      *
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $id     The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -234,11 +236,11 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function gets an object with the function set to organization.
      *
-     * @param string     $id
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $id     The id of the object entity
+     * @param array|null $fields The fields array that can be filtered on
+     * @param array|null $extend The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -257,9 +259,9 @@ class ObjectEntityService
     /**
      * @TODO
      *
-     * @param string     $username
-     * @param array|null $fields
-     * @param array|null $extend
+     * @param string     $username The username of the person
+     * @param array|null $fields   The fields array that can be filtered on
+     * @param array|null $extend   The extend array that can be extended
      *
      * @throws CacheException|InvalidArgumentException
      *
@@ -288,7 +290,7 @@ class ObjectEntityService
     }
 
     /**
-     * @TODO
+     * This function get the filters array from the parameters.
      *
      * @return array
      */
@@ -313,78 +315,37 @@ class ObjectEntityService
     }
 
     /**
-     * A function to handle calls to eav.
+     * This function handles the check for an object.
      *
-     * @param Handler     $handler
-     * @param Endpoint    $endpoint
-     * @param array|null  $data          Data to be set into the eav
-     * @param string|null $method        Method from request if there is a request
-     * @param string|null $operationType
-     * @param string      $acceptType
+     * @param string|null $id     The id of the object
+     * @param string|null $method Method from request if there is a request
+     * @param Entity      $entity The entity of the object
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
+     * @throws GatewayException
      *
-     * @return array $data
+     * @return ObjectEntity|array|mixed|null
      */
-    public function handleObject(Handler $handler, Endpoint $endpoint, array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function checkGetObject(?string $id, string $method, Entity $entity)
     {
-        // check application
-        $this->stopwatch->start('getApplication', 'handleObject');
-        $application = $this->applicationService->getApplication();
-        $this->stopwatch->stop('getApplication');
+        // todo: re-used old code for getting an objectEntity
+        $object = $this->eavService->getObject($method === 'POST' ? null : $id, $method, $entity);
 
-        // If type is array application is an error
-        if (gettype($application) === 'array') {
-            // todo: maybe just throw a gatewayException? see getApplication() function^
-            return $application;
+        if (is_array($object) && array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
+            throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
+        } // Let's check if the user is allowed to view/edit this resource.
+
+        if (!$method == 'POST' && !$this->checkOwner($object)) {
+            // TODO: do we want to throw a different error if there are no organizations in the session? (because of logging out for example)
+            if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
+                throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
+            }
         }
 
-        // Get Entity
-        $this->stopwatch->start('getEntity', 'handleObject');
-        $entity = $handler->getEntity();
-        $this->stopwatch->stop('getEntity');
-
-        $this->stopwatch->start('saveEntity+SourceInSession', 'handleObject');
-        $sessionInfo = [
-            'entity' => $entity->getId()->toString(),
-            'source' => $entity->getGateway() ? $entity->getGateway()->getId()->toString() : null,
-        ];
-        $this->session->set('entitySource', $sessionInfo);
-        $this->stopwatch->stop('saveEntity+SourceInSession');
-
-        // Get filters from query parameters
-        $this->stopwatch->start('getFilterFromParameters', 'handleObject');
-        $filters = $this->getFilterFromParameters();
-        $this->stopwatch->stop('getFilterFromParameters');
-
-        array_key_exists('id', ($filters)) && $id = $filters['id'];
-        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
-
-        // todo throw error if get/put/patch/delete and no id ?
-        // Get Object if needed
-        if (isset($id) || $method == 'POST') {
-            // todo: re-used old code for getting an objectEntity
-            $this->stopwatch->start('getObject', 'handleObject');
-            $object = $this->eavService->getObject($method == 'POST' ? null : $id, $method, $entity);
-            $this->stopwatch->stop('getObject');
-            if (is_array($object) && array_key_exists('type', $object) && $object['type'] == 'Bad Request') {
-                throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
-            } // Lets check if the user is allowed to view/edit this resource.
-            $this->stopwatch->start('checkOwner+organization', 'handleObject');
-            if (!$method == 'POST' && !$this->checkOwner($object)) {
-                // TODO: do we want to throw a different error if there are no organizations in the session? (because of logging out for example)
-                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
-                    throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
-                }
-            }
-            $this->stopwatch->stop('checkOwner+organization');
-            if ($object instanceof ObjectEntity && $object->getId()) {
-                $this->session->set('object', $object->getId()->toString());
-            }
+        if ($object instanceof ObjectEntity && $object->getId() !== null) {
+            $this->session->set('object', $object->getId()->toString());
         }
 
         // Check for scopes, if forbidden to view/edit this, throw forbidden error
-        $this->stopwatch->start('checkAuthorization', 'handleObject');
         if (!isset($object) || is_array($object) || !$object->getUri() || !$this->checkOwner($object)) {
             try {
                 //TODO what to do if we do a get collection and want to show objects this user is the owner of, but not any other objects?
@@ -397,151 +358,308 @@ class ObjectEntityService
                 throw new GatewayException($e->getMessage(), null, null, ['data' => null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
             }
         }
-        $this->stopwatch->stop('checkAuthorization');
 
-        // Lets allow for filtering specific fields
-        $this->stopwatch->start('getRequestFields', 'handleObject');
+        return $object;
+    }
+
+    /**
+     * This function handles the check on operation types exceptions.
+     *
+     * @param Endpoint $endpoint The endpoint of the object
+     * @param Entity   $entity   The entity of the object
+     * @param array    $data     Data to be set into the eav
+     *
+     * @throws GatewayException
+     *
+     * @return ObjectEntity|string[]|void
+     */
+    public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
+    {
+        if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
+            $data = $data['results'][0];
+            isset($data['id']) && Uuid::isValid($data['id']) ?? $this->session->set('object', $data['id']);
+        } elseif ((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') {
+            throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * This function handles the object entity exceptions.
+     *
+     *
+     * @param array|null        $data       Data to be set into the eav
+     * @param ObjectEntity|null $object     The objects that is being checked on exceptions
+     * @param array|null        $fields     The fields array that can be filtered on
+     * @param array|null        $extend     The extend array that can be extended
+     * @param string            $acceptType The acceptType of the call - defaulted to jsonld
+     *
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     *
+     * @return string[]
+     */
+    public function checkGetObjectExceptions(?array &$data, ?ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType): array
+    {
+        if ($object instanceof ObjectEntity) {
+            !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
+            $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
+            $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
+
+            $object->getHasErrors() ?? $data['validationServiceErrors'] = [
+                'Warning' => 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!',
+                'Errors'  => $object->getAllErrors(),
+            ];
+        } else {
+            $data['error'] = $object;
+        }
+
+        return $data;
+    }
+
+    /**
+     * This function handles the get case of an object entity.
+     *
+     * @param string|null $id         The id of the object
+     * @param array|null  $data       Data to be set into the eav
+     * @param string      $method     The method of the call
+     * @param Endpoint    $endpoint   The endpoint of the object
+     * @param Entity      $entity     The entity of the object
+     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
+     *
+     * @throws CacheException
+     * @throws GatewayException
+     * @throws InvalidArgumentException
+     *
+     * @return array
+     */
+    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
+    {
+        // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
-        $this->stopwatch->stop('getRequestFields');
 
-        // Lets allow for extending
-        $this->stopwatch->start('getRequestExtend', 'handleObject');
+        // Let's allow for extending
         $extend = $this->eavService->getRequestExtend($this->request);
-        $this->stopwatch->stop('getRequestExtend');
 
         // Check for dateRead query parameter
-        $dateRead = $this->request->query->get('_dateRead');
         // Use fields array to store this dateRead value for now, will be removed from the array later.
+        $dateRead = $this->request->query->get('_dateRead');
         $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
 
+        if (isset($id)) {
+            $object = $this->checkGetObject($id, $method, $entity);
+            $data = $this->checkGetObjectExceptions($data, $object, $fields, $extend, $acceptType);
+        } else {
+            //todo: -start- old code...
+            //TODO: old code for getting an ObjectEntity
+            $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
+            //todo: -end- old code...
+
+            $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+        }
+
+        return $data;
+    }
+
+    /**
+     * This function checks and unsets the owner of the body of the call.
+     *
+     * @param array $data Data to be set into the eav
+     *
+     * @return string|null
+     */
+    public function checkAndUnsetOwner(array &$data): ?string
+    {
+        // todo: what about @organization? (See saveObject function, test it first, look at and compare with old code!)
+        // Check if @owner is present in the body and if so unset it.
+        // note: $owner is allowed to be null!
+        $owner = 'owner';
+        if (array_key_exists('@owner', $data)) {
+            $owner = $data['@owner'];
+            unset($data['@owner']);
+        }
+
+        return $owner;
+    }
+
+    /**
+     * This function handles creating, updating and patching the object.
+     *
+     * @param array        $data       Data to be set into the eav
+     * @param ObjectEntity $object     The objects that needs to be created/updated
+     * @param string       $owner      The owner of the object
+     * @param string       $method     The method of the call
+     * @param string       $acceptType The acceptType of the call - defaulted to jsonld
+     *
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     *
+     * @return string[]
+     */
+    public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
+    {
+        // Let's allow for filtering specific fields
+        $fields = $this->eavService->getRequestFields($this->request);
+
+        // Let's allow for extending
+        $extend = $this->eavService->getRequestExtend($this->request);
+
+        // Check for dateRead query parameter
+        // Use fields array to store this dateRead value for now, will be removed from the array later.
+        $dateRead = $this->request->query->get('_dateRead');
+        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+
+        // Save the object (this will remove this object result from the cache)
+        $this->functionService->removeResultFromCache = [];
+        $object = $this->saveObject($object, $data);
+
+        // Handle Entity Function (note that this might be overwritten when handling the promise later!)
+        $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
+            'method'           => $method,
+            'uri'              => $object->getUri(),
+            'organizationType' => array_key_exists('type', $data) ? $data['type'] : null,
+            'userGroupName'    => array_key_exists('name', $data) ? $data['name'] : null,
+        ]);
+
+        $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
+
+        $this->entityManager->persist($object);
+        $this->entityManager->flush();
+
+        // todo: maybe add an option for extend all? if we always want to show every subresource after a post/put?
+        $data = $this->responseService->renderResult($object, $fields, $extend, $acceptType);
+
+        if ($object->getHasErrors()) {
+            $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
+            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
+        }
+        $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
+
+        return $data;
+    }
+
+    /**
+     * This function handles deleting the object.
+     *
+     * @param string     $id     the id of the object
+     * @param array|null $data   Data to be set into the eav
+     * @param string     $method The method of the call
+     * @param Entity     $entity The entity of the object
+     *
+     * @throws GatewayException
+     * @throws InvalidArgumentException
+     *
+     * @return string[]
+     */
+    public function deleteCase(string $id, ?array &$data, string $method, Entity $entity): array
+    {
+        $object = $this->checkGetObject($id, $method, $entity);
+        //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
+
+        //todo: -start- old code...
+        //TODO: old code for deleting an ObjectEntity
+
+        // delete object (this will remove this object result from the cache)
+        $this->functionService->removeResultFromCache = [];
+        $data = $this->eavService->handleDelete($object);
+        if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
+            throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
+        }
+        //todo: -end- old code...
+
+        return $data;
+    }
+
+    /**
+     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     *
+     * @param array|null $data       Data to be set into the eav
+     * @param Endpoint   $endpoint   The endpoint of the object
+     * @param Entity     $entity     The entity of the object
+     * @param string     $method     The method of the call
+     * @param string     $acceptType The acceptType of the call - defaulted to jsonld
+     *
+     * @throws CacheException
+     * @throws ComponentException
+     * @throws GatewayException
+     * @throws InvalidArgumentException
+     *
+     * @return string[]|void
+     */
+    public function switchMethod(?array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
+    {
+        // Get filters from query parameters
+        $filters = $this->getFilterFromParameters();
+
+        $id = null;
+        array_key_exists('id', ($filters)) && $id = $filters['id'];
+        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
+
+        $validationErrors = null;
         switch ($method) {
             case 'GET':
-                //todo: -start- old code...
-                //TODO: old code for getting an ObjectEntity
-
-                if (isset($object)) {
-                    if ($object instanceof ObjectEntity) {
-                        if (!$object->getSelf()) {
-                            // Lets make sure we always set the self (@id)
-                            $object->setSelf($this->createSelf($object));
-                        }
-
-                        $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
-
-                        $this->stopwatch->start('handleGet', 'handleObject');
-                        $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
-                        $this->stopwatch->stop('handleGet');
-                        if ($object->getHasErrors()) {
-                            $data['validationServiceErrors']['Warning'] = 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!';
-                            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-                        }
-                    } else {
-                        $data['error'] = $object;
-                    }
-                } else {
-                    $this->stopwatch->start('handleSearch', 'handleObject');
-                    $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
-                    $this->stopwatch->stop('handleSearch');
-                    //todo: -end- old code...
-
-                    if ($this->session->get('endpoint')) {
-                        if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
-                            $data = $data['results'][0];
-                            if (isset($data['id']) && Uuid::isValid($data['id'])) {
-                                $this->session->set('object', $data['id']);
-                            }
-                        } elseif ((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') {
-                            throw new GatewayException('No object found with these filters', null, null, ['data' => $filters ?? null, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
-                        }
-                    }
-                }
-
+                $data = $this->getCase($id, $data, $method, $entity, $endpoint, $acceptType);
                 break;
             case 'POST':
             case 'PUT':
             case 'PATCH':
-                // todo: what about @organization? (See saveObject function, test it first, look at and compare with old code!)
-                // Check if @owner is present in the body and if so unset it.
-                // note: $owner is allowed to be null!
-                $owner = 'owner';
-                if (array_key_exists('@owner', $data)) {
-                    $owner = $data['@owner'];
-                    unset($data['@owner']);
-                }
+                $object = $this->checkGetObject($id, $method, $entity);
+                $owner = $this->checkAndUnsetOwner($data);
 
                 // validate
-                $this->stopwatch->start('validateData', 'handleObject');
                 if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
-                    break;
+                    return $validationErrors;
                 }
-                $this->stopwatch->stop('validateData');
 
-                // Save the object (this will remove this object result from the cache)
-                $this->stopwatch->start('saveObject', 'handleObject');
-                $this->functionService->removeResultFromCache = [];
-                $object = $this->saveObject($object, $data);
-                $this->stopwatch->stop('saveObject');
-
-                $this->session->set('object', $object->getId()->toString());
-
-                // Handle Entity Function (note that this might be overwritten when handling the promise later!)
-                $this->stopwatch->start('handleFunction', 'handleObject');
-                $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
-                    'method'           => $method,
-                    'uri'              => $object->getUri(),
-                    'organizationType' => array_key_exists('type', $data) ? $data['type'] : null,
-                    'userGroupName'    => array_key_exists('name', $data) ? $data['name'] : null,
-                ]);
-                $this->stopwatch->stop('handleFunction');
-
-                $this->stopwatch->start('handleOwner', 'handleObject');
-                $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
-                $this->stopwatch->stop('handleOwner');
-
-                $this->stopwatch->start('persistFlushObject', 'handleObject');
-                $this->entityManager->persist($object);
-                $this->entityManager->flush();
-                $this->stopwatch->stop('persistFlushObject');
-
-                $this->stopwatch->start('renderResult', 'handleObject');
-                // todo: maybe add an option for extend all? if we always want to show every subresource after a post/put?
-                $data = $this->responseService->renderResult($object, $fields, $extend, $acceptType);
-                $this->stopwatch->stop('renderResult');
-
-                if ($object->getHasErrors()) {
-                    $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-                    $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-                }
-                $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
+                $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
                 break;
             case 'DELETE':
-                //todo: use PromiseMessage for delete promise and notification (re-use / replace code from eavService->handleDelete
-
-                //todo: -start- old code...
-                //TODO: old code for deleting an ObjectEntity
-
-                $this->stopwatch->start('handleDelete', 'handleObject');
-                // delete object (this will remove this object result from the cache)
-                $this->functionService->removeResultFromCache = [];
-                $data = $this->eavService->handleDelete($object);
-                if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
-                    throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
-                }
-                $this->stopwatch->stop('handleDelete');
-
-                //todo: -end- old code...
-
+                $data = $this->deleteCase($id, $data, $method, $entity);
                 break;
             default:
                 throw new GatewayException('This method is not allowed', null, null, ['data' => ['method' => $method], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
         }
 
+        return $validationErrors;
+    }
+
+    /**
+     * A function to handle calls to eav.
+     *
+     * @param Handler     $handler       The handler the object relates to
+     * @param Endpoint    $endpoint      The endpoint of the object
+     * @param array|null  $data          Data to be set into the eav
+     * @param string|null $method        Method from request if there is a request
+     * @param string|null $operationType The operation type of the object
+     * @param string      $acceptType    The acceptType of the call - defaulted to jsonld
+     *
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
+     *
+     * @return array $data
+     */
+    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    {
+        // If type is array application is an error
+        $application = $this->applicationService->getApplication();
+        if (gettype($application) === 'array') {
+            // todo: maybe just throw a gatewayException? see getApplication() function^
+            return $application;
+        }
+
+        // set session with sessionInfo
+        $sessionInfo = [
+            'entity' => $handler->getEntity()->getId()->toString(),
+            'source' => $handler->getEntity()->getGateway() ? $handler->getEntity()->getGateway()->getId()->toString() : null,
+        ];
+        $this->session->set('entitySource', $sessionInfo);
+
+        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), $method, $acceptType);
         if (isset($validationErrors)) {
-            throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $entity->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
+            throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $handler->getEntity()->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
 
         // use events
-
         return $data;
     }
 
@@ -1301,7 +1419,7 @@ class ObjectEntityService
 
         // Create file data
         return [
-            'name'      => array_key_exists('filename', $file) ? $file['filename'] : null,
+            'name' => array_key_exists('filename', $file) ? $file['filename'] : null,
             // Get extension from filename, and else from the mime_type
             'extension' => array_key_exists('filename', $file) ? pathinfo($file['filename'], PATHINFO_EXTENSION) : $this->mimeToExt($mime_type),
             'mimeType'  => $mime_type,
@@ -1722,8 +1840,8 @@ class ObjectEntityService
 
         // Handle Function todo: what if @organization is used in the post body? than we shouldn't handle function organization here:
         return $this->functionService->handleFunction($objectEntity, $objectEntity->getEntity()->getFunction(), [
-            'method'           => $method,
-            'uri'              => $objectEntity->getUri(),
+            'method' => $method,
+            'uri'    => $objectEntity->getUri(),
         ]);
     }
 
@@ -1813,7 +1931,7 @@ class ObjectEntityService
 //        }
 //        $log = $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 14, $error_message, null, 'out');
         /* @todo eigenlijk willen we links naar error reports al losse property mee geven op de json error message */
-        $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/') for a full error report');
+        $objectEntity->addError('gateway endpoint on '.$objectEntity->getEntity()->getName().' said', $error_message.'. (see /admin/logs/'./*$log->getId().*/ ') for a full error report');
     }
 
     /**
