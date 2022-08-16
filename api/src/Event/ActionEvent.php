@@ -10,6 +10,7 @@ class ActionEvent extends Event
     public const EVENTS = [
         'commongateway.handler.pre',
         'commongateway.handler.post',
+        'commongateway.cronjob.trigger',
     ];
 
     protected string $type;

@@ -3,15 +3,22 @@
 namespace App\ActionHandler;
 
 use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Container\ContainerInterface;
 
 class ZaakTypeHandler implements ActionHandlerInterface
 {
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(ContainerInterface $container)
     {
-        $this->entityManager = $entityManager;
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+        if ($entityManager instanceof EntityManagerInterface) {
+            $this->entityManager = $entityManager;
+        } else {
+            throw new GatewayException('The service container does not contain the required services for this handler');
+        }
     }
 
     public function getIdentifier(array $data, $configuration): string

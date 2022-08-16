@@ -74,19 +74,27 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
      */
-    private ?ObjectEntity $object;
+    private ?ObjectEntity $object = null;
 
     /**
-     * @var Action The action of this resource
+     * @var Action|null The action of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Action::class)
-     * @ORM\JoinColumn(nullable=false)
      */
-    private Action $action;
+    private ?Action $action = null;
 
     /**
-     * @var string The id of the related source
+     * @var Gateway The gateway (source) of this resource
+     *
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private Gateway $gateway;
+
+    /**
+     * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
@@ -99,7 +107,15 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $hash;
+    private ?string $hash = '';
+
+    /**
+     * @var ?DateTimeInterface The moment the source of this resource was last changed
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?DateTimeInterface $sourceLastChanged;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last checked
@@ -107,7 +123,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $lastChecked;
+    private ?DateTimeInterface $lastChecked = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last synced
@@ -115,7 +131,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $lastSynced;
+    private ?DateTimeInterface $lastSynced = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was created
@@ -176,6 +192,18 @@ class Synchronization
         return $this;
     }
 
+    public function getGateway(): ?Gateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?Gateway $gateway): self
+    {
+        $this->gateway = $gateway;
+
+        return $this;
+    }
+
     public function getSourceId(): ?string
     {
         return $this->sourceId;
@@ -196,6 +224,18 @@ class Synchronization
     public function setHash(?string $hash): self
     {
         $this->hash = $hash;
+
+        return $this;
+    }
+
+    public function getSourceLastChanged(): ?\DateTimeInterface
+    {
+        return $this->sourceLastChanged;
+    }
+
+    public function setSourceLastChanged(?\DateTimeInterface $sourceLastChanged): self
+    {
+        $this->sourceLastChanged = $sourceLastChanged;
 
         return $this;
     }

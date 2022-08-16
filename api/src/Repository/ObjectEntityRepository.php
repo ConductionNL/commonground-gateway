@@ -139,8 +139,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
+            $multipleAttributes = $this->getMultipleAttributes($entity);
 
-            $filters = $this->cleanArray($filters, $filterCheck);
+            $filters = $this->cleanArray($filters, $filterCheck, $multipleAttributes);
 
             $this->buildQuery($filters, $query)->distinct();
         }
@@ -184,14 +185,40 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Gets and returns an array with all attributes names (as array key, dot notation) that have multiple set to true.
+     * Works for subresources as well.
+     *
+     * @param Entity $entity
+     * @param string $prefix
+     * @param int    $level
+     *
+     * @return array An array with all attributes that have multiple set to true.
+     */
+    private function getMultipleAttributes(Entity $entity, string $prefix = '', int $level = 1): array
+    {
+        $multipleAttributes = [];
+        foreach ($entity->getAttributes() as $attribute) {
+            if ($attribute->getMultiple()) {
+                $multipleAttributes[$prefix.$attribute->getName()] = true;
+            }
+            if ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $multipleAttributes = array_merge($multipleAttributes, $this->getMultipleAttributes($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+            }
+        }
+
+        return $multipleAttributes;
+    }
+
+    /**
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
+     * Also checks for filters used on multiple attributes and handles these.
      *
      * @param array $array       The array of query params / filters.
      * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
      * @return array A 'clean' array. And transformed array.
      */
-    private function cleanArray(array $array, array $filterCheck): array
+    private function cleanArray(array $array, array $filterCheck, array $multipleAttributes): array
     {
         $result = [];
 
@@ -205,6 +232,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
+                $key = array_key_exists($key, $multipleAttributes) ? $key.'|multiple' : $key;
                 $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
             }
         }
@@ -340,11 +368,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $key = str_replace('|compareDateTime', '', $key);
             }
         }
+        if (str_contains($key, '|multiple')) {
+            $multiple = true;
+            $key = str_replace('|multiple', '', $key);
+        }
 
         return [
             'key'             => $key,
             'arrayValue'      => $arrayValue ?? false,
             'compareDateTime' => $compareDateTime ?? false,
+            'multiple'        => $multiple ?? false,
         ];
     }
 
@@ -446,21 +479,39 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // Check if this filter has an array of values (example1: key = value,value2) (example2: key[a] = value, key[b] = value2)
         if (is_array($value) && $filterKey['arrayValue']) {
-            // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
-            if ($filterKey['compareDateTime']) {
-                $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
-            } else {
-                $query->andWhere("$prefix$key.stringValue IN (:$key)")
-                    ->setParameter($key, $value);
-            }
+            $query = $this->arrayValueFilter($query, $filterKey, $value, $prefix);
         } else {
-            // If a date value is given, make sure we transform it into a dateTime string
-            if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
-                $value = $value.' 00:00:00';
-            }
-            // Check the actual value (example: key = value)
-            // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
-            $query->andWhere("$prefix$key.stringValue = :$key")
+            $query = $this->normalValueFilter($query, $filterKey, $value, $prefix);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with an OR filter.
+     * Example: &platforms[]=android&platforms[]=linux. In this case platforms must be android or linux.
+     *
+     * @param QueryBuilder $query
+     * @param array        $filterKey
+     * @param $value
+     * @param string $prefix
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder
+     */
+    private function arrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    {
+        $key = $filterKey['key'];
+
+        // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
+        if ($filterKey['compareDateTime']) {
+            $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
+        } elseif ($filterKey['multiple']) {
+            // If the attribute we filter on is multiple=true
+            $query = $this->arrayValueMultipleFilter($query, $key, $value, $prefix);
+        } else {
+            $query->andWhere("$prefix$key.stringValue IN (:$key)")
                 ->setParameter($key, $value);
         }
 
@@ -500,6 +551,68 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $date = new DateTime($value[$before]);
             $operator = array_key_exists('strictly_before', $value) ? '<' : '<=';
             $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$key.'Before')->setParameter($key.'Before', $date->format('Y-m-d H:i:s'));
+        }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with an OR filter for an attribute with multiple=true.
+     * Example: &platforms[]=android&platforms[]=linux. In this case platforms must be android or linux.
+     * And attribute platforms is an array (multiple=true).
+     *
+     * @param QueryBuilder $query
+     * @param string       $key
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function arrayValueMultipleFilter(QueryBuilder $query, string $key, $value, string $prefix): QueryBuilder
+    {
+        $andWhere = '(';
+        foreach ($value as $i => $item) {
+            $andWhere .= "$prefix$key.stringValue LIKE :$key$i";
+            if ($i !== array_key_last($value)) {
+                $andWhere .= ' OR ';
+            }
+        }
+        $query->andWhere($andWhere.')');
+        foreach ($value as $i => $item) {
+            $query->setParameter("$key$i", "%$item%");
+        }
+
+        return $query;
+    }
+
+    /**
+     *  Expands a QueryBuilder with a 'normal' filter. This can be a filter for example a string or a datetime Attribute/Value.
+     *  Example query/filter: ?name=anExampleName.
+     *
+     * @param QueryBuilder $query
+     * @param array        $filterKey
+     * @param $value
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function normalValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    {
+        $key = $filterKey['key'];
+
+        // If a date value is given, make sure we transform it into a dateTime string
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
+            $value = $value.' 00:00:00';
+        }
+        // Check the actual value (example: key = value)
+        // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
+        if ($filterKey['multiple']) {
+            // If the attribute we filter on is multiple=true
+            $query->andWhere("$prefix$key.stringValue LIKE :$key")
+                ->setParameter($key, "%$value%");
+        } else {
+            $query->andWhere("$prefix$key.stringValue = :$key")
+                ->setParameter($key, "$value");
         }
 
         return $query;
