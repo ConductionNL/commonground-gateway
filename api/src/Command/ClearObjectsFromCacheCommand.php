@@ -185,7 +185,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($entity->getObjectEntities() as $objectEntity) {
             $this->removeObjectFromCache($io, $objectEntity, $objectEntity->getId()->toString());
         }
-        $io->text("Successfully removed all Objects from cache for the Entity with id: {$id}");
+        $io->text("Successfully removed all Objects from cache for the Entity with id: {$id} (and name: {$entity->getName()})");
     }
 
     private function handleTypeCollection(SymfonyStyle $io, array $ids): int
@@ -219,7 +219,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($collection->getEntities() as $entity) {
             $this->removeEntityObjectsFromCache($io, $entity, $entity->getId()->toString());
         }
-        $io->text("Successfully removed all Objects from cache for the Collection with id: {$id}");
+        $io->text("Successfully removed all Objects from cache for the Collection with id: {$id} (and name: {$collection->getName()})");
     }
 
     private function handleAllObjects(SymfonyStyle $io, array $objectEntities): int
