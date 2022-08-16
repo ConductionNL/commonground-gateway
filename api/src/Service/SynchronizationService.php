@@ -134,7 +134,7 @@ class SynchronizationService
     // todo: docs
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().'/'.$configuration['location'].($id ? '/'.$id : '');
+        return $gateway->getLocation().$configuration['location'].($id ? '/'.$id : '');
     }
 
     // todo: docs
