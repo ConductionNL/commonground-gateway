@@ -121,16 +121,24 @@ class ClearObjectsFromCacheCommand extends Command
         return Command::SUCCESS;
     }
 
+    private function checkUuid(SymfonyStyle $io, string $id, int &$errorCount): bool
+    {
+        if (!Uuid::isValid($id)) {
+            $io->error($id.' is not a valid uuid!');
+            $errorCount++;
+            $io->progressAdvance();
+            return false;
+        }
+        return true;
+    }
+
     private function handleTypeObject(SymfonyStyle $io, array $ids): int
     {
         $errorCount = 0;
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Object from cache with id: {$id}");
-            if (!Uuid::isValid($id)) {
-                $io->error($id.' is not a valid uuid!');
-                $errorCount++;
-                $io->progressAdvance();
+            if(!$this->checkUuid($io, $id, $errorCount)){
                 continue;
             }
             $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($id);
@@ -158,10 +166,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Objects from cache for Entity with id: {$id}");
-            if (!Uuid::isValid($id)) {
-                $io->error($id.' is not a valid uuid!');
-                $errorCount++;
-                $io->progressAdvance();
+            if(!$this->checkUuid($io, $id, $errorCount)){
                 continue;
             }
             $entity = $this->entityManager->getRepository('App:Entity')->find($id);
@@ -192,10 +197,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Objects from cache for Collection with id: {$id}");
-            if (!Uuid::isValid($id)) {
-                $io->error($id.' is not a valid uuid!');
-                $errorCount++;
-                $io->progressAdvance();
+            if(!$this->checkUuid($io, $id, $errorCount)){
                 continue;
             }
             $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($id);
