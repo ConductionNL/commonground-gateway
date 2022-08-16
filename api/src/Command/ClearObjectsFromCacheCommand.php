@@ -42,7 +42,7 @@ class ClearObjectsFromCacheCommand extends Command
         $this
             ->setName('cache:clear:objects')
             // the short description shown while running "php bin/console list"
-            ->setDescription('Resets cache for objects')
+            ->setDescription('Resets cache for saved object responses')
             ->setHelp('This command will remove all stored responses for the given objects from the cache (or all objects for a specific entity or collection, or just all objects that exist), useful if, for example, an entity is changed.');
     }
 
@@ -122,6 +122,40 @@ class ClearObjectsFromCacheCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function handleSwitchType(SymfonyStyle $io, array $ids, string $entityName): int
+    {
+        $errorCount = 0;
+        foreach ($ids as $id) {
+            $io->newLine();
+            $io->section("Removing Object from cache with id: {$id}"); //todo make this abstract
+            if (!Uuid::isValid($id)) {
+                $io->error($id. ' is not a valid uuid!');
+                $errorCount++;
+                $io->progressAdvance();
+                continue;
+            }
+            $object = $this->entityManager->getRepository('App:'.$entityName)->find($id);
+            switch (get_class($object)) {
+                case ObjectEntity::class:
+                    $this->removeObjectFromCache($io, $object, $id);
+                    break;
+                case Entity::class:
+                    $this->removeEntityObjectsFromCache($io, $object, $id);
+                    break;
+                case CollectionEntity::class:
+                    $this->removeCollectionObjectsFromCache($io, $object, $id);
+                    break;
+                default:
+                    $io->error("Could not find an {$entityName} with this id: {$id}");
+                    $errorCount++;
+                    break;
+            }
+            $io->progressAdvance();
+        }
+
+        return $errorCount;
     }
 
     private function handleTypeObject(SymfonyStyle $io, array $ids): int
