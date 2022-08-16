@@ -338,7 +338,6 @@ class SynchronizationService
             return $objectEntity;
         }
 
-
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
 
         return $objectEntity;
