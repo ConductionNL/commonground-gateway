@@ -31,6 +31,19 @@ class SynchronizationService
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
 
+    /**
+     * @param CommonGroundService $commonGroundService
+     * @param EntityManagerInterface $entityManager
+     * @param SessionInterface $session
+     * @param GatewayService $gatewayService
+     * @param FunctionService $functionService
+     * @param LogService $logService
+     * @param MessageBusInterface $messageBus
+     * @param TranslationService $translationService
+     * @param ObjectEntityService $objectEntityService
+     * @param ValidatorService $validatorService
+     * @param EavService $eavService
+     */
     public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService)
     {
         $this->commonGroundService = $commonGroundService;
@@ -46,8 +59,16 @@ class SynchronizationService
         $this->validatorService = $validatorService;
     }
 
-    // todo: Een functie dan op een source + endpoint alle objecten ophaalt (dit dus  waar ook de configuratie
-    // todo: rondom pagination, en locatie van de results vandaan komt).
+    /**
+     * Gets all objects from the source according to configuration
+     *
+     * @param   array   $data           Data from the request running
+     * @param   array   $configuration  Configuration for the action running
+     *
+     * @return  array                   The resulting data
+     *
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     */
     public function getAllFromSource(array $data, array $configuration): array
     {
         // todo: i think we need the Action here, because we need to set it with $sync->setAction($action) later...
@@ -84,7 +105,13 @@ class SynchronizationService
         return $results;
     }
 
-    // todo: docs
+    /**
+     * Searches and returns the source of the configuration in the database
+     *
+     * @param   array           $configuration  The configuration of the action running
+     *
+     * @return  Gateway|null                    The found source for the configuration
+     */
     private function getSourceFromAction(array $configuration): ?Gateway
     {
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $configuration['source']]);
@@ -96,7 +123,13 @@ class SynchronizationService
         return null;
     }
 
-    // todo: docs
+    /**
+     * Searches and returns the entity of the configuration in the database
+     *
+     * @param   array       $configuration  The configuration of the action running
+     *
+     * @return  Entity|null                 The found entity for the configuration
+     */
     private function getEntityFromAction(array $configuration): ?Entity
     {
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $configuration['eavObject']]);
@@ -108,7 +141,14 @@ class SynchronizationService
         return null;
     }
 
-    // todo: docs
+    /**
+     * Gets the configuration for the source and fetches the results on the source
+     *
+     * @param   array       $configuration  The configuration for the action running
+     * @param   Gateway     $gateway        The source to get the data from
+     *
+     * @return  array                       The results found on the source
+     */
     private function getObjectsFromSource(array $configuration, Gateway $gateway): array
     {
         $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
@@ -120,24 +160,47 @@ class SynchronizationService
         return $results;
     }
 
+    /**
+     * Determines the configuration for the source given
+     *
+     * @param   array   $configuration  Configuration of the action running
+     * @param   Gateway $gateway        The source to call
+     *
+     * @return  array                   The configuration for the source to call
+     */
     private function getCallServiceConfig(array $configuration, Gateway $gateway): array
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway, $configuration),
-            // todo: maybe use sourceLimitQuery instead of sourceLimit for this in $configuration?
             'query'   => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
             'headers' => $gateway->getHeaders(),
         ];
     }
 
-    // todo: docs
+    /**
+     * Determines the URL to request
+     *
+     * @param   Gateway     $gateway        The source to call
+     * @param   array       $configuration  The configuration of the action running
+     * @param   string|null $id             The id to request (optional)
+     *
+     * @return  string                      The resulting URL
+     */
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
         return $gateway->getLocation().$configuration['location'].($id ? '/'.$id : '');
     }
 
-    // todo: docs
+    /**
+     * Fetches the objects stored on the source
+     *
+     * @param   array   $configuration      The configuration of the action running
+     * @param   array   $callServiceConfig  The configuration for the source
+     * @param   int     $page               The current page to be requested
+     *
+     * @return  array
+     */
     private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
 
@@ -170,7 +233,13 @@ class SynchronizationService
         return $results;
     }
 
-    // todo: Een functie die één enkel object uit de source trekt
+    /**
+     * Gets a single object from the source
+     *
+     * @param   Synchronization $sync           The synchronisation object with the related source object id
+     * @param   array           $configuration  The configuration of the action running
+     * @return  array|null                      The resulting object
+     */
     private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
@@ -188,11 +257,18 @@ class SynchronizationService
 //        $id = $dot->get($configuration['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($configuration['sourceObjectLocation'], $result);
+        return $dot->get($configuration['apiSource']['locationObject'], $result);
     }
 
-    // todo: Een functie die kijkt of  er al een synchronistie object is aan de hand van de source
-    // todo: (dus zoekt op source + endpoint + externeid)
+    /**
+     * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist
+     *
+     * @param   Gateway                 $source     The source that is requested
+     * @param   Entity                  $entity     The entity that is requested
+     * @param   string                  $sourceId   The id of the object in the source
+     *
+     * @return  Synchronization|null                A synchronisation object related to the object in the source
+     */
     private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
         $sync = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source->getId(), 'entity' => $entity->getId(), 'sourceId' => $sourceId]);
@@ -211,8 +287,15 @@ class SynchronizationService
         return $sync;
     }
 
-    // todo: Een functie die kijkt of er al een synchronisatie object is aan de hand van een objectEntity
-    // todo: (dus zoekt op object + source + endooint)
+    /**
+     * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist
+     *
+     * @param   ObjectEntity    $objectEntity   The current object in the gateway
+     * @param   Gateway         $source         The current source
+     * @param   Entity          $entity         The current entity
+     *
+     * @return  Synchronization|null            A synchronisation object related to the object in the gateway
+     */
     private function findSyncByObject(ObjectEntity $objectEntity, Gateway $source, Entity $entity): ?Synchronization
     {
         $sync = $this->entityManager->getRepository('App:Synchronization')->findBy(['object' => $objectEntity, 'gateway' => $source, 'entity' => $entity]);
