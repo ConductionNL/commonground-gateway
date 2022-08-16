@@ -127,8 +127,10 @@ class ClearObjectsFromCacheCommand extends Command
             $io->error($id.' is not a valid uuid!');
             $errorCount++;
             $io->progressAdvance();
+
             return false;
         }
+
         return true;
     }
 
@@ -138,7 +140,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Object from cache with id: {$id}");
-            if(!$this->checkUuid($io, $id, $errorCount)){
+            if (!$this->checkUuid($io, $id, $errorCount)) {
                 continue;
             }
             $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($id);
@@ -166,7 +168,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Objects from cache for Entity with id: {$id}");
-            if(!$this->checkUuid($io, $id, $errorCount)){
+            if (!$this->checkUuid($io, $id, $errorCount)) {
                 continue;
             }
             $entity = $this->entityManager->getRepository('App:Entity')->find($id);
@@ -197,7 +199,7 @@ class ClearObjectsFromCacheCommand extends Command
         foreach ($ids as $id) {
             $io->text('');
             $io->section("Removing Objects from cache for Collection with id: {$id}");
-            if(!$this->checkUuid($io, $id, $errorCount)){
+            if (!$this->checkUuid($io, $id, $errorCount)) {
                 continue;
             }
             $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($id);
