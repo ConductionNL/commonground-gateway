@@ -32,17 +32,17 @@ class SynchronizationService
     private ValidatorService $validatorService;
 
     /**
-     * @param CommonGroundService $commonGroundService
+     * @param CommonGroundService    $commonGroundService
      * @param EntityManagerInterface $entityManager
-     * @param SessionInterface $session
-     * @param GatewayService $gatewayService
-     * @param FunctionService $functionService
-     * @param LogService $logService
-     * @param MessageBusInterface $messageBus
-     * @param TranslationService $translationService
-     * @param ObjectEntityService $objectEntityService
-     * @param ValidatorService $validatorService
-     * @param EavService $eavService
+     * @param SessionInterface       $session
+     * @param GatewayService         $gatewayService
+     * @param FunctionService        $functionService
+     * @param LogService             $logService
+     * @param MessageBusInterface    $messageBus
+     * @param TranslationService     $translationService
+     * @param ObjectEntityService    $objectEntityService
+     * @param ValidatorService       $validatorService
+     * @param EavService             $eavService
      */
     public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService)
     {
@@ -60,14 +60,14 @@ class SynchronizationService
     }
 
     /**
-     * Gets all objects from the source according to configuration
+     * Gets all objects from the source according to configuration.
      *
-     * @param   array   $data           Data from the request running
-     * @param   array   $configuration  Configuration for the action running
-     *
-     * @return  array                   The resulting data
+     * @param array $data          Data from the request running
+     * @param array $configuration Configuration for the action running
      *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array The resulting data
      */
     public function getAllFromSource(array $data, array $configuration): array
     {
@@ -106,11 +106,11 @@ class SynchronizationService
     }
 
     /**
-     * Searches and returns the source of the configuration in the database
+     * Searches and returns the source of the configuration in the database.
      *
-     * @param   array           $configuration  The configuration of the action running
+     * @param array $configuration The configuration of the action running
      *
-     * @return  Gateway|null                    The found source for the configuration
+     * @return Gateway|null The found source for the configuration
      */
     private function getSourceFromAction(array $configuration): ?Gateway
     {
@@ -124,11 +124,11 @@ class SynchronizationService
     }
 
     /**
-     * Searches and returns the entity of the configuration in the database
+     * Searches and returns the entity of the configuration in the database.
      *
-     * @param   array       $configuration  The configuration of the action running
+     * @param array $configuration The configuration of the action running
      *
-     * @return  Entity|null                 The found entity for the configuration
+     * @return Entity|null The found entity for the configuration
      */
     private function getEntityFromAction(array $configuration): ?Entity
     {
@@ -142,12 +142,12 @@ class SynchronizationService
     }
 
     /**
-     * Gets the configuration for the source and fetches the results on the source
+     * Gets the configuration for the source and fetches the results on the source.
      *
-     * @param   array       $configuration  The configuration for the action running
-     * @param   Gateway     $gateway        The source to get the data from
+     * @param array   $configuration The configuration for the action running
+     * @param Gateway $gateway       The source to get the data from
      *
-     * @return  array                       The results found on the source
+     * @return array The results found on the source
      */
     private function getObjectsFromSource(array $configuration, Gateway $gateway): array
     {
@@ -161,31 +161,31 @@ class SynchronizationService
     }
 
     /**
-     * Determines the configuration for the source given
+     * Determines the configuration for the source given.
      *
-     * @param   array   $configuration  Configuration of the action running
-     * @param   Gateway $gateway        The source to call
+     * @param array   $configuration Configuration of the action running
+     * @param Gateway $gateway       The source to call
      *
-     * @return  array                   The configuration for the source to call
+     * @return array The configuration for the source to call
      */
     private function getCallServiceConfig(array $configuration, Gateway $gateway): array
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway, $configuration),
-            'query'   => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
-            'headers' => $gateway->getHeaders(),
+            'query'     => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
+            'headers'   => $gateway->getHeaders(),
         ];
     }
 
     /**
-     * Determines the URL to request
+     * Determines the URL to request.
      *
-     * @param   Gateway     $gateway        The source to call
-     * @param   array       $configuration  The configuration of the action running
-     * @param   string|null $id             The id to request (optional)
+     * @param Gateway     $gateway       The source to call
+     * @param array       $configuration The configuration of the action running
+     * @param string|null $id            The id to request (optional)
      *
-     * @return  string                      The resulting URL
+     * @return string The resulting URL
      */
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
@@ -193,13 +193,13 @@ class SynchronizationService
     }
 
     /**
-     * Fetches the objects stored on the source
+     * Fetches the objects stored on the source.
      *
-     * @param   array   $configuration      The configuration of the action running
-     * @param   array   $callServiceConfig  The configuration for the source
-     * @param   int     $page               The current page to be requested
+     * @param array $configuration     The configuration of the action running
+     * @param array $callServiceConfig The configuration for the source
+     * @param int   $page              The current page to be requested
      *
-     * @return  array
+     * @return array
      */
     private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
     {
@@ -234,11 +234,12 @@ class SynchronizationService
     }
 
     /**
-     * Gets a single object from the source
+     * Gets a single object from the source.
      *
-     * @param   Synchronization $sync           The synchronisation object with the related source object id
-     * @param   array           $configuration  The configuration of the action running
-     * @return  array|null                      The resulting object
+     * @param Synchronization $sync          The synchronisation object with the related source object id
+     * @param array           $configuration The configuration of the action running
+     *
+     * @return array|null The resulting object
      */
     private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
     {
@@ -261,13 +262,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist
+     * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
-     * @param   Gateway                 $source     The source that is requested
-     * @param   Entity                  $entity     The entity that is requested
-     * @param   string                  $sourceId   The id of the object in the source
+     * @param Gateway $source   The source that is requested
+     * @param Entity  $entity   The entity that is requested
+     * @param string  $sourceId The id of the object in the source
      *
-     * @return  Synchronization|null                A synchronisation object related to the object in the source
+     * @return Synchronization|null A synchronisation object related to the object in the source
      */
     private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
@@ -288,13 +289,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist
+     * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist.
      *
-     * @param   ObjectEntity    $objectEntity   The current object in the gateway
-     * @param   Gateway         $source         The current source
-     * @param   Entity          $entity         The current entity
+     * @param ObjectEntity $objectEntity The current object in the gateway
+     * @param Gateway      $source       The current source
+     * @param Entity       $entity       The current entity
      *
-     * @return  Synchronization|null            A synchronisation object related to the object in the gateway
+     * @return Synchronization|null A synchronisation object related to the object in the gateway
      */
     private function findSyncByObject(ObjectEntity $objectEntity, Gateway $source, Entity $entity): ?Synchronization
     {
