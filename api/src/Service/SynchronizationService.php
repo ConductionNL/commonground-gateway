@@ -174,7 +174,7 @@ class SynchronizationService
     private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
-        $url = $this->getUrlForSource($sync->getGateway(), ['sourceLocation' => $configuration['sourceLocation']], $sync->getSourceId());
+        $url = $this->getUrlForSource($sync->getGateway(), ['location' => $configuration['location']], $sync->getSourceId());
 
         // Get object form source with callservice
         $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
