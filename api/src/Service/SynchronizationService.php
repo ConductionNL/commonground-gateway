@@ -134,7 +134,7 @@ class SynchronizationService
     // todo: docs
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().'/'.$configuration['sourceLocation'].($id ? '/'.$id : '');
+        return $gateway->getLocation().$configuration['location'].($id ? '/'.$id : '');
     }
 
     // todo: docs
@@ -174,7 +174,7 @@ class SynchronizationService
     private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
-        $url = $this->getUrlForSource($sync->getGateway(), ['sourceLocation' => $configuration['sourceLocation']], $sync->getSourceId());
+        $url = $this->getUrlForSource($sync->getGateway(), ['location' => $configuration['location']], $sync->getSourceId());
 
         // Get object form source with callservice
         $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
@@ -335,9 +335,13 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
             //@TODO: Write errors to logs
-            return $objectEntity;
-        }
 
+            foreach ($validationErrors as $error) {
+                if (strpos($error, 'must be present') !== false) {
+                    return $objectEntity;
+                }
+            }
+        }
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
 
@@ -414,8 +418,9 @@ class SynchronizationService
 //            return $entity->getAttributeByName($propertyName);
 //        }, ARRAY_FILTER_USE_KEY);
 
+
         if (array_key_exists('mappingIn', $configuration['apiSource'])) {
-            $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['apiSource']['mappingIn']);
+            $externObject = $this->translationService->dotHydrator( isset($configuration['apiSource']['skeletonIn']) ? array_merge($configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $configuration['apiSource'])) {
