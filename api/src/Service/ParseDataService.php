@@ -198,9 +198,10 @@ class ParseDataService
         if (empty($dataFile)) {
             return false;
         }
+
         $data = $this->findData($dataFile);
         if ($data['collection'] !== $oas) {
-            throw new Exception('OAS locations don\'t match');
+            throw new Exception('OAS location '. $data['collection'] . ' doesn\'t match ' . $oas);
         }
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['locationOAS' => $oas]);
         if (!$collection instanceof CollectionEntity) {
