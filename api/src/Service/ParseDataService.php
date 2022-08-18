@@ -27,9 +27,9 @@ class ParseDataService
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param ValidationService $validationService
-     * @param EavService $eavService
-     * @param FunctionService $functionService
+     * @param ValidationService      $validationService
+     * @param EavService             $eavService
+     * @param FunctionService        $functionService
      */
     public function __construct(EntityManagerInterface $entityManager, ValidationService $validationService, EavService $eavService, FunctionService $functionService)
     {
@@ -202,9 +202,10 @@ class ParseDataService
         if (empty($dataFile)) {
             return false;
         }
+
         $data = $this->findData($dataFile);
         if ($data['collection'] !== $oas) {
-            throw new Exception('OAS locations don\'t match');
+            throw new Exception('OAS location '.$data['collection'].' doesn\'t match '.$oas);
         }
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['locationOAS' => $oas]);
         if (!$collection instanceof CollectionEntity) {
@@ -221,8 +222,9 @@ class ParseDataService
      *
      * @param CollectionEntity $collection The collection which objectEntities will be purged
      *
-     * @return void
      * @throws InvalidArgumentException
+     *
+     * @return void
      */
     public function wipeDataForCollection(CollectionEntity $collection): void
     {

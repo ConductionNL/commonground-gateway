@@ -419,7 +419,12 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
             //@TODO: Write errors to logs
-            return $objectEntity;
+
+            foreach ($validationErrors as $error) {
+                if (strpos($error, 'must be present') !== false) {
+                    return $objectEntity;
+                }
+            }
         }
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
@@ -498,7 +503,7 @@ class SynchronizationService
 //        }, ARRAY_FILTER_USE_KEY);
 
         if (array_key_exists('mappingIn', $configuration['apiSource'])) {
-            $externObject = $this->translationService->dotHydrator($externObject, $externObject, $configuration['apiSource']['mappingIn']);
+            $externObject = $this->translationService->dotHydrator(isset($configuration['apiSource']['skeletonIn']) ? array_merge($configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $configuration['apiSource'])) {
