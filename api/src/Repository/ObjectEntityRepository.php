@@ -611,6 +611,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "%$value%");
         } else {
+            // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
             $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "$value");
         }
