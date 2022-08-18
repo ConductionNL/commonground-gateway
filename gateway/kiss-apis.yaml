@@ -1,5 +1,5 @@
- # Collections
-App\Entity\CollectionEntity:
+##  Collections
+#App\Entity\CollectionEntity:
 #    brcCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -31,7 +31,7 @@ App\Entity\CollectionEntity:
 #    klantenCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/klanten-api/master/src/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/klanten_publiccode/main/OAS.json
 #        name: Klanten collection
 #        sourceType: GitHub
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/klanten_publiccode/main/data/klanten.json
@@ -104,8 +104,8 @@ App\Entity\CollectionEntity:
 #        testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
 #        loadTestData: true
 #        autoLoad: true
-
-# Entities
+#
+## Entities
 #App\Entity\Entity:
 #    # Review Entity
 #    review:
