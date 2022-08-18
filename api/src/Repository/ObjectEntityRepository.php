@@ -611,7 +611,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "%$value%");
         } else {
-            $query->andWhere("$prefix$key.stringValue = :$key")
+            $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "$value");
         }
 
