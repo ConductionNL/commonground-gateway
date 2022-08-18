@@ -155,7 +155,7 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContextPhp:
+securityContextPhp: {}
 #    privileged: false
 #    allowPrivilegeEscalation: false
 #    runAsNonRoot: false
@@ -165,7 +165,7 @@ securityContextPhp:
 #    runAsUser: 101
 #    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
 #    readOnlyRootFilesystem: false
-securityContextNginx:
+securityContextNginx: {}
 #    privileged: false
 #    allowPrivilegeEscalation: false
 #    runAsNonRoot: false

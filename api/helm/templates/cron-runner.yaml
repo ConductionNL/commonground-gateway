@@ -6,7 +6,7 @@ metadata:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
   # this cronjob runs every 10 minutes https://crontab.guru/#*_*_*_*_*
-  schedule: {{ .Values.config.crontab }}
+  schedule: "{{ .Values.config.crontab }}"
   jobTemplate:
     spec:
       template:
@@ -17,11 +17,11 @@ spec:
                 {{- end }}
               serviceAccountName: {{ include "commonground-gateway.serviceAccountName" . }}
               securityContext:
-                {{- toYaml .Values.podSecurityContext | nindent 8 }}
+                {{- toYaml .Values.podSecurityContext | nindent 16 }}
               volumes:
                   - name: dependencies
                     secret:
-                        secretName: {{ include "commonground-gateway.fullname" . }}-dependencies
+                        secretName: "{{ include "commonground-gateway.fullname" . }}-dependencies"
                         defaultMode: 420
                   - name: app-certificates
                     secret:
@@ -50,8 +50,6 @@ spec:
         
               containers:
                   - name: {{ include "commonground-gateway.fullname" . }}-php
-                    securityContext:
-                      {{- toYaml .Values.securityContextPhp | nindent 12 }}
                     image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
                     imagePullPolicy: {{ .Values.php.pullPolicy }}
                     ports:
@@ -245,18 +243,15 @@ spec:
                                   name: {{ include "commonground-gateway.fullname" . }}
                         {{- end }}
                       {{- end }}
-        
-                    resources:
-                  {{- toYaml .Values.php.resources | nindent 12 }}
                 {{- with .Values.nodeSelector }}
               nodeSelector:
-                {{- toYaml . | nindent 8 }}
+                {{- toYaml . | nindent 16 }}
                 {{- end }}
                 {{- with .Values.affinity }}
               affinity:
-                {{- toYaml . | nindent 8 }}
+                {{- toYaml . | nindent 16 }}
                 {{- end }}
                 {{- with .Values.tolerations }}
               tolerations:
-                {{- toYaml . | nindent 8 }}
+                {{- toYaml . | nindent 16 }}
             {{- end }}
