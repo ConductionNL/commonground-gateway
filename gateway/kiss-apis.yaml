@@ -697,7 +697,7 @@
 #        async: false
 #        configuration:
 #            eavObject: 97b05576-af9b-43df-bab7-dbf0f057258e # kiss_openpub_pub entity
-#            source: /admin/gateways/{uuid} # openPub source
+#            source: uuid # openPub source
 #            location: /kiss_openpub_pub
 #            apiSource:
 #                locationObjects: '#'
