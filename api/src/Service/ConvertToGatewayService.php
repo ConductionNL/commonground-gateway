@@ -283,6 +283,7 @@ class ConvertToGatewayService
                 $object->setUri($uri.'/admin/object_entities/'.$object->getId());
             }
             $this->em->flush(); // Needed here! read comment above if statement!
+            $this->functionService->removeResultFromCache = [];
             $this->functionService->removeResultFromCache($object);
             $this->notify($object, 'Create'); // TODO: use promises instead of this function?
         }

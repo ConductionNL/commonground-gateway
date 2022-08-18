@@ -21,8 +21,8 @@ class ActionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'commongateway.handler.pre'  => 'handleEvent',
-            'commongateway.handler.post' => 'handleEvent',
+            'commongateway.handler.pre'     => 'handleEvent',
+            'commongateway.handler.post'    => 'handleEvent',
             'commongateway.cronjob.trigger' => 'handleEvent',
         ];
     }
@@ -76,7 +76,6 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-
         $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
 
         foreach ($actions as $action) {

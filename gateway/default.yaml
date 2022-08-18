@@ -853,6 +853,6 @@ App\Entity\Cronjob:
         name: synchronisations
         description: a cronjob that sets off the synchronisations for the various sources
         crontab: '*/1 * * * *'
-        throws:
+        throws: 
             - 'commongateway.cronjob.trigger'
         data: []

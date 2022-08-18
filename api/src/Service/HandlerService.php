@@ -136,7 +136,7 @@ class HandlerService
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-                $result = $this->handleHandler($handler, $endpoint, $event->getData());
+                $result = $this->handleHandler($handler, $endpoint, $event->getData()['request'] ?: []);
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 

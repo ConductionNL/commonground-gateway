@@ -154,10 +154,13 @@ class ResponseService
             return $response;
         }
 
+        $user = $this->security->getUser();
+        $userId = $user !== null ? $user->getUserIdentifier() : 'anonymous';
         $item = $this->cache->getItem(
             'object_'
             .base64_encode(
                 $result->getId()
+                .'userId_'.$userId
                 .'acceptType_'.$acceptType
                 .'level_'.$level
                 .'fields_'.http_build_query($fields ?? [], '', ',')
@@ -165,10 +168,11 @@ class ResponseService
             )
         );
         if ($item->isHit() && !$dateRead) {
-//            var_dump('FromCache: '.$result->getId().'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ','));
+//            var_dump('FromCache: '.$result->getId().'userId_'.$userId.'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
+        $item->tag('object_userId_'.base64_encode($userId));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
