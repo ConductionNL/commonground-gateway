@@ -53,7 +53,8 @@ class ApplicationService
                     break;
                 }
             }
-
+        }
+        if (!$application) {
             if (str_contains($host, 'localhost')) {
                 $application = $this->createApplication('localhost', [$host], Uuid::uuid4()->toString(), Uuid::uuid4()->toString());
             } else {
