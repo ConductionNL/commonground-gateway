@@ -502,9 +502,8 @@ class SynchronizationService
 //            return $entity->getAttributeByName($propertyName);
 //        }, ARRAY_FILTER_USE_KEY);
 
-
         if (array_key_exists('mappingIn', $configuration['apiSource'])) {
-            $externObject = $this->translationService->dotHydrator( isset($configuration['apiSource']['skeletonIn']) ? array_merge($configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $configuration['apiSource']['mappingIn']);
+            $externObject = $this->translationService->dotHydrator(isset($configuration['apiSource']['skeletonIn']) ? array_merge($configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $configuration['apiSource'])) {
