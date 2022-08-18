@@ -18,6 +18,7 @@ spec:
               serviceAccountName: {{ include "commonground-gateway.serviceAccountName" . }}
               securityContext:
                 {{- toYaml .Values.podSecurityContext | nindent 16 }}
+              restartPolicy: OnFailure
               volumes:
                   - name: dependencies
                     secret:
