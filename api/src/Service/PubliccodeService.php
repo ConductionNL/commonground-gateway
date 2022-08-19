@@ -227,31 +227,9 @@ class PubliccodeService
     }
 
     /**
-     * This function creates a github organization
-     *
-     * @param array $githubOrg
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     *
-     * @return ObjectEntity Creates a github organization
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
-     */
-    public function createOrganization(array $githubOrg, ObjectEntity $objectEntity): ObjectEntity
-    {
-        $object = new ObjectEntity();
-        $object->setEntity($objectEntity->getEntity());
-
-        var_dump(3, $object->getEntity()->getId()->toString());
-
-        return $this->synchronizationService->populateObject($githubOrg, $object);
-    }
-
-    /**
      * This function gets the github owner details.
      *
-     * @param array $item a repository from github with a publicclode.yaml file
+     * @param array $item a repository from github
      *
      * @return array
      * @throws GuzzleException
