@@ -152,8 +152,6 @@ class SynchronizationService
     private function getObjectsFromSource(array $configuration, Gateway $gateway): array
     {
         $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
-//        var_dump($callServiceConfig);
-
         // Right now there are two options, either api source is paginated or it is not
         $results = $this->fetchObjectsFromSource($configuration, $callServiceConfig);
 
@@ -413,7 +411,7 @@ class SynchronizationService
      *
      * @return ObjectEntity The populated ObjectEntity
      */
-    private function populateObject(array $data, ObjectEntity $objectEntity): ObjectEntity
+    public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
 
@@ -427,7 +425,7 @@ class SynchronizationService
             }
         }
 
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, 'POST', 'application/ld+json');
+        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
 
         return $objectEntity;
     }
