@@ -40,7 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "entity.id": "exact",
  *     "gateway.id": "exact",
- *     "objectEntity.id": "exact",
+ *     "object.id": "exact",
  * })
  */
 class Synchronization
