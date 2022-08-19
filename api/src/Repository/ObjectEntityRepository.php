@@ -311,8 +311,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query
             ->leftJoin('o.objectValues', 'valueSearch')
             ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
-            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
-            ->setParameter('search', '%'.$search.'%');
+            ->andWhere('LOWER(valueSearch.stringValue) LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
+            ->setParameter('search', '%'.strtolower($search).'%');
 
         return $query;
     }
