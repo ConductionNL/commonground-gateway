@@ -79,13 +79,16 @@ class ClearObjectsFromCacheCommand extends Command
         $this->functionService->removeResultFromCache = [];
         switch ($type) {
             case 'Object':
-                $errorCount = $this->handleTypeObject($io, $ids);
+                $errorCount = $this->handleSwitchType($io, $ids, 'ObjectEntity', 'Object from cache');
+//                $errorCount = $this->handleTypeObject($io, $ids);
                 break;
             case 'Entity':
-                $errorCount = $this->handleTypeEntity($io, $ids);
+                $errorCount = $this->handleSwitchType($io, $ids, 'Entity', 'Objects from cache for Entity');
+//                $errorCount = $this->handleTypeEntity($io, $ids);
                 break;
             case 'Collection':
-                $errorCount = $this->handleTypeCollection($io, $ids);
+                $errorCount = $this->handleSwitchType($io, $ids, 'Entity', 'Objects from cache for Collection');
+//                $errorCount = $this->handleTypeCollection($io, $ids);
                 break;
             case 'AllObjects':
                 $question = new ConfirmationQuestion('Are you sure you want to remove all objects from cache? (y/n) (default = n)', false);
@@ -124,11 +127,34 @@ class ClearObjectsFromCacheCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function checkUuid(SymfonyStyle $io, string $id, int &$errorCount): bool
+    private function handleSwitchType(SymfonyStyle $io, array $ids, string $entityName, string $ioSectionText): int
     {
-        if (!Uuid::isValid($id)) {
-            $io->error($id.' is not a valid uuid!');
-            $errorCount++;
+        $errorCount = 0;
+        foreach ($ids as $id) {
+            $io->newLine();
+            $io->section("Removing {$ioSectionText} with id: {$id}"); //todo make this abstract
+            if (!Uuid::isValid($id)) {
+                $io->error($id. ' is not a valid uuid!');
+                $errorCount++;
+                $io->progressAdvance();
+                continue;
+            }
+            $object = $this->entityManager->getRepository('App:'.$entityName)->find($id);
+            switch (get_class($object)) {
+                case ObjectEntity::class:
+                    $this->removeObjectFromCache($io, $object, $id);
+                    break;
+                case Entity::class:
+                    $this->removeEntityObjectsFromCache($io, $object, $id);
+                    break;
+                case CollectionEntity::class:
+                    $this->removeCollectionObjectsFromCache($io, $object, $id);
+                    break;
+                default:
+                    $io->error("Could not find an {$entityName} with this id: {$id}");
+                    $errorCount++;
+                    break;
+            }
             $io->progressAdvance();
 
             return false;
