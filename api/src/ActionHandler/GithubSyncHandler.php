@@ -72,15 +72,13 @@ class GithubSyncHandler implements ActionHandlerInterface
            // create and link organization
            $newOrg = $this->createOrUpdateObject($githubOrg, $orgObjectEntity);
            $organization['organisation'] = $newOrg->getId()->toString();
-           $repo = $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
-           var_dump('create en link '.$repo->getId()->toString());
+           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
        }
 
        if ($exist == true) {
            // link organisation
            $organization['organisation'] = $orgObjectEntity->getId()->toString();
-           $repo = $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
-           var_dump('link '. $repo->getId()->toString());
+           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
        }
 
        return false;
