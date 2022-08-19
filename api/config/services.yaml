@@ -38,8 +38,16 @@ services:
             $logService: '@App\Service\LogService'
             $translationService: '@App\Service\TranslationService'
             $messageBus: '@messenger.bus.default'
-            $eavService: '@App\Service\EavService'
-            
+            $eavService: '@App\Service\EavService' 
+
+    publiccodeservice:
+        public: true
+        class: App\Service\PubliccodeService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $serializer: '@serializer'
+            $parameterBag: '@parameter_bag'
+            $synchronizationService: '@App\Service\SynchronizationService'
 
     Redis:
         class: Redis
