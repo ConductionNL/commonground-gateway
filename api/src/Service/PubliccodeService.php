@@ -18,20 +18,23 @@ use Symfony\Component\Yaml\Yaml;
 class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
-    private ParameterBagInterface $params;
+    private ParameterBagInterface $parameterBag;
     private ?Client $github;
     private array $query;
     private SerializerInterface $serializer;
+    private SynchronizationService $synchronizationService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params,
-        SerializerInterface $serializer
+        ParameterBagInterface $parameterBag,
+        SerializerInterface $serializer,
+        SynchronizationService $synchronizationService
     ) {
         $this->entityManager = $entityManager;
-        $this->params = $params;
+        $this->parameterBag = $parameterBag;
         $this->serializer = $serializer;
-        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->params->get('github_key')]]) : null;
+        $this->synchronizationService = $synchronizationService;
+        $this->github = $this->parameterBag->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->parameterBag->get('github_key')]]) : null;
         $this->query = [
             'page'     => 1,
             'per_page' => 200,
@@ -87,7 +90,7 @@ class PubliccodeService
             'languages'   => $this->requestFromUrl($item['languages_url']),
             'downloads'   => $this->requestFromUrl($item['downloads_url']),
             //            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
-            'labels'      => $this->requestFromUrl($item['labels_url'], '{/name}'),
+            'labels' => $this->requestFromUrl($item['labels_url'], '{/name}'),
         ];
     }
 
@@ -222,6 +225,65 @@ class PubliccodeService
     }
 
     /**
+     * This function gets the github owner details.
+     *
+     * @param array $item a repository from github
+     *
+     * @throws GuzzleException
+     *
+     * @return array
+     */
+    public function getGithubOwner(array $item): array
+    {
+        return [
+            'id'          => $item['owner']['id'],
+            'name'        => $item['owner']['login'],
+            'description' => null,
+            'logo'        => $item['owner']['avatar_url'] ?? null,
+            'supports'    => null,
+            'owns'        => null,
+            //            'owns' => json_decode($this->getGithubOwnerRepositories($item['owner']['login'])),
+            'uses'    => null,
+            'token'   => null,
+            'github'  => $item['owner']['html_url'] ?? null,
+            'gitlab'  => null,
+            'website' => null,
+            'phone'   => null,
+            'email'   => null,
+        ];
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $slug
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null|Response
+     */
+    public function getGithubRepository(string $slug): ?array
+    {
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
+
+        try {
+            $response = $this->github->request('GET', 'repos/'.$slug);
+        } catch (ClientException $exception) {
+            return new Response(
+                $exception,
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
+        }
+
+        $response = json_decode($response->getBody()->getContents(), true);
+
+        return $response['owner']['type'] === 'Organization' ? $this->getGithubOwner($response) : null;
+    }
+
+    /**
      * This function gets the content of a specific repository.
      *
      * @param string $id
@@ -303,6 +365,6 @@ class PubliccodeService
             );
         }
 
-        return new Response($response->getBody()->getContents(), 200, ['content-type'=>'json']);
+        return new Response($response->getBody()->getContents(), 200, ['content-type' => 'json']);
     }
 }
