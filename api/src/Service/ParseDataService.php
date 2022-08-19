@@ -238,20 +238,21 @@ class ParseDataService
                     $this->eavService->handleDelete($object);
                 } catch (Exception $exception) {
                     $errors[] = [
-                        'Object.Id' => $object->getId()->toString() ?? null,
+                        'Object.Id'     => $object->getId()->toString() ?? null,
                         'Object.Entity' => $object->getEntity() ? [
-                            'Id' => $object->getEntity()->getId() ?? null,
-                            'Name' => $object->getEntity()->getName() ?? null
+                            'Id'   => $object->getEntity()->getId() ?? null,
+                            'Name' => $object->getEntity()->getName() ?? null,
                         ] : null,
                         'Message' => $exception->getMessage(),
-                        'Trace' => $exception->getTrace()
+                        'Trace'   => $exception->getTrace(),
                     ];
                 }
             }
         }
+
         return [
             'objectCount' => $objectCount,
-            'errors' => $errors
+            'errors'      => $errors,
         ];
     }
 }
