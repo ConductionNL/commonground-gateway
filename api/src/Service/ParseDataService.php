@@ -226,13 +226,33 @@ class ParseDataService
      *
      * @return void
      */
-    public function wipeDataForCollection(CollectionEntity $collection): void
+    public function wipeDataForCollection(CollectionEntity $collection): array
     {
+        $objectCount = 0;
+        $errors = [];
         $this->functionService->removeResultFromCache = [];
         foreach ($collection->getEntities() as $entity) {
             foreach ($entity->getObjectEntities() as $object) {
-                $this->eavService->handleDelete($object);
+                try {
+                    $objectCount++;
+                    $this->eavService->handleDelete($object);
+                } catch (Exception $exception) {
+                    $errors[] = [
+                        'Object.Id'     => $object->getId()->toString() ?? null,
+                        'Object.Entity' => $object->getEntity() ? [
+                            'Id'   => $object->getEntity()->getId() ?? null,
+                            'Name' => $object->getEntity()->getName() ?? null,
+                        ] : null,
+                        'Message' => $exception->getMessage(),
+                        'Trace'   => $exception->getTrace(),
+                    ];
+                }
             }
         }
+
+        return [
+            'objectCount' => $objectCount,
+            'errors'      => $errors,
+        ];
     }
 }
