@@ -116,7 +116,7 @@ class ConvenienceController extends AbstractController
                 'info'    => [
                     'Found '.count($collection->getEntities()).' Entities for this collection',
                     'Found '.$errors['objectCount'].' Objects for this collection',
-                    count($errors['errors']).' errors'.(!count($errors['errors']) ? '!' :' (failed to delete these objects)'),
+                    count($errors['errors']).' errors'.(!count($errors['errors']) ? '!' : ' (failed to delete these objects)'),
                 ],
                 'errors' => $errors['errors'],
             ], 'json'),
