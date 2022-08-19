@@ -113,12 +113,12 @@ class ConvenienceController extends AbstractController
         return new Response(
             $this->serializer->serialize([
                 'message' => 'Testdata wiped for '.$collection->getName(),
-                'info' => [
+                'info'    => [
                     'Found '.count($collection->getEntities()).' Entities for this collection',
                     'Found '.count($errors['objectCount']).' Objects for this collection',
-                    count($errors['errors']).' errors (failed to delete these objects)'
+                    count($errors['errors']).' errors (failed to delete these objects)',
                 ],
-                'errors' => $errors['errors']
+                'errors' => $errors['errors'],
             ], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
