@@ -35,7 +35,7 @@ class GithubSyncHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function creates a github organization
+     * This function creates or updates an object entity
      *
      * @param array $data
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
@@ -55,13 +55,12 @@ class GithubSyncHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function creates a github organization
+     * This function creates and/or links the repo object to an organization
      *
-     * @param ObjectEntity $orgObjectEntity
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param bool $exist
-     * @param array $githubOrg
-     * @return bool Creates a github organization
+     * @param ObjectEntity $orgObjectEntity The object entity that relates to the entity Organization
+     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Repository
+     * @param bool $exist Bool if organisation exist in the database
+     * @param array $githubOrg The github organization details
      * @throws GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
@@ -73,22 +72,25 @@ class GithubSyncHandler implements ActionHandlerInterface
            // create and link organization
            $newOrg = $this->createOrUpdateObject($githubOrg, $orgObjectEntity);
            $organization['organisation'] = $newOrg->getId()->toString();
-           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+           $repo = $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+           var_dump('create en link '.$repo->getId()->toString());
        }
 
        if ($exist == true) {
            // link organisation
            $organization['organisation'] = $orgObjectEntity->getId()->toString();
-           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+           $repo = $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+           var_dump('link '. $repo->getId()->toString());
        }
-        return false;
+
+       return false;
     }
 
     /**
-     * This function creates a github organization
+     * This function checks if the organization exist in the database
      *
-     * @param ObjectEntity|null $orgObjectEntity
-     * @param string $githubUrl
+     * @param ObjectEntity|null $orgObjectEntity The object entity that relates to the entity Organization
+     * @param string $githubUrl The github url from the organization array
      * @return bool Creates a github organization
      */
     public function checkIfOrganizationExist(?ObjectEntity $orgObjectEntity, string $githubUrl): ?bool
@@ -105,7 +107,28 @@ class GithubSyncHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function creates a github organization
+     * This function returns the entity Organisation from the OpenCatalogi collection
+     *
+     * @return Entity Creates a github organization
+     */
+    public function getCollection(): Entity
+    {
+        $organization = null;
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['name' => 'OpenCatalogi collection']);
+        foreach ($collection->getEntities() as $entity) {
+            if ($entity->getName() == 'Organisation') {
+                $organization = $entity;
+                break;
+            }
+        }
+
+        return $organization;
+    }
+
+    /**
+     * This function gets the entity Organisation from the OpenCatalogi collection
+     * Then checks if the organisation exists in the database
+     * Then creates and/or links the organisation to the repository
      *
      * @param array $githubOrg
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
@@ -117,15 +140,7 @@ class GithubSyncHandler implements ActionHandlerInterface
      */
     public function checkOrganization(array $githubOrg, ObjectEntity $objectEntity): bool
     {
-        $organization = null;
-        $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['name' => 'OpenCatalogi collection']);
-        foreach ($collection->getEntities() as $entity) {
-            if ($entity->getName() == 'Organisation') {
-                $organization = $entity;
-                break;
-            }
-        }
-
+        $organization = $this->getCollection();
         if ($organization !== null && count($organization->getObjectEntities()) > 0) {
             foreach ($organization->getObjectEntities() as $orgObjectEntity) {
                 $exist = $this->checkIfOrganizationExist($orgObjectEntity, $githubOrg['github']);
@@ -140,7 +155,9 @@ class GithubSyncHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function creates a github organization
+     * This function gets the url from the object
+     * Then checks if the domain is from github
+     * Then retrieves the slug from the url and get the repo from the github api
      *
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
      * @return array|null Creates a github organization
@@ -160,7 +177,7 @@ class GithubSyncHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function creates a github organization
+     * This function runs the GithubSyncHandler
      *
      * @param array $data
      * @param array $configuration
