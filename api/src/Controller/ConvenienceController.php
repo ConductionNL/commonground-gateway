@@ -115,8 +115,8 @@ class ConvenienceController extends AbstractController
                 'message' => 'Testdata wiped for '.$collection->getName(),
                 'info'    => [
                     'Found '.count($collection->getEntities()).' Entities for this collection',
-                    'Found '.count($errors['objectCount']).' Objects for this collection',
-                    count($errors['errors']).' errors (failed to delete these objects)',
+                    'Found '.$errors['objectCount'].' Objects for this collection',
+                    count($errors['errors']).' errors'.(!count($errors['errors']) ? '!' :' (failed to delete these objects)'),
                 ],
                 'errors' => $errors['errors'],
             ], 'json'),
