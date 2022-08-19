@@ -68,20 +68,20 @@ class GithubSyncHandler implements ActionHandlerInterface
      */
     public function createOrLinkOrg(ObjectEntity $orgObjectEntity, ObjectEntity $objectEntity, bool $exist, array $githubOrg): bool
     {
-       if ($exist == false) {
-           // create and link organization
-           $newOrg = $this->createOrUpdateObject($githubOrg, $orgObjectEntity);
-           $organization['organisation'] = $newOrg->getId()->toString();
-           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
-       }
+        if ($exist == false) {
+            // create and link organization
+            $newOrg = $this->createOrUpdateObject($githubOrg, $orgObjectEntity);
+            $organization['organisation'] = $newOrg->getId()->toString();
+            $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+        }
 
-       if ($exist == true) {
-           // link organisation
-           $organization['organisation'] = $orgObjectEntity->getId()->toString();
-           $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
-       }
+        if ($exist == true) {
+            // link organisation
+            $organization['organisation'] = $orgObjectEntity->getId()->toString();
+            $this->createOrUpdateObject($organization, $objectEntity, 'PUT');
+        }
 
-       return false;
+        return false;
     }
 
     /**
@@ -139,17 +139,19 @@ class GithubSyncHandler implements ActionHandlerInterface
     public function checkOrganization(array $githubOrg, ObjectEntity $objectEntity): bool
     {
         $organization = $this->getCollection();
-        if ($organization !== null && count($organization->getObjectEntities()) > 0) {
-            foreach ($organization->getObjectEntities() as $orgObjectEntity) {
-                $exist = $this->checkIfOrganizationExist($orgObjectEntity, $githubOrg['github']);
-                if ($exist) {
-                    break;
-                }
-            }
-            return $this->createOrLinkOrg($orgObjectEntity, $objectEntity, $exist, $githubOrg);
+
+        if ($organization === null) {
+            return false;
         }
 
-        return false;
+        foreach($organization->getObjectEntities() as $orgObjectEntity) {
+            $exist = $this->checkIfOrganizationExist($orgObjectEntity, $githubOrg['github']);
+            if ($exist) {
+                break;
+            }
+        }
+
+        return $this->createOrLinkOrg($orgObjectEntity, $objectEntity, $exist, $githubOrg);
     }
 
     /**
@@ -189,11 +191,9 @@ class GithubSyncHandler implements ActionHandlerInterface
     public function __run(array $data, array $configuration): array
     {
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
-        if (count($entity->getObjectEntities()) > 0) {
-            foreach ($entity->getObjectEntities() as $objectEntity) {
-                $githubOrg = $this->getGithubOrg($objectEntity);
-                $githubOrg !== null && key_exists('github', $githubOrg) ? $exist = $this->checkOrganization($githubOrg, $objectEntity) : $exist = null;
-            }
+        foreach ($entity->getObjectEntities() as $objectEntity) {
+            $githubOrg = $this->getGithubOrg($objectEntity);
+            $githubOrg !== null && key_exists('github', $githubOrg) ? $exist = $this->checkOrganization($githubOrg, $objectEntity) : $exist = null;
         }
 
         return $data;
