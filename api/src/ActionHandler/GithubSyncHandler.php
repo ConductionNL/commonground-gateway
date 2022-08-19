@@ -148,7 +148,7 @@ class GithubSyncHandler implements ActionHandlerInterface
             return false;
         }
 
-        foreach($organization->getObjectEntities() as $orgObjectEntity) {
+        foreach ($organization->getObjectEntities() as $orgObjectEntity) {
             $exist = $this->checkIfOrganizationExist($orgObjectEntity, $githubOrg['github']);
             if ($exist) {
                 break;
