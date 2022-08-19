@@ -311,8 +311,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query
             ->leftJoin('o.objectValues', 'valueSearch')
             ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
-            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
-            ->setParameter('search', '%'.$search.'%');
+            ->andWhere('LOWER(valueSearch.stringValue) LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
+            ->setParameter('search', '%'.strtolower($search).'%');
 
         return $query;
     }
@@ -611,7 +611,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "%$value%");
         } else {
-            $query->andWhere("$prefix$key.stringValue = :$key")
+            // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
+            $query->andWhere("$prefix$key.stringValue LIKE :$key")
                 ->setParameter($key, "$value");
         }
 

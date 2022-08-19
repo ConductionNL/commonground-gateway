@@ -108,10 +108,18 @@ class ConvenienceController extends AbstractController
         }
 
         // Wipe current data for this collection
-        $this->dataService->wipeDataForCollection($collection);
+        $errors = $this->dataService->wipeDataForCollection($collection);
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Testdata wiped for '.$collection->getName()], 'json'),
+            $this->serializer->serialize([
+                'message' => 'Testdata wiped for '.$collection->getName(),
+                'info'    => [
+                    'Found '.count($collection->getEntities()).' Entities for this collection',
+                    'Found '.$errors['objectCount'].' Objects for this collection',
+                    count($errors['errors']).' errors'.(!count($errors['errors']) ? '!' : ' (failed to delete these objects)'),
+                ],
+                'errors' => $errors['errors'],
+            ], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );

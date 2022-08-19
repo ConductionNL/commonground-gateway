@@ -436,36 +436,7 @@ class ResponseService
             $valueObject = $result->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-                // todo: move this to a function, or re-use $this->renderObjects for this somehow:
-                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
-                    if (!$attribute->getMultiple()) {
-                        $object = $valueObject->getValue();
-                        if (!$object instanceof ObjectEntity) {
-                            $response[$attribute->getName()] = null;
-                            continue;
-                        }
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        }
-                        $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        continue;
-                    }
-                    $objects = $valueObject->getValue();
-                    if (!is_array($objects)) {
-                        $response[$attribute->getName()] = null;
-                        continue;
-                    }
-                    foreach ($objects as $object) {
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()][] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        } else {
-                            $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        }
-                    }
+                if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {
                     continue;
                 }
 
@@ -480,18 +451,7 @@ class ResponseService
                 }
 
                 // Let's deal with subExtend extending
-                $subExtend = null;
-                if (is_array($extend)) {
-                    if (array_key_exists('all', $extend)) {
-                        $subExtend = $extend;
-                    } elseif (array_key_exists($attribute->getName(), $extend)) {
-                        if (is_array($extend[$attribute->getName()])) {
-                            $subExtend = $extend[$attribute->getName()];
-                        } elseif ($extend[$attribute->getName()] == false) {
-                            continue;
-                        }
-                    }
-                }
+                $subExtend = is_array($extend) ? $this->attributeSubExtend($extend, $attribute) : null;
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
                 $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
@@ -514,7 +474,119 @@ class ResponseService
     }
 
     /**
-     * Renders the objects of a value with attribute type 'object' for the renderValues function.
+     * Checks if a given attribute should be extended. Will return true if it should be extended and false if not.
+     * Will also add a reference to an object to the response if the attribute should not be extended. Or null if there is no value.
+     *
+     * @param array      $response    The response array we will be adding object references to, if needed.
+     * @param Attribute  $attribute   The attribute we are checking if it needs extending.
+     * @param Value      $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param array|null $extend      The extend array used in the api-call.
+     * @param string     $acceptType  The acceptType used in the api-call.
+     *
+     * @return bool Will return true if the attribute should be extended and false if not.
+     */
+    private function checkExtendAttribute(array &$response, Attribute $attribute, Value $valueObject, ?array $extend, string $acceptType): bool
+    {
+        if ($attribute->getExtend() !== true &&
+            (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))
+        ) {
+            $attribute->getMultiple() ?
+                $this->renderObjectReferences($response, $attribute, $valueObject, $acceptType) :
+                $this->renderObjectReference($response, $attribute, $valueObject, $acceptType);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * For a multiple=false attribute, add a reference to a single object to the response if that attribute should not be extended.
+     * Or adds null instead if there is no value at all.
+     *
+     * @param array     $response    The response array we will be adding an object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
+     *
+     * @return void
+     */
+    private function renderObjectReference(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
+    {
+        $object = $valueObject->getValue();
+        if (!$object instanceof ObjectEntity) {
+            $response[$attribute->getName()] = null;
+
+            return;
+        }
+        $response[$attribute->getName()] = $this->renderObjectSelf($object, $acceptType);
+    }
+
+    /**
+     * For a multiple=true attribute, add one or more references to one or more objects to the response if that attribute should not be extended.
+     * Or adds null instead if there is no value at all.
+     *
+     * @param array     $response    The response array we will be adding one or more object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
+     *
+     * @return void
+     */
+    private function renderObjectReferences(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
+    {
+        $objects = $valueObject->getValue();
+        if (!is_array($objects)) {
+            $response[$attribute->getName()] = null;
+
+            return;
+        }
+        foreach ($objects as $object) {
+            $response[$attribute->getName()][] = $this->renderObjectSelf($object, $acceptType);
+        }
+    }
+
+    /**
+     * Renders the 'self' of a given object, result will differ depending on the acceptType.
+     *
+     * @param ObjectEntity $object     The object to render 'self' for.
+     * @param string       $acceptType The acceptType that will influence the way this 'self' is rendered.
+     *
+     * @return string|string[] The 'self' string or array with this string in it, depending on acceptType.
+     */
+    private function renderObjectSelf(ObjectEntity $object, string $acceptType)
+    {
+        $objectSelf = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+        // todo: if we add more different acceptTypes to this list, use a switch:
+        if ($acceptType === 'jsonld') {
+            return ['@id' => $objectSelf];
+        }
+
+        return $objectSelf;
+    }
+
+    /**
+     * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
+     * This function will decide how the subExtend array for this attribute should look like.
+     *
+     * @param array     $extend    The extend array used in the api-call.
+     * @param Attribute $attribute The attribute we are checking if it needs extending.
+     *
+     * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
+     */
+    private function attributeSubExtend(array $extend, Attribute $attribute): ?array
+    {
+        if (array_key_exists('all', $extend)) {
+            return $extend;
+        } elseif (array_key_exists($attribute->getName(), $extend) && is_array($extend[$attribute->getName()])) {
+            return $extend[$attribute->getName()];
+        }
+
+        return null;
+    }
+
+    /**
+     * Renders the objects of a value with attribute type 'object' for the renderValues function. If attribute is extended.
      *
      * @param ObjectEntity $result
      * @param array        $embedded
@@ -557,17 +629,9 @@ class ResponseService
                 }
 
                 $object = $value->getValue();
-                if ($acceptType === 'jsonld') {
-                    return [
-                        'renderObjectsObjectsArray' => [
-                            '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                        ],
-                        'renderObjectsEmbedded' => $embedded,
-                    ];
-                }
 
                 return [
-                    'renderObjectsObjectsArray' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                    'renderObjectsObjectsArray' => $this->renderObjectSelf($object, $acceptType),
                     'renderObjectsEmbedded'     => $embedded,
                 ];
             } catch (AccessDeniedException $exception) {
@@ -591,13 +655,7 @@ class ResponseService
                     $embedded[$attribute->getName()][] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                 }
 
-                if ($acceptType === 'jsonld') {
-                    $objectsArray[] = [
-                        '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                    ];
-                } else {
-                    $objectsArray[] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                }
+                $objectsArray[] = $this->renderObjectSelf($object, $acceptType);
             } catch (AccessDeniedException $exception) {
                 continue;
             }
