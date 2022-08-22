@@ -6,7 +6,7 @@ use App\Entity\CollectionEntity;
 use App\Service\OasParserService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
-use App\Service\PubliccodeService;
+use App\Service\PubliccodeOldService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class ConvenienceController extends AbstractController
 {
-    private PubliccodeService $publiccodeService;
+    private PubliccodeOldService $publiccodeOldService;
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
@@ -34,7 +34,7 @@ class ConvenienceController extends AbstractController
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer);
+        $this->publiccodeOldService = new PubliccodeOldService($entityManager, $params, $serializer);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
     }
@@ -199,7 +199,7 @@ class ConvenienceController extends AbstractController
      */
     public function getRepositories(): Response
     {
-        return $this->publiccodeService->discoverGithub();
+        return $this->publiccodeOldService->discoverGithub();
     }
 
     /**
@@ -209,7 +209,7 @@ class ConvenienceController extends AbstractController
      */
     public function getGithubRepository(string $id): Response
     {
-        return $this->publiccodeService->getGithubRepositoryContent($id);
+        return $this->publiccodeOldService->getGithubRepositoryContent($id);
     }
 
     /**
@@ -219,7 +219,7 @@ class ConvenienceController extends AbstractController
      */
     public function installRepository(string $id): Response
     {
-        return $this->publiccodeService->createCollection($id);
+        return $this->publiccodeOldService->createCollection($id);
     }
 
     /**
