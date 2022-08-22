@@ -22,18 +22,15 @@ class PubliccodeOldService
     private ?Client $github;
     private array $query;
     private SerializerInterface $serializer;
-    private SynchronizationService $synchronizationService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $parameterBag,
         SerializerInterface $serializer,
-        SynchronizationService $synchronizationService
     ) {
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
         $this->serializer = $serializer;
-        $this->synchronizationService = $synchronizationService;
         $this->github = $this->parameterBag->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->parameterBag->get('github_key')]]) : null;
         $this->query = [
             'page'     => 1,
