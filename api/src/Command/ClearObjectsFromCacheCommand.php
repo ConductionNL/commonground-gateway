@@ -13,7 +13,6 @@ use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\HelperInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -120,9 +119,9 @@ class ClearObjectsFromCacheCommand extends Command
      * If user of this command chose for a type and not AllObjects, ask for id's of objects of the chosen (entity) type.
      * Will also count the amount of id's given and use this to start the SymfonyStyle $io progress.
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param SymfonyStyle   $io     The SymfonyStyle $io
      * @param QuestionHelper $helper The QuestionHelper
-     * @param string $type The chosen entity type to remove objects for from the cache.
+     * @param string         $type   The chosen entity type to remove objects for from the cache.
      *
      * @return array An array of uuid's the user of this command has given.
      */
@@ -147,7 +146,7 @@ class ClearObjectsFromCacheCommand extends Command
      * If answered with yes/true, then get all ObjectEntities from db, count the amount of objects and use this to start the SymfonyStyle $io progress.
      * If answered with no, return null.
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param SymfonyStyle   $io     The SymfonyStyle $io
      * @param QuestionHelper $helper The QuestionHelper
      *
      * @return array|null An array of all objectEntities or null.
@@ -174,13 +173,14 @@ class ClearObjectsFromCacheCommand extends Command
      * Handles removing ObjectEntity responses from cache for all $entityName $ids.
      * Will loop through the list of $ids, all entities of the chosen/given $entityName type and remove all ObjectEntities connected from cache.
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
-     * @param array $ids An array of uuid's the user of this command has given.
-     * @param string $entityName The chosen entity type to remove objects for from the cache, but with the correct entity name.
-     * @param string $ioSectionText A text used in the $io->section for each $id (per foreach loop of all $ids)
+     * @param SymfonyStyle $io            The SymfonyStyle $io
+     * @param array        $ids           An array of uuid's the user of this command has given.
+     * @param string       $entityName    The chosen entity type to remove objects for from the cache, but with the correct entity name.
+     * @param string       $ioSectionText A text used in the $io->section for each $id (per foreach loop of all $ids)
+     *
+     * @throws InvalidArgumentException
      *
      * @return int The amount of errors encountered when trying to remove objects from cache. (per $entityName type)
-     * @throws InvalidArgumentException
      */
     private function handleSwitchType(SymfonyStyle $io, array $ids, string $entityName, string $ioSectionText): int
     {
@@ -189,7 +189,7 @@ class ClearObjectsFromCacheCommand extends Command
             $io->newLine();
             $io->section("Removing {$ioSectionText} with id: {$id}");
             if (!Uuid::isValid($id)) {
-                $io->error($id. ' is not a valid uuid!');
+                $io->error($id.' is not a valid uuid!');
                 $errorCount++;
                 $io->progressAdvance();
                 continue;
@@ -212,13 +212,14 @@ class ClearObjectsFromCacheCommand extends Command
     }
 
     /**
-     * Will remove all saved responses for the given $objectEntity from cache. (incl parent objects)
+     * Will remove all saved responses for the given $objectEntity from cache. (incl parent objects).
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param SymfonyStyle $io           The SymfonyStyle $io
      * @param ObjectEntity $objectEntity The ObjectEntity to remove all saved responses for from cache. (incl parent objects)
      *
-     * @return void
      * @throws InvalidArgumentException
+     *
+     * @return void
      */
     private function removeObjectFromCache(SymfonyStyle $io, ObjectEntity $objectEntity)
     {
@@ -229,13 +230,14 @@ class ClearObjectsFromCacheCommand extends Command
     }
 
     /**
-     * Will remove all saved responses for all objectEntities connected to the given $entity from cache. (incl parent objects)
+     * Will remove all saved responses for all objectEntities connected to the given $entity from cache. (incl parent objects).
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
-     * @param Entity $entity The Entity to remove saved responses of all connected objectEntities for from cache. (incl parent objects)
+     * @param SymfonyStyle $io     The SymfonyStyle $io
+     * @param Entity       $entity The Entity to remove saved responses of all connected objectEntities for from cache. (incl parent objects)
+     *
+     * @throws InvalidArgumentException
      *
      * @return void
-     * @throws InvalidArgumentException
      */
     private function removeEntityObjectsFromCache(SymfonyStyle $io, Entity $entity)
     {
@@ -246,13 +248,14 @@ class ClearObjectsFromCacheCommand extends Command
     }
 
     /**
-     * Will remove all saved responses for all objectEntities connected to the given $collection from cache. (incl parent objects)
+     * Will remove all saved responses for all objectEntities connected to the given $collection from cache. (incl parent objects).
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param SymfonyStyle     $io         The SymfonyStyle $io
      * @param CollectionEntity $collection The Collection to remove saved responses of all connected objectEntities for from cache. (incl parent objects)
      *
-     * @return void
      * @throws InvalidArgumentException
+     *
+     * @return void
      */
     private function removeCollectionObjectsFromCache(SymfonyStyle $io, CollectionEntity $collection)
     {
@@ -265,11 +268,12 @@ class ClearObjectsFromCacheCommand extends Command
     /**
      * Will remove all saved responses for all $objectEntities from cache.
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
-     * @param array $objectEntities An array of all objectEntities.
+     * @param SymfonyStyle $io             The SymfonyStyle $io
+     * @param array        $objectEntities An array of all objectEntities.
+     *
+     * @throws InvalidArgumentException
      *
      * @return int The amount of errors encountered when trying to remove objects from cache. todo For now, default 0
-     * @throws InvalidArgumentException
      */
     private function removeAllObjectsFromCache(SymfonyStyle $io, array $objectEntities): int
     {
@@ -289,10 +293,10 @@ class ClearObjectsFromCacheCommand extends Command
      * If more than 20% failed will return Failure = 1. Else returns Succes = 0.
      * Will also send a final message with SymfonyStyle $io as user feedback, depending on the failure rate this will be a Success, Warning or Error message.
      *
-     * @param SymfonyStyle $io The SymfonyStyle $io
-     * @param string $type The chosen entity type to remove objects for from the cache.
-     * @param int $errorCount The amount of errors encountered when trying to remove objects from cache (per entity $type).
-     * @param int $total The total amount of entity $type objects we are removing saved objectEntities responses for from cache.
+     * @param SymfonyStyle $io         The SymfonyStyle $io
+     * @param string       $type       The chosen entity type to remove objects for from the cache.
+     * @param int          $errorCount The amount of errors encountered when trying to remove objects from cache (per entity $type).
+     * @param int          $total      The total amount of entity $type objects we are removing saved objectEntities responses for from cache.
      *
      * @return int 0 or 1 depending on succes rate of removing saved objectEntities responses for from cache. Success = 0, Failure = 1
      */

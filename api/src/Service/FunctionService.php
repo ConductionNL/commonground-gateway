@@ -178,12 +178,12 @@ class FunctionService
      * Always use $this->functionService->removeResultFromCache = []; before using this function to reset the list of objects that already got removed from cache.
      * If this function is called multiple times in a row it might be better to do this before a loop or starting a recursive function.
      *
-     * @param ObjectEntity $objectEntity
-     * @param SymfonyStyle|null $io If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
-     *
-     * @return bool
+     * @param ObjectEntity      $objectEntity
+     * @param SymfonyStyle|null $io           If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
      *
      * @throws InvalidArgumentException
+     *
+     * @return bool
      */
     public function removeResultFromCache(ObjectEntity $objectEntity, SymfonyStyle $io = null): bool
     {
