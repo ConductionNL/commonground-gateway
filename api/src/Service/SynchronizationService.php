@@ -91,34 +91,29 @@ class SynchronizationService
         $this->configuration = $configuration;
         $sourceObject = [];
 
-        // Checks verplaatsen naar de handler
-        if (in_array("source", $this->configuration) || in_array("entity", $this->configuration) || in_array("idLocation", $this->configuration)){
-            // thro gateway error
-        }
-
         $gateway = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
 
-        // Aan de hand van location id de id uit $datah halen
-        $id = .....
+        // Dot the data array and try to find id in it
+        $dot = new Dot($data);
+        $id = $dot->get($this->configuration['apiSource']['locationIdField']);
 
         // If we have a complete object we can use that to sync
-        if(in_array("objectLocation", $this->configuration)){
-            $sourceObject = /// get from data aan de hand van object location
+        if (array_key_exists('locationObject', $this->configuration)) {
+            $sourceObject = $dot->get($this->configuration['apiSource']['locationObject'], $data); // todo should default be $data or [] ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
         $sync = $this->findSyncBySource($gateway, $entity, $id);
 
         // Lets sync (returns the Synchronization object)
-        $sync = $this->handleSync($sync, $this->configuration, $sourceObject);
+        $sync = $this->handleSync($sync, $sourceObject);
 
         $this->entityManager->persist($sync);
         $this->entityManager->flush();
 
         return $data;
     }
-
 
     /**
      * Gets all objects from the source according to configuration.
@@ -441,7 +436,7 @@ class SynchronizationService
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
-            $object = $this->syncToGateway($synchronization, $sourceObject);
+            $synchronization = $this->syncToGateway($synchronization, $sourceObject);
         } elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
             $synchronization = $this->syncToSource($synchronization);
         } else {

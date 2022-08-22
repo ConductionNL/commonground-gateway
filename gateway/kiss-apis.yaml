@@ -701,7 +701,7 @@
 #            location: /kiss_openpub_pub
 #            apiSource:
 #                locationObjects: '#'
-#                locationTotalCount: '#'
+#                locationObject: '#'
 #                locationIdField: id
 #                locationDateChangedField: modified_gmt
 #                results: 0
