@@ -404,7 +404,7 @@ class ObjectEntityService
     {
         if ($object instanceof ObjectEntity) {
             !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
-            $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
+            $fields['_dateRead'] = isset($fields['_dateRead']) ? 'getItem' : false;
             $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
 
             $object->getHasErrors() ?? $data['validationServiceErrors'] = [
@@ -640,6 +640,7 @@ class ObjectEntityService
      */
     public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
+
         // If type is array application is an error
         $application = $this->applicationService->getApplication();
         if (gettype($application) === 'array') {

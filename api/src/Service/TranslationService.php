@@ -75,6 +75,7 @@ class TranslationService
                 $search = trim($searches[0]);
                 $format = trim($searches[1]);
             }
+
             if (isset($source[$search]['@xsi:nil'])) {
                 unset($destination[$search]);
             } elseif (!isset($format)) {
@@ -97,9 +98,18 @@ class TranslationService
                     $sourceSub = array_values($sourceSub->get('results'));
                 }
                 $destination[$replace] = $sourceSub;
-            } elseif ($format = 'date') {
+            } elseif ($format == 'date') {
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
+            } elseif (strpos($format, 'concatenation') !== false) {
+                $separator = substr($format, strlen('concatenation')+1);
+                $searches = explode('+', $search);
+                $result = '';
+                foreach($searches as $subSearch) {
+                    $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
+                    $result .= isset($source[$subSearch]) ? ($result !== '' ? $separator.$value : $value) : '';
+                }
+                $destination[$replace] = $result ?: $destination[$replace];
             }
             unset($format);
 
@@ -257,7 +267,6 @@ class TranslationService
         if ($translate) {
             $subject = strtr($subject, $this->translationVariables($translationVariables));
         }
-//        var_dump($subject);
         return $subject;
     }
 
@@ -272,7 +281,6 @@ class TranslationService
             foreach ($data as $key => $value) {
                 $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix) : $value;
             }
-
             return $result;
         } else {
             return $prefix.$data;
