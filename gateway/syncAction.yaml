@@ -12,7 +12,7 @@
 #        priority: 0
 #        async: false
 #        configuration:
-#            eavObject: 04b8f5ec-65f0-4fed-aff4-57228e373614
+#            entity: 04b8f5ec-65f0-4fed-aff4-57228e373614
 #            source: /admin/gateways/{uuid}
 #            location: /zaken
 #            apiSource:
