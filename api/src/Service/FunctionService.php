@@ -6,6 +6,7 @@ use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class FunctionService
 {
@@ -178,18 +179,23 @@ class FunctionService
      * If this function is called multiple times in a row it might be better to do this before a loop or starting a recursive function.
      *
      * @param ObjectEntity $objectEntity
-     *
-     * @throws InvalidArgumentException
+     * @param SymfonyStyle|null $io If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
      *
      * @return bool
+     *
+     * @throws InvalidArgumentException
      */
-    public function removeResultFromCache(ObjectEntity $objectEntity): bool
+    public function removeResultFromCache(ObjectEntity $objectEntity, SymfonyStyle $io = null): bool
     {
         if (!in_array($objectEntity->getId()->toString(), $this->removeResultFromCache)) {
             if (!$objectEntity->getSubresourceOf()->isEmpty()) {
                 $this->removeResultFromCache[] = $objectEntity->getId()->toString();
                 foreach ($objectEntity->getSubresourceOf() as $parentValue) {
-                    $this->removeResultFromCache($parentValue->getObjectEntity());
+                    $parentObject = $parentValue->getObjectEntity();
+                    $this->removeResultFromCache($parentObject, $io);
+                    if ($io !== null) {
+                        $io->text("Successfully removed parent Object (parent of Object: {$objectEntity->getId()->toString()}) with id: {$parentObject->getId()->toString()} (of Entity type: {$parentObject->getEntity()->getName()}) from cache");
+                    }
                 }
             }
 

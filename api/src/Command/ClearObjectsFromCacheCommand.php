@@ -9,6 +9,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Service\FunctionService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Command\Command;
@@ -94,6 +95,13 @@ class ClearObjectsFromCacheCommand extends Command
         return $this->handleExecuteResponse($io, $type, $errorCount, $total ?? 0);
     }
 
+    /**
+     * Use QuestionHelper helper to ask the user of this command what type of entity he/she wants to clear objects for from the cache.
+     *
+     * @param QuestionHelper $helper The QuestionHelper
+     *
+     * @return string The chosen type
+     */
     private function askForType(QuestionHelper $helper): string
     {
         $question = new ChoiceQuestion(
@@ -108,6 +116,16 @@ class ClearObjectsFromCacheCommand extends Command
         return $type;
     }
 
+    /**
+     * If user of this command chose for a type and not AllObjects, ask for id's of objects of the chosen (entity) type.
+     * Will also count the amount of id's given and use this to start the SymfonyStyle $io progress.
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param QuestionHelper $helper The QuestionHelper
+     * @param string $type The chosen entity type to remove objects for from the cache.
+     *
+     * @return array An array of uuid's the user of this command has given.
+     */
     private function getIdsAndStartProgress(SymfonyStyle $io, QuestionHelper $helper, string $type): array
     {
         $question = new Question('Now please give one or more uuids for Type '.$type.' (Use Enter to start adding one more id and Ctrl+D to stop adding more)', 'NO UUID INPUT');
@@ -124,6 +142,16 @@ class ClearObjectsFromCacheCommand extends Command
         return $ids;
     }
 
+    /**
+     * If user of this command chose AllObjects as type, ask one last time if he/she really wants to remove all objects from cache.
+     * If answered with yes/true, then get all ObjectEntities from db, count the amount of objects and use this to start the SymfonyStyle $io progress.
+     * If answered with no, return null.
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param QuestionHelper $helper The QuestionHelper
+     *
+     * @return array|null An array of all objectEntities or null.
+     */
     private function getAllObjectsAndStartProgress(SymfonyStyle $io, QuestionHelper $helper): ?array
     {
         $question = new ConfirmationQuestion('Are you sure you want to remove all objects from cache? (y/n) (default = n)', false);
@@ -142,6 +170,18 @@ class ClearObjectsFromCacheCommand extends Command
         return $objectEntities;
     }
 
+    /**
+     * Handles removing ObjectEntity responses from cache for all $entityName $ids.
+     * Will loop through the list of $ids, all entities of the chosen/given $entityName type and remove all ObjectEntities connected from cache.
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param array $ids An array of uuid's the user of this command has given.
+     * @param string $entityName The chosen entity type to remove objects for from the cache, but with the correct entity name.
+     * @param string $ioSectionText A text used in the $io->section for each $id (per foreach loop of all $ids)
+     *
+     * @return int The amount of errors encountered when trying to remove objects from cache. (per $entityName type)
+     * @throws InvalidArgumentException
+     */
     private function handleSwitchType(SymfonyStyle $io, array $ids, string $entityName, string $ioSectionText): int
     {
         $errorCount = 0;
@@ -156,11 +196,11 @@ class ClearObjectsFromCacheCommand extends Command
             }
             $object = $this->entityManager->getRepository('App:'.$entityName)->find($id);
             if ($object instanceof ObjectEntity) {
-                $this->removeObjectFromCache($io, $object, $id);
+                $this->removeObjectFromCache($io, $object);
             } elseif ($object instanceof Entity) {
-                $this->removeEntityObjectsFromCache($io, $object, $id);
+                $this->removeEntityObjectsFromCache($io, $object);
             } elseif ($object instanceof CollectionEntity) {
-                $this->removeCollectionObjectsFromCache($io, $object, $id);
+                $this->removeCollectionObjectsFromCache($io, $object);
             } else {
                 $io->error("Could not find an {$entityName} with this id: {$id}");
                 $errorCount++;
@@ -171,42 +211,91 @@ class ClearObjectsFromCacheCommand extends Command
         return $errorCount;
     }
 
-    private function removeObjectFromCache(SymfonyStyle $io, ObjectEntity $objectEntity, string $id)
+    /**
+     * Will remove all saved responses for the given $objectEntity from cache. (incl parent objects)
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param ObjectEntity $objectEntity The ObjectEntity to remove all saved responses for from cache. (incl parent objects)
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function removeObjectFromCache(SymfonyStyle $io, ObjectEntity $objectEntity)
     {
-        $this->functionService->removeResultFromCache($objectEntity);
-        $io->text("Successfully removed Object with id: {$id} (of Entity type: {$objectEntity->getEntity()->getName()}) from cache");
+        // todo: add try catch to catch errors?
+
+        $this->functionService->removeResultFromCache($objectEntity, $io);
+        $io->text("Successfully removed Object with id: {$objectEntity->getId()->toString()} (of Entity type: {$objectEntity->getEntity()->getName()}) from cache");
     }
 
-    private function removeEntityObjectsFromCache(SymfonyStyle $io, Entity $entity, string $id)
+    /**
+     * Will remove all saved responses for all objectEntities connected to the given $entity from cache. (incl parent objects)
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param Entity $entity The Entity to remove saved responses of all connected objectEntities for from cache. (incl parent objects)
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function removeEntityObjectsFromCache(SymfonyStyle $io, Entity $entity)
     {
         foreach ($entity->getObjectEntities() as $objectEntity) {
-            $this->removeObjectFromCache($io, $objectEntity, $objectEntity->getId()->toString());
+            $this->removeObjectFromCache($io, $objectEntity);
         }
-        $io->text("Successfully removed all Objects from cache for the Entity with id: {$id} (and name: {$entity->getName()})");
+        $io->text("Successfully removed all Objects from cache for the Entity with id: {$entity->getId()->toString()} (and name: {$entity->getName()})");
     }
 
-    private function removeCollectionObjectsFromCache(SymfonyStyle $io, CollectionEntity $collection, string $id)
+    /**
+     * Will remove all saved responses for all objectEntities connected to the given $collection from cache. (incl parent objects)
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param CollectionEntity $collection The Collection to remove saved responses of all connected objectEntities for from cache. (incl parent objects)
+     *
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function removeCollectionObjectsFromCache(SymfonyStyle $io, CollectionEntity $collection)
     {
         foreach ($collection->getEntities() as $entity) {
-            $this->removeEntityObjectsFromCache($io, $entity, $entity->getId()->toString());
+            $this->removeEntityObjectsFromCache($io, $entity);
         }
-        $io->text("Successfully removed all Objects from cache for the Collection with id: {$id} (and name: {$collection->getName()})");
+        $io->text("Successfully removed all Objects from cache for the Collection with id: {$collection->getId()->toString()} (and name: {$collection->getName()})");
     }
 
+    /**
+     * Will remove all saved responses for all $objectEntities from cache.
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param array $objectEntities An array of all objectEntities.
+     *
+     * @return int The amount of errors encountered when trying to remove objects from cache. todo For now, default 0
+     * @throws InvalidArgumentException
+     */
     private function removeAllObjectsFromCache(SymfonyStyle $io, array $objectEntities): int
     {
         $io->newLine();
         foreach ($objectEntities as $objectEntity) {
-            $id = $objectEntity->getId()->toString();
             $io->text('');
-            $io->section("Removing Object from cache with id: {$id}");
-            $this->removeObjectFromCache($io, $objectEntity, $id);
+            $io->section("Removing Object from cache with id: {$objectEntity->getId()->toString()}");
+            $this->removeObjectFromCache($io, $objectEntity);
             $io->progressAdvance();
         }
 
         return 0;
     }
 
+    /**
+     * Determine the response of executing this command. Response depends on te amount of errors in percentage.
+     * If more than 20% failed will return Failure = 1. Else returns Succes = 0.
+     * Will also send a final message with SymfonyStyle $io as user feedback, depending on the failure rate this will be a Success, Warning or Error message.
+     *
+     * @param SymfonyStyle $io The SymfonyStyle $io
+     * @param string $type The chosen entity type to remove objects for from the cache.
+     * @param int $errorCount The amount of errors encountered when trying to remove objects from cache (per entity $type).
+     * @param int $total The total amount of entity $type objects we are removing saved objectEntities responses for from cache.
+     *
+     * @return int 0 or 1 depending on succes rate of removing saved objectEntities responses for from cache. Success = 0, Failure = 1
+     */
     private function handleExecuteResponse(SymfonyStyle $io, string $type, int $errorCount, int $total): int
     {
         $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
