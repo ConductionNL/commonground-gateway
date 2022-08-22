@@ -681,7 +681,14 @@
 #        name: openPub
 #        location: https://openweb.kiss-dev.commonground.nu/wp-json/wp/v2
 #        headers:
+#            accept: 'application/json'    
+#    elastic:
+#        name: elastic
+#        location: ''
+#        headers:
 #            accept: 'application/json'
+#        auth: apikey
+#        apikey: ''
 #
 #App\Entity\Action:
 #    SyncPubAction:
@@ -713,3 +720,51 @@
 #                translationsIn: {}
 #                translationsOut: {}
 #                skeletonIn: {}
+#
+#    SyncEmployeeElasticSearch:
+#        name: SyncEmployeeElasticAction
+#        description: This is a synchronisation for the medewerkerscollection to Elastic
+#        listens:
+#            - 'commongateway.object.create'
+#            - 'commongateway.object.update'
+#        throws: []
+#        conditions:
+#            '==': [1,1]
+#        class: App\ActionHandler\SynchronizationUpdateHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            eavObject: ''
+#            source: ''
+#            location: /api/as/v1/engines/kiss-engine/documents
+#            apiSource:
+#                locationObjects: '#'
+#                locationTotalCount: ''
+#                idField: '0.id'
+#                dateChangedField: ''
+#                results: 0
+#                queryMethod: page
+#                syncFromList: true
+#                sourceLeading: false
+#                mappingIn: {}
+#                mappingOut: 
+#                    body_content: "object | array"
+#                    title: "user.firstName+user.prefixLastname+user.lastName | concatenation &nbsp;"
+#                    object: "object | array"
+#                    object_meta: "function+department+skills | concatenation <identity('<br/>')>"
+#                translationsIn: {}
+#                translationsOut: {}
+#                skeletonIn: {}
+#                skeletonOut: 
+#                     object_bron: Smoelenboek
+#                     title: medewerker
+#                unavailablePropertiesOut:
+#                    - calendar
+#                    - contact
+#                    - department
+#                    - description
+#                    - function
+#                    - replacement
+#                    - skills
+#                prefixFieldsOut:
+#                    id: smoelenboek_
