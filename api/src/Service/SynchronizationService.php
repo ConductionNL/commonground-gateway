@@ -30,6 +30,8 @@ class SynchronizationService
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
+    private array $configuration;
+
 
     /**
      * @param CommonGroundService    $commonGroundService
@@ -57,7 +59,56 @@ class SynchronizationService
         $this->objectEntityService = $objectEntityService;
         $this->objectEntityService->addServices($eavService->getValidationService(), $eavService);
         $this->validatorService = $validatorService;
+        $this->configuration = [];
     }
+
+    /*
+     *
+     */
+    public function SynchronizationItemHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+
+        return $data;
+    }
+
+    /*
+     *
+     */
+    public function SynchronizationWebhookHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $sourceObject = [];
+
+
+        // Checks verplaatsen naar de handler
+        if(in_array("sourceId", $configuration) || in_array("entityId", $configuration) || in_array("idLocation", $configuration)){
+            // thro gateway error
+        }
+
+        $gateway = $this->entityManager->getRepository('App:Entity')->get($this->configuration['sourceId']);
+        $entity = $this->entityManager->getRepository('App:Gateway')->get($this->configuration['entityId']);
+
+        // Aan de hand van location id de id uit $datah halen
+        $id = .....
+
+        // If we have a complete object we can use that to sync
+        if(in_array("objectLocation", $configuration)){
+            $sourceObject = /// get from data aan de hand van object location
+        }
+
+        // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
+        $sync = $this->findSyncBySource($gateway, $entity, $id);
+
+        // Lets sync (returns the Synchronization object)
+        $sync = $this->handleSync($sync, $configuration, $sourceObject);
+
+        $this->entityManager->persist($sync);
+        $this->entityManager->flush();
+
+        return $data;
+    }
+
 
     /**
      * Gets all objects from the source according to configuration.
@@ -71,6 +122,8 @@ class SynchronizationService
      */
     public function getAllFromSource(array $data, array $configuration): array
     {
+        $this->configuration = $configuration;
+
         // todo: i think we need the Action here, because we need to set it with $sync->setAction($action) later...
         // todo: if we do this, some functions that have $sync no longer need $configuration because we can do: $sync->getAction()->getConfiguration()
         $gateway = $this->getSourceFromAction($configuration);
@@ -97,8 +150,12 @@ class SynchronizationService
 //            $sync = $this->findSyncByObject($object, $gateway, $entity);
 
             // Lets sync (returns the Synchronization object)
-            $result = $this->handleSync($sync, $configuration, $result);
-            $this->entityManager->persist($result);
+            if(in_array('useDataFromCollection', $this->configuration) and !$this->configuration['useDataFromCollection']){
+                $result = [];
+            }
+            $sync = $this->handleSync($sync, $configuration, $result);
+
+            $this->entityManager->persist($sync);
             $this->entityManager->flush();
         }
 
@@ -377,7 +434,11 @@ class SynchronizationService
     private function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
+
+        // If we don't have an sourced object, we need to get one
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization, $configuration);
+        // @todo vraag aan robert hoe gaat ?: met lege array
+
         $synchronization = $this->setLastChangedDate($synchronization, $configuration, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly

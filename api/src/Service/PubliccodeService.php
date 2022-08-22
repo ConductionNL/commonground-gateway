@@ -142,7 +142,7 @@ class PubliccodeService
                 $organisation = New ObjectEntity();
                 $organisation->setEntity($entity);
                 $organisation->setValue('name',$github['organisation']['name']);
-                 /// etc voor logoe bla bla
+                 /// etc voor logo en andere waarden bla bla
                 $organisation->setValue('github',$github['organisation']['url']);
 
                 return $organisation;

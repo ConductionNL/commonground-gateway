@@ -8,7 +8,7 @@
 #        throws: []
 #        conditions: 
 #            '==': [1, 1]
-#        class: App\ActionHandler\SynchronizationHandler
+#        class: App\ActionHandler\SynchronizationCollectionHandler
 #        priority: 0
 #        async: false
 #        configuration:
