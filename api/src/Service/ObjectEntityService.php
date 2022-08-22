@@ -100,17 +100,16 @@ class ObjectEntityService
     }
 
     /**
-     * Dispatches an event for CRUD actions
+     * Dispatches an event for CRUD actions.
      *
-     * @param   string  $type   The type of event to dispatch
-     * @param   array   $data   The data that should in the event
+     * @param string $type The type of event to dispatch
+     * @param array  $data The data that should in the event
      */
     public function dispatchEvent(string $type, array $data): void
     {
         $event = new ActionEvent($type, $data);
         $this->eventDispatcher->dispatch($event, $type);
     }
-
 
     /**
      * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
