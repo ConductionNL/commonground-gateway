@@ -7,7 +7,7 @@ use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class SynchronizationUpdateHandler implements ActionHandlerInterface
+class SynchronizationPushHandler implements ActionHandlerInterface
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
