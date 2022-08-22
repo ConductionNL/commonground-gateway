@@ -14,10 +14,8 @@ class SynchronizationUpdateHandler implements ActionHandlerInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $entityManager = $container->get('doctrine.orm.entity_manager');
         $synchronizationService = $container->get('synchronizationservice');
-        if ($entityManager instanceof EntityManagerInterface && $synchronizationService instanceof SynchronizationService) {
-            $this->entityManager = $entityManager;
+        if ($synchronizationService instanceof SynchronizationService) {
             $this->synchronizationService = $synchronizationService;
         } else {
             throw new GatewayException('The service container does not contain the required services for this handler');
