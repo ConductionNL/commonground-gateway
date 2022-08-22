@@ -5,7 +5,7 @@ namespace App\ActionHandler;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
-use App\Service\PubliccodeService;
+use App\Service\PubliccodeOldService;
 use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface;
 class GithubSyncHandler implements ActionHandlerInterface
 {
     private EntityManagerInterface $entityManager;
-    private PubliccodeService $publiccodeService;
+    private PubliccodeOldService $publiccodeOldService;
     private SynchronizationService $synchronizationService;
 
     public function __construct(ContainerInterface $container)
@@ -23,7 +23,7 @@ class GithubSyncHandler implements ActionHandlerInterface
         $synchronizationService = $container->get('synchronizationservice');
         if ($entityManager instanceof EntityManagerInterface) {
             $this->entityManager = $entityManager;
-            $this->publiccodeService = $publiccodeService;
+            $this->publiccodeOldService = $publiccodeService;
             $this->synchronizationService = $synchronizationService;
         } else {
             throw new GatewayException('The service container does not contain the required services for this handler');
@@ -32,6 +32,8 @@ class GithubSyncHandler implements ActionHandlerInterface
 
     /**
      * This function creates or updates an object entity.
+     *
+     * @todo this function always creates an object entity -> don't set a new object if its an put
      *
      * @param array             $data
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
@@ -176,7 +178,7 @@ class GithubSyncHandler implements ActionHandlerInterface
             $url = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
             $domain = parse_url($url, PHP_URL_HOST);
             $domain == 'github.com' ? $slug = trim(parse_url($url, PHP_URL_PATH), '/') : $slug = null;
-            $slug !== null && $organization = $this->publiccodeService->getGithubRepository($slug);
+            $slug !== null && $organization = $this->publiccodeOldService->getGithubRepository($slug);
         }
 
         return $organization;
