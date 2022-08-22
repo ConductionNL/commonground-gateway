@@ -181,8 +181,9 @@ class FunctionService
      * @param ObjectEntity      $objectEntity The ObjectEntity to remove saved results for from the cache.
      * @param SymfonyStyle|null $io           If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
      *
-     * @return bool
      * @throws InvalidArgumentException
+     *
+     * @return bool
      */
     public function removeResultFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io = null): bool
     {
@@ -204,11 +205,12 @@ class FunctionService
      * Always use $this->functionService->removeResultFromCache = []; before using removeResultFromCache() function to reset the list of objects that already got removed from cache.
      * If removeResultFromCache() function is called multiple times in a row it might be better to do this before a loop or starting a recursive function.
      *
-     * @param ObjectEntity $objectEntity The ObjectEntity to remove saved results of parent objects for from the cache.
-     * @param SymfonyStyle|null $io If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
+     * @param ObjectEntity      $objectEntity The ObjectEntity to remove saved results of parent objects for from the cache.
+     * @param SymfonyStyle|null $io           If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
+     *
+     * @throws InvalidArgumentException
      *
      * @return void
-     * @throws InvalidArgumentException
      */
     private function removeParentResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
     {
