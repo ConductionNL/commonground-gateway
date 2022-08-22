@@ -102,10 +102,10 @@ class TranslationService
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
             } elseif (strpos($format, 'concatenation') !== false) {
-                $separator = substr($format, strlen('concatenation')+1);
+                $separator = substr($format, strlen('concatenation') + 1);
                 $searches = explode('+', $search);
                 $result = '';
-                foreach($searches as $subSearch) {
+                foreach ($searches as $subSearch) {
                     $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
                     $result .= isset($source[$subSearch]) ? ($result !== '' ? $separator.$value : $value) : '';
                 }
@@ -267,6 +267,7 @@ class TranslationService
         if ($translate) {
             $subject = strtr($subject, $this->translationVariables($translationVariables));
         }
+
         return $subject;
     }
 
@@ -281,6 +282,7 @@ class TranslationService
             foreach ($data as $key => $value) {
                 $result[$this->addPrefix($key, $prefix)] = is_array($value) ? $this->addPrefix($value, $prefix) : $value;
             }
+
             return $result;
         } else {
             return $prefix.$data;

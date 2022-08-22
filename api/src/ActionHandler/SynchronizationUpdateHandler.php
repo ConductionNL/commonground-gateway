@@ -24,10 +24,10 @@ class SynchronizationUpdateHandler implements ActionHandlerInterface
         }
     }
 
-
     public function __run(array $data, array $configuration): array
     {
         $this->synchronizationService->getAllForObjects($data, $configuration);
+
         return $data;
     }
 }
