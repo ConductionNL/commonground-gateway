@@ -702,8 +702,8 @@
 #            apiSource:
 #                locationObjects: '#'
 #                locationTotalCount: '#'
-#                idField: id
-#                dateChangedField: modified_gmt
+#                locationIdField: id
+#                locationDateChangedField: modified_gmt
 #                results: 0
 #                queryMethod: page
 #                syncFromList: true

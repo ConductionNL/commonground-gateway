@@ -18,8 +18,8 @@
 #            apiSource:
 #                locationObjects: '#'
 #                locationTotalCount: '#'
-#                idField: id
-#                dateChangedField: dateModified
+#                locationIdField: id
+#                locationDateChangedField: dateModified
 #                results: 30
 #                queryMethod: page
 #                syncFromList: true

@@ -148,7 +148,7 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($this->configuration['apiSource']['idField']);
+            $id = $dot->get($this->configuration['apiSource']['locationIdField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
             $result = $dot->get($this->configuration['apiSource']['locationObjects'], $result);
@@ -232,7 +232,7 @@ class SynchronizationService
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway),
-            'query'     => array_key_exists('sourceLimit', $this->configuration) ? ['limit' => $this->configuration['sourceLimit']] : [],
+            'query'     => array_key_exists('sourceLimit', $this->configuration) ? ['limit' => $this->configuration['apiSource']['sourceLimit']] : [],
             'headers'   => $gateway->getHeaders(),
         ];
     }
@@ -311,7 +311,7 @@ class SynchronizationService
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-//        $id = $dot->get($this->configuration['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
+//        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
         return $dot->get($this->configuration['apiSource']['locationObject'], $result);
@@ -405,8 +405,8 @@ class SynchronizationService
     {
         $hash = hash('sha384', serialize($sourceObject));
         $dot = new Dot($sourceObject);
-        if (isset($this->configuration['apiSource']['dateChangedField'])) {
-            $lastChanged = $dot->get($this->configuration['apiSource']['dateChangedField']);
+        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
+            $lastChanged = $dot->get($this->configuration['apiSource']['locationDateChangedField']);
             $synchronization->setSourcelastChanged(new \DateTime($lastChanged));
         } elseif ($synchronization->getHash() != $hash) {
             $lastChanged = new \DateTime();
@@ -436,7 +436,6 @@ class SynchronizationService
 
         // If we don't have an sourced object, we need to get one
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
-        // @todo vraag aan robert hoe gaat ?: met lege array
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
@@ -568,8 +567,8 @@ class SynchronizationService
 
         $externObjectDot = new Dot($externObject);
 
-        if (isset($this->configuration['apiSource']['dateChangedField'])) {
-            $object->setDateModified(new DateTime($externObjectDot->get($this->configuration['apiSource']['dateChangedField'])));
+        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
+            $object->setDateModified(new DateTime($externObjectDot->get($this->configuration['apiSource']['locationDateChangedField'])));
         }
         $object = $this->populateObject($externObject, $object);
 
