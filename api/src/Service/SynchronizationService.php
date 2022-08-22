@@ -628,10 +628,10 @@ class SynchronizationService
      *
      * @return array The data from the action modified by the execution of the synchronisation
      */
-    public function getAllForObjects(array $data, array $configuration): array
+    public function synchronisationPushHandler(array $data, array $configuration): array
     {
-        $entity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $configuration['eavObject']]);
-        $source = $this->entityManager->getRepository(Gateway::class)->findOneBy(['id' => $configuration['source']]);
+        $source = $this->getSourceFromAction($configuration);
+        $entity = $this->getEntityFromAction($configuration);
 
         if (!($entity instanceof Entity)) {
             return $data;
