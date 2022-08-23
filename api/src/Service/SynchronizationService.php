@@ -187,7 +187,7 @@ class SynchronizationService
      */
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().$configuration['location'].($id && !($configuration['apiSource']['updateUrlWithoutId'])? '/'.$id : '');
+        return $gateway->getLocation().$configuration['location'].($id && !($configuration['apiSource']['updateUrlWithoutId']) ? '/'.$id : '');
     }
 
     /**

@@ -554,7 +554,6 @@ class ObjectEntityService
         }
         $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
 
-
         return $data;
     }
 
