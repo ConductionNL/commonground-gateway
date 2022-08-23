@@ -103,7 +103,7 @@ class TranslationService
                 $destination[$replace] = $datum->format('Y-m-d');
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);
-                $separator = str_replace('&nbsp', ' ', $separator);
+                $separator = str_replace('&nbsp;', ' ', $separator);
                 $searches = explode('+', $search);
                 $result = '';
                 foreach ($searches as $subSearch) {
