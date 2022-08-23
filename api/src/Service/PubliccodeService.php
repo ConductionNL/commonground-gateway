@@ -9,6 +9,7 @@ use App\Service\GithubService;
 use App\Service\GitlabService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Yaml;
 
 class PubliccodeService
 {
@@ -59,7 +60,7 @@ class PubliccodeService
         }
 
         // If we want to do it for al repositiries
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
+        $entity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['repositoryEntityId']);;
         foreach ($entity->getObjectEntities() as $repository) {
 
             // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
@@ -86,9 +87,48 @@ class PubliccodeService
     {
         $this->configuration = $configuration;
 
+        // Load from config
+        $gateway = $this->entityManager->getRepository('App:Entity')->get($this->configuration['sourceId']);
+        $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
+        $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
+        $entity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['repositoryEntityId']);
+
         // Let see if it is one or alle organisations
         if(!empty($data)){ // it is one organisation
+            // Heb ik een id?
 
+            // trycatch
+            $organisation = $this->objectEntityService->getObject($data['id']);
+
+            // Get organisation from github
+            $organisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+
+            // Even kijken of dit kliopt met github object
+            foreach($organisation['repositories'] as $repository){
+                // Creat a sync trough not finding it
+                $sync = $this->findSyncBySource($gateway, $entity ,$repository['id']);
+
+                // activate sync to pull in data
+                $sync = $this->handleSync($sync, $githubRepositoryActionId->getConfiguration(), $repository);
+            }
+
+        }
+
+        // If we want to do it for al repositiries
+        $entity = $this->entityManager->getRepository('App:Entity')->get($this->configuration['organisationEntityId']);
+        foreach ($entity->getObjectEntities() as $organisation) {
+
+            // Get organisation from github
+            $organisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+
+            // Even kijken of dit kliopt met github object
+            foreach($organisation['repositories'] as $repository){
+                // Creat a sync trough not finding it
+                $sync = $this->findSyncBySource($gateway, $entity ,$repository['id']);
+
+                // activate sync to pull in data
+                $sync = $this->handleSync($sync, $githubRepositoryActionId->getConfiguration(), $repository);
+            }
         }
     }
 
@@ -98,9 +138,48 @@ class PubliccodeService
      *
      * @return array dataset at the end of the handler
      */
-    public function publiccodeCheckForPublicCodeHandler(array $data, array $configuration): array
+    public function publiccodeCheckRepositoriesForPublicCodeHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['componentEntityId']);
+
+        if(!empty($data)){ // it is one organisation
+            // Heb ik een id?
+
+            // trycatch
+            $repository = $this->objectEntityService->getObject($data['id']);
+
+            if(!$component = $repository->GetValueOnAtribute('component')){
+                $component = New ObjectEntity();
+                $component->setEntity($componentEntity);
+                $component->setValue('repository',$repository);
+                $component->setValue('name',$repository['name']);
+                $component->setValue('url',$repository['url']);
+            }
+
+            switch ($repository['source']){
+                case 'github':
+                    //@todo zouden we via een sync moeten willen. Dus na hier negeren
+                    if($file = $this->githubService->getRepositoryFileFromUrl($repository['url'], 'publiccode.yaml'));
+                    {
+                        $yamlPubliccode = decode($file['content']);
+                        $component = $this->parsePubliccodeToComponent(Yaml::parse($yamlPubliccode), $repository->GetValueOnAtribute('component'));
+                        // @todosave component
+                    }
+                case 'gitlab':
+
+                default:
+                    //@todo gooi error
+            }
+
+        }
+
+        // If we want to do it for al repositiries
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
+        foreach ($entity->getObjectEntities() as $repository) {
+
+        }
 
     }
 
@@ -113,6 +192,25 @@ class PubliccodeService
     public function publiccodeRatingHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        if(!empty($data)){ // it is one organisation
+            // Heb ik een id?
+
+            // trycatch
+            $component = $this->objectEntityService->getObject($data['id']);
+
+            $component = $this->rateComponent($component);
+
+            // @todosave component
+        }
+
+        // If we want to do it for al repositiries
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
+        foreach ($entity->getObjectEntities() as $component) {
+
+            $component = $this->rateComponent($component);
+
+            // @todosave component
+        }
 
     }
 
@@ -142,7 +240,7 @@ class PubliccodeService
                 $organisation = New ObjectEntity();
                 $organisation->setEntity($entity);
                 $organisation->setValue('name',$github['organisation']['name']);
-                 /// etc voor logoe bla bla
+                 /// etc voor logo en andere waarden bla bla
                 $organisation->setValue('github',$github['organisation']['url']);
 
                 return $organisation;
@@ -152,4 +250,30 @@ class PubliccodeService
                 // error voor onbeknd type
         };
     }
+
+    /*
+     * Concerts publiccodefiles to components
+     */
+    public function parsePubliccodeToComponent(array $publicode, ObjectEntity $component): ObjectEntity
+    {
+
+    }
+
+    /*
+     * Rates a component
+     */
+    public function rateComponent(ObjectEntity $component): ObjectEntity
+    {
+        $component = $component->toArray();
+        $rating = 1;
+
+        if(in_array['name'],$component)){
+            $rating ++;
+        }
+
+        //@todo checks doornemen
+
+        return $component;
+    }
+
 }
