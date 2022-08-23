@@ -26,7 +26,7 @@ class PubliccodeOldService
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $parameterBag,
-        SerializerInterface $serializer,
+        SerializerInterface $serializer
     ) {
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;

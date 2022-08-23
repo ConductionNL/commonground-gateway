@@ -28,7 +28,8 @@ class ActionRepository extends ServiceEntityRepository
     {
         $query = $this->createQueryBuilder('a')
             ->andWhere('a.listens LIKE :listen')
-            ->setParameter('listen', "%$listen%");
+            ->setParameter('listen', "%$listen%")
+            ->orderBy('a.priority', 'ASC');
 
         return $query->getQuery()->getResult();
     }
