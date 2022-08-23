@@ -108,7 +108,7 @@ class TranslationService
                 $result = '';
                 foreach ($searches as $subSearch) {
                     $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
-                    $result .= isset($source[$subSearch]) ? ($result != '' ? $separator.$value : $value) : '';
+                    $result .= isset($source[$subSearch]) ? ($value != '' ? $separator.$value : $value) : '';
                 }
                 $destination[$replace] = $result ?: $destination[$replace];
             }
