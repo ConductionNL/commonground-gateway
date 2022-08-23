@@ -187,7 +187,7 @@ class SynchronizationService
      */
     private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
     {
-        return $gateway->getLocation().$configuration['location'].($id ? '/'.$id : '');
+        return $gateway->getLocation().$configuration['location'].($id && !($configuration['apiSource']['updateUrlWithoutId']) ? '/'.$id : '');
     }
 
     /**
@@ -519,12 +519,12 @@ class SynchronizationService
 
         $result = $this->commonGroundService->callService(
             $this->gatewayService->gatewayToArray($synchronization->getGateway()),
-            $this->getUrlForSource($synchronization->getGateway(), $configuration),
+            $this->getUrlForSource($synchronization->getGateway(), $configuration, $existsInSource ? $object->getId() : null),
             json_encode($objectArray),
             [],
             $synchronization->getGateway()->getHeaders(),
             false,
-            $existsInSource ? 'PUT' : 'POST'
+            $existsInSource ? ($configuration['apiSource']['updateMethod'] ?? 'PUT') : 'POST'
         );
 
         if (is_array($result)) {
