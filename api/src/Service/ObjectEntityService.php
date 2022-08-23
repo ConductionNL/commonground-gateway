@@ -541,6 +541,7 @@ class ObjectEntityService
 
         $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
 
+        $object->setDateModified(new \DateTime());
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
@@ -552,6 +553,7 @@ class ObjectEntityService
             $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
         }
         $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
+
 
         return $data;
     }
