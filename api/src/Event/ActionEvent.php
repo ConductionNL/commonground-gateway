@@ -11,6 +11,10 @@ class ActionEvent extends Event
         'commongateway.handler.pre',
         'commongateway.handler.post',
         'commongateway.cronjob.trigger',
+        'commongateway.object.create',
+        'commongateway.object.read',
+        'commongateway.object.update',
+        'commongateway.object.delete',
     ];
 
     protected string $type;

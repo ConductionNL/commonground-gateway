@@ -10,6 +10,7 @@ use App\Entity\Handler;
 use App\Entity\ObjectEntity;
 use App\Entity\Unread;
 use App\Entity\Value;
+use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
 use App\Security\User\AuthenticationUser;
@@ -26,6 +27,7 @@ use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -53,6 +55,7 @@ class ObjectEntityService
     private GatewayService $gatewayService;
     private LogService $logService;
     private ConvertToGatewayService $convertToGatewayService;
+    private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
 
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
@@ -73,7 +76,8 @@ class ObjectEntityService
         MessageBusInterface $messageBus,
         GatewayService $gatewayService,
         TranslationService $translationService,
-        LogService $logService
+        LogService $logService,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->security = $security;
         $this->request = $requestStack->getCurrentRequest() ?: new Request();
@@ -92,6 +96,19 @@ class ObjectEntityService
         $this->logService = $logService;
         $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus, $translationService);
         $this->notifications = [];
+        $this->eventDispatcher = $eventDispatcher;
+    }
+
+    /**
+     * Dispatches an event for CRUD actions.
+     *
+     * @param string $type The type of event to dispatch
+     * @param array  $data The data that should in the event
+     */
+    public function dispatchEvent(string $type, array $data): void
+    {
+        $event = new ActionEvent($type, $data);
+        $this->eventDispatcher->dispatch($event, $type);
     }
 
     /**
@@ -404,7 +421,7 @@ class ObjectEntityService
     {
         if ($object instanceof ObjectEntity) {
             !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
-            $fields['_dateRead'] = $fields['_dateRead'] ? 'getItem' : false;
+            $fields['_dateRead'] = isset($fields['_dateRead']) ? 'getItem' : false;
             $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
 
             $object->getHasErrors() ?? $data['validationServiceErrors'] = [
@@ -600,6 +617,7 @@ class ObjectEntityService
         switch ($method) {
             case 'GET':
                 $data = $this->getCase($id, $data, $method, $entity, $endpoint, $acceptType);
+                $this->dispatchEvent('commongateway.object.read', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'POST':
             case 'PUT':
@@ -613,9 +631,11 @@ class ObjectEntityService
                 }
 
                 $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
+                $this->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'DELETE':
                 $data = $this->deleteCase($id, $data, $method, $entity);
+                $this->dispatchEvent('commongateway.object.delete', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             default:
                 throw new GatewayException('This method is not allowed', null, null, ['data' => ['method' => $method], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
@@ -640,6 +660,7 @@ class ObjectEntityService
      */
     public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
+
         // If type is array application is an error
         $application = $this->applicationService->getApplication();
         if (gettype($application) === 'array') {
