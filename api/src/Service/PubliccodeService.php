@@ -6,14 +6,8 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
-use App\Service\GithubApiService;
-use App\Service\GitlabApiService;
-use App\Service\ObjectEntityService;
-use App\Service\SynchronizationService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Container\ContainerInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Yaml;
 
 class PubliccodeService
@@ -28,11 +22,10 @@ class PubliccodeService
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService    $objectEntityService,
-        GithubApiService       $githubService,
-        GitlabApiService       $gitlabService
-    )
-    {
+        ObjectEntityService $objectEntityService,
+        GithubApiService $githubService,
+        GitlabApiService $gitlabService
+    ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
@@ -43,6 +36,7 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $repository the repository where we want to find an organisation for
+     *
      * @throws \Exception
      */
     public function getOrganisationFromRepository(ObjectEntity $repository): ?ObjectEntity
@@ -71,15 +65,17 @@ class PubliccodeService
                 // hetelfde maar dan voor gitlab
             default:
                 // error voor onbeknd type
-        };
+        }
 
         return null;
     }
 
     /**
      * @param ObjectEntity $repository
-     * @return void dataset at the end of the handler
+     *
      * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return void dataset at the end of the handler
      */
     public function saveOrganisationToRepository(ObjectEntity $repository): void
     {
@@ -90,6 +86,7 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $repository
+     *
      * @return bool dataset at the end of the handler
      */
     public function checkRepositoryOrganisation(ObjectEntity $repository): bool
@@ -100,17 +97,17 @@ class PubliccodeService
             // There is alread an orangisation so we dont need to do anything
             return true;
         }
+
         return false;
     }
 
     /**
-     *
-     *
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws \Psr\Cache\InvalidArgumentException
+     *
+     * @return array dataset at the end of the handler
      */
     public function publiccodeFindOrganisationsTroughRepositoriesHandler(array $data, array $configuration): array
     {
@@ -146,21 +143,23 @@ class PubliccodeService
     }
 
     /**
-     * @param Gateway $source
-     * @param Entity $entity
+     * @param Gateway      $source
+     * @param Entity       $entity
      * @param ObjectEntity $githubOrganisations
-     * @return void dataset at the end of the handler
+     *
      * @throws GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return void dataset at the end of the handler
      */
     public function syncRepositoriesFromOrganisation(Gateway $source, Entity $entity, ObjectEntity $githubOrganisations): void
     {
         // Even kijken of dit klopt met github object
-        foreach($githubOrganisations as $repository){
+        foreach ($githubOrganisations as $repository) {
             // Creat a sync trough not finding it
-            $sync = $this->synchronizationService->findSyncBySource($source, $entity ,$repository['id']);
+            $sync = $this->synchronizationService->findSyncBySource($source, $entity, $repository['id']);
 
             // activate sync to pull in data
             $sync = $this->synchronizationService->handleSync($sync, $repository);
@@ -171,11 +170,12 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @return array dataset at the end of the handler
      */
     public function publiccodeFindRepositoriesThroughOrganisationsHandler(array $data, array $configuration): array
     {
@@ -189,7 +189,7 @@ class PubliccodeService
         $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
 
         // Let see if it is one or alle organisations
-        if(!empty($data)){ // it is one organisation
+        if (!empty($data)) { // it is one organisation
             // Heb ik een id?
 
             // trycatch
@@ -212,7 +212,7 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
@@ -223,50 +223,47 @@ class PubliccodeService
         $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
         $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
-        if(!empty($data)){ // it is one organisation
+        if (!empty($data)) { // it is one organisation
             // Heb ik een id?
 
             // trycatch
             $repository = $this->objectEntityService->getObject($data['id']);
 
-            if(!$component = $repository->GetValueOnAtribute('component')){
-                $component = New ObjectEntity();
+            if (!$component = $repository->GetValueOnAtribute('component')) {
+                $component = new ObjectEntity();
                 $component->setEntity($componentEntity);
                 $component = $this->synchronizationService->populateObject(null, $component, 'POST');
             }
 
-            switch ($repository['source']){
+            switch ($repository['source']) {
                 case 'github':
                     //@todo zouden we via een sync moeten willen. Dus na hier negeren
-                    if($file = $this->githubService->getRepositoryFileFromUrl($repository['url'], 'publiccode.yaml'));
-                    {
+                    if ($file = $this->githubService->getRepositoryFileFromUrl($repository['url'], 'publiccode.yaml'));
+
                         $yamlPubliccode = decode($file['content']);
                         $component = $this->parsePubliccodeToComponent(Yaml::parse($yamlPubliccode), $repository->GetValueOnAtribute('component'));
                         // @todosave component
-                    }
+
                 case 'gitlab':
 
                 default:
                     //@todo gooi error
             }
-
         }
 
         // If we want to do it for al repositories
         foreach ($entity->getObjectEntities() as $repository) {
-
             $existingComponentId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('component'))->getStringValue();
             if ($existingComponentId && $existingComponent = $this->entityManager->getRepository('App:ObjectEntity')->find($existingComponentId)) {
-                $component = New ObjectEntity();
+                $component = new ObjectEntity();
                 $component->setEntity($componentEntity);
                 $component = $this->synchronizationService->populateObject($existingComponent, $component, 'POST');
             }
         }
-
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
@@ -274,7 +271,7 @@ class PubliccodeService
     public function publiccodeRatingHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
-        if(!empty($data)){ // it is one organisation
+        if (!empty($data)) { // it is one organisation
             // Heb ik een id?
 
             // trycatch
@@ -288,23 +285,17 @@ class PubliccodeService
         // If we want to do it for al repositiries
         $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
         foreach ($entity->getObjectEntities() as $component) {
-
             $component = $this->rateComponent($component);
 
             // @todosave component
         }
-
     }
-
-
-
 
     /*
      * Concerts publiccodefiles to components
      */
     public function parsePubliccodeToComponent(array $publicode, ObjectEntity $component): ObjectEntity
     {
-
     }
 
     /*
@@ -323,5 +314,4 @@ class PubliccodeService
 
         return $component;
     }
-
 }

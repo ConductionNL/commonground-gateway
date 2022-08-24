@@ -2,14 +2,10 @@
 
 namespace App\Service;
 
-use App\Entity\ObjectEntity;
-use App\Service\ObjectEntityService;
-use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -82,19 +78,19 @@ class GithubApiService
     public function getGithubRepositoryInfo(array $item): array
     {
         return [
-            'source'        => 'github',
-            'name'        => $item['name'],
-            'url'   => $item['html_url'],
-            'avatar_url' => $item['owner']['avatar_url'],
-            'last_change'    => $item['updated_at'],
-            'stars'     => $item['stargazers_count'],
-            'fork_count'       => $item['forks_count'],
+            'source'                  => 'github',
+            'name'                    => $item['name'],
+            'url'                     => $item['html_url'],
+            'avatar_url'              => $item['owner']['avatar_url'],
+            'last_change'             => $item['updated_at'],
+            'stars'                   => $item['stargazers_count'],
+            'fork_count'              => $item['forks_count'],
             'issue_open_count'        => $item['open_issues_count'],
-//            'merge_request_open_count'   => $this->requestFromUrl($item['merge_request_open_count']),
+            //            'merge_request_open_count'   => $this->requestFromUrl($item['merge_request_open_count']),
             'programming_languages'   => $this->requestFromUrl($item['languages_url']),
-            'organisation' => $this->getGithubOwnerInfo($item)
-//            'topics' => $this->requestFromUrl($item['topics'], '{/name}'),
-//                'related_apis' => //
+            'organisation'            => $this->getGithubOwnerInfo($item),
+            //            'topics' => $this->requestFromUrl($item['topics'], '{/name}'),
+            //                'related_apis' => //
         ];
     }
 
@@ -117,6 +113,7 @@ class GithubApiService
             $response = $this->github->request('GET', 'repos/'.$slug);
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
+
             return new Response(
                 $exception,
                 Response::HTTP_BAD_REQUEST,
@@ -129,12 +126,8 @@ class GithubApiService
         return $this->getGithubRepositoryInfo($response);
     }
 
-
-    /**
-     */
     public function getRepositoryFileFromUrl(string $url): array
     {
-
         return [];
     }
 
@@ -187,13 +180,13 @@ class GithubApiService
             'logo'        => $item['owner']['avatar_url'] ?? null,
             'supports'    => null,
             'owns'        => $this->getGithubOwnerRepositories($item['owner']['repos_url']),
-            'uses'    => null,
-            'token'   => null,
-            'github'  => $item['owner']['html_url'] ?? null,
-            'gitlab'  => null,
-            'website' => null,
-            'phone'   => null,
-            'email'   => null,
+            'uses'        => null,
+            'token'       => null,
+            'github'      => $item['owner']['html_url'] ?? null,
+            'gitlab'      => null,
+            'website'     => null,
+            'phone'       => null,
+            'email'       => null,
         ];
     }
 
