@@ -93,7 +93,7 @@ class PubliccodeService
     {
         // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
         $existingOrganisationId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('organisation'))->getStringValue();
-        if ($existingOrganisationId && $existingOrganisation = $this->entityManager->getRepository('App:ObjectEntity')->find($existingOrganisationId)) {
+        if ($existingOrganisationId && $this->entityManager->getRepository('App:ObjectEntity')->find($existingOrganisationId)) {
             // There is alread an orangisation so we dont need to do anything
             return true;
         }
