@@ -8,18 +8,18 @@
 #        throws: []
 #        conditions: 
 #            '==': [1, 1]
-#        class: App\ActionHandler\SynchronizationHandler
+#        class: App\ActionHandler\SynchronizationCollectionHandler
 #        priority: 0
 #        async: false
 #        configuration:
-#            eavObject: 04b8f5ec-65f0-4fed-aff4-57228e373614
+#            entity: 04b8f5ec-65f0-4fed-aff4-57228e373614
 #            source: /admin/gateways/{uuid}
 #            location: /zaken
 #            apiSource:
 #                locationObjects: '#'
-#                locationTotalCount: '#'
-#                idField: id
-#                dateChangedField: dateModified
+#                locationObject: '#'
+#                locationIdField: id
+#                locationDateChangedField: dateModified
 #                results: 30
 #                queryMethod: page
 #                syncFromList: true

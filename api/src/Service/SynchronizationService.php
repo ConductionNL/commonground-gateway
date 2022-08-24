@@ -30,6 +30,8 @@ class SynchronizationService
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
+    private array $configuration;
+
 
     /**
      * @param CommonGroundService    $commonGroundService
@@ -57,6 +59,60 @@ class SynchronizationService
         $this->objectEntityService = $objectEntityService;
         $this->objectEntityService->addServices($eavService->getValidationService(), $eavService);
         $this->validatorService = $validatorService;
+        $this->configuration = [];
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $data
+     * @param array $configuration
+     *
+     * @return array
+     */
+    public function SynchronizationItemHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+
+        return $data;
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $data
+     * @param array $configuration
+     *
+     * @return array
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     */
+    public function SynchronizationWebhookHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $sourceObject = [];
+
+        $gateway = $this->getSourceFromConfig();
+        $entity = $this->getEntityFromConfig();
+
+        // Dot the data array and try to find id in it
+        $dot = new Dot($data);
+        $id = $dot->get($this->configuration['apiSource']['locationIdField']);
+
+        // If we have a complete object we can use that to sync
+        if (array_key_exists('locationObject', $this->configuration)) {
+            $sourceObject = $dot->get($this->configuration['apiSource']['locationObject'], $data); // todo should default be $data or [] ?
+        }
+
+        // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
+        $sync = $this->findSyncBySource($gateway, $entity, $id);
+
+        // Lets sync (returns the Synchronization object)
+        $sync = $this->handleSync($sync, $sourceObject);
+
+        $this->entityManager->persist($sync);
+        $this->entityManager->flush();
+
+        return $data;
     }
 
     /**
@@ -69,15 +125,17 @@ class SynchronizationService
      *
      * @return array The resulting data
      */
-    public function getAllFromSource(array $data, array $configuration): array
+    public function SynchronizationCollectionHandler(array $data, array $configuration): array
     {
+        $this->configuration = $configuration;
+
         // todo: i think we need the Action here, because we need to set it with $sync->setAction($action) later...
         // todo: if we do this, some functions that have $sync no longer need $configuration because we can do: $sync->getAction()->getConfiguration()
-        $gateway = $this->getSourceFromAction($configuration);
-        $entity = $this->getEntityFromAction($configuration);
+        $gateway = $this->getSourceFromConfig();
+        $entity = $this->getEntityFromConfig();
 
         // Get json/array results based on the type of source
-        $results = $this->getObjectsFromSource($configuration, $gateway);
+        $results = $this->getObjectsFromSource($gateway);
 
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
@@ -85,10 +143,10 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($configuration['apiSource']['idField']);
+            $id = $dot->get($this->configuration['apiSource']['locationIdField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            $result = $dot->get($configuration['apiSource']['locationObjects'], $result);
+            key_exists('locationObject', $this->configuration['apiSource']) && $result = $dot->get($this->configuration['apiSource']['locationObject'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $sync = $this->findSyncBySource($gateway, $entity, $id);
@@ -97,8 +155,12 @@ class SynchronizationService
 //            $sync = $this->findSyncByObject($object, $gateway, $entity);
 
             // Lets sync (returns the Synchronization object)
-            $result = $this->handleSync($sync, $configuration, $result);
-            $this->entityManager->persist($result);
+            if (array_key_exists('useDataFromCollection', $this->configuration) and !$this->configuration['useDataFromCollection']) {
+                $result = [];
+            }
+            $sync = $this->handleSync($sync, $result);
+
+            $this->entityManager->persist($sync);
             $this->entityManager->flush();
         }
 
@@ -108,13 +170,11 @@ class SynchronizationService
     /**
      * Searches and returns the source of the configuration in the database.
      *
-     * @param array $configuration The configuration of the action running
-     *
      * @return Gateway|null The found source for the configuration
      */
-    private function getSourceFromAction(array $configuration): ?Gateway
+    private function getSourceFromConfig(): ?Gateway
     {
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $configuration['source']]);
+        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
 
         if ($source instanceof Gateway) {
             return $source;
@@ -126,13 +186,11 @@ class SynchronizationService
     /**
      * Searches and returns the entity of the configuration in the database.
      *
-     * @param array $configuration The configuration of the action running
-     *
      * @return Entity|null The found entity for the configuration
      */
-    private function getEntityFromAction(array $configuration): ?Entity
+    private function getEntityFromConfig(): ?Entity
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $configuration['eavObject']]);
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
 
         if ($entity instanceof Entity) {
             return $entity;
@@ -144,16 +202,15 @@ class SynchronizationService
     /**
      * Gets the configuration for the source and fetches the results on the source.
      *
-     * @param array   $configuration The configuration for the action running
      * @param Gateway $gateway       The source to get the data from
      *
      * @return array The results found on the source
      */
-    private function getObjectsFromSource(array $configuration, Gateway $gateway): array
+    private function getObjectsFromSource(Gateway $gateway): array
     {
-        $callServiceConfig = $this->getCallServiceConfig($configuration, $gateway);
+        $callServiceConfig = $this->getCallServiceConfig($gateway);
         // Right now there are two options, either api source is paginated or it is not
-        $results = $this->fetchObjectsFromSource($configuration, $callServiceConfig);
+        $results = $this->fetchObjectsFromSource($callServiceConfig);
 
         return $results;
     }
@@ -161,17 +218,16 @@ class SynchronizationService
     /**
      * Determines the configuration for the source given.
      *
-     * @param array   $configuration Configuration of the action running
      * @param Gateway $gateway       The source to call
      *
      * @return array The configuration for the source to call
      */
-    private function getCallServiceConfig(array $configuration, Gateway $gateway): array
+    private function getCallServiceConfig(Gateway $gateway): array
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
-            'url'       => $this->getUrlForSource($gateway, $configuration),
-            'query'     => array_key_exists('sourceLimit', $configuration) ? ['limit' => $configuration['sourceLimit']] : [],
+            'url'       => $this->getUrlForSource($gateway),
+            'query'     => array_key_exists('sourceLimit', $this->configuration) ? ['limit' => $this->configuration['apiSource']['sourceLimit']] : [],
             'headers'   => $gateway->getHeaders(),
         ];
     }
@@ -180,12 +236,11 @@ class SynchronizationService
      * Determines the URL to request.
      *
      * @param Gateway     $gateway       The source to call
-     * @param array       $configuration The configuration of the action running
      * @param string|null $id            The id to request (optional)
      *
      * @return string The resulting URL
      */
-    private function getUrlForSource(Gateway $gateway, array $configuration, string $id = null): string
+    private function getUrlForSource(Gateway $gateway, string $id = null): string
     {
         return $gateway->getLocation().$configuration['location'].($id && !($configuration['apiSource']['updateUrlWithoutId']) ? '/'.$id : '');
     }
@@ -193,13 +248,12 @@ class SynchronizationService
     /**
      * Fetches the objects stored on the source.
      *
-     * @param array $configuration     The configuration of the action running
      * @param array $callServiceConfig The configuration for the source
      * @param int   $page              The current page to be requested
      *
      * @return array
      */
-    private function fetchObjectsFromSource(array $configuration, array $callServiceConfig, int $page = 1): array
+    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
 
         // Get a single page
@@ -220,12 +274,12 @@ class SynchronizationService
         $pageResult = json_decode($response->getBody()->getContents(), true);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($configuration['apiSource']['locationObjects'], $pageResult);
+        $results = $dot->get($this->configuration['apiSource']['locationObjects'], $pageResult);
 
-        if (array_key_exists('limit', $configuration['apiSource']) && count($results) >= $configuration['apiSource']['limit']) {
-            $results = array_merge($results, $this->fetchObjectsFromSource($configuration, $callServiceConfig, $page + 1));
+        if (array_key_exists('limit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['limit']) {
+            $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
         } elseif (!empty($results) && isset($callServiceConfig['apiSource']['sourcePaginated']) && $callServiceConfig['apiSource']['sourcePaginated']) {
-            $results = array_merge($results, $this->fetchObjectsFromSource($configuration, $callServiceConfig, $page + 1));
+            $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
         }
 
         return $results;
@@ -235,14 +289,13 @@ class SynchronizationService
      * Gets a single object from the source.
      *
      * @param Synchronization $sync          The synchronisation object with the related source object id
-     * @param array           $configuration The configuration of the action running
      *
      * @return array|null The resulting object
      */
-    private function getSingleFromSource(Synchronization $sync, array $configuration): ?array
+    private function getSingleFromSource(Synchronization $sync): ?array
     {
         $component = $this->gatewayService->gatewayToArray($sync->getGateway());
-        $url = $this->getUrlForSource($sync->getGateway(), ['location' => $configuration['location']], $sync->getSourceId());
+        $url = $this->getUrlForSource($sync->getGateway(), $sync->getSourceId());
 
         // Get object form source with callservice
         $response = $this->commonGroundService->callService($component, $url, '', [], $sync->getGateway()->getHeaders(), false, 'GET');
@@ -253,10 +306,10 @@ class SynchronizationService
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-//        $id = $dot->get($configuration['sourceIdFieldLocation']); // todo, not sure if we need this here or later?
+//        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($configuration['apiSource']['locationObject'], $result);
+        return $dot->get($this->configuration['apiSource']['locationObject'], $result);
     }
 
     /**
@@ -268,7 +321,7 @@ class SynchronizationService
      *
      * @return Synchronization|null A synchronisation object related to the object in the source
      */
-    private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
+    public function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
         $sync = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source->getId(), 'entity' => $entity->getId(), 'sourceId' => $sourceId]);
 
@@ -336,19 +389,18 @@ class SynchronizationService
      * Sets the last changed date from the source object and creates a hash for the source object.
      *
      * @param Synchronization $synchronization The synchronisation object to update
-     * @param array           $configuration   The configuration from the action
      * @param array           $sourceObject    The object returned from the source
      *
      * @throws \Exception
      *
      * @return Synchronization The updated source object
      */
-    private function setLastChangedDate(Synchronization $synchronization, array $configuration, array $sourceObject): Synchronization
+    private function setLastChangedDate(Synchronization $synchronization, array $sourceObject): Synchronization
     {
         $hash = hash('sha384', serialize($sourceObject));
         $dot = new Dot($sourceObject);
-        if (isset($configuration['apiSource']['dateChangedField'])) {
-            $lastChanged = $dot->get($configuration['apiSource']['dateChangedField']);
+        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
+            $lastChanged = $dot->get($this->configuration['apiSource']['locationDateChangedField']);
             $synchronization->setSourcelastChanged(new \DateTime($lastChanged));
         } elseif ($synchronization->getHash() != $hash) {
             $lastChanged = new \DateTime();
@@ -374,13 +426,14 @@ class SynchronizationService
      */
     public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
+        // @todo to the object entity service -> because of duplicate code
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
             //@TODO: Write errors to logs
 
             foreach ($validationErrors as $error) {
-                if (strpos($error, 'must be present') !== false) {
+                if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
                 }
             }
@@ -394,15 +447,14 @@ class SynchronizationService
     /**
      * Translates the input according to the translation table referenced in the configuration of the action.
      *
-     * @param array $configuration The configuration of the action, refers to the translationTable to use
      * @param array $externObject  The external object found in the source
      *
      * @return array The translated external object
      */
-    private function translateInput($configuration, $externObject): array
+    private function translateInput(array $externObject): array
     {
         $translationsRepo = $this->entityManager->getRepository('App:Translation');
-        $translations = $translationsRepo->getTranslations($configuration['apiSource']['translationsIn']);
+        $translations = $translationsRepo->getTranslations($this->configuration['apiSource']['translationsIn']);
         if (!empty($translations)) {
             $externObject = $this->translationService->parse($externObject, true, $translations);
         }
@@ -417,7 +469,7 @@ class SynchronizationService
      *
      * @return ObjectEntity The updated ObjectEntity
      */
-    private function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
+    public function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
     {
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
@@ -540,13 +592,12 @@ class SynchronizationService
      *
      * @param Synchronization $sync          The synchronisation object to update
      * @param array           $externObject  The external object to synchronise from
-     * @param array           $configuration The configuration of the action to handle
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
      */
-    private function syncToGateway(Synchronization $sync, array $externObject, array $configuration): Synchronization
+    private function syncToGateway(Synchronization $sync, array $externObject): Synchronization
     {
         $object = $sync->getObject();
 
@@ -563,18 +614,18 @@ class SynchronizationService
 //            return $entity->getAttributeByName($propertyName);
 //        }, ARRAY_FILTER_USE_KEY);
 
-        if (array_key_exists('mappingIn', $configuration['apiSource'])) {
-            $externObject = $this->translationService->dotHydrator(isset($configuration['apiSource']['skeletonIn']) ? array_merge($configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $configuration['apiSource']['mappingIn']);
+        if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
+            $externObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($this->configuration['apiSource']['skeletonIn'], $externObject) : $externObject, $externObject, $this->configuration['apiSource']['mappingIn']);
         }
 
-        if (array_key_exists('translationsIn', $configuration['apiSource'])) {
-            $externObject = $this->translateInput($configuration, $externObject);
+        if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
+            $externObject = $this->translateInput($externObject);
         }
 
         $externObjectDot = new Dot($externObject);
 
-        if (isset($configuration['apiSource']['dateChangedField'])) {
-            $object->setDateModified(new DateTime($externObjectDot->get($configuration['apiSource']['dateChangedField'])));
+        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
+            $object->setDateModified(new DateTime($externObjectDot->get($this->configuration['apiSource']['locationDateChangedField'])));
         }
         $object = $this->populateObject($externObject, $object);
 
@@ -588,11 +639,11 @@ class SynchronizationService
      * @param array           $configuration   The configuration from the action
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
-     *
      * @return Synchronization The updated synchronisation object
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *
      */
-    private function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization, $configuration);
