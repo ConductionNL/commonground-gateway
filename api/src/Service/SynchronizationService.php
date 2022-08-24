@@ -679,8 +679,9 @@ class SynchronizationService
      */
     public function synchronisationPushHandler(array $data, array $configuration): array
     {
-        $source = $this->getSourceFromAction($configuration);
-        $entity = $this->getEntityFromAction($configuration);
+        $this->configuration = $configuration;
+        $source = $this->getSourceFromConfig();
+        $entity = $this->getEntityFromConfig();
 
         if (!($entity instanceof Entity)) {
             return $data;
