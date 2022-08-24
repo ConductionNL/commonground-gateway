@@ -42,8 +42,9 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
      *
      * @param array $configuration
      *
-     * @return void
      * @throws GatewayException
+     *
+     * @return void
      */
     private function validateConfiguration(array $configuration)
     {
@@ -51,7 +52,7 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
 //        if (!empty(array_intersect_key($configuration, array_flip(['source', 'entity', 'locationIdField'])))) {
 //
 //        }
-        if (in_array("source", $configuration) || in_array("entity", $configuration) || in_array("locationIdField", $configuration)){
+        if (in_array('source', $configuration) || in_array('entity', $configuration) || in_array('locationIdField', $configuration)) {
             throw new GatewayException('The configuration array does not match the required keys for the SynchronizationWebhookHandler', null, null, ['requiredKeys' => ['source', 'entity', 'locationIdField']]);
         }
     }
