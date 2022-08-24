@@ -2,11 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\ObjectEntity;
-use App\Service\ObjectEntityService;
-use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Container\ContainerInterface;
 
 class GitlabApiService
 {
@@ -14,6 +10,7 @@ class GitlabApiService
     private SynchronizationService $synchronizationService;
     private ObjectEntityService $objectEntityService;
 
-    public function __construct() {}
-
+    public function __construct()
+    {
+    }
 }
