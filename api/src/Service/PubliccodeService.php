@@ -2,13 +2,18 @@
 
 namespace App\Service;
 
+use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
+use App\Service\GithubApiService;
+use App\Service\GitlabApiService;
 use App\Service\ObjectEntityService;
 use App\Service\SynchronizationService;
-use App\Service\GithubService;
-use App\Service\GitlabService;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Yaml;
 
 class PubliccodeService
@@ -16,17 +21,87 @@ class PubliccodeService
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
     private ObjectEntityService $objectEntityService;
-    private GithubService $githubService;
-    private GitlabService $gitlabService;
+    private GithubApiService $githubService;
+    private GitlabApiService $gitlabService;
     private array $configuration;
 
-    public function __construct(ContainerInterface $container) {
-        $entityManager = $container->get('doctrine.orm.entity_manager');
-        $synchronizationService = $container->get('synchronizationservice');
-        $objectEntityService = $container->get('objectentityService');
-        $githubService = $container->get('githubservice');
-        $gitlabService = $container->get('gitlabservice');
-        $configuration = [];
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        SynchronizationService $synchronizationService,
+        ObjectEntityService    $objectEntityService,
+        GithubApiService       $githubService,
+        GitlabApiService       $gitlabService
+    )
+    {
+        $this->entityManager = $entityManager;
+        $this->synchronizationService = $synchronizationService;
+        $this->objectEntityService = $objectEntityService;
+        $this->githubService = $githubService;
+        $this->gitlabService = $gitlabService;
+        $this->configuration = [];
+    }
+
+    /**
+     * @param ObjectEntity $repository the repository where we want to find an organisation for
+     * @throws \Exception
+     */
+    public function getOrganisationFromRepository(ObjectEntity $repository, Entity $entity): ?ObjectEntity
+    {
+        $source = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('source'))->getStringValue();
+        $url = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('url'))->getStringValue();
+        $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
+
+        switch ($source) {
+            case 'github':
+                // lets get the repository data
+                $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
+
+                $existingOrganisations = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($organisationEntity, ['github' => $github['organisation']['github']]);
+                // lets see if we have an organisations // even uitzoeken
+                if (count($existingOrganisations) > 0 && $existingOrganisations[0] instanceof ObjectEntity) {
+                    return $existingOrganisations[0];
+                }
+
+                $organisation = new ObjectEntity();
+                $organisation->setEntity($organisationEntity);
+                $organisation = $this->synchronizationService->setApplicationAndOrganization($organisation);
+
+                return $this->synchronizationService->populateObject($github['organisation'], $organisation, 'POST');
+            case 'gitlab':
+                // hetelfde maar dan voor gitlab
+            default:
+                // error voor onbeknd type
+        };
+
+        return null;
+    }
+
+    /**
+     * @param ObjectEntity $repository
+     * @param Entity $entity
+     * @return void dataset at the end of the handler
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function saveOrganisationToRepository(ObjectEntity $repository, Entity $entity): void
+    {
+        $organisation = $this->getOrganisationFromRepository($repository, $entity);
+        $repo['organisation'] = $organisation ? $organisation->getId()->toString() : null;
+        $this->objectEntityService->saveObject($repository, $repo);
+    }
+
+    /**
+     * @param ObjectEntity $repository
+     * @return bool dataset at the end of the handler
+     */
+    public function checkRepositoryOrganisation(ObjectEntity $repository): bool
+    {
+        // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
+        $existingOrganisationId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('organisation'))->getStringValue();
+        if ($existingOrganisationId && $existingOrganisation = $this->entityManager->getRepository('App:ObjectEntity')->find($existingOrganisationId)) {
+            // There is alread an orangisation so we dont need to do anything
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -36,42 +111,102 @@ class PubliccodeService
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function publiccodeFindOrganisationsTroughRepositoriesHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
         // Let if we have a single repository
+        if (!empty($data)) { // it is one organisation
+
+            try {
+                $repository = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+            } catch (Exception $exception) {
+                return $data;
+            }
+
+            if ($this->checkRepositoryOrganisation($repository)) {
+                return $data;
+            }
+            $this->saveOrganisationToRepository($repository, $entity);
+
+            return $data;
+        }
+
+        // If we want to do it for al repositories
+        foreach ($entity->getObjectEntities() as $repository) {
+            if ($this->checkRepositoryOrganisation($repository)) {
+                continue;
+            }
+            $this->saveOrganisationToRepository($repository, $entity);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param Gateway $source
+     * @param Entity $entity
+     * @param ObjectEntity $githubOrganisations
+     * @return void dataset at the end of the handler
+     * @throws GatewayException
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \Respect\Validation\Exceptions\ComponentException
+     */
+    public function syncRepositoriesFromOrganisation(Gateway $source, Entity $entity, ObjectEntity $githubOrganisations): void
+    {
+        // Even kijken of dit klopt met github object
+        foreach($githubOrganisations as $repository){
+            // Creat a sync trough not finding it
+            $sync = $this->synchronizationService->findSyncBySource($source, $entity ,$repository['id']);
+
+            // activate sync to pull in data
+            $sync = $this->synchronizationService->handleSync($sync, $repository);
+
+            $this->entityManager->persist($sync);
+            $this->entityManager->flush();
+        }
+    }
+
+    /**
+     * @param array $data data set at the start of the handler
+     * @param array $configuration configuration of the action
+     *
+     * @return array dataset at the end of the handler
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function publiccodeFindRepositoriesThroughOrganisationsHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+
+        // Load from config
+        $source = $this->entityManager->getRepository('App:Entity')->find($this->configuration['sourceId']);
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
+
+        $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
+        $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
+
+        // Let see if it is one or alle organisations
         if(!empty($data)){ // it is one organisation
             // Heb ik een id?
 
             // trycatch
-            $repository = $this->objectEntityService->getObject($data['id']);
+            $organisation = $this->objectEntityService->getObject($data['id']);
+            // Get organisation from github
+            $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+            $this->syncRepositoriesFromOrganisation($source, $entity, $githubOrganisation['owns']);
 
-            // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
-            if($repository->getValueByAttribute('organisation')){
-                // There is alread an orangisation so we dont need to do anything
-                return $data;
-            }
-
-            $organisation = $this->getOrganistionFromRepository($repository);
-            $repository->setValue('organisation', $organisation);
-            $this->objectEntityService->saveObject($repository);
+            return $data;
         }
 
         // If we want to do it for al repositiries
-        $entity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['repositoryEntityId']);;
-        foreach ($entity->getObjectEntities() as $repository) {
-
-            // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
-            if($repository->getValueByAttribute('organisation')){
-                // There is alread an orangisation so we dont need to do anything
-                continue;
-            }
-
-            $organisation = $this->getOrganistionFromRepository($repository);
-            $repository->setValue('organisation', $organisation);
-            $this->objectEntityService->saveObject($repository);
+        foreach ($entity->getObjectEntities() as $organisation) {
+            // Get organisation from github
+            $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+            $this->syncRepositoriesFromOrganisation($source, $entity, $githubOrganisation['owns']);
         }
 
         return $data;
@@ -83,66 +218,11 @@ class PubliccodeService
      *
      * @return array dataset at the end of the handler
      */
-    public function publiccodeFindRepositoriesThroughOrganisationsHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-
-        // Load from config
-        $gateway = $this->entityManager->getRepository('App:Entity')->get($this->configuration['sourceId']);
-        $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
-        $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
-        $entity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['repositoryEntityId']);
-
-        // Let see if it is one or alle organisations
-        if(!empty($data)){ // it is one organisation
-            // Heb ik een id?
-
-            // trycatch
-            $organisation = $this->objectEntityService->getObject($data['id']);
-
-            // Get organisation from github
-            $organisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
-
-            // Even kijken of dit kliopt met github object
-            foreach($organisation['repositories'] as $repository){
-                // Creat a sync trough not finding it
-                $sync = $this->findSyncBySource($gateway, $entity ,$repository['id']);
-
-                // activate sync to pull in data
-                $sync = $this->handleSync($sync, $githubRepositoryActionId->getConfiguration(), $repository);
-            }
-
-        }
-
-        // If we want to do it for al repositiries
-        $entity = $this->entityManager->getRepository('App:Entity')->get($this->configuration['organisationEntityId']);
-        foreach ($entity->getObjectEntities() as $organisation) {
-
-            // Get organisation from github
-            $organisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
-
-            // Even kijken of dit kliopt met github object
-            foreach($organisation['repositories'] as $repository){
-                // Creat a sync trough not finding it
-                $sync = $this->findSyncBySource($gateway, $entity ,$repository['id']);
-
-                // activate sync to pull in data
-                $sync = $this->handleSync($sync, $githubRepositoryActionId->getConfiguration(), $repository);
-            }
-        }
-    }
-
-    /**
-     * @param array $data data set at the start of the handler
-     * @param array $configuration configuration of the action
-     *
-     * @return array dataset at the end of the handler
-     */
     public function publiccodeCheckRepositoriesForPublicCodeHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
-
-        $componentEntity = $this->entityManager->getRepository('App:Entity')->get(this->configuration['componentEntityId']);
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
         if(!empty($data)){ // it is one organisation
             // Heb ik een id?
@@ -153,9 +233,7 @@ class PubliccodeService
             if(!$component = $repository->GetValueOnAtribute('component')){
                 $component = New ObjectEntity();
                 $component->setEntity($componentEntity);
-                $component->setValue('repository',$repository);
-                $component->setValue('name',$repository['name']);
-                $component->setValue('url',$repository['url']);
+                $component = $this->synchronizationService->populateObject(null, $component, 'POST');
             }
 
             switch ($repository['source']){
@@ -175,10 +253,15 @@ class PubliccodeService
 
         }
 
-        // If we want to do it for al repositiries
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
+        // If we want to do it for al repositories
         foreach ($entity->getObjectEntities() as $repository) {
 
+            $existingComponentId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('component'))->getStringValue();
+            if ($existingComponentId && $existingComponent = $this->entityManager->getRepository('App:ObjectEntity')->find($existingComponentId)) {
+                $component = New ObjectEntity();
+                $component->setEntity($componentEntity);
+                $component = $this->synchronizationService->populateObject($existingComponent, $component, 'POST');
+            }
         }
 
     }
@@ -215,41 +298,7 @@ class PubliccodeService
     }
 
 
-    /**
-     * @param ObjectEntity $repository the repository where we want to find an organisation for
-     */
-    public function getOrganistionFromRepository(ObjectEntity $repository): ObjectEntity
-    {
-        $source = $repository->getValueByAttribute('type');
-        $url = $repository->getValueByAttribute('url');
 
-        switch ($source){
-            case 'github':
-                // lets get the repository data
-                $github = $this->githubService->getRepositoryFromUrl($url);
-
-                // checken of er een RepositoryEntityId in de config zit
-                $entity = $this->entityManager->getRepository('Entity')->get($this->configuration['RepsoitoryEntityId']); // get from config
-                // even checken of we de enituy ook hebben
-
-                // lets see if we have an organisations // even uitzoeken
-                if($organisation === $this->objectEntityService->findOneBy($entity, ['github' => $github['organisation']['url']])){
-                    return $organisation;
-                }
-
-                $organisation = New ObjectEntity();
-                $organisation->setEntity($entity);
-                $organisation->setValue('name',$github['organisation']['name']);
-                 /// etc voor logo en andere waarden bla bla
-                $organisation->setValue('github',$github['organisation']['url']);
-
-                return $organisation;
-            case 'gitlab':
-                // hetelfde maar dan voor gitlab
-            default:
-                // error voor onbeknd type
-        };
-    }
 
     /*
      * Concerts publiccodefiles to components
@@ -267,9 +316,9 @@ class PubliccodeService
         $component = $component->toArray();
         $rating = 1;
 
-        if(in_array['name'],$component)){
-            $rating ++;
-        }
+//        if(in_array['name'],$component)){
+//            $rating ++;
+//        }
 
         //@todo checks doornemen
 

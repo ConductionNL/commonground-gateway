@@ -146,7 +146,7 @@ class SynchronizationService
             $id = $dot->get($this->configuration['apiSource']['locationIdField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            $result = $dot->get($this->configuration['apiSource']['locationObjects'], $result);
+            key_exists('locationObject', $this->configuration['apiSource']) && $result = $dot->get($this->configuration['apiSource']['locationObject'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $sync = $this->findSyncBySource($gateway, $entity, $id);
@@ -321,7 +321,7 @@ class SynchronizationService
      *
      * @return Synchronization|null A synchronisation object related to the object in the source
      */
-    private function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
+    public function findSyncBySource(Gateway $source, Entity $entity, string $sourceId): ?Synchronization
     {
         $sync = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source->getId(), 'entity' => $entity->getId(), 'sourceId' => $sourceId]);
 
@@ -418,14 +418,14 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException
-     * @throws CacheException
+     * @return Synchronization The updated synchronisation object
+     *@throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return Synchronization The updated synchronisation object
+     * @throws GatewayException
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
 
@@ -467,13 +467,14 @@ class SynchronizationService
      */
     public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
+        // @todo to the object entity service -> because of duplicate code
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), 'POST')) {
             //@TODO: Write errors to logs
 
             foreach ($validationErrors as $error) {
-                if (strpos($error, 'must be present') !== false) {
+                if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
                 }
             }
@@ -509,7 +510,7 @@ class SynchronizationService
      *
      * @return ObjectEntity The updated ObjectEntity
      */
-    private function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
+    public function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
     {
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
@@ -557,7 +558,7 @@ class SynchronizationService
         }
 
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
-            $externObject = $this->translateInput($this->configuration, $externObject);
+            $externObject = $this->translateInput($externObject);
         }
 
         $externObjectDot = new Dot($externObject);
