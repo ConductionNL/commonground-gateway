@@ -32,7 +32,6 @@ class SynchronizationService
     private ValidatorService $validatorService;
     private array $configuration;
 
-
     /**
      * @param CommonGroundService    $commonGroundService
      * @param EntityManagerInterface $entityManager
@@ -83,8 +82,9 @@ class SynchronizationService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array
      */
     public function SynchronizationWebhookHandler(array $data, array $configuration): array
     {
@@ -202,7 +202,7 @@ class SynchronizationService
     /**
      * Gets the configuration for the source and fetches the results on the source.
      *
-     * @param Gateway $gateway       The source to get the data from
+     * @param Gateway $gateway The source to get the data from
      *
      * @return array The results found on the source
      */
@@ -218,7 +218,7 @@ class SynchronizationService
     /**
      * Determines the configuration for the source given.
      *
-     * @param Gateway $gateway       The source to call
+     * @param Gateway $gateway The source to call
      *
      * @return array The configuration for the source to call
      */
@@ -235,8 +235,8 @@ class SynchronizationService
     /**
      * Determines the URL to request.
      *
-     * @param Gateway     $gateway       The source to call
-     * @param string|null $id            The id to request (optional)
+     * @param Gateway     $gateway The source to call
+     * @param string|null $id      The id to request (optional)
      *
      * @return string The resulting URL
      */
@@ -288,7 +288,7 @@ class SynchronizationService
     /**
      * Gets a single object from the source.
      *
-     * @param Synchronization $sync          The synchronisation object with the related source object id
+     * @param Synchronization $sync The synchronisation object with the related source object id
      *
      * @return array|null The resulting object
      */
@@ -447,7 +447,7 @@ class SynchronizationService
     /**
      * Translates the input according to the translation table referenced in the configuration of the action.
      *
-     * @param array $externObject  The external object found in the source
+     * @param array $externObject The external object found in the source
      *
      * @return array The translated external object
      */
@@ -590,8 +590,8 @@ class SynchronizationService
     /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param Synchronization $sync          The synchronisation object to update
-     * @param array           $externObject  The external object to synchronise from
+     * @param Synchronization $sync         The synchronisation object to update
+     * @param array           $externObject The external object to synchronise from
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
@@ -639,9 +639,9 @@ class SynchronizationService
      * @param array           $configuration   The configuration from the action
      * @param array           $sourceObject    The object in the source
      *
-     * @return Synchronization The updated synchronisation object
      *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
+     * @return Synchronization The updated synchronisation object
      */
     public function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
     {
@@ -679,8 +679,9 @@ class SynchronizationService
      */
     public function synchronisationPushHandler(array $data, array $configuration): array
     {
-        $source = $this->getSourceFromAction($configuration);
-        $entity = $this->getEntityFromAction($configuration);
+        $this->configuration = $configuration;
+        $source = $this->getSourceFromConfig();
+        $entity = $this->getEntityFromConfig();
 
         if (!($entity instanceof Entity)) {
             return $data;
