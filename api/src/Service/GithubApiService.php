@@ -138,28 +138,6 @@ class GithubApiService
         return [];
     }
 
-//    /**
-//     * This function gets all the repositories of the owner.
-//     *
-//     * @param string $owner the name of the owner of a repository
-//     *
-//     * @throws GuzzleException
-//     *
-//     * @return string|false
-//     */
-//    public function getGithubOwnerRepositories(string $owner): ?string
-//    {
-//        if ($response = $this->github->request('GET', '/orgs/'.$owner.'/repos')) {
-//
-//            $response = json_decode($response->getBody()->getContents(), true);
-//
-//            var_dump($response);die();
-//            return $response->getBody()->getContents();
-//        }
-//
-//        return null;
-//    }
-
     /**
      * This function gets the content of the given url.
      *
