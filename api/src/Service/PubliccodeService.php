@@ -45,7 +45,7 @@ class PubliccodeService
      * @param ObjectEntity $repository the repository where we want to find an organisation for
      * @throws \Exception
      */
-    public function getOrganisationFromRepository(ObjectEntity $repository, Entity $entity): ?ObjectEntity
+    public function getOrganisationFromRepository(ObjectEntity $repository): ?ObjectEntity
     {
         $source = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('source'))->getStringValue();
         $url = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('url'))->getStringValue();
@@ -78,13 +78,12 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $repository
-     * @param Entity $entity
      * @return void dataset at the end of the handler
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function saveOrganisationToRepository(ObjectEntity $repository, Entity $entity): void
+    public function saveOrganisationToRepository(ObjectEntity $repository): void
     {
-        $organisation = $this->getOrganisationFromRepository($repository, $entity);
+        $organisation = $this->getOrganisationFromRepository($repository);
         $repo['organisation'] = $organisation ? $organisation->getId()->toString() : null;
         $this->objectEntityService->saveObject($repository, $repo);
     }
@@ -130,7 +129,7 @@ class PubliccodeService
             if ($this->checkRepositoryOrganisation($repository)) {
                 return $data;
             }
-            $this->saveOrganisationToRepository($repository, $entity);
+            $this->saveOrganisationToRepository($repository);
 
             return $data;
         }
@@ -140,7 +139,7 @@ class PubliccodeService
             if ($this->checkRepositoryOrganisation($repository)) {
                 continue;
             }
-            $this->saveOrganisationToRepository($repository, $entity);
+            $this->saveOrganisationToRepository($repository);
         }
 
         return $data;
