@@ -639,11 +639,11 @@ class SynchronizationService
      * @param array           $configuration   The configuration from the action
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
-     *
      * @return Synchronization The updated synchronisation object
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *
      */
-    private function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $configuration, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization, $configuration);
