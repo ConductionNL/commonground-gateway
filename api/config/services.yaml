@@ -57,6 +57,13 @@ services:
             $objectEntityService: '@App\Service\ObjectEntityService'
             $githubService: '@App\Service\GithubApiService'
             $gitlabService: '@App\Service\GitlabApiService'
+            
+    uhrzaakservice:
+        public: true
+        class: App\Service\UhrZaakService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $synchronizationService: '@App\Service\SynchronizationService'
 
     Redis:
         class: Redis
