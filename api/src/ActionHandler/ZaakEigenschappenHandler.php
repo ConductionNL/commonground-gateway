@@ -6,7 +6,7 @@ use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use App\Service\ObjectEntityService;
 use App\Service\ValidatorService;
-use App\Service\UhrZaakService;
+use App\Service\ZdsZaakService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
 
@@ -17,13 +17,13 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     private ValidatorService $validatorService;
     private array $usedValues = [];
 
-    private UhrZaakService $uhrZaakService;
+    private ZdsZaakService $zdsZaakService;
 
     public function __construct(ContainerInterface $container)
     {
-        $zaakService = $container->get('uhrzaakservice');
-        if ($zaakService instanceof UhrZaakService) {
-            $this->uhrZaakService = $zaakService;
+        $zdsZaakService = $container->get('zdszaakservice');
+        if ($zdsZaakService instanceof ZdsZaakService) {
+            $this->zdsZaakService = $zdsZaakService;
         } else {
             throw new GatewayException('The service container does not contain the required services for this handler');
         }
@@ -44,6 +44,6 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-        return $this->uhrZaakService->zaakEigenschappenHandler($data, $configuration);
+        return $this->zdsZaakService->zaakEigenschappenHandler($data, $configuration);
     }
 }

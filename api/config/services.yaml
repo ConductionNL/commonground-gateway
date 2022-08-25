@@ -58,9 +58,9 @@ services:
             $githubService: '@App\Service\GithubApiService'
             $gitlabService: '@App\Service\GitlabApiService'
             
-    uhrzaakservice:
+    zdszaakservice:
         public: true
-        class: App\Service\UhrZaakService
+        class: App\Service\ZdsZaakService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
             $synchronizationService: '@App\Service\SynchronizationService'

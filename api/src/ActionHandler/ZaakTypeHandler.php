@@ -4,19 +4,19 @@ namespace App\ActionHandler;
 
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
-use App\Service\UhrZaakService;
+use App\Service\ZdsZaakService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
 
 class ZaakTypeHandler implements ActionHandlerInterface
 {
-    private UhrZaakService $uhrZaakService;
+    private ZdsZaakService $zdsZaakService;
 
     public function __construct(ContainerInterface $container)
     {
-        $zaakService = $container->get('uhrzaakservice');
-        if ($zaakService instanceof UhrZaakService) {
-            $this->uhrZaakService = $zaakService;
+        $zdsZaakService = $container->get('zdszaakservice');
+        if ($zdsZaakService instanceof ZdsZaakService) {
+            $this->zdsZaakService = $zdsZaakService;
         } else {
             throw new GatewayException('The service container does not contain the required services for this handler');
         }
@@ -37,6 +37,6 @@ class ZaakTypeHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-       return $this->uhrZaakService->zaakTypeHandler($data, $configuration);
+       return $this->zdsZaakService->zaakTypeHandler($data, $configuration);
     }
 }

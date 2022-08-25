@@ -5,7 +5,7 @@ namespace App\Service;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
-class UhrZaakService
+class ZdsZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
@@ -37,7 +37,7 @@ class UhrZaakService
      *
      * @param string $value
      * @param string $path
-     * @param array $data
+     * @param array $data The data from the call
      * @return array
      */
     public function overridePath(string $value, string $path, array $data): array
@@ -50,8 +50,8 @@ class UhrZaakService
 
     /**
      *
-     * @param array $data
-     * @param array $configuration
+     * @param array $data The data from the call
+     * @param array $configuration The configuration of the action
      * @return array
      */
     public function zaakTypeHandler(array $data, array $configuration): array
@@ -88,9 +88,8 @@ class UhrZaakService
     /**
      * This function creates a zaak eigenschap.
      *
-     * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
+     * @param array $eigenschap The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param string            $method       The method of the call, defaulted to 'POST'
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
@@ -143,13 +142,14 @@ class UhrZaakService
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $data The data from the call
      * @param ObjectEntity $zaakObject The zaak object entity that relates to the entity Zaak
+     * @param array $eigenschappen The eigenschappen @ids
      * @return ObjectEntity
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
      */
-    public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject): ObjectEntity
+    public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject, array $eigenschappen): ObjectEntity
     {
         $unusedElements = [
             'toelichting'                  => '',
@@ -157,6 +157,7 @@ class UhrZaakService
             'startdatum'                   => $data['startdatum'],
             'bronorganisatie'              => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
+            'eigenschappen'                => $eigenschappen
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -192,27 +193,28 @@ class UhrZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data
-     * @param array $configuration
+     * @param array $data The data from the call
+     * @param array $configuration The configuration of the zaakeigenschap action
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param array $eigenschappen The eigenschappen @ids
      * @return void
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
      */
-    public function getZaak(array $data, array $configuration, array $extraElements): void
+    public function getZaak(array $data, array $configuration, array $extraElements, array $eigenschappen): void
     {
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['url' => $data['response']['url']]);
-        $this->updateZaak($extraElements, $data['response'], $zaakObject[0]);
+        $this->updateZaak($extraElements, $data['response'], $zaakObject[0], $eigenschappen);
     }
 
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data
-     * @param array $configuration
+     * @param array $data The data from the call
+     * @param array $configuration The configuration of the zaakeigenschap action
      * @return array|null
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
@@ -226,13 +228,14 @@ class UhrZaakService
         $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($eigenschapEntity, ['zaaktype' => $identifier]);
         $extraElements = $this->getExtraElements($data['request'], $configuration);
 
+        $eigenschappen = [];
         if (count($objectEntities) > 0) {
             foreach ($objectEntities as $objectEntity) {
                 $eigenschap = $this->getEigenschap($objectEntity, $extraElements, $data['response']['url']);
-                $eigenschap !== null && $this->createObject($eigenschap, $objectEntity);
+                $eigenschap !== null && $eigenschappen[] = $this->createObject($eigenschap, $objectEntity)->getSelf();
             }
         }
-       $this->getZaak($data, $configuration, $extraElements);
+       $this->getZaak($data, $configuration, $extraElements, $eigenschappen);
 
         return $data;
     }
