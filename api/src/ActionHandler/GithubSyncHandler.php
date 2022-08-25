@@ -19,7 +19,7 @@ class GithubSyncHandler implements ActionHandlerInterface
     public function __construct(ContainerInterface $container)
     {
         $entityManager = $container->get('doctrine.orm.entity_manager');
-        $publiccodeService = $container->get('publiccodeservice');
+        $publiccodeService = $container->get('publiccodeoldservice');
         $synchronizationService = $container->get('synchronizationservice');
         if ($entityManager instanceof EntityManagerInterface) {
             $this->entityManager = $entityManager;

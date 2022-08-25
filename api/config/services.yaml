@@ -39,14 +39,30 @@ services:
             $translationService: '@App\Service\TranslationService'
             $messageBus: '@messenger.bus.default'
             $eavService: '@App\Service\EavService' 
+            
+    publiccodeoldservice:
+        public: true
+        class: App\Service\PubliccodeOldService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $serializer: '@serializer'
+            $parameterBag: '@parameter_bag'
 
     publiccodeservice:
         public: true
         class: App\Service\PubliccodeService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            $serializer: '@serializer'
-            $parameterBag: '@parameter_bag'
+            $synchronizationService: '@App\Service\SynchronizationService'
+            $objectEntityService: '@App\Service\ObjectEntityService'
+            $githubService: '@App\Service\GithubApiService'
+            $gitlabService: '@App\Service\GitlabApiService'
+            
+    zdszaakservice:
+        public: true
+        class: App\Service\ZdsZaakService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             $synchronizationService: '@App\Service\SynchronizationService'
 
     Redis:

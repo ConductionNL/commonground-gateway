@@ -22,7 +22,6 @@ class SynchronizationItemHandler implements ActionHandlerInterface
 
     //@todo define config
 
-
     public function __run(array $data, array $configuration): array
     {
         $result = $this->synchronizationService->SynchronizationItemHandler($data, $configuration);
