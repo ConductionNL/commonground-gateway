@@ -34,10 +34,10 @@ class ZdsZaakService
     }
 
     /**
-     *
      * @param string $value
      * @param string $path
-     * @param array $data The data from the call
+     * @param array  $data  The data from the call
+     *
      * @return array
      */
     public function overridePath(string $value, string $path, array $data): array
@@ -49,9 +49,9 @@ class ZdsZaakService
     }
 
     /**
-     *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
+     *
      * @return array
      */
     public function zaakTypeHandler(array $data, array $configuration): array
@@ -88,7 +88,7 @@ class ZdsZaakService
     /**
      * This function creates a zaak eigenschap.
      *
-     * @param array $eigenschap The eigenschap array with zaak, eigenschap and waarde as keys
+     * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
      *
      * @throws \App\Exception\GatewayException
@@ -139,15 +139,17 @@ class ZdsZaakService
     /**
      * This function returns updates the zaak with the unused elements under 'toelichting'.
      *
-     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array $data The data from the call
-     * @param ObjectEntity $zaakObject The zaak object entity that relates to the entity Zaak
-     * @param array $eigenschappen The eigenschappen @ids
-     * @return ObjectEntity
+     * @param array        $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param array        $data          The data from the call
+     * @param ObjectEntity $zaakObject    The zaak object entity that relates to the entity Zaak
+     * @param array        $eigenschappen The eigenschappen @ids
+     *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return ObjectEntity
      */
     public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject, array $eigenschappen): ObjectEntity
     {
@@ -157,7 +159,7 @@ class ZdsZaakService
             'startdatum'                   => $data['startdatum'],
             'bronorganisatie'              => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
-            'eigenschappen'                => $eigenschappen
+            'eigenschappen'                => $eigenschappen,
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -193,15 +195,17 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the zaakeigenschap action
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $eigenschappen The eigenschappen @ids
-     * @return void
+     *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return void
      */
     public function getZaak(array $data, array $configuration, array $extraElements, array $eigenschappen): void
     {
@@ -213,13 +217,15 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the zaakeigenschap action
-     * @return array|null
+     *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     *
+     * @return array|null
      */
     public function zaakEigenschappenHandler(array $data, array $configuration): array
     {
@@ -235,7 +241,7 @@ class ZdsZaakService
                 $eigenschap !== null && $eigenschappen[] = $this->createObject($eigenschap, $objectEntity)->getSelf();
             }
         }
-       $this->getZaak($data, $configuration, $extraElements, $eigenschappen);
+        $this->getZaak($data, $configuration, $extraElements, $eigenschappen);
 
         return $data;
     }

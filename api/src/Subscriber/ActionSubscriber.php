@@ -21,9 +21,9 @@ class ActionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'commongateway.handler.pre'  => 'handleEvent',
-            'commongateway.handler.post' => 'handleEvent',
-            'commongateway.response.pre' => 'handleEvent',
+            'commongateway.handler.pre'     => 'handleEvent',
+            'commongateway.handler.post'    => 'handleEvent',
+            'commongateway.response.pre'    => 'handleEvent',
             'commongateway.cronjob.trigger' => 'handleEvent',
             'commongateway.object.create'   => 'handleEvent',
             'commongateway.object.read'     => 'handleEvent',

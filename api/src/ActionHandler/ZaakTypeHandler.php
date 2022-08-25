@@ -2,10 +2,8 @@
 
 namespace App\ActionHandler;
 
-use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
 
 class ZaakTypeHandler implements ActionHandlerInterface
@@ -37,6 +35,6 @@ class ZaakTypeHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-       return $this->zdsZaakService->zaakTypeHandler($data, $configuration);
+        return $this->zdsZaakService->zaakTypeHandler($data, $configuration);
     }
 }
