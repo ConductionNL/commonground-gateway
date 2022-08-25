@@ -56,11 +56,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // If we have to order do it only for the findByEntity QueryBuilder.
         if (!empty($order)) {
-            $orderCheck = $this->getOrderParameters($entity);
-
-            if (in_array(array_keys($order)[0], $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
-                $baseQuery = $this->getObjectEntityOrder($baseQuery, array_keys($order)[0], array_values($order)[0]);
-            }
+            $baseQuery = $this->addOrderBy($baseQuery, $entity, $order);
         }
 
         return [
@@ -134,16 +130,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (array_key_exists('search', $filters)) {
             $search = $filters['search'];
             unset($filters['search']);
-            $this->buildSearchQuery($search, $query)->distinct();
+            $this->buildSearchQuery($query, $search)->distinct();
         }
 
         if (!empty($filters)) {
             $filterCheck = $this->getFilterParameters($entity);
             $multipleAttributes = $this->getMultipleAttributes($entity);
 
-            $filters = $this->cleanArray($filters, $filterCheck, $multipleAttributes);
+            $filters = $this->cleanFiltersArray($filters, $filterCheck, $multipleAttributes);
 
-            $this->buildQuery($filters, $query)->distinct();
+            $this->buildQuery($query, $filters)->distinct();
         }
 
         // TODO: This is a quick fix for taalhuizen, find a better way of showing taalhuizen and teams for an anonymous user!
@@ -174,11 +170,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->setParameter('defaultOrganization', 'http://testdata-organization');
 
         if (!empty($order)) {
-            $orderCheck = $this->getOrderParameters($entity);
-
-            if (in_array(array_keys($order)[0], $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
-                $query = $this->getObjectEntityOrder($query, array_keys($order)[0], array_values($order)[0]);
-            }
+            $this->addOrderBy($query, $entity, $order);
         }
 
         return $query;
@@ -213,19 +205,19 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      * Also checks for filters used on multiple attributes and handles these.
      *
-     * @param array $array       The array of query params / filters.
+     * @param array $filters     The array of query params / filters.
      * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
      * @return array A 'clean' array. And transformed array.
      */
-    private function cleanArray(array $array, array $filterCheck, array $multipleAttributes): array
+    private function cleanFiltersArray(array $filters, array $filterCheck, array $multipleAttributes): array
     {
         $result = [];
 
         // Handles valueScopeFilters. This will prevent duplicate filters and makes sure the user can not bypass authorization by using filters!
-        $array = $this->handleValueScopeFilters($array);
+        $filters = $this->handleValueScopeFilters($filters);
 
-        foreach ($array as $key => $value) {
+        foreach ($filters as $key => $value) {
             $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
             if (substr($key, 0, 1) == '.') {
                 $key = '_'.ltrim($key, $key[0]);
@@ -299,14 +291,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case that the search query is used.
      *
-     * @param string       $search
      * @param QueryBuilder $query
+     * @param string       $search
      *
      * @throws Exception
      *
      * @return QueryBuilder
      */
-    private function buildSearchQuery(string $search, QueryBuilder $query): QueryBuilder
+    private function buildSearchQuery(QueryBuilder $query, string $search): QueryBuilder
     {
         $query
             ->leftJoin('o.objectValues', 'valueSearch')
@@ -320,8 +312,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case that filters are used in createQuery().
      *
-     * @param array        $filters      An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param array        $filters      An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param int          $level        The depth level, if we are filtering on subresource.subresource etc.
      * @param string       $prefix       The prefix of the value for the filter we are adding, default = 'value'.
      * @param string       $objectPrefix The prefix of the objectEntity for the filter we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
@@ -330,7 +322,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder The QueryBuilder.
      */
-    private function buildQuery(array $filters, QueryBuilder $query, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
+    private function buildQuery(QueryBuilder $query, array $filters, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
         foreach ($filters as $key => $value) {
             $filterKey = $this->clearFilterKey($key);
@@ -446,8 +438,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
         $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
         $query = $this->buildQuery(
-            $value,
             $query,
+            $value,
             $level + 1,
             'subValue'.$key.$level,
             'subObjects'.$key.$level
@@ -479,9 +471,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // Check if this filter has an array of values (example1: key = value,value2) (example2: key[a] = value, key[b] = value2)
         if (is_array($value) && $filterKey['arrayValue']) {
-            $query = $this->arrayValueFilter($query, $filterKey, $value, $prefix);
+            $query = $this->getArrayValueFilter($query, $filterKey, $value, $prefix);
         } else {
-            $query = $this->normalValueFilter($query, $filterKey, $value, $prefix);
+            $query = $this->getNormalValueFilter($query, $filterKey, $value, $prefix);
         }
 
         return $query;
@@ -500,7 +492,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    private function arrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    private function getArrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
         $key = $filterKey['key'];
 
@@ -509,7 +501,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
         } elseif ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
-            $query = $this->arrayValueMultipleFilter($query, $key, $value, $prefix);
+            $query = $this->getArrayValueMultipleFilter($query, $key, $value, $prefix);
         } else {
             $query->andWhere("LOWER($prefix$key.stringValue) IN (:$key)")
                 ->setParameter($key, array_map('strtolower', $value));
@@ -568,7 +560,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    private function arrayValueMultipleFilter(QueryBuilder $query, string $key, $value, string $prefix): QueryBuilder
+    private function getArrayValueMultipleFilter(QueryBuilder $query, string $key, $value, string $prefix): QueryBuilder
     {
         $andWhere = '(';
         foreach ($value as $i => $item) {
@@ -586,8 +578,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     *  Expands a QueryBuilder with a 'normal' filter. This can be a filter for example a string or a datetime Attribute/Value.
-     *  Example query/filter: ?name=anExampleName.
+     * Expands a QueryBuilder with a 'normal' filter. This can be a filter for example a string or a datetime Attribute/Value.
+     * Example query/filter: ?name=anExampleName.
      *
      * @param QueryBuilder $query
      * @param array        $filterKey
@@ -596,7 +588,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    private function normalValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
+    private function getNormalValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
         $key = $filterKey['key'];
 
@@ -620,28 +612,87 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Function that handles the order by filter. Adds to an existing QueryBuilder.
+     * Checks if we need to add orderBy to an existing QueryBuilder and if so actually adds orderBy to the query.
+     * This depends on the given $order array and the allowed attributes to order on for the given Entity.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param $key
-     * @param $value
-     * @param string $prefix
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param Entity       $entity       The Entity to check for allowed attributes to order on.
+     * @param array        $order        The order array with the order query param used with the current get collection api-call.
+     * @param int          $level
+     * @param string       $prefix
+     * @param string       $objectPrefix
+     *
+     * @return QueryBuilder
+     */
+    private function addOrderBy(QueryBuilder $query, Entity $entity, array $order, int $level = 0, string $prefix = 'valueOrderBy', string $objectPrefix = 'o'): QueryBuilder
+    {
+        // Important note: $prefix here = 'valueOrderBy', for filters we use $prefix = 'value'. This is to make sure the leftJoins do not clash.
+        $orderCheck = $this->getOrderParameters($entity);
+        $key = array_keys($order)[0];
+        $value = array_values($order)[0];
+
+        if (in_array($key, $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
+            if (substr($key, 0, 1) == '_') {
+                $query = $this->getObjectEntityOrder($query, $key, $value, $objectPrefix);
+            } else {
+                $query->leftJoin("$objectPrefix.objectValues", $prefix.$key);
+                $query->addSelect($prefix.$key.'.stringValue');
+
+                //todo: here we could add an if statement to check for subresource ordering. (see buildQuery() for how this is done for filters)
+                // else :
+                $query = $this->buildOrderQuery($query, $key, $value, $prefix);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Function that handles special orderBy options starting with _
+     * Adds to an existing QueryBuilder.
+     *
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The order[$key] used in the order query param.
+     * @param string       $value  The value used with the query param, desc or asc.
+     * @param string       $prefix
      *
      * @return QueryBuilder The QueryBuilder.
      */
-    private function getObjectEntityOrder(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    private function getObjectEntityOrder(QueryBuilder $query, string $key, string $value, string $prefix = 'o'): QueryBuilder
     {
         switch ($key) {
             case '_dateCreated':
-                $query->orderBy($prefix.'.dateCreated', $value);
+                $query->orderBy("$prefix.dateCreated", $value);
                 break;
             case '_dateModified':
-                $query->orderBy($prefix.'.dateModified', $value);
+                $query->orderBy("$prefix.dateModified", $value);
                 break;
             default:
-                $query->orderBy($prefix.'.'.$key, $value);
+                $query->orderBy("$prefix.$key", $value);
                 break;
         }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with the correct orderBy, using the given input and prefix.
+     *
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The order[$key] used in the order query param.
+     * @param string       $value  The value used with the query param, desc or asc.
+     * @param string       $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function buildOrderQuery(QueryBuilder $query, string $key, string $value, string $prefix): QueryBuilder
+    {
+        // Make sure we only check the values of the correct attribute
+        $query->leftJoin("$prefix$key.attribute", $prefix.$key.'Attribute');
+        $query->andWhere($prefix.$key."Attribute.name = :Key$key")
+            ->setParameter("Key$key", $key);
+
+        $query->orderBy("$prefix$key.stringValue", $value);
 
         return $query;
     }
@@ -694,15 +745,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // defaults
         $sortable = ['_dateCreated', '_dateModified'];
 
-        // todo: add something to ObjectEntities just like bool searchable, use that to check for fields allowed to be used for ordering.
-        // todo: sortable?
-//        foreach ($Entity->getAttributes() as $attribute) {
-//            if (in_array($attribute->getType(), ['date', 'datetime']) && $attribute->getSortable()) {
-//                $sortable[] = $prefix.$attribute->getName();
-//            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+        foreach ($Entity->getAttributes() as $attribute) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSortable()) {
+                $sortable[] = $prefix.$attribute->getName();
+            }
+            // todo: lets not allow ordering on subresources for now...
+//            elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
 //                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
 //            }
-//        }
+        }
 
         return $sortable;
     }
