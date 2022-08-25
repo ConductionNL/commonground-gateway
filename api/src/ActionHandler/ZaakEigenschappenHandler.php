@@ -22,7 +22,7 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     /**
      * This function returns the identifierPath field from the configuration array.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @return string The identifierPath in the action configuration
@@ -37,7 +37,7 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     /**
      * This function returns the eigenschappen field from the configuration array.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @return array The eigenschappen in the action configuration
@@ -52,9 +52,9 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     /**
      * This function adds the data to an object entity.
      *
-     * @param array             $data The data from the call
+     * @param array             $data         The data from the call
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param string            $method The method of the call, defaulted to 'POST'
+     * @param string            $method       The method of the call, defaulted to 'POST'
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
@@ -77,9 +77,9 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     /**
      * This function creates a zaak eigenschap.
      *
-     * @param array             $eigenschap The eigenschap array with zaak, eigenschap and waarde as keys
+     * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param string            $method The method of the call, defaulted to 'POST'
+     * @param string            $method       The method of the call, defaulted to 'POST'
      *
      * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
@@ -97,12 +97,12 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function returns the zaak, eigenschap and waarde when matched with the element in de action configuration file
+     * This function returns the zaak, eigenschap and waarde when matched with the element in de action configuration file.
      *
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
+     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
      * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string            $eigenschap The naam of the eigenschap that has to be matched
-     * @param string            $zaakUrl The zaakurl the eigenschap is related to
+     * @param string            $eigenschap    The naam of the eigenschap that has to be matched
+     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -111,13 +111,14 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
         foreach ($extraElements['ns1:extraElement'] as $element) {
             if ($eigenschap == $element['@naam']) {
                 $this->usedValues[] = $element['@naam'];
+
                 return [
                     'zaak'       => $zaakUrl,
                     'eigenschap' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue(),
                     'waarde'     => $element['#'],
                     'zaaktype'   => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('zaaktype'))->getStringValue(),
                     'definitie'  => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('definitie'))->getStringValue(),
-                    'naam'       => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue()
+                    'naam'       => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue(),
                 ];
             }
         }
@@ -126,21 +127,21 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function returns updates the zaak with the unused elements under 'toelichting'
+     * This function returns updates the zaak with the unused elements under 'toelichting'.
      *
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      *
      * @return array|null
      */
     public function updateZaak(array $extraElements, array $data): ?array
     {
         $unusedElements = [
-            'toelichting' => '',
-            'zaaktype' => $data['zaaktype'],
-            'startdatum' => $data['startdatum'],
-            'bronorganisatie' => $data['bronorganisatie'],
-            'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie']
+            'toelichting'                  => '',
+            'zaaktype'                     => $data['zaaktype'],
+            'startdatum'                   => $data['startdatum'],
+            'bronorganisatie'              => $data['bronorganisatie'],
+            'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -154,11 +155,11 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function gets the name of the eigenschap and returns the getEigenschapValues functie
+     * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
+     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
      * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string            $zaakUrl The zaakurl the eigenschap is related to
+     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -176,7 +177,7 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     /**
      * This function runs the zaakeigenschappen plugin.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @throws \App\Exception\GatewayException
