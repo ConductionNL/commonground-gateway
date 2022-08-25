@@ -2,7 +2,6 @@
 
 namespace App\ActionHandler;
 
-use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use App\Service\ObjectEntityService;
 use App\Service\ValidatorService;
