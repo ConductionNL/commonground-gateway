@@ -84,6 +84,11 @@ class EavService
         $this->stopwatch = $stopwatch;
     }
 
+    public function getValidationService(): ValidationService
+    {
+        return $this->validationService;
+    }
+
     /**
      * Looks for an Entity object using a entityName.
      *

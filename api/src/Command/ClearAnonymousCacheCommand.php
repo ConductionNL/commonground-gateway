@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class AnonymousCacheCommand extends Command
+class ClearAnonymousCacheCommand extends Command
 {
     private CacheInterface $cache;
 
@@ -26,7 +26,7 @@ class AnonymousCacheCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('cache:anonymous:scopes')
+            ->setName('cache:clear:anonymous:scopes')
             // the short description shown while running "php bin/console list"
             ->setDescription('Resets cache for anonymous scopes')
             ->setHelp('This command will remove all anonymous scopes from the cache, useful if these scopes get changed.');

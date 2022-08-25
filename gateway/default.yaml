@@ -847,3 +847,12 @@ App\Entity\Authentication:
             - email
             - groups
             - profile
+
+App\Entity\Cronjob:
+    sync:
+        name: synchronisations
+        description: a cronjob that sets off the synchronisations for the various sources
+        crontab: '*/1 * * * *'
+        throws: 
+            - 'commongateway.cronjob.trigger'
+        data: []

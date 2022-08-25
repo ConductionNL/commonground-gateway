@@ -2,307 +2,316 @@
 
 namespace App\Service;
 
-use App\Entity\CollectionEntity;
+use App\Entity\Entity;
+use App\Entity\Gateway;
+use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\GuzzleException;
-use phpDocumentor\Reflection\Types\This;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Yaml;
 
 class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
-    private ParameterBagInterface $params;
-    private ?Client $github;
-    private array $query;
-    private SerializerInterface $serializer;
+    private SynchronizationService $synchronizationService;
+    private ObjectEntityService $objectEntityService;
+    private GithubApiService $githubService;
+    private GitlabApiService $gitlabService;
+    private array $configuration;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ParameterBagInterface $params,
-        SerializerInterface $serializer
+        SynchronizationService $synchronizationService,
+        ObjectEntityService $objectEntityService,
+        GithubApiService $githubService,
+        GitlabApiService $gitlabService
     ) {
         $this->entityManager = $entityManager;
-        $this->params = $params;
-        $this->serializer = $serializer;
-        $this->github = $this->params->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->params->get('github_key')]]) : null;
-        $this->query = [
-            'page'     => 1,
-            'per_page' => 200,
-            'order'    => 'desc',
-            'sort'     => 'author-date',
-            'q'        => 'publiccode in:path path:/  extension:yaml', // so we are looking for a yaml file called publiccode based in the repo root
-        ];
+        $this->synchronizationService = $synchronizationService;
+        $this->objectEntityService = $objectEntityService;
+        $this->githubService = $githubService;
+        $this->gitlabService = $gitlabService;
+        $this->configuration = [];
     }
 
     /**
-     * This function gets the github owner details.
+     * @param ObjectEntity $repository the repository where we want to find an organisation for
      *
-     * @param array $item a repository from github with a publicclode.yaml file
-     *
-     * @throws GuzzleException
-     *
-     * @return array
+     * @throws \Exception
      */
-    public function getGithubOwnerInfo(array $item): array
+    public function getOrganisationFromRepository(ObjectEntity $repository): ?ObjectEntity
     {
-        return [
-            'id'                => $item['owner']['id'],
-            'type'              => $item['owner']['type'],
-            'login'             => $item['owner']['login'] ?? null,
-            'html_url'          => $item['owner']['html_url'] ?? null,
-            'organizations_url' => $item['owner']['organizations_url'] ?? null,
-            'avatar_url'        => $item['owner']['avatar_url'] ?? null,
-            'publiccode'        => $this->findPubliccode($item),
-            'repos'             => json_decode($this->getGithubOwnerRepositories($item['owner']['login'])),
-        ];
-    }
+        $source = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('source'))->getStringValue();
+        $url = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('url'))->getStringValue();
+        $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
 
-    /**
-     * This function gets all the github repository details.
-     *
-     * @param array $item a repository from github with a publicclode.yaml file
-     *
-     * @throws GuzzleException
-     *
-     * @return array
-     */
-    public function getGithubRepositoryInfo(array $item): array
-    {
-        return [
-            'id'          => $item['id'],
-            'name'        => $item['name'],
-            'full_name'   => $item['full_name'],
-            'description' => $item['description'],
-            'html_url'    => $item['html_url'],
-            'private'     => $item['private'],
-            'owner'       => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item) : null,
-            'tags'        => $this->requestFromUrl($item['tags_url']),
-            'languages'   => $this->requestFromUrl($item['languages_url']),
-            'downloads'   => $this->requestFromUrl($item['downloads_url']),
-            //            'releases'    => $this->requestFromUrl($item['releases_url'], '{/id}'),
-            'labels'      => $this->requestFromUrl($item['labels_url'], '{/name}'),
-        ];
-    }
+        switch ($source) {
+            case 'github':
+                // lets get the repository data
+                $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
 
-    /**
-     * This function gets the content of the given url.
-     *
-     * @param string      $url
-     * @param string|null $path
-     *
-     * @throws GuzzleException
-     *
-     * @return array|null
-     */
-    public function requestFromUrl(string $url, ?string $path = null): ?array
-    {
-        if ($path !== null) {
-            $parse = parse_url($url);
-            $url = str_replace([$path], '', $parse['path']);
-        }
+                $existingOrganisations = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($organisationEntity, ['github' => $github['organisation']['github']]);
+                // lets see if we have an organisations // even uitzoeken
+                if (count($existingOrganisations) > 0 && $existingOrganisations[0] instanceof ObjectEntity) {
+                    return $existingOrganisations[0];
+                }
 
-        if ($response = $this->github->request('GET', $url)) {
-            return json_decode($response->getBody()->getContents(), true);
+                $organisation = new ObjectEntity();
+                $organisation->setEntity($organisationEntity);
+                $organisation = $this->synchronizationService->setApplicationAndOrganization($organisation);
+
+                return $this->synchronizationService->populateObject($github['organisation'], $organisation, 'POST');
+            case 'gitlab':
+                // hetelfde maar dan voor gitlab
+            default:
+                // error voor onbeknd type
         }
 
         return null;
     }
 
     /**
-     * This function gets all the repositories of the owner.
+     * @param ObjectEntity $repository
      *
-     * @param string $owner the name of the owner of a repository
+     * @throws \Psr\Cache\InvalidArgumentException
      *
-     * @throws GuzzleException
-     *
-     * @return string|false
+     * @return void dataset at the end of the handler
      */
-    public function getGithubOwnerRepositories(string $owner): ?string
+    public function saveOrganisationToRepository(ObjectEntity $repository): void
     {
-        if ($response = $this->github->request('GET', '/orgs/'.$owner.'/repos')) {
-            return $response->getBody()->getContents();
-        }
-
-        return null;
+        $organisation = $this->getOrganisationFromRepository($repository);
+        $repo['organisation'] = $organisation ? $organisation->getId()->toString() : null;
+        $this->objectEntityService->saveObject($repository, $repo);
     }
 
     /**
-     * This function gets the content of a github file.
+     * @param ObjectEntity $repository
      *
-     * @param array  $repository a github repository
-     * @param string $file       the file that we want to search
-     *
-     * @throws GuzzleException
-     *
-     * @return string|null
+     * @return bool dataset at the end of the handler
      */
-    public function getGithubFileContent(array $repository, string $file): ?string
+    public function checkRepositoryOrganisation(ObjectEntity $repository): bool
     {
-        $path = $this->getRepoPath($repository['html_url']);
-        $client = new Client(['base_uri' => 'https://raw.githubusercontent.com/'.$path.'/main/', 'http_errors' => false]);
-        $response = $client->get($file);
-
-        if ($response->getStatusCode() == 200) {
-            $result = strval($response->getBody());
-        } else {
-            return null;
+        // Set see if we have an org // CHECK DIT! Returnd dit false als niks is gevonden
+        $existingOrganisationId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('organisation'))->getStringValue();
+        if ($existingOrganisationId && $this->entityManager->getRepository('App:ObjectEntity')->find($existingOrganisationId)) {
+            // There is alread an orangisation so we dont need to do anything
+            return true;
         }
 
-        if (!substr_compare($result, $file, -strlen($file), strlen($file))) {
-            return $this->getGithubFileContent($repository, $result);
-        }
-
-        return $result;
+        return false;
     }
 
     /**
-     * This function finds a publiccode yaml file in a repository.
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
      *
-     * @param array $repository a github repository
+     * @throws \Psr\Cache\InvalidArgumentException
      *
-     * @throws GuzzleException
-     *
-     * @return array|null
+     * @return array dataset at the end of the handler
      */
-    public function findPubliccode(array $repository): ?array
+    public function publiccodeFindOrganisationsTroughRepositoriesHandler(array $data, array $configuration): array
     {
-        $publiccode = $this->getGithubFileContent($repository, 'publiccode.yml');
-        if (!$publiccode) {
-            $publiccode = $this->getGithubFileContent($repository, 'publiccode.yaml');
+        $this->configuration = $configuration;
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
+
+        // Let if we have a single repository
+        if (!empty($data)) { // it is one organisation
+
+            try {
+                $repository = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+            } catch (Exception $exception) {
+                return $data;
+            }
+
+            if ($this->checkRepositoryOrganisation($repository)) {
+                return $data;
+            }
+            $this->saveOrganisationToRepository($repository);
+
+            return $data;
         }
 
-        // Lets parse the public code yaml/yml
-        try {
-            $publiccode ? $publiccode = Yaml::parse($publiccode) : $publiccode = null;
-        } catch (ParseException $exception) {
-            return null;
+        // If we want to do it for al repositories
+        foreach ($entity->getObjectEntities() as $repository) {
+            if ($this->checkRepositoryOrganisation($repository)) {
+                continue;
+            }
+            $this->saveOrganisationToRepository($repository);
         }
 
-        return $publiccode;
+        return $data;
     }
 
     /**
-     * This function gets the path of a github repository.
+     * @param Gateway      $source
+     * @param Entity       $entity
+     * @param ObjectEntity $githubOrganisations
      *
-     * @param string $html_url a github repository html_url
+     * @throws GatewayException
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \Respect\Validation\Exceptions\ComponentException
      *
-     * @return string
+     * @return void dataset at the end of the handler
      */
-    public function getRepoPath(string $html_url): string
+    public function syncRepositoriesFromOrganisation(Gateway $source, Entity $entity, ObjectEntity $githubOrganisations): void
     {
-        $parse = parse_url($html_url);
-        $path = str_replace(['.git'], '', $parse['path']);
+        // Even kijken of dit klopt met github object
+        foreach ($githubOrganisations as $repository) {
+            // Creat a sync trough not finding it
+            $sync = $this->synchronizationService->findSyncBySource($source, $entity, $repository['id']);
 
-        return rtrim($path, '/');
+            // activate sync to pull in data
+            $sync = $this->synchronizationService->handleSync($sync, $repository);
+
+            $this->entityManager->persist($sync);
+            $this->entityManager->flush();
+        }
     }
 
     /**
-     * This function check if the github key is provided.
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
      *
-     * @return Response|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @return array dataset at the end of the handler
      */
-    public function checkGithubKey(): ?Response
+    public function publiccodeFindRepositoriesThroughOrganisationsHandler(array $data, array $configuration): array
     {
-        if (!$this->github) {
-            return new Response(
-                'Missing github_key in env',
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
+        $this->configuration = $configuration;
+
+        // Load from config
+        $source = $this->entityManager->getRepository('App:Entity')->find($this->configuration['sourceId']);
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
+
+        $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
+        $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
+
+        // Let see if it is one or alle organisations
+        if (!empty($data)) { // it is one organisation
+            // Heb ik een id?
+
+            // trycatch
+            $organisation = $this->objectEntityService->getObject($data['id']);
+            // Get organisation from github
+            $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+            $this->syncRepositoriesFromOrganisation($source, $entity, $githubOrganisation['owns']);
+
+            return $data;
         }
 
-        return null;
+        // If we want to do it for al repositiries
+        foreach ($entity->getObjectEntities() as $organisation) {
+            // Get organisation from github
+            $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+            $this->syncRepositoriesFromOrganisation($source, $entity, $githubOrganisation['owns']);
+        }
+
+        return $data;
     }
 
     /**
-     * This function gets the content of a specific repository.
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
      *
-     * @param string $id
-     *
-     * @throws GuzzleException
-     *
-     * @return Response
+     * @return array dataset at the end of the handler
      */
-    public function getGithubRepositoryContent(string $id): Response
+    public function publiccodeCheckRepositoriesForPublicCodeHandler(array $data, array $configuration): array
     {
-        if ($this->checkGithubKey()) {
-            return $this->checkGithubKey();
-        }
-        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
+        $this->configuration = $configuration;
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
-        return new Response(json_encode($this->getGithubRepositoryInfo(json_decode($response->getBody()->getContents(), true))), 200, ['content-type' => 'json']);
+        if (!empty($data)) { // it is one organisation
+            // Heb ik een id?
+
+            // trycatch
+            $repository = $this->objectEntityService->getObject($data['id']);
+
+            if (!$component = $repository->GetValueOnAtribute('component')) {
+                $component = new ObjectEntity();
+                $component->setEntity($componentEntity);
+                $component = $this->synchronizationService->populateObject(null, $component, 'POST');
+            }
+
+            switch ($repository['source']) {
+                case 'github':
+                    //@todo zouden we via een sync moeten willen. Dus na hier negeren
+                    if ($file = $this->githubService->getRepositoryFileFromUrl($repository['url'], 'publiccode.yaml'));
+
+                        $yamlPubliccode = decode($file['content']);
+                        $component = $this->parsePubliccodeToComponent(Yaml::parse($yamlPubliccode), $repository->GetValueOnAtribute('component'));
+                        // @todosave component
+
+                case 'gitlab':
+
+                default:
+                    //@todo gooi error
+            }
+        }
+
+        // If we want to do it for al repositories
+        foreach ($entity->getObjectEntities() as $repository) {
+            $existingComponentId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('component'))->getStringValue();
+            if ($existingComponentId && $existingComponent = $this->entityManager->getRepository('App:ObjectEntity')->find($existingComponentId)) {
+                $component = new ObjectEntity();
+                $component->setEntity($componentEntity);
+                $component = $this->synchronizationService->populateObject($existingComponent, $component, 'POST');
+            }
+        }
     }
 
     /**
-     * This function creates a Collection from a github repository.
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
      *
-     * @param string $id id of the github repository
-     *
-     * @throws GuzzleException
-     *
-     * @return Response Uuid of created Collection
+     * @return array dataset at the end of the handler
      */
-    public function createCollection(string $id): Response
+    public function publiccodeRatingHandler(array $data, array $configuration): array
     {
-        if ($this->checkGithubKey()) {
-            return $this->checkGithubKey();
+        $this->configuration = $configuration;
+        if (!empty($data)) { // it is one organisation
+            // Heb ik een id?
+
+            // trycatch
+            $component = $this->objectEntityService->getObject($data['id']);
+
+            $component = $this->rateComponent($component);
+
+            // @todosave component
         }
-        $response = $this->github->request('GET', 'https://api.github.com/repositories/'.$id);
-        $repository = json_decode($response->getBody()->getContents(), true);
-        $publiccode = $this->findPubliccode($repository);
 
-        $collection = new CollectionEntity();
-        $collection->setName($repository['name']);
-        $collection->setDescription($repository['description']);
-        $collection->setSourceType('url');
-        $collection->setSourceUrl($repository['html_url']);
-        $collection->setSourceBranch($repository['default_branch']);
-        $collection->setLocationOAS($publiccode ? $publiccode['description']['en']['apiDocumentation'] : null);
-        isset($publiccode['description']['en']['testDataLocation']) && $collection->setTestDataLocation($publiccode['description']['en']['testDataLocation']);
+        // If we want to do it for al repositiries
+        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
+        foreach ($entity->getObjectEntities() as $component) {
+            $component = $this->rateComponent($component);
 
-        $this->entityManager->persist($collection);
-        $this->entityManager->flush();
-
-        return new Response(
-            $this->serializer->serialize(
-                ['message' => 'Repository: '.$id.' successfully created into a '.'Collection with id: '.$collection->getId()->toString()],
-                'json'
-            ),
-            200,
-            ['content-type' => 'json']
-        );
+            // @todosave component
+        }
     }
 
-    /**
-     * This function is searching for repositories containing a publiccode.yaml file.
-     *
-     * @throws GuzzleException
-     *
-     * @return Response
+    /*
+     * Concerts publiccodefiles to components
      */
-    public function discoverGithub(): Response
+    public function parsePubliccodeToComponent(array $publicode, ObjectEntity $component): ObjectEntity
     {
-        if ($this->checkGithubKey()) {
-            return $this->checkGithubKey();
-        }
+    }
 
-        try {
-            $response = $this->github->request('GET', '/search/code', ['query' => $this->query]);
-        } catch (ClientException $exception) {
-            return new Response(
-                $exception,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
-        }
+    /*
+     * Rates a component
+     */
+    public function rateComponent(ObjectEntity $component): ObjectEntity
+    {
+        $component = $component->toArray();
+        $rating = 1;
 
-        return new Response($response->getBody()->getContents(), 200, ['content-type'=>'json']);
+//        if(in_array['name'],$component)){
+//            $rating ++;
+//        }
+
+        //@todo checks doornemen
+
+        return $component;
     }
 }

@@ -311,8 +311,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query
             ->leftJoin('o.objectValues', 'valueSearch')
             ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
-            ->andWhere('valueSearch.stringValue LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
-            ->setParameter('search', '%'.$search.'%');
+            ->andWhere('LOWER(valueSearch.stringValue) LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
+            ->setParameter('search', '%'.strtolower($search).'%');
 
         return $query;
     }
@@ -511,8 +511,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // If the attribute we filter on is multiple=true
             $query = $this->arrayValueMultipleFilter($query, $key, $value, $prefix);
         } else {
-            $query->andWhere("$prefix$key.stringValue IN (:$key)")
-                ->setParameter($key, $value);
+            $query->andWhere("LOWER($prefix$key.stringValue) IN (:$key)")
+                ->setParameter($key, array_map('strtolower', $value));
         }
 
         return $query;
@@ -572,7 +572,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $andWhere = '(';
         foreach ($value as $i => $item) {
-            $andWhere .= "$prefix$key.stringValue LIKE :$key$i";
+            $andWhere .= "LOWER($prefix$key.stringValue) LIKE LOWER(:$key$i)";
             if ($i !== array_key_last($value)) {
                 $andWhere .= ' OR ';
             }
@@ -608,10 +608,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
         if ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
-            $query->andWhere("$prefix$key.stringValue LIKE :$key")
+            $query->andWhere("LOWER($prefix$key.stringValue) LIKE LOWER(:$key)")
                 ->setParameter($key, "%$value%");
         } else {
-            $query->andWhere("$prefix$key.stringValue = :$key")
+            // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
+            $query->andWhere("LOWER($prefix$key.stringValue) LIKE LOWER(:$key)")
                 ->setParameter($key, "$value");
         }
 

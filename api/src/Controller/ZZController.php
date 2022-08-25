@@ -5,11 +5,11 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Exception\GatewayException;
 use App\Service\DocumentService;
-use App\Service\EavService;
 use App\Service\HandlerService;
 use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
+use Doctrine\ORM\NonUniqueResultException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 class ZZController extends AbstractController
 {
@@ -27,17 +26,13 @@ class ZZController extends AbstractController
     public function dynamicAction(
         ?string $path,
         Request $request,
-        EavService $eavService,
         DocumentService $documentService,
         ValidationService $validationService,
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService,
-        Stopwatch $stopwatch
+        ProcessingLogService $processingLogService
     ): Response {
-        $stopwatch->start('ZZController');
-
         // Below is hacky tacky
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
@@ -53,23 +48,28 @@ class ZZController extends AbstractController
         }
         // End of hacky tacky
 
+        // default acceptType for if we throw an error response.
+        $acceptType = $handlerService->getRequestType('accept');
+        in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
+
         // Get full path
-        $stopwatch->start('getEndpoint', 'ZZController');
-        $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
-        $stopwatch->stop('getEndpoint');
+        try {
+            $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
+        } catch (NonUniqueResultException $exception) {
+            return new Response(
+                $serializer->serialize(['message' =>  'Found more than one Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => $acceptType]
+            );
+        }
 
         // exit here if we do not have an endpoint
         if (!isset($endpoint)) {
-            $acceptType = $handlerService->getRequestType('accept');
-            in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
-
             return new Response(
                 $serializer->serialize(['message' =>  'Could not find an Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),
                 Response::HTTP_BAD_REQUEST,
                 ['content-type' => $acceptType]
             );
-
-            return $response->prepare($request);
         }
 
         // Let create the variable
@@ -94,10 +94,7 @@ class ZZController extends AbstractController
 
         // Try handler proces and catch exceptions
         try {
-            $stopwatch->start('handleEndpoint', 'ZZController');
             $result = $handlerService->handleEndpoint($endpoint, $parameters);
-            $stopwatch->stop('handleEndpoint');
-            $stopwatch->stop('ZZController');
 
             return $result;
         } catch (GatewayException $gatewayException) {

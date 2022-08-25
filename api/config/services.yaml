@@ -25,6 +25,38 @@ services:
         arguments: [ '@App\Swagger\GatewayDecorator.inner' ]
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    
+    synchronizationservice:
+        public: true
+        class: App\Service\SynchronizationService
+        arguments:
+            $commonGroundService: '@Conduction\CommonGroundBundle\Service\CommonGroundService'
+            $entityManager: '@doctrine.orm.entity_manager'
+            $session: '@session'
+            $gatewayService: '@App\Service\GatewayService'
+            $functionService: '@App\Service\FunctionService'
+            $logService: '@App\Service\LogService'
+            $translationService: '@App\Service\TranslationService'
+            $messageBus: '@messenger.bus.default'
+            $eavService: '@App\Service\EavService' 
+            
+    publiccodeoldservice:
+        public: true
+        class: App\Service\PubliccodeOldService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $serializer: '@serializer'
+            $parameterBag: '@parameter_bag'
+
+    publiccodeservice:
+        public: true
+        class: App\Service\PubliccodeService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $synchronizationService: '@App\Service\SynchronizationService'
+            $objectEntityService: '@App\Service\ObjectEntityService'
+            $githubService: '@App\Service\GithubApiService'
+            $gitlabService: '@App\Service\GitlabApiService'
 
     Redis:
         class: Redis
