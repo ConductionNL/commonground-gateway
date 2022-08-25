@@ -590,7 +590,7 @@ class Attribute
     private $searchable = false;
 
     /**
-     * Whether or not this property is sortable. (orderBy)
+     * Whether or not this property is sortable. (orderBy).
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
