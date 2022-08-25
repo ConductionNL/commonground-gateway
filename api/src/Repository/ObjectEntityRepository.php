@@ -205,7 +205,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      * Also checks for filters used on multiple attributes and handles these.
      *
-     * @param array $filters       The array of query params / filters.
+     * @param array $filters     The array of query params / filters.
      * @param array $filterCheck The allowed filters. See: getFilterParameters().
      *
      * @return array A 'clean' array. And transformed array.
@@ -615,12 +615,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Checks if we need to add orderBy to an existing QueryBuilder and if so actually adds orderBy to the query.
      * This depends on the given $order array and the allowed attributes to order on for the given Entity.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param Entity $entity The Entity to check for allowed attributes to order on.
-     * @param array $order The order array with the order query param used with the current get collection api-call.
-     * @param int $level
-     * @param string $prefix
-     * @param string $objectPrefix
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param Entity       $entity       The Entity to check for allowed attributes to order on.
+     * @param array        $order        The order array with the order query param used with the current get collection api-call.
+     * @param int          $level
+     * @param string       $prefix
+     * @param string       $objectPrefix
      *
      * @return QueryBuilder
      */
@@ -651,10 +651,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Function that handles special orderBy options starting with _
      * Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param string $key The order[$key] used in the order query param.
-     * @param string $value The value used with the query param, desc or asc.
-     * @param string $prefix
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The order[$key] used in the order query param.
+     * @param string       $value  The value used with the query param, desc or asc.
+     * @param string       $prefix
      *
      * @return QueryBuilder The QueryBuilder.
      */
@@ -678,10 +678,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder with the correct orderBy, using the given input and prefix.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param string $key The order[$key] used in the order query param.
-     * @param string $value The value used with the query param, desc or asc.
-     * @param string $prefix
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param string       $key    The order[$key] used in the order query param.
+     * @param string       $value  The value used with the query param, desc or asc.
+     * @param string       $prefix
      *
      * @return QueryBuilder
      */
