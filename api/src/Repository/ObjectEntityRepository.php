@@ -628,6 +628,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $value = array_values($order)[0];
 
         if (in_array($key, $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
+            // todo, will this clash with the leftJoin of filters?! if so make sure we always, only do one join.
             $query->leftJoin("$objectPrefix.objectValues", $prefix.$key);
 
             if (substr($key, 0, 1) == '_') {
