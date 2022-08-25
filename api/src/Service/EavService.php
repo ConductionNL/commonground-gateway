@@ -1089,6 +1089,12 @@ class EavService
         $results = [];
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
+            // If orderBy is used on an attribute we needed to add the value of that attribute to the select of the query...
+            // In this^ case $object will be an array containing the object and this specific value we are ordering on.
+            if (is_array($object)) {
+                $object = $object[0];
+                // $object['stringValue'] contains the value we are ordering on.
+            }
             $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $this->stopwatch->lap('renderResults');
         }
