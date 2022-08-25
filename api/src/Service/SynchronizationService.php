@@ -466,6 +466,7 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
+            $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
             $synchronization->setObject($object);
@@ -753,7 +754,7 @@ class SynchronizationService
 //        }, ARRAY_FILTER_USE_KEY);
 
         if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
-            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($this->configuration['apiSource']['skeletonIn'], $sourceObject) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
+            $sourceObject = $this->translationService->dotHydrator($this->configuration['apiSource']['skeletonIn'] ?? $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
@@ -766,6 +767,7 @@ class SynchronizationService
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['locationDateChangedField'])));
         }
         $object = $this->populateObject($sourceObject, $object);
+        $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
 
         return $sync->setObject($object);
     }
