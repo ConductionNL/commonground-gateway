@@ -141,9 +141,13 @@ class UhrZaakService
      * This function returns updates the zaak with the unused elements under 'toelichting'.
      *
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array $data          The data from the call
-     *
+     * @param array $data The data from the call
+     * @param ObjectEntity $zaakObject The zaak object entity that relates to the entity Zaak
      * @return ObjectEntity
+     * @throws \App\Exception\GatewayException
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \Respect\Validation\Exceptions\ComponentException
      */
     public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject): ObjectEntity
     {
