@@ -167,6 +167,8 @@ class PubliccodeService
             $this->entityManager->persist($sync);
             $this->entityManager->flush();
         }
+
+        return;
     }
 
     /**
@@ -188,20 +190,23 @@ class PubliccodeService
         $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
         $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
 
-        // Let see if it is one or alle organisations
         if (!empty($data)) { // it is one organisation
-            // Heb ik een id?
 
-            // trycatch
-            $organisation = $this->objectEntityService->getObject($data['id']);
+            var_dump($data['response']['id']);
+            try {
+                $organisation = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+            } catch (Exception $exception) {
+                return $data;
+            }
+
             // Get organisation from github
             $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);
+            var_dump($githubOrganisation);
             $this->syncRepositoriesFromOrganisation($source, $entity, $githubOrganisation['owns']);
 
             return $data;
         }
 
-        // If we want to do it for al repositiries
         foreach ($entity->getObjectEntities() as $organisation) {
             // Get organisation from github
             $githubOrganisation = $this->githubService->getOrganisationOnUrl($organisation['github']);

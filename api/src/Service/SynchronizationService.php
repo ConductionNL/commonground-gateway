@@ -507,11 +507,11 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
-     *
      * @return Synchronization The updated synchronisation object
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
 
