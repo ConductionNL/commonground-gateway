@@ -967,6 +967,7 @@ class EavService
      * @param Entity     $entity
      * @param Request    $request
      * @param array|null $fields
+     * @param array|null $extend
      * @param $extension
      * @param null   $filters
      * @param string $acceptType
@@ -1002,13 +1003,17 @@ class EavService
         if (array_key_exists('order', $query)) {
             $order = $query['order'];
             unset($query['order']);
-            if (count($order) > 1) {
+            if (!is_array($order)) {
+                $orderCheckStr = implode(', ', $orderCheck);
+                $message = 'Please give an attribute to order on. Like this: ?order[attributeName]=desc/asc. Supported order query parameters: '.$orderCheckStr;
+            }
+            if (is_array($order) && count($order) > 1) {
                 $message = 'Only one order query param at the time is allowed.';
             }
-            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
+            if (is_array($order) && !in_array(array_values($order)[0], ['desc', 'asc'])) {
                 $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
             }
-            if (!in_array(array_keys($order)[0], $orderCheck)) {
+            if (is_array($order) && !in_array(array_keys($order)[0], $orderCheck)) {
                 $orderCheckStr = implode(', ', $orderCheck);
                 $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
             }
@@ -1016,7 +1021,7 @@ class EavService
                 return [
                     'message' => $message,
                     'type'    => 'error',
-                    'path'    => $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0],
+                    'path'    => is_array($order) ? $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0] : $entity->getName().'?order='.$order,
                     'data'    => ['order' => $order],
                 ];
             }

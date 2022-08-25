@@ -55,7 +55,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $countQuery = clone $baseQuery;
 
         // If we have to order do it only for the findByEntity QueryBuilder.
-        $baseQuery = $this->addOrderBy($baseQuery, $entity, $order);
+        if (!empty($order)) {
+            $baseQuery = $this->addOrderBy($baseQuery, $entity, $order);
+        }
 
         return [
             'objects' => $this->findByEntity($entity, [], [], $offset, $limit, $baseQuery),
@@ -167,7 +169,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->setParameter('parentOrganizations', $parentOrganizations)
             ->setParameter('defaultOrganization', 'http://testdata-organization');
 
-        return $this->addOrderBy($query, $entity, $order);
+        if (!empty($order)) {
+            $this->addOrderBy($query, $entity, $order);
+        }
+
+        return $query;
     }
 
     /**
@@ -615,13 +621,20 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    private function addOrderBy(QueryBuilder $query, Entity $entity, array $order): QueryBuilder
+    private function addOrderBy(QueryBuilder $query, Entity $entity, array $order, int $level = 0, string $prefix = 'value', string $objectPrefix = 'o'): QueryBuilder
     {
-        if (!empty($order)) {
-            $orderCheck = $this->getOrderParameters($entity);
+        $orderCheck = $this->getOrderParameters($entity);
+        $key = array_keys($order)[0];
+        $value = array_values($order)[0];
 
-            if (in_array(array_keys($order)[0], $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
-                $query = $this->getObjectEntityOrder($query, array_keys($order)[0], array_values($order)[0]);
+        if (in_array($key, $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
+            $query->leftJoin("$objectPrefix.objectValues", $prefix.$key);
+
+            if (substr($key, 0, 1) == '_') {
+                $query = $this->getObjectEntityOrder($query, $key, $value, $objectPrefix);
+            } //todo: here we could add an if statement to check for subresource ordering. (see buildQuery() for how this is done for filters)
+            else {
+                $query = $this->buildOrderQuery($query, $key, $value, $prefix);
             }
         }
 
@@ -629,28 +642,46 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Function that handles the order by filter. Adds to an existing QueryBuilder.
+     * Function that handles special orderBy options starting with _
+     * Adds to an existing QueryBuilder.
      *
      * @param QueryBuilder $query The existing QueryBuilder.
-     * @param $key
-     * @param $value
+     * @param string $key The order[$key] used in the order query param.
+     * @param string $value The value used with the query param, desc or asc.
      * @param string $prefix
      *
      * @return QueryBuilder The QueryBuilder.
      */
-    private function getObjectEntityOrder(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    private function getObjectEntityOrder(QueryBuilder $query, string $key, string $value, string $prefix = 'o'): QueryBuilder
     {
         switch ($key) {
             case '_dateCreated':
-                $query->orderBy($prefix.'.dateCreated', $value);
+                $query->orderBy("$prefix.dateCreated", $value);
                 break;
             case '_dateModified':
-                $query->orderBy($prefix.'.dateModified', $value);
+                $query->orderBy("$prefix.dateModified", $value);
                 break;
             default:
-                $query->orderBy($prefix.'.'.$key, $value);
+                $query->orderBy("$prefix.$key", $value);
                 break;
         }
+
+        return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with the correct orderBy, using the given input and prefix.
+     *
+     * @param QueryBuilder $query The existing QueryBuilder.
+     * @param string $key The order[$key] used in the order query param.
+     * @param string $value The value used with the query param, desc or asc.
+     * @param string $prefix
+     *
+     * @return QueryBuilder
+     */
+    private function buildOrderQuery(QueryBuilder $query, string $key, string $value, string $prefix): QueryBuilder
+    {
+        $query->orderBy("$prefix$key.stringValue", $value);
 
         return $query;
     }
