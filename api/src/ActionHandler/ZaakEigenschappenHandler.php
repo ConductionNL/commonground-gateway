@@ -3,11 +3,19 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
+use App\Service\ObjectEntityService;
+use App\Service\ValidatorService;
 use App\Service\ZdsZaakService;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Container\ContainerInterface;
 
-class ZaakTypeHandler implements ActionHandlerInterface
+class ZaakEigenschappenHandler implements ActionHandlerInterface
 {
+    private EntityManagerInterface $entityManager;
+    private ObjectEntityService $objectEntityService;
+    private ValidatorService $validatorService;
+    private array $usedValues = [];
+
     private ZdsZaakService $zdsZaakService;
 
     public function __construct(ContainerInterface $container)
@@ -21,7 +29,7 @@ class ZaakTypeHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function runs the zaak type plugin.
+     * This function runs the zaakeigenschappen plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
@@ -35,6 +43,6 @@ class ZaakTypeHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zaakTypeHandler($data, $configuration);
+        return $this->zdsZaakService->zaakEigenschappenHandler($data, $configuration);
     }
 }
