@@ -212,10 +212,11 @@ class SynchronizationService
      */
     private function getSourceFromConfig(): ?Gateway
     {
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
-
-        if ($source instanceof Gateway) {
-            return $source;
+        if (isset($this->configuration['source'])) {
+            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
+            if ($source instanceof Gateway) {
+                return $source;
+            }
         }
 
         return null;
@@ -228,10 +229,11 @@ class SynchronizationService
      */
     private function getEntityFromConfig(): ?Entity
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
-
-        if ($entity instanceof Entity) {
-            return $entity;
+        if (isset($this->configuration['entity'])) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
+            if ($entity instanceof Entity) {
+                return $entity;
+            }
         }
 
         return null;

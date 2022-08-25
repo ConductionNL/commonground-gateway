@@ -585,9 +585,18 @@ class Attribute
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
     private $searchable = false;
+
+    /**
+     * Whether or not this property is sortable. (orderBy)
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private $sortable = false;
 
     /**
      * Whether or not the object of this property will be deleted if the parent object is deleted.
@@ -1511,6 +1520,18 @@ class Attribute
     public function setSearchable(?bool $searchable): self
     {
         $this->searchable = $searchable;
+
+        return $this;
+    }
+
+    public function getSortable(): ?bool
+    {
+        return $this->sortable;
+    }
+
+    public function setSortable(?bool $sortable): self
+    {
+        $this->sortable = $sortable;
 
         return $this;
     }
