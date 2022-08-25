@@ -212,10 +212,11 @@ class SynchronizationService
      */
     private function getSourceFromConfig(): ?Gateway
     {
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
-
-        if ($source instanceof Gateway) {
-            return $source;
+        if (isset($this->configuration['source'])) {
+            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
+            if ($source instanceof Gateway) {
+                return $source;
+            }
         }
 
         return null;
@@ -228,10 +229,11 @@ class SynchronizationService
      */
     private function getEntityFromConfig(): ?Entity
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
-
-        if ($entity instanceof Entity) {
-            return $entity;
+        if (isset($this->configuration['entity'])) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
+            if ($entity instanceof Entity) {
+                return $entity;
+            }
         }
 
         return null;
@@ -240,8 +242,8 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Gateway $gateway       The source to call
-     * @param string|null $id        The id to request (optional)
+     * @param Gateway     $gateway The source to call
+     * @param string|null $id      The id to request (optional)
      *
      * @return array The configuration for the source to call
      */
@@ -268,13 +270,14 @@ class SynchronizationService
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
             $id = null;
         }
+
         return $gateway->getLocation().$this->configuration['location'].($id ? '/'.$id : '');
     }
 
     /**
      * Determines the query parameters for a request done with the callservice.
      *
-     * @param string|null $id            The id to request (optional)
+     * @param string|null $id The id to request (optional)
      *
      * @return array The resulting query parameters.
      */
@@ -295,7 +298,7 @@ class SynchronizationService
     /**
      * Gets the configuration for the source and fetches the results on the source.
      *
-     * @param Gateway $gateway       The source to get the data from
+     * @param Gateway $gateway The source to get the data from
      *
      * @return array The results found on the source
      */
@@ -573,8 +576,8 @@ class SynchronizationService
     /**
      * Translates the input according to the translation table referenced in the configuration of the action.
      *
-     * @param array $sourceObject  The external object found in the source
-     * @param bool $translateOut   Default = false, if set to true will use translationsOut instead of translationsIn.
+     * @param array $sourceObject The external object found in the source
+     * @param bool  $translateOut Default = false, if set to true will use translationsOut instead of translationsIn.
      *
      * @return array The translated external object
      */
@@ -616,7 +619,7 @@ class SynchronizationService
     /**
      * Removes objects that should not be send or received from the data.
      *
-     * @param array $object     The object that should be cleared
+     * @param array $object The object that should be cleared
      *
      * @return array The cleared objects
      */
@@ -729,8 +732,8 @@ class SynchronizationService
     /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param Synchronization $sync          The synchronisation object to update
-     * @param array           $sourceObject  The external object to synchronise from
+     * @param Synchronization $sync         The synchronisation object to update
+     * @param array           $sourceObject The external object to synchronise from
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *

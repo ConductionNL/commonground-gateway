@@ -23,6 +23,7 @@ class ActionSubscriber implements EventSubscriberInterface
         return [
             'commongateway.handler.pre'     => 'handleEvent',
             'commongateway.handler.post'    => 'handleEvent',
+            'commongateway.response.pre'    => 'handleEvent',
             'commongateway.cronjob.trigger' => 'handleEvent',
             'commongateway.object.create'   => 'handleEvent',
             'commongateway.object.read'     => 'handleEvent',
