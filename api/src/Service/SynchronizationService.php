@@ -694,7 +694,7 @@ class SynchronizationService
     {
         foreach($objectArray as $key => $value) {
             if(!$value)
-                unset($objectArray[$key])
+                unset($objectArray[$key]);
         }
 
         return $objectArray;
