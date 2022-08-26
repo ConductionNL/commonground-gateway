@@ -202,8 +202,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      * Also checks for filters used on multiple attributes and handles these.
      *
-     * @param array $filters    The array of query params / filters.
-     * @param Entity $entity    The Entity.
+     * @param array  $filters The array of query params / filters.
+     * @param Entity $entity  The Entity.
      *
      * @return array A 'clean' array. And transformed array.
      */
@@ -426,14 +426,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param int          $level  The depth level, if we are filtering on subresource.subresource etc.
      * @param string       $prefix The prefix of the value for the filter we are adding.
      *
-     * @return QueryBuilder The QueryBuilder.
      * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
      */
     private function buildSubresourceQuery(QueryBuilder $query, string $key, array $value, int $level, string $prefix): QueryBuilder
     {
         // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
         $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
         $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
+
         return $this->buildQuery(
             $query,
             $value,
@@ -605,8 +607,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Replace dot order _ into . (symfony query param thing) and transform dot order into an array with recursiveFilterSplit().
      *
-     * @param array $order      The order array with the order query param used with the current get collection api-call.
-     * @param Entity $entity    The entity.
+     * @param array  $order  The order array with the order query param used with the current get collection api-call.
+     * @param Entity $entity The entity.
      *
      * @return array A 'clean' array. And transformed array.
      */
@@ -633,14 +635,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Checks if we need to add orderBy to an existing QueryBuilder and if so actually adds orderBy to the query.
      * This depends on the given $order array and the allowed attributes to order on for the given Entity.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param array $order The order array with the order query param used with the current get collection api-call.
-     * @param int $level
-     * @param string $prefix
-     * @param string $objectPrefix
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param array        $order        The order array with the order query param used with the current get collection api-call.
+     * @param int          $level
+     * @param string       $prefix
+     * @param string       $objectPrefix
+     *
+     * @throws Exception
      *
      * @return QueryBuilder
-     * @throws Exception
      */
     private function addOrderBy(QueryBuilder $query, array $order, int $level = 0, string $prefix = 'valueOrderBy', string $objectPrefix = 'o'): QueryBuilder
     {
@@ -660,7 +663,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $query = $this->buildOrderQuery($query, $key, $value, $prefix);
             }
         }
-
 
         return $query;
     }
@@ -711,6 +713,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // If $value is an array we need to order on a subresource (example: subresource.key = something)
         $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
         $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
+
         return $this->addOrderBy(
             $query,
             $value,
