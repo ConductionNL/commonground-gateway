@@ -112,7 +112,6 @@ class GithubApiService
         try {
             $response = $this->github->request('GET', 'repos/'.$slug);
         } catch (ClientException $exception) {
-            var_dump($exception->getMessage());
 
             return new Response(
                 $exception,
@@ -218,5 +217,35 @@ class GithubApiService
         $response = json_decode($response->getBody()->getContents(), true);
 
         return $response['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($response) : null;
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $slug
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null|Response
+     */
+    public function checkPublicRepository(string $slug)
+    {
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
+
+        try {
+            $response = $this->github->request('GET', 'repos/'.$slug);
+        } catch (ClientException $exception) {
+            return new Response(
+                $exception,
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
+        }
+
+        $response = json_decode($response->getBody()->getContents(), true);
+
+        return $response['private'];
     }
 }
