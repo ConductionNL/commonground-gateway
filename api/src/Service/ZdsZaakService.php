@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
+use App\Entity\Synchronization;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ZdsZaakService
@@ -86,6 +87,26 @@ class ZdsZaakService
     }
 
     /**
+     * @param ObjectEntity $objectEntity
+     * @param array $data
+     * @return Synchronization
+     */
+    public function createSynchronization(ObjectEntity $objectEntity, array $data): Synchronization
+    {
+        $synchronization = new Synchronization();
+        $synchronization->setObject($objectEntity);
+        $synchronization->setEntity($objectEntity->getEntity());
+        $synchronization->setGateway();
+
+        //TODO: is this right this way? Feels very hardcoded
+        $synchronization->setEndpoint("/zaken/{$data['response']['uuid']}/zaakeigenschappen");
+
+        $this->entityManager->persist($synchronization);
+
+        return $synchronization;
+    }
+
+    /**
      * This function creates a zaak eigenschap.
      *
      * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
@@ -98,10 +119,12 @@ class ZdsZaakService
      *
      * @return ObjectEntity Creates a zaakeigenschap
      */
-    public function createObject(array $eigenschap, ObjectEntity $objectEntity): ObjectEntity
+    public function createObject(array $eigenschap, ObjectEntity $objectEntity, array $data): ObjectEntity
     {
         $object = new ObjectEntity();
         $object->setEntity($objectEntity->getEntity());
+
+        $this->createSynchronization($objectEntity, $data);
 
         return $this->synchronizationService->populateObject($eigenschap, $object, 'POST');
     }
@@ -238,7 +261,7 @@ class ZdsZaakService
         if (count($objectEntities) > 0) {
             foreach ($objectEntities as $objectEntity) {
                 $eigenschap = $this->getEigenschap($objectEntity, $extraElements, $data['response']['url']);
-                $eigenschap !== null && $eigenschappen[] = $this->createObject($eigenschap, $objectEntity)->getSelf();
+                $eigenschap !== null && $eigenschappen[] = $this->createObject($eigenschap, $objectEntity, $data)->getSelf();
             }
         }
         $this->getZaak($data, $configuration, $extraElements, $eigenschappen);
