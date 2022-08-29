@@ -174,8 +174,6 @@ class SynchronizationService
 
         // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($gateway);
-        var_dump(count($results));
-        var_dump('collectionHandler');
 
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
@@ -269,7 +267,6 @@ class SynchronizationService
     {
         $location = preg_replace_callback('/{{.*?}}/', function ($match) use ($data) {return $data[$match[1]]; }, $this->configuration['location']);
 
-        var_dump($location);
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
             $id = null;
         }
@@ -530,8 +527,6 @@ class SynchronizationService
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
-        var_dump(!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified()));
-
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject);
@@ -575,7 +570,7 @@ class SynchronizationService
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
         if ($method !== 'RESPONSE') {
             // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', array_merge(['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()], $extraData));
+            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
         }
 
         return $objectEntity;
@@ -683,8 +678,8 @@ class SynchronizationService
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
         $synchronization->setLastChecked($now);
-        if ($body->has($this->configuration['apiSource']['location']['idField'])) {
-            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
+        if ($body->has($this->configuration['apiSource']['location']['IdField'])) {
+            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['IdField']));
         }
         $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
 
@@ -749,7 +744,8 @@ class SynchronizationService
 //            ]);
         }
 
-        if (is_array($result)) {
+        if(is_Array($result)) {
+            var_dump('callServiceConfigUrl+result');
             var_dump($callServiceConfig['url']);
             var_dump($result);
             exit;
