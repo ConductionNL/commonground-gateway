@@ -7,15 +7,13 @@ use App\Service\ObjectEntityService;
 use App\Service\ValidatorService;
 use App\Service\ZdsZaakService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+use Respect\Validation\Exceptions\ComponentException;
 
 class ZaakEigenschappenHandler implements ActionHandlerInterface
 {
-    private EntityManagerInterface $entityManager;
-    private ObjectEntityService $objectEntityService;
-    private ValidatorService $validatorService;
-    private array $usedValues = [];
-
     private ZdsZaakService $zdsZaakService;
 
     public function __construct(ContainerInterface $container)
@@ -34,10 +32,10 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return array
      */

@@ -4,7 +4,11 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 
 class ZdsZaakService
 {
@@ -96,9 +100,10 @@ class ZdsZaakService
         $synchronization = new Synchronization();
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
-        $synchronization->setGateway();
+        $synchronization->setGateway(); //todo
 
         //TODO: is this right this way? Feels very hardcoded
+        //TODO: use twig parser on this instead
         $synchronization->setEndpoint("/zaken/{$data['response']['uuid']}/zaakeigenschappen");
 
         $this->entityManager->persist($synchronization);
@@ -112,10 +117,10 @@ class ZdsZaakService
      * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return ObjectEntity Creates a zaakeigenschap
      */
@@ -167,10 +172,10 @@ class ZdsZaakService
      * @param ObjectEntity $zaakObject    The zaak object entity that relates to the entity Zaak
      * @param array        $eigenschappen The eigenschappen @ids
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return ObjectEntity
      */
@@ -223,10 +228,10 @@ class ZdsZaakService
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $eigenschappen The eigenschappen @ids
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return void
      */
@@ -243,10 +248,10 @@ class ZdsZaakService
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the zaakeigenschap action
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return array|null
      */

@@ -94,6 +94,14 @@ class Synchronization
     private Gateway $gateway;
 
     /**
+     * @var string|null
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private ?string $endpoint = null;
+
+    /**
      * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
@@ -200,6 +208,18 @@ class Synchronization
     public function setGateway(?Gateway $gateway): self
     {
         $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getEndpoint(): ?string
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(string $endpoint): self
+    {
+        $this->endpoint = $endpoint;
 
         return $this;
     }
