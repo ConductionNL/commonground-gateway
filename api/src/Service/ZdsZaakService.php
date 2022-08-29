@@ -14,6 +14,7 @@ class ZdsZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
+    private array $configuration;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -27,26 +28,25 @@ class ZdsZaakService
      * This function returns the identifierPath field from the configuration array.
      *
      * @param array $data          The data from the call
-     * @param array $configuration The configuration of the action
      *
      * @return string The identifierPath in the action configuration
      */
-    public function getIdentifier(array $data, array $configuration): string
+    public function getIdentifier(array $data): string
     {
         $dotData = new \Adbar\Dot($data);
 
-        return $dotData->get($configuration['identifierPath']);
+        return $dotData->get($this->configuration['identifierPath']);
     }
 
     /**
      * @param string $value
-     * @param string $path
      * @param array  $data  The data from the call
      *
      * @return array
      */
-    public function overridePath(string $value, string $path, array $data): array
+    public function overridePath(string $value, array $data): array
     {
+        $path = $this->configuration['identifierPath'];
         $dotData = new \Adbar\Dot($data);
         $dotData->set($path, $value);
 
@@ -55,21 +55,20 @@ class ZdsZaakService
 
     /**
      * @param array $data          The data from the call
-     * @param array $configuration The configuration of the action
      *
      * @return array
      */
-    public function zaakTypeHandler(array $data, array $configuration): array
+    public function zaakTypeHandler(array $data): array
     {
-        $identifier = $this->getIdentifier($data['request'], $configuration);
-        $entity = $this->entityManager->getRepository('App:Entity')->find($configuration['entityId']);
+        $identifier = $this->getIdentifier($data['request']);
+        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['entityId']);
         $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['identificatie' => $identifier]);
 
         if (count($objectEntities) > 0 && $objectEntities[0] instanceof ObjectEntity) {
             $objectEntity = $objectEntities[0];
 
             $url = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
-            $data['request'] = $this->overridePath($url, $configuration['identifierPath'], $data['request']);
+            $data['request'] = $this->overridePath($url, $data['request']);
         }
 
         return $data;
@@ -79,15 +78,14 @@ class ZdsZaakService
      * This function returns the eigenschappen field from the configuration array.
      *
      * @param array $data          The data from the call
-     * @param array $configuration The configuration of the action
      *
      * @return array The eigenschappen in the action configuration
      */
-    public function getExtraElements(array $data, array $configuration): array
+    public function getExtraElements(array $data): array
     {
         $dotData = new \Adbar\Dot($data);
 
-        return $dotData->get($configuration['eigenschappen']);
+        return $dotData->get($this->configuration['eigenschappen']);
     }
 
     /**
@@ -100,7 +98,7 @@ class ZdsZaakService
         $synchronization = new Synchronization();
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
-        $synchronization->setGateway(); //todo
+        $synchronization->setGateway(null); //todo
 
         //TODO: is this right this way? Feels very hardcoded
         //TODO: use twig parser on this instead
@@ -224,7 +222,6 @@ class ZdsZaakService
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
      * @param array $data          The data from the call
-     * @param array $configuration The configuration of the zaakeigenschap action
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $eigenschappen The eigenschappen @ids
      *
@@ -235,9 +232,9 @@ class ZdsZaakService
      *
      * @return void
      */
-    public function getZaak(array $data, array $configuration, array $extraElements, array $eigenschappen): void
+    public function getZaak(array $data, array $extraElements, array $eigenschappen): void
     {
-        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['zaakEntityId']);
+        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['url' => $data['response']['url']]);
         $this->updateZaak($extraElements, $data['response'], $zaakObject[0], $eigenschappen);
     }
@@ -257,10 +254,12 @@ class ZdsZaakService
      */
     public function zaakEigenschappenHandler(array $data, array $configuration): array
     {
-        $identifier = $this->getIdentifier($data['request'], $configuration);
-        $eigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['eigenschapEntityId']);
+        $this->configuration = $configuration;
+
+        $identifier = $this->getIdentifier($data['request']);
+        $eigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
         $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($eigenschapEntity, ['zaaktype' => $identifier]);
-        $extraElements = $this->getExtraElements($data['request'], $configuration);
+        $extraElements = $this->getExtraElements($data['request']);
 
         $eigenschappen = [];
         if (count($objectEntities) > 0) {
@@ -269,7 +268,7 @@ class ZdsZaakService
                 $eigenschap !== null && $eigenschappen[] = $this->createObject($eigenschap, $objectEntity, $data)->getSelf();
             }
         }
-        $this->getZaak($data, $configuration, $extraElements, $eigenschappen);
+        $this->getZaak($data, $extraElements, $eigenschappen);
 
         return $data;
     }
