@@ -175,7 +175,7 @@ class SynchronizationService
         // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($gateway);
         var_dump(count($results));
-        var_Dump('collectionHandler');
+        var_dump('collectionHandler');
 
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
@@ -267,7 +267,7 @@ class SynchronizationService
      */
     private function getUrlForSource(Gateway $gateway, string $id = null, array $data = []): string
     {
-        $location = preg_replace_callback("/{{.*?}}/", function ($match) use ($data) {return $data[$match[1]];}, $this->configuration['location']);
+        $location = preg_replace_callback('/{{.*?}}/', function ($match) use ($data) {return $data[$match[1]]; }, $this->configuration['location']);
 
         var_dump($location);
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
@@ -672,10 +672,10 @@ class SynchronizationService
      */
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
-        try{
+        try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'RESPONSE'));
-        } catch (Exception $exception)
-        {}
+        } catch (Exception $exception) {
+        }
 
         $body = new Dot($body);
         $now = new DateTime();
@@ -693,9 +693,10 @@ class SynchronizationService
 
     public function clearNull(array $objectArray): array
     {
-        foreach($objectArray as $key => $value) {
-            if(!$value)
+        foreach ($objectArray as $key => $value) {
+            if (!$value) {
                 unset($objectArray[$key]);
+            }
         }
 
         return $objectArray;
@@ -748,10 +749,10 @@ class SynchronizationService
 //            ]);
         }
 
-        if(is_Array($result)) {
+        if (is_array($result)) {
             var_dump($callServiceConfig['url']);
             var_dump($result);
-            die;
+            exit;
         }
         $body = json_decode($result->getBody()->getContents(), true);
 
@@ -761,8 +762,8 @@ class SynchronizationService
     /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param Synchronization $synchronization         The synchronisation object to update
-     * @param array           $sourceObject The external object to synchronise from
+     * @param Synchronization $synchronization The synchronisation object to update
+     * @param array           $sourceObject    The external object to synchronise from
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *

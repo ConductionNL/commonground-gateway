@@ -3,10 +3,7 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\ObjectEntityService;
-use App\Service\ValidatorService;
 use App\Service\ZdsZaakService;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
