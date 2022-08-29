@@ -55,11 +55,14 @@ class ZdsZaakService
 
     /**
      * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
      *
      * @return array
      */
-    public function zaakTypeHandler(array $data): array
+    public function zaakTypeHandler(array $data, array $configuration): array
     {
+        $this->configuration = $configuration;
+
         $identifier = $this->getIdentifier($data['request']);
         $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['entityId']);
         $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['identificatie' => $identifier]);
