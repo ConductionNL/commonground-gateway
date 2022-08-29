@@ -16,6 +16,9 @@ class ActionEvent extends Event
         'commongateway.object.read',
         'commongateway.object.update',
         'commongateway.object.delete',
+        'zwg.zaak.pushed',
+        'zwg.zaakEigenschap.handled',
+        'commongateway.action.event'
     ];
 
     protected string $type;
@@ -34,7 +37,7 @@ class ActionEvent extends Event
         if (in_array($type, self::EVENTS)) {
             $this->type = $type;
         } else {
-            return;
+            $this->type = 'commongateway.action.event';
         }
         $this->data = $data;
     }

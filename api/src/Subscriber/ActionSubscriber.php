@@ -5,6 +5,7 @@ namespace App\Subscriber;
 use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
+use App\Message\NotificationMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,6 +15,7 @@ class ActionSubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private ContainerInterface $container;
+    private NotificationMessage $messageBus;
 
     /**
      * @inheritDoc
@@ -29,6 +31,10 @@ class ActionSubscriber implements EventSubscriberInterface
             'commongateway.object.read'     => 'handleEvent',
             'commongateway.object.update'   => 'handleEvent',
             'commongateway.object.delete'   => 'handleEvent',
+            'zwg.zaak.pushed'               => 'handleEvent',
+            'zwg.zaakEigenschap.handled'    => 'handleEvent',
+            'commongateway.action.event'    => 'handleEvent'
+
         ];
     }
 
@@ -36,10 +42,6 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         $this->entityManager = $entityManager;
         $this->container = $container;
-    }
-
-    public function throwEvent(string $throw): void
-    {
     }
 
     public function runFunction(Action $action, array $data): array
@@ -51,13 +53,6 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         return $data;
-    }
-
-    public function triggerActions(Action $action): void
-    {
-        foreach ($action->getThrows() as $throw) {
-            $this->throwEvent($throw);
-        }
     }
 
     public function checkConditions(Action $action, array $data): bool
@@ -73,7 +68,12 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         if ($this->checkConditions($action, $event->getData())) {
             $event->setData($this->runFunction($action, $event->getData()));
-            $this->triggerActions($action);
+            // throw events
+            foreach ($action->getThrows() as $throw) {
+                $this->messageBus->dispatch(new ActionEvent($throw, $event->getData()));
+
+//            $this->throwEvent($throw);
+            }
         }
 
         return $event;
