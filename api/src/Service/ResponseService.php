@@ -271,7 +271,11 @@ class ResponseService
                 break;
             case 'json':
             default:
-                // todo: do we want to use embedded here? or just always show all objects instead? see include on attribute...
+                if ($dateRead) {
+                    $xCommongatewayMetadata = [];
+                    $xCommongatewayMetadata['dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+                    $gatewayContext['x-commongateway-metadata'] = $xCommongatewayMetadata;
+                }
                 $embedded['embedded'] = $embedded;
                 break;
         }
