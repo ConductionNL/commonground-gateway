@@ -271,8 +271,10 @@ class ResponseService
                 break;
             case 'json':
             default:
+                $xCommongatewayMetadata = [];
+                // todo: x-commongateway-metadata (new function to generate this)
+                // todo: add $dateRead to this^ or show it like this:
                 if ($dateRead) {
-                    $xCommongatewayMetadata = [];
                     $xCommongatewayMetadata['dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
                     $gatewayContext['x-commongateway-metadata'] = $xCommongatewayMetadata;
                 }
