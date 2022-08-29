@@ -97,7 +97,7 @@ class Synchronization
      * @var string|null
      *
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $endpoint = null;
 
@@ -217,7 +217,7 @@ class Synchronization
         return $this->endpoint;
     }
 
-    public function setEndpoint(string $endpoint): self
+    public function setEndpoint(?string $endpoint): self
     {
         $this->endpoint = $endpoint;
 

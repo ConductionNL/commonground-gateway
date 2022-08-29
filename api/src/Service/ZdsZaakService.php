@@ -27,7 +27,7 @@ class ZdsZaakService
     /**
      * This function returns the identifierPath field from the configuration array.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      *
      * @return string The identifierPath in the action configuration
      */
@@ -80,7 +80,7 @@ class ZdsZaakService
     /**
      * This function returns the eigenschappen field from the configuration array.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      *
      * @return array The eigenschappen in the action configuration
      */
@@ -93,7 +93,8 @@ class ZdsZaakService
 
     /**
      * @param ObjectEntity $objectEntity
-     * @param array $data
+     * @param array        $data
+     *
      * @return Synchronization
      */
     public function createSynchronization(ObjectEntity $objectEntity, array $data): Synchronization
