@@ -882,29 +882,8 @@ class OasDocumentationService
             }
 
 //            # @todo fix mapping
-//            $newSchema = [];
-//            $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
-//            foreach ($newSchema as $key => $value) {
-////                if($value !== null) {
-////                    #check if there is an object in the array -> if there is no example
-////                    # this does not work
-////                    if (!key_exists('example', $value)) {
-////                        $newSchema[$key] = [
-////                            'type' => 'object',
-////                            'example' => $value
-////                        ];
-////                    }
-////                }
-//                $newSchema[$key] = [
-//                    'example' => 'string'
-//                ];
-//            }
-//
-//            #@todo here mapping
-//            # object is still there -> request body
-//            # object is not showing -> response body
-//            $schema = $this->unsetProperties($attribute, $mapping, $schema);
-//            $schema['properties'] = $newSchema;
+//            $schema = $this->getMappingSchema($attribute, $mapping, $schema);
+
         }
 
         return $schema;
