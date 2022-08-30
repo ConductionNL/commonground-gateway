@@ -747,18 +747,22 @@ class SynchronizationService
         // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
         // todo: turn all or some of the following todo's and there code into functions?
 
-        // todo: availableProperties, maybe move this to foreach in getAllFromSource() (nice to have)
-//        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-//        $availableBody = array_filter($body, function ($propertyName) use ($entity) {
-//            if ($entity->getAvailableProperties()) {
-//                return in_array($propertyName, $entity->getAvailableProperties());
-//            }
-//
-//            return $entity->getAttributeByName($propertyName);
-//        }, ARRAY_FILTER_USE_KEY);
+        // todo: maybe move this to foreach in getAllFromSource() (nice to have)
+        // todo: allowedPropertiesOut, notAllowedPropertiesOut
+        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
 
         if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
-            $sourceObject = $this->translationService->dotHydrator($this->configuration['apiSource']['skeletonIn'] ?? $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
+            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
