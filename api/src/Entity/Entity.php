@@ -298,7 +298,7 @@ class Entity
 
     /**
      * @var ?string The uri to a schema.org object
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */

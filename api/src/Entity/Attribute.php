@@ -654,7 +654,7 @@ class Attribute
 
     /**
      * @var ?string The uri to a schema.org property
-     * 
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
