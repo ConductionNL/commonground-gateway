@@ -36,6 +36,8 @@ class OasParserService
 
         $this->handlersToCreate = [];
         $this->oas = [];
+
+        $this->schemaRefs = [];
     }
 
     /**
@@ -289,8 +291,7 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (
-                    isset($response['content']['application/json']['schema']['properties']) ?
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (isset($response['content']['application/json']['schema']['properties']) ?
                     substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
                     substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
                 );
@@ -394,6 +395,7 @@ class OasParserService
         } else {
             return $this->createFlatAttribute($propertyName, $schema, $parentEntity);
         }
+        $this->schemaRefs = ['test'];
 
         if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array') && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
@@ -405,14 +407,15 @@ class OasParserService
     /**
      * Creates an attribute referencing another entity.
      *
-     * @param string $propertyName The name of the attribute
-     * @param Entity $parentEntity The entity the attribute is in
-     * @param Entity $targetEntity The entity the attribute references
-     * @param bool   $multiple     Whether the attribute should allow for multiple values (i.e. is an array of values)
+     * @param string  $propertyName The name of the attribute
+     * @param Entity  $parentEntity The entity the attribute is in
+     * @param Entity  $targetEntity The entity the attribute references
+     * @param bool    $multiple     Whether the attribute should allow for multiple values (i.e. is an array of values)
+     * @param ?string $schema       Link to schema.org object
      *
      * @return Attribute The resulting attribute
      */
-    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity, bool $multiple = false): Attribute
+    private function createObjectAttribute(string $propertyName, Entity $parentEntity, Entity $targetEntity, bool $multiple = false, ?string $schema = null): Attribute
     {
         $newAttribute = new Attribute();
         $newAttribute->setName($propertyName);
@@ -421,6 +424,7 @@ class OasParserService
         $newAttribute->setMultiple($multiple);
         $newAttribute->setSearchable(true);
         $newAttribute->setExtend(true);
+        $newAttribute->setSchema($schema);
 
         $newAttribute->setObject($targetEntity);
 
@@ -511,7 +515,7 @@ class OasParserService
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
         }
         $pathRegex .= '$';
 
@@ -530,32 +534,44 @@ class OasParserService
      *
      * @return Attribute|null The resulting attribute
      */
-    private function createAttribute(array $originalProperty, string $propertyName, Entity $entity, CollectionEntity $collectionEntity): ?Attribute
+    private function createAttribute(array $originalProperty, string $propertyName, Entity $entity, CollectionEntity $collectionEntity, ?array &$schemaRefs = null): ?Attribute
     {
         // Ignore this attribute if its id or empty, because the gateway generates this itself
         if ($propertyName == 'id' || empty($propertyName)) {
             return null;
         }
 
+
         if (isset($originalProperty['$ref'])) {
             $originalProperty = $this->getSchemaFromRef($originalProperty['$ref'], $targetEntity);
         } elseif (isset($originalProperty['items']['$ref']) && isset($originalProperty['type']) && $originalProperty['type'] == 'array') {
             $newProperty = $this->getSchemaFromRef($originalProperty['items']['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName().$propertyName.'Entity';
+            $targetEntity = $entity->getName() . $propertyName . 'Entity';
         }
+        $originalProperty['x-context'] = 'schema.org/test';
 
         if ((!isset($originalProperty['type']) || $originalProperty['type'] == 'object') || (isset($originalProperty['type']) &&
             $originalProperty['type'] == 'array' && isset($originalProperty['items']['$ref']))) {
             $targetEntity = $this->getEntity($targetEntity, $newProperty ?? $originalProperty, $collectionEntity);
             $multiple = (isset($originalProperty['type']) && $originalProperty['type'] == 'array');
-            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity, $multiple);
+            $schema = null;
+            isset($originalProperty['x-context']) && strpos($originalProperty['x-context'], 'schema.org') !== false && $schema = $originalProperty['x-context'];
+            $attribute = $this->createObjectAttribute($propertyName, $entity, $targetEntity, $multiple, $schema);
         } elseif ($originalProperty['type'] == 'array') {
             $attribute = $this->createArrayAttribute($propertyName, $originalProperty, $entity, $collectionEntity);
         } else {
             $attribute = $this->createFlatAttribute($propertyName, $originalProperty, $entity);
         }
         $this->entityManager->persist($attribute);
+
+        if ($attribute->getSchema()) {
+            $schemaRefs[] = [
+                'type'    => 'attribute',
+                'id'      => $attribute->getId(),
+                'schema'  => $attribute->getSchema()
+            ];
+        }
 
         return $attribute;
     }
@@ -609,7 +625,7 @@ class OasParserService
         $pathArray = array_values(array_filter(explode('/', $path)));
         $endpoint = new Endpoint();
         $endpoint->addCollection($collection);
-        $endpoint->setName($path.' '.$methodName);
+        $endpoint->setName($path . ' ' . $methodName);
         $endpoint->setMethod($methodName);
         $collection->getPrefix() && array_unshift($pathArray, $collection->getPrefix());
         $endpoint->setPath($pathArray);
@@ -636,14 +652,24 @@ class OasParserService
      *
      * @return Entity The resulting entity
      */
-    private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection): Entity
+    private function persistEntityFromSchema(string $name, array $schema, CollectionEntity $collection, ?array &$schemaRefs = null): Entity
     {
+        $schema['x-context'] = 'schema.org/test';
         $newEntity = new Entity();
         $newEntity->setName($name);
         $newEntity->addCollection($collection);
+        isset($schema['x-context']) && strpos($schema['x-context'], 'schema.org') !== false && $newEntity->setSchema($schema['x-context']);
         $collection->getSource() !== null && $newEntity->setGateway($collection->getSource());
 
         $this->entityManager->persist($newEntity);
+
+        if ($newEntity->getSchema()) {
+            $schemaRefs[] = [
+                'type'   => 'entity',
+                'id'     => $newEntity->getId(),
+                'schema' => $newEntity->getSchema()
+            ];
+        }
 
         $this->handlersToCreate[$name]['entity'] = $newEntity;
 
@@ -658,7 +684,7 @@ class OasParserService
                 if (isset($schema['required']) && is_array($schema['required']) && in_array($propertyName, $schema['required'])) {
                     $property['required'] = true;
                 }
-                $attribute = $this->createAttribute($property, $propertyName, $newEntity, $collection);
+                $attribute = $this->createAttribute($property, $propertyName, $newEntity, $collection, $schemaRefs);
             }
         }
 
@@ -724,7 +750,7 @@ class OasParserService
      *
      * @return Entity The resulting entity
      */
-    private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity): Entity
+    private function getEntity(string $name, array $schema, CollectionEntity $collectionEntity, ?array &$schemaRefs = null): Entity
     {
         foreach ($collectionEntity->getEntities() as $entity) {
             if ($entity->getName() == $name) {
@@ -732,7 +758,7 @@ class OasParserService
             }
         }
 
-        return $this->persistEntityFromSchema($name, $schema, $collectionEntity);
+        return $this->persistEntityFromSchema($name, $schema, $collectionEntity, $schemaRefs);
     }
 
     /**
@@ -853,6 +879,8 @@ class OasParserService
         $this->entityManager->clear();
         $this->oas = [];
         $this->handlersToCreate = [];
+
+        var_dump($this->schemaRefs);
 
         return $collection;
     }
