@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use Adbar\Dot;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
@@ -414,8 +413,11 @@ class ResponseService
     private function handleXCommongatewayMetadata(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response): array
     {
         $metadata = [];
-        $this->addToMetadata($metadata, 'self',
-            $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId());
+        $this->addToMetadata(
+            $metadata,
+            'self',
+            $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId()
+        );
         $this->addToMetadata($metadata, 'type', ucfirst($result->getEntity()->getName()));
         $this->addToMetadata($metadata, 'context', '/contexts/'.ucfirst($result->getEntity()->getName()));
         $this->addToMetadata($metadata, 'dateCreated', $result->getDateCreated());
@@ -425,11 +427,17 @@ class ResponseService
         }
         $this->addToMetadata($metadata, 'owner', $result->getOwner());
         $this->addToMetadata($metadata, 'organization', $result->getOrganization());
-        $this->addToMetadata($metadata, 'application',
-            $result->getApplication() !== null ? $result->getApplication()->getId() : null);
+        $this->addToMetadata(
+            $metadata,
+            'application',
+            $result->getApplication() !== null ? $result->getApplication()->getId() : null
+        );
         $this->addToMetadata($metadata, 'uri', $result->getUri());
-        $this->addToMetadata($metadata, 'gateway/id',
-            $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null));
+        $this->addToMetadata(
+            $metadata,
+            'gateway/id',
+            $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null)
+        );
         if (array_key_exists('@type', $response)) {
             $this->addToMetadata($metadata, 'gateway/type', $response['@type']);
         }
@@ -451,7 +459,7 @@ class ResponseService
      * Adds a key and value to the given $metadata array. But only if all or the $key is present in $this->xCommongatewayMetadata.
      * If $key contains dateRead this will also trigger some specific BL we only want to do if specifically asked for.
      *
-     * @param array $metadata
+     * @param array  $metadata
      * @param string $key
      * @param $value
      * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
