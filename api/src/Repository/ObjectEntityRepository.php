@@ -772,7 +772,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'number']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
@@ -797,7 +797,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSortable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'number']) && $attribute->getSortable()) {
                 $sortable[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
