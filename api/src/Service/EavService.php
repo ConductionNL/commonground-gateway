@@ -1035,7 +1035,9 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
-        $filterCheck[] = 'search';
+        if (!empty($entity->getSearchPartial())) {
+            $filterCheck[] = 'search';
+        }
         $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
