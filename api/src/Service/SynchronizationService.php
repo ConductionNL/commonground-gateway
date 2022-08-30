@@ -134,11 +134,11 @@ class SynchronizationService
 
         // Dot the data array and try to find id in it
         $dot = new Dot($data);
-        $id = $dot->get($this->configuration['apiSource']['locationIdField']);
+        $id = $dot->get($this->configuration['apiSource']['location']['IdField']);
 
         // If we have a complete object we can use that to sync
         if (array_key_exists('locationObject', $this->configuration)) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['locationObject'], $data); // todo should default be $data or [] ?
+            $sourceObject = $dot->get($this->configuration['apiSource']['location']['Object'], $data); // todo should default be $data or [] ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
@@ -181,10 +181,10 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($this->configuration['apiSource']['locationIdField']);
+            $id = $dot->get($this->configuration['apiSource']['location']['IdField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            array_key_exists('locationObject', $this->configuration) && $result = $dot->get($this->configuration['apiSource']['locationObject'], $result);
+            array_key_exists('locationObject', $this->configuration) && $result = $dot->get($this->configuration['apiSource']['location']['Object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $sync = $this->findSyncBySource($gateway, $entity, $id);
@@ -351,7 +351,7 @@ class SynchronizationService
         $pageResult = json_decode($response->getBody()->getContents(), true);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($this->configuration['apiSource']['locationObjects'], $pageResult);
+        $results = $dot->get($this->configuration['apiSource']['location']['Objects'], $pageResult);
 
         if (array_key_exists('limit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['limit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
@@ -402,7 +402,7 @@ class SynchronizationService
 //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['locationObject'], $result);
+        return $dot->get($this->configuration['apiSource']['location']['Object'], $result);
     }
 
     /**
@@ -493,8 +493,8 @@ class SynchronizationService
     {
         $hash = hash('sha384', serialize($sourceObject));
         $dot = new Dot($sourceObject);
-        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
-            $lastChanged = $dot->get($this->configuration['apiSource']['locationDateChangedField']);
+        if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
+            $lastChanged = $dot->get($this->configuration['apiSource']['location']['DateChangedField']);
             $synchronization->setSourcelastChanged(new \DateTime($lastChanged));
         } elseif ($synchronization->getHash() != $hash) {
             $lastChanged = new \DateTime();
@@ -767,8 +767,8 @@ class SynchronizationService
 
         $sourceObjectDot = new Dot($sourceObject);
 
-        if (isset($this->configuration['apiSource']['locationDateChangedField'])) {
-            $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['locationDateChangedField'])));
+        if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
+            $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['DateChangedField'])));
         }
         $object = $this->populateObject($sourceObject, $object);
         $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
