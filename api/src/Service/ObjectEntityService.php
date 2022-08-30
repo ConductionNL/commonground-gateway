@@ -421,7 +421,10 @@ class ObjectEntityService
     {
         if ($object instanceof ObjectEntity) {
             !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
-            $fields['_dateRead'] = isset($fields['_dateRead']) ? 'getItem' : false;
+            if (isset($extend['x-commongateway-metadata']['dateRead'])
+                || isset($extend['x-commongateway-metadata']['all'])) {
+                $extend['x-commongateway-metadata']['dateRead'] = 'getItem';
+            }
             $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
 
             $object->getHasErrors() ?? $data['validationServiceErrors'] = [
@@ -453,25 +456,22 @@ class ObjectEntityService
      */
     public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
+        // todo getting data from request query here is duplicate code, see createOrUpdateCase()
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
 
         // Let's allow for extending
         $extend = $this->eavService->getRequestExtend($this->request);
-
-        // Check for dateRead query parameter
-        // Use fields array to store this dateRead value for now, will be removed from the array later.
-        $dateRead = $this->request->query->get('_dateRead');
-        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+        if (isset($extend['x-commongateway-metadata']) && $extend['x-commongateway-metadata'] === true) {
+            $extend['x-commongateway-metadata'] = [];
+            $extend['x-commongateway-metadata']['all'] = true;
+        }
 
         if (isset($id)) {
             $object = $this->checkGetObject($id, $method, $entity);
             $data = $this->checkGetObjectExceptions($data, $object, $fields, $extend, $acceptType);
         } else {
-            //todo: -start- old code...
-            //TODO: old code for getting an ObjectEntity
             $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
-            //todo: -end- old code...
 
             $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
@@ -516,16 +516,16 @@ class ObjectEntityService
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
+        // todo getting data from request query here is duplicate code, see getCase()
         // Let's allow for filtering specific fields
         $fields = $this->eavService->getRequestFields($this->request);
 
         // Let's allow for extending
         $extend = $this->eavService->getRequestExtend($this->request);
-
-        // Check for dateRead query parameter
-        // Use fields array to store this dateRead value for now, will be removed from the array later.
-        $dateRead = $this->request->query->get('_dateRead');
-        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+        if (isset($extend['x-commongateway-metadata']) && $extend['x-commongateway-metadata'] === true) {
+            $extend['x-commongateway-metadata'] = [];
+            $extend['x-commongateway-metadata']['all'] = true;
+        }
 
         // Save the object (this will remove this object result from the cache)
         $this->functionService->removeResultFromCache = [];

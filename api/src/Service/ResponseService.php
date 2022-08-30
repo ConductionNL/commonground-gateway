@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Adbar\Dot;
 use App\Entity\Attribute;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
@@ -33,6 +34,11 @@ class ResponseService
     private SessionInterface $session;
     private Security $security;
     private CacheInterface $cache;
+    // todo: maybe start using one or more array properties to save data in, so we don't have to pass down all this...
+    // todo: ...data in RenderResult (and other function after that, untill we come back to RenderResult again, because of 'recursion')
+    // todo: other examples we could use this for when we cleanup this service: $fields, $extend, $acceptType, $skipAuthCheck
+    // todo: use this as example (checking for $level when setting this data only once is very important):
+    private array $xCommongatewayMetadata;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, Security $security, CacheInterface $cache)
     {
@@ -136,12 +142,14 @@ class ResponseService
     public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
-        $dateRead = false;
-        if (is_array($fields) && array_key_exists('_dateRead', $fields)) {
-            $dateRead = $fields['_dateRead']; // Can be string = 'getItem' in case of a get item call.
-            unset($fields['_dateRead']);
-            if (empty($fields)) {
-                $fields = null;
+        if ($level === 0) {
+            $this->xCommongatewayMetadata = [];
+            if (is_array($extend) && array_key_exists('x-commongateway-metadata', $extend)) {
+                $this->xCommongatewayMetadata = $extend['x-commongateway-metadata'];
+                unset($extend['x-commongateway-metadata']);
+                if (empty($extend)) {
+                    $extend = null;
+                }
             }
         }
 
@@ -165,10 +173,12 @@ class ResponseService
                 .'level_'.$level
                 .'fields_'.http_build_query($fields ?? [], '', ',')
                 .'extend_'.http_build_query($extend ?? [], '', ',')
+                .'xCommongatewayMetadata_'.http_build_query($this->xCommongatewayMetadata ?? [], '', ',')
             )
         );
-        if ($item->isHit() && !$dateRead) {
-//            var_dump('FromCache: '.$result->getId().'userId_'.$userId.'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ','));
+        // Todo: what to do with dateRead and caching... this works for now:
+        if ($item->isHit() && !isset($this->xCommongatewayMetadata['dateRead']) && !isset($this->xCommongatewayMetadata['all'])) {
+//            var_dump('FromCache: '.$result->getId().'userId_'.$userId.'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ',').'xCommongatewayMetadata_'.http_build_query($this->xCommongatewayMetadata ?? [], '', ','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
@@ -231,9 +241,10 @@ class ResponseService
             return $response;
         }
 
-        $response = $this->handleAcceptType($result, $fields, $extend, $dateRead, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
+        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
 
-        if (!$dateRead) {
+        // Todo: what to do with dateRead and caching... this works for now:
+        if (!isset($this->xCommongatewayMetadata['dateRead']) && !isset($this->xCommongatewayMetadata['all'])) {
             $item->set($response);
             $this->cache->save($item);
         }
@@ -247,7 +258,6 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead   can be true, false or 'getItem' in case of a get item call.
      * @param string       $acceptType
      * @param int          $level
      * @param array        $response
@@ -255,30 +265,28 @@ class ResponseService
      *
      * @return array
      */
-    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, string $acceptType, int $level, array $response, array $embedded): array
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
         switch ($acceptType) {
             case 'jsonld':
-                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $dateRead, $level, $response, $embedded);
+                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $level, $response, $embedded);
                 $gatewayContext = $jsonLd['gatewayContext'];
                 $embedded = $jsonLd['embedded'];
                 break;
             case 'jsonhal':
-                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $dateRead, $level, $response, $embedded);
+                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $level, $response, $embedded);
                 $gatewayContext = $jsonHal['gatewayContext'];
                 $embedded = $jsonHal['embedded'];
                 break;
             case 'json':
             default:
-                $xCommongatewayMetadata = [];
-                // todo: x-commongateway-metadata (new function to generate this)
-                // todo: add $dateRead to this^ or show it like this:
-                if ($dateRead) {
-                    $xCommongatewayMetadata['dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
-                    $gatewayContext['x-commongateway-metadata'] = $xCommongatewayMetadata;
+                if ($this->xCommongatewayMetadata !== []) {
+                    $gatewayContext['x-commongateway-metadata'] = $this->handleXCommongatewayMetadata($result, $fields, $extend, $level, $response);
                 }
-                $embedded['embedded'] = $embedded;
+                if (!empty($embedded)) {
+                    $embedded['embedded'] = $embedded;
+                }
                 break;
         }
 
@@ -293,22 +301,21 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
         $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
-        if ($dateRead) {
-            $gatewayContext['@dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        if ($level === 0) {
+            $this->addToMetadata($gatewayContext, 'dateRead', $result, '@dateRead');
         }
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -344,14 +351,13 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
         $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['_metadata'] = [
@@ -360,8 +366,8 @@ class ResponseService
             '_dateCreated'  => $result->getDateCreated(),
             '_dateModified' => $result->getDateModified(),
         ];
-        if ($dateRead) {
-            $gatewayContext['_metadata']['_dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        if ($level === 0) {
+            $this->addToMetadata($gatewayContext['_metadata'], 'dateRead', $result, '_dateRead');
         }
         $gatewayContext['_metadata'] = array_merge($gatewayContext['_metadata'], [
             '_owner'        => $result->getOwner(),
@@ -391,6 +397,78 @@ class ResponseService
             'gatewayContext' => $gatewayContext,
             'embedded'       => $embedded,
         ];
+    }
+
+    /**
+     * Returns a response array for renderResult function.
+     * This function is called and used to show metadata for AcceptTypes json or 'default' when the extend query param contains x-commongateway-metadata.
+     *
+     * @param ObjectEntity $result
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param int          $level
+     * @param array        $response
+     *
+     * @return array
+     */
+    private function handleXCommongatewayMetadata(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response): array
+    {
+        $metadata = [];
+        $this->addToMetadata($metadata, 'self',
+            $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId());
+        $this->addToMetadata($metadata, 'type', ucfirst($result->getEntity()->getName()));
+        $this->addToMetadata($metadata, 'context', '/contexts/'.ucfirst($result->getEntity()->getName()));
+        $this->addToMetadata($metadata, 'dateCreated', $result->getDateCreated());
+        $this->addToMetadata($metadata, 'dateModified', $result->getDateModified());
+        if ($level === 0) {
+            $this->addToMetadata($metadata, 'dateRead', $result);
+        }
+        $this->addToMetadata($metadata, 'owner', $result->getOwner());
+        $this->addToMetadata($metadata, 'organization', $result->getOrganization());
+        $this->addToMetadata($metadata, 'application',
+            $result->getApplication() !== null ? $result->getApplication()->getId() : null);
+        $this->addToMetadata($metadata, 'uri', $result->getUri());
+        $this->addToMetadata($metadata, 'gateway/id',
+            $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null));
+        if (array_key_exists('@type', $response)) {
+            $this->addToMetadata($metadata, 'gateway/type', $response['@type']);
+        }
+        if (array_key_exists('@context', $response)) {
+            $this->addToMetadata($metadata, 'gateway/context', $response['@context']);
+        }
+        if (is_array($extend)) {
+            $this->addToMetadata($metadata, 'extend', $extend);
+        }
+        if (is_array($fields)) {
+            $this->addToMetadata($metadata, 'fields', $fields);
+        }
+        $this->addToMetadata($metadata, 'level', $level);
+
+        return $metadata;
+    }
+
+    /**
+     * Adds a key and value to the given $metadata array. But only if all or the $key is present in $this->xCommongatewayMetadata.
+     * If $key contains dateRead this will also trigger some specific BL we only want to do if specifically asked for.
+     *
+     * @param array $metadata
+     * @param string $key
+     * @param $value
+     * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
+     *
+     * @return void
+     */
+    private function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
+    {
+        if (array_key_exists('all', $this->xCommongatewayMetadata) || array_key_exists($key, $this->xCommongatewayMetadata)) {
+            // Make sure we only do getDateRead function when it is present in $this->xCommongatewayMetadata
+            if ($key === 'dateRead') {
+                // If the api-call is an getItem call show NOW instead!
+                $value = isset($this->xCommongatewayMetadata['dateRead']) && $this->xCommongatewayMetadata['dateRead'] === 'getItem'
+                    ? new DateTime() : $this->getDateRead($value);
+            }
+            $metadata[$overwriteKey ?? $key] = $value;
+        }
     }
 
     /**
