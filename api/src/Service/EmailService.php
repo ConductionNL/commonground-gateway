@@ -20,6 +20,7 @@ use Twig\Error\SyntaxError;
 // todo ... and (re)move the mailgun .env variable (see mailgun in the following files: .env, docker-compose.yaml, helm/values.yaml, helm/templates/deployment.yaml & helm/templates/secrets.yaml)
 class EmailService
 {
+    private ObjectEntityService $objectEntityService;
     private EntityManagerInterface $entityManager;
     private Environment $twig;
     private array $configuration;
@@ -28,7 +29,8 @@ class EmailService
     public function __construct(
         EntityManagerInterface $entityManager,
         Environment $twig,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->twig = $twig;
