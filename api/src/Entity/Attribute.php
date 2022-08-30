@@ -658,7 +658,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $schema;
+    private ?string $schema = null;
 
     /**
      * @var Datetime The moment this resource was created
