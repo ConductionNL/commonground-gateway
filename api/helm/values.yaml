@@ -119,7 +119,7 @@ rabbitmq:
   service:
       port: 5672
       
-# todo: move this to an email plugin (see EmailSubscriber.php)
+# todo: move this to an email plugin (see EmailService.php)
 mailgun: 'mailgun+api://code:domain@api.eu.mailgun.net'
 
 imagePullSecrets: []

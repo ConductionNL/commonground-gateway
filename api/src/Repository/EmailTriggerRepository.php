@@ -8,7 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * todo: move this to an email plugin (see EmailSubscriber.php).
+ * todo: move this to an email plugin (see EmailService.php).
  *
  * @method EmailTrigger|null find($id, $lockMode = null, $lockVersion = null)
  * @method EmailTrigger|null findOneBy(array $criteria, array $orderBy = null)
