@@ -3,10 +3,9 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
-use App\Service\ObjectEntityService;
 
 /**
- * This service holds al the logic for the larping plugin
+ * This service holds al the logic for the larping plugin.
  */
 class LarpingService
 {
@@ -24,13 +23,14 @@ class LarpingService
     }
 
     /**
-     * This function calculates the atributes for any or all character effected by a change in the data set
+     * This function calculates the atributes for any or all character effected by a change in the data set.
      *
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
+     *
+     * @return array
      */
     public function LarpingHandler(array $data, array $configuration): array
     {
@@ -38,13 +38,12 @@ class LarpingService
         $this->configuration = $configuration;
 
         // Check if the provided data is iether a character or effect
-        if(
+        if (
             in_array('id', $this->data) &&
-            $object = $this->objectEntityService->getObject(null, $this->data['id'])){
+            $object = $this->objectEntityService->getObject(null, $this->data['id'])) {
             // okey we have data so lets do our magic
             // switch &&
             //            ($object->getEntity()->getName() == 'character' || $object->getEntity()->getName() == 'effect')
-
         }
 
         return $data;

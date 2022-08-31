@@ -21,22 +21,22 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
     }
 
     /**
-     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action schould comply to
      */
     public function getConfiguration(): array
     {
         return [
-            '$id' => "https://example.com/person.schema.json",
-            '$schema' => "https://json-schema.org/draft/2020-12/schema",
-            'title' => "Notification Action",
-            "required" => ["huwelijksEntityId"],
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Notification Action',
+            'required'   => ['huwelijksEntityId'],
             'properties' => [
                 'huwelijksEntityId' => [
-                    'type' => 'string',
-                    'description' => 'The id of the huwelijks entity'
-                ]
+                    'type'        => 'string',
+                    'description' => 'The id of the huwelijks entity',
+                ],
             ],
         ];
     }

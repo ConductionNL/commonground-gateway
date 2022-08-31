@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\EmailTemplate;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -35,13 +34,14 @@ class EmailService
     }
 
     /**
-     * Handles the sending of an email based on an event
+     * Handles the sending of an email based on an event.
      *
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
+     *
+     * @return array
      */
     public function EmailHandler(array $data, array $configuration): array
     {
@@ -109,19 +109,19 @@ class EmailService
             ->text($text);
 
         // Then we can handle some optional configuration
-        if(array_key_exists('cc', $this->configuration)){
+        if (array_key_exists('cc', $this->configuration)) {
             $email->cc($this->configuration['cc']);
         }
 
-        if(array_key_exists('bcc', $this->configuration)){
+        if (array_key_exists('bcc', $this->configuration)) {
             $email->bcc($this->configuration['bcc']);
         }
 
-        if(array_key_exists('replyTo', $this->configuration)){
+        if (array_key_exists('replyTo', $this->configuration)) {
             $email->replyTo($this->configuration['replyTo']);
         }
 
-        if(array_key_exists('priority', $this->configuration)){
+        if (array_key_exists('priority', $this->configuration)) {
             $email->priority($this->configuration['priority']);
         }
 

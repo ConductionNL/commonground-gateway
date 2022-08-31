@@ -3,11 +3,10 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
-use App\Service\ObjectEntityService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 
 /**
- * This service holds al the logic for the notification plugin
+ * This service holds al the logic for the notification plugin.
  */
 class NotificationService
 {
@@ -18,7 +17,7 @@ class NotificationService
 
     /**
      * @param \Conduction\CommonGroundBundle\Service\CommonGroundServic $commonGroundService
-     * @param \App\Service\ObjectEntityService $objectEntityService
+     * @param \App\Service\ObjectEntityService                          $objectEntityService
      */
     public function __construct(
         CommonGroundService $commonGroundService,
@@ -29,13 +28,14 @@ class NotificationService
     }
 
     /**
-     * Handles the notifiaction actions
+     * Handles the notifiaction actions.
      *
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
+     *
+     * @return array
      */
     public function NotificationHandler(array $data, array $configuration): array
     {
@@ -43,10 +43,9 @@ class NotificationService
         $this->configuration = $configuration;
 
         // Lets see if we have an object
-        if(
+        if (
             in_array('id', $this->data) &&
-            $object = $this->objectEntityService->getObject(null, $this->data['id'])){
-
+            $object = $this->objectEntityService->getObject(null, $this->data['id'])) {
             return $this->sendNotification($object)->toArray();
         }
 
@@ -54,9 +53,10 @@ class NotificationService
     }
 
     /**
-     * Send a notifiction in line with the cloudevent standard
+     * Send a notifiction in line with the cloudevent standard.
      *
      * @param ObjectEntity $object
+     *
      * @return ObjectEntity
      */
     public function sendNotification(ObjectEntity $object): ObjectEntity
@@ -65,22 +65,22 @@ class NotificationService
 
         // Skelleton notification bassed on https://github.com/VNG-Realisatie/notificatieservices look at https://github.com/VNG-Realisatie/NL-GOV-profile-for-CloudEvents/blob/main/NL-GOV-Guideline-for-CloudEvents-JSON.md for a json example
         $notification = [
-            "specversion"=>$this->configuration['specversion'],
-             "type"=>$this->configuration['type'],
-             "source"=>$this->configuration['source'],
-             "subject"=>$object->getId(),
-             "id"=>"f3dce042-cd6e-4977-844d-05be8dce7cea",
-             "time"=>"2021-12-10T17:31:00Z", // @todo current datetime
-             //"nlbrpnationaliteit"=>"0083",
-             //"geheimnummer"=>null,
-             "dataref"=>$this->configuration['dataref'].$object->getId(),
-             //"sequence"=>"1234",
-             //"sequencetype"=>"integer",
-             "datacontenttype"=>$this->configuration['source']
+            'specversion'=> $this->configuration['specversion'],
+            'type'       => $this->configuration['type'],
+            'source'     => $this->configuration['source'],
+            'subject'    => $object->getId(),
+            'id'         => 'f3dce042-cd6e-4977-844d-05be8dce7cea',
+            'time'       => '2021-12-10T17:31:00Z', // @todo current datetime
+            //"nlbrpnationaliteit"=>"0083",
+            //"geheimnummer"=>null,
+            'dataref'=> $this->configuration['dataref'].$object->getId(),
+            //"sequence"=>"1234",
+            //"sequencetype"=>"integer",
+            'datacontenttype'=> $this->configuration['source'],
         ];
 
         // Include data if so required
-        if($this->configuration['includeData']){
+        if ($this->configuration['includeData']) {
             $notification['data'] = $object->toArray();
         }
 
@@ -99,9 +99,8 @@ class NotificationService
                 $this->configuration['headers'],
             );
         } catch (Exception $exception) {
-
         }
+
         return $object;
     }
-
 }
