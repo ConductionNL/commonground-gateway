@@ -80,6 +80,8 @@ class HuwelijksplannerService
 
         $huwelijk->setValue('checklist',$checklist);
 
+        $this->objectEntityService->saveObject($huwelijk);
+
         return $huwelijk;
     }
 
