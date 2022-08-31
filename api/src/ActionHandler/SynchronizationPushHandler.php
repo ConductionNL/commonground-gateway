@@ -22,6 +22,14 @@ class SynchronizationPushHandler implements ActionHandlerInterface
         }
     }
 
+    /**
+     * This function runs the synchronization push handler plugin.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
+     *
+     * @return array
+     */
     public function __run(array $data, array $configuration): array
     {
         $this->synchronizationService->synchronisationPushHandler($data, $configuration);

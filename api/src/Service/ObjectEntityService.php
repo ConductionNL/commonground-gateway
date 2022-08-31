@@ -105,9 +105,12 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data): void
+    public function dispatchEvent(string $type, array $data, $subType = null ): void
     {
-        $event = new ActionEvent($type, $data);
+        $event = new ActionEvent($type, $data, null);
+        if($subType){
+            $event->setSubType($subType);
+        }
         $this->eventDispatcher->dispatch($event, $type);
     }
 

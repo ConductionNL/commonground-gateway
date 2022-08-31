@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
@@ -15,6 +17,7 @@ class ZdsZaakService
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
     private array $configuration;
+    private array $usedValues = [];
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -39,7 +42,7 @@ class ZdsZaakService
     }
 
     /**
-     * @param string $value
+     * @param string $value The zaaktype url
      * @param array  $data  The data from the call
      *
      * @return array
@@ -64,13 +67,12 @@ class ZdsZaakService
         $this->configuration = $configuration;
 
         $identifier = $this->getIdentifier($data['request']);
-        $entity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['entityId']);
-        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($entity, ['identificatie' => $identifier]);
+        $zaakTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakTypeEntityId']);
+        $zaakTypeObjectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeEntity, ['identificatie' => $identifier]);
 
-        if (count($objectEntities) > 0 && $objectEntities[0] instanceof ObjectEntity) {
-            $objectEntity = $objectEntities[0];
-
-            $url = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
+        if (count($zaakTypeObjectEntities) > 0 && $zaakTypeObjectEntities[0] instanceof ObjectEntity) {
+            $zaakTypeObjectEntity = $zaakTypeObjectEntities[0];
+            $url = $zaakTypeObjectEntity->getValueByAttribute($zaakTypeObjectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
             $data['request'] = $this->overridePath($url, $data['request']);
         }
 
@@ -92,17 +94,19 @@ class ZdsZaakService
     }
 
     /**
-     * @param ObjectEntity $objectEntity
-     * @param array        $data
+     * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
+     * @param array $data The data array
      *
      * @return Synchronization
      */
     public function createSynchronization(ObjectEntity $objectEntity, array $data): Synchronization
     {
+        $zrcSource = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zrcSourceId']);
+
         $synchronization = new Synchronization();
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
-        $synchronization->setGateway(null); //todo
+        $synchronization->setGateway($zrcSource);
 
         //TODO: is this right this way? Feels very hardcoded
         //TODO: use twig parser on this instead
@@ -189,7 +193,7 @@ class ZdsZaakService
             'startdatum'                   => $data['startdatum'],
             'bronorganisatie'              => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
-            'eigenschappen'                => $eigenschappen,
+            'eigenschappen'                => $eigenschappen
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -260,9 +264,8 @@ class ZdsZaakService
     {
         $this->configuration = $configuration;
 
-        $identifier = $this->getIdentifier($data['request']);
         $eigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
-        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($eigenschapEntity, ['zaaktype' => $identifier]);
+        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($eigenschapEntity, ['zaaktype' => $this->getIdentifier($data['request'])]);
         $extraElements = $this->getExtraElements($data['request']);
 
         $eigenschappen = [];

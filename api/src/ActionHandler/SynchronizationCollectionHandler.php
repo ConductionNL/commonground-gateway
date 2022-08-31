@@ -4,6 +4,8 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
+use Cassandra\Exception\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SynchronizationCollectionHandler implements ActionHandlerInterface
@@ -20,11 +22,17 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
         }
     }
 
-    //@todo define config
-
+    /**
+     * This function runs the synchronization collection handler plugin.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
+     *
+     * @return array
+     */
     public function __run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
+        $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
 
         return $data;
     }

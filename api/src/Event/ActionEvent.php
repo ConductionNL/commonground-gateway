@@ -16,12 +16,19 @@ class ActionEvent extends Event
         'commongateway.object.read',
         'commongateway.object.update',
         'commongateway.object.delete',
-        'zwg.zaak.pushed',
-        'zwg.zaakEigenschap.handled',
         'commongateway.action.event'
     ];
 
     protected string $type;
+
+    /*
+     * An overwrite for type
+     */
+    protected ?string $subType;
+
+    /*
+     * The data for the event
+     */
     protected array $data;
 
     protected Action $action;
@@ -32,7 +39,7 @@ class ActionEvent extends Event
      * @param string $type The type of event, must be in the EVENTS constant
      * @param array  $data The data from the request or elsewhere
      */
-    public function __construct(string $type, array $data)
+    public function __construct(string $type, array $data, $subType = null)
     {
         if (in_array($type, self::EVENTS)) {
             $this->type = $type;
@@ -40,11 +47,17 @@ class ActionEvent extends Event
             $this->type = 'commongateway.action.event';
         }
         $this->data = $data;
+        $this->subType = $subType;
     }
 
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getSubType(): ?string
+    {
+        return $this->subType;
     }
 
     public function getData(): array
@@ -55,6 +68,13 @@ class ActionEvent extends Event
     public function setData(array $data): self
     {
         $this->data = $data;
+
+        return $this;
+    }
+
+    public function setSubType(?string $subType): self
+    {
+        $this->subType = $subType;
 
         return $this;
     }
