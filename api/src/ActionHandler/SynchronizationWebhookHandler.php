@@ -13,6 +13,10 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
 {
     private SynchronizationService $synchronizationService;
 
+    /**
+     * @param ContainerInterface $container
+     * @throws GatewayException
+     */
     public function __construct(ContainerInterface $container)
     {
         $synchronizationService = $container->get('synchronizationservice');
@@ -23,37 +27,51 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
         }
     }
 
-    //@todo define config
+    /**
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+        return [
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Notification Action',
+            'required'   => ['source', 'entity', 'locationIdField'],
+            'properties' => [
+                'source' => [
+                    'type'        => 'string',
+                    'description' => 'The source where to sink from',
+                    'example'     => 'native://default',
+                ],
+                'entity' => [
+                    'type'        => 'string',
+                    'description' => 'The enitity to sink',
+                    'example'     => '',
+                ],
+                'locationIdField' => [
+                    'type'        => 'string',
+                    'description' => 'The location of the id field in the external object',
+                    'example'     => 'id',
+                ],
+
+            ],
+        ];
+    }
 
     /**
+     * Run the actual business logic in the appropriate server
+     *
+     * @param array $data
+     * @param array $configuration
+     * @return array
      * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
      */
     public function __run(array $data, array $configuration): array
     {
-        $this->validateConfiguration($configuration);
-
         $result = $this->synchronizationService->SynchronizationWebhookHandler($data, $configuration);
 
         return $data;
-    }
-
-    /**
-     * Validates if the $configuration array has the correct/required keys.
-     *
-     * @param array $configuration
-     *
-     * @throws GatewayException
-     *
-     * @return void
-     */
-    private function validateConfiguration(array $configuration)
-    {
-        // todo: use jsonLogic for this instead!
-//        if (!empty(array_intersect_key($configuration, array_flip(['source', 'entity', 'locationIdField'])))) {
-//
-//        }
-        if (in_array('source', $configuration) || in_array('entity', $configuration) || in_array('locationIdField', $configuration)) {
-            throw new GatewayException('The configuration array does not match the required keys for the SynchronizationWebhookHandler', null, null, ['requiredKeys' => ['source', 'entity', 'locationIdField']]);
-        }
     }
 }

@@ -17,8 +17,13 @@ class ZdsZaakService
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
     private array $configuration;
+    private array $data;
     private array $usedValues = [];
 
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param SynchronizationService $synchronizationService
+     */
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService
@@ -28,7 +33,7 @@ class ZdsZaakService
     }
 
     /**
-     * This function returns the identifierPath field from the configuration array.
+     * This function returns the identifier from data based on the identifierPath field from the configuration array.
      *
      * @param array $data The data from the call
      *
@@ -38,25 +43,32 @@ class ZdsZaakService
     {
         $dotData = new \Adbar\Dot($data);
 
+        // @todo in de sync service noemen we dit niet identifierPath maar locationIdField
         return $dotData->get($this->configuration['identifierPath']);
     }
 
     /**
-     * @param string $value The zaaktype url
-     * @param array  $data  The data from the call
+     * This function set an identifier on the dataset
+     *
+     * @param string $identifier    The identifier to set
+     * @param array  $data          The data from the call
      *
      * @return array
      */
-    public function overridePath(string $value, array $data): array
+    public function overridePath(string $identifier, array $data): array
     {
+        // @todo in de sync service noemen we dit niet identifierPath maar locationIdField
         $path = $this->configuration['identifierPath'];
         $dotData = new \Adbar\Dot($data);
-        $dotData->set($path, $value);
+        $dotData->set($path, $identifier);
 
+        // @todo er wordt aangegeven dat de result een array is (that makes sense) maar we geven een JSON object terug?
         return $dotData->jsonSerialize();
     }
 
     /**
+     * @todo wat doet dit?
+     *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
@@ -65,19 +77,25 @@ class ZdsZaakService
     public function zaakTypeHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        $this->data = $data;
 
         $identifier = $this->getIdentifier($data['request']);
         $zaakTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakTypeEntityId']);
         $zaakTypeObjectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeEntity, ['identificatie' => $identifier]);
 
         if (count($zaakTypeObjectEntities) > 0 && $zaakTypeObjectEntities[0] instanceof ObjectEntity) {
+            // @todo bij meer dan één zaak hebben we gewoon een probleem en willen we een error
             $zaakTypeObjectEntity = $zaakTypeObjectEntities[0];
+            // Ok dus dat is de url van de aangemaakte zaak en dan
             $url = $zaakTypeObjectEntity->getValueByAttribute($zaakTypeObjectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
+            // deze functie verhaspeld het overwriten van het paht en muteren van object (naar json)
             $data['request'] = $this->overridePath($url, $data['request']);
         }
 
         return $data;
     }
+
+    // @todo waarom is dit een functie?
 
     /**
      * This function returns the eigenschappen field from the configuration array.
@@ -94,6 +112,8 @@ class ZdsZaakService
     }
 
     /**
+     * @todo wat doet dit?
+     *
      * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
      * @param array $data The data array
      *
@@ -104,6 +124,7 @@ class ZdsZaakService
         $zrcSource = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zrcSourceId']);
 
         $synchronization = new Synchronization();
+        // @todo als er s'n sterke behoefte is om deze dingen meteen te kunnen zetten mogen ze in een magic constructor
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
         $synchronization->setGateway($zrcSource);
@@ -112,7 +133,9 @@ class ZdsZaakService
         //TODO: use twig parser on this instead
         $synchronization->setEndpoint("/zaken/{$data['response']['uuid']}/zaakeigenschappen");
 
+        // @todo waar is de flush?
         $this->entityManager->persist($synchronization);
+
 
         return $synchronization;
     }
@@ -137,6 +160,7 @@ class ZdsZaakService
 
         $this->createSynchronization($objectEntity, $data);
 
+        // @todo populate is geen gangabre term hydrate wel
         return $this->synchronizationService->populateObject($eigenschap, $object, 'POST');
     }
 
