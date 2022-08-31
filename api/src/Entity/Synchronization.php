@@ -181,8 +181,17 @@ class Synchronization
         return $this->object;
     }
 
+    /**
+     * Set the object (and entity if none is profided)
+     *
+     * @return ObjectEntity|null
+     */
     public function setObject(?ObjectEntity $object): self
     {
+        if(!$this->getEntity() && $object->getEntity()){
+            $this->setEntity($object->getEntity());
+        }
+
         $this->object = $object;
 
         return $this;

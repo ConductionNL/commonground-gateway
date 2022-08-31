@@ -10,6 +10,10 @@ class ZaakTypeHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
+    /**
+     * @param ContainerInterface $container
+     * @throws GatewayException
+     */
     public function __construct(ContainerInterface $container)
     {
         $zdsZaakService = $container->get('zdszaakservice');
@@ -21,17 +25,43 @@ class ZaakTypeHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function runs the zaak type plugin.
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
-     * @param array $data          The data from the call
-     * @param array $configuration The configuration of the action
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+        return [
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Zaaktype Action',
+            'decription' => 'Gets the zaaktype for a given zaak',
+            'required'   => ['identifierPath'],
+            'properties' => [
+                'identifierPath' => [
+                    'type'        => 'string',
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example'     => 'id',
+                ],
+                'entityId' => [
+                    'type'        => 'string',
+                    'description' => 'The id  of the ZRC zaak entity',
+                    'example'     => '',
+                ],
+
+
+
+            ],
+        ];
+    }
+
+    /**
+     * Run the actual business logic in the appropriate server
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
-     *
+     * @param array $data
+     * @param array $configuration
      * @return array
+     * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
      */
     public function __run(array $data, array $configuration): array
     {
