@@ -14,6 +14,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
 
     /**
      * @param ContainerInterface $container
+     *
      * @throws GatewayException
      */
     public function __construct(ContainerInterface $container)
@@ -49,7 +50,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
     }
 
     /**
-     * Run the actual business logic in the appropriate server
+     * Run the actual business logic in the appropriate server.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action

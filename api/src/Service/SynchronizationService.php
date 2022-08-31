@@ -260,7 +260,7 @@ class SynchronizationService
      *
      * @param Gateway     $gateway The source to call
      * @param string|null $id      The id to request (optional)
-     * @param array $data          The data array
+     * @param array       $data    The data array
      *
      * @return string The resulting URL
      */
@@ -543,7 +543,7 @@ class SynchronizationService
 
     /**
      * This function populates a pre-existing objectEntity with data that has been validated.
-     * This function is only meant for synchronisation
+     * This function is only meant for synchronisation.
      *
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
@@ -572,7 +572,7 @@ class SynchronizationService
         }
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
-            // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
+        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
         $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
 
         return $objectEntity;

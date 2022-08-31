@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
@@ -48,10 +47,10 @@ class ZdsZaakService
     }
 
     /**
-     * This function set an identifier on the dataset
+     * This function set an identifier on the dataset.
      *
-     * @param string $identifier    The identifier to set
-     * @param array  $data          The data from the call
+     * @param string $identifier The identifier to set
+     * @param array  $data       The data from the call
      *
      * @return array
      */
@@ -115,7 +114,7 @@ class ZdsZaakService
      * @todo wat doet dit?
      *
      * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
-     * @param array $data The data array
+     * @param array        $data         The data array
      *
      * @return Synchronization
      */
@@ -135,7 +134,6 @@ class ZdsZaakService
 
         // @todo waar is de flush?
         $this->entityManager->persist($synchronization);
-
 
         return $synchronization;
     }
@@ -217,7 +215,7 @@ class ZdsZaakService
             'startdatum'                   => $data['startdatum'],
             'bronorganisatie'              => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
-            'eigenschappen'                => $eigenschappen
+            'eigenschappen'                => $eigenschappen,
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {

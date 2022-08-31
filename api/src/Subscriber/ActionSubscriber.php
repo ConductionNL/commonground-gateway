@@ -5,7 +5,6 @@ namespace App\Subscriber;
 use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
-use App\Message\NotificationMessage;
 use App\Service\ObjectEntityService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
@@ -32,7 +31,7 @@ class ActionSubscriber implements EventSubscriberInterface
             'commongateway.object.read'     => 'handleEvent',
             'commongateway.object.update'   => 'handleEvent',
             'commongateway.object.delete'   => 'handleEvent',
-            'commongateway.action.event'    => 'handleEvent'
+            'commongateway.action.event'    => 'handleEvent',
 
         ];
     }
@@ -80,11 +79,11 @@ class ActionSubscriber implements EventSubscriberInterface
     public function handleEvent(ActionEvent $event): ActionEvent
     {
         // bij normaal gedrag
-        if(!$event->getSubType()){
+        if (!$event->getSubType()) {
             $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
         }
         // Anders als er wel een subtype is
-        else{
+        else {
             $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getSubType());
         }
 

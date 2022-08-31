@@ -12,6 +12,7 @@ class ZaakTypeHandler implements ActionHandlerInterface
 
     /**
      * @param ContainerInterface $container
+     *
      * @throws GatewayException
      */
     public function __construct(ContainerInterface $container)
@@ -49,19 +50,19 @@ class ZaakTypeHandler implements ActionHandlerInterface
                     'example'     => '',
                 ],
 
-
-
             ],
         ];
     }
 
     /**
-     * Run the actual business logic in the appropriate server
+     * Run the actual business logic in the appropriate server.
      *
      * @param array $data
      * @param array $configuration
-     * @return array
+     *
      * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
+     *
+     * @return array
      */
     public function __run(array $data, array $configuration): array
     {
