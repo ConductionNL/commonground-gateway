@@ -30,7 +30,6 @@ class EmailService
     ) {
         $this->entityManager = $entityManager;
         $this->twig = $twig;
-//        $this->mailgun = $parameterBag->get('mailgun');
     }
 
     /**
@@ -56,12 +55,10 @@ class EmailService
     /**
      * Sends and email using an EmailTemplate with configuration for it. It is possible to use $object data in the email if configured right.
      *
-     * @param EmailTemplate $template
-     * @param array         $object
-     *
-     * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
-     *
      * @return bool
+     * @throws LoaderError
+     * @throws SyntaxError
+     * @throws TransportExceptionInterface
      */
     private function sendEmail(): bool
     {
@@ -80,16 +77,13 @@ class EmailService
         }
 
         // Render the template
-        // @todo right now the code here points to a hardcoded twig template, that should be doft coded the below code does that
         $html = $this->twig->createTemplate(base64_decode($this->configuration['template']))->render($variables);
-        // @todo however this code is more akin to how it works now and refers to a hardcoded twig template in the stack
-        //$html = $this->twig->render($this->configuration['template'], $variables);
         $text = strip_tags(preg_replace('#<br\s*/?>#i', "\n", $html), '\n');
 
         // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the these^ strings.
-        $subject = $this->replaceWithObjectValues($this->configuration['subject'], $this->data);
-        $receiver = $this->replaceWithObjectValues($this->configuration['receiver'], $this->data);
-        $sender = $this->replaceWithObjectValues($this->configuration['sender'], $this->data);
+        $subject = $this->twig->createTemplate($this->configuration['subject'])->render($variables);
+        $receiver = $this->twig->createTemplate($this->configuration['receiver'])->render($variables);
+        $sender = $this->twig->createTemplate($this->configuration['sender'])->render($variables);
 
         // If we have no sender, set sender to receiver
         if (!$sender) {
@@ -132,37 +126,5 @@ class EmailService
         $mailer->send($email);
 
         return true;
-    }
-
-    /**
-     * Replaces {attributeName.attributeName} in given $source string with values from the object Created/Updated.
-     *
-     * @param string $source
-     * @param array  $object
-     *
-     * @return string
-     */
-    private function replaceWithObjectValues(string $source, array $object): string
-    {
-        $destination = $source;
-
-        // Find {attributeName.attributeName} in $source string
-        preg_match_all('/{([#A-Za-z0-9.]+)}/', $source, $matches);
-        if (!empty($matches)) {
-            for ($i = 0; $i < count($matches[0]); $i++) {
-                // If we find matches, get the value for {attributeName.attributeName} from $object.
-                $objectAttribute = explode('.', $matches[1][$i]);
-                $replacement = $object;
-                foreach ($objectAttribute as $item) {
-                    $replacement = $replacement[$item];
-                }
-
-                // Replace {attributeName.attributeName} in $source with the corresponding value from $object.
-                $pattern = '/'.$matches[0][$i].'/';
-                $destination = preg_replace($pattern, $replacement, $destination);
-            }
-        }
-
-        return $destination;
     }
 }
