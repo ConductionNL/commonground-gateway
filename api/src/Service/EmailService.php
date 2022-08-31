@@ -81,9 +81,9 @@ class EmailService
 
         // Render the template
         // @todo right now the code here points to a hardcoded twig template, that should be doft coded the below code does that
-        // $html = $this->twig->createTemplate($this->configuration['template'])->render($variables);
+        $html = $this->twig->createTemplate(base64_decode($this->configuration['template']))->render($variables);
         // @todo however this code is more akin to how it works now and refers to a hardcoded twig template in the stack
-        $html = $this->twig->render($this->configuration['template'], $variables);
+        //$html = $this->twig->render($this->configuration['template'], $variables);
         $text = strip_tags(preg_replace('#<br\s*/?>#i', "\n", $html), '\n');
 
         // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the these^ strings.
