@@ -21,66 +21,66 @@ class EmailHandler implements ActionHandlerInterface
     }
 
     /**
-     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
      */
     public function getConfiguration(): array
     {
         return [
-            '$id' => "https://example.com/person.schema.json",
-            '$schema' => "https://json-schema.org/draft/2020-12/schema",
-            'title' => "Notification Action",
-            "required" => ['ServiceDNS','template','sender','reciever','subject'],
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Notification Action',
+            'required'   => ['ServiceDNS', 'template', 'sender', 'reciever', 'subject'],
             'properties' => [
                 'serviceDNS' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example' => 'native://default'
+                    'example'     => 'native://default',
                 ],
                 'template' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The actual email template',
-                    'example' => 'emails/kiss/new-review-e-mail.html.twig'
+                    'example'     => 'emails/kiss/new-review-e-mail.html.twig',
                 ],
                 'variables' => [
-                    'type' => 'array',
+                    'type'        => 'array',
                     'description' => 'The variables supported by this template (might contain default vallues)',
                 ],
                 'sender' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The sender of the email',
-                    'example' => 'info@conduction.nl'
+                    'example'     => 'info@conduction.nl',
                 ],
                 'receiver' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The receiver of the email',
-                    'example' => 'j.do@conduction.nl'
+                    'example'     => 'j.do@conduction.nl',
                 ],
                 'subject' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The subject of the email',
-                    'example' => 'Your weekly update'
+                    'example'     => 'Your weekly update',
                 ],
                 'cc' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'Carbon copy, email boxes that should receive a copy of  this mail',
-                    'example' => 'archive@conduction.nl'
+                    'example'     => 'archive@conduction.nl',
                 ],
                 'bcc' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'Blind carbon copy, people that should receive a copy without other recipient knowing',
-                    'example' => 'b.brother@conduction.nl'
+                    'example'     => 'b.brother@conduction.nl',
                 ],
                 'replyTo' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The address the receiver should reply to, only provide this if it differs from the sender address',
-                    'example' => 'no-reply@conduction.nl'
+                    'example'     => 'no-reply@conduction.nl',
                 ],
                 'priority' => [
-                    'type' => 'string',
-                    'description' => 'An optional priority for the email'
-                ]
+                    'type'        => 'string',
+                    'description' => 'An optional priority for the email',
+                ],
             ],
         ];
     }

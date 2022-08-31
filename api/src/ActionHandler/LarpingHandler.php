@@ -21,26 +21,26 @@ class LarpingHandler implements ActionHandlerInterface
     }
 
     /**
-     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action schould comply to
      */
     public function getConfiguration(): array
     {
         return [
-            '$id' => "https://example.com/person.schema.json",
-            '$schema' => "https://json-schema.org/draft/2020-12/schema",
-            'title' => "Notification Action",
-            "required" => ["characterEntityId","effectEntityId"],
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Notification Action',
+            'required'   => ['characterEntityId', 'effectEntityId'],
             'properties' => [
                 'characterEntityId' => [
-                    'type' => 'string',
-                    'description' => 'The id of the character entity'
+                    'type'        => 'string',
+                    'description' => 'The id of the character entity',
                 ],
                 'effectEntityId' => [
-                    'type' => 'string',
-                    'description' => 'The id of the effect entity'
-                ]
+                    'type'        => 'string',
+                    'description' => 'The id of the effect entity',
+                ],
             ],
         ];
     }
