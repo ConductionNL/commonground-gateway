@@ -2,13 +2,9 @@
 
 namespace App\Service;
 
-use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\ExpressionLanguage\SyntaxError;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
 
 /**
  * This service holds al the logic for the notification plugin.
@@ -24,9 +20,9 @@ class NotificationService
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param CommonGroundService $commonGroundService
-     * @param ObjectEntityService $objectEntityService
-     * @param GatewayService $gatewayService
+     * @param CommonGroundService    $commonGroundService
+     * @param ObjectEntityService    $objectEntityService
+     * @param GatewayService         $gatewayService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -107,7 +103,6 @@ class NotificationService
                 array_key_exists('query', $this->configuration) ? $this->configuration['query'] : [],
                 array_key_exists('headers', $this->configuration) ? $this->configuration['headers'] : [],
             );
-
         } catch (Exception $exception) {
             return $object;
         }
