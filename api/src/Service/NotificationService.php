@@ -4,22 +4,27 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use App\Service\ObjectEntityService;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 
 /**
  * This service holds al the logic for the notification plugin
  */
 class NotificationService
 {
+    private CommonGroundService $commonGroundService;
     private ObjectEntityService $objectEntityService;
     private array $data;
     private array $configuration;
 
     /**
+     * @param \Conduction\CommonGroundBundle\Service\CommonGroundServic $commonGroundService
      * @param \App\Service\ObjectEntityService $objectEntityService
      */
     public function __construct(
+        CommonGroundService $commonGroundService,
         ObjectEntityService $objectEntityService
     ) {
+        $this->commonGroundService = $commonGroundService;
         $this->objectEntityService = $objectEntityService;
     }
 
@@ -56,20 +61,22 @@ class NotificationService
      */
     public function sendNotification(ObjectEntity $object): ObjectEntity
     {
-        // Skelleton notificaiton bassed on https://github.com/VNG-Realisatie/notificatieservices look at https://github.com/VNG-Realisatie/NL-GOV-profile-for-CloudEvents/blob/main/NL-GOV-Guideline-for-CloudEvents-JSON.md for a json example
+        // Determine the id
+
+        // Skelleton notification bassed on https://github.com/VNG-Realisatie/notificatieservices look at https://github.com/VNG-Realisatie/NL-GOV-profile-for-CloudEvents/blob/main/NL-GOV-Guideline-for-CloudEvents-JSON.md for a json example
         $notification = [
-            "specversion"=>"1.0",
-             "type"=>"nl.overheid.zaken.zaakstatus-gewijzigd",
-             "source"=>"urn:nld:oin:00000001823288444000:systeem:BRP-component",
-             "subject"=>"123456789",
+            "specversion"=>$this->configuration['specversion'],
+             "type"=>$this->configuration['type'],
+             "source"=>$this->configuration['source'],
+             "subject"=>$object->getId(),
              "id"=>"f3dce042-cd6e-4977-844d-05be8dce7cea",
-             "time"=>"2021-12-10T17:31:00Z",
-             "nlbrpnationaliteit"=>"0083",
-             "geheimnummer"=>null,
-             "dataref"=>"https://gemeenteX/api/persoon/123456789",
-             "sequence"=>"1234",
-             "sequencetype"=>"integer",
-             "datacontenttype"=>"application/json"
+             "time"=>"2021-12-10T17:31:00Z", // @todo current datetime
+             //"nlbrpnationaliteit"=>"0083",
+             //"geheimnummer"=>null,
+             "dataref"=>$this->configuration['dataref'].$object->getId(),
+             //"sequence"=>"1234",
+             //"sequencetype"=>"integer",
+             "datacontenttype"=>$this->configuration['source']
         ];
 
         // Include data if so required
@@ -79,6 +86,21 @@ class NotificationService
 
         // @todo  fire a simple guzle call to post the notification
 
+        // Grap the source to notify
+        $source = $this->objectEntityServic->get($this->configuration['sourceId']);
+
+        // Send the notification
+        try {
+            $result = $this->commonGroundService->callService(
+                $source,
+                $this->configuration['endpoint'],
+                json_encode($notification),
+                $this->configuration['query'],
+                $this->configuration['headers'],
+            );
+        } catch (Exception $exception) {
+
+        }
         return $object;
     }
 

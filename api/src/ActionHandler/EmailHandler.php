@@ -78,7 +78,7 @@ class EmailHandler implements ActionHandlerInterface
     }
 
     /**
-     * This function runs the zaak type plugin.
+     * This function runs the email service plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
