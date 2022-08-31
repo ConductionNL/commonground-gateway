@@ -35,39 +35,47 @@ class EmailHandler implements ActionHandlerInterface
             'properties' => [
                 'serviceDNS' => [
                     'type' => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details'
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example' => 'native://default'
                 ],
                 'template' => [
                     'type' => 'string',
-                    'description' => 'The actual email template'
+                    'description' => 'The actual email template',
+                    'example' => 'emails/kiss/new-review-e-mail.html.twig'
                 ],
                 'variables' => [
                     'type' => 'array',
-                    'description' => 'The variables supported by this template (might contain default vallues)'
+                    'description' => 'The variables supported by this template (might contain default vallues)',
                 ],
                 'sender' => [
                     'type' => 'string',
-                    'description' => 'The sender of the email'
+                    'description' => 'The sender of the email',
+                    'example' => 'info@conduction.nl'
                 ],
                 'reciever' => [
                     'type' => 'string',
-                    'description' => 'The reciever of the email'
+                    'description' => 'The reciever of the email',
+                    'example' => 'j.do@conduction.nl'
                 ],
                 'subject' => [
                     'type' => 'string',
-                    'description' => 'The subject of the email'
+                    'description' => 'The subject of the email',
+                    'example' => 'Your weekly update'
                 ],
                 'cc' => [
                     'type' => 'string',
-                    'description' => 'Carbon copy, email boxes that should recieve a copy of  this mail'
+                    'description' => 'Carbon copy, email boxes that should recieve a copy of  this mail',
+                    'example' => 'archive@conduction.nl'
                 ],
                 'bcc' => [
                     'type' => 'string',
-                    'description' => 'Blind carbon copy, people that should recieve a copy without other recipient knowing'
+                    'description' => 'Blind carbon copy, people that should recieve a copy without other recipient knowing',
+                    'example' => 'b.brother@conduction.nl'
                 ],
                 'replyTo' => [
                     'type' => 'string',
-                    'description' => 'The adres the reciever should reply to, only provide this if it differs from the sender address'
+                    'description' => 'The adres the reciever should reply to, only provide this if it differs from the sender address',
+                    'example' => 'no-reply@conduction.nl'
                 ],
                 'priority' => [
                     'type' => 'string',
