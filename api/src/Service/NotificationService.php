@@ -4,36 +4,49 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\ExpressionLanguage\SyntaxError;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
 
 /**
  * This service holds al the logic for the notification plugin.
  */
 class NotificationService
 {
+    private EntityManagerInterface $entityManager;
     private CommonGroundService $commonGroundService;
     private ObjectEntityService $objectEntityService;
+    private GatewayService $gatewayService;
     private array $data;
     private array $configuration;
 
     /**
-     * @param \Conduction\CommonGroundBundle\Service\CommonGroundServic $commonGroundService
-     * @param \App\Service\ObjectEntityService                          $objectEntityService
+     * @param EntityManagerInterface $entityManager
+     * @param CommonGroundService $commonGroundService
+     * @param ObjectEntityService $objectEntityService
+     * @param GatewayService $gatewayService
      */
     public function __construct(
+        EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        GatewayService $gatewayService
     ) {
+        $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
         $this->objectEntityService = $objectEntityService;
+        $this->gatewayService = $gatewayService;
     }
 
     /**
-     * Handles the notifiaction actions.
+     * Handles the notification actions.
      *
      * @param array $data
      * @param array $configuration
      *
-     * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
+     * @throws SyntaxError
      *
      * @return array
      */
@@ -42,63 +55,61 @@ class NotificationService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        // Lets see if we have an object
+        // Let's see if we have an object
         if (
-            in_array('id', $this->data) &&
-            $object = $this->objectEntityService->getObject(null, $this->data['id'])) {
-            return $this->sendNotification($object)->toArray();
+            in_array('id', $this->data['response']) &&
+            $object = $this->objectEntityService->getObjectByUri($this->data['response']['@uri'])) {
+            return $this->sendNotification($object);
         }
 
         return $data;
     }
 
     /**
-     * Send a notifiction in line with the cloudevent standard.
+     * Send a notification in line with the cloudEvent standard.
      *
-     * @param ObjectEntity $object
+     * @param array $object
      *
-     * @return ObjectEntity
+     * @return array
      */
-    public function sendNotification(ObjectEntity $object): ObjectEntity
+    public function sendNotification(array $object): array
     {
-        // Determine the id
-
-        // Skelleton notification bassed on https://github.com/VNG-Realisatie/notificatieservices look at https://github.com/VNG-Realisatie/NL-GOV-profile-for-CloudEvents/blob/main/NL-GOV-Guideline-for-CloudEvents-JSON.md for a json example
+        // Skeleton notification based on https://github.com/VNG-Realisatie/notificatieservices look at https://github.com/VNG-Realisatie/NL-GOV-profile-for-CloudEvents/blob/main/NL-GOV-Guideline-for-CloudEvents-JSON.md for a json example
         $notification = [
             'specversion'=> $this->configuration['specversion'],
             'type'       => $this->configuration['type'],
             'source'     => $this->configuration['source'],
-            'subject'    => $object->getId(),
+            'subject'    => $object['id'],
             'id'         => 'f3dce042-cd6e-4977-844d-05be8dce7cea',
-            'time'       => '2021-12-10T17:31:00Z', // @todo current datetime
+            'time'       => new \DateTime('now'),
             //"nlbrpnationaliteit"=>"0083",
             //"geheimnummer"=>null,
-            'dataref'=> $this->configuration['dataref'].$object->getId(),
+            'dataref'=> $this->configuration['dataref'].$object['id'],
             //"sequence"=>"1234",
             //"sequencetype"=>"integer",
             'datacontenttype'=> $this->configuration['source'],
         ];
 
         // Include data if so required
-        if ($this->configuration['includeData']) {
-            $notification['data'] = $object->toArray();
+        if (array_key_exists('includeData', $this->configuration)) {
+            $notification['data'] = $object;
         }
 
-        // @todo  fire a simple guzle call to post the notification
-
-        // Grap the source to notify
-        $source = $this->objectEntityServic->get($this->configuration['sourceId']);
+        // Grep the source to notify
+        $source = $this->entityManager->getRepository('App:Gateway')->find($this->configuration['sourceId']);
 
         // Send the notification
         try {
-            $result = $this->commonGroundService->callService(
-                $source,
-                $this->configuration['endpoint'],
+            $this->commonGroundService->callService(
+                $this->gatewayService->gatewayToArray($source),
+                $source->getLocation().$this->configuration['endpoint'].($object['id'] ? '/'.$object['id'] : ''),
                 json_encode($notification),
-                $this->configuration['query'],
-                $this->configuration['headers'],
+                array_key_exists('query', $this->configuration) ? $this->configuration['query'] : [],
+                array_key_exists('headers', $this->configuration) ? $this->configuration['headers'] : [],
             );
+
         } catch (Exception $exception) {
+            return $object;
         }
 
         return $object;
