@@ -65,6 +65,13 @@ services:
             $entityManager: '@doctrine.orm.entity_manager'
             $synchronizationService: '@App\Service\SynchronizationService'
 
+    mailService:
+        public: true
+        class: App\Service\EmailService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $twig: '@twig'
+            
     Redis:
         class: Redis
         calls:
