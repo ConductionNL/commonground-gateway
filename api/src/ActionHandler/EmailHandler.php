@@ -31,23 +31,47 @@ class EmailHandler implements ActionHandlerInterface
             '$id' => "https://example.com/person.schema.json",
             '$schema' => "https://json-schema.org/draft/2020-12/schema",
             'title' => "Notification Action",
-            "required" => ['mailServiceDNS','emailTemplate','emailSender','emailSubject'],
+            "required" => ['ServiceDNS','template','sender','reciever','subject'],
             'properties' => [
-                'mailServiceDNS' => [
+                'serviceDNS' => [
                     'type' => 'string',
-                    'description' => 'The id of the source where to send the emails to'
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details'
                 ],
-                'emailTemplate' => [
+                'template' => [
                     'type' => 'string',
                     'description' => 'The actual email template'
                 ],
-                'emailSender' => [
+                'variables' => [
+                    'type' => 'array',
+                    'description' => 'The variables supported by this template (might contain default vallues)'
+                ],
+                'sender' => [
                     'type' => 'string',
                     'description' => 'The sender of the email'
                 ],
-                'emailSubject' => [
+                'reciever' => [
+                    'type' => 'string',
+                    'description' => 'The reciever of the email'
+                ],
+                'subject' => [
                     'type' => 'string',
                     'description' => 'The subject of the email'
+                ],
+                'cc' => [
+                    'type' => 'string',
+                    'description' => 'Carbon copy, email boxes that should recieve a copy of  this mail'
+                ],
+                'bcc' => [
+                    'type' => 'string',
+                    'description' => 'Blind carbon copy, people that should recieve a copy without other recipient knowing'
+                ],
+                'replyTo' => [
+                    'type' => 'string',
+                    'description' => 'The adres the reciever should reply to, only provide this if it differs from the sender address'
+                ],
+                'priority' => [
+                    'type' => 'string',
+                    'description' => 'An optional priority for the email'
                 ]
             ],
         ];

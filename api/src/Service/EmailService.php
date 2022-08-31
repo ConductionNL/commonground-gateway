@@ -21,10 +21,9 @@ use Twig\Error\SyntaxError;
 class EmailService
 {
     private ObjectEntityService $objectEntityService;
-    private EntityManagerInterface $entityManager;
     private Environment $twig;
+    private array $data;
     private array $configuration;
-    private string $mailgun;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -38,7 +37,7 @@ class EmailService
     }
 
     /**
-     * @todo
+     * Handles the sending of an email based on an event
      *
      * @param array $data
      * @param array $configuration
@@ -48,18 +47,10 @@ class EmailService
      */
     public function EmailHandler(array $data, array $configuration): array
     {
+        $this->data = $data;
         $this->configuration = $configuration;
 
-        // todo: het idee is/was dat we een of meerdere triggers kunnen hebben die afgaan op een of meerdere endpoints
-        // todo: hiervoor kunnen we commongateway.object.create gebruiken, in combinatie met conditions voor een specifieke Entity id van de Review entity
-        // todo: in config van Action aangeven welke email templates allemaal af moeten gaan, dus een lijstje met id's, in dit geval voor kiss maar eentje nodig (zie kiss-apis.yaml emailTemplates)
-        // todo: In plaats van een lijstje met id's van EmailTemplate objecten kunnen we ook gewoon de configuratie die in deze objecten word opgeslagen in de configuratie array van de action stoppen
-
-        // Send an email per template this EmailTrigger has.
-        foreach ($this->configuration['emailTemplates'] as $templateId) {
-            $template = $this->entityManager->getRepository('App:EmailTemplate')->find($templateId);
-            $send = $this->sendEmail($template, $data['response']);
-        }
+        $this->sendEmail();
 
         return $data;
     }
@@ -74,27 +65,33 @@ class EmailService
      *
      * @return bool
      */
-    private function sendEmail(EmailTemplate $template, array $object): bool
+    private function sendEmail(): bool
     {
+
         // Create mailer with mailgun url
-        $transport = Transport::fromDsn($this->mailgun);
+        $transport = Transport::fromDsn($this->configuration['serviceDNS']);
         $mailer = new Mailer($transport);
 
         // Ready the email template with configured variables
         $variables = [];
-        foreach ($template->getVariables() as $key => $variable) {
-            if (array_key_exists($variable, $object)) {
-                $variables[$key] = $object[$variable];
+
+        foreach ($this->configuration['variables'] as $key => $variable) {
+            if (array_key_exists($variable, $data)) {
+                $variables[$key] = $data[$variable];
             }
         }
-        $html = $this->twig->render($template->getContent(), $variables);
+
+        // Render the template
+        // @todo right now the code here points to a hardcoded twig template, that should be doft coded the below code does that
+        // $html = $this->twig->createTemplate($this->configuration['template'])->render($variables);
+        // @todo however this code is more akin to how it works now and refers to a hardcoded twig template in the stack
+        $html = $this->twig->render($this->configuration['template'], $variables);
         $text = strip_tags(preg_replace('#<br\s*/?>#i', "\n", $html), '\n');
 
-        // Get the subject, receiver and sender
         // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the these^ strings.
-        $subject = $this->replaceWithObjectValues($template->getSubject(), $object);
-        $receiver = $this->replaceWithObjectValues($template->getReceiver(), $object);
-        $sender = $this->replaceWithObjectValues($template->getSender(), $object);
+        $subject = $this->replaceWithObjectValues($this->configuration['subject'], $this->data);
+        $receiver = $this->replaceWithObjectValues($this->configuration['reciever'], $this->data);
+        $sender = $this->replaceWithObjectValues($this->configuration['sender'], $this->data);
 
         // If we have no sender, set sender to receiver
         if (!$sender) {
@@ -112,6 +109,23 @@ class EmailService
             ->subject($subject)
             ->html($html)
             ->text($text);
+
+        // Then we can handle some optional configuration
+        if($this->configuration['cc']){
+            $email->cc($this->configuration['cc']);
+        }
+
+        if($this->configuration['bcc']){
+            $email->bcc($this->configuration['bcc']);
+        }
+
+        if($this->configuration['replyTo']){
+            $email->replyTo($this->configuration['replyTo']);
+        }
+
+        if($this->configuration['priority']){
+            $email->priority($this->configuration['priority']);
+        }
 
         // todo: attachments
 
