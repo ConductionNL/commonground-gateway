@@ -23,7 +23,7 @@ class EmailHandler implements ActionHandlerInterface
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array
      *
-     * @throws array a [json-schema](https://json-schema.org/) that this  action schould comply to
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
      */
     public function getConfiguration(): array
     {
@@ -52,9 +52,9 @@ class EmailHandler implements ActionHandlerInterface
                     'description' => 'The sender of the email',
                     'example' => 'info@conduction.nl'
                 ],
-                'reciever' => [
+                'receiver' => [
                     'type' => 'string',
-                    'description' => 'The reciever of the email',
+                    'description' => 'The receiver of the email',
                     'example' => 'j.do@conduction.nl'
                 ],
                 'subject' => [
@@ -64,17 +64,17 @@ class EmailHandler implements ActionHandlerInterface
                 ],
                 'cc' => [
                     'type' => 'string',
-                    'description' => 'Carbon copy, email boxes that should recieve a copy of  this mail',
+                    'description' => 'Carbon copy, email boxes that should receive a copy of  this mail',
                     'example' => 'archive@conduction.nl'
                 ],
                 'bcc' => [
                     'type' => 'string',
-                    'description' => 'Blind carbon copy, people that should recieve a copy without other recipient knowing',
+                    'description' => 'Blind carbon copy, people that should receive a copy without other recipient knowing',
                     'example' => 'b.brother@conduction.nl'
                 ],
                 'replyTo' => [
                     'type' => 'string',
-                    'description' => 'The adres the reciever should reply to, only provide this if it differs from the sender address',
+                    'description' => 'The address the receiver should reply to, only provide this if it differs from the sender address',
                     'example' => 'no-reply@conduction.nl'
                 ],
                 'priority' => [

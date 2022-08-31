@@ -20,20 +20,18 @@ use Twig\Error\SyntaxError;
 // todo ... and (re)move the mailgun .env variable (see mailgun in the following files: .env, docker-compose.yaml, helm/values.yaml, helm/templates/deployment.yaml & helm/templates/secrets.yaml)
 class EmailService
 {
-    private ObjectEntityService $objectEntityService;
+    private EntityManagerInterface $entityManager;
     private Environment $twig;
     private array $data;
     private array $configuration;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        Environment $twig,
-        ParameterBagInterface $parameterBag,
-        ObjectEntityService $objectEntityService
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->twig = $twig;
-        $this->mailgun = $parameterBag->get('mailgun');
+//        $this->mailgun = $parameterBag->get('mailgun');
     }
 
     /**
@@ -76,8 +74,8 @@ class EmailService
         $variables = [];
 
         foreach ($this->configuration['variables'] as $key => $variable) {
-            if (array_key_exists($variable, $data)) {
-                $variables[$key] = $data[$variable];
+            if (array_key_exists($variable, $this->data['response'])) {
+                $variables[$key] = $this->data['response'][$variable];
             }
         }
 
@@ -90,7 +88,7 @@ class EmailService
 
         // Lets allow the use of values from the object Created/Updated with {attributeName.attributeName} in the these^ strings.
         $subject = $this->replaceWithObjectValues($this->configuration['subject'], $this->data);
-        $receiver = $this->replaceWithObjectValues($this->configuration['reciever'], $this->data);
+        $receiver = $this->replaceWithObjectValues($this->configuration['receiver'], $this->data);
         $sender = $this->replaceWithObjectValues($this->configuration['sender'], $this->data);
 
         // If we have no sender, set sender to receiver
@@ -111,19 +109,19 @@ class EmailService
             ->text($text);
 
         // Then we can handle some optional configuration
-        if($this->configuration['cc']){
+        if(array_key_exists('cc', $this->configuration)){
             $email->cc($this->configuration['cc']);
         }
 
-        if($this->configuration['bcc']){
+        if(array_key_exists('bcc', $this->configuration)){
             $email->bcc($this->configuration['bcc']);
         }
 
-        if($this->configuration['replyTo']){
+        if(array_key_exists('replyTo', $this->configuration)){
             $email->replyTo($this->configuration['replyTo']);
         }
 
-        if($this->configuration['priority']){
+        if(array_key_exists('priority', $this->configuration)){
             $email->priority($this->configuration['priority']);
         }
 
