@@ -55,10 +55,11 @@ class EmailService
     /**
      * Sends and email using an EmailTemplate with configuration for it. It is possible to use $object data in the email if configured right.
      *
-     * @return bool
      * @throws LoaderError
      * @throws SyntaxError
      * @throws TransportExceptionInterface
+     *
+     * @return bool
      */
     private function sendEmail(): bool
     {
