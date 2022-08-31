@@ -12,7 +12,7 @@ class NotificationHandler implements ActionHandlerInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $notificationService = $container->get('zdszaakservice');
+        $notificationService = $container->get('notificationservice');
         if ($notificationService instanceof NotificationService) {
             $this->notificationService = $notificationService;
         } else {
