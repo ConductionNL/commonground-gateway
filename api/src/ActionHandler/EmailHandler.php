@@ -92,11 +92,12 @@ class EmailHandler implements ActionHandlerInterface
     /**
      * This function runs the email service plugin.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @return array
      * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
+     *
+     * @return array
      */
     public function __run(array $data, array $configuration): array
     {
