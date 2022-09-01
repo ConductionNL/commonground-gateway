@@ -533,6 +533,37 @@ class ObjectEntity
     }
 
     /**
+     * Gets a value based on the attribute string name or atribute object
+     *
+     * @param string|Attribute $attribute
+     * @return Value
+     */
+    public function getValue($attribute): Value
+    {
+        if(is_string($attribute)){
+            $attribute = $this->getEntity()->getAttributeByName($attribute);
+        }
+        $value = $this->getValueByAttribute($attribute);
+
+        return $value;
+    }
+
+    /**
+     * Sets a value based on the attribute string name or atribute object
+     *
+     * @param string|Attribute $attribute
+     * @return ObjectEntity
+     */
+    public function setValue($attribute, $value): ObjectEntity
+    {
+        $this->getValue($attribute);
+
+        $value->setValue($value);
+
+        return $this;
+    }
+
+    /**
      * Get an value based on a attribut.
      *
      * @param Attribute $attribute the attribute that you are searching for
