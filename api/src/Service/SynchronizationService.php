@@ -771,11 +771,11 @@ class SynchronizationService
 
         $sourceObjectDot = new Dot($sourceObject);
 
+        $object = $this->populateObject($sourceObject, $object);
+        $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['DateChangedField'])));
         }
-        $object = $this->populateObject($sourceObject, $object);
-        $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
 
         return $sync->setObject($object);
     }
