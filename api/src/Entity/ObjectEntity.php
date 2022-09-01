@@ -192,6 +192,12 @@ class ObjectEntity
     private Collection $requestLogs;
 
     /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
+     */
+    private Collection $synchronizations;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})

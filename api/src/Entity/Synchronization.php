@@ -72,7 +72,7 @@ class Synchronization
      * @var ?ObjectEntity The object of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="synchronizations", fetch="EAGER")
      */
     private ?ObjectEntity $object = null;
 
