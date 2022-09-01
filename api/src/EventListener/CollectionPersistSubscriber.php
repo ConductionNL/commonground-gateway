@@ -90,10 +90,11 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
 
     private function bindAttributesToEntities(array $schemaRefs): void
     {
+        $entityRepo = $this->entityManager->getRepository(Entity::class);
+        $attributeRepo = $this->entityManager->getRepository(Attribute::class);
+
         // Bind objects/properties that are needed from other collections
         foreach ($schemaRefs as $ref) {
-            $entityRepo = $this->entityManager->getRepository(Entity::class);
-            $attributeRepo = $this->entityManager->getRepository(Attribute::class);
             $entity = null;
             $attributes = null;
 
