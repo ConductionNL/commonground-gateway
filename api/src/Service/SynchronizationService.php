@@ -773,6 +773,9 @@ class SynchronizationService
 
         $object = $this->populateObject($sourceObject, $object);
         $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
+        if (isset($this->configuration['apiSource']['location']['DateCreatedField'])) {
+            $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['DateCreatedField'])));
+        }
         if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['DateChangedField'])));
         }
