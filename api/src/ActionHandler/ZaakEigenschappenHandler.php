@@ -46,7 +46,6 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
                     'type'        => 'array',
                     'description' => '',
                 ],
-
             ],
         ];
     }

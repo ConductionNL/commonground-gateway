@@ -706,4 +706,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return $sortable;
     }
+
+    // @todo
+    public function findByAnyId($id){
+
+        //where id or external.id = id
+        return;
+    }
 }
