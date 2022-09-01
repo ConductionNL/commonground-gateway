@@ -360,6 +360,7 @@ class OasParserService
 
         // Set schema.org ref
         isset($schema['x-context']) && strpos($schema['x-context'], 'schema') !== false && $attribute->setSchema($schema['x-context']);
+
         if (
             isset($schema['format']) && $schema['format'] == 'uri' && isset($schema['type']) &&
             $schema['type'] == 'string' && isset($schema['readOnly']) && $schema['readOnly'] == true &&
@@ -402,6 +403,9 @@ class OasParserService
 
         if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array') && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
+        } elseif ($itemSchema['type'] == 'object' && isset($itemSchema['properties'])) {
+            $simpleEntity = $this->persistEntityFromSchema($parentEntity->getName() . $propertyName . 'Entity', $itemSchema, $collection);
+            return $this->createObjectAttribute($propertyName, $parentEntity, $simpleEntity, true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
         }
