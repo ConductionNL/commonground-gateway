@@ -733,10 +733,10 @@
 #            location: /kiss_openpub_pub
 #            apiSource:
 #                location:
-#                    Objects: '#'
-#                    Object: '#'
-#                    IdField: id
-#                    DateChangedField: modified_gmt
+#                    objects: '#'
+#                    object: '#'
+#                    idField: id
+#                    dateChangedField: modified_gmt
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: true
@@ -766,9 +766,9 @@
 #            location: /api/as/v1/engines/kiss-engine/documents
 #            apiSource:
 #                location:
-#                    Objects: '#'
-#                    IdField: '0.id'
-#                    DateChangedField: ''
+#                    objects: '#'
+#                    idField: '0.id'
+#                    dateChangedField: ''
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: false

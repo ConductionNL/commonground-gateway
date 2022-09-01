@@ -17,10 +17,10 @@
 #            location: /zaken
 #            apiSource:
 #                location:
-#                    Objects: '#'
-#                    Object: '#'
-#                    IdField: id
-#                    DateChangedField: dateModified
+#                    objects: '#'
+#                    object: '#'
+#                    idField: id
+#                    dateChangedField: dateModified
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: true
