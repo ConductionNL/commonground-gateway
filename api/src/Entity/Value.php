@@ -320,11 +320,12 @@ class Value
                     break;
                 case 'float':
                     // if float
-                    //@todo
+                    $outputArray[] = floatval($input);
                     break;
                 case 'number':
                     // if number
-                    //@todo
+                    // todo: not sure if this is correct for type number
+                    $outputArray[] = floatval($input);
                     break;
                 case 'date':
                 case 'datetime':
