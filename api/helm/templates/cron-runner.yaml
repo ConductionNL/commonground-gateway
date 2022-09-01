@@ -150,7 +150,7 @@ spec:
                               secretKeyRef:
                                   name: {{ template "commonground-gateway.fullname" . }}
                                   key: rabbitmq-password
-                        #Mailgun # todo: move this to an email plugin (see EmailSubscriber.php)
+                        #Mailgun # todo: move this to an email plugin (see EmailService.php)
                         - name: MAILGUN
                           valueFrom:
                               secretKeyRef:
