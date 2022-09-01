@@ -291,7 +291,8 @@ class OasParserService
     {
         if (isset($response['content']['application/json'])) {
             $entityNameToLinkTo = isset($response['content']['application/json']['schema']['$ref']) ?
-                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (isset($response['content']['application/json']['schema']['properties']) ?
+                substr($response['content']['application/json']['schema']['$ref'], strrpos($response['content']['application/json']['schema']['$ref'], '/') + 1) : (
+                    isset($response['content']['application/json']['schema']['properties']) ?
                     substr($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], strrpos($response['content']['application/json']['schema']['properties']['results']['items']['$ref'], '/') + 1) :
                     substr($response['content']['application/json']['schema']['items']['$ref'], strrpos($response['content']['application/json']['schema']['items']['$ref'], '/') + 1)
                 );
@@ -404,7 +405,8 @@ class OasParserService
         if (isset($itemSchema['type']) && ($itemSchema['type'] == 'object' || $itemSchema['type'] == 'array') && isset($targetEntity)) {
             return $this->createObjectAttribute($propertyName, $parentEntity, $this->getEntity($targetEntity, $itemSchema, $collection), true);
         } elseif ($itemSchema['type'] == 'object' && isset($itemSchema['properties'])) {
-            $simpleEntity = $this->persistEntityFromSchema($parentEntity->getName() . $propertyName . 'Entity', $itemSchema, $collection);
+            $simpleEntity = $this->persistEntityFromSchema($parentEntity->getName().$propertyName.'Entity', $itemSchema, $collection);
+
             return $this->createObjectAttribute($propertyName, $parentEntity, $simpleEntity, true);
         } else {
             return $this->createFlatAttribute($propertyName, $itemSchema, $parentEntity, true);
@@ -521,7 +523,7 @@ class OasParserService
             if (empty($part)) {
                 continue;
             }
-            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/' . $part);
+            substr($part, 0)[0] == '{' ? $pathRegex .= '/[a-z0-9-]+' : ($key < 1 ? $pathRegex .= $part : $pathRegex .= '/'.$part);
         }
         $pathRegex .= '$';
 
@@ -547,13 +549,12 @@ class OasParserService
             return null;
         }
 
-
         if (isset($originalProperty['$ref'])) {
             $originalProperty = $this->getSchemaFromRef($originalProperty['$ref'], $targetEntity);
         } elseif (isset($originalProperty['items']['$ref']) && isset($originalProperty['type']) && $originalProperty['type'] == 'array') {
             $newProperty = $this->getSchemaFromRef($originalProperty['items']['$ref'], $targetEntity);
         } else {
-            $targetEntity = $entity->getName() . $propertyName . 'Entity';
+            $targetEntity = $entity->getName().$propertyName.'Entity';
         }
 
         if ((!isset($originalProperty['type']) || $originalProperty['type'] == 'object') || (isset($originalProperty['type']) &&
@@ -572,7 +573,7 @@ class OasParserService
             $this->schemaRefs[] = [
                 'id'     => $attribute->getId(),
                 'type'   => 'attribute',
-                'schema' => $attribute->getSchema()
+                'schema' => $attribute->getSchema(),
             ];
         }
 
@@ -628,7 +629,7 @@ class OasParserService
         $pathArray = array_values(array_filter(explode('/', $path)));
         $endpoint = new Endpoint();
         $endpoint->addCollection($collection);
-        $endpoint->setName($path . ' ' . $methodName);
+        $endpoint->setName($path.' '.$methodName);
         $endpoint->setMethod($methodName);
         $collection->getPrefix() && array_unshift($pathArray, $collection->getPrefix());
         $endpoint->setPath($pathArray);
@@ -668,9 +669,9 @@ class OasParserService
 
         if ($newEntity->getSchema()) {
             $this->schemaRefs[] = [
-                'id' => $newEntity->getId(),
-                'type' => 'entity',
-                'schema' => $newEntity->getSchema()
+                'id'     => $newEntity->getId(),
+                'type'   => 'entity',
+                'schema' => $newEntity->getSchema(),
             ];
         }
 
