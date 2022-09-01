@@ -702,11 +702,11 @@
 #            source: uuid # openPub source
 #            location: /kiss_openpub_pub
 #            apiSource:
-#                locationObjects: '#'
-#                locationObject: '#'
-#                locationIdField: id
-#                locationDateChangedField: modified_gmt
-#                results: 0
+#                location:
+#                    Objects: '#'
+#                    Object: '#'
+#                    IdField: id
+#                    DateChangedField: modified_gmt
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: true
@@ -724,7 +724,9 @@
 #            - 'commongateway.object.update'
 #        throws: []
 #        conditions:
-#            '==': [1,1]
+#            '==':
+#                - var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # medewerker entity uuid
 #        class: App\ActionHandler\SynchronizationPushHandler
 #        priority: 0
 #        async: false
@@ -733,11 +735,10 @@
 #            source: ''
 #            location: /api/as/v1/engines/kiss-engine/documents
 #            apiSource:
-#                locationObjects: '#'
-#                locationTotalCount: ''
-#                idField: '0.id'
-#                dateChangedField: ''
-#                results: 0
+#                location:
+#                    Objects: '#'
+#                    IdField: '0.id'
+#                    DateChangedField: ''
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: false

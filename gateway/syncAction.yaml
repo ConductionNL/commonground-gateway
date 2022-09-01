@@ -16,11 +16,11 @@
 #            source: /admin/gateways/{uuid}
 #            location: /zaken
 #            apiSource:
-#                locationObjects: '#'
-#                locationObject: '#'
-#                locationIdField: id
-#                locationDateChangedField: dateModified
-#                results: 30
+#                location:
+#                    Objects: '#'
+#                    Object: '#'
+#                    IdField: id
+#                    DateChangedField: dateModified
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: true
