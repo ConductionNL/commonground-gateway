@@ -79,6 +79,7 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
     private function bindAttributeToEntity(Attribute $attribute, Entity $entity): void
     {
         if ($attribute->getType() !== 'object') {
+            $attribute->setFormat(null);
             $attribute->setType('object');
             $attribute->setObject($entity);
             $attribute->setCascade(true);
