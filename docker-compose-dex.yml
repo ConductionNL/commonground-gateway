@@ -77,7 +77,6 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - MAILGUN=${MAILGUN}
     ports:
       - "82:80"
     cap_drop:

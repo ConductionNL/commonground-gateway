@@ -646,36 +646,6 @@
 #        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
 #        entity: "@medewerker"
 #
-#
-## EmailTemplates
-#App\Entity\EmailTemplate:
-#    newReviewTemplate:
-#        name: newReviewTemplate
-#        description: "email template for the new review email."
-#        # todo for content find another way to configure email templates, so we don't need to add files inside the gateway
-#        content: "emails/kiss/new-review-e-mail.html.twig"
-#        variables:
-#            subject: name
-#            author: author
-#            topic: name
-#            description: description
-#        subject: "test {name}"
-#        sender: kiss@commonground.nu
-#        receiver: kiss@commonground.nu
-#
-## EmailTriggers
-#App\Entity\EmailTrigger:
-#    newReviewTrigger:
-#        name: newReviewTrigger
-#        description: "trigger for the new review email."
-#        # todo: request is an example, not required
-##        request:
-##            query:
-##                test: test123
-#        hooks: ['POST_HANDLER']
-#        endpoints: ["@reviewEndpointPost"]
-#        templates: ["@newReviewTemplate"]
-#
 #App\Entity\Gateway:
 #    pubSource:
 #        name: openPub
@@ -712,7 +682,7 @@
 #                author: author
 #                topic: topic
 #                description: description
-#            sender: info@kiss.nl
+#            sender: kiss@commonground.nu
 #            receiver: icatttest+kiss@gmail.com
 #            subject: "KISS feedback: {{subject}}"
 #        

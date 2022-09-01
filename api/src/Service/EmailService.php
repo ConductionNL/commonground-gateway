@@ -2,8 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\EmailTemplate;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -14,21 +12,15 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 // todo: move this to an email plugin with the following packages from composer.json: symfony/mailer, symfony/mailgun-mailer & symfony/http-client
-// todo ... and (re)move api/config/packages/mailer.yaml
-// todo ... and (re)move the Entities EmailTrigger & EmailTemplate
-// todo ... and (re)move the mailgun .env variable (see mailgun in the following files: .env, docker-compose.yaml, helm/values.yaml, helm/templates/deployment.yaml & helm/templates/secrets.yaml)
 class EmailService
 {
-    private EntityManagerInterface $entityManager;
     private Environment $twig;
     private array $data;
     private array $configuration;
 
     public function __construct(
-        EntityManagerInterface $entityManager,
         Environment $twig
     ) {
-        $this->entityManager = $entityManager;
         $this->twig = $twig;
     }
 

@@ -69,7 +69,6 @@ services:
         public: true
         class: App\Service\EmailService
         arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
             $twig: '@twig'
 
     huwelijksplannerService:
