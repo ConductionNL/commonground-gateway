@@ -2,15 +2,15 @@
 
 namespace App\EventListener;
 
+use App\Entity\Attribute;
 use App\Entity\CollectionEntity;
+use App\Entity\Entity;
 use App\Service\OasParserService;
 use App\Service\ParseDataService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use App\Entity\Entity;
-use App\Entity\Attribute;
 
 class CollectionPersistSubscriber implements EventSubscriberInterface
 {
