@@ -691,6 +691,31 @@
 #        apikey: ''
 #
 #App\Entity\Action:
+#    EmailAction:
+#        name: Send review mail
+#        description: This action sends an email every time a review is made
+#        listens:
+#            - 'commongateway.object.create'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # review entity uuid
+#        class: App\ActionHandler\EmailHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            serviceDNS: mailgun+api://code:domain@api.eu.mailgun.net
+#            template: emails/kiss/new-review-e-mail.html.twig
+#            variables:
+#                subject: name
+#                author: author
+#                topic: topic
+#                description: description
+#            sender: info@kiss.nl
+#            reciever: icatttest+kiss@gmail.com
+#            subject: Er is nieuwe feedback
+#        
 #    SyncPubAction:
 #        name: SyncPubAction
 #        description: This is a synchronization action for the pub collection
