@@ -81,6 +81,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - APP_AUTH=${APP_AUTH}
+      - CRON_RUNNER_ENABLED=${CRON_RUNNER_ENABLED}
+      - CRON_RUNNER_CRONTAB=${CRON_RUNNER_CRONTAB}
     ports:
       - "82:80"
 

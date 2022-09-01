@@ -1,3 +1,4 @@
+{{- if .Values.config.cronRunner.enabled }}
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -6,7 +7,7 @@ metadata:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
   # this cronjob runs every 10 minutes https://crontab.guru/#*_*_*_*_*
-  schedule: "{{ .Values.config.crontab }}"
+  schedule: "{{ .Values.config.cronRunner.crontab }}"
   jobTemplate:
     spec:
       template:
@@ -127,6 +128,16 @@ spec:
                           valueFrom:
                               configMapKeyRef:
                                   key: url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_ENABLED
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-enabled
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_CRONTAB
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-crontab
                                   name: {{ include "commonground-gateway.fullname" . }}
         
                         #RabbitMQ
@@ -256,3 +267,4 @@ spec:
               tolerations:
                 {{- toYaml . | nindent 16 }}
             {{- end }}
+{{- end }}
