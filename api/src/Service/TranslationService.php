@@ -79,7 +79,7 @@ class TranslationService
             if (isset($source[$search]['@xsi:nil'])) {
                 unset($destination[$search]);
             } elseif (!isset($format)) {
-                // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
+                // Make sure we don't transform (wrong type) input like integers to string. So validatorService throws a must be type x error when needed!
                 $destination[$replace] = $source[$search] ?? ($destination[$replace]) ?? null;
             } elseif ($format == 'string') {
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;

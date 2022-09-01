@@ -58,7 +58,7 @@ class SynchronizationService
         $this->messageBus = $messageBus;
         $this->translationService = $translationService;
         $this->objectEntityService = $objectEntityService;
-        $this->objectEntityService->addServices($eavService->getValidationService(), $eavService);
+        $this->objectEntityService->addServices($eavService);
         $this->validatorService = $validatorService;
         $this->configuration = [];
     }
