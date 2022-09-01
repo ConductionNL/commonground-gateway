@@ -421,11 +421,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case a filter for a subresource is used (example: subresource.key = something).
      *
-     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param QueryBuilder $query          The existing QueryBuilder.
      * @param string       $sqlFriendlyKey The key of the filter. But one that is sql friendly for using in left joins. see makeKeySqlFriendly() function.
-     * @param array        $value  The value of the filter.
-     * @param int          $level  The depth level, if we are filtering on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the filter we are adding.
+     * @param array        $value          The value of the filter.
+     * @param int          $level          The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the filter we are adding.
      *
      * @throws Exception
      *
@@ -512,8 +512,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Function that handles after and/or before dateTime filters. Adds to an existing QueryBuilder.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param string $sqlFriendlyKey
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey
      * @param $value
      * @param string $prefix
      *
@@ -701,11 +701,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case order on a subresource is used (example: subresource.key = something).
      *
-     * @param QueryBuilder $query  The existing QueryBuilder.
-     * @param string       $sqlFriendlyKey    The key of the order. But made sql friendly for left joins with the makeKeySqlFriendly() function.
-     * @param array        $value  The value of the order.
-     * @param int          $level  The depth level, if we are ordering on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the order we are adding.
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey The key of the order. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param array        $value          The value of the order.
+     * @param int          $level          The depth level, if we are ordering on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the order we are adding.
      *
      * @throws Exception
      *
@@ -729,10 +729,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder with the correct orderBy, using the given input and prefix.
      *
-     * @param QueryBuilder $query  The existing QueryBuilder.
-     * @param string       $sqlFriendlyKey    The order[$key] used in the order query param. But made sql friendly for left joins with the makeKeySqlFriendly() function.
-     * @param string       $key    The order[$key] used in the order query param.
-     * @param string       $value  The value used with the query param, desc or asc.
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey The order[$key] used in the order query param. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param string       $key            The order[$key] used in the order query param.
+     * @param string       $value          The value used with the query param, desc or asc.
      * @param string       $prefix
      *
      * @return QueryBuilder
