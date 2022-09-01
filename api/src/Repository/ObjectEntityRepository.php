@@ -707,10 +707,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
         return $sortable;
     }
 
-    // @todo
-    public function findByAnyId($id){
+    /**
+     * Finds object entities on there external or internal id
+     *
+     * @param string $listen
+     *
+     * @return ObjectEntity The found object entity
+     */
+    public function findByAnyId(string $identifier): ObjectEntity
+    {
+        $query = $this->createQueryBuilder('o')
+            ->join('o.synchronizations')
+            ->where('o.id = :identifier')
+            ->orWhere('o.synchronizations.sourceId = :identifier')
+            ->setParameter('identifier', $identifier);
 
-        //where id or external.id = id
-        return;
+        return $query->getQuery()->getSingleResult();
     }
 }
