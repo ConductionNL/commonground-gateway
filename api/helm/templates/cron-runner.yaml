@@ -134,11 +134,13 @@ spec:
                               configMapKeyRef:
                                   key: cron-runner-enabled
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        {{- if .Values.config.cronRunner.enabled }}
                         - name: CRON_RUNNER_CRONTAB
                           valueFrom:
                               configMapKeyRef:
                                   key: cron-runner-crontab
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        {{- end}}
         
                         #RabbitMQ
                         - name: RABBITMQ_HOST

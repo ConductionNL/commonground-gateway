@@ -21,7 +21,7 @@ data:
   {{- end }}
   cron-runner-enabled: {{ .Values.config.cronRunner.enabled | default "false" | quote }}
   {{- if .Values.config.cronRunner.enabled }}
-  cron-runner-crontab: {{ .Values.config.cronRunner.crontab | quote }}
+  cron-runner-crontab: {{ .Values.config.cronRunner.crontab | default "*/5 * * * *" | quote }}
   {{- end }}
 
   rabbitmq-host: {{ printf "%s" $rabbitmqServiceName | quote }}
