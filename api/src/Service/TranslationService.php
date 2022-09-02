@@ -27,9 +27,10 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
-            if ($value === [] && $newKey != 'results') {
-                unset($result[$newKey]);
-            }
+            // todo: With this if statement it is impossible to do the following put: "telefoonnummers": []
+//            if ($value === [] && $newKey != 'results') {
+//                unset($result[$newKey]);
+//            }
         }
 
         return $result;
