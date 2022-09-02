@@ -59,6 +59,7 @@ class LogService
         $callLog->setType($type);
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
+        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
         $callLog->setRequestQuery($request->query->all() ?? null);
         $callLog->setRequestPathInfo($request->getPathInfo());
         $callLog->setRequestLanguages($request->getLanguages() ?? null);
