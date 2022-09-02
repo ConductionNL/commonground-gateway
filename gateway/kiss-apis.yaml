@@ -682,13 +682,20 @@
 #        location: https://openweb.kiss-dev.commonground.nu/wp-json/wp/v2
 #        headers:
 #            accept: 'application/json'    
-#    elastic:
-#        name: elastic
-#        location: ''
+#    elasticPrivate:
+#        name: EnterpriseSearch API Private
+#        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
 #        headers:
 #            accept: 'application/json'
 #        auth: apikey
-#        apikey: ''
+#        apikey: 'Bearer private-IWillNotTellYouMySecret'
+#    elasticSearch:
+#        name: EnterpriseSearch API Search
+#        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
+#        headers:
+#            accept: 'application/json'
+#        auth: apikey
+#        apikey: 'Bearer search-IWillNotTellYouMySecret'
 #
 #App\Entity\Action:
 #    EmailAction:
@@ -761,8 +768,8 @@
 #        priority: 0
 #        async: false
 #        configuration:
-#            eavObject: ''
-#            source: ''
+#            entity: '' # medewerker entity uuid
+#            source: '' # EnterpriseSearch API Private
 #            location: /api/as/v1/engines/kiss-engine/documents
 #            apiSource:
 #                location:
