@@ -65,6 +65,12 @@ services:
             $entityManager: '@doctrine.orm.entity_manager'
             $synchronizationService: '@App\Service\SynchronizationService'
 
+    zgwzaakservice:
+        public: true
+        class: App\Service\ZgwZaakService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
     Redis:
         class: Redis
         calls:
