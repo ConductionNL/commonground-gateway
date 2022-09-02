@@ -747,7 +747,7 @@ class SynchronizationService
         // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
         // todo: turn all or some of the following todo's and there code into functions?
 
-        // todo: maybe move this to foreach in getAllFromSource() (nice to have)
+        // todo: move to function, maybe copy: clearUnavailableProperties()
         // todo: allowedPropertiesOut, notAllowedPropertiesOut
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
