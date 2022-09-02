@@ -884,12 +884,9 @@ class ObjectEntityService
                     foreach ($valueObject->getObjects() as $object) {
                         // If we are not re-adding this object...
                         $object->removeSubresourceOf($valueObject);
-                        $this->eavService->handleDelete($object);
-                        // todo: remove?
-//                        $this->removeObjectsOnPut[] = [
-//                            'valueObject' => $valueObject,
-//                            'object'      => $object,
-//                        ];
+                        if (empty($object->getSubresourceOf())) {
+                            $this->eavService->handleDelete($object);
+                        }
                     }
                     $valueObject->getObjects()->clear();
                 } else {
@@ -1042,12 +1039,9 @@ class ObjectEntityService
                         // If we are not re-adding this object...
                         if (!$saveSubObjects->contains($object)) {
                             $object->removeSubresourceOf($valueObject);
-                            $this->eavService->handleDelete($object);
-                            // todo: remove?
-//                            $this->removeObjectsOnPut[] = [
-//                                'valueObject' => $valueObject,
-//                                'object'      => $object,
-//                            ];
+                            if (empty($object->getSubresourceOf())) {
+                                $this->eavService->handleDelete($object);
+                            }
                         }
                     }
                     $valueObject->getObjects()->clear();
