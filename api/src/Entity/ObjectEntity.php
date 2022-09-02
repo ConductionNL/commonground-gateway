@@ -570,6 +570,21 @@ class ObjectEntity
     }
 
     /**
+     * Populate this object with an array of values, where attributes are diffined by key.
+     *
+     * @param array $array
+     * @return ObjectEntity
+     */
+    public function hydrate(array $array): ObjectEntity
+    {
+        foreach($array as  $key => $value){
+            $this->setValue($key,$value);
+        }
+
+        return $this;
+    }
+
+    /**
      * Get an value based on a attribut.
      *
      * @param Attribute $attribute the attribute that you are searching for
