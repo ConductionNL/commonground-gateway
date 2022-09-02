@@ -217,10 +217,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $filters = $this->handleValueScopeFilters($filters);
 
         foreach ($filters as $key => $value) {
-            $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
-            if (substr($key, 0, 1) == '.') {
-                $key = '_'.ltrim($key, $key[0]);
-            }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
                 $key = array_key_exists($key, $multipleAttributes) ? $key.'|multiple' : $key;
@@ -622,10 +618,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $key = array_keys($order)[0];
         $value = array_values($order)[0];
 
-        $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
-        if (substr($key, 0, 1) == '.') {
-            $key = '_'.ltrim($key, $key[0]);
-        }
         if (in_array($key, $orderCheck) && in_array($value, ['desc', 'asc'])) {
             $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
         }
