@@ -7,6 +7,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
+use mysql_xdevapi\Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
@@ -15,6 +16,7 @@ class ZdsZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
+    private ObjectEntityService $objectEntityService;
     private array $configuration;
     private array $data;
     private array $usedValues = [];
@@ -22,13 +24,16 @@ class ZdsZaakService
     /**
      * @param EntityManagerInterface $entityManager
      * @param SynchronizationService $synchronizationService
+     * @param ObjectEntityService $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        SynchronizationService $synchronizationService
+        SynchronizationService $synchronizationService,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -44,6 +49,76 @@ class ZdsZaakService
 
         // @todo in de sync service noemen we dit niet identifierPath maar locationIdField
         return $dotData->get($this->configuration['identifierPath']);
+    }
+
+    public function zdsValidationHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $identificatie = $this->getIdentifier($data['request']);
+
+        if(!$identificatie){
+            throw new Exception('The identificatie is not found');
+        }
+
+        var_dump('identificatie '.$identificatie);
+
+        // Let get the zaaktype
+        $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($identificatie);
+        if(!$zaakTypeObjectEntity){
+            throw new Exception('The zaakType with identificatie: '.$identificatie.' can\'t be found');
+        }
+
+        var_dump($zaakTypeObjectEntity->toArray());
+
+        $data['request']['zgw'] = [
+            'zaakType' => $zaakTypeObjectEntity,
+            'identificatie' => $identificatie,
+        ];
+
+        return $data;
+    }
+
+    // inhaken op aanmaken zds object
+    public function zdsToZGWHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
+        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['id']);
+
+        // get value by attribute aanpassen zodat die ook strings accepteerd
+        $zgwZaaktype = $zds->getValue('zaakType');
+        $zgwZaakTypeEigenschappen = $zgwZaaktype->getValue('eingenschapen');
+
+        // so far so good (need error handling doh)
+        $zaak = New ObjectEntity();
+        $zaak->setEntity($zaakEntity);
+
+        // Insert magic method
+        $zaak->setValue('zaaktype',$zgwZaaktype);
+        // etc etc
+
+        $zaakEigenschappen = [];
+        foreach($zds->getValue('extaElements') as $key => $value){
+            if(array_key_exists($key, $zgwZaakTypeEigenschappen['name'])){
+                $zaakEigenschappen[] = [
+
+                ];
+                continue;
+            }
+
+            $toelichtingen = $zaak->getValue('toelichtingen');
+            $toelichtingen = $toelichtingen.$value;
+            $zaak->setValue('toelichtingen', $toelichtingen);
+        }
+
+        $zaak->setValue('eigenschappen', $zaakEigenschappen);
+
+        $this->entityManager->persist($zaak);
+        return $data;
     }
 
     /**
@@ -64,77 +139,6 @@ class ZdsZaakService
         // @todo er wordt aangegeven dat de result een array is (that makes sense) maar we geven een JSON object terug?
         return $dotData->jsonSerialize();
     }
-
-
-    public function zdsValidationHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        $identificatie = $this->getIdentifier($data['request']);
-
-        if(!$identificatie){
-            // throw  error
-        }
-
-        // Let  get the zaaktype
-        $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($identificatie);
-        if(!$zaakTypeObjectEntity){
-            //throw  error
-        }
-
-        $data['request']['zgw'] = [
-            'zaakType' => $zaakTypeObjectEntity,
-            'identificatie' => $identificatie,
-        ];
-
-        return $data;
-    }
-
-    // inhaken op aanmaken zds object
-    public function zdsToZGWHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find( $this->configuration['zaakEntityId']);
-        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find( $this->data['id']);
-
-        // get value by atribute aanassen zodat die ook strings accepteerd
-        $zgwZaaktype = $zds->getValueByAtribute('zaakType');
-        $zgwZaakTypeEigenschappen => $zgwZaaktype= $zds->getValueByAtribute('eingenschapen');
-
-        // so far so good (need error handling doh)
-        $zaak = New ObjectEntity();
-        $zaak->setEntity($zaakEntity);
-
-        // Insert magic method
-        $zaak->setValue('zaaktype',$zgwZaaktype);
-        // etc etc
-
-        $zaakEigenschappen = [];
-        foreach($zds->getValue('extaElements') as $key => $value){
-            if($key exisits in $zgwZaakTypeEigenschappen['name']){
-                $zaakEigenschappen[] = [
-
-                ];
-                continue;
-            };
-            else{
-                $toelichtingen = $zaak->getValue('toelichtingen');
-                $toelichtingen = $toelichtingen.$value;
-                $zaak->setValue('toelichtingen', $toelichtingen);
-            }
-        }
-
-        $zaak->setValue('eigenschappen', $zaakEigenschappen);
-        $this->objectService->saveObject($zaak);
-
-        return $data;
-    }
-
-
-
 
     /**
      * Changes the request to hold the proper zaaktype url insted of given identifier
