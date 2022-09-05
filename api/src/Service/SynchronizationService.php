@@ -134,11 +134,11 @@ class SynchronizationService
 
         // Dot the data array and try to find id in it
         $dot = new Dot($data);
-        $id = $dot->get($this->configuration['apiSource']['location']['IdField']);
+        $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
         // If we have a complete object we can use that to sync
         if (array_key_exists('locationObject', $this->configuration)) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['location']['Object'], $data); // todo should default be $data or [] ?
+            $sourceObject = $dot->get($this->configuration['apiSource']['location']['object'], $data); // todo should default be $data or [] ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
@@ -181,10 +181,10 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($this->configuration['apiSource']['location']['IdField']);
+            $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            array_key_exists('locationObject', $this->configuration) && $result = $dot->get($this->configuration['apiSource']['location']['Object'], $result);
+            array_key_exists('locationObject', $this->configuration) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $sync = $this->findSyncBySource($gateway, $entity, $id);
@@ -351,7 +351,7 @@ class SynchronizationService
         $pageResult = json_decode($response->getBody()->getContents(), true);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($this->configuration['apiSource']['location']['Objects'], $pageResult);
+        $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
 
         if (array_key_exists('limit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['limit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
@@ -402,7 +402,7 @@ class SynchronizationService
 //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['location']['Object'], $result);
+        return $dot->get($this->configuration['apiSource']['location']['object'], $result);
     }
 
     /**
@@ -493,8 +493,8 @@ class SynchronizationService
     {
         $hash = hash('sha384', serialize($sourceObject));
         $dot = new Dot($sourceObject);
-        if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
-            $lastChanged = $dot->get($this->configuration['apiSource']['location']['DateChangedField']);
+        if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
+            $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
             $synchronization->setSourcelastChanged(new \DateTime($lastChanged));
         } elseif ($synchronization->getHash() != $hash) {
             $lastChanged = new \DateTime();
@@ -747,7 +747,7 @@ class SynchronizationService
         // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
         // todo: turn all or some of the following todo's and there code into functions?
 
-        // todo: maybe move this to foreach in getAllFromSource() (nice to have)
+        // todo: move to function, maybe copy: clearUnavailableProperties()
         // todo: allowedPropertiesOut, notAllowedPropertiesOut
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
@@ -771,11 +771,14 @@ class SynchronizationService
 
         $sourceObjectDot = new Dot($sourceObject);
 
-        if (isset($this->configuration['apiSource']['location']['DateChangedField'])) {
-            $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['DateChangedField'])));
-        }
         $object = $this->populateObject($sourceObject, $object);
         $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
+        if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
+            $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
+        }
+        if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
+            $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateChangedField'])));
+        }
 
         return $sync->setObject($object);
     }

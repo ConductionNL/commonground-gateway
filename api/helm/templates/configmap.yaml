@@ -19,6 +19,10 @@ data:
   redis-host: {{ printf "%s-headless" $redisServiceName | quote }}
   redis-port: {{ .Values.redis.redisPort | toString | quote }}
   {{- end }}
+  cron-runner-enabled: {{ .Values.config.cronRunner.enabled | default "false" | quote }}
+  {{- if .Values.config.cronRunner.enabled }}
+  cron-runner-crontab: {{ .Values.config.cronRunner.crontab | default "*/5 * * * *" | quote }}
+  {{- end }}
 
   rabbitmq-host: {{ printf "%s" $rabbitmqServiceName | quote }}
   rabbitmq-port: {{ .Values.rabbitmq.service.port | quote }}

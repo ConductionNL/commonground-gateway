@@ -883,6 +883,7 @@ class ResponseService
 
         $requestLog->setMethod($request->getMethod());
         $requestLog->setHeaders($this->filterRequestLogHeaders($requestLog->getEndpoint(), $request->headers->all()));
+        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
         $requestLog->setQueryParams($request->query->all());
 
         $this->em->persist($requestLog);

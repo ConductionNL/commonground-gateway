@@ -3,7 +3,7 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.306876109+02:00"
+    created: "2022-09-02T10:00:42.6353282+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -17,7 +17,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 9.0.1
     description: A Helm chart for Kubernetes
-    digest: f2491554fd039db0f74b0e1971b1e3e5d76c18712666f7e974b091bcd522f276
+    digest: 46944ce261477e26923e3db46ff4332b43dd8fc7677086a1431b85908fc1485d
     name: commonground-gateway
     type: application
     urls:
@@ -25,7 +25,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.289871127+02:00"
+    created: "2022-09-02T10:00:42.6245687+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -47,7 +47,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.424044584+02:00"
+    created: "2022-09-02T10:00:42.7187362+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -69,7 +69,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.407663604+02:00"
+    created: "2022-09-02T10:00:42.7079895+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -91,7 +91,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.391811395+02:00"
+    created: "2022-09-02T10:00:42.6949933+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -113,7 +113,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.372990506+02:00"
+    created: "2022-09-02T10:00:42.6815198+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -132,7 +132,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.362164096+02:00"
+    created: "2022-09-02T10:00:42.6730442+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -151,7 +151,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.350773309+02:00"
+    created: "2022-09-02T10:00:42.6650426+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -170,7 +170,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.338941986+02:00"
+    created: "2022-09-02T10:00:42.656045+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -189,7 +189,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.327703247+02:00"
+    created: "2022-09-02T10:00:42.6472108+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -208,7 +208,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.273951785+02:00"
+    created: "2022-09-02T10:00:42.6099711+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -227,7 +227,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-08-23T09:27:35.258727518+02:00"
+    created: "2022-09-02T10:00:42.5999626+02:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -249,13 +249,12 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 11.13.0
-    created: "2022-08-23T09:27:35.432290705+02:00"
+    created: "2022-09-02T10:00:42.7237362+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       version: 1.x.x
-    description: Chart for PostgreSQL, an object-relational database management system
-      (ORDBMS) with an emphasis on extensibility and on standards-compliance.
+    description: Chart for PostgreSQL, an object-relational database management system (ORDBMS) with an emphasis on extensibility and on standards-compliance.
     digest: 871e4726cd44dddc531dc9bcdbd4fb6e7da875fbe0c6ec347bfcda33acc2d246
     home: https://github.com/bitnami/charts/tree/master/bitnami/postgresql
     icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-220x234.png
@@ -283,16 +282,14 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 3.9.16
-    created: "2022-08-23T09:27:35.4392678+02:00"
+    created: "2022-09-02T10:00:42.7267357+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
       version: 1.x.x
-    description: RabbitMQ is an open source general-purpose message broker that is
-      designed for consistent, highly-available messaging scenarios (both synchronous
-      and asynchronous).
+    description: RabbitMQ is an open source general-purpose message broker that is designed for consistent, highly-available messaging scenarios (both synchronous and asynchronous).
     digest: e87eafdbe989aecc9e6dd4a9190b0fa616591b26004a760a5c4ef4d4f4dbb0fd
     home: https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq
     icon: https://bitnami.com/assets/stacks/rabbitmq/img/rabbitmq-stack-220x234.png
@@ -315,16 +312,14 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.2.5
-    created: "2022-08-23T09:27:35.448858097+02:00"
+    created: "2022-09-02T10:00:42.7307362+02:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
       version: 1.x.x
-    description: Open source, advanced key-value store. It is often referred to as
-      a data structure server since keys can contain strings, hashes, lists, sets
-      and sorted sets.
+    description: Open source, advanced key-value store. It is often referred to as a data structure server since keys can contain strings, hashes, lists, sets and sorted sets.
     digest: f8fa3b0bdaecf7f9aa1669b027c5452f7efaab21c10b0dbcf7148e17c54ac5b7
     home: https://github.com/bitnami/charts/tree/master/bitnami/redis
     icon: https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png
@@ -344,4 +339,4 @@ entries:
     urls:
     - charts/redis-15.3.2.tgz
     version: 15.3.2
-generated: "2022-08-23T09:27:35.24551282+02:00"
+generated: "2022-09-02T10:00:42.5905681+02:00"
