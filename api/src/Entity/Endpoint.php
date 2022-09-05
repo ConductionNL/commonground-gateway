@@ -176,7 +176,7 @@ class Endpoint
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255)
      */
-    private ?string  $operationType;
+    private string $operationType;
 
     /**
      * @var ?array (OAS) tags to identify this Endpoint
