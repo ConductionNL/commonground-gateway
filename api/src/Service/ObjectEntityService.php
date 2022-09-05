@@ -884,7 +884,7 @@ class ObjectEntityService
                     foreach ($valueObject->getObjects() as $object) {
                         // If we are not re-adding this object...
                         $object->removeSubresourceOf($valueObject);
-                        if (empty($object->getSubresourceOf())) {
+                        if (count($object->getSubresourceOf()) == 0) {
                             $this->eavService->handleDelete($object);
                         }
                     }
@@ -1039,7 +1039,7 @@ class ObjectEntityService
                         // If we are not re-adding this object...
                         if (!$saveSubObjects->contains($object)) {
                             $object->removeSubresourceOf($valueObject);
-                            if (empty($object->getSubresourceOf())) {
+                            if (count($object->getSubresourceOf()) == 0) {
                                 $this->eavService->handleDelete($object);
                             }
                         }
