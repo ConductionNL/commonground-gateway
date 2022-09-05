@@ -61,6 +61,6 @@ class ZgwZaakHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-        return $this->zgwService->zdsValidationHandler($data, $configuration);
+        return $this->zgwService->zgwZaakHandler($data, $configuration);
     }
 }
