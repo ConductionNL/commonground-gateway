@@ -969,10 +969,13 @@ class EavService
      *
      * @return array An array with all query parameters.
      */
-    public function realRequestQueryAll(string $method = 'GET'): array
+    public function realRequestQueryAll(string $method = 'get'): array
     {
-        $pairs = explode('&', $method == 'POST' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
         $vars = [];
+        if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
+            return $vars;
+        }
+        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);
