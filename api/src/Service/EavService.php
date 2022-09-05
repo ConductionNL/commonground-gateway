@@ -976,7 +976,10 @@ class EavService
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);
-            $value = urldecode($nv[1]);
+            $value = "";
+            if (count($nv) == 2) {
+                $value = urldecode($nv[1]);
+            }
             $matchesCount = preg_match('/(\[.*])/', $name, $matches);
             if ($matchesCount == 1) {
                 $key = $matches[1];
