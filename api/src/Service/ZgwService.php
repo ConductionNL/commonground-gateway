@@ -14,20 +14,17 @@ use Respect\Validation\Exceptions\ComponentException;
 class ZgwService
 {
     private EntityManagerInterface $entityManager;
-    private ObjectEntityService $objectEntityService;
     private array $configuration;
     private array $data;
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param ObjectEntityService $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
-        $this->objectEntityService = $objectEntityService;
     }
 
     public function zgwZaakHandler(array $data, array $configuration): array
@@ -35,28 +32,35 @@ class ZgwService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        if(!array_key_exists('id', $this->data)){
+        // var_dump($data);
+
+        if (!array_key_exists('id', $this->data)) {
             // het is nieuwe zaak
-            $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($this->data['zaaktype']);
-        }
-        else{
+            // var_dump($this->data['response']['zaaktype']);
+            $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($this->data['response']['zaaktype']);
+        } else {
             // het is een bestaande zaak
-            $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($this->data['id'])->getValue('zaaktype');
+            $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($this->data['response']['id']->toString())->getValue('zaaktype');
         }
+
+        // var_dump($zaaktype);
 
         // heb $zaaktype en in $data de zaak
 
-        // dus nu kan je valideren
+        // // 1. bestaan de rollen in het zaaktype
+        // $this->doRolesExist();
+        // // 2. bestaan de eigenschappen in het zaaktype
+        // $this->doPropertiesExist();
+        // // 3. bestaat de status in het zaaktype
+        // $this->doesStatusExist();
+        // // 4. Als de status anders is dan de huidige status, is die dan opvolgend?
+        // $this->isStatusValid();
 
-        // 1. bestaan de rollen in het zaaktype
-
-        // 2. bestaan de eigenschappen in het zaaktype
-
-        // 3. bestaat de status in het zaaktype
-
-        // 4. Als de status anders is dan de huidige status, is die dan opvolgend?
 
 
+
+        // var_dump('ZGW Zaak plugin works');
+        // die;
 
         return $this->data;
     }
