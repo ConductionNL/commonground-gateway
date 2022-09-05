@@ -181,12 +181,6 @@ spec:
                   secretKeyRef:
                       name: {{ template "commonground-gateway.fullname" . }}
                       key: rabbitmq-password
-          #Mailgun # todo: move this to an email plugin (see EmailService.php)
-            - name: MAILGUN
-              valueFrom:
-                  secretKeyRef:
-                      key: mailgun
-                      name: {{ include "commonground-gateway.fullname" . }}
             {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
             - name: APP_CERT
               value: '/var/run/certs/tls.crt'

@@ -12,7 +12,7 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $huwelijksplannerService = $container->get('zdszaakservice');
+        $huwelijksplannerService = $container->get('huwelijksplannerService');
         if ($huwelijksplannerService instanceof HuwelijksplannerService) {
             $this->huwelijksplannerService = $huwelijksplannerService;
         } else {

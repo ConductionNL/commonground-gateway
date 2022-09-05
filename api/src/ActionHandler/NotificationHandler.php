@@ -12,7 +12,7 @@ class NotificationHandler implements ActionHandlerInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $notificationService = $container->get('notificationservice');
+        $notificationService = $container->get('notificationService');
         if ($notificationService instanceof NotificationService) {
             $this->notificationService = $notificationService;
         } else {
@@ -21,7 +21,7 @@ class NotificationHandler implements ActionHandlerInterface
     }
 
     /**
-     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
+     *  This function returns the required configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action schould comply to
      */
@@ -40,17 +40,17 @@ class NotificationHandler implements ActionHandlerInterface
                 ],
                 'endpoint' => [
                     'type'        => 'string',
-                    'description' => 'The endpoint on the source where the  notification is send to',
+                    'description' => 'The endpoint on the source where the notification is send to',
                     'example'     => '/webhook',
                 ],
                 'query' => [
                     'type'        => 'array',
-                    'description' => 'Any aditional query parameters that need to be included (for example for validation',
+                    'description' => 'Any additional query parameters that need to be included (for example for validation',
                     'example'     => ['token'=>'123'],
                 ],
                 'headers' => [
                     'type'        => 'array',
-                    'description' => 'Any aditional header parameters that need to be included (for example for validation',
+                    'description' => 'Any additional header parameters that need to be included (for example for validation',
                     'example'     => ['token'=>'123'],
                 ],
                 'includeObject' => [
@@ -78,7 +78,7 @@ class NotificationHandler implements ActionHandlerInterface
                 'datacontenttype' => [
                     'type'        => 'string',
                     'enum'        => 'application/json',
-                    'description' => 'The id of the source where to send the notification to',
+                    'description' => 'The content type of the data',
                     'example'     => 'application/json',
                 ],
                 'dataref' => [
@@ -96,9 +96,6 @@ class NotificationHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
      *
      * @return array

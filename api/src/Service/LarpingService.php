@@ -3,6 +3,10 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
+use Symfony\Component\ExpressionLanguage\SyntaxError;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
 
 /**
  * This service holds al the logic for the larping plugin.
@@ -14,7 +18,7 @@ class LarpingService
     private array $configuration;
 
     /**
-     * @param \App\Service\ObjectEntityService $objectEntityService
+     * @param ObjectEntityService $objectEntityService
      */
     public function __construct(
         ObjectEntityService $objectEntityService
@@ -37,7 +41,7 @@ class LarpingService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        // Check if the provided data is iether a character or effect
+        // Check if the provided data is either a character or effect
         if (
             in_array('id', $this->data) &&
             $object = $this->objectEntityService->getObject(null, $this->data['id'])) {

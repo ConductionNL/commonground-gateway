@@ -5,6 +5,10 @@ namespace App\ActionHandler;
 use App\Exception\GatewayException;
 use App\Service\EmailService;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 class EmailHandler implements ActionHandlerInterface
 {
@@ -91,10 +95,7 @@ class EmailHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
      *
      * @return array
      */
