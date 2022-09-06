@@ -8,7 +8,6 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Security;
-use App\Exception\GatewayException;
 
 /**
  * The data service aims at providing an acces layer to request, session and user information tha can be accesed and changed from differend contexts e.g. actionHandels, Events etc
@@ -18,6 +17,8 @@ class DataService
     private SessionInterface $session;
     private Request $request;
     private Security $security;
+    private $user;
+    private $faker;
 
     public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security)
     {
@@ -25,6 +26,7 @@ class DataService
         $this->request = $requestStack->getCurrentRequest();
         $this->security = $security;
         $this->user = $this->security->getUser();
+        $this->faker = \Faker\Factory::create();
     }
 
     /*
@@ -107,6 +109,18 @@ class DataService
     public function getSession(): SessionInterface
     {
         return $this->session;
+    }
+
+    /**
+     * Accesses the faker component, e.g. simple wrapper for the faker bundle
+     *
+     * See https://fakerphp.github.io/formatters/numbers-and-strings/ for more information
+     *
+     * @return
+     */
+    public function getFaker(): SessionInterface
+    {
+        return $this->faker;
     }
 
 }
