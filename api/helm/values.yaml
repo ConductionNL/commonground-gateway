@@ -20,6 +20,7 @@ config:
   samesiteCookie: lax
   cronRunner: 
     enabled: false
+    concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
     crontab: '*/5 * * * *'
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 

@@ -6,7 +6,9 @@ metadata:
   labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
-  # this cronjob runs every 10 minutes https://crontab.guru/#*_*_*_*_*
+  # concurrencyPolicy: Forbid: The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
+  concurrencyPolicy: "{{ .Values.config.cronRunner.concurrencyPolicy }}"
+  # this cronjob runs every 5 minutes https://crontab.guru/#*_*_*_*_*
   schedule: "{{ .Values.config.cronRunner.crontab }}"
   jobTemplate:
     spec:
@@ -139,6 +141,11 @@ spec:
                           valueFrom:
                               configMapKeyRef:
                                   key: cron-runner-crontab
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_CONCURRENCYPOLICY
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-concurrencyPolicy
                                   name: {{ include "commonground-gateway.fullname" . }}
                         {{- end}}
         

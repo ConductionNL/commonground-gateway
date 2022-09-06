@@ -158,6 +158,11 @@ spec:
                     configMapKeyRef:
                         key: cron-runner-crontab
                         name: {{ include "commonground-gateway.fullname" . }}
+            -   name: CRON_RUNNER_CONCURRENCYPOLICY
+                valueFrom:
+                    configMapKeyRef:
+                        key: cron-runner-concurrencyPolicy
+                        name: {{ include "commonground-gateway.fullname" . }}
             {{- end}}
                       
           #RabbitMQ
