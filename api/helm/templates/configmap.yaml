@@ -23,6 +23,8 @@ data:
   {{- if .Values.config.cronRunner.enabled }}
   cron-runner-crontab: {{ .Values.config.cronRunner.crontab | default "*/5 * * * *" | quote }}
   cron-runner-concurrencyPolicy: {{ .Values.config.cronRunner.concurrencyPolicy | default "Forbid" | quote }}
+  cron-runner-activeDeadlineSeconds: {{ .Values.config.cronRunner.concurrencyPolicy | default "Forbid" | quote }}
+  cron-runner-appAuth: {{ .Values.config.cronRunner.concurrencyPolicy | default "Forbid" | quote }}
   {{- end }}
 
   rabbitmq-host: {{ printf "%s" $rabbitmqServiceName | quote }}

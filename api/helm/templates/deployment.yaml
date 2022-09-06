@@ -158,10 +158,20 @@ spec:
                     configMapKeyRef:
                         key: cron-runner-crontab
                         name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_CONCURRENCYPOLICY
+            -   name: CRON_RUNNER_CONCURRENCY_POLICY
                 valueFrom:
                     configMapKeyRef:
                         key: cron-runner-concurrencyPolicy
+                        name: {{ include "commonground-gateway.fullname" . }}
+            -   name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
+                valueFrom:
+                    configMapKeyRef:
+                        key: cron-runner-activeDeadlineSeconds
+                        name: {{ include "commonground-gateway.fullname" . }}
+            -   name: CRON_RUNNER_APP_AUTH
+                valueFrom:
+                    configMapKeyRef:
+                        key: cron-runner-appAuth
                         name: {{ include "commonground-gateway.fullname" . }}
             {{- end}}
                       

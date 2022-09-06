@@ -12,6 +12,8 @@ spec:
   schedule: "{{ .Values.config.cronRunner.crontab }}"
   jobTemplate:
     spec:
+      # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
+      activeDeadlineSeconds: {{ .Values.config.cronRunner.activeDeadlineSeconds | int }}
       template:
           spec:
                 {{- with .Values.imagePullSecrets }}
@@ -83,7 +85,7 @@ spec:
                         - name: APP_ENV
                           value: {{ .Values.config.env }}
                         - name: APP_AUTH
-                          value: 'false'
+                          value: '{{ .Values.config.cronRunner.appAuth }}'
                         - name: AUTH_ENABLED
                           value: 'true'
                         - name: APP_REPRO
@@ -139,10 +141,20 @@ spec:
                               configMapKeyRef:
                                   key: cron-runner-crontab
                                   name: {{ include "commonground-gateway.fullname" . }}
-                        - name: CRON_RUNNER_CONCURRENCYPOLICY
+                        - name: CRON_RUNNER_CONCURRENCY_POLICY
                           valueFrom:
                               configMapKeyRef:
                                   key: cron-runner-concurrencyPolicy
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-activeDeadlineSeconds
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_APP_AUTH
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-appAuth
                                   name: {{ include "commonground-gateway.fullname" . }}
                         {{- end}}
         

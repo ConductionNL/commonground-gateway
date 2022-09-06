@@ -20,8 +20,10 @@ config:
   samesiteCookie: lax
   cronRunner: 
     enabled: false
+    activeDeadlineSeconds: 1800 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
     concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
     crontab: '*/5 * * * *'
+    appAuth: false
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 
 # Authentication
