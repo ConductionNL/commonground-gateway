@@ -18,6 +18,7 @@ config:
   cache: true
   githubKey: ''
   samesiteCookie: lax
+  # todo move cronRunner to its own 'tab' so it isn't a subtab under config?
   cronRunner: 
     enabled: false
     activeDeadlineSeconds: 1800 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
