@@ -42,7 +42,7 @@ class DataService
      * @todo more content types ?
      * @todo check for specific error when decoding
      */
-    public function getDataFromRequest(): array
+    public function getData(): array
     {
 
         // If we already have the data in the session then we do NOT want to rearange it
@@ -87,4 +87,26 @@ class DataService
 
         return $data;
     }
+
+    /**
+     * Get the current user, e.g. simple wrapper for the user interface
+     *
+     * @return User
+     */
+    public function getUser(): User
+    {
+        return $this->user;
+
+    }
+
+    /**
+     * Get the current session, e.g. simple wrapper for the session interface
+     *
+     * @return SessionInterface
+     */
+    public function getSession(): SessionInterface
+    {
+        return $this->session;
+    }
+
 }
