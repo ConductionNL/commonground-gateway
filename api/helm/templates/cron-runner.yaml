@@ -83,10 +83,7 @@ spec:
                         - name: APP_ENV
                           value: {{ .Values.config.env }}
                         - name: APP_AUTH
-                          valueFrom:
-                              configMapKeyRef:
-                                  key: auth-enabled
-                                  name: {{ include "commonground-gateway.fullname" . }}
+                          value: 'false'
                         - name: AUTH_ENABLED
                           value: 'true'
                         - name: APP_REPRO
