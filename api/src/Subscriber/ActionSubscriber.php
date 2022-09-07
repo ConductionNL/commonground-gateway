@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 class ActionSubscriber implements EventSubscriberInterface
 {
@@ -69,23 +70,50 @@ class ActionSubscriber implements EventSubscriberInterface
         return (bool) $result;
     }
 
+    /**
+     * Handle a single action on an event
+     *
+     * @param Action $action
+     * @param ActionEvent $event
+     * @return ActionEvent
+     */
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
+        // Lets masure the time this action takes
+        $stopwatch = new Stopwatch();
+        $stopwatch->start($action->getName(), 'eventActions');
+
         if ($this->checkConditions($action, $event->getData())) {
             $event->setData($this->runFunction($action, $event->getData()));
             $this->triggerActions($action);
         }
 
+        // Stop the clock
+        $this->stopwatch->stop($action->getName());
+
         return $event;
     }
 
+    /**
+     * Turning symfony events into gateway events
+     *
+     * @param ActionEvent $event
+     * @return ActionEvent
+     */
     public function handleEvent(ActionEvent $event): ActionEvent
     {
+        // Lets mesure the time this event takes
+        $stopwatch = new Stopwatch();
+        $stopwatch->start($event->getType(), 'event');
+
         $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
 
         foreach ($actions as $action) {
             $this->handleAction($action, $event);
         }
+
+        // Stop the clock
+        $this->stopwatch->stop($event->getType());
 
         return $event;
     }
