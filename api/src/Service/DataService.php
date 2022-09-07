@@ -4,6 +4,10 @@ namespace App\Service;
 
 
 use App\Exception\GatewayException;
+use App\Entity\Endpoint;
+use App\Entity\Handler;
+use App\Entity\Entity;
+use App\Entity\ObjectEntity;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -19,6 +23,10 @@ class DataService
     private Security $security;
     private $user;
     private $faker;
+    private Endpoint $endpoint;
+    private Handler $handler;
+    private Entity $entity;
+    private ObjectEntity $object;
 
     public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security)
     {
@@ -34,6 +42,10 @@ class DataService
      */
     function clearCallData(){
         $this->sesion->clear('data');
+        $this->sesion->clear('endpoint');
+        $this->sesion->clear('handler');
+        $this->sesion->clear('entity');
+        $this->sesion->clear('object');
     }
 
     /**
@@ -46,7 +58,6 @@ class DataService
      */
     public function getData(): array
     {
-
         // If we already have the data in the session then we do NOT want to rearange it
         if($data = $this->session->get('data',false)){
             return $data;
@@ -88,6 +99,115 @@ class DataService
         $this->session->set('data',$data);
 
         return $data;
+    }
+
+    /**
+     *
+     *
+     * @param array $data
+     * @return User
+     */
+    public function setData(array $data): DataService
+    {
+        // Stuf it into the session so we wont have to do this again
+        $this->session->set('data',$data);
+
+        return $this;
+    }
+
+    /**
+     *
+     * @return Endpoint
+     */
+    public function getEndpoint(): Endpoint
+    {
+        $this->session->get('endpoint');
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param Endpoint $endpoint
+     * @return User
+     */
+    public function setEndpoint(Endpoint $endpoint): DataService
+    {
+        // Stuf it into the session so we wont have to do this again
+        $this->session->set('endpoint',$endpoint);
+
+        return $this;
+    }
+
+    /**
+     *
+     * @return Handler
+     */
+    public function getHandler(): Handler
+    {
+        $this->session->get('handler');
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param Handler $handler
+     * @return User
+     */
+    public function setHandler(Handler $handler): DataService
+    {
+        // Stuf it into the session so we wont have to do this again
+        $this->session->set('handler',$handler);
+
+        return $this;
+    }
+
+    /**
+     *
+     * @return Entity
+     */
+    public function getEntity(): Entity
+    {
+        $this->session->get('entity');
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param Entity $entity
+     * @return User
+     */
+    public function setEntity(Entity $entity): DataService
+    {
+        // Stuf it into the session so we wont have to do this again
+        $this->session->set('entity',$entity);
+
+        return $this;
+    }
+
+    /**
+     *
+     * @return ObjectEntity
+     */
+    public function getObject(): ObjectEntity
+    {
+        $this->session->get('object');
+
+        return $this;
+    }
+
+    /**
+     *
+     * @param ObjectEntity $object
+     * @return User
+     */
+    public function setObject(ObjectEntity $object): DataService
+    {
+        $this->session->set('object',$object);
+
+        return $this;
     }
 
     /**
