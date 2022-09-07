@@ -120,9 +120,9 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
-        $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
+        $event = $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
 
-        // @todo creat logicdata, generalvaribales uit de translationservice
+        // @todo creat logicdata, generalvaribales uit de dataservice
 
         $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {
@@ -145,7 +145,7 @@ class HandlerService
                 $this->stopwatch->stop('handleHandlers');
 
                 $event = new ActionEvent('commongateway.handler.post', array_merge($event->getData(), ['result' => $result]));
-                $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
+                $event = $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
             }
