@@ -26,6 +26,15 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     
+    dataservice:
+        public: true
+        class: App\Service\DataService
+        arguments:
+            $session: '@Symfony\Component\HttpFoundation\Session\SessionInterface'
+            $requestStack: '@Symfony\Component\HttpFoundation\RequestStack'
+            $security: '@Symfony\Component\Security\Core\Security'
+            $datalayer: '@App\Service\ObjectEntityService'            
+            
     synchronizationservice:
         public: true
         class: App\Service\SynchronizationService

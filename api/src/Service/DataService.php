@@ -30,7 +30,11 @@ class DataService
     private ObjectEntity $object;
     private ObjectEntityService $datalayer;
 
-    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer)
+    public function __construct(
+        SessionInterface $session,
+        RequestStack $requestStack,
+        Security $security,
+        ObjectEntityService $datalayer)
     {
         $this->session = $session;
         $this->request = $requestStack->getCurrentRequest();
