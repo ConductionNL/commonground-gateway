@@ -170,6 +170,7 @@ class ObjectEntity
     private Collection $recursionStack;
 
     /**
+     * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
@@ -179,11 +180,11 @@ class ObjectEntity
      * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
      * Used for showing correct index in error messages.
      *
-     * @var int|null
+     * @var string|null
      *
      * @Groups({"read", "write"})
      */
-    private ?int $subresourceIndex = null;
+    private ?string $subresourceIndex = null;
 
     /**
      * @MaxDepth(1)
@@ -841,12 +842,12 @@ class ObjectEntity
         return $this;
     }
 
-    public function getSubresourceIndex(): ?int
+    public function getSubresourceIndex(): ?string
     {
         return $this->subresourceIndex;
     }
 
-    public function setSubresourceIndex(?int $subresourceIndex): self
+    public function setSubresourceIndex(?string $subresourceIndex): self
     {
         $this->subresourceIndex = $subresourceIndex;
 
