@@ -8,6 +8,7 @@ use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use App\Service\ObjectEntityService;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -27,14 +28,16 @@ class DataService
     private Handler $handler;
     private Entity $entity;
     private ObjectEntity $object;
+    private ObjectEntityService $datalayer;
 
-    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security)
+    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer)
     {
         $this->session = $session;
         $this->request = $requestStack->getCurrentRequest();
         $this->security = $security;
         $this->user = $this->security->getUser();
         $this->faker = \Faker\Factory::create();
+        $this->datalayer = $datalayer;
     }
 
     /*
@@ -236,11 +239,21 @@ class DataService
      *
      * See https://fakerphp.github.io/formatters/numbers-and-strings/ for more information
      *
-     * @return
+     * @return SessionInterface
      */
     public function getFaker(): SessionInterface
     {
         return $this->faker;
+    }
+
+    /**
+     * Accesses the datalayer, e.g. simple wrapper for the object entity service
+     *
+     * @return ObjectEntityService
+     */
+    public function getDataLayer(): ObjectEntityService
+    {
+        return $this->datalayer;
     }
 
 }
