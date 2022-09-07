@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;

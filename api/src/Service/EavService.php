@@ -962,11 +962,52 @@ class EavService
     }
 
     /**
+     * A function to replace Request->query->all() because Request->query->all() will replace some characters with an underscore.
+     * This function will not.
+     *
+     * @param string $method The method of the Request
+     *
+     * @return array An array with all query parameters.
+     */
+    public function realRequestQueryAll(string $method = 'get'): array
+    {
+        $vars = [];
+        if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
+            return $vars;
+        }
+        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
+        foreach ($pairs as $pair) {
+            $nv = explode('=', $pair);
+            $name = urldecode($nv[0]);
+            $value = "";
+            if (count($nv) == 2) {
+                $value = urldecode($nv[1]);
+            }
+            $matchesCount = preg_match('/(\[.*])/', $name, $matches);
+            if ($matchesCount == 1) {
+                $key = $matches[1];
+                $name = str_replace($key, '', $name);
+                $key = trim($key, '[]');
+                if (!empty($key)) {
+                    $vars[$name][$key] = $value;
+                } else {
+                    $vars[$name][] = $value;
+                }
+                continue;
+            }
+            $vars[$name] = $value;
+        }
+
+        return $vars;
+    }
+
+    /**
      * Handles a search (collection) api call.
      *
      * @param Entity     $entity
      * @param Request    $request
      * @param array|null $fields
+     * @param array|null $extend
      * @param $extension
      * @param null   $filters
      * @param string $acceptType
@@ -978,7 +1019,7 @@ class EavService
      */
     public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
-        $query = $request->query->all();
+        $query = $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
         unset($query['page']);
         unset($query['start']);
@@ -1002,13 +1043,17 @@ class EavService
         if (array_key_exists('order', $query)) {
             $order = $query['order'];
             unset($query['order']);
-            if (count($order) > 1) {
+            if (!is_array($order)) {
+                $orderCheckStr = implode(', ', $orderCheck);
+                $message = 'Please give an attribute to order on. Like this: ?order[attributeName]=desc/asc. Supported order query parameters: '.$orderCheckStr;
+            }
+            if (is_array($order) && count($order) > 1) {
                 $message = 'Only one order query param at the time is allowed.';
             }
-            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
+            if (is_array($order) && !in_array(array_values($order)[0], ['desc', 'asc'])) {
                 $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
             }
-            if (!in_array(array_keys($order)[0], $orderCheck)) {
+            if (is_array($order) && !in_array(array_keys($order)[0], $orderCheck)) {
                 $orderCheckStr = implode(', ', $orderCheck);
                 $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
             }
@@ -1016,7 +1061,7 @@ class EavService
                 return [
                     'message' => $message,
                     'type'    => 'error',
-                    'path'    => $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0],
+                    'path'    => is_array($order) ? $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0] : $entity->getName().'?order='.$order,
                     'data'    => ['order' => $order],
                 ];
             }
@@ -1030,21 +1075,12 @@ class EavService
         // Lets add generic filters
         $filterCheck[] = 'fields';
         $filterCheck[] = 'extend';
-        $filterCheck[] = 'search';
+        if (!empty($entity->getSearchPartial())) {
+            $filterCheck[] = 'search';
+        }
         $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
-            if (str_contains($param, '__')) {
-                unset($query[$param]);
-                $param = str_replace(['__'], ['.'], $param);
-                $query[$param] = $value;
-            }
-            $param = str_replace(['_'], ['.'], $param);
-            $param = str_replace(['..'], ['._'], $param);
-
-            if (substr($param, 0, 1) == '.') {
-                $param = '_'.ltrim($param, $param[0]);
-            }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = implode(', ', $filterCheck);
 
@@ -1084,6 +1120,12 @@ class EavService
         $results = [];
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
+            // If orderBy is used on an attribute we needed to add the value of that attribute to the select of the query...
+            // In this^ case $object will be an array containing the object and this specific value we are ordering on.
+            if (is_array($object)) {
+                $object = $object[0];
+                // $object['stringValue'] contains the value we are ordering on.
+            }
             $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $this->stopwatch->lap('renderResults');
         }

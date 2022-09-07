@@ -65,6 +65,33 @@ services:
             $entityManager: '@doctrine.orm.entity_manager'
             $synchronizationService: '@App\Service\SynchronizationService'
 
+    mailService:
+        public: true
+        class: App\Service\EmailService
+        arguments:
+            $twig: '@twig'
+
+    huwelijksplannerService:
+        public: true
+        class: App\Service\HuwelijksplannerService
+        arguments:
+            $objectEntityService: '@App\Service\ObjectEntityService'
+
+    larpingService:
+        public: true
+        class: App\Service\LarpingService
+        arguments:
+            $objectEntityService: '@App\Service\ObjectEntityService'
+
+    notificationService:
+        public: true
+        class: App\Service\NotificationService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $commonGroundService: '@Conduction\CommonGroundBundle\Service\CommonGroundService'
+            $objectEntityService: '@App\Service\ObjectEntityService'
+            $gatewayService: '@App\Service\GatewayService'
+            
     Redis:
         class: Redis
         calls:

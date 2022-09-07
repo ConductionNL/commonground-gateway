@@ -18,7 +18,13 @@ config:
   cache: true
   githubKey: ''
   samesiteCookie: lax
-  crontab: '*/5 * * * *'
+  # todo move cronRunner to its own 'tab' so it isn't a subtab under config?
+  cronRunner: 
+    enabled: false
+    activeDeadlineSeconds: 600 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
+    concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
+    crontab: '*/5 * * * *'
+    appAuth: false
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 
 # Authentication
@@ -118,9 +124,6 @@ rabbitmq:
       password: '!changeMe!'
   service:
       port: 5672
-      
-# todo: move this to an email plugin (see EmailSubscriber.php)
-mailgun: 'mailgun+api://code:domain@api.eu.mailgun.net'
 
 imagePullSecrets: []
 nameOverride: ""

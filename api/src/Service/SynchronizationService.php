@@ -212,10 +212,11 @@ class SynchronizationService
      */
     private function getSourceFromConfig(): ?Gateway
     {
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
-
-        if ($source instanceof Gateway) {
-            return $source;
+        if (isset($this->configuration['source'])) {
+            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration['source']]);
+            if ($source instanceof Gateway) {
+                return $source;
+            }
         }
 
         return null;
@@ -228,10 +229,11 @@ class SynchronizationService
      */
     private function getEntityFromConfig(): ?Entity
     {
-        $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
-
-        if ($entity instanceof Entity) {
-            return $entity;
+        if (isset($this->configuration['entity'])) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
+            if ($entity instanceof Entity) {
+                return $entity;
+            }
         }
 
         return null;
@@ -471,6 +473,7 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
+            $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
             $synchronization->setObject($object);
@@ -783,18 +786,22 @@ class SynchronizationService
         // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
         // todo: turn all or some of the following todo's and there code into functions?
 
-        // todo: availableProperties, maybe move this to foreach in getAllFromSource() (nice to have)
-//        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-//        $availableBody = array_filter($body, function ($propertyName) use ($entity) {
-//            if ($entity->getAvailableProperties()) {
-//                return in_array($propertyName, $entity->getAvailableProperties());
-//            }
-//
-//            return $entity->getAttributeByName($propertyName);
-//        }, ARRAY_FILTER_USE_KEY);
+        // todo: move to function, maybe copy: clearUnavailableProperties()
+        // todo: allowedPropertiesOut, notAllowedPropertiesOut
+        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
 
         if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
-            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($this->configuration['apiSource']['skeletonIn'], $sourceObject) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
+            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
@@ -803,12 +810,14 @@ class SynchronizationService
 
         $sourceObjectDot = new Dot($sourceObject);
 
+        $object = $this->populateObject($sourceObject, $object);
+        $object->setUri($this->getUrlForSource($sync->getGateway(), $sync->getSourceId()));
+        if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
+            $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
+        }
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateChangedField'])));
-        } else {
-            $object->setDateModified(new DateTime());
         }
-        $object = $this->populateObject($sourceObject, $object);
 
         return $synchronization->setObject($object);
     }
