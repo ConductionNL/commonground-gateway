@@ -9,28 +9,33 @@ use App\Entity\Handler;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Service\ObjectEntityService;
+use Faker\Generator;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 /**
- * The data service aims at providing an acces layer to request, session and user information tha can be accesed and changed from differend contexts e.g. actionHandels, Events etc
+ * The data service aims at providing an access layer to request, session and user information tha can be accessed and changed from different contexts e.g. actionHandlers, Events etc
  */
 class DataService
 {
     private SessionInterface $session;
     private Request $request;
     private Security $security;
-    private $user;
-    private $faker;
+    private UserInterface $user;
+    private Generator $faker;
     private Endpoint $endpoint;
     private Handler $handler;
     private Entity $entity;
     private ObjectEntity $object;
     private ObjectEntityService $datalayer;
+    private HandlerService $handlerService;
 
-    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer)
+    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer, HandlerService $handlerService)
     {
         $this->session = $session;
         $this->request = $requestStack->getCurrentRequest();
@@ -38,38 +43,41 @@ class DataService
         $this->user = $this->security->getUser();
         $this->faker = \Faker\Factory::create();
         $this->datalayer = $datalayer;
-    }
-
-    /*
-     * This function should be call on the start and end of a call to remove any call specific data from the session
-     */
-    function clearCallData(){
-        $this->sesion->clear('data');
-        $this->sesion->clear('endpoint');
-        $this->sesion->clear('handler');
-        $this->sesion->clear('entity');
-        $this->sesion->clear('object');
+        $this->handlerService = $handlerService;
     }
 
     /**
-     * Returns the data from the current requests and decodes it if necicary
+     * This function should be called on the start and end of a call to remove any call specific data from the session
+     */
+    public function clearCallData(): void
+    {
+        $this->session->remove('data');
+        $this->session->remove('endpoint');
+        $this->session->remove('handler');
+        $this->session->remove('entity');
+        $this->session->remove('object');
+    }
+
+    /**
+     * Returns the data from the current requests and decodes it if necessary
      *
      * @return array
      *
-     * @todo more content types ?
+     * @throws GatewayException
      * @todo check for specific error when decoding
+     * @todo more content types ?
      */
     public function getData(): array
     {
-        // If we already have the data in the session then we do NOT want to rearange it
+        // If we already have the data in the session then we do NOT want to rearrange it
         if($data = $this->session->get('data',false)){
             return $data;
         }
 
         $content = $this->request->getContent();
-        $contentType = $this->getRequestType('content-type');
+        $contentType = $this->handlerService->getRequestType('content-type');
 
-        // lets transform the data from the request
+        // let's transform the data from the request
         switch ($contentType) {
             case 'json':
             case 'jsonhal':
@@ -98,7 +106,7 @@ class DataService
                 throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
 
-        // Stuf it into the session so we wont have to do this again
+        // Stuff it into the session, so we won't have to do this again
         $this->session->set('data',$data);
 
         return $data;
@@ -108,11 +116,11 @@ class DataService
      *
      *
      * @param array $data
-     * @return User
+     * @return DataService
      */
     public function setData(array $data): DataService
     {
-        // Stuf it into the session so we wont have to do this again
+        // Stuff it into the session, so we won't have to do this again
         $this->session->set('data',$data);
 
         return $this;
@@ -124,20 +132,18 @@ class DataService
      */
     public function getEndpoint(): Endpoint
     {
-        $this->session->get('endpoint');
-
-        return $this;
+        return $this->session->get('endpoint');
     }
 
     /**
      *
      * @param Endpoint $endpoint
-     * @return User
+     * @return DataService
      */
     public function setEndpoint(Endpoint $endpoint): DataService
     {
-        // Stuf it into the session so we wont have to do this again
-        $this->session->set('endpoint',$endpoint);
+        // Stuff it into the session, so we won't have to do this again
+        $this->session->set('endpoint',$endpoint->getId());
 
         return $this;
     }
@@ -148,20 +154,18 @@ class DataService
      */
     public function getHandler(): Handler
     {
-        $this->session->get('handler');
-
-        return $this;
+        return $this->session->get('handler');
     }
 
     /**
      *
      * @param Handler $handler
-     * @return User
+     * @return DataService
      */
     public function setHandler(Handler $handler): DataService
     {
-        // Stuf it into the session so we wont have to do this again
-        $this->session->set('handler',$handler);
+        // Stuff it into the session, so we won't have to do this again
+        $this->session->set('handler', $handler->getId());
 
         return $this;
     }
@@ -172,20 +176,18 @@ class DataService
      */
     public function getEntity(): Entity
     {
-        $this->session->get('entity');
-
-        return $this;
+        return $this->session->get('entity');
     }
 
     /**
      *
      * @param Entity $entity
-     * @return User
+     * @return DataService
      */
     public function setEntity(Entity $entity): DataService
     {
-        // Stuf it into the session so we wont have to do this again
-        $this->session->set('entity',$entity);
+        // Stuff it into the session, so we won't have to do this again
+        $this->session->set('entity',$entity->getId());
 
         return $this;
     }
@@ -196,19 +198,18 @@ class DataService
      */
     public function getObject(): ObjectEntity
     {
-        $this->session->get('object');
-
-        return $this;
+        return $this->session->get('object');
     }
 
     /**
      *
      * @param ObjectEntity $object
-     * @return User
+     * @return DataService
      */
     public function setObject(ObjectEntity $object): DataService
     {
-        $this->session->set('object',$object);
+        // Stuff it into the session, so we won't have to do this again
+        $this->session->set('object',$object->getId());
 
         return $this;
     }
@@ -216,9 +217,9 @@ class DataService
     /**
      * Get the current user, e.g. simple wrapper for the user interface
      *
-     * @return User
+     * @return UserInterface
      */
-    public function getUser(): User
+    public function getUser(): UserInterface
     {
         return $this->user;
 
@@ -239,9 +240,9 @@ class DataService
      *
      * See https://fakerphp.github.io/formatters/numbers-and-strings/ for more information
      *
-     * @return SessionInterface
+     * @return Generator
      */
-    public function getFaker(): SessionInterface
+    public function getFaker(): Generator
     {
         return $this->faker;
     }

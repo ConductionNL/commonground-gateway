@@ -103,19 +103,22 @@ class HandlerService
 
     /**
      * This function sets the endpoint in the session and executes handleHandler with its found Handler.
+     * @throws GatewayException
      */
     public function handleEndpoint(Endpoint $endpoint, array $parameters): Response
     {
+//        $this->dataService->clearCallData();
         $this->stopwatch->start('invalidateTags-grantedScopes', 'handleEndpoint');
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->dataService->getDataFromRequest(), 'response' => []]);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->dataService->getData(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
         $this->stopwatch->start('saveEndpointInSession', 'handleEndpoint');
-        $session->set('endpoint', $endpoint->getId()->toString());
+        $this->dataService->setEndpoint($endpoint);
+//        $session->set('endpoint', $endpoint->getId()->toString()); @todo
         $this->stopwatch->stop('saveEndpointInSession');
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
@@ -134,9 +137,10 @@ class HandlerService
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->dataService->getDataFromRequest())) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->dataService->getData())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
-                $session->set('handler', $handler->getId());
+                $this->dataService->setHandler($handler);
+//                $session->set('handler', $handler->getId()); @todo
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
@@ -168,13 +172,16 @@ class HandlerService
         return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
     }
 
+    /**
+     * @throws GatewayException
+     */
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
     {
         $overrides = $handler->getMethodOverrides();
         if (!isset($overrides[$this->request->getMethod()])) {
             return;
         }
-        $content = new \Adbar\Dot($this->dataService->getDataFromRequest());
+        $content = new \Adbar\Dot($this->dataService->getData());
 
         foreach ($overrides[$this->request->getMethod()] as $override) {
             if (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $content->has($override['condition']))) {

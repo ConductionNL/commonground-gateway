@@ -17,6 +17,7 @@ class ActionSubscriber implements EventSubscriberInterface
     private EntityManagerInterface $entityManager;
     private ContainerInterface $container;
     private ObjectEntityService $objectEntityService;
+    private Stopwatch $stopwatch;
 
     /**
      * @inheritDoc
@@ -37,11 +38,12 @@ class ActionSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container, ObjectEntityService $objectEntityService)
+    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container, ObjectEntityService $objectEntityService, Stopwatch $stopwatch)
     {
         $this->entityManager = $entityManager;
         $this->container = $container;
         $this->objectEntityService = $objectEntityService;
+        $this->stopwatch = $stopwatch;
     }
 
     public function runFunction(Action $action, array $data): array
@@ -73,9 +75,9 @@ class ActionSubscriber implements EventSubscriberInterface
      */
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
-        // Lets masure the time this action takes
-        $stopwatch = new Stopwatch();
-        $stopwatch->start($action->getName(), 'eventActions');
+        // Let's measure the time this action takes
+//        $this->stopwatch = new Stopwatch();
+        $this->stopwatch->start($action->getName(), 'eventActions');
 
         if ($this->checkConditions($action, $event->getData())) {
             $event->setData($this->runFunction($action, $event->getData()));
@@ -99,15 +101,15 @@ class ActionSubscriber implements EventSubscriberInterface
      */
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        // Lets mesure the time this event takes
-        $stopwatch = new Stopwatch();
-        $stopwatch->start($event->getType(), 'event');
+        // Let's measure the time this event takes
+//        $this->stopwatch = new Stopwatch();
+        $this->stopwatch->start($event->getSubType() ?? $event->getType(), 'event');
 
-        // bij normaal gedrag
+        // with normal behavior
         if (!$event->getSubType()) {
             $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
         }
-        // Anders als er wel een subtype is
+        // Else if there is a subtype
         else {
             $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getSubType());
         }
@@ -117,7 +119,7 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         // Stop the clock
-        $this->stopwatch->stop($event->getType());
+        $this->stopwatch->stop($event->getSubType() ?? $event->getType());
 
         return $event;
     }
