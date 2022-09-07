@@ -271,6 +271,9 @@ parameters:
 
 twig:
   globals:
+    # The data service
+    dataService: '@App\Service\DataService'     
+      
     # Application Parameters
     app_env: "%env(APP_ENV)%"
     app_debug: "%env(APP_DEBUG)%"

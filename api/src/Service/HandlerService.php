@@ -6,6 +6,7 @@ use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Event\ActionEvent;
+use App\Service\DataService;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
@@ -36,6 +37,7 @@ class HandlerService
     private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
     private EventDispatcherInterface $eventDispatcher;
+    private DataService $dataService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -75,7 +77,8 @@ class HandlerService
         CacheInterface $cache,
         GatewayService $gatewayService,
         Stopwatch $stopwatch,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        DataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -95,6 +98,7 @@ class HandlerService
         $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
         $this->eventDispatcher = $eventDispatcher;
+        $this->dataService = $dataService;
     }
 
     /**
@@ -106,7 +110,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->getDataFromRequest(), 'response' => []]);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->dataService->getDataFromRequest(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -116,9 +120,9 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
-        $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
+        $event = $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
 
-        // @todo creat logicdata, generalvaribales uit de translationservice
+        // @todo creat logicdata, generalvaribales uit de dataservice
 
         $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {
@@ -130,7 +134,7 @@ class HandlerService
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->dataService->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
@@ -141,7 +145,7 @@ class HandlerService
                 $this->stopwatch->stop('handleHandlers');
 
                 $event = new ActionEvent('commongateway.handler.post', array_merge($event->getData(), ['result' => $result]));
-                $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
+                $event = $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
             }
@@ -170,7 +174,7 @@ class HandlerService
         if (!isset($overrides[$this->request->getMethod()])) {
             return;
         }
-        $content = new \Adbar\Dot($this->getDataFromRequest());
+        $content = new \Adbar\Dot($this->dataService->getDataFromRequest());
 
         foreach ($overrides[$this->request->getMethod()] as $override) {
             if (key_exists($method, $overrides) && (!array_key_exists('condition', $override) || $content->has($override['condition']))) {
@@ -312,45 +316,7 @@ class HandlerService
         return $response;
     }
 
-    /**
-     * Checks content type and decodes that if needed.
-     *
-     * @return array|null
-     *
-     * @todo more content types ?
-     * @todo check for specific error when decoding
-     */
-    public function getDataFromRequest()
-    {
-        $content = $this->request->getContent();
-        $contentType = $this->getRequestType('content-type');
-        switch ($contentType) {
-      case 'json':
-      case 'jsonhal':
-      case 'jsonld':
-        return json_decode($content, true);
-      case 'xml':
-          $xmlEncoder = new XmlEncoder();
-          $xml = $xmlEncoder->decode($content, $contentType);
-        // otherwise xml will throw its own error bypassing our exception handling
-//        libxml_use_internal_errors(true);
-        // string to xml object, encode that to json then decode to array
-//        $xml = simplexml_load_string($content);
-        // if xml is false get errors and throw exception
-        if ($xml === false) {
-            $errors = 'Something went wrong decoding xml:';
-            foreach (libxml_get_errors() as $e) {
-                $errors .= ' '.$e->message;
-            }
 
-            throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
-        }
-
-        return json_decode(json_encode($xml), true);
-      default:
-        throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
-    }
-    }
 
     /**
      * This function creates and prepares the response.
