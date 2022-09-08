@@ -37,7 +37,6 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
 {
@@ -64,20 +63,20 @@ class ObjectEntityService
     private TranslationService $translationService;
 
     public function __construct(
-        Security                 $security,
-        RequestStack             $requestStack,
-        AuthorizationService     $authorizationService,
-        ApplicationService       $applicationService,
-        ValidatorService         $validatorService,
-        SessionInterface         $session,
-        EntityManagerInterface   $entityManager,
-        CommonGroundService      $commonGroundService,
-        ResponseService          $responseService,
-        CacheInterface           $cache,
-        MessageBusInterface      $messageBus,
-        GatewayService           $gatewayService,
-        TranslationService       $translationService,
-        LogService               $logService,
+        Security $security,
+        RequestStack $requestStack,
+        AuthorizationService $authorizationService,
+        ApplicationService $applicationService,
+        ValidatorService $validatorService,
+        SessionInterface $session,
+        EntityManagerInterface $entityManager,
+        CommonGroundService $commonGroundService,
+        ResponseService $responseService,
+        CacheInterface $cache,
+        MessageBusInterface $messageBus,
+        GatewayService $gatewayService,
+        TranslationService $translationService,
+        LogService $logService,
         EventDispatcherInterface $eventDispatcher
     ) {
         $this->security = $security;
@@ -114,7 +113,7 @@ class ObjectEntityService
     /**
      * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
      *
-     * @param EavService        $eavService
+     * @param EavService $eavService
      *
      * @return $this
      */
@@ -449,7 +448,7 @@ class ObjectEntityService
 
         return [
             'fields' => $fields,
-            'extend' => $extend
+            'extend' => $extend,
         ];
     }
 
@@ -477,8 +476,15 @@ class ObjectEntityService
             $object = $this->checkGetObject($id, $method, $entity);
             $data = $this->checkGetObjectExceptions($data, $object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
         } else {
-            $data = $this->eavService->handleSearch($entity, $this->request, $queryParamData['fields'],
-                $queryParamData['extend'], false, $filters ?? [], $acceptType);
+            $data = $this->eavService->handleSearch(
+                $entity,
+                $this->request,
+                $queryParamData['fields'],
+                $queryParamData['extend'],
+                false,
+                $filters ?? [],
+                $acceptType
+            );
 
             $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
