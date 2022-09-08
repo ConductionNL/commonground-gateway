@@ -791,12 +791,12 @@ class SynchronizationService
      * Synchronises data from an external source to the internal database of the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object to update
-     * @param array $sourceObject The external object to synchronise from
+     * @param array           $sourceObject    The external object to synchronise from
+     *
+     * @throws Exception
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
-     * @throws Exception
-     *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      */
     private function syncToGateway(Synchronization $synchronization, array $sourceObject): Synchronization
     {
