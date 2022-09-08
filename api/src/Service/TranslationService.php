@@ -48,10 +48,17 @@ class TranslationService
      *
      * @return array
      */
-    public function twigHydrator(array $destination, array $source, array $mapping): array
+    public function twigHydrator(array $source, array $mapping): array
     {
         // We are using dot notation for array's so lets make sure we do not intefene on the . part
-        $destination = $this->encodeArrayKeys($destination, '.', '&#2E');
+        $destination = $this->encodeArrayKeys($source, '.', '&#2E');
+
+        // lets get any drops
+        $drops = [];
+        if(array_key_exists('_drop',$mapping)){
+            $drops = $mapping['_drops'];
+            unset($mapping['_drops']);
+        }
 
         // Lets turn  destination into a dat array
         $destination = new \Adbar\Dot($destination);
@@ -59,6 +66,16 @@ class TranslationService
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $key => $value) {
             $destination[$key] = $this->twig->createTemplate($value)->render(['source'=>$source]);
+        }
+
+        // Lets remove the drops (is anny
+        foreach ($drops as $drop){
+            if($destination->has($drop)){
+                $destination->clear($drop);
+            }
+            else{
+                // @todo throw error?
+            }
         }
 
         // Let turn the dot array back into an array

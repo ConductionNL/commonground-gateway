@@ -716,7 +716,6 @@ class ObjectEntityService
                 $objectEntity = $this->saveAttribute($objectEntity, $attribute, $post[$attribute->getName()]);
             } elseif ($this->request->getMethod() == 'POST') {
                 if ($attribute->getDefaultValue()) {
-                    // todo: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string
                     // DefaultValue can be a uuid string to connect an object...
                     $objectEntity = $this->saveAttribute($objectEntity, $attribute, $this->twig->createTemplate($attribute->getDefaultValue())->render());
                 } else {

@@ -151,6 +151,113 @@ A format defines a way an value should be formated, and is directly connected to
 *bsn*:
 ####Validations
 Besides validations on type and string you can also use specific validations, these are contained in the validation array. Validation might be specific to certain types or formats e.g. minValue can only be applied values that can be turned into numeric value. And other validations might be of an more general nature e.g. required.
+
+## Mapping
+Mapping is the process of changing the structure of an object. For example when an object is either send to or retrieved from an external source. This always follows in input -> mapping -> output model. Mapping is especially useful when source don’t match to the data model that you want to uses.
+
+The gateway follows a mapping model based on configuration in dot array’s that consist of twig (read a bit more about twig code here),  let take a look a simple mapping example. We haven an tree object in our datalayer  looking like
+```json
+{
+  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
+  “name”:”The big white three”,
+  “description”: “This is the tree that granny planted when she and grams god married”, 
+  “location”:”Orvil’s farm”, 
+  “species”:”Chestnut”
+}
+```
+Now the municipality opened up a county wide tree register and we would like to register our tree there. But the have decided too move locations and species of the tree into a metadata aray data, and thus expect an object like this
+```json
+{
+  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
+  “name”:”The big old three”,
+  “description”: “This is the tree that granny planted when she and grams god married”, 
+  “metadata”:{
+    “location”:”Orvil’s farm”, 
+    “species”:” Chestnut”
+  }
+}
+```
+Oke so lets put our mapping to the rescue!
+
+A mapping always consist of an array where the array key’s are a dot notation of where we want our something to go. And an value representing what we want to go there. Thar value is a string that may contain twig logic. In this twig logic our original object is represented under de source object. So in this case we could do a mapping like
+
+```json
+{
+    “metadata.location”:”{{source.location }}”,	
+    “metadata.species”:”{{source.species }}”,
+}
+```
+We would then end up wit a new object (after mapping) looking like
+ ```json
+{
+	“id”:”0d671e30-04af-479a-926a-5e7044484171”,
+	“name”:”The big white three”,
+	“description”: “This is the tree that granny planted when she and grams god married”, 
+	“location”:”Orvil’s farm”, 
+	“species”:” Chestnut” ”, 
+    “metadata”:{
+            “location”:”Orvil’s farm”, 
+            “species”:” Chestnut”
+    }
+}
+```
+### Dropping key’s
+Oke so that’s better but not exactly what we want. That’s because mapping alters the source object rather than replacing it. So we need to tell to mapping to drop tha data that we won’t need. We can do that under the “_drop” key. That accepts an array of dot notations to drop. Lets change the mapping to
+```json
+{
+    “metadata.location”:”{{source.location }}”,	
+    “metadata.species”:”{{source.species }}”,
+    “_drop”:[
+        “location”,
+        “species”
+    ]
+}
+```
+We now have an object that’s
+```json
+{
+  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
+  “name”:”The big white three”,
+  “description”:“This is the tree that granny planted when she and grams god married”, 
+  “metadata”:{
+    “location”:”Orvil’s farm”, 
+    “species”:”Chestnut”
+  }
+}
+```
+### Adding key’s
+The mapping setup allows you to add key’s and values to objects simply by declaring them, lets look at the above example and assume that the county wants us to enter the primary color of the three. A value that we simply do not have in our object. But we assume al our threes to be brown.  We could then edit our mapping to
+
+```json
+{
+  “metadata.location”:”{{source.location }}”,	
+  “metadata.species”:”{{source.species }}”,
+  “metadata.color”: ”Brown”,
+  “_drop”:[
+    “location”,
+    “species”
+  ]
+}
+```
+
+Witch would give us
+
+```json
+{
+  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
+  “name”:”The big white three”,
+  “description”: “This is the tree that granny planted when she and grams god married”, 
+  “metadata”:{
+    “location”:”Orvil’s farm”, 
+    “species”:”Chestnut”, 
+    “color”:”Brown”
+  }
+}
+```
+
+Even trough we didn’t have a color value originally. Als node that we used a simple string value here instead of a twig code. Thats because twig template may contain strings.
+
+
 ##API Documentation
 ad
 
