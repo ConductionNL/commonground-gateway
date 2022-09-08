@@ -14,6 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -170,6 +171,7 @@ class ObjectEntity
     private Collection $recursionStack;
 
     /**
+     * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
@@ -179,17 +181,23 @@ class ObjectEntity
      * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
      * Used for showing correct index in error messages.
      *
-     * @var int|null
+     * @var string|null
      *
      * @Groups({"read", "write"})
      */
-    private ?int $subresourceIndex = null;
+    private ?string $subresourceIndex = null;
 
     /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $requestLogs;
+
+    /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
+     */
+    private Collection $synchronizations;
 
     /**
      * @var Datetime The moment this resource was created
@@ -533,6 +541,54 @@ class ObjectEntity
     }
 
     /**
+     * Gets a value based on the attribute string name or attribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @return Value
+     */
+    public function getValue($attribute): Value
+    {
+        if (is_string($attribute)) {
+            $attribute = $this->getEntity()->getAttributeByName($attribute);
+        }
+
+        return $this->getValueByAttribute($attribute);
+    }
+
+    /**
+     * Sets a value based on the attribute string name or atribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @throws Exception
+     *
+     * @return false|Value
+     */
+    public function setValue($attribute, $value)
+    {
+        return $this->getValue($attribute)->setValue($value);
+    }
+
+    /**
+     * Populate this object with an array of values, where attributes are diffined by key.
+     *
+     * @param array $array
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    public function hydrate(array $array): ObjectEntity
+    {
+        foreach ($array as  $key => $value) {
+            $this->setValue($key, $value);
+        }
+
+        return $this;
+    }
+
+    /**
      * Get an value based on a attribut.
      *
      * @param Attribute $attribute the attribute that you are searching for
@@ -789,12 +845,12 @@ class ObjectEntity
         return $this;
     }
 
-    public function getSubresourceIndex(): ?int
+    public function getSubresourceIndex(): ?string
     {
         return $this->subresourceIndex;
     }
 
-    public function setSubresourceIndex(?int $subresourceIndex): self
+    public function setSubresourceIndex(?string $subresourceIndex): self
     {
         $this->subresourceIndex = $subresourceIndex;
 

@@ -11,6 +11,7 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 
@@ -814,5 +815,29 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         return $sortable;
+    }
+
+    /**
+     * Finds object entities on there external or internal id.
+     *
+     * @param string $identifier
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return ObjectEntity The found object entity
+     */
+    public function findByAnyId(string $identifier): ?ObjectEntity
+    {
+        $query = $this->createQueryBuilder('o')
+            ->leftJoin('o.synchronizations', 's')
+            ->where('s.sourceId = :identifier')
+            ->orWhere('o.externalId = :identifier')
+            ->setParameter('identifier', $identifier);
+
+        if (Uuid::isValid($identifier)) {
+            $query->orWhere('o.id = :identifier');
+        }
+
+        return $query->getQuery()->getOneOrNullResult();
     }
 }

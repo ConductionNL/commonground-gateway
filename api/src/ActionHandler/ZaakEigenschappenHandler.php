@@ -3,19 +3,14 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\ObjectEntityService;
-use App\Service\ValidatorService;
 use App\Service\ZdsZaakService;
-use Doctrine\ORM\EntityManagerInterface;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+use Respect\Validation\Exceptions\ComponentException;
 
 class ZaakEigenschappenHandler implements ActionHandlerInterface
 {
-    private EntityManagerInterface $entityManager;
-    private ObjectEntityService $objectEntityService;
-    private ValidatorService $validatorService;
-    private array $usedValues = [];
-
     private ZdsZaakService $zdsZaakService;
 
     public function __construct(ContainerInterface $container)
@@ -29,15 +24,42 @@ class ZaakEigenschappenHandler implements ActionHandlerInterface
     }
 
     /**
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+        return [
+            '$id'         => 'https://example.com/person.schema.json',
+            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
+            'title'       => 'Zaakeigenschappen Action',
+            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
+            'required'    => ['identifierPath'],
+            'properties'  => [
+                'identifierPath' => [
+                    'type'        => 'string',
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example'     => 'native://default',
+                ],
+                'eigenschappen' => [
+                    'type'        => 'array',
+                    'description' => '',
+                ],
+            ],
+        ];
+    }
+
+    /**
      * This function runs the zaakeigenschappen plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws \App\Exception\GatewayException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return array
      */
