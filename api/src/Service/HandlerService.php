@@ -390,7 +390,7 @@ class HandlerService
             $status,
 //            ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $this->acceptHeaderToSerialiazation)]]
             //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
-            ['content-type' => array_search($acceptType, $this->acceptHeaderToSerialiazation)]
+            ['content-type' => array_search($acceptType, $this->dataService->acceptHeaderToSerialization)]
         );
         $this->stopwatch->stop('newResponse');
 

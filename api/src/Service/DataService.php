@@ -26,7 +26,7 @@ class DataService
     private SessionInterface $session;
     private Request $request;
     private Security $security;
-    private UserInterface $user;
+    private ?UserInterface $user;
     private Generator $faker;
     private Endpoint $endpoint;
     private Handler $handler;
@@ -109,7 +109,8 @@ class DataService
         if ($typeValue == 'text/plain;charset=UTF-8') {
             return 'json';
         }
-        if (array_key_exists($typeValue, $this->acceptHeaderToSerialization)) {
+        if (array_key_exists($typeValue, $this->acceptHeaderToSerialization))
+        {
             return $this->acceptHeaderToSerialization[$typeValue];
         }
 
@@ -161,8 +162,9 @@ class DataService
                 }
 
                 $data = json_decode(json_encode($xml), true);
+                break;
             default:
-                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+                throw new GatewayException('Unsupported content type '.$contentType, null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
 
         // Stuff it into the session, so we won't have to do this again
@@ -276,9 +278,9 @@ class DataService
     /**
      * Get the current user, e.g. simple wrapper for the user interface
      *
-     * @return UserInterface
+     * @return UserInterface|null
      */
-    public function getUser(): UserInterface
+    public function getUser(): ?UserInterface
     {
         return $this->user;
 
