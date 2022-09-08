@@ -27,6 +27,7 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
+            // @todo ask Robert if it can be removed
 //            if ($value === [] && $newKey != 'results') {
 //                unset($result[$newKey]);
 //            }
