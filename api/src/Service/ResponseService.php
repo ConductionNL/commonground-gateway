@@ -628,7 +628,7 @@ class ResponseService
     private function renderObjectReferences(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
     {
         $objects = $valueObject->getValue();
-        if (!is_array($objects)) {
+        if (!is_countable($objects)) {
             $response[$attribute->getName()] = null;
 
             return;
