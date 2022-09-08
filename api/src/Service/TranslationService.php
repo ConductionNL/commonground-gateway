@@ -65,7 +65,7 @@ class TranslationService
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $key => $value) {
-            $destination[$key] = $this->twig->createTemplate($value)->render(['source'=>$source]);
+            $destination[$key] = castValue($this->twig->createTemplate($value)->render(['source'=>$source]));
         }
 
         // Lets remove the drops (is anny
@@ -83,6 +83,56 @@ class TranslationService
         $destination = $this->encodeArrayKeys($destination, '&#2E', '.');
 
         return $destination;
+    }
+
+    /**
+     * This function cast a value to a specific value type
+     *
+     * @param string $value
+     * @return void
+     */
+    public function castValue(string $value)
+    {
+        // Find the format for this value
+        // @todo this should be a regex
+        if (strpos($value, '|')) {
+            $values = explode('|', $value);
+            $value = trim($values[0]);
+            $format = trim($values[1]);
+        }
+        else{
+            return $value;
+        }
+
+        // What if....
+        if(!isset($format)){
+            return $value;
+        }
+
+        // Lets cast
+        switch ($format){
+            case 'string':
+                return  (string) $value;
+            case 'bool':
+            case 'boolean':
+                return  (bool) $value;
+            case 'int':
+            case 'integer':
+                return  (int) $value;
+            case 'float':
+                return  (float) $value;
+            case 'array':
+                return  (array) $value;
+            case 'date':
+                return  new DateTime($value);
+            case 'json':
+                return  json_decode($value);
+            case 'xml':
+                $xmlEncoder = new XmlEncoder();
+                return  $xmlEncoder->decode($value, 'xml');
+            default:
+                //@todo throw error
+        }
     }
 
     /**
