@@ -1160,7 +1160,6 @@ class ObjectEntityService
                     // Disconnect old objects
                     foreach ($inversedByValue->getObjects() as $object) {
                         // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
-                        var_dump('DISCONNECT: '.$object->getId()->toString().' FROM: '.$object->getId()->toString());
                         $object->removeSubresourceOf($inversedByValue);
                     }
                 }
