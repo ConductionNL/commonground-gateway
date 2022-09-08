@@ -300,8 +300,8 @@ E.g
 
 ```json
 {
-    "color|": "{{ source.color }}",
-    "metadata.color|": "{{ source.color }}"
+    "color|{\"source.color\" : [\"blue\"]}": "{{ source.color }}",
+    "metadata.color|{\"source.color\" : [\"blue\"]}": "{{ source.color }}"
 }
 ```
 
