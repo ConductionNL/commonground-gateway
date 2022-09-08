@@ -158,7 +158,7 @@ Mapping is the process of changing the structure of an object. For example when 
 The gateway follows a mapping model based on configuration in dot array’s that consist of twig (read a bit more about twig code here),  let take a look a simple mapping example. We haven an tree object in our datalayer  looking like
 ```json
 {
-  "id”:"0d671e30-04af-479a-926a-5e7044484171",
+  "id":"0d671e30-04af-479a-926a-5e7044484171",
   "name":"The big white three",
   "description": "This is the tree that granny planted when she and grams god married", 
   "location":"Orvil’s farm", 
@@ -190,14 +190,14 @@ A mapping always consist of an array where the array key’s are a dot notation 
 We would then end up wit a new object (after mapping) looking like
  ```json
 {
-	“id”:”0d671e30-04af-479a-926a-5e7044484171”,
-	“name”:”The big white three”,
-	“description”: “This is the tree that granny planted when she and grams god married”, 
-	“location”:”Orvil’s farm”, 
-	“species”:” Chestnut” ”, 
-    “metadata”:{
-            “location”:”Orvil’s farm”, 
-            “species”:” Chestnut”
+    "id":"0d671e30-04af-479a-926a-5e7044484171",
+    "name":"The big white three",
+    "description": "This is the tree that granny planted when she and grams god married", 
+    "location":"Orvil’s farm", 
+    "species":"Chestnut", 
+    "metadata":{
+        "location":"Orvil’s farm",
+        "species":"Chestnut"
     }
 }
 ```
@@ -205,23 +205,23 @@ We would then end up wit a new object (after mapping) looking like
 Oke so that’s better but not exactly what we want. That’s because mapping alters the source object rather than replacing it. So we need to tell to mapping to drop tha data that we won’t need. We can do that under the “_drop” key. That accepts an array of dot notations to drop. Lets change the mapping to
 ```json
 {
-    “metadata.location”:”{{source.location }}”,	
-    “metadata.species”:”{{source.species }}”,
-    “_drop”:[
-        “location”,
-        “species”
+    "metadata.location":"{{source.location }}",	
+    "metadata.species":"{{source.species }}",
+    "_drop":[
+        "location",
+        "species"
     ]
 }
 ```
 We now have an object that’s
 ```json
 {
-  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
-  “name”:”The big white three”,
-  “description”:“This is the tree that granny planted when she and grams god married”, 
-  “metadata”:{
-    “location”:”Orvil’s farm”, 
-    “species”:”Chestnut”
+    "id":"0d671e30-04af-479a-926a-5e7044484171",
+    "name":"The big white three",
+    "description":"This is the tree that granny planted when she and grams god married", 
+    "metadata":{
+        "location":"Orvil’s farm", 
+        "species":"Chestnut"
   }
 }
 ```
@@ -230,12 +230,12 @@ The mapping setup allows you to add key’s and values to objects simply by decl
 
 ```json
 {
-  “metadata.location”:”{{source.location }}”,	
-  “metadata.species”:”{{source.species }}”,
-  “metadata.color”: ”Brown”,
-  “_drop”:[
-    “location”,
-    “species”
+    "metadata.location":"{{source.location }}",	
+    "metadata.species":"{{source.species }}",
+    "metadata.color":"Brown",
+    "_drop":[
+        "location",
+        "species"
   ]
 }
 ```
@@ -244,13 +244,13 @@ Witch would give us
 
 ```json
 {
-  “id”:'0d671e30-04af-479a-926a-5e7044484171',
-  “name”:'The big white three',
-  “description”: 'This is the tree that granny planted when she and grams god married', 
-  “metadata”:{
-    “location”:'Orvil’s farm', 
-    “species”:'Chestnut', 
-    “color”:'Brown'
+    "id":'0d671e30-04af-479a-926a-5e7044484171',
+    "name":'The big white three',
+    "description": 'This is the tree that granny planted when she and grams god married', 
+    "metadata":{
+        "location":"Orvil’s farm", 
+        "species":"Chestnut", 
+        "color":"Brown"
   }
 }
 ```
@@ -263,7 +263,7 @@ strings e.g. {{ 'string 1' ~ 'string 2' }} wich can also be used the source data
 
 ```json
 {
-  “color”: '{{ "The color is " ~ source.color }}'
+    "color": '{{ "The color is " ~ source.color }}'
 }
 ```
 
@@ -271,7 +271,7 @@ The same can hower also be achieved with [string interpolation](https://twig.sym
 
 ```json
 {
-  “color”: '{{ "The color is {source.color}" }}'
+    "color": '{{ "The color is {source.color}" }}'
 }
 ```
 
@@ -281,7 +281,7 @@ Another usesfull twig take is the if statement. This can be used both to check i
 
 ```json
 {
-  “color”: '{% if source.color %} source.color {{ else }} unknown {{ endif }} }}'
+    "color": '{% if source.color %} source.color {{ else }} unknown {{ endif }} }}'
 }
 ```
 
@@ -289,7 +289,7 @@ Or to check for specific values
 
 ```json
 {
-  “color”: '{% if source.color == "violet" %} pink {{ endif }} }}'
+    "color": '{% if source.color == "violet" %} pink {{ endif }} }}'
 }
 ```
 
