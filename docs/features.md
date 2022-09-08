@@ -244,13 +244,13 @@ Witch would give us
 
 ```json
 {
-  “id”:”0d671e30-04af-479a-926a-5e7044484171”,
-  “name”:”The big white three”,
-  “description”: “This is the tree that granny planted when she and grams god married”, 
+  “id”:'0d671e30-04af-479a-926a-5e7044484171',
+  “name”:'The big white three',
+  “description”: 'This is the tree that granny planted when she and grams god married', 
   “metadata”:{
-    “location”:”Orvil’s farm”, 
-    “species”:”Chestnut”, 
-    “color”:”Brown”
+    “location”:'Orvil’s farm', 
+    “species”:'Chestnut', 
+    “color”:'Brown'
   }
 }
 ```
@@ -258,9 +258,58 @@ Witch would give us
 Even trough we didn’t have a color value originally. Als node that we used a simple string value here instead of a twig code. Thats because twig template may contain strings.
 
 ### Working with conditional data
+Twig nativly support a lot of [logical operators](https://twig.symfony.com/doc/3.x/templates.html) but a few of those are exeptionally handy when dealing with mappings the are  concating 
+strings e.g. {{ 'string 1' ~ 'string 2' }} wich can also be used the source data inside mapping
+
+```json
+{
+  “color”: '{{ "The color is " ~ source.color }}'
+}
+```
+
+The same can hower also be achieved with [string interpolation](https://twig.symfony.com/doc/1.x/templates.html#string-interpolation) via
+
+```json
+{
+  “color”: '{{ "The color is {source.color}" }}'
+}
+```
+
+So both of the above notations would provide the same result
+
+Another usesfull twig take is the if statement. This can be used both to check if a values exists in the first place
+
+```json
+{
+  “color”: '{% if source.color %} source.color {{ else }} unknown {{ endif }} }}'
+}
+```
+
+Or to check for specific values
+
+```json
+{
+  “color”: '{% if source.color == "violet" %} pink {{ endif }} }}'
+}
+```
+
+### Conditional mapping (beta)
+There are cases when a mapping rule should only be run if certain conditions are met. This is done trough conditional mapping. To make a mapping conditional add a | to the mappings key followd bij a JSON Condition description. The mapping wil then only be executed if the JSON condition is met (results in true)
+
+E.g
+
+```json
+{
+  “color|”: '{{ source.color }}',
+  “metadata.color|”: '{{ source.color }}'
+}
+```
+
+At this moment in time it is not posible to build if/or/else cases with mappings. A single mapping rule is iether run or not
+
 
 ### Forcing the type/format of values
-Due to the twig rendering the output of a mapping will always change al the values to string. For internal gateway travel this isn’t problematic as the datalayer will cast cast value’s to the appropriate outputs anyway. But when sending data to an external source it might be bothersome to have al your Booleans cast to string. Fortunately you can force the datatype of your values yourself by adding |[format] behind your mapping value e.g. |string or |integer. Be ware of what php functions are used to map cast these values and the the cast should be possible (or else an error wil be thrown).
+Due to twig rendering, the output of a mapping will always change al the values to string. For internal gateway travel this isn’t problematic as the datalayer will cast value’s to the appropriate outputs anyway. But when sending data to an external source it might be bothersome to have al your Booleans cast to string. Fortunately you can force the datatype of your values yourself by adding |[format] behind your mapping value e.g. |string or |integer. Be ware of what php functions are used to map cast these values and the the cast should be possible (or else an error wil be thrown).
 
 | Cast           	| Function                                                 	| Twig 	 |
 |----------------	|----------------------------------------------------------	|--------|
@@ -281,7 +330,7 @@ Example a mapping of
 ```json
 {
   ..
-  “metadata.hasFruit”: ”Yes|bool”,
+  “metadata.hasFruit”: 'Yes|bool',
   ..
 }
 ```
@@ -294,6 +343,80 @@ Would result in
     ...
     “hasFruit”:true
   }
+}
+```
+
+Keep in mind that format adjustment should be done outside the `{{`and `}}` twig brackets to overwrite the twig string output
+
+### Translating values
+Twigg naturaly supoort translations (full docs can be read [here](https://symfony.com/doc/current/translation.html)) but you should remember that translations are an active filter `|trans`. And thus should be specifacally called on values that you want to translate. Translations are perfomed against an translation table, you can read moet about configuring your transaltion table here. Keep in mind the base for translations is the locale as profided in the localisation header of a request. Or when sending data in the default setting of a gateway environment. You can also translate from an specif table and language by configuring the translation filter e.g. {{ 'greeting' | trans({}, `[table_name]`, `[language]`) }}
+
+Original object
+
+```json
+{
+  “color”:”brown”
+}
+```
+
+With mapping
+
+```json
+{
+  “color”:”{{source.color|trans({},"colors") }}
+}
+```
+gives us (on locale nl)
+
+```json
+{
+  “color”:”bruin”
+}
+```
+
+If we would like to force german (even if the requester asked for a difrend language) we could map like 
+
+```json
+{
+  “color”:”{{source.color|trans({},"colors"."de") }}
+}
+```
+
+And get
+
+```json
+{
+  “color”:”braun”
+}
+```
+
+
+### Renaming Keys
+The mapping dosn't support the renaming of keys directly but can rename key's indirectly by moving the data to a new position and dropping the old position
+
+Original object
+
+```json
+{
+  “name”:”The big old three”
+}
+```
+
+With mapping
+
+```json
+{
+  “naam”:”{{source.name }}”,	
+  “_drop”:[
+    “name”
+  ]
+}
+```
+gives us
+
+```json
+{
+  “naam”:”The big old three”
 }
 ```
 
