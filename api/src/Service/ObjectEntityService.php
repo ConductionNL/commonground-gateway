@@ -56,7 +56,6 @@ class ObjectEntityService
     private LogService $logService;
     private ConvertToGatewayService $convertToGatewayService;
     private EventDispatcherInterface $eventDispatcher;
-    private array $removeObjectsOnPut = [];
     public array $notifications;
 
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
@@ -533,12 +532,7 @@ class ObjectEntityService
 
         // Save the object (this will remove this object result from the cache)
         $this->functionService->removeResultFromCache = [];
-        $this->removeObjectsOnPut = []; //todo: remove ?
         $object = $this->saveObject($object, $data);
-        //todo: remove?
-//        if ($method === 'PUT') {
-//            $this->handleRemoveObjectsOnPut();
-//        }
 
         // Handle Entity Function (note that this might be overwritten when handling the promise later!)
         $object = $this->functionService->handleFunction($object, $object->getEntity()->getFunction(), [
@@ -559,29 +553,6 @@ class ObjectEntityService
         $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
 
         return $data;
-    }
-
-    // todo: remove?
-    private function handleRemoveObjectsOnPut()
-    {
-        // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
-        foreach ($this->removeObjectsOnPut as $removeObjectOnPut) {
-            $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
-            // If the object has no other 'parent' connections, if the attribute of the value must be unique...
-            // Example: Entity "Organization" has Attribute "organization_postalCodes" (array of postalCodes objects) that mustBeUnique
-            if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0 && $removeObjectOnPut['valueObject']->getAttribute()->getMustBeUnique()) {
-                // ...and if the object of the attribute has a value that must be unique
-                // Example: Entity "postalCode" has Attribute "code" (integer) that mustBeUnique
-                foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
-                    if ($attribute->getMustBeUnique()) {
-                        // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
-                        $this->eavService->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
-                        break;
-                    }
-                }
-            }
-        }
-//        $this->entityManager->flush(); //todo do we need this here?
     }
 
     /**
