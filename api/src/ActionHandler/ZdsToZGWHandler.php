@@ -4,17 +4,15 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+use Respect\Validation\Exceptions\ComponentException;
 
-class ZaakTypeHandler implements ActionHandlerInterface
+class ZdsToZGWHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
-    /**
-     * @param ContainerInterface $container
-     *
-     * @throws GatewayException
-     */
     public function __construct(ContainerInterface $container)
     {
         $zdsZaakService = $container->get('zdszaakservice');
@@ -33,39 +31,40 @@ class ZaakTypeHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'        => 'https://example.com/person.schema.json',
-            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Zaaktype Action',
-            'decription' => 'Gets the zaaktype for a given zaak',
-            'required'   => ['identifierPath'],
-            'properties' => [
+            '$id'         => 'https://example.com/person.schema.json',
+            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
+            'title'       => 'Zaakeigenschappen Action',
+            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
+            'required'    => ['identifierPath'],
+            'properties'  => [
                 'identifierPath' => [
                     'type'        => 'string',
                     'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'id',
+                    'example'     => 'native://default',
                 ],
-                'entityId' => [
-                    'type'        => 'string',
-                    'description' => 'The id  of the ZRC zaak entity',
-                    'example'     => '',
+                'eigenschappen' => [
+                    'type'        => 'array',
+                    'description' => '',
                 ],
-
             ],
         ];
     }
 
     /**
-     * Run the actual business logic in the appropriate server.
+     * This function runs the zaakeigenschappen plugin.
      *
-     * @param array $data
-     * @param array $configuration
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
+     * @throws GatewayException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return array
      */
     public function __run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zaakTypeHandler($data, $configuration);
+        return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
     }
 }

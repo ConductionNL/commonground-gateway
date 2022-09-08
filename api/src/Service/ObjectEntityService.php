@@ -103,9 +103,12 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data): void
+    public function dispatchEvent(string $type, array $data, $subType = null): void
     {
-        $event = new ActionEvent($type, $data);
+        $event = new ActionEvent($type, $data, null);
+        if ($subType) {
+            $event->setSubType($subType);
+        }
         $this->eventDispatcher->dispatch($event, $type);
     }
 
@@ -616,6 +619,7 @@ class ObjectEntityService
         switch ($method) {
             case 'GET':
                 $data = $this->getCase($id, $data, $method, $entity, $endpoint, $acceptType);
+                // todo: this dispatch should probably be moved to the getCase function!?
                 $this->dispatchEvent('commongateway.object.read', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'POST':
@@ -630,10 +634,12 @@ class ObjectEntityService
                 }
 
                 $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
+                // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
                 $this->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'DELETE':
                 $data = $this->deleteCase($id, $data, $method, $entity);
+                // todo: this dispatch should probably be moved to the deleteCase function!?
                 $this->dispatchEvent('commongateway.object.delete', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             default:

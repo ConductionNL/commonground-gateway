@@ -72,7 +72,7 @@ class Synchronization
      * @var ?ObjectEntity The object of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class)
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="synchronizations", fetch="EAGER")
      */
     private ?ObjectEntity $object = null;
 
@@ -92,6 +92,14 @@ class Synchronization
      * @ORM\JoinColumn(nullable=false)
      */
     private Gateway $gateway;
+
+    /**
+     * @var string|null
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $endpoint = null;
 
     /**
      * @var string The id of object in the related source
@@ -200,6 +208,18 @@ class Synchronization
     public function setGateway(?Gateway $gateway): self
     {
         $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function getEndpoint(): ?string
+    {
+        return $this->endpoint;
+    }
+
+    public function setEndpoint(?string $endpoint): self
+    {
+        $this->endpoint = $endpoint;
 
         return $this;
     }

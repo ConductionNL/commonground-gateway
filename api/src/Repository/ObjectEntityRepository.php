@@ -11,6 +11,7 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 
@@ -217,10 +218,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $filters = $this->handleValueScopeFilters($filters);
 
         foreach ($filters as $key => $value) {
-            $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
-            if (substr($key, 0, 1) == '.') {
-                $key = '_'.ltrim($key, $key[0]);
-            }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
                 $key = array_key_exists($key, $multipleAttributes) ? $key.'|multiple' : $key;
@@ -622,10 +619,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $key = array_keys($order)[0];
         $value = array_values($order)[0];
 
-        $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
-        if (substr($key, 0, 1) == '.') {
-            $key = '_'.ltrim($key, $key[0]);
-        }
         if (in_array($key, $orderCheck) && in_array($value, ['desc', 'asc'])) {
             $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
         }
@@ -822,5 +815,29 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
 
         return $sortable;
+    }
+
+    /**
+     * Finds object entities on there external or internal id.
+     *
+     * @param string $identifier
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return ObjectEntity The found object entity
+     */
+    public function findByAnyId(string $identifier): ?ObjectEntity
+    {
+        $query = $this->createQueryBuilder('o')
+            ->leftJoin('o.synchronizations', 's')
+            ->where('s.sourceId = :identifier')
+            ->orWhere('o.externalId = :identifier')
+            ->setParameter('identifier', $identifier);
+
+        if (Uuid::isValid($identifier)) {
+            $query->orWhere('o.id = :identifier');
+        }
+
+        return $query->getQuery()->getOneOrNullResult();
     }
 }

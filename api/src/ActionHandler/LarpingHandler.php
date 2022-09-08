@@ -12,7 +12,7 @@ class LarpingHandler implements ActionHandlerInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $larpingService = $container->get('zdszaakservice');
+        $larpingService = $container->get('larpingService');
         if ($larpingService instanceof LarpingService) {
             $this->larpingService = $larpingService;
         } else {

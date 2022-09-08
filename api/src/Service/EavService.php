@@ -962,6 +962,46 @@ class EavService
     }
 
     /**
+     * A function to replace Request->query->all() because Request->query->all() will replace some characters with an underscore.
+     * This function will not.
+     *
+     * @param string $method The method of the Request
+     *
+     * @return array An array with all query parameters.
+     */
+    public function realRequestQueryAll(string $method = 'get'): array
+    {
+        $vars = [];
+        if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
+            return $vars;
+        }
+        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
+        foreach ($pairs as $pair) {
+            $nv = explode('=', $pair);
+            $name = urldecode($nv[0]);
+            $value = '';
+            if (count($nv) == 2) {
+                $value = urldecode($nv[1]);
+            }
+            $matchesCount = preg_match('/(\[.*])/', $name, $matches);
+            if ($matchesCount == 1) {
+                $key = $matches[1];
+                $name = str_replace($key, '', $name);
+                $key = trim($key, '[]');
+                if (!empty($key)) {
+                    $vars[$name][$key] = $value;
+                } else {
+                    $vars[$name][] = $value;
+                }
+                continue;
+            }
+            $vars[$name] = $value;
+        }
+
+        return $vars;
+    }
+
+    /**
      * Handles a search (collection) api call.
      *
      * @param Entity     $entity
@@ -979,7 +1019,7 @@ class EavService
      */
     public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
     {
-        $query = $request->query->all();
+        $query = $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
         unset($query['page']);
         unset($query['start']);
@@ -1041,17 +1081,6 @@ class EavService
         $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
-            if (str_contains($param, '__')) {
-                unset($query[$param]);
-                $param = str_replace(['__'], ['.'], $param);
-                $query[$param] = $value;
-            }
-            $param = str_replace(['_'], ['.'], $param);
-            $param = str_replace(['..'], ['._'], $param);
-
-            if (substr($param, 0, 1) == '.') {
-                $param = '_'.ltrim($param, $param[0]);
-            }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = implode(', ', $filterCheck);
 

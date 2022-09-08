@@ -5,6 +5,7 @@ namespace App\Subscriber;
 use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
+use App\Service\ObjectEntityService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,6 +15,7 @@ class ActionSubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private ContainerInterface $container;
+    private ObjectEntityService $objectEntityService;
 
     /**
      * @inheritDoc
@@ -29,17 +31,16 @@ class ActionSubscriber implements EventSubscriberInterface
             'commongateway.object.read'     => 'handleEvent',
             'commongateway.object.update'   => 'handleEvent',
             'commongateway.object.delete'   => 'handleEvent',
+            'commongateway.action.event'    => 'handleEvent',
+
         ];
     }
 
-    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container)
+    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container, ObjectEntityService $objectEntityService)
     {
         $this->entityManager = $entityManager;
         $this->container = $container;
-    }
-
-    public function throwEvent(string $throw): void
-    {
+        $this->objectEntityService = $objectEntityService;
     }
 
     public function runFunction(Action $action, array $data): array
@@ -51,13 +52,6 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         return $data;
-    }
-
-    public function triggerActions(Action $action): void
-    {
-        foreach ($action->getThrows() as $throw) {
-            $this->throwEvent($throw);
-        }
     }
 
     public function checkConditions(Action $action, array $data): bool
@@ -73,7 +67,10 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         if ($this->checkConditions($action, $event->getData())) {
             $event->setData($this->runFunction($action, $event->getData()));
-            $this->triggerActions($action);
+            // throw events
+            foreach ($action->getThrows() as $throw) {
+                $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
+            }
         }
 
         return $event;
@@ -81,7 +78,14 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
+        // bij normaal gedrag
+        if (!$event->getSubType()) {
+            $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
+        }
+        // Anders als er wel een subtype is
+        else {
+            $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getSubType());
+        }
 
         foreach ($actions as $action) {
             $this->handleAction($action, $event);
