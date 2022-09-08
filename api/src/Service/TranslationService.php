@@ -28,6 +28,7 @@ class TranslationService
             $result[$newKey] = $value;
 
             // todo: With this if statement it is impossible to do the following put: "telefoonnummers": []
+            // todo @rjzondervan: this change might impact work done for Nijmegen. This code i removed was added by you in december 2021.
 //            if ($value === [] && $newKey != 'results') {
 //                unset($result[$newKey]);
 //            }
