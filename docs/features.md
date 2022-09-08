@@ -276,6 +276,26 @@ Due to the twig rendering the output of a mapping will always change al the valu
 | json           	| https://www.php.net/manual/en/function.json-encode.php   	| 	Yes   |
 | xml            	|                                                          	|  No  	  | 
 
+Example a mapping of
+
+```json
+{
+  ..
+  “metadata.hasFruit”: ”Yes|bool”,
+  ..
+}
+```
+Would result in
+
+```json
+{
+  ...
+  “metadata”:{
+    ...
+    “hasFruit”:true
+  }
+}
+```
 
 ##API Documentation
 ad
