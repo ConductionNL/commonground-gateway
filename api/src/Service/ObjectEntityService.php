@@ -857,7 +857,7 @@ class ObjectEntityService
         // If the value given by the user is empty...
         if (empty($value)) {
             if ($attribute->getMultiple() && $value === []) {
-                if ($attribute->getType() == 'object') {
+                if ($attribute->getType() == 'object' && ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')) {
                     foreach ($valueObject->getObjects() as $object) {
                         // If we are not re-adding this object...
                         $object->removeSubresourceOf($valueObject);
@@ -940,7 +940,7 @@ class ObjectEntityService
                     }
 
                     // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
-                    if ($this->request->getMethod() == 'PUT' && array_key_exists('id', $object)) {
+                    if (($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH') && array_key_exists('id', $object)) {
                         if (!is_string($object['id']) || Uuid::isValid($object['id']) == false) {
 //                            var_dump('The given value ('.$object['id'].') is not a valid uuid.');
                             continue;
@@ -967,7 +967,9 @@ class ObjectEntityService
                         } else {
                             $subObject = $subObject->first();
                         }
-                    } elseif ($this->request->getMethod() == 'PUT' && count($value) == 1 && count($valueObject->getObjects()) == 1) {
+                    } elseif (($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')
+                        && count($value) == 1
+                        && count($valueObject->getObjects()) == 1) {
                         // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
                         $subObject = $valueObject->getObjects()->first();
                         $object['id'] = $subObject->getExternalId();
@@ -1011,9 +1013,9 @@ class ObjectEntityService
                 }
 
                 // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
-                if ($this->request->getMethod() == 'PUT') {
+                if ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH') {
                     foreach ($valueObject->getObjects() as $object) {
-                        // If we are not re-adding this object...
+                        // If we are not re-adding this object... allow delete on PUT
                         if (!$saveSubObjects->contains($object)) {
                             $object->removeSubresourceOf($valueObject);
                             if (count($object->getSubresourceOf()) == 0) {
@@ -1025,24 +1027,9 @@ class ObjectEntityService
                 }
                 // Actually add the objects to the valueObject
                 foreach ($saveSubObjects as $saveSubObject) {
-                    // todo: remove objects so not multiple attributes won't ever have multiple objects
-//                    // If we have inversedBy on this attribute
-//                    if ($attribute->getInversedBy()) {
-//                        $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
-//                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
-//                            // If inversedBy attribute is not multiple it should only have one object connected to it
-//                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
-//                                // Remove old objects
-//                                foreach ($inversedByValue->getObjects() as $object) {
-//                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
-//                                    $this->removeObjectsNotMultiple[] = [
-//                                        'valueObject' => $inversedByValue,
-//                                        'object'      => $object,
-//                                    ];
-//                                }
-//                            }
-//                        }
-//                    }
+                    // Make sure we never connect the value of a multiple=false attribute to more than one object! Checks inversedBy
+                    $this->disconnectNotMultipleObjects($objectEntity, $attribute, $saveSubObject);
+
                     $valueObject->addObject($saveSubObject);
                 }
                 break;
@@ -1107,24 +1094,8 @@ class ObjectEntityService
                         }
                     }
 
-                    // todo: remove objects so not multiple attributes won't ever have multiple objects
-//                    // If we have inversedBy on this attribute
-//                    if ($attribute->getInversedBy()) {
-//                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
-//                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
-//                            // If inversedBy attribute is not multiple it should only have one object connected to it
-//                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
-//                                // Remove old objects
-//                                foreach ($inversedByValue->getObjects() as $object) {
-//                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
-//                                    $this->removeObjectsNotMultiple[] = [
-//                                        'valueObject' => $inversedByValue,
-//                                        'object'      => $object,
-//                                    ];
-//                                }
-//                            }
-//                        }
-//                    }
+                    // Make sure we never connect the value of a multiple=false attribute to more than one object! Checks inversedBy.
+                    $this->disconnectNotMultipleObjects($objectEntity, $attribute, $subObject);
 
                     // Object toevoegen
                     $valueObject->getObjects()->clear(); // We start with a default object
@@ -1164,6 +1135,37 @@ class ObjectEntityService
         }
 
         return $objectEntity;
+    }
+
+    /**
+     * This function will check if an attribute has inversedBy, if so, get the inversedBy value and check if this value does not already have given $objectEntity as a relation.
+     * If inversedBy value does not have the $objectEntity as relation and the attribute of this inversedBy value is multiple=false this inversedBy value should only contain one object.
+     * So, if the inversedBy value has already one or more other objects connected to it, disconnect all these objects, so we can add $objectEntity as the only relation after using this function.
+     *
+     * @param ObjectEntity $objectEntity The 'parent' objectEntity of $attribute we might want to add as a inversedBy relation to $subObject.
+     * @param Attribute $attribute The attribute we are going to check inversedBy on and get its value if it has a inversedBy attribute/value.
+     * @param ObjectEntity $subObject The 'child' objectEntity we want to add to the Value of the $attribute of $objectEntity.
+     *
+     * @return void
+     */
+    private function disconnectNotMultipleObjects(ObjectEntity $objectEntity, Attribute $attribute, ObjectEntity $subObject)
+    {
+        // Make sure we never connect the value of a multiple=false attribute to more than one object!
+        if ($attribute->getInversedBy()) {
+            // If we have inversedBy on this attribute
+            $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+            if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                // If inversedBy attribute is not multiple it should only have one object connected to it
+                if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                    // Disconnect old objects
+                    foreach ($inversedByValue->getObjects() as $object) {
+                        // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                        var_dump('DISCONNECT: '.$object->getId()->toString().' FROM: '.$object->getId()->toString());
+                        $object->removeSubresourceOf($inversedByValue);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1570,6 +1572,7 @@ class ObjectEntityService
                 $action = 'Create';
                 break;
             case 'PUT':
+            case 'PATCH':
                 $action = 'Update';
                 break;
             case 'DELETE':
