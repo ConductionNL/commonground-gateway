@@ -8,7 +8,6 @@ use App\Entity\Synchronization;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
-use mysql_xdevapi\Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
@@ -25,7 +24,7 @@ class ZdsZaakService
     /**
      * @param EntityManagerInterface $entityManager
      * @param SynchronizationService $synchronizationService
-     * @param ObjectEntityService $objectEntityService
+     * @param ObjectEntityService    $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -53,15 +52,16 @@ class ZdsZaakService
     }
 
     /**
-     * This function validates whether the zds message has an identifier associated with a case type
+     * This function validates whether the zds message has an identifier associated with a case type.
+     *
      * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
-     * @return array The modified data of the call with the case type and identification
-     *
      * @throws ErrorException
+     *
+     * @return array The modified data of the call with the case type and identification
      */
     public function zdsValidationHandler(array $data, array $configuration): array
     {
@@ -70,13 +70,13 @@ class ZdsZaakService
 
         $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
 
-        if(!$zaakTypeIdentificatie){
+        if (!$zaakTypeIdentificatie) {
             throw new ErrorException('The identificatie is not found');
         }
 
         // Let get the zaaktype
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if(!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity){
+        if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
@@ -95,15 +95,16 @@ class ZdsZaakService
 
     /**
      * This function converts a zds message to zgw.
+     *
      * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
      * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
-     * @return array The data from the call
-     *
      * @throws ErrorException
+     *
+     * @return array The data from the call
      */
     public function zdsToZGWHandler(array $data, array $configuration): array
     {
@@ -113,17 +114,16 @@ class ZdsZaakService
         $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
 
-
         // @todo remove the check for identification and zaaktype if the dataService is implemented
         // @todo get in the zds object the values of the properties casetype and identification and store this in the case
         $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
-        if(!$zaakTypeIdentificatie){
+        if (!$zaakTypeIdentificatie) {
             throw new ErrorException('The identificatie is not found');
         }
 
         // Let get the zaaktype
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if(!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity){
+        if (!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity) {
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
@@ -133,7 +133,7 @@ class ZdsZaakService
         $zdsObject = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsObjectId);
 
         // so far so good (need error handling doh)
-        $zaak = New ObjectEntity();
+        $zaak = new ObjectEntity();
         $zaak->setEntity($zaakEntity);
         $zaak->setValue('startdatum', $zdsObject->getValue('startdatum')->getStringValue());
         $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum')->getStringValue());
@@ -187,7 +187,7 @@ class ZdsZaakService
     }
 
     /**
-     * Changes the request to hold the proper zaaktype url insted of given identifier
+     * Changes the request to hold the proper zaaktype url insted of given identifier.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action

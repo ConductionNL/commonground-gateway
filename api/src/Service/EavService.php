@@ -979,7 +979,7 @@ class EavService
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);
-            $value = "";
+            $value = '';
             if (count($nv) == 2) {
                 $value = urldecode($nv[1]);
             }
