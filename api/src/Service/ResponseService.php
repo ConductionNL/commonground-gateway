@@ -629,7 +629,7 @@ class ResponseService
     {
         $objects = $valueObject->getValue();
         if (!is_countable($objects)) {
-            $response[$attribute->getName()] = null;
+            $response[$attribute->getName()] = [];
 
             return;
         }
@@ -701,7 +701,7 @@ class ResponseService
 
         if ($value->getValue() == null) {
             return [
-                'renderObjectsObjectsArray' => null,
+                'renderObjectsObjectsArray' => $attribute->getMultiple() ? [] : null,
                 'renderObjectsEmbedded'     => $embedded,
             ];
         }
