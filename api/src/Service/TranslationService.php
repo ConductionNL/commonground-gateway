@@ -112,21 +112,27 @@ class TranslationService
         // Lets cast
         switch ($format){
             case 'string':
-                return  (string) $value;
+                return  strval($value);
             case 'bool':
             case 'boolean':
-                return  (bool) $value;
+                return  boolval($value);
             case 'int':
             case 'integer':
-                return  (int) $value;
+                return  intval($value);
             case 'float':
-                return  (float) $value;
+                return  floatval($value);
             case 'array':
                 return  (array) $value;
             case 'date':
                 return  new DateTime($value);
+            case 'url':
+                return  urlencode(($value);
+            case 'rawurl':
+                return  rawurlencode(($value);
+            case 'base64':
+                return  base64_encode(($value);
             case 'json':
-                return  json_decode($value);
+                return  json_encode($value);
             case 'xml':
                 $xmlEncoder = new XmlEncoder();
                 return  $xmlEncoder->decode($value, 'xml');

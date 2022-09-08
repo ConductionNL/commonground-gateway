@@ -257,6 +257,25 @@ Witch would give us
 
 Even trough we didn’t have a color value originally. Als node that we used a simple string value here instead of a twig code. Thats because twig template may contain strings.
 
+### Working with conditional data
+
+### Forcing the type/format of values
+Due to the twig rendering the output of a mapping will always change al the values to string. For internal gateway travel this isn’t problematic as the datalayer will cast cast value’s to the appropriate outputs anyway. But when sending data to an external source it might be bothersome to have al your Booleans cast to string. Fortunately you can force the datatype of your values yourself by adding |[format] behind your mapping value e.g. |string or |integer. Be ware of what php functions are used to map cast these values and the the cast should be possible (or else an error wil be thrown).
+
+| Cast           	| Function                                                 	| Twig 	 |
+|----------------	|----------------------------------------------------------	|--------|
+| string         	| https://www.php.net/manual/en/function.strval.php        	| No  	  |
+| bool / boolean 	| https://www.php.net/manual/en/function.boolval.php       	| No  	  |
+| int / integer  	| https://www.php.net/manual/en/function.intval.php        	| No  	  |
+| float          	| https://www.php.net/manual/en/function.floatval          	|  No  	  |
+| array          	|                                                          	| No  	  |
+| date           	| https://www.php.net/manual/en/function.date              	|  No  	  |
+| url            	| https://www.php.net/manual/en/function.urlencode.php     	| 	Yes   |
+| rawurl         	| https://www.php.net/manual/en/function.rawurlencode.php  	| 	Yes   |
+| base64         	| https://www.php.net/manual/en/function.base64-encode.php 	| 	Yes   |
+| json           	| https://www.php.net/manual/en/function.json-encode.php   	| 	Yes   |
+| xml            	|                                                          	|  No  	  | 
+
 
 ##API Documentation
 ad
