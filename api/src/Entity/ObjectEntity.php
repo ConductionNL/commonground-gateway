@@ -541,14 +541,15 @@ class ObjectEntity
     }
 
     /**
-     * Gets a value based on the attribute string name or attribute object
+     * Gets a value based on the attribute string name or attribute object.
      *
      * @param string|Attribute $attribute
+     *
      * @return Value
      */
     public function getValue($attribute): Value
     {
-        if(is_string($attribute)){
+        if (is_string($attribute)) {
             $attribute = $this->getEntity()->getAttributeByName($attribute);
         }
 
@@ -556,15 +557,16 @@ class ObjectEntity
     }
 
     /**
-     * Sets a value based on the attribute string name or atribute object
+     * Sets a value based on the attribute string name or atribute object.
      *
      * @param string|Attribute $attribute
-     * @return false|Value
+     *
      * @throws Exception
+     *
+     * @return false|Value
      */
     public function setValue($attribute, $value)
     {
-
         return $this->getValue($attribute)->setValue($value);
     }
 
@@ -572,13 +574,15 @@ class ObjectEntity
      * Populate this object with an array of values, where attributes are diffined by key.
      *
      * @param array $array
-     * @return ObjectEntity
+     *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function hydrate(array $array): ObjectEntity
     {
-        foreach($array as  $key => $value){
-            $this->setValue($key,$value);
+        foreach ($array as  $key => $value) {
+            $this->setValue($key, $value);
         }
 
         return $this;

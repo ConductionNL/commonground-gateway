@@ -818,11 +818,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Finds object entities on there external or internal id
+     * Finds object entities on there external or internal id.
      *
      * @param string $identifier
-     * @return ObjectEntity The found object entity
+     *
      * @throws NonUniqueResultException
+     *
+     * @return ObjectEntity The found object entity
      */
     public function findByAnyId(string $identifier): ?ObjectEntity
     {
@@ -838,5 +840,4 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return $query->getQuery()->getOneOrNullResult();
     }
-
 }
