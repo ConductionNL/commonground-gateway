@@ -244,9 +244,9 @@ Witch would give us
 
 ```json
 {
-    "id":'0d671e30-04af-479a-926a-5e7044484171',
-    "name":'The big white three',
-    "description": 'This is the tree that granny planted when she and grams god married', 
+    "id":"0d671e30-04af-479a-926a-5e7044484171",
+    "name":"The big white three",
+    "description": "This is the tree that granny planted when she and grams god married", 
     "metadata":{
         "location":"Orvil’s farm", 
         "species":"Chestnut", 
@@ -263,7 +263,7 @@ strings e.g. {{ 'string 1' ~ 'string 2' }} wich can also be used the source data
 
 ```json
 {
-    "color": '{{ "The color is " ~ source.color }}'
+    "color": "{{ \"The color is \" ~ source.color }}"
 }
 ```
 
@@ -271,7 +271,7 @@ The same can hower also be achieved with [string interpolation](https://twig.sym
 
 ```json
 {
-    "color": '{{ "The color is {source.color}" }}'
+    "color": "{{ \"The color is {source.color}\" }}"
 }
 ```
 
@@ -281,7 +281,7 @@ Another usesfull twig take is the if statement. This can be used both to check i
 
 ```json
 {
-    "color": '{% if source.color %} source.color {{ else }} unknown {{ endif }} }}'
+    "color": "{% if source.color %} source.color {{ else }} unknown {{ endif }} }}"
 }
 ```
 
@@ -289,7 +289,7 @@ Or to check for specific values
 
 ```json
 {
-    "color": '{% if source.color == "violet" %} pink {{ endif }} }}'
+    "color": "{% if source.color == \"violet\" %} pink {{ endif }} }}"
 }
 ```
 
@@ -300,8 +300,8 @@ E.g
 
 ```json
 {
-  “color|”: '{{ source.color }}',
-  “metadata.color|”: '{{ source.color }}'
+    "color|": "{{ source.color }}",
+    "metadata.color|": "{{ source.color }}"
 }
 ```
 
@@ -330,7 +330,7 @@ Example a mapping of
 ```json
 {
   ..
-  “metadata.hasFruit”: 'Yes|bool',
+    "metadata.hasFruit": "Yes|bool",
   ..
 }
 ```
@@ -339,9 +339,9 @@ Would result in
 ```json
 {
   ...
-  “metadata”:{
-    ...
-    “hasFruit”:true
+    "metadata":{
+      ...
+      "hasFruit":true
   }
 }
 ```
@@ -355,7 +355,7 @@ Original object
 
 ```json
 {
-  “color”:”brown”
+    "color":"brown"
 }
 ```
 
@@ -363,14 +363,14 @@ With mapping
 
 ```json
 {
-  “color”:”{{source.color|trans({},"colors") }}
+    "color":"{{source.color|trans({},\"colors\") }}"
 }
 ```
 gives us (on locale nl)
 
 ```json
 {
-  “color”:”bruin”
+    "color":"bruin"
 }
 ```
 
@@ -378,7 +378,7 @@ If we would like to force german (even if the requester asked for a difrend lang
 
 ```json
 {
-  “color”:”{{source.color|trans({},"colors"."de") }}
+    "color":"{{source.color|trans({},\"colors\".\"de\") }}" 
 }
 ```
 
@@ -386,7 +386,7 @@ And get
 
 ```json
 {
-  “color”:”braun”
+    "color":"braun"
 }
 ```
 
@@ -398,7 +398,7 @@ Original object
 
 ```json
 {
-  “name”:”The big old three”
+    "name":"The big old three"
 }
 ```
 
@@ -406,9 +406,9 @@ With mapping
 
 ```json
 {
-  “naam”:”{{source.name }}”,	
-  “_drop”:[
-    “name”
+    "naam":"{{source.name }}",
+  "_drop":[
+      "name"
   ]
 }
 ```
@@ -416,7 +416,7 @@ gives us
 
 ```json
 {
-  “naam”:”The big old three”
+    "naam":"The big old three"
 }
 ```
 
