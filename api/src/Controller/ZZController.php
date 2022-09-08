@@ -35,6 +35,7 @@ class ZZController extends AbstractController
         ProcessingLogService $processingLogService,
         DataService $dataService
     ): Response {
+        $dataService->clearCallData();
         // Below is hacky tacky
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
@@ -108,9 +109,9 @@ class ZZController extends AbstractController
                 $response = new Response(
                     $serializer->serialize(['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']], $acceptType),
                     $options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR,
-//                    ['content-type' => $this->acceptHeaderToSerialiazation[array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]]
+//                    ['content-type' => $this->dataService->acceptHeaderToSerialization[array_search($acceptType, $dataService->acceptHeaderToSerialiazation)]]
                     //todo: should be ^ for taalhuizen we need accept = application/json to result in content-type = application/json
-                    ['content-type' => array_search($acceptType, $handlerService->acceptHeaderToSerialiazation)]
+                    ['content-type' => array_search($acceptType, $dataService->acceptHeaderToSerialization)]
                 );
                 // Catch NotEncodableValueException from symfony serializer
             } catch (NotEncodableValueException $e) {
@@ -122,6 +123,7 @@ class ZZController extends AbstractController
             }
             $logService->saveLog($request, $response, 10);
             $processingLogService->saveProcessingLog();
+            $dataService->clearCallData();
 
             return $response->prepare($request);
         }

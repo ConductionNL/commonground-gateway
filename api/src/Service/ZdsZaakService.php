@@ -17,7 +17,7 @@ class ZdsZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
-    private ObjectEntityService $objectEntityService;
+    private DataService $dataService;
     private array $configuration;
     private array $data;
     private array $usedValues = [];
@@ -25,16 +25,15 @@ class ZdsZaakService
     /**
      * @param EntityManagerInterface $entityManager
      * @param SynchronizationService $synchronizationService
-     * @param ObjectEntityService $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService $objectEntityService
+        DataService $dataService
     ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
-        $this->objectEntityService = $objectEntityService;
+        $this->dataService = $dataService;
     }
 
     /**
@@ -76,19 +75,23 @@ class ZdsZaakService
 
         // Let get the zaaktype
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if(!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity){
+        if(!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity){
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
+        var_dump($zaakTypeObjectEntity->getId()->toString());
+        var_dump($zaakTypeIdentificatie);
+
         // @todo change the data with the zaaktype and identification.
 
-//        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
-//
-//        $zdsArray = $zds->toArray();
-//        $zdsArray['object']['zgw'] = [
-//            'zaaktype' => $zaakTypeObjectEntity,
-//            'identificatie' => $zaakTypeIdentificatie,
-//        ];
+        $this->data['request']['object']['zgw'] = [
+            'zaaktype' => $zaakTypeObjectEntity,
+            'identificatie' => $zaakTypeIdentificatie,
+        ];
+
+
+        $this->dataService->setData($this->data);
+
 
         return $this->data;
     }
@@ -107,6 +110,7 @@ class ZdsZaakService
      */
     public function zdsToZGWHandler(array $data, array $configuration): array
     {
+        var_dump('zdsToZGWHandler');
         $this->configuration = $configuration;
         $this->data = $data;
 
@@ -114,23 +118,31 @@ class ZdsZaakService
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
 
 
-        // @todo remove the check for identification and zaaktype if the dataService is implemented
-        // @todo get in the zds object the values of the properties casetype and identification and store this in the case
-        $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
-        if(!$zaakTypeIdentificatie){
-            throw new ErrorException('The identificatie is not found');
-        }
-
-        // Let get the zaaktype
-        $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if(!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity){
-            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
-        }
+//        // @todo remove the check for identification and zaaktype if the dataService is implemented
+//        // @todo get in the zds object the values of the properties casetype and identification and store this in the case
+//        $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
+//        if(!$zaakTypeIdentificatie){
+//            throw new ErrorException('The identificatie is not found');
+//        }
+//
+//        // Let get the zaaktype
+//        $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
+//        if(!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity){
+//            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
+//        }
 
 //        $zgwZaakTypeEigenschappen = $zgwZaaktype->getValue('eigenschappen');
 
         $zdsObjectId = $zds->getValue('object')->getStringValue();
         $zdsObject = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsObjectId);
+
+        $zdsZgwId = $zdsObject->getValue('zgw')->getStringValue();
+        $zdsZgw = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsZgwId);
+
+        $zdsZaaktypeId = $zdsZgw->getValue('zaaktype')->getStringValue();
+        $zdsZaaktype = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsZaaktypeId);
+
+        var_dump($zdsZgw->getValue('identificatie')->getStringValue());
 
         // so far so good (need error handling doh)
         $zaak = New ObjectEntity();
@@ -143,7 +155,12 @@ class ZdsZaakService
         $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum')->getStringValue());
         $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie')->getStringValue());
         $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum')->getStringValue());
-        $zaak->setValue('zaaktype', $zaakTypeObjectEntity);
+
+        $zaak->setValue('zaaktype', $zdsZaaktype);
+        $zaak->setValue('identificatie', $zdsZgw->getValue('identificatie')->getStringValue());
+
+        // @todo option 2 zaaktype
+//        $zaak->setValue('zaaktype', $zaakTypeObjectEntity);
 
 //        $zaakEigenschappen = [];
 //        foreach($zds->getValue('extaElements') as $key => $value){
