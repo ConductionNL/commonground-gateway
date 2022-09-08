@@ -274,7 +274,7 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
     person_organization:
-        name: addresses
+        name: organization
         description: organization of this person
         type: object
         entity: "@person"
