@@ -14,6 +14,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Security;
 
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 /**
  * The data service aims at providing an acces layer to request, session and user information tha can be accesed and changed from differend contexts e.g. actionHandels, Events etc
  */
@@ -29,12 +33,14 @@ class DataService
     private Entity $entity;
     private ObjectEntity $object;
     private ObjectEntityService $datalayer;
+    private Environment $twig;
 
     public function __construct(
         SessionInterface $session,
         RequestStack $requestStack,
         Security $security,
-        ObjectEntityService $datalayer)
+        ObjectEntityService $datalayer,
+        Environment $twig)
     {
         $this->session = $session;
         $this->request = $requestStack->getCurrentRequest();
@@ -42,6 +48,7 @@ class DataService
         $this->user = $this->security->getUser();
         $this->faker = \Faker\Factory::create();
         $this->datalayer = $datalayer;
+        $this->twig = $twig;
     }
 
     /*

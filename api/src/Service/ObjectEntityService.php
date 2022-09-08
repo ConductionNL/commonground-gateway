@@ -38,6 +38,7 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Stopwatch\Stopwatch;
+use Twig\Environment;
 
 class ObjectEntityService
 {
@@ -57,6 +58,7 @@ class ObjectEntityService
     private ConvertToGatewayService $convertToGatewayService;
     private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
+    private Environment $twig;
 
     // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     private TranslationService $translationService;
@@ -77,7 +79,8 @@ class ObjectEntityService
         GatewayService $gatewayService,
         TranslationService $translationService,
         LogService $logService,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        Environment $twig
     ) {
         $this->security = $security;
         $this->request = $requestStack->getCurrentRequest() ?: new Request();
@@ -97,6 +100,7 @@ class ObjectEntityService
         $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus, $translationService);
         $this->notifications = [];
         $this->eventDispatcher = $eventDispatcher;
+        $this->twig = $twig;
     }
 
     /**
@@ -714,7 +718,7 @@ class ObjectEntityService
                 if ($attribute->getDefaultValue()) {
                     // todo: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string
                     // DefaultValue can be a uuid string to connect an object...
-                    $objectEntity = $this->saveAttribute($objectEntity, $attribute, $attribute->getDefaultValue());
+                    $objectEntity = $this->saveAttribute($objectEntity, $attribute, $this->twig->createTemplate($attribute->getDefaultValue())->render());
                 } else {
                     // If no value is given when creating a new object, make sure we set a value to null for this attribute.
                     $objectEntity->getValueByAttribute($attribute)->setValue(null);

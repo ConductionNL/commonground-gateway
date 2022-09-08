@@ -5,14 +5,18 @@ namespace App\Service;
 use DateTime;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Twig\Environment;
+
 
 class TranslationService
 {
     private SessionInterface $sessionInterface;
+    private Environment $twig;
 
-    public function __construct(SessionInterface $sessionInterface)
+    public function __construct(SessionInterface $sessionInterface,Environment $twig)
     {
         $this->sessionInterface = $sessionInterface;
+        $this->twig = $twig;
     }
 
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array
@@ -36,8 +40,39 @@ class TranslationService
     }
 
     /**
+     * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation and twig
+     *
+     * @param array $destination the array that the values are inserted into
+     * @param array $source      the array that the values are taken from
+     * @param array $mapping     the array that determines how the mapping takes place
+     *
+     * @return array
+     */
+    public function twigHydrator(array $destination, array $source, array $mapping): array
+    {
+        // We are using dot notation for array's so lets make sure we do not intefene on the . part
+        $destination = $this->encodeArrayKeys($destination, '.', '&#2E');
+
+        // Lets turn  destination into a dat array
+        $destination = new \Adbar\Dot($destination);
+
+        // Lets use the mapping to hydrate the array
+        foreach ($mapping as $key => $value) {
+            $destination[$key] = $this->twig->createTemplate($value)->render(['source'=>$source]);
+        }
+
+        // Let turn the dot array back into an array
+        $destination = $destination->all();
+        $destination = $this->encodeArrayKeys($destination, '&#2E', '.');
+
+        return $destination;
+    }
+
+    /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
      *
+     * @deprecated
+     * @depredated
      * @param array $destination the array that the values are inserted into
      * @param array $source      the array that the values are taken from
      * @param array $mapping     the array that determines how the mapping takes place
@@ -70,6 +105,7 @@ class TranslationService
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
+
             if (strpos($search, '|')) {
                 $searches = explode('|', $search);
                 $search = trim($searches[0]);
@@ -127,10 +163,14 @@ class TranslationService
     }
 
     /**
+     * this functions has been removed in favor of the new dataservice
+     *
      * Creates a list of replacebale variables for use in translations.
      *
      * With a litle help from https://github.com/FakerPHP/Faker
      *
+     * @deprecated
+     * @depredated
      * @return array
      */
     public function generalVariables(): array
@@ -154,10 +194,14 @@ class TranslationService
     }
 
     /**
+     * this functions has been removed in favor of the new dataservice
+     *
      * Creates a list of replacebale variables for use in translations.
      *
      * With a litle help from https://github.com/FakerPHP/Faker
      *
+     * @deprecated
+     * @depredated
      * @return array
      */
     public function translationVariables(array $variables = []): array
