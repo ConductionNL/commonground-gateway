@@ -1143,8 +1143,8 @@ class ObjectEntityService
      * So, if the inversedBy value has already one or more other objects connected to it, disconnect all these objects, so we can add $objectEntity as the only relation after using this function.
      *
      * @param ObjectEntity $objectEntity The 'parent' objectEntity of $attribute we might want to add as a inversedBy relation to $subObject.
-     * @param Attribute $attribute The attribute we are going to check inversedBy on and get its value if it has a inversedBy attribute/value.
-     * @param ObjectEntity $subObject The 'child' objectEntity we want to add to the Value of the $attribute of $objectEntity.
+     * @param Attribute    $attribute    The attribute we are going to check inversedBy on and get its value if it has a inversedBy attribute/value.
+     * @param ObjectEntity $subObject    The 'child' objectEntity we want to add to the Value of the $attribute of $objectEntity.
      *
      * @return void
      */
