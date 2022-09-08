@@ -187,11 +187,11 @@ class ResponseService
         if ($level > 3) {
             if ($acceptType === 'jsonld') {
                 return [
-                    '@id' => $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
+                    '@id' => $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
                 ];
             }
 
-            return $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+            return $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         }
 
         // todo: do we still want to do this if we have BL for syncing objects?
@@ -308,7 +308,7 @@ class ResponseService
      */
     private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
-        $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@id'] = $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
@@ -358,7 +358,7 @@ class ResponseService
      */
     private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
-        $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['_metadata'] = [
             '_type'         => ucfirst($result->getEntity()->getName()),
             '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
@@ -416,7 +416,7 @@ class ResponseService
         $this->addToMetadata(
             $metadata,
             'self',
-            $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId()
+            $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId()
         );
         $this->addToMetadata($metadata, 'type', ucfirst($result->getEntity()->getName()));
         $this->addToMetadata($metadata, 'context', '/contexts/'.ucfirst($result->getEntity()->getName()));
@@ -628,8 +628,8 @@ class ResponseService
     private function renderObjectReferences(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
     {
         $objects = $valueObject->getValue();
-        if (!is_array($objects)) {
-            $response[$attribute->getName()] = null;
+        if (!is_countable($objects)) {
+            $response[$attribute->getName()] = [];
 
             return;
         }
@@ -648,7 +648,7 @@ class ResponseService
      */
     private function renderObjectSelf(ObjectEntity $object, string $acceptType)
     {
-        $objectSelf = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+        $objectSelf = $object->getSelf() ?? '/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
         // todo: if we add more different acceptTypes to this list, use a switch:
         if ($acceptType === 'jsonld') {
             return ['@id' => $objectSelf];
@@ -701,7 +701,7 @@ class ResponseService
 
         if ($value->getValue() == null) {
             return [
-                'renderObjectsObjectsArray' => null,
+                'renderObjectsObjectsArray' => $attribute->getMultiple() ? [] : null,
                 'renderObjectsEmbedded'     => $embedded,
             ];
         }
