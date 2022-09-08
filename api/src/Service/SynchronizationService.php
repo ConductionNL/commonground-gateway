@@ -716,8 +716,9 @@ class SynchronizationService
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
         $object = $synchronization->getObject();
+        $objectArray = $object->toArray();
 
-        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
+//        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
         // todo: allowedPropertiesOut, notAllowedPropertiesOut
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
@@ -732,12 +733,29 @@ class SynchronizationService
             }, ARRAY_FILTER_USE_KEY);
         }
 
-        // todo: make this line of code a function with if else so this code fits on my screen and is actually readable:
-        $objectArray = isset($this->configuration['apiSource']['mappingOut']) ? $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonOut']) ? array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']) : $objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']) : $objectArray;
-        $objectArray = isset($this->configuration['apiSource']['translationsOut']) ? $this->translate($objectArray, true) : $objectArray;
-        $objectArray = isset($this->configuration['apiSource']['unavailablePropertiesOut']) ? $this->clearUnavailableProperties($objectArray) : $objectArray;
-        $objectArray = isset($this->configuration['apiSource']['prefixFieldsOut']) ? $this->addPrefixes($objectArray) : $objectArray;
-        $objectArray = isset($this->configuration['apiSource']['clearNull']) && $this->configuration['apiSource']['clearNull'] ? $this->clearNull($objectArray) : $objectArray;
+        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
+        }
+
+        if (array_key_exists('translationsOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translate($objectArray, true);
+        }
+
+        if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->clearUnavailableProperties($objectArray);
+        }
+
+        if (array_key_exists('prefixFieldsOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->addPrefixes($objectArray);
+        }
+
+        if (array_key_exists('clearNull', $this->configuration['apiSource']) && $this->configuration['apiSource']['clearNull']) {
+            $objectArray = $this->clearNull($objectArray);
+        }
 
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway());
 
@@ -773,11 +791,12 @@ class SynchronizationService
      * Synchronises data from an external source to the internal database of the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object to update
-     * @param array           $sourceObject    The external object to synchronise from
-     *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @param array $sourceObject The external object to synchronise from
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     * @throws Exception
+     *
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      */
     private function syncToGateway(Synchronization $synchronization, array $sourceObject): Synchronization
     {

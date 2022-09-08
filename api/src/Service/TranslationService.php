@@ -27,9 +27,9 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
-            if ($value === [] && $newKey != 'results') {
-                unset($result[$newKey]);
-            }
+//            if ($value === [] && $newKey != 'results') {
+//                unset($result[$newKey]);
+//            }
         }
 
         return $result;

@@ -14,6 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -170,6 +171,7 @@ class ObjectEntity
     private Collection $recursionStack;
 
     /**
+     * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
@@ -539,7 +541,7 @@ class ObjectEntity
     }
 
     /**
-     * Gets a value based on the attribute string name or atribute object
+     * Gets a value based on the attribute string name or attribute object
      *
      * @param string|Attribute $attribute
      * @return Value
@@ -549,24 +551,21 @@ class ObjectEntity
         if(is_string($attribute)){
             $attribute = $this->getEntity()->getAttributeByName($attribute);
         }
-        $value = $this->getValueByAttribute($attribute);
 
-        return $value;
+        return $this->getValueByAttribute($attribute);
     }
 
     /**
      * Sets a value based on the attribute string name or atribute object
      *
      * @param string|Attribute $attribute
-     * @return ObjectEntity
+     * @return false|Value
+     * @throws Exception
      */
-    public function setValue($attribute, $value): ObjectEntity
+    public function setValue($attribute, $value)
     {
-        $this->getValue($attribute);
 
-        $value->setValue($value);
-
-        return $this;
+        return $this->getValue($attribute)->setValue($value);
     }
 
     /**
@@ -574,6 +573,7 @@ class ObjectEntity
      *
      * @param array $array
      * @return ObjectEntity
+     * @throws Exception
      */
     public function hydrate(array $array): ObjectEntity
     {
