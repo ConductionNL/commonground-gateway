@@ -39,26 +39,6 @@ class HandlerService
     private EventDispatcherInterface $eventDispatcher;
     private DataService $dataService;
 
-    // This list is used to map content-types to extentions, these are then used for serializations and downloads
-    // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-    public $acceptHeaderToSerialiazation = [
-        'application/json'                                                                                     => 'json',
-        'application/ld+json'                                                                                  => 'jsonld',
-        'application/json+ld'                                                                                  => 'jsonld',
-        'application/hal+json'                                                                                 => 'jsonhal',
-        'application/json+hal'                                                                                 => 'jsonhal',
-        'application/xml'                                                                                      => 'xml',
-        'text/xml'                                                                                             => 'xml',
-        'text/xml; charset=utf-8'                                                                              => 'xml',
-        'text/csv'                                                                                             => 'csv',
-        'text/yaml'                                                                                            => 'yaml',
-        'text/html'                                                                                            => 'html',
-        'application/pdf'                                                                                      => 'pdf',
-        'application/msword'                                                                                   => 'doc',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
-        'application/form.io'                                                                                  => 'form.io',
-    ];
-
     public function __construct(
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
@@ -235,7 +215,7 @@ class HandlerService
         $this->getMethodOverrides($method, $operationType, $handler);
 
         // Form.io components array
-        // if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+        // if ($method === 'GET' && $this->dataService->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
         //   return new Response(
         //     $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity()), 'json'),
         //     Response::HTTP_OK,
@@ -260,14 +240,14 @@ class HandlerService
 
         // eav new way
         // dont get collection if accept type is formio
-        if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
+        if (($this->dataService->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->dataService->getRequestType('accept') !== 'form.io') {
             $this->stopwatch->start('handleObject', 'handleHandler');
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->dataService->getRequestType('accept'));
             $this->stopwatch->stop('handleObject');
         }
 
         // Form.io components array
-        if ($method === 'GET' && $this->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
+        if ($method === 'GET' && $this->dataService->getRequestType('accept') === 'form.io' && $handler->getEntity() && $handler->getEntity()->getAttributes()) {
             return new Response(
                 $this->serializer->serialize($this->formIOService->createFormIOArray($handler->getEntity(), $data ?? null), 'json'),
                 Response::HTTP_OK,
@@ -355,7 +335,7 @@ class HandlerService
     }
 
         $this->stopwatch->start('getRequestType', 'createResponse');
-        $acceptType = $this->getRequestType('accept', $endpoint);
+        $acceptType = $this->dataService->getRequestType('accept', $endpoint);
         $this->stopwatch->stop('getRequestType');
 
         // Lets fill in some options
@@ -430,46 +410,6 @@ class HandlerService
         $this->stopwatch->stop('prepareResponse');
 
         return $response;
-    }
-
-    /**
-     * Validates content or accept type from request.
-     *
-     * @param string $type 'content-type' or 'accept'
-     *
-     * @return string Accept or content-type
-     */
-    public function getRequestType(string $type, ?Endpoint $endpoint = null): string
-    {
-        // Lets grap the route parameters
-        $routeParameters = $this->request->attributes->get('_route_params');
-
-        // If we have an extension and the extension is a valid serialization format we will use that
-        if ($type == 'content-type' && array_key_exists('extension', $routeParameters)) {
-            if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialiazation)) {
-                return $routeParameters['extension'];
-            } else {
-                throw new GatewayException('invalid extension requested', null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
-            }
-        }
-
-        // Lets pick the first accaptable content type that we support
-        $typeValue = $this->request->headers->get($type);
-        if ((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
-            $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
-        } else {
-            (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
-        }
-        //todo: temp fix for taalhuizen, should be removed after front-end changes
-        if ($typeValue == 'text/plain;charset=UTF-8') {
-            return 'json';
-        }
-        if (array_key_exists($typeValue, $this->acceptHeaderToSerialiazation)) {
-            return $this->acceptHeaderToSerialiazation[$typeValue];
-        }
-
-        // If we end up here we are dealing with an unsupported content type
-        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
     }
 
     /**

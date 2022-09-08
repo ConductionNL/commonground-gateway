@@ -33,9 +33,8 @@ class DataService
     private Entity $entity;
     private ObjectEntity $object;
     private ObjectEntityService $datalayer;
-    private HandlerService $handlerService;
 
-    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer, HandlerService $handlerService)
+    public function __construct(SessionInterface $session, RequestStack $requestStack, Security $security, ObjectEntityService $datalayer)
     {
         $this->session = $session;
         $this->request = $requestStack->getCurrentRequest();
@@ -43,8 +42,27 @@ class DataService
         $this->user = $this->security->getUser();
         $this->faker = \Faker\Factory::create();
         $this->datalayer = $datalayer;
-        $this->handlerService = $handlerService;
     }
+
+    // This list is used to map content-types to extentions, these are then used for serializations and downloads
+    // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    public array $acceptHeaderToSerialization = [
+        'application/json'                                                                                     => 'json',
+        'application/ld+json'                                                                                  => 'jsonld',
+        'application/json+ld'                                                                                  => 'jsonld',
+        'application/hal+json'                                                                                 => 'jsonhal',
+        'application/json+hal'                                                                                 => 'jsonhal',
+        'application/xml'                                                                                      => 'xml',
+        'text/xml'                                                                                             => 'xml',
+        'text/xml; charset=utf-8'                                                                              => 'xml',
+        'text/csv'                                                                                             => 'csv',
+        'text/yaml'                                                                                            => 'yaml',
+        'text/html'                                                                                            => 'html',
+        'application/pdf'                                                                                      => 'pdf',
+        'application/msword'                                                                                   => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'                              => 'docx',
+        'application/form.io'                                                                                  => 'form.io',
+    ];
 
     /**
      * This function should be called on the start and end of a call to remove any call specific data from the session
@@ -56,6 +74,47 @@ class DataService
         $this->session->remove('handler');
         $this->session->remove('entity');
         $this->session->remove('object');
+    }
+
+    /**
+     * Validates content or accept type from request.
+     *
+     * @param string $type 'content-type' or 'accept'
+     *
+     * @return string Accept or content-type
+     * @throws GatewayException
+     */
+    public function getRequestType(string $type, ?Endpoint $endpoint = null): string
+    {
+        // Lets grap the route parameters
+        $routeParameters = $this->request->attributes->get('_route_params');
+
+        // If we have an extension and the extension is a valid serialization format we will use that
+        if ($type == 'content-type' && array_key_exists('extension', $routeParameters)) {
+            if (in_array($routeParameters['extension'], $this->acceptHeaderToSerialization)) {
+                return $routeParameters['extension'];
+            } else {
+                throw new GatewayException('invalid extension requested', null, null, ['data' => $routeParameters['extension'], 'path' => null, 'responseType' => Response::HTTP_BAD_REQUEST]);
+            }
+        }
+
+        // Lets pick the first accaptable content type that we support
+        $typeValue = $this->request->headers->get($type);
+        if ((!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && isset($endpoint)) {
+            $typeValue = $endpoint->getDefaultContentType() ?: 'application/json';
+        } else {
+            (!isset($typeValue) || $typeValue === '*/*' || empty($typeValue)) && $typeValue = 'application/json';
+        }
+        //todo: temp fix for taalhuizen, should be removed after front-end changes
+        if ($typeValue == 'text/plain;charset=UTF-8') {
+            return 'json';
+        }
+        if (array_key_exists($typeValue, $this->acceptHeaderToSerialization)) {
+            return $this->acceptHeaderToSerialization[$typeValue];
+        }
+
+        // If we end up here we are dealing with an unsupported content type
+        throw new GatewayException('Unsupported content type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
     }
 
     /**
@@ -75,7 +134,7 @@ class DataService
         }
 
         $content = $this->request->getContent();
-        $contentType = $this->handlerService->getRequestType('content-type');
+        $contentType = $this->getRequestType('content-type');
 
         // let's transform the data from the request
         switch ($contentType) {

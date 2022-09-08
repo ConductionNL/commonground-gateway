@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Document;
 use App\Exception\GatewayException;
+use App\Service\DataService;
 use App\Service\DocumentService;
 use App\Service\HandlerService;
 use App\Service\LogService;
@@ -31,7 +32,8 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService
+        ProcessingLogService $processingLogService,
+        DataService $dataService
     ): Response {
         // Below is hacky tacky
         // @todo refactor
@@ -49,7 +51,7 @@ class ZZController extends AbstractController
         // End of hacky tacky
 
         // default acceptType for if we throw an error response.
-        $acceptType = $handlerService->getRequestType('accept');
+        $acceptType = $dataService->getRequestType('accept');
         in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
 
         // Get full path
@@ -100,7 +102,7 @@ class ZZController extends AbstractController
             return $result;
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
-            $acceptType = $handlerService->getRequestType('accept');
+            $acceptType = $dataService->getRequestType('accept');
 
             try {
                 $response = new Response(
