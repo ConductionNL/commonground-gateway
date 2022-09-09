@@ -529,6 +529,10 @@ gives us
 }
 ```
 
+### What if i can't map?
+Even with al the above options it might be posible that the obejcts that you are looking at are simply to differend to map. In that case the go to sollution is don't. If objects A and B are to differend just add both of them to datalayer and write a plugin to keep them in sync bassed on actions.
+
+
 ## API Documentation
 ad
 
