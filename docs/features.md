@@ -250,6 +250,9 @@ We would then end up wit a new object (after mapping) looking like
     }
 }
 ```
+
+Keep in mind that both dotnation and twig based mapping can be used to move value's around in an object. But performance wise a dotnotation is preffered when is can be used
+
 ### Dropping key’s
 Oke so that’s better but not exactly what we want. That’s because mapping alters the source object rather than replacing it. So we need to tell to mapping to drop tha data that we won’t need. We can do that under the “_drop” key. That accepts an array of dot notations to drop. Lets change the mapping to
 ```json
