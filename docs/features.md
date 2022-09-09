@@ -557,3 +557,20 @@ gjgh
 fgfhfgh
 ###Y AML
 sdfs
+
+## Plugins
+The gateway aims at providing al functionality for normal the normal integration and distribution of data trough pre made functionality that can be configured to your wishes. It is  however impossible to catch the world in coding an we don’t aim to do that.
+
+If  you require functionality for a specific project or integration that is simply not provided by the gateway you can ad it in the form of a plugin. A plugin is a separate bit of coding run within an gateway instance.
+### Setting up your plugin
+The gateway  runs on the symphony flex framework for bundles, as such al plugins should be valid symphony bundles. The gateway then discovers these bundles trough the publiccode standard (so a publiccode.yamml should be included in the plugin code) and the gateway loads these bunles trough ackagist (so they should be registerd there). Oke that a bit much to digest so lets take that stap by step.
+1.	**Setting up your plugin as a bundle ** This is surprisingly the easiest part, we provide a template bundle at the gateway gitub org. Simply hop over to [this]() repository and follow the instructions.
+2.	** Setting up your public code file ** Interestingly enough this is already included in the template repository you just used and included at root level. Take a moment to look into the publiccode file and see if you want to change any information.
+3.	** Registering to packagist ** Again this is easier then it sounds, head over to [packadgist.org]( https://packagist.org/packages/submit) login and submit  your freshly created repository.
+### Adding the functionality
+
+Now that your plugin is  ready to use its time to add functionality. Gateway plugins provide functionality by hooking into the gateway’s [event system]() and then performing specific action’s (like altering data or sending a mail).
+
+### Adding plugins to your gateway
+There are several options how you can add pluging to your gateway, depending on if you run your gateway locally, online or within a cloud.
+
