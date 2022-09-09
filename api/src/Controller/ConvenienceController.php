@@ -2,13 +2,21 @@
 
 namespace App\Controller;
 
+use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\CollectionEntity;
+use App\Event\ActionEvent;
+use App\Exception\GatewayException;
+use App\Service\HandlerService;
 use App\Service\OasParserService;
+use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeOldService;
+use App\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use JWadhams\JsonLogic;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,12 +32,18 @@ class ConvenienceController extends AbstractController
     private SerializerInterface $serializer;
     private ParseDataService $dataService;
     private PackagesService $packagesService;
+    private HandlerService $handlerService;
+    private ActionSubscriber $actionSubscriber;
+    private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $params,
         SerializerInterface $serializer,
-        ParseDataService $dataService
+        ParseDataService $dataService,
+        HandlerService $handlerService,
+        ActionSubscriber $actionSubscriber,
+        ObjectEntityService $objectEntityService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -37,6 +51,9 @@ class ConvenienceController extends AbstractController
         $this->publiccodeOldService = new PubliccodeOldService($entityManager, $params, $serializer);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
+        $this->handlerService = $handlerService;
+        $this->actionSubscriber = $actionSubscriber;
+        $this->objectEntityService = $objectEntityService;
     }
 
     /**
@@ -189,6 +206,39 @@ class ConvenienceController extends AbstractController
             $this->serializer->serialize(['endpoint' => $isValid === false ? $isValid : $crudEndpoint], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
+        );
+    }
+
+    /**
+     * This function runs an action
+     *
+     * @Route("/admin/run_action/{actionId}")
+     * @throws GatewayException
+     * @throws Exception
+     */
+    public function runAction(string $actionId): Response
+    {
+        $action = $this->entityManager->getRepository('App:Action')->find($actionId);
+
+        $contentType = $this->handlerService->getRequestType('content-type');
+        $data = $this->handlerService->getDataFromRequest();
+
+        $conditions = $action->getConditions();
+        $result = JsonLogic::apply($conditions, $data);
+
+        if ($result) {
+            $data = $this->actionSubscriber->runFunction($action, $data);
+
+            // throw events
+            foreach ($action->getThrows() as $throw) {
+                $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
+            }
+        }
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Action '.$action->getName()], $contentType),
+            Response::HTTP_OK,
+            ['content-type' => $contentType]
         );
     }
 
