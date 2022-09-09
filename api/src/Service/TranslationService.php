@@ -65,6 +65,11 @@ class TranslationService
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $key => $value) {
+            // lets handle non-twig mapping
+            if($destination->has($value)){
+                $destination[$key] =$destination->get($value);
+            }
+            // and then the twig mapping
             $destination[$key] = castValue($this->twig->createTemplate($value)->render(['source'=>$source]));
         }
 

@@ -45,39 +45,40 @@ The web gateway allows searching on any attribute that is marked as  ‘searchab
 
 ## Ordering results
 adas
+
 ## Pagination
 The web gateway supports two different approaches to pagination, allowing the developer choose what fits him best. When making a GET call to a collection endpoint e.g. `/pet` instead of `/pet/{petId}` the result will always be an array of objects in the results property of the response (do the array might consist of zero items).  Additionally a start(default 1), limit (default 25), page, pages and total property will be returned allowing you to slice the result any way you want. Basic slicing can be done using the start and limit properties, advanced slicing to the page end limit property (pagination). Lets assume that you have an collection containing a 125 result. A besic get would then get you something like 
 ```json
 {
-	“results”: .. ,#array containing 25 items
-	“total”:125
-	“start”:1,
-	“limit”:25,
-	“page”:1
-	“pages”:5
+    "results": .. ,#array containing 25 items
+    "total":125,
+    "start":1,
+    "limit":25,
+    "page":1,
+    "pages":5
 }
 ```
 
 Lets say that you are displaying the data in an table and want more results to start with so you set the limit to `?limit=100`, the expected result would then be
 ```json
 {
-	“results”: .. , #array containing 100 items
-	“total”:125
-	“start”:1,
-	“limit”:100,
-	“page”:1
-	“pages”:2
+    "results": .. , #array containing 100 items
+    "total":125,
+    "start":1,
+    "limit":100,
+    "page":1,
+    "pages":2
 }
 ```
 You can now provide pagination buttons to you user based directly on the pages property, lets say you make a button for each page and the user presses page 2 (or next) your following call will then be  `?limit=100&page=2` and the result 
 ```json
 {
-	“results”: .. , #array containing 25 items
-	“total”:125
-	“start”:101,
-	“limit”:100,
-	“page”:2
-	“pages”:2
+    "results": .. , #array containing 25 items
+    "total":125,
+    "start":101,
+    "limit":100,
+    "page":2,
+    "pages":2
 }
 ```
 Alternatively you could also query `?limit=100&start=101` for the same result
@@ -92,19 +93,19 @@ Generally speaking on underlying API will provide `endpoints` containing (collec
 An pet object looks something like this
 ```json
 {
-  "id": 0,
+  "id": "715d0656-55b3-481e-bacb-69eddabec373",
   "category": {
-    "id": 0,
+    "id": "715d0656-55b3-481e-bacb-69eddabec373",
     "name": "string"
   },
   "name": "doggie",
   "photoUrls": [
-    "string"
+    "https://images.app.goo.gl/SPSCpXWePUpMGh4MA"
   ],
   "tags": [
     {
-      "id": 0,
-      "name": "string"
+      "id": "715d0656-55b3-481e-bacb-69eddabec373",
+      "name": "Golden retriever"
     }
   ],
   "status": "available"
@@ -112,7 +113,6 @@ An pet object looks something like this
 ```
 
 So what does that mean for EAV mapping? Well simply put our objects become entities and our properties become attributes. So in this case we will have an entity called Pet that has the following attributes: ‘category’,’name’,’photoUrls’,’tags’ and ’status’/. Both entities and attributes can contain additional configuration, meaning the can do MORE than the original api object but never less. For example is the pet object requires you to provide a name for a pet (it does) you might chose to ignore that requirement on the name attribute but that will just cause the underlying api to throw an error any time you try to process a pet without a name. 
-
 
 
 ### Entity
@@ -153,9 +153,58 @@ A format defines a way an value should be formated, and is directly connected to
 Besides validations on type and string you can also use specific validations, these are contained in the validation array. Validation might be specific to certain types or formats e.g. minValue can only be applied values that can be turned into numeric value. And other validations might be of an more general nature e.g. required.
 
 ## Mapping
-Mapping is the process of changing the structure of an object. For example when an object is either send to or retrieved from an external source. This always follows in input -> mapping -> output model. Mapping is especially useful when source don’t match to the data model that you want to uses.
+Mapping is the process of changing the structure of an object. For example when an object is either send to or retrieved from an external source. This always follows in Output <- mapping <- Input model. Mapping is especially useful when source don’t match to the data model that you want to uses.
 
-The gateway follows a mapping model based on configuration in dot array’s that consist of twig (read a bit more about twig code here),  let take a look a simple mapping example. We haven an tree object in our datalayer  looking like
+The gateway performs mapping as a serrie of mapping rules, handled in order. Mapping rules are always writen in a To <- From
+
+### Simple mapping
+In its most simple form a mapping consists of changing the position of value within an object, this can be done with a simple To <- From order. Or in other words you describe the object you want using the object (or other data) you have
+
+So lets see a simple mapping rule, let say we have tree object like this
+```json
+{
+  "id":"0d671e30-04af-479a-926a-5e7044484171",
+  "name":"The big white three",
+  "description": "Chestnut", 
+  "location":"Orvil’s farm"
+}
+```
+
+And we come to the conclusion that we need to move the data in the `description` field to a `species` field in order to free up the description field for more generic data. Wich we than also want to fill. In short move a value to a new position and insert a new value in the old position. We can do that with the following to mapping rules.
+
+```json
+{
+    "species":"description",	
+    "description":"This is the tree that granny planted when she and grams god married",
+}
+```
+
+Wich wil give us 
+
+```json
+{
+  "id":"0d671e30-04af-479a-926a-5e7044484171",
+  "name":"The big white three",
+  "description": "This is the tree that granny planted when she and grams god married", 
+  "location":"Orvil’s farm", 
+  "species":"Chestnut"
+}
+```
+
+So what happend under the hood? And why is one value executed as a movement rule and the second as a string? Let take a look at the first rule
+
+```json
+{
+    "species":"description"	
+}
+```
+
+Rules are carried out as a `To <- From` pair. So in this case we are filling the `species` position with `description`. When interpeting what discription is the mapping service has two options. 
+- The value is iether a dot notation array pointing to a another position in the object (see dot notation), then the value is of that position is copied to the new position
+- The value is not a dot notation array to a another position in the object (see dot notation), then the value is renderd as a twig template 
+
+### Twig mapping
+Oke so what is this twig and how do we use it to transform or map out data?  let take a look a bit more complex mapping example. We haven an tree object in our datalayer  looking like
 ```json
 {
   "id":"0d671e30-04af-479a-926a-5e7044484171",
@@ -225,6 +274,9 @@ We now have an object that’s
   }
 }
 ```
+
+Note that droping keys is always the last action perfomed in the mapping procces.
+
 ### Adding key’s
 The mapping setup allows you to add key’s and values to objects simply by declaring them, lets look at the above example and assume that the county wants us to enter the primary color of the three. A value that we simply do not have in our object. But we assume al our threes to be brown.  We could then edit our mapping to
 
@@ -307,6 +359,60 @@ E.g
 
 At this moment in time it is not posible to build if/or/else cases with mappings. A single mapping rule is iether run or not
 
+### Working with array
+Its currently not possibe to re-map array (change the keys within an array) but you can map an array into its entirty into a key that expexcts an array by bypassing the twig handerl e.g.
+
+```json
+{
+    "metadata":{
+        "branches": [
+            {
+                "id":"475342cd-3551-4d55-aa4e-b734c1fda3f7",
+                "name":"One"
+                
+            },
+            {
+                "id":"18e9d8be-32e5-4bec-93f2-55d60444fc4e",
+                "name":"two"
+            },
+            {
+                "id":"3ba4f1be-be2e-4e1a-ae83-04fed18fdf29",
+                "name":"thre"
+            }
+        ]
+    }
+}
+```
+
+Under mapping 
+
+```json
+{
+  "roots": "metadata.branches",
+  "_drop": ["metadata.branches"]
+}
+```
+
+Would become
+```json
+{
+    "roots": [
+        {
+            "id":"475342cd-3551-4d55-aa4e-b734c1fda3f7",
+            "name":"One"
+            
+        },
+        {
+            "id":"18e9d8be-32e5-4bec-93f2-55d60444fc4e",
+            "name":"two"
+        },
+        {
+            "id":"3ba4f1be-be2e-4e1a-ae83-04fed18fdf29",
+            "name":"thre"
+        }
+    ]
+}
+```
 
 ### Forcing the type/format of values
 Due to twig rendering, the output of a mapping will always change al the values to string. For internal gateway travel this isn’t problematic as the datalayer will cast value’s to the appropriate outputs anyway. But when sending data to an external source it might be bothersome to have al your Booleans cast to string. Fortunately you can force the datatype of your values yourself by adding |[format] behind your mapping value e.g. |string or |integer. Be ware of what php functions are used to map cast these values and the the cast should be possible (or else an error wil be thrown).
@@ -419,6 +525,16 @@ gives us
     "naam":"The big old three"
 }
 ```
+
+## API Documentation
+ad
+
+
+## Translation table
+Translation tables are specific by subject, and contain translations from the gateway base language (default en) to otherlanguages by iso language code e.g. fr (france) or nl (dutch). Translations are loaded and cashed from both plugins files, gatway files and the transaltion table. 
+
+t
+
 
 ## API Documentation
 ad
