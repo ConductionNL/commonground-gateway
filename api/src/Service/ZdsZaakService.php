@@ -11,7 +11,6 @@ use ErrorException;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
-use Symfony\Component\HttpFoundation\Response;
 
 class ZdsZaakService
 {
@@ -62,7 +61,7 @@ class ZdsZaakService
      *
      * @throws ErrorException
      *
-     * @return array|Response The modified data of the call with the case type and identification
+     * @return array The modified data of the call with the case type and identification
      */
     public function zdsValidationHandler(array $data, array $configuration): array
     {
@@ -77,8 +76,9 @@ class ZdsZaakService
 
         // Let get the zaaktype
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if (!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity) {
-            return new Response(serialize(['message' => 'The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found']), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
+            // @todo fix error
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
         // @todo change the data with the zaaktype and identification.
@@ -105,7 +105,7 @@ class ZdsZaakService
      *
      * @throws ErrorException
      *
-     * @return array|Response The data from the call
+     * @return array The data from the call
      */
     public function zdsToZGWHandler(array $data, array $configuration): array
     {
@@ -119,13 +119,15 @@ class ZdsZaakService
         // @todo get in the zds object the values of the properties casetype and identification and store this in the case
         $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
         if (!$zaakTypeIdentificatie) {
-            return new Response(serialize(['message' => 'The identification of the zaaktype is not found']), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            // @todo fix error
+            throw new ErrorException('The identificatie is not found');
         }
 
         // Let get the zaaktype
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
         if (!$zaakTypeObjectEntity && !$zaakTypeObjectEntity instanceof ObjectEntity) {
-            return new Response(serialize(['message' => 'The zaaktype with identification: '.$zaakTypeIdentificatie.' can\'t be found']), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+            // @todo fix error
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
 //        $zgwZaakTypeEigenschappen = $zgwZaaktype->getValue('eigenschappen');
