@@ -2,9 +2,7 @@
 
 namespace App\Controller;
 
-use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\CollectionEntity;
-use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use App\Service\HandlerService;
 use App\Service\OasParserService;
@@ -210,9 +208,10 @@ class ConvenienceController extends AbstractController
     }
 
     /**
-     * This function runs an action
+     * This function runs an action.
      *
      * @Route("/admin/run_action/{actionId}")
+     *
      * @throws GatewayException
      * @throws Exception
      */
