@@ -569,8 +569,148 @@ The gateway  runs on the symphony flex framework for bundles, as such al plugins
 3.	** Registering to packagist ** Again this is easier then it sounds, head over to [packadgist.org]( https://packagist.org/packages/submit) login and submit  your freshly created repository.
 ### Adding the functionality
 
-Now that your plugin is  ready to use its time to add functionality. Gateway plugins provide functionality by hooking into the gateway’s [event system]() and then performing specific action’s (like altering data or sending a mail).
+Now that your plugin is  ready to use its time to add functionality. Gateway plugins provide functionality by hooking into the gateway’s [event system]() and then performing specific action’s (like altering data or sending a mail). They do this trough handlers, a handler is a bit of code that handles an event send by the event system. An example of this would be sending an email every time a object is stored in the [datalayer]().
+Each handler should be a php file containing a class. Implementing the ActionHandlerInterface and providing at least the functions.
+
+```php
+<?php
+
+namespace Acme\EmailBundle;
+
+use App\Exception\GatewayException;
+use App\Service\EmailService;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+
+class EmailHandler implements ActionHandlerInterface
+{
+    // Declare private functions
+    private EmailService $emailService;
+     
+    /**
+    * The constructor is a magic method that is called when the class is declared, it is genneraly used to get an service from the container inteface
+    *   
+    * @param ContainerInterface $container
+    */
+    public function __construct(ContainerInterface $container)
+    {
+        $emailService = $container->get('mailService');
+        if ($emailService instanceof EmailService) {
+            $this->emailService = $emailService;
+        } else {
+            throw new GatewayException('The service container does not contain the required services for this handler');
+        }
+    }
+    
+    /**
+     *  This function returns the event types that are suported by this handler
+     *
+     * @return array a list of event types
+     */
+    public function getEvents(): array
+    {
+	    return [];
+    }
+
+
+    /**
+     *  This function returns the configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @return array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+	    return [];
+    }
+    
+    /**
+     * This function runs the email service plugin.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
+     *
+     * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
+     *
+     * @return array
+     */
+    public function __run(array $data, array $configuration): array
+    {
+	    return $data;
+    }
+}
+```
+
+Oke so lets look at these functions one at a time 
+
+```php
+    /**
+    * The constructor is a magic method that is called when the class is declared, it is genneraly used to get an service from the container inteface
+    *   
+    * @param ContainerInterface $container
+    */
+    public function __construct(ContainerInterface $container)
+    {
+        $emailService = $container->get('mailService');
+        if ($emailService instanceof EmailService) {
+            $this->emailService = $emailService;
+        } else {
+            throw new GatewayException('The service container does not contain the required services for this handler');
+        }
+    }
+```
+
+Events
+```php
+    /**
+     *  This function returns the event types that are suported by this handler
+     *
+     * @throws array a list of event types
+     */
+    public function getEvents(): array
+    {
+	    return [];
+    }
+```
+
+Configuration
+```php
+    /**
+     *  This function returns the configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+	    return [];
+    }
+```
+
+Run
+```php
+    /**
+     * This function runs the email service plugin.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration of the action
+     *
+     * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
+     *
+     * @return array
+     */
+    public function __run(array $data, array $configuration): array
+    {
+        return $this->emailService->emailHandler($data, $configuration);
+    }
+```
 
 ### Adding plugins to your gateway
 There are several options how you can add pluging to your gateway, depending on if you run your gateway locally, online or within a cloud.
+1. Trough the commandline
+2. Through packadgelist
+3. Through fixtures
+4. Toruh Intreface
+1 T
 

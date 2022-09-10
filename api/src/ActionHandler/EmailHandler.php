@@ -25,9 +25,19 @@ class EmailHandler implements ActionHandlerInterface
     }
 
     /**
-     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
+     *  This function returns the event types that are suported by this handler
      *
-     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     * @return array a list of event types
+     */
+    public function getEvents(): array
+    {
+
+    }
+
+    /**
+     *  This function returns the configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @return array a [json-schema](https://json-schema.org/) that this  action should comply to
      */
     public function getConfiguration(): array
     {
