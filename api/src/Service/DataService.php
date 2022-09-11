@@ -272,14 +272,23 @@ class DataService
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation and twig
      *
-     * @param array $destination the array that the values are inserted into
-     * @param array $source      the array that the values are taken from
+     * @param array $source      the array that contains the data that is mapped
      * @param array $mapping     the array that determines how the mapping takes place
+     * @param bool $list         whether the mappable objects are contained in a list (isnstead of a single object)
      *
      * @return array
      */
-    public function twigHydrator(array $source, array $mapping): array
+    public function mapper(array $source, $mapping, bool $list = false): array
     {
+        // Lets first check if we are dealing with a list
+        if($list){
+            // We need to map object for object so....
+            foreach($list as $key => $value){
+                $list[$key] = $this->mapper($source, $mapping);
+            }
+            return $list;
+        }
+
         // We are using dot notation for array's so lets make sure we do not intefene on the . part
         $destination = $this->encodeArrayKeys($source, '.', '&#2E');
 
