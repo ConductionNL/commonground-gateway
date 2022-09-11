@@ -1,50 +1,50 @@
-# Features
-The web gateway is designed as an feature rich solution to quickly developing progressive web applications. 
-## Sources
-Sources form the beating heart of the gateway. A source represents an external API (be it either registered or microservice in nature) that might be exposed through the web gateway. Adding an API as a source WILL NOT cause that API to be exposed. API’s might be added manually our through discovery, discovery methods currently on the roadmap are NLX, Autorisatie Component and Generic Kubernetes services.
+#Features
+The web gateway is designed as a feature rich's solution to quickly developing progressive web applications.
+##Sources
+Sources form the beating heart of the gateway. A source represents an external API (be it either registered or microservice in nature) that might be exposed through the web gateway. Adding an API as a source WILL NOT cause that API to be exposed. API’s might be added manually or through discovery, discovery methods currently on the roadmap are NLX, Autorisatie Component and Generic Kubernetes services.
 
 Properties
 *name*:
-*description* 
-## Authentication
-The web gateway provides several out of the box authentication mechanisms that are aimed at lowering the dependency on external services. The include DigiD and ADFS and also come with local and online mock environments. Creating an easy and straightforward flow to setting up application focuses on governmental services. 
+*description*
+##Authentication
+The web gateway provides several out of the box authentication mechanisms that are aimed at lowering the dependency on external services. Includes DigiD and ADFS and also come with local and online mock environments. Creating an easy and straightforward flow to setting up application focuses on governmental services.
 
-## Authorisation
-The web gateway can either provide an authorisation scheme on its own or deffer to other components like ADFS or het user component. 
+##Authorisation
+The web gateway can either provide an authorisation scheme on its own or deffer to other components like ADFS or the user component.
 
-## Multi-application
-It is possible to split authorisation based on application profiles, providing basic framework for running multiple applications from the same gateway. 
+##Multi-application
+It is possible to split authorisation based on application profiles, providing a basic framework for running multiple applications from the same gateway.
 
-## Multi-tenancy
-The web gateway provides multi-tenancy by separating all the data it holds (both configuration and actual usage) along the lines of organizational id’s. This is hardcoded into a database query’s and thereby provides a save an fool proof way of running an  multi tenancy setop from an single installation. If you however prefer an seperation of databases on tenant base we advise you to use a multi-installation setup.
-## NL Design System Ready
-The wab gateway provides an ease (and inline scripting save) way of providing application with NL Design System token files based on the organisation that is currently served (see multy-tenency). This allows applications to easily implement NL Design by using nl Design tokens (a full list of which can be viewed here). The only actions an application need to take is to include the following line before loading other ccs files `/api/organisation/{id}/nl-design-tokens.css`. Keep in mind that from a security perspective the API needs to be provided from the same domain as the actual application.
+##Multi-tenancy
+The web gateway provides multi-tenancy by separating all the data it holds (both configuration and actual usage) along the lines of organizational id’s. This is hardcoded into a database query’s and thereby provides a save a full proof way of running a multi-tenancy setup from a single installation. If you however prefer a separation of databases on tenant base, we advise you to use a multi-installation setup.
+##NL Design System Ready
+The web gateway provides an ease (and inline scripting save) way of providing an application with NL Design System token files based on the organization that is currently served (see multi-tenancy). This allows applications to easily implement NL Design by using NL Design tokens (a full list of which can be viewed here). The only actions an application need to take is to include the following line before loading other CCS files `/api/organization/{id}/nl-design-tokens.css`. Keep in mind that from a security perspective the API needs to be provided from the same domain as the actual application.
 
 ## Haven ready
 ad
 
-## GDPR compliance and logging
-The web gateway support logging all data requests and there ‘doelbinding’ to a gdpr registry (or in case of ducth governmental agencies the vng doelbindings register), be aware do that activating this functionality can lead to double registrations in said registry if the receiving api is also already logging all requests. Therefore please check the documentation of the api you are connecting before activating this function 
+##GDPR compliance and logging
+The web gateway support logging all data requests and there ‘doelbinding’ to a gdpr registry (or in case of Dutch governmental agencies the VNG doelbindings register), be aware that activating this functionality can lead to double registrations in said registry if the receiving API is also already logging all requests. Therefore please check the documentation of the API you are connecting before activating this function
 
-##N otifications and event driven
-The web gateway can send notification on its own behalf when receiving and processing request (both on successful and unsuccessful results) and thereby trigger event driven applications (like a busnes engine), it can however also trigger events on the behalf of other api’s thereby providing event driven architecture to ecosystems that normally do not support such a scheme. In both cases the gateway requires an notification api to be present under its sources and configurations for the others sources or entities that should us this api.
+##Notifications and event driven
+The web gateway can send notification on its own behalf when receiving and processing request (both on successful and unsuccessful results) and thereby trigger event-driven applications (like a business engine), it can however also trigger events on the behalf of other API’s thereby providing event-driven architecture to ecosystems that normally do not support such a scheme. In both cases the gateway requires a notification API to be present under its sources and configurations for the others sources or entities that should use this API.
 
-## Smart cashing
-The web gateway relies on smart caching to quickly serve required data, it does this by taking active subscriptions on any resources that it cashes. E.g. when cashing a case from zgw it will take an notificatie subscription, any time the case is changed the web gateway will drop it from it cache and (if cache warmup is activated) replace it with a new copy). This simple process means that any api that supports the notificatie or berichten standaard will be served to the client lightning fast. It also allows the gateway to share cache between applications (do not organisations) to speed the proses up even more. 
+##Smart cashing
+The web gateway relies on smart caching to quickly serve required data, it does this by taking active subscriptions on any resources that it cashes. E.g. when cashing a case from zgw it will take a notificatie subscription, any time the case is changed the web gateway will drop it from it cache and (if cache warmup is activated) replace it with a new copy). This simple process means that any api that supports the notificatie or berichten standaard will be served to the client lightning fast. It also allows the gateway to share cache between applications (do not organisations) to speed the proses up even more.
 
-## Field limiting
-The web gateway supports limiting the returned data by use of the fields query parameter. When supplied the gateway wil only return the requested attributes (even if the entity contains more attributes) and wil only log the requested fields in the GDPR registry. Fields can be supplied as comma separated or in an array as in ?fields=field1,field2,field2 or ?fields[]=field1&fields[]=field2. When dealing with sub entities simply listing the attribute containing the entity will result in returning the complete entity when only specific fields are required then a dot notation array can be used to filter those e.g. ?fields[]field1.subfield1. Field limitation is only supported to a field depth of 5. 
+##Field limiting
+The web gateway supports limiting the returned data by use of the field's query parameter. When supplied, the gateway will only return the requested attributes (even if the entity contains more attributes) and will only log the requested fields in the GDPR registry. Fields can be supplied as comma separated or in an array as in ?fields=field1,field2,field2 or ?fields[]=field1&fields[]=field2. When dealing with sub entities simply listing the attribute containing the entity will result in returning the complete entity when only specific fields are required then a dot notation array can be used to filter those e.g. ?fields[]field1.subfield1. Field limitation is only supported to a field depth of 5.
 
-## Entity extension
-Occasionally you might encounter a linked data uri to a different api in a commonground registry (zgw api’s are notorious examples) if sufficient rights have been provided (the references api is a valid gateway source and the user/application combination has right to an entity matching the uri’s endpoint) you can use the gateway to include the linked data object in the result if though it where one result (keep in mind do that this provides worse performance than just setting up the attribute properly). To do this you can use the extend query parameters e.g. `?extend[]=field1` which can also be used on sub entities by using dot annotation eg.  `?extend[]=field1.subfield1`. The gateway will try to use smart cashing to quickly deliver the desired sub entity but this will require additional internal calls at best, or an external api call at the worst. Severely impacting performance.
-### Metadata extension
-In addition to the way we can extend objects as described above, there is also a way to use the extend query parameter to show more metadata about objects. This can be done by using `?extend[]=x-commongateway-metadata` and if you just want one or a few specific metadata fields you could also do the following: `?extend[]=x-commongateway-metadata.dateCreated&extend[]=x-commongateway-metadata.dateModified`. Please do note that using the Accept headers application/json+ld or application/json+hal will always result in a response with metadata included (except for the field dateRead).
+##Entity extension
+Occasionally you might encounter a linked data URI to a different API in a common ground registry (ZGW API’s are notorious examples) if sufficient rights have been provided (the references API is a valid gateway source and the user/application combination has right to an entity matching the URI’s endpoint) you can use the gateway to include the linked data object in the result if through it where one result (keep in mind do that this provides worse performance than just setting up the attribute properly). To do this you can use the extend query parameters e.g. `?extend=field1` which can also be used on sub entities by way’s od dot annotation eg.  `?extend=field1.subfield1`. The gateway will try to use smart cashing to quickly deliver the desired sub entity but this will require additional internal calls at best or an external API call at the worst. Severely impacting performance.
 
-## Smart search 
-The web gateway allows searching on any attribute that is marked as  ‘searchable’ even if the original API dosn’t allow for searching on that specific attribute or property. It also support the searching of sub entities by the way of dot annotation e.g. `?field1.subfield1=searchme. All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you to also use `?search=searchme` be aware tho that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string type attributes. 
+##Smart search
+The web gateway allows searching on any attribute that is marked as  ‘searchable’ even if the original API doesn’t allow for searching on that specific attribute or property. It also supports the searching of sub entities by the way of dot annotation e.g. `?field1.subfield1=searchme. All searchable fields of an endpoint are automatically collected for fuzzy search under the search query parameter allows you to also use `?search=searchme` be aware tho that this comes with a severe performance drain and that specific searches are almost always preferable. Wildcard search is only supported on string type attributes.
 
-## Ordering results
-adas
+##Data formats
+The web gateway defaults to the currently popular json data format, but supports other data formats out of the box, keep in mind that the data format determines how the data is presented to the consuming application. E.g it is possible to have the Gateway consume an json api but present its results as XML to a web application. The data format need to bes set on each call through the Accept header. The gateway currently supports the following Accept headers and corresponding formats.
+
+`text/csv`,`text/yaml`,`application/json`,`application/ld+json`, `application/json+ld`,`application/hal+json`,`application/json+hal`,`application/xml`
 
 ## Pagination
 The web gateway supports two different approaches to pagination, allowing the developer choose what fits him best. When making a GET call to a collection endpoint e.g. `/pet` instead of `/pet/{petId}` the result will always be an array of objects in the results property of the response (do the array might consist of zero items).  Additionally a start(default 1), limit (default 25), page, pages and total property will be returned allowing you to slice the result any way you want. Basic slicing can be done using the start and limit properties, advanced slicing to the page end limit property (pagination). Lets assume that you have an collection containing a 125 result. A besic get would then get you something like 
@@ -115,42 +115,188 @@ An pet object looks something like this
 So what does that mean for EAV mapping? Well simply put our objects become entities and our properties become attributes. So in this case we will have an entity called Pet that has the following attributes: ‘category’,’name’,’photoUrls’,’tags’ and ’status’/. Both entities and attributes can contain additional configuration, meaning the can do MORE than the original api object but never less. For example is the pet object requires you to provide a name for a pet (it does) you might chose to ignore that requirement on the name attribute but that will just cause the underlying api to throw an error any time you try to process a pet without a name. 
 
 
-### Entity
-Entities represent objects that you want to communicate to underlaying sources, to do this they require a source and an endpoint on that source to send the object to. You may however choose to ignore this. And just ‘store’ you objects with the gateway, do this might be a good way to mock api’s in development environments it isn’t recommended for production environments.
+###Entity
+Entities represent objects that you want to communicate to underlying sources, to do this they require and source and an endpoint on that source to send the object to. You may however choose to ignore this. And just ‘store’ your objects with the gateway, this might be a good way to mock API’s in development environments it isn’t recommended for production environments.
 
-#### Properties
+####Properties
 An entity consists of the following properties that can be configured
 
-*name*: ‘required’ An unique name for this entity
-*description*:  ‘optional’ The description for this entity that wil be shown in de API documentation
-*source*: ‘optional’ The source where this entity resides
-*endpoint*: ‘required if an source is provided’ The endpoint within the source that this entity should be posted to as an object
-*file*: ‘required’ Whethers this entity might contain file uploads, if present this should either be set to ‘no’,’yes’ or ‘multiple’. Where yes wil allow a single file to be uploaded through this entity and multiple wil allow multiple files to be uploaded through this entity. Read more under ‘Uploading files through the gateway’.
-*fileRequirements*: ‘required if file is either yes or multiple’ Read more under ‘Uploading files through the gateway’.
+| Property | Required | Description |
+|--------|-------------| -------------|
+|name| yes |An unique name for this entity|
+|description| no | The description for this entity that wil be shown in de API documentation|
+|source| no |The source where this entity resides|
+|endpoint| yes if an source is provided | The endpoint within the source that this entity should be posted to as an object|
+|route| no | The route this entity can be found easier, should be a path |
+|extend| no | Whether or not the properties of the original object are automatically included|
 
-### Attribute
-Attributes represent properties on objects that you want to communicatie to underlying sources. In a normal setup and attribute should at leas apply the same restrictions as the onderlying property (e.g. required) to prevent errors when pushing the entity to its source. It can however provide additional validations to an properte, for a example the source aiu might simply require the property ‘email’  to be an unique string but you could set the formt to ‘email’ causing the input to be validated as an iso compatible email adres. 
+
+###Attribute
+Attributes represent properties on objects that you want to communicate to underlying sources. In a normal setup and attribute should at leas apply the same restrictions as the underlying property (e.g. required) to prevent errors when pushing the entity to its source. It can however provide additional validations to a property, for example the source AIU might simply require the property ‘email’  to be a unique string, but you could set the form to ‘email’ causing the input to be validated as an ISO compatible email address.
 
 
-#### Properties
-*name*: ’required’  An name for this attribute MUST be unique on an entity level and MAY NOT be ‘id’,’file’,‘files’, ’search’,’fields’,’start’,’page’,’limit’,’extend’,’organization’
-*type*:  ’required’ See types
-*format*:  ’optional’ See formats
+####Properties
 
-#### Types
-The type of an attribute provides basic validations and an way for the gateway to store and cahse values in an efficient manner. Types are derived from the OAS3 specification. Currently available types are:
+| Property | Required | Description |
+|--------|-------------| -------------|
+|name| yes  |`string` An name for this attribute. MUST be unique on an entity level and MAY NOT be ‘id’,’file’,‘files’, ’search’,’fields’,’start’,’page’,’limit’,’extend’ or ’organization’|
+|description| no | The description for this attribute  that wil be shown in de API documentation|
+|type|  yes |`string` See [types](#Types)|
+|format|  no |`string` See [formats](#Formats)|
+|validations|  no |`array of strings` See [validations](#Validations)|
+|multiple|  no |`boolean` if this attribute expects an array of the given type |
+|defaultValue|  no |`string` An default value for this value that will be used if a user doesn't supply a value|
+|deprecated|  no |`boolean`  Whether or not this property has been deprecated and wil be removed in the future|
+|required|  no |`boolean` whether or not this property is required to be in a POST or UPDATE|
+|requiredIf| no |`array` a nested set of validations that will cause this attribute to become required |
+|forbidden|  no |`boolean` whether or not this property is forbiden to be in a POST or UPDATE|
+|forbiddenIf| no |`array`  a nested set of validations that will cause this attribute to become forbidden|
+|example|  no |`string` An example of the value that should be supplied|
+|persistToSource|  no |`boolean` Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV)|
+|searchable|  no |`boolean` Whether or not this property is searchable|
+|cascade|  no |`boolean`  Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities)|
 
-*string*:
-*int*
-*date*
-*date-time*
+####Types
+The type of attribute provides basic validations and a way for the gateway to store and cash values in an efficient manner. Types are derived from the OAS3 specification. Current available types are:
 
-#### Formats
-A format defines a way an value should be formated, and is directly connected to an type, for example an string MAY BE an format of email, but an integer cannot be an valid email. Formats are derived from the OAS3 specification but supplemented with formats that are generally needed in governmental applications (like bsn) . Currently available formats are:
+| Format | Description |
+|--------|-------------|
+|string| a text |
+|integer| a full number without decimals|
+|decimal| a number including decimals|
+|boolean| a true/false |
+|date| an ISO-??? date |
+|date-time| an ISO-??? date |
+|array| an array or list of values|
+|object|Used to nest a Entity as atribute of antother Entity, read more about [nesting]()|
+|file|Used to handle file uploads, an Entity SHOULD only contain one atribute of the type file, read more about [handling file uploads]() |
 
-*bsn*:
-#### Validations
-Besides validations on type and string you can also use specific validations, these are contained in the validation array. Validation might be specific to certain types or formats e.g. minValue can only be applied values that can be turned into numeric value. And other validations might be of an more general nature e.g. required.
+* you are allowed to use integer instead of int, boolean instead of bool, date-time or dateTime instead of datetime,
+
+####Formats
+A format defines a way a value should be formatted, and is directly connected to a type, for example a string MAY BE a format of email, but an integer cannot be a valid email. Formats are derived from the OAS3 specification, but supplemented with formats that are generally needed in governmental applications (like BSN) . Current available formats are:
+
+
+General formats
+
+| Format | Type(s) | Description |
+|--------|---------|-------------|
+|alnum|         |Validates whether the input is alphanumeric or not. Alphanumeric is a combination of alphabetic and numeric characters|
+|alpha|         |Validates whether the input contains only alphabetic characters|
+|numeric|         |Validates whether the input contains only numeric characters|
+|uuid|string||
+|base| 	|Validate numbers in any base, even with non reqular bases.| 
+|base64|	| Validate if a string is Base64-encoded.|
+|countryCode|string|Validates whether the input is a country code in ISO 3166-1 standard.|
+|creditCard|string|Validates a credit card number.|
+|currencyCode|string|Validates an ISO 4217 currency code like GBP or EUR.|
+|digit|string|Validates whether the input contains only digits.|
+|directory|string|Validates if the given path is a directory.|
+|domain|string|Validates whether the input is a valid domain name or not.|
+|url|string|Validates whether the input is a valid url or not.|
+|email|string|Validates an email address.|
+|phone|string|Validates an phone number.|
+|fibonacci|integer|Validates whether the input follows the Fibonacci integer sequence.|
+|file|string|Validates whether file input is as a reqular filename.|
+|hexRgbColor|string|Validates whether the input is a hex RGB color or not.|
+|iban|string|Validates whether the input is a valid IBAN (International Bank Account Number) or not.|
+|imei|string|Validates if the input is a valid IMEI.|
+|ip|string|Validates whether the input is a valid IP address.|
+|isbn|string|Validates whether the input is a valid ISBN or not.|
+|json|string|Validates if the given input is a valid JSON.|
+|xml|string|Validates if the given input is a valid XML.|
+|languageCode|string|Validates whether the input is language code based on ISO 639.|
+|luhn|string|Validate whether a given input is a Luhn number.|
+|macAddress|string|Validates whether the input is a valid MAC address.|
+|nfeAccessKey|string|Validates the access key of the Brazilian electronic invoice (NFe).|
+
+* Phone numbers should ALWAY be treated as a string since they MAY contain a leading zero.
+
+*Country specific formats*
+
+| Format | Type(s) | Description |
+|--------|---------|-------------|
+|bsn|string|Dutch social security number (BSN)|
+|nip|string, integer|Polish VAT identification number (NIP)|
+|nif|string, integer|Spanish fiscal identification number (NIF)| 
+|cnh|string, integer|Brazilian driver’s licence|
+|cpf|string, integer| Validates a Brazillian CPF number |
+|cnpj|string, integer|Validates if the input is a Brazilian National Reqistry of Legal Entities (CNPJ) number | 
+
+* Dutch BSN numbers should ALWAY be treated as a string since they MAY contain a leading zero.
+
+
+####Validations
+Besides validations on type and string you can also use specific validations, these are contained in the validation array. Validation might be specific to certain types or formats e.g. minValue can only be applied values that can be turned into numeric value. And other validations might be of a more general nature e.g. required.
+
+
+
+| Validation | value | Description |
+|--------|---------|-------------|
+|between| |Validates whether the input is between two other values.|
+|boolType| |Validates whether the type of the input is boolean.|
+|boolVal| |Validates if the input results in a boolean value.|
+|call| |Validates the return of a [callable][] for a given input.|
+|callableType| |Validates whether the pseudo-type of the input is callable.|
+|callback| |Validates the input using the return of a given callable.|
+|charset| |Validates if a string is in a specific charset.|
+|alwaysInvalid| | Validates any input as invalid|
+|alwaysValid| | Validates any input as valid|
+|anyOf| | This is a group validator that acts as an OR operator. AnyOf returns true if at least one inner validator passes.|
+|arrayType| | Validates whether the type of an input is array|
+|arrayVal| |Validates if the input is an array or if the input can be used as an array (instance of ArrayAcces or SimpleXMLElement.|
+|attribute| | Validates an object attribute, even private ones.|
+|consonant| | Validates if the input contains only consonants.|
+|contains| | Validates if the input contains some value. |
+|containsAny| | Validates if the input contains at least one of defined values.|
+|control| | Validates if all of the characters in the provided string, are control characters. |
+|countable| | Validates if the input is countable, in other words, if you’re allowed to use count() funtion on it. |
+|decimal| | Validates whether the input matches the expected number or decimals.|
+|each| | Validates whether each value in the input is valid according to another rule.|
+|endsWith| | This validator is similar to Contains(), but validates only if the value is at the end of the input.|
+|equals| | Validates if the input is equal to some value.|
+|equivalent| | Validates if the input is equivalent to some value.|
+|even| |  Validates whether the input is an even number or not.|
+|executable| |Validates if a file is an executable.|
+|exists| | Validates files or directories.|
+|extension| | Validates if the file extension matches the expected one. This rule is case-sensitive.|
+|factor| | Validates if the input is a factor of the defined dividend.|
+|falseVal| | Validates if a value is considered as false.|
+|file| | Validates whether file input is as a reqular filename.|
+|image| | Validates if the file is a valid image by checking its MIME type.|
+|filterVar| | Validates the input with the PHP’s filter_var() function.|
+|finite| | Validates if the input is a firtine number.|
+|floatType| | Validates whether the type of the input is float.|
+|floatVal| |Validate whether the input value is float.|
+|graph| | Validates if all characters in the input are printable and actually creates visible output (no white space).|
+|greaterThen| | Validates whether the input is greater than a value.|
+|identical| | Validates if the input is identical to some value.|
+|in| | Validates if the input is contained in a specific haystack. |
+|infinite | | Validates if the input is an infinite number.|
+|instance| | Validates if the input is an instance of the given class or interface.|
+|iterableType| | Validates whether the pseudo-type of the input is iterable or not, in other words, if you're able to iterate over it with foreach language construct.|
+|key| | Validates an array key.|
+|keyNested| | Validates an array key or an object property using . to represent nested data.|
+|keySet| | Validates a keys in a defined structure.|
+|keyValue| | |
+|leapDate| |Validates if a date is leap.|
+|leapYear| |Validates if a year is leap.|
+|length| | |
+|lessThan| |Validates whether the input is less than a value.|
+|lowercase | |Validates whether the characters in the input are lowercase.|
+|not| | |
+|notBlank| |Validates if the given input is not a blank value (null, zeros, empty strings or empty arrays, recursively).|
+|notEmoji| |Validates if the input does not contain an emoji.|
+|no| |Validates if value is considered as “No”.|
+|noWhitespace| |Validates if a string contains no whitespace (spaces, tabs and line breaks).|
+|noneOf| |Validates if NONE of the given validators validate.|
+|max| |Validates whether the input is less than or equal to a value.|
+|maxAge| |Validates a maximum age for a given date. The $format argument should be in accordance to PHP's date() function.|
+|mimetype| |Validates if the input is a file and if its MIME type matches the expected one.|
+|min| |Validates whether the input is greater than or equal to a value.|
+|minAge| |Validates a minimum age for a given date. The $format argument should be in accordance to PHP's date() function.|
+|multiple| |Validates if the input is a multiple of the given parameter.|
+|negative| |Validates whether the input is a negative number.|
 
 ## Mapping
 Mapping is the process of changing the structure of an object. For example when an object is either send to or retrieved from an external source. This always follows in Output <- mapping <- Input model. Mapping is especially useful when source don’t match to the data model that you want to uses.
@@ -546,8 +692,66 @@ t
 ## API Documentation
 ad
 
-##U ploading files through the gateway
-ad
+##Uploading files through the gateway
+The gateway supports the uploading of files as part of an object, to add file uploads add a attribute of the type file to the entity that you want to upload to. It is strongly advised to to only use ONE attribute of the type file per entity but more are allowed (this will however prevent you frontend from using mulit-part form uploads and force base64 encoding of files on the frontend, besides being more complex this will also eat into you maximum memory use within the browser, commonly 10MB).
+
+When creating an attribute of the type file you can maximize size, restrict mime types and designate if you are expecting one or multiple files.
+
+When this is done it is possible to make multipart posts to the specific endpoint representing the entity you just created (to test this in postman go to the body tab and set the body type to form-data). This will then
+
+When posting to an endpoint containing file type attributes trough form-data the first available attribute of the type file will be used to process the incoming files, so if you are including multiple files they are all stored under the same attribute and that attribute must be set to multiple. If you want multiple attributes containing files (for example al lists of diploma and an employee picture) consider using sub-entities (with there own endpoints) or making an api based request (like json).
+
+You can also post files in a json like manner by either supling a base encoded string or and array containing the beast encode string and an name, e.g.
+
+```json
+{
+	….
+"logo":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
+  //8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+}
+```
+or
+```json
+{
+	….
+"logo":{
+“name”:”my logo”,
+“base64”: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
+  //8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+}
+```
+When working with an attribute that allows multiple you MY put either of the above methods into an array (not doing so will just create a multiple of one) and you MAY mix them (using the plain string and object option in the same array), e.g.
+
+```json
+{
+	….
+"logos":[
+"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
+  //8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==",
+{
+“name”:”my logo”,
+“data”: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4
+  //8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="}
+}
+
+Files will be translated to file objects by the gateway, and returned as such. By default the base encoded file is not returned but instead a download link is provided. This is preferable from both an performance (preventing large return objects) as a safety (logging file 
+downloads) point of view e.g.
+
+```json
+{
+	….
+"logo":{
+“name”:”my logo”,
+“extension”:”png”,
+“mimeType”:”image/png”,
+“size”:”124065”,
+“url”: "/api/downloads/2dee1608-2cdd-11ec-8d3d-0242ac130003"
+}
+}
+```
+
+Files MAY be passed on to un underlaying register or DMS system depending on the gateway settings.
+
 
 ## Easy configuration
 
@@ -740,6 +944,15 @@ The run function is the function that is actually called by the event manager wh
         return $this->emailService->emailHandler($data, $configuration);
     }
 ```
+### Listing available Handlers
+In order to register actions for handlers the gateway needs to know what handlers are available. Making handlers known to the gateway is done trough the yaml [configuration files](https://symfony.com/doc/current/configuration.html) of symfony. Becouse the gatway uses the default symfony bundle system the configuration files can just be listed in your bundle in a `resources`. This makes it possible to extend the default gateway configuration from you bundle and add your handler to the handelers array like this:
+
+```php
+# config/packages/api_platform.yaml
+common_gateway:
+    handlers:
+        - 'Acme\EmailBundle\EmailHandler'
+```
 
 ### Adding plugins to your gateway
 There are several options how you can add pluging to your gateway, depending on if you run your gateway locally, online or within a cloud.
@@ -748,4 +961,20 @@ There are several options how you can add pluging to your gateway, depending on 
 3. Through fixtures
 4. Toruh Intreface
 1 T
+
+## Dataservice
+The dataservice is the main servers used by the gateway to obtain an alter data from either is internal datalake, external sources or session specific attributes. When dealing with data this function **MUST** be used. This is especially trough  because the event driven nature of the gateway means that underlying data could change during the course of an event. That in turn means that normal symfony functions might present false data. And using them in your  code makes theme error prone.
+The most dominant usecase for the data service is as part of the mapping of objects (all functions within the data service are available tough the twig function data service. The primary data services are:
+
+### Data
+{{Table}}
+
+### Mapping
+@todo mapping opbject aanmaken, mapping cast aanmaken, endpointHandler aanmaken, proxyHandler aanmaken.
+
+### Session
+
+### Request
+
+### Datalayer
 
