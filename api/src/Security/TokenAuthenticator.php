@@ -2,10 +2,13 @@
 
 namespace App\Security;
 
+use App\Entity\Application;
 use App\Security\User\AuthenticationUser;
+use App\Service\ApplicationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,19 +29,22 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private FunctionService $functionService;
+    private ApplicationService $applicationService;
 
     public function __construct(
         CommonGroundService $commonGroundService,
         AuthenticationService $authenticationService,
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService
+        FunctionService $functionService,
+        ApplicationService $applicationService
     ) {
         $this->commonGroundService = $commonGroundService;
         $this->parameterBag = $parameterBag;
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->functionService = $functionService;
+        $this->applicationService = $applicationService;
     }
 
     /**
@@ -50,10 +56,19 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             strpos($request->headers->get('Authorization'), 'Bearer') === 0;
     }
 
+    public function getPublicKey(): string
+    {
+        $application = $this->applicationService->getApplication();
+        $publicKey = $application->getPublicKey();
+        if(!$publicKey) {
+            $publicKey = $this->parameterBag->get('app_x509_cert');
+        }
+        return $publicKey;
+    }
+
     public function validateToken(string $token): array
     {
-        $publicKey = $this->parameterBag->get('app_x509_cert');
-
+        $publicKey = $this->getPublicKey();
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
         } catch (\Exception $exception) {
@@ -156,6 +171,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
         $user = $this->validateToken($token);
+        var_dump('token validated', $user);
         $this->setOrganizations($user);
 
         return new Passport(
