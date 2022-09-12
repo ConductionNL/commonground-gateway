@@ -272,4 +272,4 @@ parameters:
 twig:
   globals:
     # The data service
-    dataService: '@dataservice'     
+    # dataService: '@dataservice'     
