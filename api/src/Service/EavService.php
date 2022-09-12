@@ -1284,6 +1284,13 @@ class EavService
             }
         }
 
+        // Lets remove unread objects before we delete this object
+        $unreads = $this->em->getRepository('App:Unread')->findBy(['object' => $object]);
+        foreach ($unreads as $unread) {
+            $this->em->remove($unread);
+        }
+        $this->em->flush(); // I think we need to flush and delete unreads before we delete $object?
+
         // Remove this object from cache
         $this->functionService->removeResultFromCache($object);
 
