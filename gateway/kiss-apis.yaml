@@ -713,7 +713,7 @@
 #                    objects: '#'
 #                    object: '#'
 #                    idField: id
-#                    dateChangedField: modified_gmt
+#                    dateChangedField: modified
 #                queryMethod: page
 #                syncFromList: true
 #                sourceLeading: true
