@@ -571,13 +571,14 @@ class ObjectEntity
      */
     public function setValue($attribute, $value)
     {
-        // return $this->getValue($attribute)->setValue($value);
-        $value = $this->getValue($attribute);
-        if ($value !== null) {
-            return $value->setValue($value);
-        } else {
-            return false;
+        $valueObject = $this->getValueObject($attribute);
+        // If we find the Value object we set the value
+        if ($valueObject instanceof Value) {
+            return $valueObject->setValue($value);
         }
+
+        // If not return false
+        return false;
     }
 
     /**
