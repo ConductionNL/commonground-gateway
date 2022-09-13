@@ -14,6 +14,7 @@ use App\Service\TranslationService;
 use App\Service\ObjectEntityService;
 use App\Service\EavService;
 use App\Service\SynchronizationService;
+use Doctrine\Common\Collections\Criteria;
 
 class MapZaakTypeService
 {
@@ -47,12 +48,22 @@ class MapZaakTypeService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        // Find ZGW ZaakType entity by name
-        $zaakTypeEntity = $this->entityManager->getRepository(Entity::class)->findOneBy(['name' => 'ZaakType']);
+        // Find ZGW Type entities by id from config
+        $zaakTypeEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['entities']['ZaakType']);
+        $statusTypeEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['entities']['StatusType']);
+        $resultaatTypeEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['entities']['ResultaatType']);
 
         if (!isset($zaakTypeEntity)) {
             throw new \Exception('ZaakType entity could not be found');
         }
+        if (!isset($statusTypeEntity)) {
+            throw new \Exception('StatusType entity could not be found');
+        }
+        if (!isset($resultaatTypeEntity)) {
+            throw new \Exception('ResultaatType entity could not be found');
+        }
+
+
         $mappingIn = [
             'identificatie' => 'embedded.instance.embedded.legacy.zaaktype_id|string',
             'onderwerp' => 'embedded.instance.title',
@@ -83,38 +94,59 @@ class MapZaakTypeService
             'aanleiding' => 'Er is een afspraak gemaakt met een (niet) natuurlijk persoon',
         ];
 
+        // NOTE/@TODO why is this in response? 
         $xxllncCaseType = $data['response'];
 
-        // find already existing zgwZaakType by $xxllncCaseType['reference']
-        // if (!$objectEntity = $this->objectEntityService->findObjectBy($zaakTypeEntity, ['reference' => $xxllncCaseType['reference']])) {
-        // create new empty objectentity
-        $objectEntity = $this->eavService->getObject(null, 'POST', $zaakTypeEntity);
-        // }
+        // Find already existing zgwZaakType by $xxllncCaseType['reference']
+        $zaakTypeObjectEntity = $this->entityManager->getRepository(ObjectEntity::class)->findOneBy(['externalId' => $xxllncCaseType['reference'], 'entity' => $zaakTypeEntity]);
+        $zaakTypeObjectEntity instanceof ObjectEntity ? var_dump('object found') : var_dump('object not found');
+
+        // Create new empty ObjectEntity if no ObjectEntity has been found
+        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+            $zaakTypeObjectEntity = new ObjectEntity();
+            $zaakTypeObjectEntity->setEntity($zaakTypeEntity);
+        }
 
         // Map and set default values from xxllnc casetype to zgw zaaktype
         $zgwZaakType = $this->translationService->dotHydrator(isset($skeletonIn) ? array_merge($xxllncCaseType, $skeletonIn) : $xxllncCaseType, $xxllncCaseType, $mappingIn);
 
-        // Manually map results to resultaattypen
-        if (isset($xxllncCaseType['embedded']['instance']['embedded']['results'])) {
-            $zgwZaakType['resultaattypen'] = [];
-            foreach ($xxllncCaseType['embedded']['instance']['embedded']['results'] as $result) {
-                $resultaatType = [];
-                $result['type'] && $resultaatType['omschrijving'] = $result['type'];
-                $result['label'] && $resultaatType['toelichting'] = $result['label'];
-                $resultaatType['selectielijstklasse'] = $result['selection_list'] ?? 'http://localhost';
-                $result['type_of_archiving'] && $resultaatType['archiefnominatie'] = $result['type_of_archiving'];
-                $result['period_of_preservation'] && $resultaatType['archiefactietermijn'] = $result['period_of_preservation'];
-
-                $zgwZaakType['resultaattypen'][] = $resultaatType;
-            }
-        }
+        $zaakTypeObjectEntity->hydrate($zgwZaakType);
 
         // Manually map phases to statustypen
         if (isset($xxllncCaseType['embedded']['instance']['embedded']['phases'])) {
             $zgwZaakType['statustypen'] = [];
+
+            $statusMapping = [];
+
             foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
                 // var_dump($phase);
                 // die;
+
+                // Ophalen of creeren status object
+                $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('externalId', $phase['id']));
+
+                $status = $zaakTypeObjectEntity->getValue('statustypen')->matching($criteria)->first();
+                if (!$status) {
+                    $status = new ObjectEntity();
+                    // $status->setEntity($statusEntity);
+                }
+
+                // Mapping maken voor status
+
+
+                // Vullen status object
+                $statusArray = [];
+                $statusArray = $this->translationService->dotHydrator($phase, $phase, $statusMapping);
+                $status->hydrate($statusArray);
+
+                $zaakTypeObjectEntity->getValue('statustypen')->addObject($status);
+
+                // Persist
+                $this->entityManager->persist($status);
+
+
+
+                // Old code
                 $statusType = [];
                 $phase['name'] && $statusType['omschrijving'] = $phase['name'];
                 $phase['embedded']['fields'][0]['label'] && $statusType['omschrijvingGeneriek'] = $phase['embedded']['fields'][0]['label'];
@@ -125,46 +157,64 @@ class MapZaakTypeService
             }
         }
 
-        // Manually map ? to eigenschappen
-        if (isset($xxllncCaseType['embedded']['instance']['embedded']['eigenschappen'])) {
-            // $zgwZaakType['statustypen'] = [];
-            // foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
-            //     var_dump($phase);
-            //     // die;
-            //     $statusType = [];
-            //     $phase['name'] && $resultaatType['omschrijving'] = $phase['name'];
-            //     $phase['fields'][0]['label'] && $resultaatType['omschrijvingGeneriek'] = $phase['fields'][0]['label'];
-            //     $phase['fields'][0]['help'] && $resultaatType['statustekst'] = $phase['fields'][0]['help'];
-            //     $phase['seq'] && $resultaatType['volgnummer'] = $phase['seq'];
+        // // Manually map results to resultaattypen
+        // if (isset($xxllncCaseType['embedded']['instance']['embedded']['results'])) {
+        //     $zgwZaakType['resultaattypen'] = [];
+        //     foreach ($xxllncCaseType['embedded']['instance']['embedded']['results'] as $result) {
+        //         $resultaatType = [];
+        //         $result['type'] && $resultaatType['omschrijving'] = $result['type'];
+        //         $result['label'] && $resultaatType['toelichting'] = $result['label'];
+        //         $resultaatType['selectielijstklasse'] = $result['selection_list'] ?? 'http://localhost';
+        //         $result['type_of_archiving'] && $resultaatType['archiefnominatie'] = $result['type_of_archiving'];
+        //         $result['period_of_preservation'] && $resultaatType['archiefactietermijn'] = $result['period_of_preservation'];
 
-            //     $zgwZaakType['statustypen'][] = $statusType;
-            // }
-        }
+        //         $zgwZaakType['resultaattypen'][] = $resultaatType;
+        //     }
+        // }
 
-        // Manually map ? to roltypen
-        if (isset($xxllncCaseType['embedded']['instance']['embedded']['roltypen'])) {
-            // $zgwZaakType['statustypen'] = [];
-            // foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
-            //     var_dump($phase);
-            //     // die;
-            //     $statusType = [];
-            //     $phase['name'] && $resultaatType['omschrijving'] = $phase['name'];
-            //     $phase['fields'][0]['label'] && $resultaatType['omschrijvingGeneriek'] = $phase['fields'][0]['label'];
-            //     $phase['fields'][0]['help'] && $resultaatType['statustekst'] = $phase['fields'][0]['help'];
-            //     $phase['seq'] && $resultaatType['volgnummer'] = $phase['seq'];
+        // // Manually map ? to eigenschappen
+        // if (isset($xxllncCaseType['embedded']['instance']['embedded']['eigenschappen'])) {
+        //     // $zgwZaakType['statustypen'] = [];
+        //     // foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
+        //     //     var_dump($phase);
+        //     //     // die;
+        //     //     $statusType = [];
+        //     //     $phase['name'] && $resultaatType['omschrijving'] = $phase['name'];
+        //     //     $phase['fields'][0]['label'] && $resultaatType['omschrijvingGeneriek'] = $phase['fields'][0]['label'];
+        //     //     $phase['fields'][0]['help'] && $resultaatType['statustekst'] = $phase['fields'][0]['help'];
+        //     //     $phase['seq'] && $resultaatType['volgnummer'] = $phase['seq'];
 
-            //     $zgwZaakType['statustypen'][] = $statusType;
-            // }
-        }
+        //     //     $zgwZaakType['statustypen'][] = $statusType;
+        //     // }
+        // }
+
+        // // Manually map ? to roltypen
+        // if (isset($xxllncCaseType['embedded']['instance']['embedded']['roltypen'])) {
+        //     // $zgwZaakType['statustypen'] = [];
+        //     // foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
+        //     //     var_dump($phase);
+        //     //     // die;
+        //     //     $statusType = [];
+        //     //     $phase['name'] && $resultaatType['omschrijving'] = $phase['name'];
+        //     //     $phase['fields'][0]['label'] && $resultaatType['omschrijvingGeneriek'] = $phase['fields'][0]['label'];
+        //     //     $phase['fields'][0]['help'] && $resultaatType['statustekst'] = $phase['fields'][0]['help'];
+        //     //     $phase['seq'] && $resultaatType['volgnummer'] = $phase['seq'];
+
+        //     //     $zgwZaakType['statustypen'][] = $statusType;
+        //     // }
+        // }
 
         // var_dump($zgwZaakType['statustypen']);
         $zgwZaakType['embedded'] = null;
         // die;
 
-        $objectEntity = $this->synchronizationService->setApplicationAndOrganization($objectEntity);
-        $objectEntity = $this->objectEntityService->saveObject($objectEntity, $zgwZaakType);
-        $this->entityManager->persist($objectEntity);
+        $zaakTypeObjectEntity->setExternalId($xxllncCaseType['reference']);
+        $zaakTypeObjectEntity = $this->synchronizationService->setApplicationAndOrganization($zaakTypeObjectEntity);
+
+        $this->entityManager->persist($zaakTypeObjectEntity);
         $this->entityManager->flush();
+
+        // $zaakTypeObjectEntity = $this->objectEntityService->saveObject($zaakTypeObjectEntity, $zgwZaakType);
 
         return $this->data;
     }
