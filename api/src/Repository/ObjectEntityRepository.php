@@ -563,7 +563,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         }
         $query->andWhere($andWhere.')');
         foreach ($value as $i => $item) {
-            $query->setParameter("$sqlFriendlyKey$i", "%$item%");
+            $query->setParameter("$sqlFriendlyKey$i", "%,$item%");
         }
 
         return $query;
@@ -593,7 +593,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
-                ->setParameter($sqlFriendlyKey, "%$value%");
+                ->setParameter($sqlFriendlyKey, "%,$value%");
         } else {
             // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")

@@ -88,7 +88,7 @@ class HandlerService
         $this->processingLogService = $processingLogService;
         $this->templating = $twig;
         $this->templateService = $templateService;
-        $this->objectEntityService = $objectEntityService->addServices($validationService, $eavService); // todo: temp fix untill we no longer need these services here
+        $this->objectEntityService = $objectEntityService->addServices($eavService); // todo: temp fix untill we no longer need these services here
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
