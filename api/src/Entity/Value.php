@@ -184,10 +184,19 @@ class Value
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(?Attribute $attribute, ?ObjectEntity $objectEntity)
     {
         $this->files = new ArrayCollection();
         $this->objects = new ArrayCollection();
+
+        if($attribute){
+            $this->setAttribute($attribute);
+        }
+
+        if($attribute){
+            $this->setObjectEntity($objectEntity);
+        }
+
 
         // Dealing with default values
         $this->setDefaultValue();
