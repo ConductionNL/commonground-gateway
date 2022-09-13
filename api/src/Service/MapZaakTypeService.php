@@ -119,41 +119,38 @@ class MapZaakTypeService
             $statusMapping = [];
 
             foreach ($xxllncCaseType['embedded']['instance']['embedded']['phases'] as $phase) {
-                // var_dump($phase);
-                // die;
 
                 // Ophalen of creeren status object
                 $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('externalId', $phase['id']));
 
-                $status = $zaakTypeObjectEntity->getValue('statustypen')->matching($criteria)->first();
-                if (!$status) {
-                    $status = new ObjectEntity();
-                    // $status->setEntity($statusEntity);
+                // Get statusTypen value
+                $statusTypen = $zaakTypeObjectEntity->getValue('statustypen');
+
+                // If we have statusTypen get matching statusType by externalId
+                count($statusTypen) > 1 && $statusType = $statusTypen->matching($criteria)->first();
+
+                // If no statusType has been found with criteria create new ObjectEntity
+                if (!isset($statusType) || !$statusType instanceof ObjectEntity) {
+                    $statusType = new ObjectEntity();
+                    $statusType->setEntity($statusTypeEntity);
                 }
 
                 // Mapping maken voor status
-
-
-                // Vullen status object
                 $statusArray = [];
                 $statusArray = $this->translationService->dotHydrator($phase, $phase, $statusMapping);
-                $status->hydrate($statusArray);
+                isset($phase['name']) && $statusArray['omschrijving'] = $phase['name'];
+                isset($phase['embedded']['fields'][0]['label']) ? $statusArray['omschrijvingGeneriek'] = $phase['embedded']['fields'][0]['label'] : 'geen omschrijving';
+                isset($phase['embedded']['fields'][0]['help']) ? $statusArray['statustekst'] = $phase['embedded']['fields'][0]['help'] : 'geen statustekst';
+                isset($phase['seq']) && $statusArray['volgnummer'] = $phase['seq'];
 
-                $zaakTypeObjectEntity->getValue('statustypen')->addObject($status);
+                // Vullen status object
+                $statusType->hydrate($statusArray);
+
+                // Add new statusType to all statusTypen
+                $zaakTypeObjectEntity->getValue('statustypen')->add($statusType);
 
                 // Persist
-                $this->entityManager->persist($status);
-
-
-
-                // Old code
-                $statusType = [];
-                $phase['name'] && $statusType['omschrijving'] = $phase['name'];
-                $phase['embedded']['fields'][0]['label'] && $statusType['omschrijvingGeneriek'] = $phase['embedded']['fields'][0]['label'];
-                $phase['embedded']['fields'][0]['help'] && $statusType['statustekst'] = $phase['embedded']['fields'][0]['help'];
-                $phase['seq'] && $statusType['volgnummer'] = $phase['seq'];
-
-                $zgwZaakType['statustypen'][] = $statusType;
+                $this->entityManager->persist($statusType);
             }
         }
 
