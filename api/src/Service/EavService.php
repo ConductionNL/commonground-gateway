@@ -1289,7 +1289,6 @@ class EavService
         foreach ($unreads as $unread) {
             $this->em->remove($unread);
         }
-        $this->em->flush(); // I think we need to flush and delete unreads before we delete $object?
 
         // Remove this object from cache
         $this->functionService->removeResultFromCache($object);

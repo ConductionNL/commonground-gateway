@@ -19,6 +19,24 @@ class ValueRepository extends ServiceEntityRepository
         parent::__construct($registry, Value::class);
     }
 
+    /**
+     * An sql function used in the AddCommaToArrayValuesCommand to update all (multiple=true) values with a stringValue that doesn't start with a comma.
+     *
+     * @return array Returns an array of value objects
+     */
+    public function findMultipleValues(): array
+    {
+        $query = $this->createQueryBuilder('v')
+            ->leftJoin('v.attribute', 'a')
+            ->where('a.multiple = true AND v.stringValue NOT LIKE :startWithComma')
+            ->setParameter('startWithComma', ',%')
+            ->distinct();
+
+        return $query
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return Value[] Returns an array of Value objects
     //  */
