@@ -737,6 +737,7 @@ class ObjectEntityService
             $objectEntity->setSelf($this->createSelf($objectEntity));
         }
 
+
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
             $objectEntity->setOrganization($post['@organization']);
         }
@@ -914,6 +915,7 @@ class ObjectEntityService
     {
         switch ($attribute->getType()) {
             case 'object':
+                $subObjectIds = [];
                 $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
                 foreach ($value as $key => $object) {
                     // If we are not cascading and value is a string, then value should be an id.
@@ -942,7 +944,6 @@ class ObjectEntityService
                                 }
                             }
                         }
-
                         // object toevoegen
                         $saveSubObjects->add($subObject);
                         continue;
@@ -1017,7 +1018,11 @@ class ObjectEntityService
 
                     // object toevoegen
                     $saveSubObjects->add($subObject);
+                    $subObjectIds[] = $subObject->getId()->toString();
+
+
                 }
+                $valueObject->setArrayValue($subObjectIds);
 
                 // todo: remove objects on put
 //                // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need

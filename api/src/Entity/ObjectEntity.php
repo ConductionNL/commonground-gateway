@@ -541,16 +541,39 @@ class ObjectEntity
     }
 
     /**
-     * Gets a value based on the attribute string name or attribute object.
+     * Gets the value of the Value object based on the attribute string name or attribute object.
      *
      * @param string|Attribute $attribute
      *
-     * @return Value
+     * @return array|bool|string|int|object Returns a Value if its found or false when its not found
      */
-    public function getValue($attribute): Value
+    public function getValue($attribute)
+    {
+        // If we can find the Value object return the value of the Value object
+        $valueObject = $this->getValueObject($attribute);
+        if ($valueObject instanceof Value) {
+            return $valueObject->getValue();
+        }
+
+        // If not return false
+        return false;
+    }
+
+    /**
+     * Gets a Value object based on the attribute string name or attribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @return Value|bool Returns a Value if its found or false when its not found
+     */
+    public function getValueObject($attribute)
     {
         if (is_string($attribute)) {
             $attribute = $this->getEntity()->getAttributeByName($attribute);
+        }
+
+        if (!$attribute instanceof Attribute) {
+            return false;
         }
 
         return $this->getValueByAttribute($attribute);
@@ -567,7 +590,14 @@ class ObjectEntity
      */
     public function setValue($attribute, $value)
     {
-        return $this->getValue($attribute)->setValue($value);
+        $valueObject = $this->getValueObject($attribute);
+        // If we find the Value object we set the value
+        if ($valueObject instanceof Value) {
+            return $valueObject->setValue($value);
+        }
+
+        // If not return false
+        return false;
     }
 
     /**

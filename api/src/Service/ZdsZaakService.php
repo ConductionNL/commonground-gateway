@@ -114,6 +114,7 @@ class ZdsZaakService
 
         $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
+        $eigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
 
         // @todo remove the check for identification and zaaktype if the dataService is implemented
         // @todo get in the zds object the values of the properties casetype and identification and store this in the case
@@ -130,22 +131,38 @@ class ZdsZaakService
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
-//        $zgwZaakTypeEigenschappen = $zgwZaaktype->getValue('eigenschappen');
+//        var_dump($eigenschapEntity->getId()->toString());
+//        var_dump($zaakTypeObjectEntity->getValue('url'));
+        // Let get the eigenschappen
+        $eigenschapObjectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($eigenschapEntity,  ['zaaktype' => $zaakTypeObjectEntity->getValue('url')]);
 
-        $zdsObjectId = $zds->getValue('object')->getStringValue();
+//        var_dump(count($eigenschapObjectEntities));
+
+        $zdsObjectId = $zds->getValue('object');
         $zdsObject = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsObjectId);
+
+
+        $zdsExtraElementsEntityIds = $zdsObject->getValue('extraElementen');
+        $unusedExtraElements = [
+            'toelichting' => null
+        ];
+        foreach ($zdsExtraElementsEntityIds as $zdsExtraElementsEntityId) {
+            $zdsExtraElement = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsExtraElementsEntityId);
+            $unusedExtraElements['toelichting'] .= " {$zdsExtraElement->getValue('@naam')}: {$zdsExtraElement->getValue('#')} ";
+        }
 
         // so far so good (need error handling doh)
         $zaak = new ObjectEntity();
+
+        $zaak->hydrate($zdsObject->toArray());
         $zaak->setEntity($zaakEntity);
-        $zaak->setValue('startdatum', $zdsObject->getValue('startdatum')->getStringValue());
-        $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum')->getStringValue());
-        $zaak->setValue('toelichting', $zdsObject->getValue('toelichting')->getStringValue());
-        $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving')->getStringValue());
-        $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland')->getStringValue());
-        $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum')->getStringValue());
-        $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie')->getStringValue());
-        $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum')->getStringValue());
+//        $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum')->getStringValue());
+        $zaak->setValue('toelichting', "{$zdsObject->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+//        $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving')->getStringValue());
+//        $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland')->getStringValue());
+        $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
+        $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
+//        $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum')->getStringValue());
         $zaak->setValue('zaaktype', $zaakTypeObjectEntity);
 
 //        $zaakEigenschappen = [];
