@@ -522,21 +522,29 @@ class Value
     public function setValue($value)
     {
         if ($this->getAttribute()) {
+
             // If the value is an array we handle it in its own function
             if ($this->getAttribute()->getMultiple()) {
+                $value instanceof Value && $value = $value->getArrayValue();
                 return $this->setSimpleArrayValue($value);
             }
 
             switch ($this->getAttribute()->getType()) {
                 case 'string':
+                    $value instanceof Value && $value = $value->getStringValue();
+                    // if (!$value instanceof string) {
+                    //     return $this;
+                    // }
                     return $this->setStringValue($value);
                 case 'integer':
+                    $value instanceof Value && $value->getIntegerValue();
                     if ($value < PHP_INT_MAX) {
                         return $this->setIntegerValue($value);
                     } else {
                         return $this;
                     }
                 case 'boolean':
+                    $value instanceof Value && $value = $value->getBooleanValue();
                     if (is_string($value)) {
                         // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
@@ -544,6 +552,7 @@ class Value
 
                     return $this->setBooleanValue($value);
                 case 'number':
+                    $value instanceof Value && $value = $value->getNumberValue();
                     return $this->setNumberValue($value);
                 case 'date':
                 case 'datetime':
@@ -555,6 +564,11 @@ class Value
 
                         return $this->setDateTimeValue(null);
                     }
+
+                    // if (!$value instanceof string) {
+                    //     return $this;
+                    // }
+                    $value instanceof Value && $value = $value->getStringValue();
 
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
