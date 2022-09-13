@@ -545,12 +545,16 @@ class ObjectEntity
      *
      * @param string|Attribute $attribute
      *
-     * @return Value
+     * @return ?Value
      */
-    public function getValue($attribute): Value
+    public function getValue($attribute): ?Value
     {
         if (is_string($attribute)) {
             $attribute = $this->getEntity()->getAttributeByName($attribute);
+        }
+
+        if (!$attribute instanceof Attribute) {
+            return null;
         }
 
         return $this->getValueByAttribute($attribute);
@@ -567,7 +571,13 @@ class ObjectEntity
      */
     public function setValue($attribute, $value)
     {
-        return $this->getValue($attribute)->setValue($value);
+        // return $this->getValue($attribute)->setValue($value);
+        $value = $this->getValue($attribute);
+        if ($value !== null) {
+            return $value->setValue($value);
+        } else {
+            return false;
+        }
     }
 
     /**
