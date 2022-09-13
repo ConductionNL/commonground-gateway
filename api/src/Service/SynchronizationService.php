@@ -289,7 +289,8 @@ class SynchronizationService
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
         if (array_key_exists('sourceLimit', $this->configuration)) {
-            $query['limit'] = $this->configuration['apiSource']['sourceLimit'];
+            $key = array_key_exists('sourceLimitKey', $this->configuration) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
+            $query[$key] = $this->configuration['apiSource']['sourceLimit'];
         }
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
             $query[$this->configuration['queryParams']['syncSourceId']] = $id;
@@ -337,14 +338,19 @@ class SynchronizationService
                 false,
                 'GET'
             );
+
+            if (is_array($response)) {
+                throw new Exception('Callservice error while doing getSingleFromSource');
+            }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
-            //todo: error, user feedback and log this?
             return [];
+            //todo: error, user feedback and log this?
 //            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
 //                'data' => [
 //                    'message'           => $exception->getMessage(),
 //                    'code'              => $exception->getCode(),
+//                    'response'          => $response ?? null,
 //                    'trace'             => $exception->getTraceAsString()
 //                ],
 //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
@@ -358,7 +364,7 @@ class SynchronizationService
 
         if (array_key_exists('limit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['limit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
-        } elseif (!empty($results) && isset($callServiceConfig['apiSource']['sourcePaginated']) && $callServiceConfig['apiSource']['sourcePaginated']) {
+        } elseif (!empty($results) && isset($this->configuration['apiSource']['sourcePaginated']) && $this->configuration['apiSource']['sourcePaginated']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
         }
 
@@ -387,6 +393,10 @@ class SynchronizationService
                 false,
                 'GET'
             );
+
+            if (is_array($response)) {
+                throw new Exception('Callservice error while doing getSingleFromSource');
+            }
         } catch (Exception $exception) {
             return null;
 //            //todo: error, user feedback and log this?
@@ -769,6 +779,10 @@ class SynchronizationService
                 false,
                 $existsInSource ? 'PUT' : 'POST'
             );
+
+            if (is_array($result)) {
+                throw new Exception('Callservice error while doing getSingleFromSource');
+            }
         } catch (Exception $exception) {
             return $synchronization;
             //todo: error, user feedback and log this?
