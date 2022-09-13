@@ -8,7 +8,6 @@ use App\Service\ApplicationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,7 +56,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     }
 
     /**
-     * Gets the public key for the application connected to the request, defaults to a general public key
+     * Gets the public key for the application connected to the request, defaults to a general public key.
      *
      * @return string Public key for the application or the general public key
      */
@@ -65,21 +64,24 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     {
         $application = $this->applicationService->getApplication();
         $publicKey = $application->getPublicKey();
-        if(!$publicKey) {
+        if (!$publicKey) {
             $publicKey = $this->parameterBag->get('app_x509_cert');
         }
+
         return $publicKey;
     }
 
     /**
-     * Validates the JWT token and throws an error if it is not valid, or has expired
+     * Validates the JWT token and throws an error if it is not valid, or has expired.
      *
      * @param string $token The token provided by the user
-     * @return array        The payload of the token
+     *
+     * @return array The payload of the token
      */
     public function validateToken(string $token): array
     {
         $publicKey = $this->getPublicKey();
+
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
         } catch (\Exception $exception) {
@@ -185,15 +187,14 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         $this->setOrganizations($payload);
 
         $application = $this->applicationService->getApplication();
-        if(!isset($payload['client_id'])) {
+        if (!isset($payload['client_id'])) {
             $user = $payload;
         } else {
             $user = $this->commonGroundService->getResource($application->getResource(), [], false);
         }
 
-
         return new Passport(
-            new UserBadge($user['user']['id'] ?? $user['userId'] ?? $user['id'], function ($userIdentifier) use ($user, $application) {
+            new UserBadge($user['user']['id'] ?? $user['userId'] ?? $user['id'], function ($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $user['user']['id'] ?? $user['username'],
