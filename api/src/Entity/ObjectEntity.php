@@ -429,13 +429,13 @@ class ObjectEntity
                 if (!$maxDepth->contains($subResource)) {
                     if ($value->getAttribute()->getMultiple()) {
                         $key = $subResource->getSubresourceIndex() ?? $key;
-                        $key = '['.$key.']';
+                        $key = '[' . $key . ']';
                     } else {
                         $key = '';
                     }
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName() . $key] = $subErrors;
                     }
                 }
             }
@@ -541,20 +541,40 @@ class ObjectEntity
     }
 
     /**
-     * Gets a value based on the attribute string name or attribute object.
+     * Gets the value of the Value object based on the attribute string name or attribute object.
      *
      * @param string|Attribute $attribute
      *
-     * @return ?Value
+     * @return array|bool|string|int|object Returns a Value if its found or false when its not found
      */
-    public function getValue($attribute): ?Value
+    public function getValue($attribute)
+    {
+        // If we can find the Value object return the value of the Value object
+        $valueObject = $this->getValueObject($attribute);
+        if ($valueObject instanceof Value) {
+            return $valueObject->getValue();
+        }
+
+        // If not return false
+        return false;
+    }
+
+
+    /**
+     * Gets a Value object based on the attribute string name or attribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @return Value|bool Returns a Value if its found or false when its not found
+     */
+    public function getValueObject($attribute)
     {
         if (is_string($attribute)) {
             $attribute = $this->getEntity()->getAttributeByName($attribute);
         }
 
         if (!$attribute instanceof Attribute) {
-            return null;
+            return false;
         }
 
         return $this->getValueByAttribute($attribute);
@@ -592,7 +612,7 @@ class ObjectEntity
      */
     public function hydrate(array $array): ObjectEntity
     {
-        foreach ($array as  $key => $value) {
+        foreach ($array as $key => $value) {
             $this->setValue($key, $value);
         }
 
@@ -609,7 +629,7 @@ class ObjectEntity
     public function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
-            $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
+            $this->addError($attribute->getName(), 'The entity: ' . $this->getEntity()->getName() . ' does not have this attribute. (intern getValueByAttribute error)');
         }
 
         // Check if value with this attribute exists for this ObjectEntity
@@ -737,14 +757,16 @@ class ObjectEntity
                 continue;
             }
             // Oke loop the conditions
-            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
+            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty => $conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
                 if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
                     $explodedConditionValue = explode('.', $conditionValue);
                     $getValue = $value->getValue() instanceof ObjectEntity ? $value->getValue()->getExternalId() : $value->getValue();
-                    if (!$value->getAttribute()->getDefaultValue()
+                    if (
+                        !$value->getAttribute()->getDefaultValue()
                         || ($value->getAttribute()->getDefaultValue() !== $getValue)
-                        || end($explodedConditionValue) != 'noDefaultValue') {
+                        || end($explodedConditionValue) != 'noDefaultValue'
+                    ) {
                         continue;
                     } else {
                         $conditionValue = implode('.', array_slice($explodedConditionValue, 0, -1));
@@ -762,9 +784,9 @@ class ObjectEntity
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $convar);
                         }
                     }
                 } else {
@@ -773,9 +795,9 @@ class ObjectEntity
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $conditionValue);
                     }
                 }
             }
