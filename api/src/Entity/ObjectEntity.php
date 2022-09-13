@@ -217,12 +217,16 @@ class ObjectEntity
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(?Entity $entity)
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+
+        if($entity){
+            $this->setEntity($entity);
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -639,9 +643,7 @@ class ObjectEntity
 
         if ($values->isEmpty()) {
             // If no value with this attribute was found
-            $value = new Value();
-            $value->setAttribute($attribute);
-            $value->setObjectEntity($this);
+            $value = new Value($attribute, $this);
             $this->addObjectValue($value);
 
             return $value;
