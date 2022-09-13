@@ -194,12 +194,12 @@ class Application
     private $dateModified;
 
     /**
-     * @var string A public key for authentication, or a secret for HS256 keys
+     * @var string|null A public key for authentication, or a secret for HS256 keys
      *
      * @Groups({"write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $publicKey;
+    private ?string $publicKey = null;
 
 
     public function __construct()
@@ -472,9 +472,9 @@ class Application
         return $this;
     }
 
-    public function getPublicKey(): string
+    public function getPublicKey(): ?string
     {
-        return $this->getPublicKey();
+        return $this->publicKey;
     }
 
     public function setPublicKey(string $publicKey): self
