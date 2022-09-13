@@ -216,6 +216,10 @@ class Value
 
     public function getStringValue(): ?string
     {
+        if (!$this->stringValue && $this->getAttribute()->getDefaultValue()) {
+            return (string) $this->getAttribute()->getDefaultValue();
+        }
+
         return $this->stringValue;
     }
 
@@ -228,6 +232,10 @@ class Value
 
     public function getIntegerValue(): ?int
     {
+        if (!$this->integerValue && $this->getAttribute()->getDefaultValue()) {
+            return (int) $this->getAttribute()->getDefaultValue();
+        }
+
         return $this->integerValue;
     }
 
@@ -248,6 +256,10 @@ class Value
 
     public function getNumberValue(): ?float
     {
+        if (!$this->numberValue && $this->getAttribute()->getDefaultValue()) {
+            return (float) $this->getAttribute()->getDefaultValue();
+        }
+
         return $this->numberValue;
     }
 
@@ -268,6 +280,10 @@ class Value
 
     public function getBooleanValue(): ?bool
     {
+        if (!$this->booleanValue && $this->getAttribute()->getDefaultValue()) {
+            return (bool) $this->getAttribute()->getDefaultValue();
+        }
+
         return $this->booleanValue;
     }
 
@@ -281,7 +297,7 @@ class Value
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
-//        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
+        //        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
         $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
         return $this;
@@ -289,6 +305,56 @@ class Value
 
     public function getArrayValue(): ?array
     {
+        if (!$this->arrayValue && $this->getAttribute()->getDefaultValue()) {
+
+            $defaultValueArray = explode(',', $this->getAttribute()->getDefaultValue());
+
+            $outputArray = [];
+
+            foreach ($defaultValueArray as $defaultValue) {
+                switch ($this->getAttribute()->getType()) {
+                    case 'string':
+                        // if string
+                        $outputArray[] = strval($defaultValue);
+                        break;
+                    case 'integer':
+                        // if integer
+                        $outputArray[] = intval($defaultValue);
+                        break;
+                    case 'boolean':
+                        // if boolean
+                        $outputArray[] = boolval($defaultValue);
+                        break;
+                    case 'float':
+                        // if float
+                        $outputArray[] = floatval($defaultValue);
+                        break;
+                    case 'number':
+                        // if number
+                        // todo: not sure if this is correct for type number
+                        $outputArray[] = floatval($defaultValue);
+                        break;
+                    case 'date':
+                    case 'datetime':
+                        // if datetime or date
+                        $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';
+                        $outputArray[] = new DateTime($format);
+                        break;
+                    case 'file':
+                        // if file
+                        //@todo get file from uuid
+                        break;
+                    case 'object':
+                        // if object
+                        //@todo get object from uuid
+                        break;
+                    default:
+                        throw new \UnexpectedValueException('Could not parse to array the attribute type of: ' . $this->getAttribute()->getType());
+                }
+            }
+            return $outputArray;
+        }
+
         return $this->arrayValue;
     }
 
@@ -342,7 +408,7 @@ class Value
                     //@todo get object from uuid
                     break;
                 default:
-                    throw new \UnexpectedValueException('Could not parse to array the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not parse to array the attribute type of: ' . $this->getAttribute()->getType());
             }
         }
 
@@ -525,26 +591,19 @@ class Value
 
             // If the value is an array we handle it in its own function
             if ($this->getAttribute()->getMultiple()) {
-                $value instanceof Value && $value = $value->getArrayValue();
                 return $this->setSimpleArrayValue($value);
             }
 
             switch ($this->getAttribute()->getType()) {
                 case 'string':
-                    $value instanceof Value && $value = $value->getStringValue();
-                    // if (!$value instanceof string) {
-                    //     return $this;
-                    // }
                     return $this->setStringValue($value);
                 case 'integer':
-                    $value instanceof Value && $value->getIntegerValue();
                     if ($value < PHP_INT_MAX) {
                         return $this->setIntegerValue($value);
                     } else {
                         return $this;
                     }
                 case 'boolean':
-                    $value instanceof Value && $value = $value->getBooleanValue();
                     if (is_string($value)) {
                         // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
@@ -552,7 +611,6 @@ class Value
 
                     return $this->setBooleanValue($value);
                 case 'number':
-                    $value instanceof Value && $value = $value->getNumberValue();
                     return $this->setNumberValue($value);
                 case 'date':
                 case 'datetime':
@@ -568,7 +626,6 @@ class Value
                     // if (!$value instanceof string) {
                     //     return $this;
                     // }
-                    $value instanceof Value && $value = $value->getStringValue();
 
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
@@ -581,6 +638,9 @@ class Value
 
                     return $this->addFile($value);
                 case 'object':
+                    // if ($value === null || !$value instanceof ObjectEntity) {
+                    //     return $this;
+                    // }
                     if ($value === null) {
                         return $this;
                     }
@@ -592,7 +652,7 @@ class Value
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: ' . $this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
@@ -650,17 +710,18 @@ class Value
 
                     return $files;
                 case 'object':
+                    // $objects can be a single object
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
                         return $objects->first();
                     }
                     if (count($objects) == 0) {
-                        return null;
+                        return new ArrayCollection();
                     }
 
                     return $objects;
                 default:
-                    throw new \UnexpectedValueException('Could not return a value for the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not return a value for the attribute type of: ' . $this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
