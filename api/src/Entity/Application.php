@@ -201,7 +201,6 @@ class Application
      */
     private ?string $publicKey = null;
 
-
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
