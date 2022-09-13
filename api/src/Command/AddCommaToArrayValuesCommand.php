@@ -8,7 +8,6 @@ use App\Entity\Value;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -52,8 +51,9 @@ class AddCommaToArrayValuesCommand extends Command
             $io->newLine();
             $io->newLine();
         } else {
-            $io->warning("Values is not countable");
-            $io->error("A lot of values could not be updated. Failure rate is 100%");
+            $io->warning('Values is not countable');
+            $io->error('A lot of values could not be updated. Failure rate is 100%');
+
             return Command::FAILURE;
         }
 
@@ -63,6 +63,7 @@ class AddCommaToArrayValuesCommand extends Command
         $io->progressFinish();
 
         $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
+
         return $this->handleCommandResult($io, $errors);
     }
 
@@ -70,7 +71,7 @@ class AddCommaToArrayValuesCommand extends Command
      * Loop through values and update stringValue so it starts with a comma.
      *
      * @param SymfonyStyle $io
-     * @param array $values
+     * @param array        $values
      *
      * @return int The errorCount
      */
@@ -87,6 +88,7 @@ class AddCommaToArrayValuesCommand extends Command
             }
             $io->progressAdvance();
         }
+
         return $errorCount;
     }
 
@@ -94,7 +96,7 @@ class AddCommaToArrayValuesCommand extends Command
      * Handles result for this command depending on the amount of $errors.
      *
      * @param SymfonyStyle $io
-     * @param int $errors
+     * @param int          $errors
      *
      * @return int Return value for this command, 0 or 1. Command::SUCCESS or Command::FAILURE
      */
@@ -102,10 +104,11 @@ class AddCommaToArrayValuesCommand extends Command
     {
         if ($errors == 0) {
             $io->success('All values have been updated');
-        } elseif($errors < 20) {
+        } elseif ($errors < 20) {
             $io->warning("Some values could not be updated. Failure rate is $errors%");
         } else {
             $io->error("A lot of values could not be updated. Failure rate is $errors%");
+
             return Command::FAILURE;
         }
 
