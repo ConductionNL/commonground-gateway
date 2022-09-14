@@ -54,23 +54,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             strpos($request->headers->get('Authorization'), 'Bearer') === false;
     }
 
-    public function validateToken(string $token): array
-    {
-        $publicKey = $this->parameterBag->get('app_x509_cert');
-
-        try {
-            $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
-        } catch (\Exception $exception) {
-            throw new AuthenticationException('The provided token is not valid');
-        }
-        $now = new \DateTime();
-        if ($payload['exp'] < $now->getTimestamp()) {
-            throw new AuthenticationException('The provided token has expired');
-        }
-
-        return $payload;
-    }
-
     /**
      * Get all the child organisations for an organisation.
      *
