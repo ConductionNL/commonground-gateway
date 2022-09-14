@@ -1,7 +1,7 @@
 # Features
 
 ___
-The web gateway is designed as a feature rich's solution to quickly developing progressive web applications.
+The web gateway is designed as a feature-rich solution to quickly develop progressive web applications.
 
 ## Sources
 
