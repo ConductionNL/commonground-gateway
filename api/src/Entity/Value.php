@@ -739,12 +739,12 @@ class Value
      */
     public function setDefaultValue(): self
     {
-        if (!$this->getAttribute() || $this->getAttribute()->getDefaultValue) {
+        if (!$this->getAttribute() || $this->getAttribute()->getDefaultValue()) {
             return $this;
         }
 
         // OKe lets grap the default value
-        $defaultValue = $this->getAtribute()->getDefaultValue;
+        $defaultValue = $this->getAttribute()->getDefaultValue();
 
         // Lets double check if we are Expacting an array
         if ($this->getAttribute()->getMultiple()) {
