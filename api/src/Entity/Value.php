@@ -193,13 +193,9 @@ class Value
             $this->setAttribute($attribute);
         }
 
-        if($attribute){
+        if($objectEntity){
             $this->setObjectEntity($objectEntity);
         }
-
-
-        // Dealing with default values
-        $this->setDefaultValue();
     }
 
     public function getId(): ?UuidInterface
@@ -511,6 +507,10 @@ class Value
 
     public function setAttribute(?Attribute $attribute): self
     {
+
+        // If we have an atribute we can deal with default values
+        $this->setDefaultValue();
+
         $this->attribute = $attribute;
 
         return $this;
