@@ -184,7 +184,7 @@ class Value
      */
     private $dateModified;
 
-    public function __construct(?Attribute $attribute, ?ObjectEntity $objectEntity)
+    public function __construct(?Attribute $attribute = null, ?ObjectEntity $objectEntity = null)
     {
         $this->files = new ArrayCollection();
         $this->objects = new ArrayCollection();
