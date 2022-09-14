@@ -193,6 +193,14 @@ class Application
      */
     private $dateModified;
 
+    /**
+     * @var string|null A public key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $publicKey = null;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
@@ -459,6 +467,18 @@ class Application
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPublicKey(): ?string
+    {
+        return $this->publicKey;
+    }
+
+    public function setPublicKey(string $publicKey): self
+    {
+        $this->publicKey = $publicKey;
 
         return $this;
     }

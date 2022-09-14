@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1cf406f6bf19d62e6a3e284161d0f7b7",
+    "content-hash": "c77ef64af8839ecb154db045b50d17ab",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -832,12 +832,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/CommonGroundBundle.git",
-                "reference": "bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2"
+                "reference": "02d76a8ddda5cc2329f0e4ff326f427ac1eba3c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/CommonGroundBundle/zipball/bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2",
-                "reference": "bdc981ca4f0e6f71c7f13e2e0ac82d6b3ec18ba2",
+                "url": "https://api.github.com/repos/ConductionNL/CommonGroundBundle/zipball/02d76a8ddda5cc2329f0e4ff326f427ac1eba3c0",
+                "reference": "02d76a8ddda5cc2329f0e4ff326f427ac1eba3c0",
                 "shasum": ""
             },
             "require": {
@@ -920,7 +920,7 @@
                 "issues": "https://github.com/ConductionNL/ConductionCommonGroundBundle/issues",
                 "source": "https://github.com/ConductionNL/ConductionCommonGroundBundle"
             },
-            "time": "2022-03-07T11:54:01+00:00"
+            "time": "2022-09-13T14:22:16+00:00"
         },
         {
             "name": "conduction/digidbundle",
@@ -13742,7 +13742,8 @@
         "php": "^7.4.0",
         "ext-ctype": "*",
         "ext-fileinfo": "*",
-        "ext-iconv": "*"
+        "ext-iconv": "*",
+        "ext-json": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"
