@@ -217,7 +217,7 @@ class ObjectEntity
      */
     private $dateModified;
 
-    public function __construct(?Entity $entity)
+    public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
