@@ -502,7 +502,7 @@ class Value
 
     public function getAttribute(): ?Attribute
     {
-        return $this->attribute;
+        return isset($this->attribute) ? $this->attribute : null;
     }
 
     public function setAttribute(?Attribute $attribute): self
