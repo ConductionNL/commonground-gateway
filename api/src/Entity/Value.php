@@ -531,7 +531,7 @@ class Value
     /**
      * @throws Exception
      */
-    public function setValue($value)
+    public function setValue($value): self
     {
         if ($this->getAttribute()) {
 
@@ -543,6 +543,10 @@ class Value
                 // Lest deal with multiple file subobjects
 
                 $this->objects->clear();
+
+                if (!$value) {
+                    return $this;
+                }
 
                 $valueArray = $value;
                 $idArray = [];
@@ -562,7 +566,7 @@ class Value
                 // Set a string reprecentation of the object
                 $this->stringValue = ','.implode(',', $idArray);
 
-                return $this->getObjects();
+                return $this;
             }
 
             switch ($this->getAttribute()->getType()) {
