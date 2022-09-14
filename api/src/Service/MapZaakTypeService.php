@@ -4,17 +4,8 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
-use App\Exception\GatewayException;
-use Doctrine\ORM\EntityManagerInterface;
-use mysql_xdevapi\Exception;
-use Psr\Cache\CacheException;
-use Psr\Cache\InvalidArgumentException;
-use Respect\Validation\Exceptions\ComponentException;
-use App\Service\TranslationService;
-use App\Service\ObjectEntityService;
-use App\Service\EavService;
-use App\Service\SynchronizationService;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\EntityManagerInterface;
 
 class MapZaakTypeService
 {
@@ -63,19 +54,18 @@ class MapZaakTypeService
             throw new \Exception('ResultaatType entity could not be found');
         }
 
-
         $mappingIn = [
-            'identificatie' => 'embedded.instance.embedded.legacy.zaaktype_id|string',
-            'onderwerp' => 'embedded.instance.title',
-            'indicatieInternOfExtern' => 'embedded.instance.trigger',
-            'doorlooptijd' => 'embedded.instance.embedded.properties.lead_time_legal.weken',
-            'servicenorm' => 'embedded.instance.embedded.properties.lead_time_service.weken',
-            'vertrouwelijkheidaanduiding' => 'embedded.instance.embedded.properties.designation_of_confidnetiality',
-            'verlengingMogelijk' => 'embedded.instance.embedded.properties.extension',
-            'trefwoorden' => 'embedded.instance.subject_types',
-            'publicatieIndicatie' => 'embedded.instance.embedded.properties.publication|bool',
-            'verantwoordingsrelatie' => 'embedded.instance.embedded.properties.supervisor_relation|array',
-            'omschrijving' => 'embedded.instance.title',
+            'identificatie'                   => 'embedded.instance.embedded.legacy.zaaktype_id|string',
+            'onderwerp'                       => 'embedded.instance.title',
+            'indicatieInternOfExtern'         => 'embedded.instance.trigger',
+            'doorlooptijd'                    => 'embedded.instance.embedded.properties.lead_time_legal.weken',
+            'servicenorm'                     => 'embedded.instance.embedded.properties.lead_time_service.weken',
+            'vertrouwelijkheidaanduiding'     => 'embedded.instance.embedded.properties.designation_of_confidnetiality',
+            'verlengingMogelijk'              => 'embedded.instance.embedded.properties.extension',
+            'trefwoorden'                     => 'embedded.instance.subject_types',
+            'publicatieIndicatie'             => 'embedded.instance.embedded.properties.publication|bool',
+            'verantwoordingsrelatie'          => 'embedded.instance.embedded.properties.supervisor_relation|array',
+            'omschrijving'                    => 'embedded.instance.title',
             'opschortingEnAanhoudingMogelijk' => 'embedded.instance.embedded.properties.suspension|bool',
             // 'resultaattypen.omschrijving' => 'instance.results.comments',
             // 'resultaattypen.omschrijvingGeneriek' => 'instance.results.label',
@@ -85,16 +75,16 @@ class MapZaakTypeService
         ];
 
         $skeletonIn = [
-            'handelingInitiator' => 'indienen',
-            'beginGeldigheid' => '1970-01-01',
-            'versieDatum' => '1970-01-01',
-            'doel' => 'Overzicht hebben van de bezoekers die aanwezig zijn',
-            'versiedatum' => '1970-01-01',
+            'handelingInitiator'   => 'indienen',
+            'beginGeldigheid'      => '1970-01-01',
+            'versieDatum'          => '1970-01-01',
+            'doel'                 => 'Overzicht hebben van de bezoekers die aanwezig zijn',
+            'versiedatum'          => '1970-01-01',
             'handelingBehandelaar' => 'Hoofd beveiliging',
-            'aanleiding' => 'Er is een afspraak gemaakt met een (niet) natuurlijk persoon',
+            'aanleiding'           => 'Er is een afspraak gemaakt met een (niet) natuurlijk persoon',
         ];
 
-        // NOTE/@TODO why is this in response? 
+        // NOTE/@TODO why is this in response?
         $xxllncCaseType = $data['response'];
 
         // Find already existing zgwZaakType by $xxllncCaseType['reference']
