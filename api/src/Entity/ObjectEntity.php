@@ -217,12 +217,16 @@ class ObjectEntity
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+
+        if ($entity) {
+            $this->setEntity($entity);
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -551,6 +555,8 @@ class ObjectEntity
     {
         // If we can find the Value object return the value of the Value object
         $valueObject = $this->getValueObject($attribute);
+
+
         if ($valueObject instanceof Value) {
             return $valueObject->getValue();
         }
@@ -611,7 +617,7 @@ class ObjectEntity
      */
     public function hydrate(array $array): ObjectEntity
     {
-        foreach ($array as  $key => $value) {
+        foreach ($array as $key => $value) {
             $this->setValue($key, $value);
         }
 
@@ -638,9 +644,7 @@ class ObjectEntity
 
         if ($values->isEmpty()) {
             // If no value with this attribute was found
-            $value = new Value();
-            $value->setAttribute($attribute);
-            $value->setObjectEntity($this);
+            $value = new Value($attribute, $this);
             $this->addObjectValue($value);
 
             return $value;
@@ -756,14 +760,16 @@ class ObjectEntity
                 continue;
             }
             // Oke loop the conditions
-            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
+            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty => $conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
                 if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
                     $explodedConditionValue = explode('.', $conditionValue);
                     $getValue = $value->getValue() instanceof ObjectEntity ? $value->getValue()->getExternalId() : $value->getValue();
-                    if (!$value->getAttribute()->getDefaultValue()
+                    if (
+                        !$value->getAttribute()->getDefaultValue()
                         || ($value->getAttribute()->getDefaultValue() !== $getValue)
-                        || end($explodedConditionValue) != 'noDefaultValue') {
+                        || end($explodedConditionValue) != 'noDefaultValue'
+                    ) {
                         continue;
                     } else {
                         $conditionValue = implode('.', array_slice($explodedConditionValue, 0, -1));
