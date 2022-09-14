@@ -193,7 +193,7 @@ class Value
             $this->setAttribute($attribute);
         }
 
-        if($objectEntity){
+        if ($objectEntity) {
             $this->setObjectEntity($objectEntity);
         }
     }
