@@ -535,9 +535,35 @@ class Value
     {
         if ($this->getAttribute()) {
 
-            // If the value is an array we handle it in its own function
-            if ($this->getAttribute()->getMultiple()) {
+            // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
+            $doNotGetArrayTypes = ['object', 'file'];
+            if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 return $this->setSimpleArrayValue($value);
+            }
+            elseif($this->getAttribute()->getMultiple()){
+                // Lest deal with multiple file subobjects
+
+                $this->objects->clear();
+
+                $valueArray = $value;
+                $idArray = [];
+                foreach($valueArray as $value){
+
+                    // Catch Array input (for hydrator)
+                    if(is_array($value)){
+                        $valueObject = New ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->hydrate($value);
+                        $value = $valueObject;
+                    }
+
+                    $idArray[] = $value->getId();
+                    $this->addObject($value);
+                }
+
+                // Set a string reprecentation of the object
+                $this->stringValue = ','.implode(',',$idArray);
+
+                return $this->getObjects();
             }
 
             switch ($this->getAttribute()->getType()) {
@@ -545,19 +571,20 @@ class Value
                     return $this->setStringValue($value);
                 case 'integer':
                     if ($value < PHP_INT_MAX) {
-                        return $this->setIntegerValue($value);
+                        return $this->setIntegerValue((int)$value);
                     } else {
                         return $this;
                     }
                 case 'boolean':
+
+                    // This is used for defaultValue, this is always a string type instead of a boolean
                     if (is_string($value)) {
-                        // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
                     }
 
                     return $this->setBooleanValue($value);
                 case 'number':
-                    return $this->setNumberValue($value);
+                    return $this->setNumberValue((float)$value);
                 case 'date':
                 case 'datetime':
                     // if we auto convert null to a date time we would always default to current_timestamp, so lets tackle that
@@ -568,11 +595,6 @@ class Value
 
                         return $this->setDateTimeValue(null);
                     }
-
-                    // if (!$value instanceof string) {
-                    //     return $this;
-                    // }
-
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
                     if ($value === null) {
@@ -584,17 +606,26 @@ class Value
 
                     return $this->addFile($value);
                 case 'object':
-                    // if ($value === null || !$value instanceof ObjectEntity) {
-                    //     return $this;
-                    // }
+
+                    // Catch empty input
                     if ($value === null) {
                         return $this;
                     }
+
+                    // Catch Array input (for hydrator)
+                    if(is_array($value)){
+                        $valueObject = New ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->hydrate($value);
+                        $value = $valueObject;
+                    }
+
                     $this->objects->clear();
+
                     // Set a string reprecentation of the object
                     $this->stringValue = $value->getId();
 
                     return $this->addObject($value);
+
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
@@ -610,7 +641,9 @@ class Value
     {
         if ($this->getAttribute()) {
             // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
+
             $doNotGetArrayTypes = ['object', 'file'];
+
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 // Lets be backwards compatable
                 if (!empty($this->getSimpleArrayValue())) {
