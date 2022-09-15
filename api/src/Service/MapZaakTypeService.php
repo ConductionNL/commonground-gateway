@@ -153,8 +153,6 @@ class MapZaakTypeService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
-        // var_dump($configuration);
-
         // Find ZGW Type entities by id from config
         $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
 
