@@ -288,8 +288,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Expands a QueryBuilder in the case that the search query is used.
      *
      * @param QueryBuilder $query
-     * @param Entity $entity
-     * @param string $search
+     * @param Entity       $entity
+     * @param string       $search
      *
      * @return QueryBuilder
      */
@@ -299,9 +299,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $searchQueryOrWhere = $this->buildSearchQuery($query, $entity, $search);
 
             if (!empty($searchQueryOrWhere)) {
-                $searchQuery = "";
+                $searchQuery = '';
                 foreach ($searchQueryOrWhere as $key => $searchQueryValue) {
-                    $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue :"$searchQuery OR $searchQueryValue";
+                    $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue : "$searchQuery OR $searchQueryValue";
                 }
 
                 $query->andWhere("($searchQuery)");
@@ -318,11 +318,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * And lastly but most importantly builds and returns an array of orWhere statements to add to the query in addSearchQuery().
      *
      * @param QueryBuilder $query
-     * @param Entity $entity
-     * @param string $search
-     * @param int $level
-     * @param string $prefix
-     * @param string $objectPrefix
+     * @param Entity       $entity
+     * @param string       $search
+     * @param int          $level
+     * @param string       $prefix
+     * @param string       $objectPrefix
      *
      * @return array returns an array of orWhere statements to add to the query in addSearchQuery().
      */
@@ -349,11 +349,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Expands a QueryBuilder in the case the search query is used and search on subresources is configured.
      *
      * @param QueryBuilder $query
-     * @param Attribute $attribute
-     * @param string $sqlFriendlyKey
-     * @param string $search
-     * @param int $level
-     * @param string $prefix
+     * @param Attribute    $attribute
+     * @param string       $sqlFriendlyKey
+     * @param string       $search
+     * @param int          $level
+     * @param string       $prefix
      *
      * @return array returns an array of orWhere statements for a subresource to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
      */
@@ -376,9 +376,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Expands a QueryBuilder so that we only check the values of the correct attribute when building the search query sql.
      *
      * @param QueryBuilder $query
-     * @param Attribute $attribute
-     * @param string $sqlFriendlyKey
-     * @param string $prefix
+     * @param Attribute    $attribute
+     * @param string       $sqlFriendlyKey
+     * @param string       $prefix
      *
      * @return string returns a single orWhere statements to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
      */
