@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use DateTime;
@@ -85,10 +86,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         $query = $query ?? $this->createQuery($entity, $filters, $order);
 
-        var_dump('DQL', $query->getDQL());
-        var_dump('SQL', $query->getQuery()->getSQL());
-        var_dump('PARAMETER', $query->getParameter('search')->getValue());
-
         return $query
             ->setFirstResult($offset)
             ->setMaxResults($limit)
@@ -135,7 +132,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (array_key_exists('search', $filters)) {
             $search = $filters['search'];
             unset($filters['search']);
-            $this->buildSearchQuery($query, $entity, $search)->distinct();
+            $this->addSearchQuery($query, $entity, $search)->distinct();
         }
 
         if (!empty($filters)) {
@@ -296,18 +293,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder
      */
-    private function buildSearchQuery(QueryBuilder $query, Entity $entity, string $search): QueryBuilder
+    private function addSearchQuery(QueryBuilder $query, Entity $entity, string $search): QueryBuilder
     {
         if (count($entity->getSearchPartial()) !== 0) {
-            $searchQueryValues = $this->getSearchQueryValues($query, $entity, $search);
+            $searchQueryOrWhere = $this->buildSearchQuery($query, $entity, $search);
 
-            if (!empty($searchQueryValues)) {
+            if (!empty($searchQueryOrWhere)) {
                 $searchQuery = "";
-                foreach ($searchQueryValues as $key => $searchQueryValue) {
-                    $searchQuery = array_key_first($searchQueryValues) === $key ? $searchQueryValue :"$searchQuery OR $searchQueryValue";
+                foreach ($searchQueryOrWhere as $key => $searchQueryValue) {
+                    $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue :"$searchQuery OR $searchQueryValue";
                 }
 
-                var_dump($searchQuery);
                 $query->andWhere("($searchQuery)");
                 $query->setParameter('search', '%'.strtolower($search).'%');
             }
@@ -317,8 +313,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @todo docs
-     * & better function name?
+     * Expands a QueryBuilder with the correct left joins if the search query is used and search on subresources is configured.
+     * Also makes sure we only check the values of the correct attribute when building the search query sql.
+     * And lastly but most importantly builds and returns an array of orWhere statements to add to the query in addSearchQuery().
      *
      * @param QueryBuilder $query
      * @param Entity $entity
@@ -327,44 +324,72 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param string $prefix
      * @param string $objectPrefix
      *
-     * @return array
+     * @return array returns an array of orWhere statements to add to the query in addSearchQuery().
      */
-    private function getSearchQueryValues(QueryBuilder &$query, Entity $entity, string $search, int $level = 0, string $prefix = 'valueSearch', string $objectPrefix = 'o'): array
+    private function buildSearchQuery(QueryBuilder $query, Entity $entity, string $search, int $level = 0, string $prefix = 'valueSearch', string $objectPrefix = 'o'): array
     {
-        $searchQueryValues = [];
+        $searchQueryOrWhere = [];
 
-        var_dump("{$entity->getName()} Searchable");
         foreach ($entity->getSearchPartial() as $attribute) {
             $sqlFriendlyKey = $this->makeKeySqlFriendly($attribute->getName());
             $query->leftJoin("$objectPrefix.objectValues", $prefix.$sqlFriendlyKey);
             // If attribute type is object (we have $attribute->object) AND if that Entity has searchPartial attributes.
             if (!empty($attribute->getObject()) && count($attribute->getObject()->getSearchPartial()) !== 0) {
-                // todo make this a function
-                var_dump("{$entity->getName()} Attribute Object $sqlFriendlyKey");
-                $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
-                $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
-
-                $searchQueryValues = array_merge($searchQueryValues, $this->getSearchQueryValues(
-                    $query,
-                    $attribute->getObject(),
-                    $search,
-                    $level + 1,
-                    'subValue'.$sqlFriendlyKey.$level,
-                    'subObjects'.$sqlFriendlyKey.$level
-                ));
-            } elseif (empty($attribute->getObject())) { // Only do this if type is not object!
-                // todo make this a function
-                // Make sure we only check the values of the correct attribute
-                $query->leftJoin("$prefix$sqlFriendlyKey.attribute", $prefix.$sqlFriendlyKey.'Attribute');
-                $query->andWhere($prefix.$sqlFriendlyKey."Attribute.name = :Key$sqlFriendlyKey")
-                    ->setParameter("Key$sqlFriendlyKey", $attribute->getName());
-
-                var_dump("{$entity->getName()} Attribute OR $sqlFriendlyKey");
-                $searchQueryValues[] = "LOWER($prefix$sqlFriendlyKey.stringValue) LIKE :search";
+                $searchQueryOrWhere = array_merge($searchQueryOrWhere, $this->addSubresourceSearchQuery($query, $attribute, $sqlFriendlyKey, $search, $level, $prefix));
+            } elseif (empty($attribute->getObject())) {
+                // Only do this if type is not object!
+                $searchQueryOrWhere[] = $this->addNormalSearchQuery($query, $attribute, $sqlFriendlyKey, $prefix);
             }
         }
 
-        return $searchQueryValues;
+        return $searchQueryOrWhere;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case the search query is used and search on subresources is configured.
+     *
+     * @param QueryBuilder $query
+     * @param Attribute $attribute
+     * @param string $sqlFriendlyKey
+     * @param string $search
+     * @param int $level
+     * @param string $prefix
+     *
+     * @return array returns an array of orWhere statements for a subresource to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
+     */
+    private function addSubresourceSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $search, int $level, string $prefix): array
+    {
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+
+        return $this->buildSearchQuery(
+            $query,
+            $attribute->getObject(),
+            $search,
+            $level + 1,
+            'subValue'.$sqlFriendlyKey.$level,
+            'subObjects'.$sqlFriendlyKey.$level
+        );
+    }
+
+    /**
+     * Expands a QueryBuilder so that we only check the values of the correct attribute when building the search query sql.
+     *
+     * @param QueryBuilder $query
+     * @param Attribute $attribute
+     * @param string $sqlFriendlyKey
+     * @param string $prefix
+     *
+     * @return string returns a single orWhere statements to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
+     */
+    private function addNormalSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $prefix): string
+    {
+        // Make sure we only check the values of the correct attribute
+        $query->leftJoin("$prefix$sqlFriendlyKey.attribute", $prefix.$sqlFriendlyKey.'Attribute');
+        $query->andWhere($prefix.$sqlFriendlyKey."Attribute.name = :Key$sqlFriendlyKey")
+            ->setParameter("Key$sqlFriendlyKey", $attribute->getName());
+
+        return "LOWER($prefix$sqlFriendlyKey.stringValue) LIKE :search";
     }
 
     /**
@@ -755,7 +780,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Expands a QueryBuilder in the case order on a subresource is used (example: subresource.key = something).
+     * Expands a QueryBuilder in the case order on a subresource is used in the order query (example: subresource.key = something).
      *
      * @param QueryBuilder $query          The existing QueryBuilder.
      * @param string       $sqlFriendlyKey The key of the order. But made sql friendly for left joins with the makeKeySqlFriendly() function.
