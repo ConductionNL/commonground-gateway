@@ -26,13 +26,14 @@ class ZdsZaakService
     /**
      * @param EntityManagerInterface $entityManager
      * @param SynchronizationService $synchronizationService
-     * @param ObjectEntityService    $objectEntityService
+     * @param ObjectEntityService $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService $objectEntityService
-    ) {
+        ObjectEntityService    $objectEntityService
+    )
+    {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
@@ -56,14 +57,14 @@ class ZdsZaakService
     /**
      * This function validates whether the zds message has an identifier associated with a case type.
      *
-     * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
-     *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration array from the action
      *
+     * @return array The modified data of the call with the case type and identification
      * @throws ErrorException
      *
-     * @return array The modified data of the call with the case type and identification
+     * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
+     *
      */
     public function zdsValidationHandler(array $data, array $configuration): array
     {
@@ -80,7 +81,7 @@ class ZdsZaakService
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
         if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
+            throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
         }
 
         // @todo change the data with the zaaktype and identification.
@@ -99,15 +100,15 @@ class ZdsZaakService
     /**
      * This function converts a zds message to zgw.
      *
+     * @param array $data The data from the call
+     * @param array $configuration The configuration array from the action
+     *
+     * @return array The data from the call
+     * @throws ErrorException
+     *
      * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
      * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
      *
-     * @param array $data          The data from the call
-     * @param array $configuration The configuration array from the action
-     *
-     * @throws ErrorException
-     *
-     * @return array The data from the call
      */
     public function zdsToZGWHandler(array $data, array $configuration): array
     {
@@ -115,6 +116,7 @@ class ZdsZaakService
         $this->data = $data;
 
         $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
+        $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
 
         // @todo remove the check for identification and zaaktype if the dataService is implemented
@@ -126,48 +128,21 @@ class ZdsZaakService
         }
 
         // Let get the zaaktype
-        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue'=> $zaakTypeIdentificatie])->getObjectEntity();
+        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
         if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
+            throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
         }
 
-//        var_dump($zaaktypeObjectEntity->getId()->toString());
-//        var_dump($zdsObject->getValueObject('extraElementen')->getArrayValue());
-//        var_dump($zaaktypeObjectEntity->getValueObject('eigenschappen')->getArrayValue());die();
         $zdsObject = $zds->getValue('object');
-        $zdsExtraElementsEntityIds = $zdsObject->getValueObject('extraElementen')->getArrayValue();
+
         $unusedExtraElements = [
             'toelichting' => null
         ];
-        $zaaktypeEigenschappenIds = $zaaktypeObjectEntity->getValueObject('eigenschappen')->getArrayValue();
-        foreach ($zaaktypeEigenschappenIds as $zaaktypeEigenschapId) {
-            $zaaktypeEigenschap = $this->entityManager->getRepository('App:ObjectEntity')->find($zaaktypeEigenschapId);
 
-//            var_dump($zaaktypeEigenschap->getValue('zaaktype'));
-
-            foreach ($zdsExtraElementsEntityIds as $zdsExtraElementsEntityId) {
-                $zdsExtraElement = $this->entityManager->getRepository('App:ObjectEntity')->find($zdsExtraElementsEntityId);
-
-//                var_dump($zaaktypeEigenschap->getValue('naam'));
-//                var_dump($zdsExtraElement->getValue('@naam'));
-//                var_dump($zaaktypeEigenschap->getValue('naam') . ' ' . $zdsExtraElement->getValue('@naam'));
-                if ($zaaktypeEigenschap->getValue('naam') == $zdsExtraElement->getValue('@naam')) {
-//                    var_dump($zaaktypeEigenschap->toArray());die();
-
-                }
-            }
-        }
-
-//        $unusedExtraElements['toelichting'] .= " {$zdsExtraElement->getValue('@naam')}: {$zdsExtraElement->getValue('#')} ";
-
-        // so far so good (need error handling doh)
-        $zaak = new ObjectEntity();
-
-//        $zaak->hydrate($zdsObject->toArray());
-        $zaak->setEntity($zaakEntity);
+        // Lets start by setting up the case
+        $zaak = new ObjectEntity($zaakEntity);
         $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum'));
-        $zaak->setValue('toelichting', "{$zdsObject->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
         $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving'));
         $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland'));
         $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
@@ -175,21 +150,42 @@ class ZdsZaakService
         $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
         $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
 
-        $zaakEigenschappen = [];
-//        foreach($zds->getValue('extaElements') as $key => $value){
-//            if(array_key_exists($key, $zgwZaakTypeEigenschappen)){
-//                $zaakEigenschappen[] = [
-//
-//                ];
-//                continue;
-//            }
-//
-//            $toelichtingen = $zaak->getValue('toelichtingen');
-//            $toelichtingen = $toelichtingen->getStringValue().$value;
-//            $zaak->setValue('toelichtingen', $toelichtingen);
-//        }
-//
-//        $zaak->setValue('eigenschappen', $zaakEigenschappen);
+        // Lets prepare an eigenschappen array
+        $eigenschappen = $zaaktypeObjectEntity->getValue('eigenschappen');
+        $eigenschappenArray = [];
+
+
+        foreach ($eigenschappen as $eigenschap) {
+            $eigenschappenArray[$eigenschap->getValue('naam')] = $eigenschap;
+        }
+
+        // Lets grep our extra elements to stuff into the zaak
+        $extraElementen = $zdsObject->getValue('extraElementen');
+
+        foreach ($extraElementen as $extraElement) {
+            // Extra element does exist in eigenschappen
+            if (array_key_exists($extraElement->getValue('@naam'), $eigenschappenArray) && !in_array($extraElement->getValue('@naam'), $unusedExtraElements)) {
+
+                // Eigenschap type
+                $eigenschapType = $eigenschappenArray[$extraElement->getValue('@naam')];
+
+                // Nieuwe eigenschap aanmaken
+                $zaakEigenschap = new ObjectEntity($zaakEigenschapEntity);
+                $zaakEigenschap->setValue('type', $eigenschapType->getValue('definitie'));
+                $zaakEigenschap->setValue('naam', $extraElement->getValue('@naam'));
+                $zaakEigenschap->setValue('waarde', $extraElement->getValue('#'));
+                $zaakEigenschap->setValue('zaak', $zaak);
+                $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
+
+                $this->entityManager->persist($zaakEigenschap);
+                // Nieuwe eigenschap aan zaak toevoegen
+                $zaak->getValueObject('eigenschappen')->addObject($zaakEigenschap);
+
+                continue;
+            }
+            // Extra element doesn't exist in eigenschappen
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+        }
 
         $this->entityManager->persist($zaak);
         $this->entityManager->flush();
@@ -199,7 +195,7 @@ class ZdsZaakService
 
     /**
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration array from the action
      *
      *
@@ -213,16 +209,16 @@ class ZdsZaakService
         $eigenschapObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
         $eigenschappen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $eigenschapObjectEntity]);
 
-        foreach($eigenschappen as $eigenschap){
+        foreach ($eigenschappen as $eigenschap) {
 
             if ($eigenschap->getValue('zaaktype') !== null) {
-                $zaaktype =  $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($eigenschap->getValue('zaaktype'));
+                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($eigenschap->getValue('zaaktype'));
 
-                var_dump($zaaktype->getId()->toString());
+//                var_dump($zaaktype->getId()->toString());
                 // Vind de eigenschappen property en voeg de
                 $zaaktype->getValueObject('eigenschappen')->addObject($eigenschap);
                 $this->entityManager->persist($zaaktype);
-                var_dump($zaaktype->toArray());
+//                var_dump($zaaktype->toArray());
             }
         }
 
@@ -237,7 +233,7 @@ class ZdsZaakService
      * This function set an identifier on the dataset.
      *
      * @param string $identifier The identifier to set
-     * @param array  $data       The data from the call
+     * @param array $data The data from the call
      *
      * @return array
      */
@@ -255,7 +251,7 @@ class ZdsZaakService
     /**
      * Changes the request to hold the proper zaaktype url insted of given identifier.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration of the action
      *
      * @return array
@@ -299,12 +295,12 @@ class ZdsZaakService
     }
 
     /**
-     * @todo wat doet dit?
-     *
      * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
-     * @param array        $data         The data array
+     * @param array $data The data array
      *
      * @return Synchronization
+     * @todo wat doet dit?
+     *
      */
     public function createSynchronization(ObjectEntity $objectEntity, array $data): Synchronization
     {
@@ -329,15 +325,15 @@ class ZdsZaakService
     /**
      * This function creates a zaak eigenschap.
      *
-     * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
+     * @param array $eigenschap The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
      *
-     * @throws GatewayException
+     * @return ObjectEntity Creates a zaakeigenschap
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return ObjectEntity Creates a zaakeigenschap
+     * @throws GatewayException
      */
     public function createObject(array $eigenschap, ObjectEntity $objectEntity, array $data): ObjectEntity
     {
@@ -353,10 +349,10 @@ class ZdsZaakService
     /**
      * This function returns the zaak, eigenschap and waarde when matched with the element in de action configuration file.
      *
-     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
-     * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string            $eigenschap    The naam of the eigenschap that has to be matched
-     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
+     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
+     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param string $eigenschap The naam of the eigenschap that has to be matched
+     * @param string $zaakUrl The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -367,12 +363,12 @@ class ZdsZaakService
                 $this->usedValues[] = $element['@naam'];
 
                 return [
-                    'zaak'       => $zaakUrl,
+                    'zaak' => $zaakUrl,
                     'eigenschap' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue(),
-                    'waarde'     => $element['#'],
-                    'zaaktype'   => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('zaaktype'))->getStringValue(),
-                    'definitie'  => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('definitie'))->getStringValue(),
-                    'naam'       => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue(),
+                    'waarde' => $element['#'],
+                    'zaaktype' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('zaaktype'))->getStringValue(),
+                    'definitie' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('definitie'))->getStringValue(),
+                    'naam' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue(),
                 ];
             }
         }
@@ -383,27 +379,27 @@ class ZdsZaakService
     /**
      * This function returns updates the zaak with the unused elements under 'toelichting'.
      *
-     * @param array        $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array        $data          The data from the call
-     * @param ObjectEntity $zaakObject    The zaak object entity that relates to the entity Zaak
-     * @param array        $eigenschappen The eigenschappen @ids
+     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param array $data The data from the call
+     * @param ObjectEntity $zaakObject The zaak object entity that relates to the entity Zaak
+     * @param array $eigenschappen The eigenschappen @ids
      *
-     * @throws GatewayException
+     * @return ObjectEntity
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return ObjectEntity
+     * @throws GatewayException
      */
     public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject, array $eigenschappen): ObjectEntity
     {
         $unusedElements = [
-            'toelichting'                  => '',
-            'zaaktype'                     => $data['zaaktype'],
-            'startdatum'                   => $data['startdatum'],
-            'bronorganisatie'              => $data['bronorganisatie'],
+            'toelichting' => '',
+            'zaaktype' => $data['zaaktype'],
+            'startdatum' => $data['startdatum'],
+            'bronorganisatie' => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
-            'eigenschappen'                => $eigenschappen,
+            'eigenschappen' => $eigenschappen,
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -419,9 +415,9 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
-     * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
+     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
+     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param string $zaakUrl The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -439,16 +435,16 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $eigenschappen The eigenschappen @ids
      *
-     * @throws GatewayException
+     * @return void
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return void
+     * @throws GatewayException
      */
     public function getZaak(array $data, array $extraElements, array $eigenschappen): void
     {
@@ -460,15 +456,15 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration of the zaakeigenschap action
      *
-     * @throws GatewayException
+     * @return array|null
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return array|null
+     * @throws GatewayException
      */
     public function zaakEigenschappenHandler(array $data, array $configuration): array
     {
