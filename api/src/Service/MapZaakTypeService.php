@@ -62,7 +62,13 @@ class MapZaakTypeService
         ];
     }
 
-    public function mapStatusTypen(array $zaakTypeArray): array
+    /**
+     * Maps the statusTypen from xxllnc to zgw
+     * 
+     * @param array $zaakTypeArray This is the ZGW ZaakType array.
+     * @return array $zaakTypeArray This is the ZGW ZaakType array with the added statustypen.
+     */
+    private function mapStatusTypen(array $zaakTypeArray): array
     {
         $zaakTypeArray['roltypen'] = [];
 
@@ -101,7 +107,13 @@ class MapZaakTypeService
         return $zaakTypeArray;
     }
 
-    public function mapResultaatTypen(array $zaakTypeArray): array
+    /**
+     * Maps the resultaatTypen from xxllnc to zgw
+     * 
+     * @param array $zaakTypeArray This is the ZGW ZaakType array.
+     * @return array $zaakTypeArray This is the ZGW ZaakType array with the added resultaattypen.
+     */
+    private function mapResultaatTypen(array $zaakTypeArray): array
     {
         // Manually map results to resultaattypen
         if (isset($this->data['embedded']['instance']['embedded']['results'])) {
@@ -121,7 +133,13 @@ class MapZaakTypeService
         return $zaakTypeArray;
     }
 
-    public function mapEigenschappen(array $zaakTypeArray): array
+    /**
+     * Maps the eigenschappen from xxllnc to zgw
+     * 
+     * @param array $zaakTypeArray This is the ZGW ZaakType array.
+     * @return array $zaakTypeArray This is the ZGW ZaakType array with the added eigenschappen.
+     */
+    private function mapEigenschappen(array $zaakTypeArray): array
     {
         // // Manually map properties to eigenschappen
         $zaakTypeArray['eigenschappen'] = [];
@@ -133,8 +151,13 @@ class MapZaakTypeService
         return $zaakTypeArray;
     }
 
-
-    public function getZaakTypeObjectEntity(Entity $zaakTypeEntity): ObjectEntity
+    /**
+     * Finds or creates a ObjectEntity from the ZaakType Entity
+     * 
+     * @param Entity $zaakTypeEntity This is the ZaakType Entity in the gateway.
+     * @return ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType ObjectEntity.
+     */
+    private function getZaakTypeObjectEntity(Entity $zaakTypeEntity): ObjectEntity
     {
         // Find already existing zgwZaakType by $this->data['reference']
         $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $this->data['reference'], 'entity' => $zaakTypeEntity]);
@@ -148,6 +171,13 @@ class MapZaakTypeService
         return $zaakTypeObjectEntity;
     }
 
+    /**
+     * Creates or updates a ZGW ZaakType from a xxllnc casetype with the use of mapping
+     * 
+     * @param array $data Data from the handler where the xxllnc casetype is in.
+     * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
+     * @return array $this->data Data which we entered the function with
+     */
     public function mapZaakTypeHandler(array $data, array $configuration): array
     {
         $this->data = $data['response'];
