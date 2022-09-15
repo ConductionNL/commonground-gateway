@@ -162,34 +162,57 @@ class ZdsZaakService
 //        $unusedExtraElements['toelichting'] .= " {$zdsExtraElement->getValue('@naam')}: {$zdsExtraElement->getValue('#')} ";
 
         // so far so good (need error handling doh)
-        $zaak = new ObjectEntity();
 
-//        $zaak->hydrate($zdsObject->toArray());
-        $zaak->setEntity($zaakEntity);
+        // General Data
+        $zaakEntity =
+        $zaakEigenschapEntity =
+        $zdsObject  = $zds->getValue('object');
+
+        $unusedExtraElements = [
+            'toelichting' => null
+        ];
+
+        // Lets start by setting up the case
+        $zaak = new ObjectEntity($zaakEntity);
         $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum'));
-        $zaak->setValue('toelichting', "{$zdsObject->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
         $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving'));
         $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland'));
         $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
         $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
         $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
         $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
+        $zaak->setValue('zaaktype', $zdsObject->getValue('toelichting');
 
-        $zaakEigenschappen = [];
-//        foreach($zds->getValue('extaElements') as $key => $value){
-//            if(array_key_exists($key, $zgwZaakTypeEigenschappen)){
-//                $zaakEigenschappen[] = [
-//
-//                ];
-//                continue;
-//            }
-//
-//            $toelichtingen = $zaak->getValue('toelichtingen');
-//            $toelichtingen = $toelichtingen->getStringValue().$value;
-//            $zaak->setValue('toelichtingen', $toelichtingen);
-//        }
-//
-//        $zaak->setValue('eigenschappen', $zaakEigenschappen);
+        // Lets prepare an eigenschappen array
+        $eigenschappen = $zaaktypeObjectEntity->getValue('eigenschappen');
+        $eigenschappenArray = [];
+
+        foreach($eigenschappen as $eigenschap){
+            $eigenschappenArray[$eigenschap->getValue('name')] = $eigenschap;
+        }
+
+        // Lets grap oure extra elements to stuff into the zaak
+        $extraElementen = $zdsObject->getValue('extraElementen');
+
+        foreach($extraElementen as $extraElement){
+            // Extra element does exsist i eigenschappen
+            if(array_key_exists( $extraElement->getVlaue('@name'), $eigenschappenArray ) && !in_array($extraElement->getVlaue('@name'), $unusedExtraElements)){
+                // Eigenschap type
+                $eigenschapType = $eigenschappenArray[$extraElement->getVlaue('@name')];
+                // Nieuwe eigenschap aanmaken
+                $eigenschap = new ObjectEntity($zaakEigenschapEntity);
+                $eigenschap->setValue('type', $eigenschapType->getValue('definitie van eigsnchap type ofzo'));
+                $eigenschap->setValue('waarde', $extraElement->getVlaue('@name'));
+                $eigenschap->setValue('zaak', $zaak);
+
+                // Nieuwe eigenschap aan zaak toevoegen
+                $zaak->getValueObject('eigenschappen')->addObject($eigenschap);
+
+                Continue;
+            }
+            // Extra element dosnt exist in eigenschappen
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+        }
 
         $this->entityManager->persist($zaak);
         $this->entityManager->flush();
