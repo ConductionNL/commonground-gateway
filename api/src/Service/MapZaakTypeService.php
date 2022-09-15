@@ -153,23 +153,13 @@ class MapZaakTypeService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
+        // var_dump($configuration);
+
         // Find ZGW Type entities by id from config
         $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
-        $statusTypeEntity = $this->entityRepo->find($configuration['entities']['StatusType']);
-        $resultaatTypeEntity = $this->entityRepo->find($configuration['entities']['ResultaatType']);
-        $rolTypeEntity = $this->entityRepo->find($configuration['entities']['RolType']);
 
         if (!isset($zaakTypeEntity)) {
             throw new \Exception('ZaakType entity could not be found');
-        }
-        if (!isset($statusTypeEntity)) {
-            throw new \Exception('StatusType entity could not be found');
-        }
-        if (!isset($resultaatTypeEntity)) {
-            throw new \Exception('ResultaatType entity could not be found');
-        }
-        if (!isset($rolTypeEntity)) {
-            throw new \Exception('RolType entity could not be found');
         }
 
         $zaakTypeObjectEntity = $this->getZaakTypeObjectEntity($zaakTypeEntity);
