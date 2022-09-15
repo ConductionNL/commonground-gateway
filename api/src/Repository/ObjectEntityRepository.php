@@ -297,16 +297,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         if (count($entity->getSearchPartial()) !== 0) {
             $searchQueryOrWhere = $this->buildSearchQuery($query, $entity, $search);
-
-            if (!empty($searchQueryOrWhere)) {
-                $searchQuery = '';
-                foreach ($searchQueryOrWhere as $key => $searchQueryValue) {
-                    $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue : "$searchQuery OR $searchQueryValue";
-                }
-
-                $query->andWhere("($searchQuery)");
-                $query->setParameter('search', '%'.strtolower($search).'%');
+            if ($searchQueryOrWhere === []) {
+                return $query;
             }
+
+            $searchQuery = '';
+            foreach ($searchQueryOrWhere as $key => $searchQueryValue) {
+                $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue : "$searchQuery OR $searchQueryValue";
+            }
+
+            $query->andWhere("($searchQuery)");
+            $query->setParameter('search', '%'.strtolower($search).'%');
         }
 
         return $query;
