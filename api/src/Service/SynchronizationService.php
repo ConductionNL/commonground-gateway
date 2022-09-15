@@ -672,35 +672,11 @@ class SynchronizationService
     }
 
     /**
-     * Stores the result of a synchronisation in the synchronization object.
+     * Removes null fields from data
      *
-     * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
-     * @param array           $body            The body of the call to synchronise to a source
-     *
-     * @return Synchronization The updated synchronization object
+     * @param  array $objectArray   The data to clear
+     * @return array                The cleared data
      */
-    private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
-    {
-        try {
-            $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
-        } catch (Exception $exception) {
-            return $synchronization;
-        }
-
-        $body = new Dot($body);
-        $now = new DateTime();
-
-        $synchronization->setLastSynced($now);
-        $synchronization->setSourceLastChanged($now);
-        $synchronization->setLastChecked($now);
-        if ($body->has($this->configuration['apiSource']['location']['idField'])) {
-            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
-        }
-        $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
-
-        return $synchronization;
-    }
-
     public function clearNull(array $objectArray): array
     {
         foreach ($objectArray as $key => $value) {
@@ -712,34 +688,12 @@ class SynchronizationService
         return $objectArray;
     }
 
-    private function mapInput(array $objectArray): array
-    {
-        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
-            $objectArray = array_filter($objectArray, function ($propertyName) {
-                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
-            }, ARRAY_FILTER_USE_KEY);
-        }
-        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
-            $objectArray = array_filter($objectArray, function ($propertyName) {
-                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
-            }, ARRAY_FILTER_USE_KEY);
-        }
-
-        if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonIn']), $objectArray, $this->configuration['apiSource']['mappingIn']);
-        } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingIn']);
-        } elseif (array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonIn']), $objectArray, $objectArray);
-        }
-
-        if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
-            $objectArray = $this->translate($objectArray);
-        }
-
-        return $objectArray;
-    }
-
+    /**
+     * Maps output according to configuration
+     *
+     * @param  array $objectArray   The data to map
+     * @return array                The mapped data
+     */
     private function mapOutput(array $objectArray): array
     {
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
@@ -780,6 +734,35 @@ class SynchronizationService
 
         return $objectArray;
     }
+    /**
+     * Stores the result of a synchronisation in the synchronization object.
+     *
+     * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
+     * @param array           $body            The body of the call to synchronise to a source
+     *
+     * @return Synchronization The updated synchronization object
+     */
+    private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
+    {
+        try {
+            $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
+        } catch (Exception $exception) {
+            return $synchronization;
+        }
+
+        $body = new Dot($body);
+        $now = new DateTime();
+
+        $synchronization->setLastSynced($now);
+        $synchronization->setSourceLastChanged($now);
+        $synchronization->setLastChecked($now);
+        if ($body->has($this->configuration['apiSource']['location']['idField'])) {
+            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
+        }
+        $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
+
+        return $synchronization;
+    }
 
     /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
@@ -793,7 +776,6 @@ class SynchronizationService
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
-        var_Dump('hello darkness my old friend');
         $object = $synchronization->getObject();
         $objectArray = $object->toArray();
 
