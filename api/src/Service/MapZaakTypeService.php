@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 
 class MapZaakTypeService
@@ -48,7 +47,7 @@ class MapZaakTypeService
             'publicatieIndicatie'             => 'embedded.instance.embedded.properties.publication|bool',
             'verantwoordingsrelatie'          => 'embedded.instance.embedded.properties.supervisor_relation|array',
             'omschrijving'                    => 'embedded.instance.title',
-            'opschortingEnAanhoudingMogelijk' => 'embedded.instance.embedded.properties.suspension|bool'
+            'opschortingEnAanhoudingMogelijk' => 'embedded.instance.embedded.properties.suspension|bool',
         ];
 
         $this->skeletonIn = [
@@ -84,7 +83,6 @@ class MapZaakTypeService
                 isset($phase['embedded']['fields'][0]['help']) ? $statusTypeArray['statustekst'] = $phase['embedded']['fields'][0]['help'] : 'geen statustekst';
                 isset($phase['seq']) && $statusTypeArray['volgnummer'] = $phase['seq'];
 
-
                 if (isset($phase['embedded']['route']['embedded']['role'])) {
                     $rolTypeArray = [];
 
@@ -94,8 +92,8 @@ class MapZaakTypeService
                     $roleInstanceObjectEntity = $this->objectEntityRepo->find($rolObjectEntity->getValue('instance')->getId()->toString());
 
                     $rolTypeArray = [
-                        'omschrijving' => $roleInstanceObjectEntity->getValue('description'),
-                        'omschrijvingGeneriek' => strtolower($roleInstanceObjectEntity->getValue('name'))
+                        'omschrijving'         => $roleInstanceObjectEntity->getValue('description'),
+                        'omschrijvingGeneriek' => strtolower($roleInstanceObjectEntity->getValue('name')),
                     ];
                     $zaakTypeArray['roltypen'][] = $rolTypeArray;
                 }
