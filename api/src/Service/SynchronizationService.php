@@ -576,7 +576,6 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             //@TODO: Write errors to logs
-
             foreach ($validationErrors as $error) {
                 if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
@@ -713,24 +712,36 @@ class SynchronizationService
         return $objectArray;
     }
 
-    /**
-     * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
-     *
-     * @param Synchronization $synchronization The synchronisation object for the created or updated object
-     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
-     *
-     * @throws CacheException|InvalidArgumentException
-     *
-     * @return Synchronization The updated synchronisation object
-     */
-    private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
+    private function mapInput(array $objectArray): array
     {
-        $object = $synchronization->getObject();
-        $objectArray = $object->toArray();
+        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
+            $objectArray = array_filter($objectArray, function ($propertyName) {
+                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
+            $objectArray = array_filter($objectArray, function ($propertyName) {
+                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
 
-//        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
-        // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-        // todo: allowedPropertiesOut, notAllowedPropertiesOut
+        if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonIn']), $objectArray, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonIn']), $objectArray, $objectArray);
+        }
+
+        if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
+            $objectArray = $this->translate($objectArray);
+        }
+
+        return $objectArray;
+    }
+
+    private function mapOutput(array $objectArray): array
+    {
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = array_filter($objectArray, function ($propertyName) {
@@ -766,6 +777,31 @@ class SynchronizationService
         if (array_key_exists('clearNull', $this->configuration['apiSource']) && $this->configuration['apiSource']['clearNull']) {
             $objectArray = $this->clearNull($objectArray);
         }
+
+        return $objectArray;
+    }
+
+    /**
+     * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
+     *
+     * @param Synchronization $synchronization The synchronisation object for the created or updated object
+     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
+     *
+     * @throws CacheException|InvalidArgumentException
+     *
+     * @return Synchronization The updated synchronisation object
+     */
+    private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
+    {
+        var_Dump('hello darkness my old friend');
+        $object = $synchronization->getObject();
+        $objectArray = $object->toArray();
+
+//        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
+        // todo: maybe move this to foreach in getAllFromSource() (nice to have)
+        // todo: allowedPropertiesOut, notAllowedPropertiesOut
+
+        $objectArray = $this->mapOutput($objectArray);
 
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway());
 
