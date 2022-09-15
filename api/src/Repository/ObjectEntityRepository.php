@@ -38,7 +38,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Does the same as findByEntity(), but also returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity $entity The Entity we are currently doing a get collection on.
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
@@ -115,7 +115,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.
      *
-     * @param Entity $entity The Entity we are currently doing a get collection on.
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
@@ -181,7 +181,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity $entity The Entity we are currently doing a get collection on.
      * @param string $prefix The prefix of multiple attribute, used if we are getting multiple attributes of subresources.
-     * @param int    $level The depth level, if we are getting multiple attributes of subresource.subresource etc.
+     * @param int    $level  The depth level, if we are getting multiple attributes of subresource.subresource etc.
      *
      * @return array An array with all attributes that have multiple set to true.
      */
@@ -205,7 +205,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Also checks for filters used on multiple attributes and handles these.
      *
      * @param array  $filters The array of query params / filters.
-     * @param Entity $entity The Entity we are currently doing a get collection on.
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      *
      * @return array A 'clean' array. And transformed array.
      */
@@ -287,7 +287,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case that the search query is used.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
+     * @param QueryBuilder $query  The existing QueryBuilder.
      * @param Entity       $entity The Entity we are currently doing a get collection on.
      * @param string       $search The value of the search Query.
      *
@@ -317,11 +317,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Also makes sure we only check the values of the correct attribute when building the search query sql.
      * And lastly but most importantly builds and returns an array of orWhere statements to add to the query in addSearchQuery().
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param Entity       $entity The Entity we are currently doing a get collection on.
-     * @param string       $search The value of the search Query.
-     * @param int          $level The depth level, if we are doing a search on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the search query we are adding.
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param Entity       $entity       The Entity we are currently doing a get collection on.
+     * @param string       $search       The value of the search Query.
+     * @param int          $level        The depth level, if we are doing a search on subresource.subresource etc.
+     * @param string       $prefix       The prefix of the value for the search query we are adding.
      * @param string       $objectPrefix The prefix of the objectEntity for the search query we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
      *
      * @return array returns an array of orWhere statements to add to the query in addSearchQuery().
@@ -348,12 +348,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case the search query is used and search on subresources is configured.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param Attribute    $attribute The Attribute configured to be searchable.
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param Attribute    $attribute      The Attribute configured to be searchable.
      * @param string       $sqlFriendlyKey The Attribute name. But made sql friendly for left joins with the makeKeySqlFriendly() function.
-     * @param string       $search The value of the search Query.
-     * @param int          $level The depth level, if we are doing a search on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the search query we are adding.
+     * @param string       $search         The value of the search Query.
+     * @param int          $level          The depth level, if we are doing a search on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the search query we are adding.
      *
      * @return array returns an array of orWhere statements for a subresource to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
      */
@@ -375,10 +375,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder so that we only check the values of the correct attribute when building the search query sql.
      *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param Attribute    $attribute The Attribute configured to be searchable.
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param Attribute    $attribute      The Attribute configured to be searchable.
      * @param string       $sqlFriendlyKey The attribute name. But made sql friendly for left joins with the makeKeySqlFriendly() function.
-     * @param string       $prefix The prefix of the value for the search query we are adding.
+     * @param string       $prefix         The prefix of the value for the search query we are adding.
      *
      * @return string returns a single orWhere statements to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
      */
@@ -720,8 +720,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query        The existing QueryBuilder.
      * @param array        $order        The order array with the order query param used with the current get collection api-call.
-     * @param int          $level The depth level, if we are ordering on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the order we are adding.
+     * @param int          $level        The depth level, if we are ordering on subresource.subresource etc.
+     * @param string       $prefix       The prefix of the value for the order we are adding.
      * @param string       $objectPrefix The prefix of the objectEntity for the order we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
      *
      * @throws Exception
@@ -814,7 +814,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param string       $sqlFriendlyKey The order[$key] used in the order query param. But made sql friendly for left joins with the makeKeySqlFriendly() function.
      * @param string       $key            The order[$key] used in the order query param.
      * @param string       $value          The value used with the query param, desc or asc.
-     * @param string       $prefix The prefix of the value for the order we are adding.
+     * @param string       $prefix         The prefix of the value for the order we are adding.
      *
      * @return QueryBuilder
      */
