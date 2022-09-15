@@ -148,6 +148,7 @@ class ZdsZaakService
         $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
         $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
         $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
+        $zaak->setValue('startdatum', $zdsObject->getValue('startdatum'));
         $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
 
         // Lets prepare an eigenschappen array
