@@ -19,6 +19,11 @@ use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\SyntaxError;
+use function PHPUnit\Framework\stringContains;
+use function Symfony\Component\Translation\t;
 
 class SynchronizationService
 {
@@ -33,21 +38,24 @@ class SynchronizationService
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
     private array $configuration;
+    private array $data;
+    private Environment $twig;
 
     /**
-     * @param CommonGroundService    $commonGroundService
+     * @param CommonGroundService $commonGroundService
      * @param EntityManagerInterface $entityManager
-     * @param SessionInterface       $session
-     * @param GatewayService         $gatewayService
-     * @param FunctionService        $functionService
-     * @param LogService             $logService
-     * @param MessageBusInterface    $messageBus
-     * @param TranslationService     $translationService
-     * @param ObjectEntityService    $objectEntityService
-     * @param ValidatorService       $validatorService
-     * @param EavService             $eavService
+     * @param SessionInterface $session
+     * @param GatewayService $gatewayService
+     * @param FunctionService $functionService
+     * @param LogService $logService
+     * @param MessageBusInterface $messageBus
+     * @param TranslationService $translationService
+     * @param ObjectEntityService $objectEntityService
+     * @param ValidatorService $validatorService
+     * @param EavService $eavService
+     * @param Environment $twig
      */
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
@@ -61,15 +69,17 @@ class SynchronizationService
         $this->objectEntityService->addServices($eavService);
         $this->validatorService = $validatorService;
         $this->configuration = [];
+        $this->data = [];
+        $this->twig = $twig;
     }
 
     /**
-     * @todo
-     *
      * @param array $data
      * @param array $configuration
      *
      * @return array
+     * @todo
+     *
      */
     public function SynchronizationItemHandler(array $data, array $configuration): array
     {
@@ -81,22 +91,23 @@ class SynchronizationService
     /**
      * Synchronises objects in the gateway to a source.
      *
-     * @param array $data          The data from the action
+     * @param array $data The data from the action
      * @param array $configuration The configuration given by the action
      *
+     * @return array The data from the action modified by the execution of the synchronisation
      * @throws CacheException|InvalidArgumentException
      *
-     * @return array The data from the action modified by the execution of the synchronisation
      */
     public function synchronisationPushHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        $this->data = $data;
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
 
         if (!($entity instanceof Entity)) {
-            return $data;
+            return $this->data;
         }
 
         foreach ($entity->getObjectEntities() as $object) {
@@ -110,35 +121,36 @@ class SynchronizationService
             $this->entityManager->flush();
         }
 
-        return $data;
+        return $this->data;
     }
 
     /**
-     * @todo
-     *
      * @param array $data
      * @param array $configuration
      *
+     * @return array
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      *
-     * @return array
+     * @todo
+     *
      */
     public function SynchronizationWebhookHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        $this->data = $data;
         $sourceObject = [];
-        $data = $data['response'];
+        $responseData = $data['response'];
 
         $gateway = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
 
         // Dot the data array and try to find id in it
-        $dot = new Dot($data);
+        $dot = new Dot($responseData);
         $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
         // If we have a complete object we can use that to sync
         if (array_key_exists('Object', $this->configuration['location'])) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['location']['object'], $data); // todo should default be $data or [] ?
+            $sourceObject = $dot->get($this->configuration['apiSource']['location']['object'], $responseData); // todo should default be $data or [] ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
@@ -150,22 +162,23 @@ class SynchronizationService
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
 
-        return $data;
+        return $responseData;
     }
 
     /**
      * Gets all objects from the source according to configuration.
      *
-     * @param array $data          Data from the request running
+     * @param array $data Data from the request running
      * @param array $configuration Configuration for the action running
      *
+     * @return array The resulting data
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      *
-     * @return array The resulting data
      */
     public function SynchronizationCollectionHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
+        $this->data = $data;
 
         // todo: i think we need the Action here, because we need to set it with $synchronization->setAction($action) later...
         // todo: if we do this, some functions that have $synchronization no longer need $configuration because we can do: $synchronization->getAction()->getConfiguration()
@@ -242,39 +255,42 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Gateway     $gateway The source to call
-     * @param string|null $id      The id to request (optional)
+     * @param Gateway $gateway The source to call
+     * @param string|null $id The id to request (optional)
      *
      * @return array The configuration for the source to call
      */
-    private function getCallServiceConfig(Gateway $gateway, string $id = null): array
+    private function getCallServiceConfig(Gateway $gateway, string $id = null, ?array $objectArray = []): array
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
-            'url'       => $this->getUrlForSource($gateway, $id),
-            'query'     => $this->getQueryForCallService($id),
-            'headers'   => $gateway->getHeaders(),
+            'url' => $this->getUrlForSource($gateway, $id, $objectArray),
+            'query' => $this->getQueryForCallService($id),
+            'headers' => $gateway->getHeaders(),
         ];
     }
 
     /**
      * Determines the URL to request.
      *
-     * @param Gateway     $gateway The source to call
-     * @param string|null $id      The id to request (optional)
-     * @param array       $data    The data array
+     * @param Gateway $gateway The source to call
+     * @param string|null $id The id to request (optional)
+     * @param array|null $objectArray
      *
      * @return string The resulting URL
+     * @throws LoaderError|SyntaxError
+     *
      */
-    private function getUrlForSource(Gateway $gateway, string $id = null, array $data = []): string
+    private function getUrlForSource(Gateway $gateway, string $id = null, ?array $objectArray = []): string
     {
-        $location = preg_replace_callback('/{{.*?}}/', function ($match) use ($data) {return $data[$match[1]]; }, $this->configuration['location']);
+        $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
+        $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
 
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
             $id = null;
         }
 
-        return $gateway->getLocation().$location.($id ? '/'.$id : '');
+        return $gateway->getLocation() . $location . ($id ? '/' . $id : '');
     }
 
     /**
@@ -321,7 +337,7 @@ class SynchronizationService
      * Fetches the objects stored on the source.
      *
      * @param array $callServiceConfig The configuration for the source
-     * @param int   $page              The current page to be requested
+     * @param int $page The current page to be requested
      *
      * @return array
      */
@@ -421,9 +437,9 @@ class SynchronizationService
     /**
      * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
-     * @param Gateway $source   The source that is requested
-     * @param Entity  $entity   The entity that is requested
-     * @param string  $sourceId The id of the object in the source
+     * @param Gateway $source The source that is requested
+     * @param Entity $entity The entity that is requested
+     * @param string $sourceId The id of the object in the source
      *
      * @return Synchronization|null A synchronisation object related to the object in the source
      */
@@ -449,8 +465,8 @@ class SynchronizationService
      * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist.
      *
      * @param ObjectEntity $objectEntity The current object in the gateway
-     * @param Gateway      $source       The current source
-     * @param Entity       $entity       The current entity
+     * @param Gateway $source The current source
+     * @param Entity $entity The current entity
      *
      * @return Synchronization|null A synchronisation object related to the object in the gateway
      */
@@ -497,11 +513,11 @@ class SynchronizationService
      * Sets the last changed date from the source object and creates a hash for the source object.
      *
      * @param Synchronization $synchronization The synchronisation object to update
-     * @param array           $sourceObject    The object returned from the source
-     *
-     * @throws Exception
+     * @param array $sourceObject The object returned from the source
      *
      * @return Synchronization The updated source object
+     * @throws Exception
+     *
      */
     private function setLastChangedDate(Synchronization $synchronization, array $sourceObject): Synchronization
     {
@@ -509,9 +525,9 @@ class SynchronizationService
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
-            $synchronization->setSourcelastChanged(new \DateTime($lastChanged));
+            $synchronization->setSourcelastChanged(new DateTime($lastChanged));
         } elseif ($synchronization->getHash() != $hash) {
-            $lastChanged = new \DateTime();
+            $lastChanged = new DateTime();
             $synchronization->setSourcelastChanged($lastChanged);
         }
         $synchronization->setHash($hash);
@@ -523,11 +539,11 @@ class SynchronizationService
      * Executes the synchronisation between source and gateway.
      *
      * @param Synchronization $synchronization The synchronisation object before synchronisation
-     * @param array           $sourceObject    The object in the source
-     *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @param array $sourceObject The object in the source
      *
      * @return Synchronization The updated synchronisation object
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *
      */
     private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
@@ -558,15 +574,15 @@ class SynchronizationService
      * This function populates a pre-existing objectEntity with data that has been validated.
      * This function is only meant for synchronisation.
      *
-     * @param array        $data         The data that has to go into the objectEntity
+     * @param array $data The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
      *
-     * @throws GatewayException
+     * @return ObjectEntity The populated ObjectEntity
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return ObjectEntity The populated ObjectEntity
+     * @throws GatewayException
      */
     public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
@@ -576,6 +592,8 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             //@TODO: Write errors to logs
+
+//            var_dump($validationErrors);
             foreach ($validationErrors as $error) {
                 if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
@@ -594,7 +612,7 @@ class SynchronizationService
      * Translates the input according to the translation table referenced in the configuration of the action.
      *
      * @param array $sourceObject The external object found in the source
-     * @param bool  $translateOut Default = false, if set to true will use translationsOut instead of translationsIn.
+     * @param bool $translateOut Default = false, if set to true will use translationsOut instead of translationsIn.
      *
      * @return array The translated external object
      */
@@ -665,7 +683,7 @@ class SynchronizationService
         // The prefixes to add in the format 'field' => 'prefix'
         $prefixes = $this->configuration['apiSource']['prefixFieldsOut'];
         foreach ($prefixes as $id => $prefix) {
-            $objectArray[$id] = $prefix.$objectArray[$id];
+            $objectArray[$id] = $prefix . $objectArray[$id];
         }
 
         return $objectArray;
@@ -741,7 +759,7 @@ class SynchronizationService
      * Stores the result of a synchronisation in the synchronization object.
      *
      * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
-     * @param array           $body            The body of the call to synchronise to a source
+     * @param array $body The body of the call to synchronise to a source
      *
      * @return Synchronization The updated synchronization object
      */
@@ -771,24 +789,22 @@ class SynchronizationService
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
-     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
-     *
-     * @throws CacheException|InvalidArgumentException
+     * @param bool $existsInSource Determines if a new synchronisation should be made, or an existing one should be updated
      *
      * @return Synchronization The updated synchronisation object
+     * @throws CacheException|InvalidArgumentException
+     *
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
         $object = $synchronization->getObject();
         $objectArray = $object->toArray();
 
-//        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
+        //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
         // todo: allowedPropertiesOut, notAllowedPropertiesOut
-
+        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
-
-        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway());
 
         try {
             $result = $this->commonGroundService->callService(
@@ -826,12 +842,12 @@ class SynchronizationService
      * Synchronises data from an external source to the internal database of the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object to update
-     * @param array           $sourceObject    The external object to synchronise from
-     *
-     * @throws Exception
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @param array $sourceObject The external object to synchronise from
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *
+     * @throws Exception
      */
     private function syncToGateway(Synchronization $synchronization, array $sourceObject): Synchronization
     {
