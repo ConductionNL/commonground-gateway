@@ -55,7 +55,6 @@ class EmailService
      */
     private function sendEmail(): bool
     {
-
         // Create mailer with mailgun url
         $transport = Transport::fromDsn($this->configuration['serviceDNS']);
         $mailer = new Mailer($transport);

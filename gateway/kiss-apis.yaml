@@ -391,6 +391,7 @@
 #    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
 #    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
 #    openpubProxyRegex: "^(openpub/[^.*]*)$"
+#    elasticRegex: "^(elastic/[^.*]*)$"
 #
 ## Endpoints        
 #App\Entity\Endpoint:
@@ -607,6 +608,15 @@
 #        pathRegex: <{openpubProxyRegex}>
 #        method: GET
 #        operationType: collection
+#        
+#    # Elastic search endpoint
+#    elasticSearchEndpoint:
+#        name: elastic search endpoint
+#        description: endpoint for elastic search
+#        path: [ 'elastic/', '{route}' ]
+#        pathRegex: <{elasticRegex}>
+#        method: POST
+#        operationType: collection
 #
 ## Handlers
 #App\Entity\Handler:
@@ -663,6 +673,15 @@
 #        conditions: "{}"
 #        endpoints: [ "@openpubProxyEndpoint" ]
 #        proxyGateway: openPub API
+#        
+#    # Elastic search Handler
+#    elasticSearchHandler:
+#        name: Elastic Search Handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@elasticSearchEndpoint" ]
+#        proxyGateway: EnterpriseSearch API Search
 #
 #App\Entity\Gateway:
 #    # Openpub proxy
