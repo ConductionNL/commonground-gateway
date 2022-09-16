@@ -672,10 +672,11 @@ class SynchronizationService
     }
 
     /**
-     * Removes null fields from data
+     * Removes null fields from data.
      *
-     * @param  array $objectArray   The data to clear
-     * @return array                The cleared data
+     * @param array $objectArray The data to clear
+     *
+     * @return array The cleared data
      */
     public function clearNull(array $objectArray): array
     {
@@ -689,10 +690,11 @@ class SynchronizationService
     }
 
     /**
-     * Maps output according to configuration
+     * Maps output according to configuration.
      *
-     * @param  array $objectArray   The data to map
-     * @return array                The mapped data
+     * @param array $objectArray The data to map
+     *
+     * @return array The mapped data
      */
     private function mapOutput(array $objectArray): array
     {
@@ -734,6 +736,7 @@ class SynchronizationService
 
         return $objectArray;
     }
+
     /**
      * Stores the result of a synchronisation in the synchronization object.
      *

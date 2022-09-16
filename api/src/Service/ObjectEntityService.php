@@ -735,7 +735,6 @@ class ObjectEntityService
             $objectEntity->setSelf($this->createSelf($objectEntity));
         }
 
-
         if (array_key_exists('@organization', $post) && $objectEntity->getOrganization() != $post['@organization']) {
             $objectEntity->setOrganization($post['@organization']);
         }
@@ -1018,8 +1017,6 @@ class ObjectEntityService
                     // object toevoegen
                     $saveSubObjects->add($subObject);
                     $subObjectIds[] = $subObject->getId()->toString();
-
-
                 }
                 $valueObject->setArrayValue($subObjectIds);
 

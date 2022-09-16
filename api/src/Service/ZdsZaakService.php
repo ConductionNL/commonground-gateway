@@ -6,9 +6,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\PersistentCollection;
 use ErrorException;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -26,14 +24,13 @@ class ZdsZaakService
     /**
      * @param EntityManagerInterface $entityManager
      * @param SynchronizationService $synchronizationService
-     * @param ObjectEntityService $objectEntityService
+     * @param ObjectEntityService    $objectEntityService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService    $objectEntityService
-    )
-    {
+        ObjectEntityService $objectEntityService
+    ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
@@ -57,14 +54,14 @@ class ZdsZaakService
     /**
      * This function validates whether the zds message has an identifier associated with a case type.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
-     * @return array The modified data of the call with the case type and identification
      * @throws ErrorException
      *
-     * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
+     * @return array The modified data of the call with the case type and identification
      *
+     * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
      */
     public function zdsValidationHandler(array $data, array $configuration): array
     {
@@ -81,7 +78,7 @@ class ZdsZaakService
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
         if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
         // @todo change the data with the zaaktype and identification.
@@ -100,15 +97,15 @@ class ZdsZaakService
     /**
      * This function converts a zds message to zgw.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
-     * @return array The data from the call
      * @throws ErrorException
+     *
+     * @return array The data from the call
      *
      * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
      * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
-     *
      */
     public function zdsToZGWHandler(array $data, array $configuration): array
     {
@@ -131,13 +128,13 @@ class ZdsZaakService
         $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
         if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
         $zdsObject = $zds->getValue('object');
 
         $unusedExtraElements = [
-            'toelichting' => null
+            'toelichting' => null,
         ];
 
         // Lets start by setting up the case
@@ -154,7 +151,6 @@ class ZdsZaakService
         // Lets prepare an eigenschappen array
         $eigenschappen = $zaaktypeObjectEntity->getValue('eigenschappen');
         $eigenschappenArray = [];
-
 
         foreach ($eigenschappen as $eigenschap) {
             $eigenschappenArray[$eigenschap->getValue('naam')] = $eigenschap;
@@ -195,10 +191,8 @@ class ZdsZaakService
     }
 
     /**
-     *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
-     *
      *
      * @return array The modified data of the call with the case type and identification
      */
@@ -245,7 +239,6 @@ class ZdsZaakService
         }
         $this->entityManager->flush();
 
-
         $statustypenObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['statustypenEntityId']);
         $statustypen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $statustypenObjectEntity]);
         foreach ($statustypen as $statustype) {
@@ -265,7 +258,7 @@ class ZdsZaakService
      * This function set an identifier on the dataset.
      *
      * @param string $identifier The identifier to set
-     * @param array $data The data from the call
+     * @param array  $data       The data from the call
      *
      * @return array
      */
@@ -283,7 +276,7 @@ class ZdsZaakService
     /**
      * Changes the request to hold the proper zaaktype url insted of given identifier.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @return array
@@ -328,11 +321,11 @@ class ZdsZaakService
 
     /**
      * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
-     * @param array $data The data array
+     * @param array        $data         The data array
      *
      * @return Synchronization
-     * @todo wat doet dit?
      *
+     * @todo wat doet dit?
      */
     public function createSynchronization(ObjectEntity $objectEntity, array $data): Synchronization
     {
@@ -357,15 +350,15 @@ class ZdsZaakService
     /**
      * This function creates a zaak eigenschap.
      *
-     * @param array $eigenschap The eigenschap array with zaak, eigenschap and waarde as keys
+     * @param array             $eigenschap   The eigenschap array with zaak, eigenschap and waarde as keys
      * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
      *
-     * @return ObjectEntity Creates a zaakeigenschap
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
-     *
      * @throws GatewayException
+     *
+     * @return ObjectEntity Creates a zaakeigenschap
      */
     public function createObject(array $eigenschap, ObjectEntity $objectEntity, array $data): ObjectEntity
     {
@@ -381,10 +374,10 @@ class ZdsZaakService
     /**
      * This function returns the zaak, eigenschap and waarde when matched with the element in de action configuration file.
      *
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string $eigenschap The naam of the eigenschap that has to be matched
-     * @param string $zaakUrl The zaakurl the eigenschap is related to
+     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
+     * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param string            $eigenschap    The naam of the eigenschap that has to be matched
+     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -395,12 +388,12 @@ class ZdsZaakService
                 $this->usedValues[] = $element['@naam'];
 
                 return [
-                    'zaak' => $zaakUrl,
+                    'zaak'       => $zaakUrl,
                     'eigenschap' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('url'))->getStringValue(),
-                    'waarde' => $element['#'],
-                    'zaaktype' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('zaaktype'))->getStringValue(),
-                    'definitie' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('definitie'))->getStringValue(),
-                    'naam' => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue(),
+                    'waarde'     => $element['#'],
+                    'zaaktype'   => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('zaaktype'))->getStringValue(),
+                    'definitie'  => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('definitie'))->getStringValue(),
+                    'naam'       => $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('naam'))->getStringValue(),
                 ];
             }
         }
@@ -411,27 +404,27 @@ class ZdsZaakService
     /**
      * This function returns updates the zaak with the unused elements under 'toelichting'.
      *
-     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array $data The data from the call
-     * @param ObjectEntity $zaakObject The zaak object entity that relates to the entity Zaak
-     * @param array $eigenschappen The eigenschappen @ids
+     * @param array        $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param array        $data          The data from the call
+     * @param ObjectEntity $zaakObject    The zaak object entity that relates to the entity Zaak
+     * @param array        $eigenschappen The eigenschappen @ids
      *
-     * @return ObjectEntity
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
-     *
      * @throws GatewayException
+     *
+     * @return ObjectEntity
      */
     public function updateZaak(array $extraElements, array $data, ObjectEntity $zaakObject, array $eigenschappen): ObjectEntity
     {
         $unusedElements = [
-            'toelichting' => '',
-            'zaaktype' => $data['zaaktype'],
-            'startdatum' => $data['startdatum'],
-            'bronorganisatie' => $data['bronorganisatie'],
+            'toelichting'                  => '',
+            'zaaktype'                     => $data['zaaktype'],
+            'startdatum'                   => $data['startdatum'],
+            'bronorganisatie'              => $data['bronorganisatie'],
             'verantwoordelijkeOrganisatie' => $data['verantwoordelijkeOrganisatie'],
-            'eigenschappen' => $eigenschappen,
+            'eigenschappen'                => $eigenschappen,
         ];
 
         foreach ($extraElements['ns1:extraElement'] as $element) {
@@ -447,9 +440,9 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param ObjectEntity|null $objectEntity The object entity that relates to the entity Eigenschap
-     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param string $zaakUrl The zaakurl the eigenschap is related to
+     * @param ObjectEntity|null $objectEntity  The object entity that relates to the entity Eigenschap
+     * @param array             $extraElements The extra elements that are taken from the action configuration eigenschappen path
+     * @param string            $zaakUrl       The zaakurl the eigenschap is related to
      *
      * @return array|null
      */
@@ -467,16 +460,16 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
      * @param array $eigenschappen The eigenschappen @ids
      *
-     * @return void
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
-     *
      * @throws GatewayException
+     *
+     * @return void
      */
     public function getZaak(array $data, array $extraElements, array $eigenschappen): void
     {
@@ -488,15 +481,15 @@ class ZdsZaakService
     /**
      * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the zaakeigenschap action
      *
-     * @return array|null
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
-     *
      * @throws GatewayException
+     *
+     * @return array|null
      */
     public function zaakEigenschappenHandler(array $data, array $configuration): array
     {
