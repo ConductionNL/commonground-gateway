@@ -651,7 +651,8 @@
 #        name: openPub
 #        location: https://openweb.kiss-dev.commonground.nu/wp-json/wp/v2
 #        headers:
-#            accept: 'application/json'    
+#            accept: 'application/json'
+#        auth: none
 #    elasticPrivate:
 #        name: EnterpriseSearch API Private
 #        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
@@ -714,7 +715,7 @@
 #                    object: '#'
 #                    idField: id
 #                    dateChangedField: modified
-#                queryMethod: page
+#                sourcePaginated: true
 #                syncFromList: true
 #                sourceLeading: true
 #                mappingIn: {}
