@@ -911,6 +911,7 @@ class ObjectEntityService
     {
         switch ($attribute->getType()) {
             case 'object':
+                $subObjectIds = [];
                 $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
                 foreach ($value as $key => $object) {
                     // If we are not cascading and value is a string, then value should be an id.
@@ -939,7 +940,6 @@ class ObjectEntityService
                                 }
                             }
                         }
-
                         // object toevoegen
                         $saveSubObjects->add($subObject);
                         continue;
@@ -1016,7 +1016,9 @@ class ObjectEntityService
 
                     // object toevoegen
                     $saveSubObjects->add($subObject);
+                    $subObjectIds[] = $subObject->getId()->toString();
                 }
+                $valueObject->setArrayValue($subObjectIds);
 
                 // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
                 if ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH') {
