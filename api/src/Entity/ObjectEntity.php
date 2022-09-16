@@ -217,12 +217,16 @@ class ObjectEntity
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+
+        if ($entity) {
+            $this->setEntity($entity);
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -541,16 +545,39 @@ class ObjectEntity
     }
 
     /**
-     * Gets a value based on the attribute string name or attribute object.
+     * Gets the value of the Value object based on the attribute string name or attribute object.
      *
      * @param string|Attribute $attribute
      *
-     * @return Value
+     * @return array|bool|string|int|object Returns a Value if its found or false when its not found
      */
-    public function getValue($attribute): Value
+    public function getValue($attribute)
+    {
+        // If we can find the Value object return the value of the Value object
+        $valueObject = $this->getValueObject($attribute);
+        if ($valueObject instanceof Value) {
+            return $valueObject->getValue();
+        }
+
+        // If not return false
+        return false;
+    }
+
+    /**
+     * Gets a Value object based on the attribute string name or attribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @return Value|bool Returns a Value if its found or false when its not found
+     */
+    public function getValueObject($attribute)
     {
         if (is_string($attribute)) {
             $attribute = $this->getEntity()->getAttributeByName($attribute);
+        }
+
+        if (!$attribute instanceof Attribute) {
+            return false;
         }
 
         return $this->getValueByAttribute($attribute);
@@ -567,7 +594,14 @@ class ObjectEntity
      */
     public function setValue($attribute, $value)
     {
-        return $this->getValue($attribute)->setValue($value);
+        $valueObject = $this->getValueObject($attribute);
+        // If we find the Value object we set the value
+        if ($valueObject instanceof Value) {
+            return $valueObject->setValue($value);
+        }
+
+        // If not return false
+        return false;
     }
 
     /**
@@ -581,7 +615,7 @@ class ObjectEntity
      */
     public function hydrate(array $array): ObjectEntity
     {
-        foreach ($array as  $key => $value) {
+        foreach ($array as $key => $value) {
             $this->setValue($key, $value);
         }
 
@@ -608,9 +642,7 @@ class ObjectEntity
 
         if ($values->isEmpty()) {
             // If no value with this attribute was found
-            $value = new Value();
-            $value->setAttribute($attribute);
-            $value->setObjectEntity($this);
+            $value = new Value($attribute, $this);
             $this->addObjectValue($value);
 
             return $value;
@@ -726,14 +758,16 @@ class ObjectEntity
                 continue;
             }
             // Oke loop the conditions
-            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty=>$conditionValue) {
+            foreach ($value->getAttribute()->getRequiredIf() as $conditionProperty => $conditionValue) {
                 // we only have a problem if the current value is empty and bools might be false when empty
                 if ($value->getValue() || ($value->getAttribute()->getType() == 'boolean' && !is_null($value->getValue()))) {
                     $explodedConditionValue = explode('.', $conditionValue);
                     $getValue = $value->getValue() instanceof ObjectEntity ? $value->getValue()->getExternalId() : $value->getValue();
-                    if (!$value->getAttribute()->getDefaultValue()
+                    if (
+                        !$value->getAttribute()->getDefaultValue()
                         || ($value->getAttribute()->getDefaultValue() !== $getValue)
-                        || end($explodedConditionValue) != 'noDefaultValue') {
+                        || end($explodedConditionValue) != 'noDefaultValue'
+                    ) {
                         continue;
                     } else {
                         $conditionValue = implode('.', array_slice($explodedConditionValue, 0, -1));

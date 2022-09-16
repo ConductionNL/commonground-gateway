@@ -91,6 +91,12 @@ services:
             $commonGroundService: '@Conduction\CommonGroundBundle\Service\CommonGroundService'
             $objectEntityService: '@App\Service\ObjectEntityService'
             $gatewayService: '@App\Service\GatewayService'
+    
+    mapZaakTypeService:
+        public: true
+        class: App\Service\MapZaakTypeService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             
     Redis:
         class: Redis
