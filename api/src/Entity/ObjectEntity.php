@@ -555,7 +555,6 @@ class ObjectEntity
     {
         // If we can find the Value object return the value of the Value object
         $valueObject = $this->getValueObject($attribute);
-
         if ($valueObject instanceof Value) {
             return $valueObject->getValue();
         }

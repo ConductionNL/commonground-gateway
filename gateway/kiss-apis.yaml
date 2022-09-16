@@ -390,6 +390,7 @@
 #    searchItemRegex: "^searches/[a-z0-9-]{36}$"
 #    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
 #    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
+#    openpubProxyRegex: "^(openpub/[^.*]*)$"
 #
 ## Endpoints        
 #App\Entity\Endpoint:
@@ -598,6 +599,15 @@
 #        method: DELETE
 #        operationType: item
 #
+#    # Openpub proxy endpoint
+#    openpubProxyEndpoint:
+#        name: openpub proxy endpoint
+#        description: endpoint for openpub proxy
+#        path: [ 'openpub/', '{route}' ]
+#        pathRegex: <{openpubProxyRegex}>
+#        method: GET
+#        operationType: collection
+#
 ## Handlers
 #App\Entity\Handler:
 #    # Review Handler
@@ -636,7 +646,6 @@
 #        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
 #        entity: "@taxanomy"
 #
-#
 #    # Medewerker Handler
 #    medewerkerHandler:
 #        name: Medewerker handler
@@ -646,12 +655,24 @@
 #        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
 #        entity: "@medewerker"
 #
+#    # Openpub Proxy Handler
+#    openpubProxyHandler:
+#        name: Openpub Proxy Handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@openpubProxyEndpoint" ]
+#        proxyGateway: openPub API
+#
 #App\Entity\Gateway:
+#    # Openpub proxy
 #    pubSource:
-#        name: openPub
+#        name: openPub API
 #        location: https://openweb.kiss-dev.commonground.nu/wp-json/wp/v2
 #        headers:
-#            accept: 'application/json'    
+#            accept: 'application/json'
+#        auth: none
+#    # ElasticSearch private
 #    elasticPrivate:
 #        name: EnterpriseSearch API Private
 #        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
@@ -659,6 +680,7 @@
 #            accept: 'application/json'
 #        auth: apikey
 #        apikey: 'Bearer private-IWillNotTellYouMySecret'
+#    # ElasticSearch search
 #    elasticSearch:
 #        name: EnterpriseSearch API Search
 #        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
@@ -692,7 +714,7 @@
 #            sender: kiss@commonground.nu
 #            receiver: icatttest+kiss@gmail.com
 #            subject: "KISS feedback: {{subject}}"
-#        
+#
 #    SyncPubAction:
 #        name: SyncPubAction
 #        description: This is a synchronization action for the pub collection
@@ -714,7 +736,7 @@
 #                    object: '#'
 #                    idField: id
 #                    dateChangedField: modified
-#                queryMethod: page
+#                sourcePaginated: true
 #                syncFromList: true
 #                sourceLeading: true
 #                mappingIn: {}
