@@ -114,6 +114,7 @@ class ZdsZaakService
 
         $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
+        $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
 
         // @todo remove the check for identification and zaaktype if the dataService is implemented
@@ -158,7 +159,6 @@ class ZdsZaakService
 
         // Lets grep our extra elements to stuff into the zaak
         $extraElementen = $zdsObject->getValue('extraElementen');
-
         foreach ($extraElementen as $extraElement) {
             // Extra element does exist in eigenschappen
             if (array_key_exists($extraElement->getValue('@naam'), $eigenschappenArray) && !in_array($extraElement->getValue('@naam'), $unusedExtraElements)) {
@@ -181,7 +181,23 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+            $zaak->setValue('toelichting', "jooooooooooo  + rollen {$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+        }
+
+        $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
+        foreach ($roltypen as $roltype) {
+            $rol = new ObjectEntity($rolEntity);
+            $rol->setValue('zaak', $zaak);
+            $rol->setValue('roltype', $roltype->getValue('url'));
+            $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
+            $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
+//            $rol->setValue('roltoelichting', $roltype->getValue('roltoelichting'));
+//            $rol->setValue('registratiedatum', $roltype->getValue('registratiedatum'));
+//            $rol->setValue('indicatieMachtiging', $roltype->getValue('indicatieMachtiging'));
+//            $rol->setValue('betrokkene', $roltype->getValue('betrokkene'));
+            $rol->setValue('betrokkeneType', 'natuurlijk_persoon'); //@todo required
+
+            $this->entityManager->persist($rol);
         }
 
         $this->entityManager->persist($zaak);
