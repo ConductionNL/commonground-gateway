@@ -183,6 +183,35 @@ class ZdsZaakService
         }
     }
 
+
+    /**
+     * Creates a starting status for a new case
+     *
+     * @param   ObjectEntity    $zaaktypeObjectEntity   The zaaktypeobject to find the statusType in
+     * @param   ObjectEntity    $zaak                   The zaak to add a status to
+     * @throws  Exception
+     */
+    public function createZgwStartStatus(ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    {
+        $statusEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['statusEntityId']);
+
+        $statusTypen = $zaaktypeObjectEntity->getValue('statustypen');
+        $volgnummer = null;
+        $statusType = null;
+        foreach ($statusTypen as $statustype) {
+            if(!$volgnummer || $statustype->getValue('volgnummer') < $volgnummer) {
+                $volgnummer = $statustype->getValue('volgnummer');
+                $statusType = $statustype;
+            }
+        }
+        $status = new ObjectEntity($statusEntity);
+        $status->setValue('zaak', $zaak);
+        $status->setValue('statusType', $statusType->getValue('url'));
+        $status->setValue('statusDatumGezet', new \DateTime());
+
+        $this->entityManager->persist($status);
+    }
+
     /**
      * This function converts a zds message to zgw.
      *
