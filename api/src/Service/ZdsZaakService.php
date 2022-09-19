@@ -196,12 +196,12 @@ class ZdsZaakService
 //            $rol->setValue('indicatieMachtiging', $roltype->getValue('indicatieMachtiging'));
 
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
-                $rol->setValue('betrokkene', $natuurlijkPersoonObject);
+                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
                 $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
             }
 
             if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
-                $rol->setValue('betrokkene', $vestigingObject);
+                $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
                 $rol->setValue('betrokkeneType', 'vestiging');
             }
 
