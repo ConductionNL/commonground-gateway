@@ -700,6 +700,8 @@ class SynchronizationService
         foreach ($objectArray as $key => $value) {
             if (!$value) {
                 unset($objectArray[$key]);
+            } elseif (is_array($value)) {
+                $objectArray[$key] = $this->clearNull($value);
             }
         }
 
@@ -750,6 +752,7 @@ class SynchronizationService
         if (array_key_exists('clearNull', $this->configuration['apiSource']) && $this->configuration['apiSource']['clearNull']) {
             $objectArray = $this->clearNull($objectArray);
         }
+
 
         return $objectArray;
     }
@@ -816,9 +819,11 @@ class SynchronizationService
                 $existsInSource ? 'PUT' : 'POST'
             );
 
+
             if (is_array($result)) {
                 throw new Exception('Callservice error while doing getSingleFromSource');
             }
+
         } catch (Exception $exception) {
             return $synchronization;
             //todo: error, user feedback and log this?

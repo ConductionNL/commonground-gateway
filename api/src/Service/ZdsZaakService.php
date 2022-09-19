@@ -169,13 +169,13 @@ class ZdsZaakService
                 // Nieuwe eigenschap aanmaken
                 $zaakEigenschap = new ObjectEntity($zaakEigenschapEntity);
                 $zaakEigenschap->setValue('type', $eigenschapType->getValue('definitie'));
+                $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
                 $zaakEigenschap->setValue('naam', $extraElement->getValue('@naam'));
                 $zaakEigenschap->setValue('waarde', $extraElement->getValue('#'));
                 $zaakEigenschap->setValue('zaak', $zaak);
 
                 $this->entityManager->persist($zaakEigenschap);
                 // Nieuwe eigenschap aan zaak toevoegen
-                $zaak->getValueObject('eigenschappen')->addObject($zaakEigenschap);
 
                 continue;
             }
