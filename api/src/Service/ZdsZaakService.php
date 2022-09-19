@@ -183,6 +183,22 @@ class ZdsZaakService
         }
     }
 
+    /**
+     * Returns the statusType from an array of statusTypes with the lowest order number
+     *
+     * @param   array           $statusTypes    An array of status types
+     * @return  ObjectEntity
+     */
+    public function getFirstStatus(array $statusTypes): ObjectEntity
+    {
+        foreach ($statusTypes as $statusType) {
+            if(!$volgnummer || $statusType->getValue('volgnummer') < $volgnummer) {
+                $volgnummer = $statusType->getValue('volgnummer');
+                $firstStatusType = $statusType;
+            }
+        }
+        return $firstStatusType;
+    }
 
     /**
      * Creates a starting status for a new case
@@ -196,14 +212,7 @@ class ZdsZaakService
         $statusEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['statusEntityId']);
 
         $statusTypen = $zaaktypeObjectEntity->getValue('statustypen');
-        $volgnummer = null;
-        $statusType = null;
-        foreach ($statusTypen as $statustype) {
-            if(!$volgnummer || $statustype->getValue('volgnummer') < $volgnummer) {
-                $volgnummer = $statustype->getValue('volgnummer');
-                $statusType = $statustype;
-            }
-        }
+        $statusType = $this->getFirstStatus($statusTypen);
         $status = new ObjectEntity($statusEntity);
         $status->setValue('zaak', $zaak);
         $status->setValue('statusType', $statusType->getValue('url'));
