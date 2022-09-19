@@ -371,7 +371,8 @@ class Value
 
             $this->simpleArrayValue = $outputArray;
 
-            $this->stringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
+            $newStringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
+            $this->stringValue = is_string($newStringValue) ? ','.$newStringValue : null;
         }
 
         return $this;
