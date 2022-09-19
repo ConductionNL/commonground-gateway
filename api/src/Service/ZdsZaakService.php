@@ -144,7 +144,6 @@ class ZdsZaakService
             // Extra element doesn't exist in eigenschappen
             $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
         }
-
     }
 
     /**

@@ -753,7 +753,6 @@ class SynchronizationService
             $objectArray = $this->clearNull($objectArray);
         }
 
-
         return $objectArray;
     }
 
@@ -819,11 +818,9 @@ class SynchronizationService
                 $existsInSource ? 'PUT' : 'POST'
             );
 
-
             if (is_array($result)) {
                 throw new Exception('Callservice error while doing getSingleFromSource');
             }
-
         } catch (Exception $exception) {
             return $synchronization;
             //todo: error, user feedback and log this?
