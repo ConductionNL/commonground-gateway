@@ -189,7 +189,7 @@ class ZdsZaakService
         foreach ($roltypen as $roltype) {
             $rol = new ObjectEntity($rolEntity);
             $rol->setValue('zaak', $zaak);
-            $rol->setValue('roltype', $roltype->getValue('url'));
+            $rol->setValue('roltype', $roltype);
             $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
             $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
             $rol->setValue('roltoelichting', 'indiener');
