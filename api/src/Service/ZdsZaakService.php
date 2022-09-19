@@ -241,6 +241,23 @@ class ZdsZaakService
     }
 
     /**
+     * @param array $objectEntities
+     * @param string $attributeName
+     * @return void
+     */
+    public function addObjectToZgwZaaktype(array $objectEntities, string $attributeName): void
+    {
+        foreach ($objectEntities as $objectEntity) {
+            if ($objectEntity->getValue('zaaktype') !== null) {
+                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($objectEntity->getValue('zaaktype'));
+                $zaaktype->getValueObject($attributeName)->addObject($objectEntity);
+                $this->entityManager->persist($zaaktype);
+            }
+        }
+        $this->entityManager->flush();
+    }
+
+    /**
      * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
@@ -253,53 +270,19 @@ class ZdsZaakService
 
         $eigenschapObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
         $eigenschappen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $eigenschapObjectEntity]);
-        foreach ($eigenschappen as $eigenschap) {
-            if ($eigenschap->getValue('zaaktype') !== null) {
-                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($eigenschap->getValue('zaaktype'));
-                // Vind de eigenschappen property en voeg de
-                $zaaktype->getValueObject('eigenschappen')->addObject($eigenschap);
-                $this->entityManager->persist($zaaktype);
-            }
-        }
-        $this->entityManager->flush();
-
-        // 3. Herhalen voor besluiten, rollen en documenten
+        $this->addObjectToZgwZaaktype($eigenschappen, 'eigenschappen');
 
         $roltypenObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['roltypenEntityId']);
         $roltypen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $roltypenObjectEntity]);
-        foreach ($roltypen as $roltype) {
-            if ($roltype->getValue('zaaktype') !== null) {
-                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($roltype->getValue('zaaktype'));
-                // Vind de roltypen property en voeg de
-                $zaaktype->getValueObject('roltypen')->addObject($roltype);
-                $this->entityManager->persist($zaaktype);
-            }
-        }
-        $this->entityManager->flush();
+        $this->addObjectToZgwZaaktype($roltypen, 'roltypen');
 
         $resultaattypenObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['resultaattypenEntityId']);
         $resultaattypen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $resultaattypenObjectEntity]);
-        foreach ($resultaattypen as $resultaattype) {
-            if ($resultaattype->getValue('zaaktype') !== null) {
-                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($resultaattype->getValue('zaaktype'));
-                // Vind de resultaattypen property en voeg de
-                $zaaktype->getValueObject('resultaattypen')->addObject($resultaattype);
-                $this->entityManager->persist($zaaktype);
-            }
-        }
-        $this->entityManager->flush();
+        $this->addObjectToZgwZaaktype($resultaattypen, 'resultaattypen');
 
         $statustypenObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['statustypenEntityId']);
         $statustypen = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $statustypenObjectEntity]);
-        foreach ($statustypen as $statustype) {
-            if ($statustype->getValue('zaaktype') !== null) {
-                $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($statustype->getValue('zaaktype'));
-                // Vind de statustypen property en voeg de
-                $zaaktype->getValueObject('statustypen')->addObject($statustype);
-                $this->entityManager->persist($zaaktype);
-            }
-        }
-        $this->entityManager->flush();
+        $this->addObjectToZgwZaaktype($statustypen, 'statustypen');
 
         return $this->data;
     }
