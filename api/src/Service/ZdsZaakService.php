@@ -172,7 +172,6 @@ class ZdsZaakService
                 $zaakEigenschap->setValue('naam', $extraElement->getValue('@naam'));
                 $zaakEigenschap->setValue('waarde', $extraElement->getValue('#'));
                 $zaakEigenschap->setValue('zaak', $zaak);
-                $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
 
                 $this->entityManager->persist($zaakEigenschap);
                 // Nieuwe eigenschap aan zaak toevoegen
@@ -181,7 +180,7 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "jooooooooooo  + rollen {$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
         }
 
         $heeftAlsInitiatorObject = $zdsObject->getValue('heeftAlsInitiator');
@@ -197,12 +196,12 @@ class ZdsZaakService
 //            $rol->setValue('indicatieMachtiging', $roltype->getValue('indicatieMachtiging'));
 
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
-                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
+                $rol->setValue('betrokkene', $natuurlijkPersoonObject);
                 $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
             }
 
             if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
-                $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
+                $rol->setValue('betrokkene', $vestigingObject);
                 $rol->setValue('betrokkeneType', 'vestiging');
             }
 
