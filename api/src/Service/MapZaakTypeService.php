@@ -196,7 +196,7 @@ class MapZaakTypeService
         $zaakTypeObjectEntity = $this->getZaakTypeObjectEntity($zaakTypeEntity);
 
         // Map and set default values from xxllnc casetype to zgw zaaktype
-        $zgwZaakTypeArray = $this->translationService->dotHydrator(isset($skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
+        $zgwZaakTypeArray = $this->translationService->dotHydrator(isset($this->skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
         $zgwZaakTypeArray['instance'] = null;
         $zgwZaakTypeArray['embedded'] = null;
 
