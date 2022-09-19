@@ -8,6 +8,7 @@ use App\Entity\Synchronization;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
+use Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
@@ -95,60 +96,20 @@ class ZdsZaakService
     }
 
     /**
-     * This function converts a zds message to zgw.
+     * @param ObjectEntity $zdsObject
+     * @param ObjectEntity $zaaktypeObjectEntity
+     * @param ObjectEntity $zaak
      *
-     * @param array $data          The data from the call
-     * @param array $configuration The configuration array from the action
+     * @throws Exception
      *
-     * @throws ErrorException
-     *
-     * @return array The data from the call
-     *
-     * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
-     * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
+     * @return void The modified data of the call with the case type and identification
      */
-    public function zdsToZGWHandler(array $data, array $configuration): array
+    public function createZgwZaakEigenschappen(ObjectEntity $zdsObject, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
     {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
-        $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
-        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
-
-        // @todo remove the check for identification and zaaktype if the dataService is implemented
-        // @todo get in the zds object the values of the properties casetype and identification and store this in the case
-        $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
-        if (!$zaakTypeIdentificatie) {
-            // @todo fix error
-            throw new ErrorException('The identificatie is not found');
-        }
-
-        // Let get the zaaktype
-        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
-        if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
-            // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
-        }
-
-        $zdsObject = $zds->getValue('object');
-
         $unusedExtraElements = [
             'toelichting' => null,
         ];
-
-        // Lets start by setting up the case
-        $zaak = new ObjectEntity($zaakEntity);
-        $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum'));
-        $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving'));
-        $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland'));
-        $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
-        $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
-        $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
-        $zaak->setValue('startdatum', $zdsObject->getValue('startdatum'));
-        $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
-
         // Lets prepare an eigenschappen array
         $eigenschappen = $zaaktypeObjectEntity->getValue('eigenschappen');
         $eigenschappenArray = [];
@@ -169,19 +130,34 @@ class ZdsZaakService
                 // Nieuwe eigenschap aanmaken
                 $zaakEigenschap = new ObjectEntity($zaakEigenschapEntity);
                 $zaakEigenschap->setValue('type', $eigenschapType->getValue('definitie'));
+                $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
                 $zaakEigenschap->setValue('naam', $extraElement->getValue('@naam'));
                 $zaakEigenschap->setValue('waarde', $extraElement->getValue('#'));
                 $zaakEigenschap->setValue('zaak', $zaak);
+                $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
 
                 $this->entityManager->persist($zaakEigenschap);
                 // Nieuwe eigenschap aan zaak toevoegen
-                $zaak->getValueObject('eigenschappen')->addObject($zaakEigenschap);
 
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
             $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
         }
+    }
+
+    /**
+     * @param ObjectEntity $zdsObject
+     * @param ObjectEntity $zaaktypeObjectEntity
+     * @param ObjectEntity $zaak
+     *
+     * @throws Exception
+     *
+     * @return void The modified data of the call with the case type and identification
+     */
+    public function createZgwRollen(ObjectEntity $zdsObject, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    {
+        $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
 
         $heeftAlsInitiatorObject = $zdsObject->getValue('heeftAlsInitiator');
         $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
@@ -192,8 +168,6 @@ class ZdsZaakService
             $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
             $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
             $rol->setValue('roltoelichting', 'indiener');
-//            $rol->setValue('registratiedatum', $roltype->getValue('registratiedatum'));
-//            $rol->setValue('indicatieMachtiging', $roltype->getValue('indicatieMachtiging'));
 
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
                 $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
@@ -207,6 +181,58 @@ class ZdsZaakService
 
             $this->entityManager->persist($rol);
         }
+    }
+
+    /**
+     * This function converts a zds message to zgw.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration array from the action
+     *
+     * @throws ErrorException
+     *
+     * @return array The data from the call
+     *
+     * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
+     * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
+     */
+    public function zdsToZGWHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
+        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
+
+        // @todo remove the check for identification and zaaktype if the dataService is implemented
+        // @todo get in the zds object the values of the properties casetype and identification and store this in the case
+        $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
+        if (!$zaakTypeIdentificatie) {
+            // @todo fix error
+            throw new ErrorException('The identificatie is not found');
+        }
+
+        // Let get the zaaktype
+        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
+        if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
+            // @todo fix error
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
+        }
+
+        $zdsObject = $zds->getValue('object');
+        // Lets start by setting up the case
+        $zaak = new ObjectEntity($zaakEntity);
+        $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum'));
+        $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving'));
+        $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland'));
+        $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
+        $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
+        $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
+        $zaak->setValue('startdatum', $zdsObject->getValue('startdatum'));
+        $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
+
+        $this->createZgwZaakEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
+        $this->createZgwRollen($zdsObject, $zaaktypeObjectEntity, $zaak);
 
         $this->entityManager->persist($zaak);
         $this->entityManager->flush();

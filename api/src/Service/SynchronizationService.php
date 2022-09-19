@@ -700,6 +700,8 @@ class SynchronizationService
         foreach ($objectArray as $key => $value) {
             if (!$value) {
                 unset($objectArray[$key]);
+            } elseif (is_array($value)) {
+                $objectArray[$key] = $this->clearNull($value);
             }
         }
 
