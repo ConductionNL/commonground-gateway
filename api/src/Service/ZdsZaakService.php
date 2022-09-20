@@ -162,25 +162,29 @@ class ZdsZaakService
         $heeftAlsInitiatorObject = $zdsObject->getValue('heeftAlsInitiator');
         $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
         foreach ($roltypen as $roltype) {
-            $rol = new ObjectEntity($rolEntity);
-            $rol->setValue('zaak', $zaak);
-            $rol->setValue('roltype', $roltype);
-            $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
-            $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
-            $rol->setValue('roltoelichting', 'indiener');
-
-            if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
-                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
-                $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
+            if($roltype->getValue('omschrijvingGeneriek') == 'initiator') {
+                break;
             }
-
-            if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
-                $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
-                $rol->setValue('betrokkeneType', 'vestiging');
-            }
-
-            $this->entityManager->persist($rol);
         }
+
+        $rol = new ObjectEntity($rolEntity);
+        $rol->setValue('zaak', $zaak);
+        $rol->setValue('roltype', $roltype);
+        $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
+        $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
+        $rol->setValue('roltoelichting', 'indiener');
+
+        if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
+            $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
+            $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
+        }
+
+        if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
+            $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
+            $rol->setValue('betrokkeneType', 'vestiging');
+        }
+
+        $this->entityManager->persist($rol);
     }
 
     /**
@@ -547,6 +551,8 @@ class ZdsZaakService
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['url' => $data['response']['url']]);
         $this->updateZaak($extraElements, $data['response'], $zaakObject[0], $eigenschappen);
+
+        $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, 'zwg.zaak.pushed');
     }
 
     /**
@@ -652,6 +658,25 @@ class ZdsZaakService
 
     }
 
+    public function getZaakObject(ObjectEntity $zds, ObjectEntity $zaak, ObjectEntity $rol): ObjectEntity
+    {
+        $zdsObject = new ObjectEntity($zds->getValue('object')->getEntity());
+        $zdsObject->setValue('identificatie', $zaak->getValue('identificatie'));
+        $zdsObject->setValue('registratiedatum', $zaak->getValue('registratiedatum'));
+        $zdsObject->setValue('omschrijving', $zaak->getValue('omschrijving'));
+        $zdsObject->setValue('einddatumGepland', $zaak->getValue('einddatumGepland'));
+        $zdsObject->setValue('uiterlijkeEinddatumAfdoening', $zaak->getValue('uiterlijkeEinddatum'));
+        $zdsObject->setValue('betalingsindicatie', $zaak->getValue('betalingsIndicatie'));
+        $zdsObject->setValue('laatsteBetaaldatum', $zaak->getValue('laatsteBetaaldatum'));
+        $zdsObject->setValue('startdatum', $zaak->getValue('startdatum'));
+        $zdsObject->setValue('isVan', $this->getIsVan($zdsObject, $zaak));
+        $zdsObject->setValue('heeftAlsInitiator', $this->getHeeftAlsInitiator($zdsObject, $rol));
+        $this->entityManager->persist($zdsObject);
+        $this->entityManager->flush();
+
+        return $zdsObject;
+    }
+
     /**
      * @param array $data
      * @param array $configuration
@@ -674,27 +699,18 @@ class ZdsZaakService
                     break;
                 }
             }
-            $zdsObject = $zds->getValue('object');
-            $zdsObject->setValue('registratiedatum', $zaak->getValue('registratiedatum'));
-            $zdsObject->setValue('omschrijving', $zaak->getValue('omschrijving'));
-            $zdsObject->setValue('einddatumGepland', $zaak->getValue('einddatumGepland'));
-            $zdsObject->setValue('uiterlijkeEinddatumAfdoening', $zaak->getValue('uiterlijkeEinddatum'));
-            $zdsObject->setValue('betalingsindicatie', $zaak->getValue('betalingsIndicatie'));
-            $zdsObject->setValue('laatsteBetaaldatum', $zaak->getValue('laatsteBetaaldatum'));
-            $zdsObject->setValue('startdatum', $zaak->getValue('startdatum'));
-            $zdsObject->setValue('isVan', $this->getIsVan($zdsObject, $zaak));
-            $zdsObject->setValue('heeftAlsInitiator', $this->getHeeftAlsInitiator($zdsObject, $rol));
-            $this->entityManager->persist($zdsObject);
-            $this->entityManager->flush();
-
+            $zds->setValue('object', $this->getZaakObject($zds, $zaak, $rol));
             $data['response'] = $zds->toArray();
         } elseif($zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
             $zaken = [];
             foreach($rollen as $rol) {
                 if($rol->getValue('betrokkeneIdentificatie')->getValue('inpBsn') == $zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
-                    $zaken[] = $rol->getValue('zaak');
+                    $zaken[] = $this->getZaakObject($zds, $rol->getValue('zaak'), $rol)->toArray();
                 }
             }
+            $result = $zds->toArray();
+            $result['object'] = $zaken;
+            $data['response'] = $result;
         }
         return $data;
     }

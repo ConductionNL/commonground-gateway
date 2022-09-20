@@ -37,6 +37,13 @@ class TranslationService
         return $result;
     }
 
+    private function isAssociative(array $array)
+    {
+        if (array() === $array) return false;
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
+
+
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
      *
@@ -76,6 +83,16 @@ class TranslationService
                 $searches = explode('|', $search);
                 $search = trim($searches[0]);
                 $format = trim($searches[1]);
+            }
+
+            if(strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
+                foreach($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
+                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
+                }
+                continue;
+            } else {
+                $search = str_replace('.$.', '', $search);
+                $replace = str_replace('.$.', '', $replace);
             }
 
             if (isset($source[$search]['@xsi:nil'])) {
