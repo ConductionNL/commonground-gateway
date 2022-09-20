@@ -162,25 +162,29 @@ class ZdsZaakService
         $heeftAlsInitiatorObject = $zdsObject->getValue('heeftAlsInitiator');
         $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
         foreach ($roltypen as $roltype) {
-            $rol = new ObjectEntity($rolEntity);
-            $rol->setValue('zaak', $zaak);
-            $rol->setValue('roltype', $roltype);
-            $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
-            $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
-            $rol->setValue('roltoelichting', 'indiener');
-
-            if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
-                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
-                $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
+            if($roltype->getValue('omschrijvingGeneriek') == 'initiator') {
+                break;
             }
-
-            if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
-                $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
-                $rol->setValue('betrokkeneType', 'vestiging');
-            }
-
-            $this->entityManager->persist($rol);
         }
+
+        $rol = new ObjectEntity($rolEntity);
+        $rol->setValue('zaak', $zaak);
+        $rol->setValue('roltype', $roltype);
+        $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
+        $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
+        $rol->setValue('roltoelichting', 'indiener');
+
+        if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
+            $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
+            $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
+        }
+
+        if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
+            $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
+            $rol->setValue('betrokkeneType', 'vestiging');
+        }
+
+        $this->entityManager->persist($rol);
     }
 
     /**
@@ -509,6 +513,8 @@ class ZdsZaakService
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['url' => $data['response']['url']]);
         $this->updateZaak($extraElements, $data['response'], $zaakObject[0], $eigenschappen);
+
+        $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, 'zwg.zaak.pushed');
     }
 
     /**
