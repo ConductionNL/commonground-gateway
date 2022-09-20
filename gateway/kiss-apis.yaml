@@ -71,17 +71,17 @@
 #    zrcCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/zrc/1.2.x/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ZaakRegistratieComponentAPI/main/OAS.yaml
 #        name: zrc collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/zrc_publiccode/main/data/zrc.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ZaakRegistratieComponentAPI/main/data/zrc.json
 #    ztcCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/ztc/1.1.x/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ZaakTypeCatalogusAPI/main/OAS.yaml
 #        name: ZTC collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/ztc_publiccode/main/data/ztc.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ZaakTypeCatalogusAPI/main/data/ztc.json
 #    referentielijstenCollection:
 #        name: Referentielijsten collection
 #        sourceType: GitHub
