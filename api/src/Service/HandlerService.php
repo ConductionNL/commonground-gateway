@@ -284,11 +284,13 @@ class HandlerService
 
             $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
+            $data = $event->getData()['response'];
 
             $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
             $this->stopwatch->stop('handleDataAfterEAV');
         }
+
 
         // Update current Log
         $this->stopwatch->start('saveLog3', 'handleHandler');
@@ -359,7 +361,6 @@ class HandlerService
      */
     public function createResponse(array $data, ?Endpoint $endpoint = null): Response
     {
-
     // We only end up here if there are no errors, so we only suply best case senario's
         switch ($this->request->getMethod()) {
       case 'GET':
@@ -581,6 +582,7 @@ class HandlerService
         }
         $this->stopwatch->start('dotHydrator2', 'handleDataAfterEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+
         $this->stopwatch->stop('dotHydrator2');
 
         // Update current Log
