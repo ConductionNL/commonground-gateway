@@ -158,9 +158,6 @@ class SynchronizationService
         // Lets sync (returns the Synchronization object), will do a get on the source if $sourceObject = []
         $synchronization = $this->handleSync($synchronization, $sourceObject);
 
-        $this->entityManager->persist($synchronization);
-        $this->entityManager->flush();
-
         return $responseData;
     }
 
@@ -209,9 +206,6 @@ class SynchronizationService
                 $result = [];
             }
             $synchronization = $this->handleSync($synchronization, $result);
-
-            $this->entityManager->persist($synchronization);
-            $this->entityManager->flush();
         }
 
         return $results;
@@ -566,6 +560,9 @@ class SynchronizationService
         } else {
             $synchronization = $this->syncThroughComparing($synchronization);
         }
+
+        $this->entityManager->persist($synchronization);
+        $this->entityManager->flush();
 
         return $synchronization;
     }
