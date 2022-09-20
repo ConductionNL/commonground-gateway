@@ -35,9 +35,29 @@ class MapZaakService
         $this->objectEntityRepo = $this->entityManager->getRepository(ObjectEntity::class);
         $this->entityRepo = $this->entityManager->getRepository(Entity::class);
 
-        $this->mappingIn = [];
+        $this->mappingIn = [
+            'identificatie' => 'reference',
+            'omschrijving' => 'instance.embedded.subject',
+            'toelichting' => 'instance.embedded.subject_external',
+            'registratiedatum' => 'instance.embedded.date_of_registration',
+            'startdatum' => 'instance.embedded.date_of_registration',
+            'einddatum' => 'instance.embedded.date_of_completion',
+            'einddatumGepland' => 'instance.embedded.date_target',
+            'publicatiedatum' => 'instance.embedded.date_target',
+            'communicatiekanaal' => 'instance.embedded.channel_of_contact',
+            'vertrouwelijkheidaanduidng' => 'instance.embedded.confidentiality.mapped'
 
-        $this->skeletonIn = [];
+
+        ];
+
+        $this->skeletonIn = [
+            'verantwoordelijkeOrganisatie' => '070124036',
+            'betalingsindicatie' => 'geheel',
+            'betalingsindicatieWeergave' => 'Bedrag is volledig betaald',
+            'laatsteBetaalDatum' => '15-07-2022',
+            'archiefnominatie' => 'blijvend_bewaren',
+            'archiefstatus' => 'nog_te_archiveren'
+        ];
     }
 
     /**
@@ -74,16 +94,27 @@ class MapZaakService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
+        var_dump('MapZaak triggered');
+
         // Find ZGW Type entities by id from config
         $zaakEntity = $this->entityRepo->find($configuration['entities']['Zaak']);
         $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
 
         if (!isset($zaakEntity)) {
-            throw new \Exception('Zaak entity could not be found');
+            throw new \Exception('Zaak entity could not be found, plugin configuration could be wrong');
         }
         if (!isset($zaakTypeEntity)) {
-            throw new \Exception('ZaakType entity could not be found');
+            throw new \Exception('ZaakType entity could not be found, plugin configuration could be wrong');
         }
+
+        $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $this->data['embedded']['instance']['embedded']['casetype']['reference']]);
+
+        if (!isset($zaakTypeObjectEntity)) {
+            throw new \Exception('ZaakType object could not be found, create ZaakTypen first');
+        }
+
+        var_dump('ZaakType object found: ' . $zaakTypeObjectEntity->getId()->toString());
+        die;
 
         $zaakObjectEntity = $this->getZaakObjectEntity($zaakEntity);
 
