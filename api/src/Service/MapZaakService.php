@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use App\Entity\Gateway;
 use Doctrine\ORM\EntityManagerInterface;
 
 class MapZaakService
@@ -94,36 +95,104 @@ class MapZaakService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
+        // ik heb in config nog nodig: domein url (kan via gekoppelde source), xxllncZaakTypeEntityId
+
         var_dump('MapZaak triggered');
 
         // Find ZGW Type entities by id from config
         $zaakEntity = $this->entityRepo->find($configuration['entities']['Zaak']);
         $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
+        $xxllncZaakTypeEntity = $this->entityRepo->find($configuration['entities']['XxllncZaakType']);
 
-        if (!isset($zaakEntity)) {
+        // Get xxllnc Gateway
+        $xxllncGateway = $this->entityManager->getRepository(Gateway::class)->find($configuration['source']);
+
+        if (!$zaakEntity instanceof Entity) {
             throw new \Exception('Zaak entity could not be found, plugin configuration could be wrong');
         }
-        if (!isset($zaakTypeEntity)) {
+        if (!$zaakTypeEntity instanceof Entity) {
             throw new \Exception('ZaakType entity could not be found, plugin configuration could be wrong');
         }
-
-        $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $this->data['embedded']['instance']['embedded']['casetype']['reference']]);
-
-        if (!isset($zaakTypeObjectEntity)) {
-            throw new \Exception('ZaakType object could not be found, create ZaakTypen first');
+        if (!$xxllncZaakTypeEntity instanceof Entity) {
+            throw new \Exception('Xxllnc zaaktype entity could not be found, plugin configuration could be wrong');
+        }
+        if (!$xxllncGateway instanceof Gateway) {
+            throw new \Exception('Xxllnc gateway could not be found, plugin configuration could be wrong');
         }
 
-        var_dump('ZaakType object found: ' . $zaakTypeObjectEntity->getId()->toString());
-        die;
+        // if no casetype id return
+        if (!isset($this->data['embedded']['instance']['embedded']['casetype'])) {
+            return $this->data;
+        }
+
+        $zaakTypeId = $this->data['embedded']['instance']['embedded']['casetype']['reference'];
+
+
+        // Get ZaakType ObjectEntity
+        $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $zaakTypeId, 'entity' => $zaakTypeEntity]);
+
+        $xxllncZaakTypeConfiguration = [
+            'source' => $xxllncGateway->getId()->toString(),
+            'location' => '/casetype',
+            'apiSource' => [
+                'location' => [
+                    'objects' => 'result.instance.rows',
+                    'object' => 'result',
+                    'idField' => 'reference'
+                ],
+                'queryMethod' => 'page',
+                'syncFromList' => true,
+                'sourceLeading' => true,
+                'useDataFromCollection' => false,
+                'mappingIn' => [],
+                'mappingOut' => [],
+                'translationsIn' => [],
+                'translationsOut' => [],
+                'skeletonIn' => []
+            ]
+        ];
+
+
+        // $zaakTypeObjectEntity instanceof ObjectEntity && $zaakTypeArray = $zaakTypeObjectEntity->toArray();
+
+        // If it does not exist, fetch the casetype from xxllnc, sync it, then map it to zgw ZaakType
+        $i = 0;
+        while ($i < 5 && !$zaakTypeObjectEntity instanceof ObjectEntity) :
+            $zaakTypeSync = $this->synchronizationService->findSyncBySource($xxllncGateway, $xxllncZaakTypeEntity, $zaakTypeId);
+            $zaakTypeSync = $this->synchronizationService->handleSync($zaakTypeSync, [], $xxllncZaakTypeConfiguration);
+            sleep(5);
+            $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $zaakTypeId, 'entity' => $zaakTypeEntity]);
+            $i++;
+        endwhile;
+
+        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+            return $this->data;
+        }
+
+        var_dump('ZaakType found/created: ' . $zaakTypeObjectEntity->getId()->toString());
+        // $zaakTypeArray = $zaakTypeObjectEntity->toArray();
+
+        // Get XxllncZaakObjectEntity from this->data['id']
+        $XxllncZaakObjectEntity = $this->objectEntityRepo->find($this->data['id']);
 
         $zaakObjectEntity = $this->getZaakObjectEntity($zaakEntity);
+
+        // set organization, application and owner on zaakObjectEntity from this->data
+        $zaakObjectEntity->setOrganization($XxllncZaakObjectEntity->getOrganization());
+        $zaakObjectEntity->setOwner($XxllncZaakObjectEntity->getOwner());
+        $zaakObjectEntity->setApplication($XxllncZaakObjectEntity->getApplication());
 
         // Map and set default values from xxllnc casetype to zgw zaaktype
         $zgwZaakArray = $this->translationService->dotHydrator(isset($this->skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
         $zgwZaakArray['instance'] = null;
         $zgwZaakArray['embedded'] = null;
 
-        // $zgwZaakArray = $this->mapStatusTypen($zgwZaakArray);
+        // Set zaakType
+        $zgwZaakArray['zaaktype'] = $zaakTypeObjectEntity;
+
+        // $zgwZaakArray = $this->mapStatus($zgwZaakArray);
+        // $zgwZaakArray = $this->mapRollen($zgwZaakArray);
+        // $zgwZaakArray = $this->mapEigenschappen($zgwZaakArray);
 
         $zaakObjectEntity->hydrate($zgwZaakArray);
 
