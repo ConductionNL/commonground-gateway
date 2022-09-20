@@ -913,6 +913,7 @@ class ObjectEntityService
         // We need to set uri here in case we need it in $this->functionService->handleFunction later!
         $subObject->setUri($this->createUri($subObject));
 
+        // todo remove if no longer needed, see value.php setValue() where we set owner, organization and application for subobjects
         // Set organization for this object
         if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
             $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
