@@ -97,6 +97,12 @@ services:
         class: App\Service\MapZaakTypeService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
+    
+    mapZaakService:
+        public: true
+        class: App\Service\MapZaakService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             
     Redis:
         class: Redis
