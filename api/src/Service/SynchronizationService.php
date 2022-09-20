@@ -544,8 +544,9 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronisation object
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $configuration = []): Synchronization
     {
+        !isset($this->configuration['location']) && $configuration && $this->configuration = $configuration;
         $this->checkObjectEntity($synchronization);
 
         // If we don't have an sourced object, we need to get one
