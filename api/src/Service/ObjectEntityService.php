@@ -901,9 +901,9 @@ class ObjectEntityService
      * @param ObjectEntity $subObject
      * @param $object
      *
-     * @return ObjectEntity
-     *
      * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
      */
     private function saveSubObject(ObjectEntity $subObject, $object): ObjectEntity
     {
