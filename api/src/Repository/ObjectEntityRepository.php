@@ -40,7 +40,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array  $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
@@ -73,7 +73,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity            $entity  The Entity we are currently doing a get collection on.
      * @param array             $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array             $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array             $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int               $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int               $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      * @param QueryBuilder|null $query   An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
@@ -117,7 +117,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array  $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
      * @throws Exception
      *
@@ -706,9 +706,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $orderCheck = $this->getOrderParameters($entity);
 
         $key = array_keys($order)[0];
-        $value = array_values($order)[0];
+        $value = strtoupper(array_values($order)[0]);
 
-        if (in_array($key, $orderCheck) && in_array($value, ['desc', 'asc'])) {
+        if (in_array($key, $orderCheck) && in_array($value, ['DESC', 'ASC'])) {
             $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
         }
 
@@ -758,7 +758,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query  The existing QueryBuilder.
      * @param string       $key    The order[$key] used in the order query param.
-     * @param string       $value  The value used with the query param, desc or asc.
+     * @param string       $value  The value used with the query param, DESC or ASC.
      * @param string       $prefix The prefix of the value for the order we are adding.
      *
      * @return QueryBuilder The QueryBuilder.
@@ -814,7 +814,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @param QueryBuilder $query          The existing QueryBuilder.
      * @param string       $sqlFriendlyKey The order[$key] used in the order query param. But made sql friendly for left joins with the makeKeySqlFriendly() function.
      * @param string       $key            The order[$key] used in the order query param.
-     * @param string       $value          The value used with the query param, desc or asc.
+     * @param string       $value          The value used with the query param, DESC or ASC.
      * @param string       $prefix         The prefix of the value for the order we are adding.
      *
      * @return QueryBuilder
