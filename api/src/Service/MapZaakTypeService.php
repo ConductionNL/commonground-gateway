@@ -124,7 +124,7 @@ class MapZaakTypeService
                 $result['label'] && $resultaatTypeArray['toelichting'] = $result['label'];
                 $resultaatTypeArray['selectielijstklasse'] = $result['selection_list'] ?? 'http://localhost';
                 $result['type_of_archiving'] && $resultaatTypeArray['archiefnominatie'] = $result['type_of_archiving'];
-                $result['period_of_preservation'] && $resultaatTypeArray['archiefactietermijn'] = $result['period_of_preservation'];
+                $result['period_of_preservation'] && $resultaatTypeArray['archiefactietermijn'] = strval($result['period_of_preservation']);
 
                 $zaakTypeArray['resultaattypen'][] = $resultaatTypeArray;
             }
@@ -221,6 +221,7 @@ class MapZaakTypeService
 
         $this->entityManager->persist($zaakTypeObjectEntity);
         $this->entityManager->flush();
+        var_dump('ZGW ZaakType created');
 
         return $this->data;
     }
