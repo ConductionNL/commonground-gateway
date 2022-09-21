@@ -62,6 +62,77 @@ class MapZaakService
     }
 
     /**
+     * Maps the eigenschappen from xxllnc to zgw.
+     *
+     * @param array $zaakArray This is the ZGW Zaak array.
+     *
+     * @return array $zaakArray This is the ZGW Zaak array with the added eigenschappen.
+     */
+    private function mapEigenschappen(array $zaakArray): array
+    {
+        // Manually map properties to eigenschappen
+        $zaakArray['eigenschappen'] = [];
+
+
+        return $zaakArray;
+    }
+
+
+    /**
+     * Maps the rollen from xxllnc to zgw.
+     *
+     * @param array $zaakArray This is the ZGW Zaak array.
+     * @param array  $zaakTypeArray This is the ZGW ZaakType array.
+     * @param array $rol This is the xxllnc Rol array.
+     *
+     * @return array $zaakArray This is the ZGW Zaak array with the added rollen.
+     */
+    private function mapRollen(array $zaakArray, array $zaakTypeArray, array $rol): array
+    {
+        $zaakArray['rollen'] = [];
+        foreach ($zaakTypeArray['roltypen'] as $rolType) {
+            if (strtolower($rol['preview']) == strtolower($rolType['omschrijving'])) {
+                $zaakArray['rollen'][] = [
+                    'roltype'       => $this->objectEntityRepo->find($rolType['id']),
+                    'omschrijving' => $rol['preview'],
+                    'omschrijvingGeneriek' => strtolower($rol['preview']),
+                    'roltoelichting' => $rol['embedded']['insatnce']['description'],
+                    'betrokkeneType' => 'natuurlijk_persoon'
+                ];
+            }
+        }
+
+
+        return $zaakArray;
+    }
+
+    /**
+     * Maps the status from xxllnc to zgw.
+     *
+     * @param array  $zaakArray This is the ZGW Zaak array.
+     * @param array  $zaakTypeArray This is the ZGW ZaakType array.
+     * @param array $status This is the xxllnc Status array.
+     *
+     * @return array $zaakArray This is the ZGW Zaak array with the added status.
+     */
+    private function mapStatus(array $zaakArray, array $zaakTypeArray, array $status): array
+    {
+        foreach ($zaakTypeArray['statustypen'] as $statusType) {
+            if ($status['preview'] == $statusType['omschrijving']) {
+                $zaakArray['status'] = [
+                    'statustype'       => $this->objectEntityRepo->find($statusType['id']),
+                    'datumStatusGezet' => isset($status['embedded']['instance']['date_modified']) ? $status['embedded']['instance']['date_modified'] : '2020-04-15',
+                    'statustoelichting' => isset($status['embedded']['instance']['milestone_label']) && strval($status['embedded']['instance']['milestone_label'])
+                ];
+                return $zaakArray;
+            }
+        }
+
+        return $zaakArray;
+    }
+
+
+    /**
      * Finds or creates a ObjectEntity from the Zaak Entity.
      *
      * @param Entity $zaakEntity This is the Zaak Entity in the gateway.
@@ -132,7 +203,8 @@ class MapZaakService
         $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $zaakTypeId, 'entity' => $zaakTypeEntity]);
 
         $xxllncZaakTypeConfiguration = [
-            'source' => $xxllncGateway->getId()->toString(),
+            'entity' => $configuration['entities']['XxllncZaakType'],
+            'source' => $configuration['source'],
             'location' => '/casetype',
             'apiSource' => [
                 'location' => [
@@ -160,16 +232,23 @@ class MapZaakService
         while ($i < 5 && !$zaakTypeObjectEntity instanceof ObjectEntity) :
             $zaakTypeSync = $this->synchronizationService->findSyncBySource($xxllncGateway, $xxllncZaakTypeEntity, $zaakTypeId);
             $zaakTypeSync = $this->synchronizationService->handleSync($zaakTypeSync, [], $xxllncZaakTypeConfiguration);
+
+
+            // dump($zaakTypeSync);
             sleep(5);
-            $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $zaakTypeId, 'entity' => $zaakTypeEntity]);
+
+            var_dump('Trying to find ZaakType with entity.id: ' . $zaakTypeEntity->getId()->toString() . ' and externalId: ' . $zaakTypeSync->getObject()->getExternalId());
+            $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $zaakTypeSync->getObject()->getExternalId(), 'entity' => $zaakTypeEntity]);
+            // var_dump('Find/create zaakType count: ' . strval($i));
             $i++;
         endwhile;
 
         if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+            var_dump('No zaakType could be found or created in 25s, returning data..');
             return $this->data;
         }
 
-        var_dump('ZaakType found/created: ' . $zaakTypeObjectEntity->getId()->toString());
+        var_dump('ZaakType found: ' . $zaakTypeObjectEntity->getId()->toString());
         // $zaakTypeArray = $zaakTypeObjectEntity->toArray();
 
         // Get XxllncZaakObjectEntity from this->data['id']
@@ -184,15 +263,16 @@ class MapZaakService
 
         // Map and set default values from xxllnc casetype to zgw zaaktype
         $zgwZaakArray = $this->translationService->dotHydrator(isset($this->skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
-        $zgwZaakArray['instance'] = null;
-        $zgwZaakArray['embedded'] = null;
+
+        // Get array version of the ZaakType
+        $zaakTypeArray = $zaakTypeObjectEntity->toArray();
 
         // Set zaakType
         $zgwZaakArray['zaaktype'] = $zaakTypeObjectEntity;
 
-        // $zgwZaakArray = $this->mapStatus($zgwZaakArray);
-        // $zgwZaakArray = $this->mapRollen($zgwZaakArray);
-        // $zgwZaakArray = $this->mapEigenschappen($zgwZaakArray);
+        $zgwZaakArray = $this->mapStatus($zgwZaakArray, $zaakTypeArray, $this->data['embedded']['instance']['embedded']['milestone']);
+        $zgwZaakArray = $this->mapRollen($zgwZaakArray, $zaakTypeArray, $this->data['embedded']['instance']['embedded']['route']['embedded']['instance']['embedded']['role']);
+        $zgwZaakArray = $this->mapEigenschappen($zgwZaakArray);
 
         $zaakObjectEntity->hydrate($zgwZaakArray);
 
@@ -201,6 +281,7 @@ class MapZaakService
 
         $this->entityManager->persist($zaakObjectEntity);
         $this->entityManager->flush();
+        var_dump('ZGW Zaak created');
 
         return $this->data;
     }
