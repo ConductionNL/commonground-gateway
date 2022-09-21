@@ -1050,7 +1050,7 @@ class EavService
             if (is_array($order) && count($order) > 1) {
                 $message = 'Only one order query param at the time is allowed.';
             }
-            if (is_array($order) && !in_array(array_values($order)[0], ['desc', 'asc'])) {
+            if (is_array($order) && !in_array(strtoupper(array_values($order)[0]), ['DESC', 'ASC'])) {
                 $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
             }
             if (is_array($order) && !in_array(array_keys($order)[0], $orderCheck)) {

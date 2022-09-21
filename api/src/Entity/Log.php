@@ -48,6 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "callId": "exact",
  *     "session": "exact",
  *     "type": "exact",
+ *     "objectId": "exact",
  * })
  */
 class Log
