@@ -142,7 +142,7 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')} {$unusedExtraElements['toelichting']}");
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}\n{$extraElement->getValue('@naam')}: {$extraElement->getValue('#')}");
         }
     }
 
@@ -513,8 +513,6 @@ class ZdsZaakService
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['url' => $data['response']['url']]);
         $this->updateZaak($extraElements, $data['response'], $zaakObject[0], $eigenschappen);
-
-        $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, 'zwg.zaak.pushed');
     }
 
     /**
