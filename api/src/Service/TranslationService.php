@@ -85,16 +85,6 @@ class TranslationService
                 $format = trim($searches[1]);
             }
 
-            if(strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
-                foreach($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
-                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
-                }
-                continue;
-            } else {
-                $search = str_replace('.$.', '', $search);
-                $replace = str_replace('.$.', '', $replace);
-            }
-
             if (isset($source[$search]['@xsi:nil'])) {
                 unset($destination[$search]);
             } elseif (!isset($format)) {
