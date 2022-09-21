@@ -291,7 +291,6 @@ class HandlerService
             $this->stopwatch->stop('handleDataAfterEAV');
         }
 
-
         // Update current Log
         $this->stopwatch->start('saveLog3', 'handleHandler');
         $this->logService->saveLog($this->request, null, 3, json_encode($data));
@@ -361,7 +360,7 @@ class HandlerService
      */
     public function createResponse(array $data, ?Endpoint $endpoint = null): Response
     {
-    // We only end up here if there are no errors, so we only suply best case senario's
+        // We only end up here if there are no errors, so we only suply best case senario's
         switch ($this->request->getMethod()) {
       case 'GET':
         $status = Response::HTTP_OK;

@@ -188,28 +188,31 @@ class ZdsZaakService
     }
 
     /**
-     * Returns the statusType from an array of statusTypes with the lowest order number
+     * Returns the statusType from an array of statusTypes with the lowest order number.
      *
-     * @param   array           $statusTypes    An array of status types
-     * @return  ObjectEntity
+     * @param array $statusTypes An array of status types
+     *
+     * @return ObjectEntity
      */
     public function getFirstStatus(array $statusTypes): ObjectEntity
     {
         foreach ($statusTypes as $statusType) {
-            if(!$volgnummer || $statusType->getValue('volgnummer') < $volgnummer) {
+            if (!$volgnummer || $statusType->getValue('volgnummer') < $volgnummer) {
                 $volgnummer = $statusType->getValue('volgnummer');
                 $firstStatusType = $statusType;
             }
         }
+
         return $firstStatusType;
     }
 
     /**
-     * Creates a starting status for a new case
+     * Creates a starting status for a new case.
      *
-     * @param   ObjectEntity    $zaaktypeObjectEntity   The zaaktypeobject to find the statusType in
-     * @param   ObjectEntity    $zaak                   The zaak to add a status to
-     * @throws  Exception
+     * @param ObjectEntity $zaaktypeObjectEntity The zaaktypeobject to find the statusType in
+     * @param ObjectEntity $zaak                 The zaak to add a status to
+     *
+     * @throws Exception
      */
     public function createZgwStartStatus(ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
     {
@@ -574,6 +577,7 @@ class ZdsZaakService
     {
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['identificatie' => $identification]);
+
         return $zaakObject;
     }
 
@@ -617,7 +621,6 @@ class ZdsZaakService
         $zdsIsVan->setValue('code', $zaak->getValue('zaaktype')->getValue('identificatie'));
 
         return $zdsIsVan;
-
     }
 
     public function getVerblijfadres(ObjectEntity $zdsNatuurlijkPersoon, ObjectEntity $rol): ObjectEntity
@@ -629,7 +632,6 @@ class ZdsZaakService
         $zdsVerblijfsadres->setValue('aoaHuisnummer', $rol->getValue('betrokkeneIdentificatie')->getValue('verblijfadres')->getValue('aoaHuisnummer'));
         $zdsVerblijfsadres->setValue('aoaHuisletter', $rol->getValue('betrokkeneIdentificatie')->getValue('verblijfadres')->getValue('aoaHuisletter'));
         $zdsVerblijfsadres->setValue('aoaHuisnummertoevoeging', $rol->getValue('betrokkeneIdentificatie')->getValue('verblijfadres')->getValue('aoaHuisnummertoevoeging'));
-
 
         return $zdsVerblijfsadres;
     }
@@ -655,8 +657,8 @@ class ZdsZaakService
         $zdsVestiging = new ObjectEntity($zdsHeeftAlsInitiator->getEntity()->getAttributeByName('vestiging')->getObject());
 
         $zdsHeeftAlsInitiator->setValue('natuurlijkPersoon', $this->getNatuurlijkPersoon($zdsHeeftAlsInitiator, $rol));
-        return $zdsHeeftAlsInitiator;
 
+        return $zdsHeeftAlsInitiator;
     }
 
     public function getZaakObject(ObjectEntity $zds, ObjectEntity $zaak, ObjectEntity $rol): ObjectEntity
@@ -681,9 +683,10 @@ class ZdsZaakService
     /**
      * @param array $data
      * @param array $configuration
+     *
      * @return array
      */
-    public function zgwToZdsHandler (array $data, array $configuration): array
+    public function zgwToZdsHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
 
@@ -692,7 +695,7 @@ class ZdsZaakService
         $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
 
         $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator']);
-        if($zds->getValue('object')->getValue('identificatie')) {
+        if ($zds->getValue('object')->getValue('identificatie')) {
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zakenEntity, ['identificatie' => $zds->getValue('object')->getValue('identificatie')])[0];
 
             foreach ($rollen as $rol) {
@@ -702,10 +705,10 @@ class ZdsZaakService
             }
             $zds->setValue('object', $this->getZaakObject($zds, $zaak, $rol));
             $data['response'] = $zds->toArray();
-        } elseif($zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
+        } elseif ($zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
             $zaken = [];
-            foreach($rollen as $rol) {
-                if($rol->getValue('betrokkeneIdentificatie')->getValue('inpBsn') == $zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
+            foreach ($rollen as $rol) {
+                if ($rol->getValue('betrokkeneIdentificatie')->getValue('inpBsn') == $zds->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
                     $zaken[] = $this->getZaakObject($zds, $rol->getValue('zaak'), $rol)->toArray();
                 }
             }
@@ -713,6 +716,7 @@ class ZdsZaakService
             $result['object'] = $zaken;
             $data['response'] = $result;
         }
+
         return $data;
     }
 }

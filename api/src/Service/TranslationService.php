@@ -39,10 +39,12 @@ class TranslationService
 
     private function isAssociative(array $array)
     {
-        if (array() === $array) return false;
+        if ([] === $array) {
+            return false;
+        }
+
         return array_keys($array) !== range(0, count($array) - 1);
     }
-
 
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
