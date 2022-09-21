@@ -162,7 +162,7 @@ class ZdsZaakService
         $heeftAlsInitiatorObject = $zdsObject->getValue('heeftAlsInitiator');
         $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
         foreach ($roltypen as $roltype) {
-            if($roltype->getValue('omschrijvingGeneriek') == 'initiator') {
+            if ($roltype->getValue('omschrijvingGeneriek') == 'initiator') {
                 break;
             }
         }
@@ -245,8 +245,9 @@ class ZdsZaakService
     }
 
     /**
-     * @param array $objectEntities
+     * @param array  $objectEntities
      * @param string $attributeName
+     *
      * @return void
      */
     public function addObjectToZgwZaaktype(array $objectEntities, string $attributeName): void
