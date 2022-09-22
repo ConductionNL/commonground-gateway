@@ -608,7 +608,7 @@
 #        pathRegex: <{openpubProxyRegex}>
 #        method: GET
 #        operationType: collection
-#        
+#
 #    # Elastic search endpoint
 #    elasticSearchEndpoint:
 #        name: elastic search endpoint
@@ -673,7 +673,7 @@
 #        conditions: "{}"
 #        endpoints: [ "@openpubProxyEndpoint" ]
 #        proxyGateway: openPub API
-#        
+#
 #    # Elastic search Handler
 #    elasticSearchHandler:
 #        name: Elastic Search Handler
@@ -812,3 +812,60 @@
 #                    - skills
 #                prefixFieldsOut:
 #                    id: smoelenboek_
+#    
+#    SyncKennisArtikelElasticSearch:
+#        name: SyncKennisArtikelElasticSearch
+#        description: This is a synchronisation for SDG kenninsartikel to Elastic
+#        listens:
+#            - 'commongateway.object.create'
+#            - 'commongateway.object.update'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # SDG kennisartikel entity uuid
+#        class: App\ActionHandler\SynchronizationPushHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            entity: '' # SDG kennisartikel entity uuid
+#            source: '' # EnterpriseSearch API Private
+#            location: /api/as/v1/engines/kiss-engine/documents
+#            apiSource:
+#                location:
+#                    objects: '#'
+#                    idField: '0.id'
+#                    dateChangedField: ''
+#                queryMethod: page
+#                syncFromList: true
+#                sourceLeading: false
+#                mappingIn: { }
+#                mappingOut:
+#                    body_content: "object | array"
+#                    title: "vertalingen.0.productTitelDecentraal | concatenation &nbsp;"
+#                    object: "object | array"
+#                    object_meta: "vertalingen.0.specifiekeTekst | concatenation <identity('<br/>')>"
+#                translationsIn: { }
+#                translationsOut: { }
+#                skeletonIn: { }
+#                skeletonOut:
+#                    object_bron: Kennisartikel
+#                    title: kennisartikel
+#                unavailablePropertiesOut:
+#                    - url
+#                    - uuid
+#                    - upnLabel
+#                    - upnUri
+#                    - versie
+#                    - publicatieDatum
+#                    - productAanwezig
+#                    - productValtOnder
+#                    - verantwoordelijkeOrganisatie
+#                    - bevoegdeOrganisatie
+#                    - catalogus
+#                    - locaties
+#                    - doelgroep
+#                    - vertalingen
+#                    - gerelateerdeProducten
+#                prefixFieldsOut:
+#                    id: kennisartikel_
