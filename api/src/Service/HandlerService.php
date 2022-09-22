@@ -284,6 +284,7 @@ class HandlerService
 
             $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
+            $data = $event->getData()['response'];
 
             $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
