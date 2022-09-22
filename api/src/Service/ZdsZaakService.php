@@ -349,7 +349,8 @@ class ZdsZaakService
         $dotData->set($path, $identifier);
 
         // @todo er wordt aangegeven dat de result een array is (that makes sense) maar we geven een JSON object terug?
-        return $dotData->jsonSerialize();
+        //return $dotData->jsonSerialize();
+        return $dotData->all();
     }
 
     /**
