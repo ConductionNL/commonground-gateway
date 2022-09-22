@@ -65,14 +65,39 @@ class MapZaakService
      * Maps the eigenschappen from xxllnc to zgw.
      *
      * @param array $zaakArray This is the ZGW Zaak array.
-     *
+     * @param array  $zaakTypeArray This is the ZGW ZaakType array.
+     * @param attributes $ar This is the xxllnc attributes array that will be mapped to eigenschappen.
+     * 
      * @return array $zaakArray This is the ZGW Zaak array with the added eigenschappen.
      */
-    private function mapEigenschappen(array $zaakArray): array
+    private function mapEigenschappen(array $zaakArray, array $zaakTypeArray, ObjectEntity $zaakTypeObjectEntity, array $attributes): array
     {
         // Manually map properties to eigenschappen
-        $zaakArray['eigenschappen'] = [];
+        !isset($zaakTypeArray['eigenschappen']) && $zaakTypeArray['eigenschappen'] = [];
+        foreach ($attributes as $attributeName => $attributeValue) {
+            $zaakTypeArray['eigenschappen'][] = [
+                'naam' => $attributeName,
+                'definitie' => $attributeName
+            ];
+        }
 
+        $zaakTypeObjectEntity->hydrate($zaakTypeArray);
+        $this->entityManager->persist($zaakTypeObjectEntity);
+        $this->entityManager->flush();
+        $zaakTypeArray = $zaakTypeObjectEntity->toArray();
+
+        !isset($zaakArray['eigenschappen']) && $zaakArray['eigenschappen'] = [];
+        foreach ($attributes as $attributeName => $attributeValue) {
+            foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
+                if ($eigenschap['name'] == $attributeName) {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam' => $attributeName,
+                        'waarde' => is_array($attributeValue) ? strval(array_shift($attribute)) :  strval($attributeValue),
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id'])
+                    ];
+                }
+            }
+        }
 
         return $zaakArray;
     }
@@ -272,7 +297,7 @@ class MapZaakService
 
         $zgwZaakArray = $this->mapStatus($zgwZaakArray, $zaakTypeArray, $this->data['embedded']['instance']['embedded']['milestone']);
         $zgwZaakArray = $this->mapRollen($zgwZaakArray, $zaakTypeArray, $this->data['embedded']['instance']['embedded']['route']['embedded']['instance']['embedded']['role']);
-        $zgwZaakArray = $this->mapEigenschappen($zgwZaakArray);
+        $zgwZaakArray = $this->mapEigenschappen($zgwZaakArray, $zaakTypeArray, $zaakTypeObjectEntity, $this->data['embedded']['instance']['embedded']['attributes']);
 
         $zaakObjectEntity->hydrate($zgwZaakArray);
 
