@@ -734,6 +734,11 @@ class SynchronizationService
             }, ARRAY_FILTER_USE_KEY);
         }
 
+        // todo: replace key name with notAllowedPropertiesOut because they have the same purpose
+        if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->clearUnavailableProperties($objectArray);
+        }
+
         if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
             $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
         } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
@@ -744,10 +749,6 @@ class SynchronizationService
 
         if (array_key_exists('translationsOut', $this->configuration['apiSource'])) {
             $objectArray = $this->translate($objectArray, true);
-        }
-
-        if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->clearUnavailableProperties($objectArray);
         }
 
         if (array_key_exists('prefixFieldsOut', $this->configuration['apiSource'])) {
@@ -808,7 +809,6 @@ class SynchronizationService
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-        // todo: allowedPropertiesOut, notAllowedPropertiesOut
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
@@ -863,7 +863,6 @@ class SynchronizationService
         // todo: turn all or some of the following todo's and there code into functions?
 
         // todo: move to function, maybe copy: clearUnavailableProperties()
-        // todo: allowedPropertiesOut, notAllowedPropertiesOut
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
             $sourceObject = array_filter($sourceObject, function ($propertyName) {
