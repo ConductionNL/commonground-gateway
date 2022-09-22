@@ -896,6 +896,43 @@ class ObjectEntityService
     }
 
     /**
+     * Saves a subObject using saveObject. Will also set the owner, uri, organization and application. And check for a Entity function.
+     *
+     * @param ObjectEntity $subObject
+     * @param $object
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
+     */
+    private function saveSubObject(ObjectEntity $subObject, $object): ObjectEntity
+    {
+        $subObject = $this->saveObject($subObject, $object);
+        $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+
+        // We need to set uri here in case we need it in $this->functionService->handleFunction later!
+        $subObject->setUri($this->createUri($subObject));
+
+        // todo remove if no longer needed, see value.php setValue() where we set owner, organization and application for subobjects
+        // Set organization for this object
+        if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+            $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+            $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+        } else {
+            $subObject->setOrganization($this->session->get('activeOrganization'));
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $subObject->setApplication(!empty($application) ? $application : null);
+        }
+
+        return $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
+            'method'           => $this->request->getMethod(),
+            'uri'              => $subObject->getUri(),
+            'organizationType' => is_array($object) && array_key_exists('type', $object) ? $object['type'] : null,
+            'userGroupName'    => is_array($object) && array_key_exists('name', $object) ? $object['name'] : null,
+        ]);
+    }
+
+    /**
      * @TODO
      *
      * @param ObjectEntity $objectEntity
@@ -992,27 +1029,8 @@ class ObjectEntityService
                     }
 
                     $subObject->setSubresourceIndex($key);
-                    $subObject = $this->saveObject($subObject, $object);
-                    $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
-                    // todo: i think we can remove this because in saveObject uri is already set, test it first!
-                    $subObject->setUri($this->createUri($subObject));
-
-                    // Set organization for this object
-                    if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-                        $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-                        $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-                    } else {
-                        $subObject->setOrganization($this->session->get('activeOrganization'));
-                        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                        $subObject->setApplication(!empty($application) ? $application : null);
-                    }
-                    $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
-                        'method'           => $this->request->getMethod(),
-                        'uri'              => $subObject->getUri(),
-                        'organizationType' => is_array($object) && array_key_exists('type', $object) ? $object['type'] : null,
-                        'userGroupName'    => is_array($object) && array_key_exists('name', $object) ? $object['name'] : null,
-                    ]);
+                    $subObject = $this->saveSubObject($subObject, $object);
 
                     // object toevoegen
                     $saveSubObjects->add($subObject);
@@ -1116,19 +1134,13 @@ class ObjectEntityService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
-                    if ($attribute->getObject()->getFunction() === 'organization') {
-                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
-                    } else {
-                        $subObject->setOrganization($this->session->get('activeOrganization'));
-                    }
-                    $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                    $subObject->setApplication(!empty($application) ? $application : null);
                 } else {
                     // Put...
                     $subObject = $valueObject->getValue();
                 }
-                $subObject = $this->saveObject($subObject, $value);
-                $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+
+                $subObject = $this->saveSubObject($subObject, $value);
+
                 $this->entityManager->persist($subObject);
 
                 $valueObject->setValue($subObject);

@@ -583,9 +583,14 @@ class SynchronizationService
      */
     public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
-        $this->setApplicationAndOrganization($objectEntity);
         // todo: move this function to ObjectEntityService to prevent duplicate code...
+
+        $this->setApplicationAndOrganization($objectEntity);
+
         $owner = $this->objectEntityService->checkAndUnsetOwner($data);
+        if (array_key_exists('owner', $this->configuration)) {
+            $owner = $this->configuration['owner'];
+        }
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             //@TODO: Write errors to logs
@@ -698,6 +703,8 @@ class SynchronizationService
         foreach ($objectArray as $key => $value) {
             if (!$value) {
                 unset($objectArray[$key]);
+            } elseif (is_array($value)) {
+                $objectArray[$key] = $this->clearNull($value);
             }
         }
 
