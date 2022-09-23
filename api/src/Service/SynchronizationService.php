@@ -355,13 +355,13 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
+                throw new Exception('Callservice error while doing fetchObjectsFromSource');
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
             return [];
             //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
+//            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [
 //                'data' => [
 //                    'message'           => $exception->getMessage(),
 //                    'code'              => $exception->getCode(),
@@ -824,12 +824,12 @@ class SynchronizationService
             );
 
             if (is_array($result)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
+                throw new Exception('Callservice error while doing syncToSource');
             }
         } catch (Exception $exception) {
             return $synchronization;
             //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
+//            throw new GatewayException('Callservice error while doing syncToSource', null, null, [
 //                'data' => [
 //                    'message'           => $exception->getMessage(),
 //                    'code'              => $exception->getCode(),
