@@ -533,6 +533,7 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
+     * @param ?array          $configuration   Configuration if not entered code from action
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
@@ -540,7 +541,7 @@ class SynchronizationService
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $configuration = []): Synchronization
     {
-        !isset($this->configuration['location']) && $configuration && $this->configuration = $configuration;
+        isset($configuration) && $this->configuration = $configuration;
         $this->checkObjectEntity($synchronization);
 
         // If we don't have an sourced object, we need to get one
