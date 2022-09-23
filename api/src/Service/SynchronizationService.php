@@ -832,9 +832,7 @@ class SynchronizationService
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
-        var_dump('ObjectArray Before Mapping:',$objectArray);
         $objectArray = $this->mapOutput($objectArray);
-        var_dump('ObjectArray After Mapping:',$objectArray);
 
         try {
             $result = $this->commonGroundService->callService(
