@@ -793,7 +793,9 @@
 #                mappingIn: {}
 #                mappingOut: 
 #                    body_content: "object | array"
-#                    title: "user.firstName+user.prefixLastname+user.lastName | concatenation &nbsp;"
+##                    todo:
+##                    title: "user.firstName+user.prefixLastname+user.lastName | concatenation &nbsp;"
+#                    title: "contact.voornaam+contact.voorvoegselAchternaam+contact.achternaam | concatenation &nbsp;"
 #                    object: "object | array"
 #                    object_meta: "function+department+skills | concatenation <identity('<br/>')>"
 #                translationsIn: {}
