@@ -62,6 +62,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
+        var_dump('Sync triggered: ' . $configuration['location']);
         $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
 
         return $data;
