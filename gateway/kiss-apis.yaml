@@ -782,6 +782,8 @@
 #            entity: '' # medewerker entity uuid
 #            source: '' # EnterpriseSearch API Private
 #            location: /api/as/v1/engines/kiss-engine/documents
+#            callService:
+#                method: post
 #            apiSource:
 #                location:
 #                    objects: '#'

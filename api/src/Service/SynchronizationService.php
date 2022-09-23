@@ -254,19 +254,37 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Gateway     $gateway The source to call
-     * @param string|null $id      The id to request (optional)
+     * @param Gateway $gateway The source to call
+     * @param string|null $id The id to request (optional)
+     * @param array|null $objectArray
      *
      * @return array The configuration for the source to call
+     * @throws LoaderError|SyntaxError
      */
     private function getCallServiceConfig(Gateway $gateway, string $id = null, ?array $objectArray = []): array
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway, $id, $objectArray),
-            'query'     => $this->getQueryForCallService($id),
-            'headers'   => $gateway->getHeaders(),
+            'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
+            'headers'   => $this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders(), //todo maybe array_merge instead of ??
+            'method'    => $this->getCallServiceOverwrite('method')
         ];
+    }
+
+    /**
+     * This function checks if a specific key exists in $this->configuration['callService'] and returns it's value if it does.
+     * If we want to overwrite how we do a callService call to a source, use $this->configuration['callService'].
+     *
+     * @param string $key
+     * @return mixed|null
+     */
+    private function getCallServiceOverwrite(string $key)
+    {
+        if (array_key_exists('callService', $this->configuration) && array_key_exists($key, $this->configuration['callService'])) {
+            return $this->configuration['callService'][$key];
+        }
+        return null;
     }
 
     /**
@@ -351,7 +369,7 @@ class SynchronizationService
                 array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
                 $callServiceConfig['headers'],
                 false,
-                'GET'
+                $callServiceConfig['method'] ?? 'GET'
             );
 
             if (is_array($response)) {
@@ -406,7 +424,7 @@ class SynchronizationService
                 $callServiceConfig['query'],
                 $callServiceConfig['headers'],
                 false,
-                'GET'
+                $callServiceConfig['method'] ?? 'GET'
             );
 
             if (is_array($response)) {
@@ -820,7 +838,7 @@ class SynchronizationService
                 $callServiceConfig['query'],
                 $callServiceConfig['headers'],
                 false,
-                $existsInSource ? 'PUT' : 'POST'
+                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
             );
 
             if (is_array($result)) {
