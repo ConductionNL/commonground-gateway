@@ -2,21 +2,12 @@
 
 namespace App\Controller;
 
-use App\Service\AuthorizationService;
-use App\Service\EavService;
-use App\Service\OasDocumentationService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Yaml\Yaml;
-use Symfony\Contracts\Cache\CacheInterface;
 
 class WsdlController extends AbstractController
 {
@@ -34,7 +25,8 @@ class WsdlController extends AbstractController
     /**
      * @Route("/wsdl")
      */
-    public function wsdlAction(){
+    public function wsdlAction()
+    {
         $wsdl =
             '<?xml version="1.0" encoding="utf-8"?>
 <wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://www.w3.org/2005/05/xmlmime" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.centric.nl/Publieksdiensten/Conductor/1.0" xmlns:s0="urn:Centric/Publieksdiensten/Conductor/1.0" xmlns:s1="http://schemas.microsoft.com/BizTalk/2003/Any" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://www.centric.nl/Publieksdiensten/Conductor/1.0" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
@@ -190,7 +182,6 @@ class WsdlController extends AbstractController
 </wsdl:service>
 </wsdl:definitions>
         ';
-
 
         return new Response(
             $wsdl,
