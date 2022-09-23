@@ -743,6 +743,14 @@ class SynchronizationService
      */
     private function mapOutput(array $objectArray): array
     {
+        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
+        }
+
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = array_filter($objectArray, function ($propertyName) {
@@ -756,16 +764,9 @@ class SynchronizationService
         }
 
         // todo: replace key name with notAllowedPropertiesOut because they have the same purpose
+        // NOTE: this must be done after dotHydrator! ^ So that we can first do correct mapping.
         if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = $this->clearUnavailableProperties($objectArray);
-        }
-
-        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
         }
 
         if (array_key_exists('translationsOut', $this->configuration['apiSource'])) {
@@ -831,7 +832,9 @@ class SynchronizationService
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
+        var_dump('ObjectArray Before Mapping:',$objectArray);
         $objectArray = $this->mapOutput($objectArray);
+        var_dump('ObjectArray After Mapping:',$objectArray);
 
         try {
             $result = $this->commonGroundService->callService(
