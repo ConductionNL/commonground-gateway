@@ -6,7 +6,6 @@ use App\Entity\ObjectEntity;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use http\Env\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -21,7 +20,7 @@ class HuwelijksplannerService
 
     /**
      * @param \App\Service\ObjectEntityService $objectEntityService
-     * @param RequestStack $requestStack
+     * @param RequestStack                     $requestStack
      */
     public function __construct(
         ObjectEntityService $objectEntityService,
@@ -39,8 +38,9 @@ class HuwelijksplannerService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws \Exception
+     *
+     * @return array
      */
     public function HuwelijksplannerHandler(array $data, array $configuration): array
     {
@@ -69,10 +69,10 @@ class HuwelijksplannerService
             }
 
             // end voorbeeld code
-            $resultArray[$currentDate->format("Y-m-d")][] = [
-                'start' => $currentDate->format("Y-m-d H:i:s"),
-                'stop' => $currentDate->add($interval)->format("Y-m-d H:i:s"),
-                'resources' => $resourceArray
+            $resultArray[$currentDate->format('Y-m-d')][] = [
+                'start'     => $currentDate->format('Y-m-d H:i:s'),
+                'stop'      => $currentDate->add($interval)->format('Y-m-d H:i:s'),
+                'resources' => $resourceArray,
             ];
         }
 
