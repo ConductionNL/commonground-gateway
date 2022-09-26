@@ -40,179 +40,59 @@ class MapSimXMLService
         $this->skeletonIn = [];
     }
 
-    // /**
-    //  * Maps the statusTypen from xxllnc to zgw.
-    //  *
-    //  * @param array $zaakTypeArray This is the ZGW ZaakType array.
-    //  *
-    //  * @return array $zaakTypeArray This is the ZGW ZaakType array with the added statustypen.
-    //  */
-    // private function mapStatusTypen(array $zaakTypeArray): array
-    // {
-    //     $zaakTypeArray['roltypen'] = [];
+    /**
+     * Creates drc informatie objecten from bijlagen.
+     *
+     * @param ObjectEntity $zaakObjectEntity This is the ZGW Zaak object.
+     * @param array        $simXMLArray This is the sim xml arrray.
+     * @param array        $zaakTypeArray This is the ZGW ZaakType array.
+     *
+     * @return void
+     */
+    private function createDocumenten(ObjectEntity &$zaakObjectEntity, Entity $documentEntity, array $simXMLArray): void
+    {
+        // Create documenten
+        $today = new \DateTime('now');
+        $todayAsString = $today->format('Y-m-d h:i:s');
+        foreach ($simXMLArray['embedded']['Bijlagen'] as $bijlage) {
+            $objectInformatieObject = [
+                'informatieobject' => [
+                    'titel' => $bijlage['ns2:Naam'],
+                    'bestandsnaam' => $bijlage['ns2:Naam'],
+                    'beschrijving' => $bijlage['ns2:Omschrijving'],
+                    'creatieDatum' => $todayAsString,
+                    'taal' => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
+                    'bestandsdelen' => [
+                        ['inhoud' => $bijlage['embedded']['ns2:Inhoud']['#']]
+                    ]
+                ],
+                'object' => $zaakObjectEntity->getSelf(),
+                'objectType' => 'zaak'
+            ];
 
-    //     // Manually map phases to statustypen
-    //     if (isset($this->data['embedded']['instance']['embedded']['phases'])) {
-    //         $zaakTypeArray['statustypen'] = [];
+            $objectInformatieObjectObjectEntity = new ObjectEntity();
+            $objectInformatieObjectObjectEntity->setEntity($documentEntity);
 
-    //         foreach ($this->data['embedded']['instance']['embedded']['phases'] as $phase) {
-    //             // Mapping maken voor status
-    //             $statusTypeArray = [];
-    //             isset($phase['name']) && $statusTypeArray['omschrijving'] = $phase['name'];
-    //             isset($phase['embedded']['fields'][0]['label']) ? $statusTypeArray['omschrijvingGeneriek'] = $phase['embedded']['fields'][0]['label'] : 'geen omschrijving';
-    //             isset($phase['embedded']['fields'][0]['help']) ? $statusTypeArray['statustekst'] = $phase['embedded']['fields'][0]['help'] : 'geen statustekst';
-    //             isset($phase['seq']) && $statusTypeArray['volgnummer'] = $phase['seq'];
+            $objectInformatieObjectObjectEntity->hydrate($objectInformatieObject);
 
-    //             if (isset($phase['embedded']['route']['embedded']['role'])) {
-    //                 $rolTypeArray = [];
-
-    //                 // Get rolInstanceObject
-    //                 $rolIdArray = explode('/', $phase['embedded']['route']['role']);
-    //                 $rolObjectEntity = $this->objectEntityRepo->find(end($rolIdArray));
-    //                 $roleInstanceObjectEntity = $this->objectEntityRepo->find($rolObjectEntity->getValue('instance')->getId()->toString());
-
-    //                 $rolTypeArray = [
-    //                     'omschrijving'         => $roleInstanceObjectEntity->getValue('description'),
-    //                     'omschrijvingGeneriek' => strtolower($roleInstanceObjectEntity->getValue('name')),
-    //                 ];
-    //                 $zaakTypeArray['roltypen'][] = $rolTypeArray;
-    //             }
-
-    //             $zaakTypeArray['statustypen'][] = $statusTypeArray;
-    //         }
-    //     }
-
-    //     return $zaakTypeArray;
-    // }
-
-    // /**
-    //  * Maps the resultaatTypen from xxllnc to zgw.
-    //  *
-    //  * @param array $zaakTypeArray This is the ZGW ZaakType array.
-    //  *
-    //  * @return array $zaakTypeArray This is the ZGW ZaakType array with the added resultaattypen.
-    //  */
-    // private function mapResultaatTypen(array $zaakTypeArray): array
-    // {
-    //     // Manually map results to resultaattypen
-    //     if (isset($this->data['embedded']['instance']['embedded']['results'])) {
-    //         $zaakTypeArray['resultaattypen'] = [];
-    //         foreach ($this->data['embedded']['instance']['embedded']['results'] as $result) {
-    //             $resultaatTypeArray = [];
-    //             $result['type'] && $resultaatTypeArray['omschrijving'] = $result['type'];
-    //             $result['label'] && $resultaatTypeArray['toelichting'] = $result['label'];
-    //             $resultaatTypeArray['selectielijstklasse'] = $result['selection_list'] ?? 'http://localhost';
-    //             $result['type_of_archiving'] && $resultaatTypeArray['archiefnominatie'] = $result['type_of_archiving'];
-    //             $result['period_of_preservation'] && $resultaatTypeArray['archiefactietermijn'] = $result['period_of_preservation'];
-
-    //             $zaakTypeArray['resultaattypen'][] = $resultaatTypeArray;
-    //         }
-    //     }
-
-    //     return $zaakTypeArray;
-    // }
-
-    // /**
-    //  * Maps the eigenschappen from xxllnc to zgw.
-    //  *
-    //  * @param array $zaakTypeArray This is the ZGW ZaakType array.
-    //  *
-    //  * @return array $zaakTypeArray This is the ZGW ZaakType array with the added eigenschappen.
-    //  */
-    // private function mapEigenschappen(array $zaakTypeArray): array
-    // {
-    //     // // Manually map properties to eigenschappen
-    //     $zaakTypeArray['eigenschappen'] = [];
-    //     $propertyIgnoreList = ['lead_time_legal', 'lead_time_service', 'designation_of_confidentiality', 'extension', 'publication', 'supervisor_relation', 'suspension'];
-    //     foreach ($this->data['embedded']['instance']['embedded']['properties'] as $propertyName => $propertyValue) {
-    //         !in_array($propertyName, $propertyIgnoreList) && $zaakTypeArray['eigenschappen'][] = ['naam' => $propertyName, 'definitie' => $propertyName];
-    //     }
-
-    //     return $zaakTypeArray;
-    // }
-
-    // /**
-    //  * Finds or creates a ObjectEntity from the ZaakType Entity.
-    //  *
-    //  * @param Entity $zaakTypeEntity This is the ZaakType Entity in the gateway.
-    //  *
-    //  * @return ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType ObjectEntity.
-    //  */
-    // private function getZaakTypeObjectEntity(Entity $zaakTypeEntity): ObjectEntity
-    // {
-    //     // Find already existing zgwZaakType by $this->data['reference']
-    //     $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $this->data['reference'], 'entity' => $zaakTypeEntity]);
-
-    //     // Create new empty ObjectEntity if no ObjectEntity has been found
-    //     if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
-    //         $zaakTypeObjectEntity = new ObjectEntity();
-    //         $zaakTypeObjectEntity->setEntity($zaakTypeEntity);
-    //     }
-
-    //     return $zaakTypeObjectEntity;
-    // }
+            $this->entityManager->persist($objectInformatieObjectObjectEntity);
+            $this->entityManager->flush();
+        }
+    }
 
     /**
-     * Creates or updates a ZGW ZaakType from a xxllnc casetype with the use of mapping.
+     * Maps the ZaakType from sim to zgw.
      *
-     * @param array $data          Data from the handler where the xxllnc casetype is in.
-     * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
+     * @param ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType object.
+     * @param array        $simXMLArray This is the sim xml arrray.
+     * @param array        $zaakTypeArray This is the ZGW ZaakType array.
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array $zaakArray This is the ZGW Zaak array with the added eigenschappen.
      */
-    public function mapSimXMLHandler(array $data, array $configuration): array
+    private function createEigenschappen(ObjectEntity &$zaakTypeObjectEntity, array $simXMLArray,  array $zaakTypeArray): array
     {
-        $this->data = $data;
-        $simXMLArray = $data['response'];
-
-        // Find ZGW entities by id from config
-        $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
-        $zaakEntity = $this->entityRepo->find($configuration['entities']['Zaak']);
-        $documentEntity = $this->entityRepo->find($configuration['entities']['Document']);
-
-        if (!isset($zaakTypeEntity)) {
-            throw new \Exception('ZaakType entity could not be found');
-        }
-        if (!isset($zaakEntity)) {
-            throw new \Exception('Zaak entity could not be found');
-        }
-        if (!isset($documentEntity)) {
-            throw new \Exception('ZaakType entity could not be found');
-        }
-
-        // Get Zaa ObjectEntity
-        $zaakObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['Body']['FormulierId'], 'entity' => $zaakEntity]);
-        // Get ZaakType ObjectEntity
-        $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['stuurgegevens']['Zaaktype'], 'entity' => $zaakTypeEntity]);
-
-
-        // If it does not exist, create new Zaak
-        if (!$zaakObjectEntity instanceof ObjectEntity) {
-            $zaakObjectEntity = new ObjectEntity();
-            $zaakObjectEntity->setEntity($zaakEntity);
-            $zaakObjectEntity->setExternalId($simXMLArray['embedded']['Body']['FormulierId']);
-            $zaakTypeArray = $zaakObjectEntity->toArray();
-        }
-
-        // If it does not exist, create new ZaakType
-        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
-            $zaakTypeObjectEntity = new ObjectEntity();
-            $zaakTypeObjectEntity->setEntity($zaakTypeEntity);
-            $zaakObjectEntity->setExternalId($simXMLArray['embedded']['stuurgegevens']['Zaaktype']);
-            $zaakTypeArray = $zaakTypeObjectEntity->toArray();
-        }
-        $zaakTypeArray['omschrijving'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
-        $zaakTypeArray['identificatie'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
-
-        $zaak['identificatie'] =  $simXMLArray['embedded']['Body']['FormulierId'];
-
-        // var_dump(json_encode($simXMLArray['embedded']));
-        // die;
-
         if (isset($simXMLArray['embedded']['Body']['embedded']['Elementen'])) {
             foreach ($simXMLArray['embedded']['Body']['embedded']['Elementen'] as $elementKey => $elementValue) {
-                var_dump($elementKey);
-                var_dump($elementValue);
                 $zaakTypeArray['eigenschappen'][] = [
                     'naam' => $elementKey,
                     'definitie' => $elementKey
@@ -237,13 +117,91 @@ class MapSimXMLService
             }
         }
 
-
-        if ($zaakObjectEntity->getId() == null) {
+        if ($zaakTypeObjectEntity->getId() == null) {
             $this->entityManager->persist($zaakTypeObjectEntity);
             $this->entityManager->flush();
         }
 
         $zaakArray['zaaktype'] = $zaakTypeObjectEntity;
+
+        return $zaakArray;
+    }
+
+    /**
+     * Maps the ZaakType from sim to zgw.
+     *
+     * @param ObjectEntity $zaakObjectEntity This is the ZGW Zaak object.
+     * @param ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType object.
+     * @param array        $simXMLArray This is the sim xml arrray.
+     * @param Entity $zaakEntity This is the ZGW Zaak Entity.
+     * @param Entity $zaakTypeEntity This is the ZGW ZaakType entity.
+     *
+     * @return array $zaakTypeArray This is the ZGW ZaakType array.
+     */
+    private function createZaakType(ObjectEntity &$zaakObjectEntity, ObjectEntity &$zaakTypeObjectEntity, array $simXMLArray, Entity $zaakEntity, Entity $zaakTypeEntity): array
+    {
+        $zaakTypeArray = [];
+
+        // If it does not exist, create new Zaak
+        if (!$zaakObjectEntity instanceof ObjectEntity) {
+            $zaakObjectEntity = new ObjectEntity();
+            $zaakObjectEntity->setEntity($zaakEntity);
+            $zaakObjectEntity->setExternalId($simXMLArray['embedded']['Body']['FormulierId']);
+            $zaakTypeArray = $zaakObjectEntity->toArray();
+        }
+
+        // If it does not exist, create new ZaakType
+        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+            $zaakTypeObjectEntity = new ObjectEntity();
+            $zaakTypeObjectEntity->setEntity($zaakTypeEntity);
+            $zaakObjectEntity->setExternalId($simXMLArray['embedded']['stuurgegevens']['Zaaktype']);
+            $zaakTypeArray = $zaakTypeObjectEntity->toArray();
+        }
+        $zaakTypeArray['omschrijving'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
+        $zaakTypeArray['identificatie'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
+        $zaakTypeArray['identificatie'] =  $simXMLArray['embedded']['Body']['FormulierId'];
+
+        return $zaakTypeArray;
+    }
+
+    /**
+     * Creates or updates a ZGW ZaakType from a xxllnc casetype with the use of mapping.
+     *
+     * @param array $data          Data from the handler where the xxllnc casetype is in.
+     * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function mapSimXMLHandler(array $data, array $configuration): array
+    {
+        $this->data = $data;
+        $simXMLArray = $data['response'];
+
+        // Find ZGW entities by id from config
+        $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
+        $zaakEntity = $this->entityRepo->find($configuration['entities']['Zaak']);
+        $documentEntity = $this->entityRepo->find($configuration['entities']['ObjectInformatieObject']);
+
+        if (!isset($zaakTypeEntity)) {
+            throw new \Exception('ZaakType entity could not be found');
+        }
+        if (!isset($zaakEntity)) {
+            throw new \Exception('Zaak entity could not be found');
+        }
+        if (!isset($documentEntity)) {
+            throw new \Exception('ObjectInformatieObject entity could not be found');
+        }
+
+        // Get Zaak ObjectEntity
+        $zaakObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['Body']['FormulierId'], 'entity' => $zaakEntity]);
+        // Get ZaakType ObjectEntity
+        $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['stuurgegevens']['Zaaktype'], 'entity' => $zaakTypeEntity]);
+
+
+        $zaakTypeArray = $this->createZaakType($zaakObjectEntity, $zaakTypeObjectEntity, $simXMLArray, $zaakEntity, $zaakTypeEntity);
+
+        $zaakArray = $this->createEigenschappen($zaakTypeObjectEntity, $simXMLArray, $zaakTypeArray);
+
 
         $zaakObjectEntity->hydrate($zaakArray);
 
@@ -251,6 +209,10 @@ class MapSimXMLService
 
         $this->entityManager->persist($zaakObjectEntity);
         $this->entityManager->flush();
+
+        $zaakObjectEntity = $this->objectEntityRepo->find($zaakObjectEntity->getId()->toString());
+
+        $this->createDocumenten($zaakObjectEntity, $documentEntity, $simXMLArray);
 
         return $this->data;
     }
