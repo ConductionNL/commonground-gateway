@@ -11,9 +11,8 @@ class BijlagenArrayService
     {
     }
 
-
     /**
-     * Sets bijlagen array properly
+     * Sets bijlagen array properly.
      *
      * @param array $data          Data from the handler where the xxllnc casetype is in.
      * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
