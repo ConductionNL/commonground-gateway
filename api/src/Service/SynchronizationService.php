@@ -767,6 +767,8 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
      * @param array           $body            The body of the call to synchronise to a source
      *
+     * @throws CacheException|InvalidArgumentException
+     *
      * @return Synchronization The updated synchronization object
      */
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
