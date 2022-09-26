@@ -1558,9 +1558,9 @@ class ObjectEntityService
     {
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
         $this->entityManager->persist($objectEntity);
-        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
-        if ($endpoint instanceof Endpoint) {
-            $pathArray = $endpoint->getPath();
+        $endpoints = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if (count($endpoints) > 0 && $endpoints[0] instanceof Endpoint) {
+            $pathArray = $endpoints[0]->getPath();
             $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
                 (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
