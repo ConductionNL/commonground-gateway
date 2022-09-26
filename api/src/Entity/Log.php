@@ -11,6 +11,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -336,6 +338,16 @@ class Log
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="log", orphanRemoval=true)
+     */
+    private $actionLogs;
+
+    public function __construct()
+    {
+        $this->actionLogs = new ArrayCollection();
+    }
+
     public function getId()
     {
         return $this->id;
@@ -649,6 +661,36 @@ class Log
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ActionLog[]
+     */
+    public function getActionLogs(): Collection
+    {
+        return $this->actionLogs;
+    }
+
+    public function addActionLog(ActionLog $actionLog): self
+    {
+        if (!$this->actionLogs->contains($actionLog)) {
+            $this->actionLogs[] = $actionLog;
+            $actionLog->setLog($this);
+        }
+
+        return $this;
+    }
+
+    public function removeActionLog(ActionLog $actionLog): self
+    {
+        if ($this->actionLogs->removeElement($actionLog)) {
+            // set the owning side to null (unless already changed)
+            if ($actionLog->getLog() === $this) {
+                $actionLog->setLog(null);
+            }
+        }
 
         return $this;
     }

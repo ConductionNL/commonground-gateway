@@ -118,6 +118,10 @@ class TranslationService
                 $searches = explode('+', $search);
                 $result = '';
                 foreach ($searches as $subSearch) {
+                    if (str_starts_with($subSearch, '\'') && str_ends_with($subSearch, '\'')) {
+                        $result .= trim($subSearch, '\'');
+                        continue;
+                    }
                     $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
                     $result .= isset($source[$subSearch]) ? ($value != '' ? $separator.$value : $value) : '';
                 }
