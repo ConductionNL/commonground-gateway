@@ -7,8 +7,8 @@ use App\Entity\Log;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionClass;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -19,58 +19,18 @@ class LogService
     private SessionInterface $session;
     private Stopwatch $stopwatch;
     private Security $security;
-    private $request;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         SessionInterface $session,
         Stopwatch $stopwatch,
-        Security $security,
-        RequestStack $requestStack
+        Security $security
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->stopwatch = $stopwatch;
         $this->security = $security;
-        $this->request = $requestStack->getCurrentRequest();
     }
-
-    /**
-     * Returns the log for the current request
-     *
-     * @param string        $type deprateced
-     */
-    public function getLog( string $type = 'in'): Log
-    {
-        $logRepo = $this->entityManager->getRepository('App:Log');
-
-        // @todo pulling this from the DBeach and everytime feels  dammed inificient
-        $this->session->get('callId') !== null && $type == 'in' ? $existingLog = $logRepo->findOneBy(['callId' => $this->session->get('callId'), 'type' => $type]) : $existingLog = null;
-
-        // The log  already exists so all done
-        if($existingLog){
-            return $existingLog;
-        }
-
-        // Else we need to  create a log
-        $callLog = new Log();
-
-        $callLog->setType($type);
-        $callLog->setRequestMethod($this->request->getMethod());
-        $callLog->setRequestHeaders($this->request->headers->all());
-        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
-        $callLog->setRequestQuery($this->request->query->all() ?? null);
-        $callLog->setRequestPathInfo($this->request->getPathInfo());
-        $callLog->setRequestLanguages($this->request->getLanguages() ?? null);
-        $callLog->setRequestServer($this->request->server->all());
-        $callLog->setRequestContent($this->request->getContent());
-
-        $this->entityManager->persist($callLog);
-        $this->entityManager->flush();
-
-        return $callLog;
-    }
-
 
     /**
      * Creates or updates a Log object with current request and response or given content.

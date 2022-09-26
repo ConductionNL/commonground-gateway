@@ -3,10 +3,6 @@
 namespace App\Service;
 
 use App\Entity\ObjectEntity;
-use DateInterval;
-use DatePeriod;
-use DateTime;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * This service holds al the logic for the huwelijksplanner plugin.
@@ -14,22 +10,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class HuwelijksplannerService
 {
     private ObjectEntityService $objectEntityService;
-    private RequestStack $requestStack;
     private array $data;
     private array $configuration;
 
     /**
      * @param \App\Service\ObjectEntityService $objectEntityService
-     * @param RequestStack                     $requestStack
      */
     public function __construct(
-        ObjectEntityService $objectEntityService,
-        RequestStack $requestStack
+        ObjectEntityService $objectEntityService
     ) {
         $this->objectEntityService = $objectEntityService;
-        $this->request = $requestStack->getCurrentRequest();
-        $this->data = [];
-        $this->configuration = [];
     }
 
     /**
@@ -38,7 +28,7 @@ class HuwelijksplannerService
      * @param array $data
      * @param array $configuration
      *
-     * @throws \Exception
+     * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
      *
      * @return array
      */
@@ -47,65 +37,16 @@ class HuwelijksplannerService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        $begin = new DateTime($this->request->get('start'));
-        $end = new DateTime($this->request->get('stop'));
-
-        $interval = DateInterval::createFromDateString($this->request->get('interval'));
-        $period = new DatePeriod($begin, $interval, $end);
-
-        $resultArray = [];
-        foreach ($period as $currentDate) {
-            // start voorbeeld code
-            $dayStart = clone $currentDate;
-            $dayStop = clone $currentDate;
-
-            $dayStart->setTime(9, 0);
-            $dayStop->setTime(17, 0);
-
-            if ($currentDate >= $dayStart && $currentDate < $dayStop) {
-                $resourceArray = $this->request->get('resources_could');
-            } else {
-                $resourceArray = [];
-            }
-
-            // end voorbeeld code
-            $resultArray[$currentDate->format('Y-m-d')][] = [
-                'start'     => $currentDate->format('Y-m-d H:i:s'),
-                'stop'      => $currentDate->add($interval)->format('Y-m-d H:i:s'),
-                'resources' => $resourceArray,
-            ];
+        // Check if the incommming data exisits and is a huwelijk object
+        if (
+            in_array('id', $this->data) &&
+            $huwelijk = $this->objectEntityService->getObject(null, $this->data['id']) &&
+            $huwelijk->getEntity()->getName() == 'huwelijk') {
+            return $this->checkHuwelijk($huwelijk)->toArray();
         }
 
-        $this->data['response'] = $resultArray;
-
-        return $this->data;
+        return $data;
     }
-
-//    /**
-//     * Handles Huwelijkslnner actions.
-//     *
-//     * @param array $data
-//     * @param array $configuration
-//     *
-//     * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
-//     *
-//     * @return array
-//     */
-//    public function HuwelijksplannerHandler(array $data, array $configuration): array
-//    {
-//        $this->data = $data;
-//        $this->configuration = $configuration;
-//
-//        // Check if the incommming data exisits and is a huwelijk object
-//        if (
-//            in_array('id', $this->data) &&
-//            $huwelijk = $this->objectEntityService->getObject(null, $this->data['id']) &&
-//            $huwelijk->getEntity()->getName() == 'huwelijk') {
-//            return $this->checkHuwelijk($huwelijk)->toArray();
-//        }
-//
-//        return $data;
-//    }
 
     public function checkHuwelijk(ObjectEntity $huwelijk): ObjectEntity
     {

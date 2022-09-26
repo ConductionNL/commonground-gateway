@@ -4,10 +4,8 @@ namespace App\Subscriber;
 
 use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
-use App\Entity\ActionLog;
 use App\Event\ActionEvent;
 use App\Service\ObjectEntityService;
-use App\Service\LogService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -18,7 +16,6 @@ class ActionSubscriber implements EventSubscriberInterface
     private EntityManagerInterface $entityManager;
     private ContainerInterface $container;
     private ObjectEntityService $objectEntityService;
-    private LogService $logService;
 
     /**
      * @inheritDoc
@@ -39,16 +36,11 @@ class ActionSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        ContainerInterface $container,
-        ObjectEntityService $objectEntityService,
-        LogService $logService)
+    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container, ObjectEntityService $objectEntityService)
     {
         $this->entityManager = $entityManager;
         $this->container = $container;
         $this->objectEntityService = $objectEntityService;
-        $this->logService = $logService;
     }
 
     public function runFunction(Action $action, array $data): array
@@ -74,22 +66,7 @@ class ActionSubscriber implements EventSubscriberInterface
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
         if ($this->checkConditions($action, $event->getData())) {
-            // Create a log
-
-            $actionLog = New ActionLog();
-            $actionLog->setAction($action);
-            $actionLog->setLog($this->logService->getLog());
-            $actionLog->setClass($action->getClass());
-            $actionLog->setDataIn($event->getData());
-
-            // Run the event
             $event->setData($this->runFunction($action, $event->getData()));
-
-            // Update and persist the log
-            $actionLog->setDataOut($event->getData());
-            $this->entityManager->persist($actionLog);
-            $this->entityManager->flush();
-
             // throw events
             foreach ($action->getThrows() as $throw) {
                 $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);

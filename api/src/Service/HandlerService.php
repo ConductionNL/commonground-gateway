@@ -282,7 +282,7 @@ class HandlerService
             $this->logService->saveLog($this->request, null, 2, json_encode($data));
             $this->stopwatch->stop('saveLog2');
 
-            $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
+            $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
             $data = $event->getData()['response'];
 

@@ -9,8 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\ActionRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -142,16 +140,6 @@ class Action
      */
     private array $configuration = [];
 
-    /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true)
-     */
-    private $actionLogs;
-
-    public function __construct()
-    {
-        $this->actionLogs = new ArrayCollection();
-    }
-
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -261,36 +249,6 @@ class Action
     public function setConfiguration(?array $configuration): self
     {
         $this->configuration = $configuration;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setAction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getAction() === $this) {
-                $actionLog->setAction(null);
-            }
-        }
 
         return $this;
     }
