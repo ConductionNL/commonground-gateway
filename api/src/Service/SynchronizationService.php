@@ -743,6 +743,14 @@ class SynchronizationService
      */
     private function mapOutput(array $objectArray): array
     {
+        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
+        }
+
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = array_filter($objectArray, function ($propertyName) {
@@ -756,16 +764,9 @@ class SynchronizationService
         }
 
         // todo: replace key name with notAllowedPropertiesOut because they have the same purpose
+        // NOTE: this must be done after dotHydrator! ^ So that we can first do correct mapping.
         if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = $this->clearUnavailableProperties($objectArray);
-        }
-
-        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
         }
 
         if (array_key_exists('translationsOut', $this->configuration['apiSource'])) {
@@ -787,9 +788,10 @@ class SynchronizationService
      * Stores the result of a synchronisation in the synchronization object.
      *
      * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
-     * @param array           $body            The body of the call to synchronise to a source
+     * @param array $body The body of the call to synchronise to a source
      *
      * @return Synchronization The updated synchronization object
+     * @throws CacheException|InvalidArgumentException
      */
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
@@ -866,6 +868,42 @@ class SynchronizationService
     }
 
     /**
+     * Maps input according to configuration.
+     *
+     * @param array $sourceObject The external object to synchronise from, the data to map
+     *
+     * @return array The mapped data
+     */
+    private function mapInput(array $sourceObject): array
+    {
+        if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator($sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $sourceObject);
+        }
+
+        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
+        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
+            $sourceObject = array_filter($sourceObject, function ($propertyName) {
+                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translate($sourceObject);
+        }
+
+        return $sourceObject;
+    }
+
+    /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object to update
@@ -880,29 +918,7 @@ class SynchronizationService
     {
         $object = $synchronization->getObject();
 
-        // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
-        // todo: turn all or some of the following todo's and there code into functions?
-
-        // todo: move to function, maybe copy: clearUnavailableProperties()
-        // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
-        if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
-            $sourceObject = array_filter($sourceObject, function ($propertyName) {
-                return in_array($propertyName, $this->configuration['apiSource']['allowedPropertiesIn']);
-            }, ARRAY_FILTER_USE_KEY);
-        }
-        if (array_key_exists('notAllowedPropertiesIn', $this->configuration['apiSource'])) {
-            $sourceObject = array_filter($sourceObject, function ($propertyName) {
-                return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
-            }, ARRAY_FILTER_USE_KEY);
-        }
-
-        if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
-            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
-        }
-
-        if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
-            $sourceObject = $this->translate($sourceObject);
-        }
+        $sourceObject = $this->mapInput($sourceObject);
 
         $sourceObjectDot = new Dot($sourceObject);
 

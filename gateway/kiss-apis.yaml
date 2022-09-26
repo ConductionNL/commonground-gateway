@@ -800,6 +800,7 @@
 #                    title: "contact.voornaam+contact.voorvoegselAchternaam+contact.achternaam | concatenation &nbsp;"
 #                    object: "object | array"
 #                    object_meta: "function+department+skills | concatenation <identity('<br/>')>"
+#                    "self": "'/api/medewerkers/'+id | concatenation &nbsp;"
 #                translationsIn: {}
 #                translationsOut: {}
 #                skeletonIn: {}
@@ -835,6 +836,8 @@
 #            entity: '' # SDG kennisartikel entity uuid
 #            source: '' # EnterpriseSearch API Private
 #            location: /api/as/v1/engines/kiss-engine/documents
+#            callService:
+#                method: post
 #            apiSource:
 #                location:
 #                    objects: '#'
@@ -849,6 +852,7 @@
 #                    title: "vertalingen.0.productTitelDecentraal | concatenation &nbsp;"
 #                    object: "object | array"
 #                    object_meta: "vertalingen.0.specifiekeTekst | concatenation <identity('<br/>')>"
+#                    "self": "'/api/sdg/kennisartikel/'+id | concatenation &nbsp;"
 #                translationsIn: { }
 #                translationsOut: { }
 #                skeletonIn: { }
