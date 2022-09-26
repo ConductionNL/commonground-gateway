@@ -34,8 +34,8 @@ class MapSimXMLService
      * Creates drc informatie objecten from bijlagen.
      *
      * @param ObjectEntity $zaakObjectEntity This is the ZGW Zaak object.
-     * @param array        $simXMLArray This is the sim xml arrray.
-     * @param array        $zaakTypeArray This is the ZGW ZaakType array.
+     * @param array        $simXMLArray      This is the sim xml arrray.
+     * @param array        $zaakTypeArray    This is the ZGW ZaakType array.
      *
      * @return void
      */
@@ -47,17 +47,17 @@ class MapSimXMLService
         foreach ($simXMLArray['embedded']['Bijlagen'] as $bijlage) {
             $objectInformatieObject = [
                 'informatieobject' => [
-                    'titel' => $bijlage['ns2:Naam'],
-                    'bestandsnaam' => $bijlage['ns2:Naam'],
-                    'beschrijving' => $bijlage['ns2:Omschrijving'],
-                    'creatieDatum' => $todayAsString,
-                    'taal' => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
+                    'titel'         => $bijlage['ns2:Naam'],
+                    'bestandsnaam'  => $bijlage['ns2:Naam'],
+                    'beschrijving'  => $bijlage['ns2:Omschrijving'],
+                    'creatieDatum'  => $todayAsString,
+                    'taal'          => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
                     'bestandsdelen' => [
-                        ['inhoud' => $bijlage['embedded']['ns2:Inhoud']['#']]
-                    ]
+                        ['inhoud' => $bijlage['embedded']['ns2:Inhoud']['#']],
+                    ],
                 ],
-                'object' => $zaakObjectEntity->getSelf(),
-                'objectType' => 'zaak'
+                'object'     => $zaakObjectEntity->getSelf(),
+                'objectType' => 'zaak',
             ];
 
             $objectInformatieObjectObjectEntity = new ObjectEntity();
@@ -74,18 +74,18 @@ class MapSimXMLService
      * Maps the ZaakType from sim to zgw.
      *
      * @param ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType object.
-     * @param array        $simXMLArray This is the sim xml arrray.
-     * @param array        $zaakTypeArray This is the ZGW ZaakType array.
+     * @param array        $simXMLArray          This is the sim xml arrray.
+     * @param array        $zaakTypeArray        This is the ZGW ZaakType array.
      *
      * @return array $zaakArray This is the ZGW Zaak array with the added eigenschappen.
      */
-    private function createEigenschappen(ObjectEntity &$zaakTypeObjectEntity, array $simXMLArray,  array $zaakTypeArray): array
+    private function createEigenschappen(ObjectEntity &$zaakTypeObjectEntity, array $simXMLArray, array $zaakTypeArray): array
     {
         if (isset($simXMLArray['embedded']['Body']['embedded']['Elementen'])) {
             foreach ($simXMLArray['embedded']['Body']['embedded']['Elementen'] as $elementKey => $elementValue) {
                 $zaakTypeArray['eigenschappen'][] = [
-                    'naam' => $elementKey,
-                    'definitie' => $elementKey
+                    'naam'      => $elementKey,
+                    'definitie' => $elementKey,
                 ];
             }
 
@@ -98,9 +98,9 @@ class MapSimXMLService
                 foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
                     if ($eigenschap['naam'] == $elementName) {
                         $zaakArray['eigenschappen'][] = [
-                            'naam' => $elementName,
-                            'waarde' => strval($elementValue),
-                            'eigenschap' => $this->objectEntityRepo->find($eigenschap['id'])
+                            'naam'       => $elementName,
+                            'waarde'     => strval($elementValue),
+                            'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                         ];
                     }
                 }
@@ -120,11 +120,11 @@ class MapSimXMLService
     /**
      * Maps the ZaakType from sim to zgw.
      *
-     * @param ObjectEntity $zaakObjectEntity This is the ZGW Zaak object.
+     * @param ObjectEntity $zaakObjectEntity     This is the ZGW Zaak object.
      * @param ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType object.
-     * @param array        $simXMLArray This is the sim xml arrray.
-     * @param Entity $zaakEntity This is the ZGW Zaak Entity.
-     * @param Entity $zaakTypeEntity This is the ZGW ZaakType entity.
+     * @param array        $simXMLArray          This is the sim xml arrray.
+     * @param Entity       $zaakEntity           This is the ZGW Zaak Entity.
+     * @param Entity       $zaakTypeEntity       This is the ZGW ZaakType entity.
      *
      * @return array $zaakTypeArray This is the ZGW ZaakType array.
      */
@@ -149,7 +149,7 @@ class MapSimXMLService
         }
         $zaakTypeArray['omschrijving'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
         $zaakTypeArray['identificatie'] = $simXMLArray['embedded']['stuurgegevens']['Zaaktype'];
-        $zaakTypeArray['identificatie'] =  $simXMLArray['embedded']['Body']['FormulierId'];
+        $zaakTypeArray['identificatie'] = $simXMLArray['embedded']['Body']['FormulierId'];
 
         return $zaakTypeArray;
     }
@@ -187,11 +187,9 @@ class MapSimXMLService
         // Get ZaakType ObjectEntity
         $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['stuurgegevens']['Zaaktype'], 'entity' => $zaakTypeEntity]);
 
-
         $zaakTypeArray = $this->createZaakType($zaakObjectEntity, $zaakTypeObjectEntity, $simXMLArray, $zaakEntity, $zaakTypeEntity);
 
         $zaakArray = $this->createEigenschappen($zaakTypeObjectEntity, $simXMLArray, $zaakTypeArray);
-
 
         $zaakObjectEntity->hydrate($zaakArray);
 
