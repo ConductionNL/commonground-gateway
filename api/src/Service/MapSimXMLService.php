@@ -9,9 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 class MapSimXMLService
 {
     private EntityManagerInterface $entityManager;
-    private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
-    private EavService $eavService;
     private SynchronizationService $synchronizationService;
     private array $configuration;
     private array $data;
@@ -21,23 +19,15 @@ class MapSimXMLService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        TranslationService $translationService,
         ObjectEntityService $objectEntityService,
-        EavService $eavService,
         SynchronizationService $synchronizationService
     ) {
         $this->entityManager = $entityManager;
-        $this->translationService = $translationService;
         $this->objectEntityService = $objectEntityService;
-        $this->eavService = $eavService;
         $this->synchronizationService = $synchronizationService;
 
         $this->objectEntityRepo = $this->entityManager->getRepository(ObjectEntity::class);
         $this->entityRepo = $this->entityManager->getRepository(Entity::class);
-
-        $this->mappingIn = [];
-
-        $this->skeletonIn = [];
     }
 
     /**
@@ -138,7 +128,7 @@ class MapSimXMLService
      *
      * @return array $zaakTypeArray This is the ZGW ZaakType array.
      */
-    private function createZaakType(ObjectEntity &$zaakObjectEntity, ObjectEntity &$zaakTypeObjectEntity, array $simXMLArray, Entity $zaakEntity, Entity $zaakTypeEntity): array
+    private function createZaakType(?ObjectEntity &$zaakObjectEntity = null, ?ObjectEntity &$zaakTypeObjectEntity = null, array $simXMLArray, Entity $zaakEntity, Entity $zaakTypeEntity): array
     {
         $zaakTypeArray = [];
 
