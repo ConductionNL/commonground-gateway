@@ -297,9 +297,10 @@ class Value
 
     public function getArrayValue(): ?array
     {
-        if(!$this->arrayValue){
+        if (!$this->arrayValue) {
             return [];
         }
+
         return $this->arrayValue;
     }
 
