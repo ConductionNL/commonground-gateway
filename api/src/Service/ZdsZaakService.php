@@ -770,6 +770,7 @@ class ZdsZaakService
         $zdsObject = new ObjectEntity($zds->getValue('object')->getEntity());
         $zdsObject->setValue('identificatie', $zaak->getValue('identificatie'));
         $zdsObject->setValue('registratiedatum', $zaak->getValue('registratiedatum'));
+        $zdsObject->setValue('toelichting', $zaak->getValue('toelichting'));
         $zdsObject->setValue('omschrijving', $zaak->getValue('omschrijving'));
         $zdsObject->setValue('einddatumGepland', $zaak->getValue('einddatumGepland'));
         $zdsObject->setValue('uiterlijkeEinddatumAfdoening', $zaak->getValue('uiterlijkeEinddatum'));

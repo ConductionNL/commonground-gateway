@@ -64,20 +64,18 @@ class TranslationService
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
         foreach ($mapping as $replace => $search) {
-            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
-                $iterator = 0;
-                if ($source->has(str_replace('$', $iterator, $search))) {
-                    while ($source->has(str_replace('$', $iterator, $search))) {
-                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
-                        $iterator++;
-                    }
-                } else {
-                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+            if(strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
+                foreach($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
+                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
                 }
                 unset($mapping[$replace]);
-                // todo: also unset the old variable in $destination
+            } elseif(strpos($search, '$') !== false) {
+                $mapping[str_replace('.$.', '.', $replace)] = str_replace('.$.', '.', $search);
+                unset($mapping[$replace]);
             }
+
         }
+
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
