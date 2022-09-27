@@ -43,7 +43,7 @@ class ClearAnonymousCacheCommand extends Command
         $io->progressStart(1);
         $io->text('');
 
-        if ($this->cache->invalidateTags(['anonymousScopes'])) {
+        if ($this->cache->invalidateTags(['anonymousScopes']) && $this->cache->invalidateTags(['anonymousOrg'])) {
             $io->progressFinish();
             $io->success('Anonymous scopes have been cleared from cache');
 
