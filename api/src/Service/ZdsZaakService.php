@@ -175,8 +175,8 @@ class ZdsZaakService
                     $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
                 }
 
-                if ($vestigingObject = $heeftAlsInitiatorObject->getValue('vestiging')) {
-                    $rol->setValue('betrokkeneIdentificatie', $vestigingObject);
+                if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
+                    $rol->setValue('betrokkeneIdentificatie', $heeftAlsInitiatorObject->getValue('vestiging'));
                     $rol->setValue('betrokkeneType', 'vestiging');
                 }
 
