@@ -797,11 +797,10 @@ class SynchronizationService
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
-     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
-     *
-     * @throws CacheException|InvalidArgumentException
+     * @param bool $existsInSource Determines if a new synchronisation should be made, or an existing one should be updated
      *
      * @return Synchronization The updated synchronisation object
+     * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {

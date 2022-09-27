@@ -114,8 +114,12 @@ class TranslationService
                 $searches = explode('+', $search);
                 $result = '';
                 foreach ($searches as $subSearch) {
-                    $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
-                    $result .= isset($source[$subSearch]) ? ($value != '' ? $separator.$value : $value) : '';
+                    if (str_starts_with($subSearch, '\'') && str_ends_with($subSearch, '\'')) {
+                        $result .= trim($subSearch, '\'');
+                        continue;
+                    }
+                    $value = is_array($source->get($subSearch)) ? implode(', ', $source->get($subSearch)) : $source->get($subSearch);
+                    $result .= !empty($source->get($subSearch)) ? ($value != '' ? $separator.$value : $value) : '';
                 }
                 $destination[$replace] = $result ?: $destination[$replace];
             }
