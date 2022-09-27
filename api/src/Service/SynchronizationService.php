@@ -254,9 +254,9 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Gateway $gateway The source to call
-     * @param string|null $id The id to request (optional)
-     * @param array|null $objectArray
+     * @param Gateway     $gateway     The source to call
+     * @param string|null $id          The id to request (optional)
+     * @param array|null  $objectArray
      *
      * @throws LoaderError|SyntaxError
      *
@@ -904,7 +904,6 @@ class SynchronizationService
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translate($sourceObject);
         }
-
 
         return $sourceObject;
     }
