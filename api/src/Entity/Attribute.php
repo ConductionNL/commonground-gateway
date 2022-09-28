@@ -585,9 +585,18 @@ class Attribute
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
     private $searchable = false;
+
+    /**
+     * Whether or not this property is sortable. (orderBy).
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private $sortable = false;
 
     /**
      * Whether or not the object of this property will be deleted if the parent object is deleted.
@@ -642,6 +651,14 @@ class Attribute
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $mayBeOrphaned = true;
+
+    /**
+     * @var ?string The uri to a schema.org property
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $schema = null;
 
     /**
      * @var Datetime The moment this resource was created
@@ -1515,6 +1532,18 @@ class Attribute
         return $this;
     }
 
+    public function getSortable(): ?bool
+    {
+        return $this->sortable;
+    }
+
+    public function setSortable(?bool $sortable): self
+    {
+        $this->sortable = $sortable;
+
+        return $this;
+    }
+
     public function getCascade(): ?bool
     {
         return $this->cascade;
@@ -1619,6 +1648,18 @@ class Attribute
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getSchema(): ?string
+    {
+        return $this->schema;
+    }
+
+    public function setSchema(?string $schema): self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

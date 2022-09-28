@@ -297,6 +297,14 @@ class Entity
     private ?Collection $collections;
 
     /**
+     * @var ?string The uri to a schema.org object
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $schema = null;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -1004,6 +1012,18 @@ class Entity
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getSchema(): ?string
+    {
+        return $this->schema;
+    }
+
+    public function setSchema(?string $schema): self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

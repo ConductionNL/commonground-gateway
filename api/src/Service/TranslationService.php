@@ -27,12 +27,23 @@ class TranslationService
             }
             $result[$newKey] = $value;
 
-            if ($value === [] && $newKey != 'results') {
-                unset($result[$newKey]);
-            }
+            // todo: With this if statement it is impossible to do the following put: "telefoonnummers": []
+            // todo @rjzondervan: this change might impact work done for Nijmegen. This code i removed was added by you in december 2021.
+//            if ($value === [] && $newKey != 'results') {
+//                unset($result[$newKey]);
+//            }
         }
 
         return $result;
+    }
+
+    private function isAssociative(array $array)
+    {
+        if ([] === $array) {
+            return false;
+        }
+
+        return array_keys($array) !== range(0, count($array) - 1);
     }
 
     /**
@@ -53,18 +64,14 @@ class TranslationService
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
         foreach ($mapping as $replace => $search) {
-            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
-                $iterator = 0;
-                if ($source->has(str_replace('$', $iterator, $search))) {
-                    while ($source->has(str_replace('$', $iterator, $search))) {
-                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
-                        $iterator++;
-                    }
-                } else {
-                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+            if (strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
+                foreach ($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
+                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
                 }
                 unset($mapping[$replace]);
-                // todo: also unset the old variable in $destination
+            } elseif (strpos($search, '$') !== false) {
+                $mapping[str_replace('.$.', '.', $replace)] = str_replace('.$.', '.', $search);
+                unset($mapping[$replace]);
             }
         }
 
@@ -79,7 +86,7 @@ class TranslationService
             if (isset($source[$search]['@xsi:nil'])) {
                 unset($destination[$search]);
             } elseif (!isset($format)) {
-                // Make sure we don't transform (wrong type) input like integers to string. So validaterService throws a must be type x error when needed!
+                // Make sure we don't transform (wrong type) input like integers to string. So validatorService throws a must be type x error when needed!
                 $destination[$replace] = $source[$search] ?? ($destination[$replace]) ?? null;
             } elseif ($format == 'string') {
                 $destination[$replace] = isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null;
@@ -107,8 +114,12 @@ class TranslationService
                 $searches = explode('+', $search);
                 $result = '';
                 foreach ($searches as $subSearch) {
-                    $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
-                    $result .= isset($source[$subSearch]) ? ($value != '' ? $separator.$value : $value) : '';
+                    if (str_starts_with($subSearch, '\'') && str_ends_with($subSearch, '\'')) {
+                        $result .= trim($subSearch, '\'');
+                        continue;
+                    }
+                    $value = is_array($source->get($subSearch)) ? implode(', ', $source->get($subSearch)) : $source->get($subSearch);
+                    $result .= !empty($source->get($subSearch)) ? ($value != '' ? $separator.$value : $value) : '';
                 }
                 $destination[$replace] = $result ?: $destination[$replace];
             }
