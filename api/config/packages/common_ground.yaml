@@ -81,6 +81,7 @@ parameters:
 
   env(APP_SHASIGN): ""
   defaultRedirectUrl: "%env(APP_DEFAULT_REDIRECT_URL)%"
+  defaultBackUrl: "%env(APP_DEFAULT_BACK_URL)%"
   app_env: "%env(APP_ENV)%"
   app_container: "%env(APP_CONTAINER)%"
   app_debug: "%env(APP_DEBUG)%"

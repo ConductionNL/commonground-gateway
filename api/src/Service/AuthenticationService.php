@@ -174,11 +174,7 @@ class AuthenticationService
 
     public function retrieveData(string $method, string $code, Authentication $authentication): array
     {
-        $redirectUrl = $this->session->get('redirectUrl');
-
-        if (!$redirectUrl) {
-            $redirectUrl = $this->parameterBag->get('defaultRedirectUrl');
-        }
+        $redirectUrl = $this->session->get('redirectUrl', $this->parameterBag->get('defaultRedirectUrl'));
 
         switch ($method) {
             case 'oidc':
