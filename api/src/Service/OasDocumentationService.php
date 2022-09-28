@@ -742,13 +742,76 @@ class OasDocumentationService
     /**
      * Generates an OAS schema from an entity.
      *
+     * @param Attribute $attribute
+     * @param array     $schema
+     *
+     * @return array
+     */
+    public function checkAttributeMultipleSchema(Attribute $attribute, array &$schema): array
+    {
+        if ($attribute->getMultiple()) {
+            $schema['properties'][$attribute->getName()] = [
+                'type'  => 'array',
+                'items' => [
+                    '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
+                ],
+            ];
+        } else {
+            $schema['properties'][$attribute->getName()] = [
+                '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
+            ];
+        }
+
+        return $schema;
+    }
+
+    /**
      * @param Entity     $entity
      * @param array      $mapping
      * @param array|null $docs
      *
      * @return array
+     *
+     * @todo Generates the mapping for the schema
      */
-    public function getSchema(Entity $entity, array $mapping, ?array $docs): array
+    public function getMappingSchema(Attribute $attribute, array $mapping, array $schema): array
+    {
+        // @todo fix mapping
+//        if ($mapping) {
+//            $newSchema = [];
+//            $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
+//            foreach ($newSchema as $key => $value) {
+//                $newSchema[$key] = [
+//                    'example' => 'string'
+//                ];
+//            }
+//
+//            #@todo here mapping
+//            # object is still there -> request body
+//            # object is not showing -> response body
+//            $schema = $this->unsetProperties($attribute, $mapping, $schema);
+//            $schema['properties'] = $newSchema;
+//        } else {
+//            // Else add schema
+//            $schema['properties'][$attribute->getName()] = [
+//                '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))
+//            ];
+//        }
+
+        return $schema;
+    }
+
+    /**
+     * Generates an OAS schema from an entity.
+     *
+     * @param Entity      $entity
+     * @param array       $mapping
+     * @param array|null  $docs
+     * @param string|null $type
+     *
+     * @return array
+     */
+    public function getSchema(Entity $entity, array $mapping, ?array $docs, ?string $type): array
     {
         $schema = [
             'type'       => 'object',
@@ -780,47 +843,28 @@ class OasDocumentationService
                 'description' => $attribute->getDescription(),
             ];
 
-            // The attribute might be a scheme on its own
+//             The attribute might be a scheme on its own
             if ($attribute->getObject() && $attribute->getCascade()) {
-
                 // @todo fix mapping
-//                if ($mapping) {
-//                    $newSchema = [];
-//                    $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
-//                    foreach ($newSchema as $key => $value) {
-//                        $newSchema[$key] = [
-//                            'example' => 'string'
-//                        ];
-//                    }
-//
-//                    #@todo here mapping
-//                    # object is still there -> request body
-//                    # object is not showing -> response body
-//                    $schema = $this->unsetProperties($attribute, $mapping, $schema);
-//                    $schema['properties'] = $newSchema;
-//                } else {
-//                    // Else add schema
-//                    $schema['properties'][$attribute->getName()] = [
-//                        '$ref' => '#/components/schemas/' . ucfirst($this->toCamelCase($attribute->getObject()->getName()))
-//                    ];
-//                }
+//                $schema = $this->getMappingSchema($attribute, $mapping, $schema);
 
-                $schema['properties'][$attribute->getName()] = [
-                    '$ref' => '#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName())),
-                ];
+                $schema = $this->checkAttributeMultipleSchema($attribute, $schema);
+
                 if (!isset($docs['components']['schemas'][ucfirst($attribute->getObject()->getName())])) {
                     $this->indirectEntities[$attribute->getObject()->getName()] = $attribute->getObject();
                 }
 
-                // Schema's dont have validators so
                 continue;
-            } elseif ($attribute->getObject() && !$attribute->getCascade()) {
+            } elseif ($attribute->getObject() && !$attribute->getCascade() && $type == 'response') {
+                $schema = $this->checkAttributeMultipleSchema($attribute, $schema);
+                continue;
+            } elseif ($attribute->getObject() && !$attribute->getCascade() && $type == 'request') {
                 $schema['properties'][$attribute->getName()] = [
                     'type'        => 'string',
                     'format'      => 'uuid',
                     'description' => $schema['properties'][$attribute->getName()]['description'].'The uuid of the ['.$attribute->getObject()->getName().']() object that you want to link, you can unlink objects by setting this field to null',
                 ];
-                // uuids dont have validators so
+
                 continue;
             }
 
@@ -839,29 +883,7 @@ class OasDocumentationService
             }
 
 //            # @todo fix mapping
-//            $newSchema = [];
-//            $newSchema = $this->translationService->dotHydrator($newSchema, $schema['properties'], $mapping);
-//            foreach ($newSchema as $key => $value) {
-////                if($value !== null) {
-////                    #check if there is an object in the array -> if there is no example
-////                    # this does not work
-////                    if (!key_exists('example', $value)) {
-////                        $newSchema[$key] = [
-////                            'type' => 'object',
-////                            'example' => $value
-////                        ];
-////                    }
-////                }
-//                $newSchema[$key] = [
-//                    'example' => 'string'
-//                ];
-//            }
-//
-//            #@todo here mapping
-//            # object is still there -> request body
-//            # object is not showing -> response body
-//            $schema = $this->unsetProperties($attribute, $mapping, $schema);
-//            $schema['properties'] = $newSchema;
+//            $schema = $this->getMappingSchema($attribute, $mapping, $schema);
         }
 
         return $schema;
@@ -877,7 +899,7 @@ class OasDocumentationService
      */
     public function getResponseSchema(Handler $handler, $responseType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null);
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), null, 'response');
 
         return $this->serializeSchema($schema, $responseType, $handler->getEntity());
     }
@@ -892,7 +914,7 @@ class OasDocumentationService
      */
     public function getRequestSchema(Handler $handler, string $requestType): array
     {
-        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null);
+        $schema = $this->getSchema($handler->getEntity(), $handler->getMappingIn(), null, 'request');
 
         return $this->serializeSchema($schema, $requestType, $handler->getEntity());
     }
@@ -1195,7 +1217,7 @@ class OasDocumentationService
 
         // Add the paths
         $docs['paths']['/api/'.$path][$method] = $this->getEndpointMethod($method, $handler, $path);
-        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs);
+        $docs['components']['schemas'][ucfirst($handler->getEntity()->getName())] = $this->getSchema($handler->getEntity(), $handler->getMappingOut(), $docs, 'response');
         $this->addTagsToSchema($handler, $endpoint, $docs);
 
         return $docs;
@@ -1282,7 +1304,7 @@ class OasDocumentationService
 
         while (count($this->indirectEntities) > 0) {
             $entity = array_pop($this->indirectEntities);
-            $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs);
+            $docs['components']['schemas'][ucfirst($entity->getName())] = $this->getSchema($entity, [], $docs, 'response');
         }
 
         return $docs;

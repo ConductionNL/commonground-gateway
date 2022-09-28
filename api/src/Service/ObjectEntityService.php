@@ -37,19 +37,19 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 class ObjectEntityService
 {
     private Security $security;
-    private ValidatorService $validaterService;
+    private Request $request;
+    private AuthorizationService $authorizationService;
+    private ApplicationService $applicationService;
+    private ValidatorService $validatorService;
     private SessionInterface $session;
-    private ?ValidationService $validationService;
     private ?EavService $eavService;
     private EntityManagerInterface $entityManager;
     private CommonGroundService $commonGroundService;
     private ResponseService $responseService;
-    private Stopwatch $stopwatch;
     public FunctionService $functionService;
     private MessageBusInterface $messageBus;
     private GatewayService $gatewayService;
@@ -66,12 +66,11 @@ class ObjectEntityService
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
-        ValidatorService $validaterService,
+        ValidatorService $validatorService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
         ResponseService $responseService,
-        Stopwatch $stopwatch,
         CacheInterface $cache,
         MessageBusInterface $messageBus,
         GatewayService $gatewayService,
@@ -83,12 +82,11 @@ class ObjectEntityService
         $this->request = $requestStack->getCurrentRequest() ?: new Request();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
-        $this->validaterService = $validaterService;
+        $this->validatorService = $validatorService;
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
         $this->responseService = $responseService;
-        $this->stopwatch = $stopwatch;
         $this->functionService = new FunctionService($cache, $commonGroundService, $this);
         $this->messageBus = $messageBus;
         $this->gatewayService = $gatewayService;
@@ -105,26 +103,27 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data): void
+    public function dispatchEvent(string $type, array $data, $subType = null): void
     {
-        $event = new ActionEvent($type, $data);
+        $event = new ActionEvent($type, $data, null);
+        if ($subType) {
+            $event->setSubType($subType);
+        }
         $this->eventDispatcher->dispatch($event, $type);
     }
 
     /**
      * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
      *
-     * @param ValidationService $validationService
-     * @param EavService        $eavService
+     * @param EavService $eavService
      *
      * @return $this
      */
-    public function addServices(ValidationService $validationService, EavService $eavService): ObjectEntityService
+    public function addServices(EavService $eavService): ObjectEntityService
     {
-        // ValidationService and EavService use the ObjectEntityService for the handleOwner and checkOwner function.
-        // The only reason we need these 2 services in this ObjectEntityService is for the handleObject function,
-        // because we use an old way to create, update and get ObjectEntities there.
-        $this->validationService = $validationService;
+        // EavService uses the ObjectEntityService for the handleOwner and checkOwner function.
+        // The only reason we need this service in this ObjectEntityService is for the handleObject function,
+        // because we use an 'old' way to create, update and get ObjectEntities there.
         $this->eavService = $eavService;
 
         return $this;
@@ -421,18 +420,38 @@ class ObjectEntityService
     {
         if ($object instanceof ObjectEntity) {
             !$object->getSelf() ?? $object->setSelf($this->createSelf($object));
-            $fields['_dateRead'] = isset($fields['_dateRead']) ? 'getItem' : false;
+            if (isset($extend['x-commongateway-metadata']['dateRead'])
+                || isset($extend['x-commongateway-metadata']['all'])) {
+                $extend['x-commongateway-metadata']['dateRead'] = 'getItem';
+            }
             $data = $this->eavService->handleGet($object, $fields, $extend, $acceptType);
-
-            $object->getHasErrors() ?? $data['validationServiceErrors'] = [
-                'Warning' => 'There are errors, this ObjectEntity might contain corrupted data, you might want to delete it!',
-                'Errors'  => $object->getAllErrors(),
-            ];
         } else {
             $data['error'] = $object;
         }
 
         return $data;
+    }
+
+    /**
+     * Gets fields and extend from the query params used in the request.
+     *
+     * @return array An array containing 2 keys: 'fields' & 'extend'.
+     */
+    private function getRequestQueryParams(): array
+    {
+        $fields = $this->eavService->getRequestFields($this->request);
+
+        // Let's allow for extending
+        $extend = $this->eavService->getRequestExtend($this->request);
+        if (isset($extend['x-commongateway-metadata']) && $extend['x-commongateway-metadata'] === true) {
+            $extend['x-commongateway-metadata'] = [];
+            $extend['x-commongateway-metadata']['all'] = true;
+        }
+
+        return [
+            'fields' => $fields,
+            'extend' => $extend,
+        ];
     }
 
     /**
@@ -453,25 +472,21 @@ class ObjectEntityService
      */
     public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
     {
-        // Let's allow for filtering specific fields
-        $fields = $this->eavService->getRequestFields($this->request);
-
-        // Let's allow for extending
-        $extend = $this->eavService->getRequestExtend($this->request);
-
-        // Check for dateRead query parameter
-        // Use fields array to store this dateRead value for now, will be removed from the array later.
-        $dateRead = $this->request->query->get('_dateRead');
-        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+        $queryParamData = $this->getRequestQueryParams();
 
         if (isset($id)) {
             $object = $this->checkGetObject($id, $method, $entity);
-            $data = $this->checkGetObjectExceptions($data, $object, $fields, $extend, $acceptType);
+            $data = $this->checkGetObjectExceptions($data, $object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
         } else {
-            //todo: -start- old code...
-            //TODO: old code for getting an ObjectEntity
-            $data = $this->eavService->handleSearch($entity, $this->request, $fields, $extend, false, $filters ?? [], $acceptType);
-            //todo: -end- old code...
+            $data = $this->eavService->handleSearch(
+                $entity,
+                $this->request,
+                $queryParamData['fields'],
+                $queryParamData['extend'],
+                false,
+                $filters ?? [],
+                $acceptType
+            );
 
             $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
         }
@@ -516,16 +531,7 @@ class ObjectEntityService
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
-        // Let's allow for filtering specific fields
-        $fields = $this->eavService->getRequestFields($this->request);
-
-        // Let's allow for extending
-        $extend = $this->eavService->getRequestExtend($this->request);
-
-        // Check for dateRead query parameter
-        // Use fields array to store this dateRead value for now, will be removed from the array later.
-        $dateRead = $this->request->query->get('_dateRead');
-        $fields['_dateRead'] = $method !== 'POST' && $dateRead === 'true';
+        $queryParamData = $this->getRequestQueryParams();
 
         // Save the object (this will remove this object result from the cache)
         $this->functionService->removeResultFromCache = [];
@@ -540,18 +546,13 @@ class ObjectEntityService
         ]);
 
         $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
-
         $object->setDateModified(new \DateTime());
+
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
-        // todo: maybe add an option for extend all? if we always want to show every subresource after a post/put?
-        $data = $this->responseService->renderResult($object, $fields, $extend, $acceptType);
+        $data = $this->responseService->renderResult($object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
 
-        if ($object->getHasErrors()) {
-            $data['validationServiceErrors']['Warning'] = 'There are errors, an ObjectEntity with corrupted data was added, you might want to delete it!';
-            $data['validationServiceErrors']['Errors'] = $object->getAllErrors();
-        }
         $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
 
         return $data;
@@ -590,7 +591,7 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validatorService->validateData() function this saveObject() function only saves the object in the DB.
      *
      * @param array|null $data       Data to be set into the eav
      * @param Endpoint   $endpoint   The endpoint of the object
@@ -618,6 +619,7 @@ class ObjectEntityService
         switch ($method) {
             case 'GET':
                 $data = $this->getCase($id, $data, $method, $entity, $endpoint, $acceptType);
+                // todo: this dispatch should probably be moved to the getCase function!?
                 $this->dispatchEvent('commongateway.object.read', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'POST':
@@ -627,15 +629,17 @@ class ObjectEntityService
                 $owner = $this->checkAndUnsetOwner($data);
 
                 // validate
-                if ($validationErrors = $this->validaterService->validateData($data, $entity, $method)) {
+                if ($validationErrors = $this->validatorService->validateData($data, $entity, $method)) {
                     return $validationErrors;
                 }
 
                 $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
+                // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
                 $this->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             case 'DELETE':
                 $data = $this->deleteCase($id, $data, $method, $entity);
+                // todo: this dispatch should probably be moved to the deleteCase function!?
                 $this->dispatchEvent('commongateway.object.delete', ['response' => $data, 'entity' => $entity->getId()->toString()]);
                 break;
             default:
@@ -686,7 +690,7 @@ class ObjectEntityService
     }
 
     /**
-     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validaterService->validateData() function this saveObject() function only saves the object in the DB.
+     * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validatorService->validateData() function this saveObject() function only saves the object in the DB.
      *
      * @param ObjectEntity $objectEntity
      * @param array        $post
@@ -859,15 +863,14 @@ class ObjectEntityService
         // If the value given by the user is empty...
         if (empty($value)) {
             if ($attribute->getMultiple() && $value === []) {
-                if ($attribute->getType() == 'object') {
-                    // todo: remove objects on put
-//                    foreach ($valueObject->getObjects() as $object) {
-//                        // If we are not re-adding this object...
-//                        $this->removeObjectsOnPut[] = [
-//                            'valueObject' => $valueObject,
-//                            'object'      => $object,
-//                        ];
-//                    }
+                if ($attribute->getType() == 'object' && ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')) {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object...
+                        $object->removeSubresourceOf($valueObject);
+                        if (count($object->getSubresourceOf()) == 0) {
+                            $this->eavService->handleDelete($object);
+                        }
+                    }
                     $valueObject->getObjects()->clear();
                 } else {
                     $valueObject->setValue([]);
@@ -893,6 +896,43 @@ class ObjectEntityService
     }
 
     /**
+     * Saves a subObject using saveObject. Will also set the owner, uri, organization and application. And check for a Entity function.
+     *
+     * @param ObjectEntity $subObject
+     * @param $object
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return ObjectEntity
+     */
+    private function saveSubObject(ObjectEntity $subObject, $object): ObjectEntity
+    {
+        $subObject = $this->saveObject($subObject, $object);
+        $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+
+        // We need to set uri here in case we need it in $this->functionService->handleFunction later!
+        $subObject->setUri($this->createUri($subObject));
+
+        // todo remove if no longer needed, see value.php setValue() where we set owner, organization and application for subobjects
+        // Set organization for this object
+        if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
+            $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
+            $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
+        } else {
+            $subObject->setOrganization($this->session->get('activeOrganization'));
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $subObject->setApplication(!empty($application) ? $application : null);
+        }
+
+        return $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
+            'method'           => $this->request->getMethod(),
+            'uri'              => $subObject->getUri(),
+            'organizationType' => is_array($object) && array_key_exists('type', $object) ? $object['type'] : null,
+            'userGroupName'    => is_array($object) && array_key_exists('name', $object) ? $object['name'] : null,
+        ]);
+    }
+
+    /**
      * @TODO
      *
      * @param ObjectEntity $objectEntity
@@ -908,6 +948,7 @@ class ObjectEntityService
     {
         switch ($attribute->getType()) {
             case 'object':
+                $subObjectIds = [];
                 $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
                 foreach ($value as $key => $object) {
                     // If we are not cascading and value is a string, then value should be an id.
@@ -936,14 +977,13 @@ class ObjectEntityService
                                 }
                             }
                         }
-
                         // object toevoegen
                         $saveSubObjects->add($subObject);
                         continue;
                     }
 
                     // If we are doing a PUT with a subObject that contains an id, find the object with this id and update it.
-                    if ($this->request->getMethod() == 'PUT' && array_key_exists('id', $object)) {
+                    if (($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH') && array_key_exists('id', $object)) {
                         if (!is_string($object['id']) || Uuid::isValid($object['id']) == false) {
 //                            var_dump('The given value ('.$object['id'].') is not a valid uuid.');
                             continue;
@@ -970,7 +1010,9 @@ class ObjectEntityService
                         } else {
                             $subObject = $subObject->first();
                         }
-                    } elseif ($this->request->getMethod() == 'PUT' && count($value) == 1 && count($valueObject->getObjects()) == 1) {
+                    } elseif (($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')
+                        && count($value) == 1
+                        && count($valueObject->getObjects()) == 1) {
                         // If we are doing a PUT with a single subObject (and it contains no id) and the existing mainObject only has a single subObject, use the existing subObject and update that.
                         $subObject = $valueObject->getObjects()->first();
                         $object['id'] = $subObject->getExternalId();
@@ -987,66 +1029,33 @@ class ObjectEntityService
                     }
 
                     $subObject->setSubresourceIndex($key);
-                    $subObject = $this->saveObject($subObject, $object);
-                    $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
 
-                    // todo: i think we can remove this because in saveObject uri is already set, test it first!
-                    $subObject->setUri($this->createUri($subObject));
-
-                    // Set organization for this object
-                    if (count($subObject->getSubresourceOf()) > 0 && !empty($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization())) {
-                        $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
-                        $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
-                    } else {
-                        $subObject->setOrganization($this->session->get('activeOrganization'));
-                        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                        $subObject->setApplication(!empty($application) ? $application : null);
-                    }
-                    $subObject = $this->functionService->handleFunction($subObject, $subObject->getEntity()->getFunction(), [
-                        'method'           => $this->request->getMethod(),
-                        'uri'              => $subObject->getUri(),
-                        'organizationType' => is_array($object) && array_key_exists('type', $object) ? $object['type'] : null,
-                        'userGroupName'    => is_array($object) && array_key_exists('name', $object) ? $object['name'] : null,
-                    ]);
+                    $subObject = $this->saveSubObject($subObject, $object);
 
                     // object toevoegen
                     $saveSubObjects->add($subObject);
+                    $subObjectIds[] = $subObject->getId()->toString();
                 }
+                $valueObject->setArrayValue($subObjectIds);
 
-                // todo: remove objects on put
-//                // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
-//                if ($this->request->getMethod() == 'PUT' && !$objectEntity->getHasErrors()) {
-//                    foreach ($valueObject->getObjects() as $object) {
-//                        // If we are not re-adding this object...
-//                        if (!$saveSubObjects->contains($object)) {
-//                            $this->removeObjectsOnPut[] = [
-//                                'valueObject' => $valueObject,
-//                                'object'      => $object,
-//                            ];
-//                        }
-//                    }
-//                    $valueObject->getObjects()->clear();
-//                }
+                // If we are doing a put, we want to actually clear (or remove) objects connected to this valueObject we no longer need
+                if ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH') {
+                    foreach ($valueObject->getObjects() as $object) {
+                        // If we are not re-adding this object... allow delete on PUT
+                        if (!$saveSubObjects->contains($object)) {
+                            $object->removeSubresourceOf($valueObject);
+                            if (count($object->getSubresourceOf()) == 0) {
+                                $this->eavService->handleDelete($object);
+                            }
+                        }
+                    }
+                    $valueObject->getObjects()->clear();
+                }
                 // Actually add the objects to the valueObject
                 foreach ($saveSubObjects as $saveSubObject) {
-                    // todo: remove objects so not multiple attributes won't ever have multiple objects
-//                    // If we have inversedBy on this attribute
-//                    if ($attribute->getInversedBy()) {
-//                        $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
-//                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
-//                            // If inversedBy attribute is not multiple it should only have one object connected to it
-//                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
-//                                // Remove old objects
-//                                foreach ($inversedByValue->getObjects() as $object) {
-//                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
-//                                    $this->removeObjectsNotMultiple[] = [
-//                                        'valueObject' => $inversedByValue,
-//                                        'object'      => $object,
-//                                    ];
-//                                }
-//                            }
-//                        }
-//                    }
+                    // Make sure we never connect the value of a multiple=false attribute to more than one object! Checks inversedBy
+                    $this->disconnectNotMultipleObjects($objectEntity, $attribute, $saveSubObject);
+
                     $valueObject->addObject($saveSubObject);
                 }
                 break;
@@ -1079,7 +1088,7 @@ class ObjectEntityService
     {
         switch ($attribute->getType()) {
             case 'object':
-                // Check for cascading (should already be done by validaterService...
+                // Check for cascading (should already be done by validatorService...
                 if (!$attribute->getCascade() && !is_string($value)) {
                     break;
                 }
@@ -1111,24 +1120,8 @@ class ObjectEntityService
                         }
                     }
 
-                    // todo: remove objects so not multiple attributes won't ever have multiple objects
-//                    // If we have inversedBy on this attribute
-//                    if ($attribute->getInversedBy()) {
-//                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
-//                        if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
-//                            // If inversedBy attribute is not multiple it should only have one object connected to it
-//                            if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
-//                                // Remove old objects
-//                                foreach ($inversedByValue->getObjects() as $object) {
-//                                    // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
-//                                    $this->removeObjectsNotMultiple[] = [
-//                                        'valueObject' => $inversedByValue,
-//                                        'object'      => $object,
-//                                    ];
-//                                }
-//                            }
-//                        }
-//                    }
+                    // Make sure we never connect the value of a multiple=false attribute to more than one object! Checks inversedBy.
+                    $this->disconnectNotMultipleObjects($objectEntity, $attribute, $subObject);
 
                     // Object toevoegen
                     $valueObject->getObjects()->clear(); // We start with a default object
@@ -1141,19 +1134,13 @@ class ObjectEntityService
                     $subObject = new ObjectEntity();
                     $subObject->setEntity($attribute->getObject());
                     $subObject->addSubresourceOf($valueObject);
-                    if ($attribute->getObject()->getFunction() === 'organization') {
-                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
-                    } else {
-                        $subObject->setOrganization($this->session->get('activeOrganization'));
-                    }
-                    $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-                    $subObject->setApplication(!empty($application) ? $application : null);
                 } else {
                     // Put...
                     $subObject = $valueObject->getValue();
                 }
-                $subObject = $this->saveObject($subObject, $value);
-                $this->handleOwner($subObject); // Do this after all CheckAuthorization function calls
+
+                $subObject = $this->saveSubObject($subObject, $value);
+
                 $this->entityManager->persist($subObject);
 
                 $valueObject->setValue($subObject);
@@ -1168,6 +1155,36 @@ class ObjectEntityService
         }
 
         return $objectEntity;
+    }
+
+    /**
+     * This function will check if an attribute has inversedBy, if so, get the inversedBy value and check if this value does not already have given $objectEntity as a relation.
+     * If inversedBy value does not have the $objectEntity as relation and the attribute of this inversedBy value is multiple=false this inversedBy value should only contain one object.
+     * So, if the inversedBy value has already one or more other objects connected to it, disconnect all these objects, so we can add $objectEntity as the only relation after using this function.
+     *
+     * @param ObjectEntity $objectEntity The 'parent' objectEntity of $attribute we might want to add as a inversedBy relation to $subObject.
+     * @param Attribute    $attribute    The attribute we are going to check inversedBy on and get its value if it has a inversedBy attribute/value.
+     * @param ObjectEntity $subObject    The 'child' objectEntity we want to add to the Value of the $attribute of $objectEntity.
+     *
+     * @return void
+     */
+    private function disconnectNotMultipleObjects(ObjectEntity $objectEntity, Attribute $attribute, ObjectEntity $subObject)
+    {
+        // Make sure we never connect the value of a multiple=false attribute to more than one object!
+        if ($attribute->getInversedBy()) {
+            // If we have inversedBy on this attribute
+            $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+            if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
+                // If inversedBy attribute is not multiple it should only have one object connected to it
+                if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
+                    // Disconnect old objects
+                    foreach ($inversedByValue->getObjects() as $object) {
+                        // Clear any objects and there parent relations (subresourceOf) to make sure we only can have one object connected.
+                        $object->removeSubresourceOf($inversedByValue);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1541,9 +1558,9 @@ class ObjectEntityService
     {
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
         $this->entityManager->persist($objectEntity);
-        $endpoint = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
-        if ($endpoint instanceof Endpoint) {
-            $pathArray = $endpoint->getPath();
+        $endpoints = $this->entityManager->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if (count($endpoints) > 0 && $endpoints[0] instanceof Endpoint) {
+            $pathArray = $endpoints[0]->getPath();
             $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
                 (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
@@ -1553,7 +1570,7 @@ class ObjectEntityService
             }
         }
 
-        return '/api/'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
+        return '/api'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
     }
 
     /**
@@ -1574,6 +1591,7 @@ class ObjectEntityService
                 $action = 'Create';
                 break;
             case 'PUT':
+            case 'PATCH':
                 $action = 'Update';
                 break;
             case 'DELETE':

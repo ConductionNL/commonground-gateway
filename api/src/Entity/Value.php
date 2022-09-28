@@ -184,10 +184,18 @@ class Value
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(?Attribute $attribute = null, ?ObjectEntity $objectEntity = null)
     {
         $this->files = new ArrayCollection();
         $this->objects = new ArrayCollection();
+
+        if ($attribute) {
+            $this->setAttribute($attribute);
+        }
+
+        if ($objectEntity) {
+            $this->setObjectEntity($objectEntity);
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -281,7 +289,7 @@ class Value
     public function setBooleanValue(?bool $booleanValue): self
     {
         $this->booleanValue = $booleanValue;
-//        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
+        //        $this->stringValue = $booleanValue !== null ? (string) $booleanValue : null; // results in a string of: "1" or "0"
         $this->stringValue = $booleanValue !== null ? ($booleanValue ? 'true' : 'false') : null;
 
         return $this;
@@ -289,6 +297,10 @@ class Value
 
     public function getArrayValue(): ?array
     {
+        if (!$this->arrayValue) {
+            return [];
+        }
+
         return $this->arrayValue;
     }
 
@@ -320,11 +332,12 @@ class Value
                     break;
                 case 'float':
                     // if float
-                    //@todo
+                    $outputArray[] = floatval($input);
                     break;
                 case 'number':
                     // if number
-                    //@todo
+                    // todo: not sure if this is correct for type number
+                    $outputArray[] = floatval($input);
                     break;
                 case 'date':
                 case 'datetime':
@@ -362,7 +375,8 @@ class Value
 
             $this->simpleArrayValue = $outputArray;
 
-            $this->stringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
+            $newStringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
+            $this->stringValue = is_string($newStringValue) ? ','.$newStringValue : null;
         }
 
         return $this;
@@ -493,11 +507,15 @@ class Value
 
     public function getAttribute(): ?Attribute
     {
-        return $this->attribute;
+        return isset($this->attribute) ? $this->attribute : null;
     }
 
     public function setAttribute(?Attribute $attribute): self
     {
+
+        // If we have an atribute we can deal with default values
+        $this->setDefaultValue();
+
         $this->attribute = $attribute;
 
         return $this;
@@ -518,12 +536,42 @@ class Value
     /**
      * @throws Exception
      */
-    public function setValue($value)
+    public function setValue($value): self
     {
         if ($this->getAttribute()) {
-            // If the value is an array we handle it in its own function
-            if ($this->getAttribute()->getMultiple()) {
+
+            // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
+            $doNotGetArrayTypes = ['object', 'file'];
+            if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 return $this->setSimpleArrayValue($value);
+            } elseif ($this->getAttribute()->getMultiple()) {
+                // Lest deal with multiple file subobjects
+
+                $this->objects->clear();
+
+                if (!$value) {
+                    return $this;
+                }
+
+                $valueArray = $value;
+                $idArray = [];
+                foreach ($valueArray as $value) {
+
+                    // Catch Array input (for hydrator)
+                    if (is_array($value)) {
+                        $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->hydrate($value);
+                        $value = $valueObject;
+                    }
+
+                    $idArray[] = $value->getId();
+                    $this->addObject($value);
+                }
+
+                // Set a string reprecentation of the object
+                $this->stringValue = ','.implode(',', $idArray);
+
+                return $this;
             }
 
             switch ($this->getAttribute()->getType()) {
@@ -531,19 +579,20 @@ class Value
                     return $this->setStringValue($value);
                 case 'integer':
                     if ($value < PHP_INT_MAX) {
-                        return $this->setIntegerValue($value);
+                        return $this->setIntegerValue((int) $value);
                     } else {
                         return $this;
                     }
                 case 'boolean':
+
+                    // This is used for defaultValue, this is always a string type instead of a boolean
                     if (is_string($value)) {
-                        // This is used for defaultValue, this is always a string type instead of a boolean
                         $value = $value === 'true';
                     }
 
                     return $this->setBooleanValue($value);
                 case 'number':
-                    return $this->setNumberValue($value);
+                    return $this->setNumberValue((float) $value);
                 case 'date':
                 case 'datetime':
                     // if we auto convert null to a date time we would always default to current_timestamp, so lets tackle that
@@ -566,14 +615,26 @@ class Value
 
                     return $this->addFile($value);
                 case 'object':
+
+                    // Catch empty input
                     if ($value === null) {
                         return $this;
                     }
+
+                    // Catch Array input (for hydrator)
+                    if (is_array($value)) {
+                        $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->hydrate($value);
+                        $value = $valueObject;
+                    }
+
                     $this->objects->clear();
+
                     // Set a string reprecentation of the object
                     $this->stringValue = $value->getId();
 
                     return $this->addObject($value);
+
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
@@ -589,7 +650,9 @@ class Value
     {
         if ($this->getAttribute()) {
             // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
+
             $doNotGetArrayTypes = ['object', 'file'];
+
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 // Lets be backwards compatable
                 if (!empty($this->getSimpleArrayValue())) {
@@ -635,12 +698,13 @@ class Value
 
                     return $files;
                 case 'object':
+                    // $objects can be a single object
                     $objects = $this->getObjects();
                     if (!$this->getAttribute()->getMultiple()) {
                         return $objects->first();
                     }
                     if (count($objects) == 0) {
-                        return null;
+                        return new ArrayCollection();
                     }
 
                     return $objects;
@@ -675,5 +739,28 @@ class Value
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    /**
+     * Set the default value for this object.
+     *
+     * @return $this
+     */
+    public function setDefaultValue(): self
+    {
+        if (!$this->getAttribute() || $this->getAttribute()->getDefaultValue()) {
+            return $this;
+        }
+
+        // OKe lets grap the default value
+        $defaultValue = $this->getAttribute()->getDefaultValue();
+
+        // Lets double check if we are Expacting an array
+        if ($this->getAttribute()->getMultiple()) {
+            $defaultValue = explode(',', $defaultValue);
+        }
+
+        // And the we can set the result
+        $this->setValue($defaultValue);
     }
 }

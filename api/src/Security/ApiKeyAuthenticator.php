@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,23 +52,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         return $request->headers->has('Authorization') &&
             strpos($request->headers->get('Authorization'), 'Bearer') === false;
-    }
-
-    public function validateToken(string $token): array
-    {
-        $publicKey = $this->parameterBag->get('app_x509_cert');
-
-        try {
-            $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
-        } catch (\Exception $exception) {
-            throw new AuthenticationException('The provided token is not valid');
-        }
-        $now = new \DateTime();
-        if ($payload['exp'] < $now->getTimestamp()) {
-            throw new AuthenticationException('The provided token has expired');
-        }
-
-        return $payload;
     }
 
     /**

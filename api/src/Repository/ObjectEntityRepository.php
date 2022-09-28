@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Attribute;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use DateTime;
@@ -11,6 +12,7 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 
@@ -36,9 +38,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Does the same as findByEntity(), but also returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity $entity  The Entity
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array  $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int    $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int    $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      *
@@ -56,7 +58,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // If we have to order do it only for the findByEntity QueryBuilder.
         if (!empty($order)) {
-            $baseQuery = $this->addOrderBy($baseQuery, $entity, $order);
+            $order = $this->cleanOrderArray($order, $entity);
+            $baseQuery = $this->addOrderBy($baseQuery, $order);
         }
 
         return [
@@ -68,9 +71,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Finds ObjectEntities using the given Entity and $filters array as filters. Can be ordered and allows pagination. Only $entity is required. Always use getFilterParameters() to check for allowed filters before using this function!
      *
-     * @param Entity            $entity  The Entity
+     * @param Entity            $entity  The Entity we are currently doing a get collection on.
      * @param array             $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array             $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array             $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      * @param int               $offset  Pagination, the first result. 'offset' of the returned ObjectEntities.
      * @param int               $limit   Pagination, the max amount of results. 'limit' of the returned ObjectEntities.
      * @param QueryBuilder|null $query   An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
@@ -90,11 +93,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // todo: see findAndCountByEntity() this function can be removed, but here in case we ever want to use this separately from findByEntity()
     /**
      * Returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
-     * @param Entity            $entity  The Entity
+     * @param Entity            $entity  The Entity we are currently doing a get collection on.
      * @param array             $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
      * @param QueryBuilder|null $query   An already existing QueryBuilder created with createQuery() to use instead of creating a new one.
      *
@@ -113,9 +115,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Main function for creating a ObjectEntity (get collection) query, with (required) $entity as filter. And optional extra filters and/or order.
      *
-     * @param Entity $entity  The Entity.
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      * @param array  $filters An array of filters, see: getFilterParameters() for how to check if filters are allowed and will work.
-     * @param array  $order   An array with a key and value (asc/desc) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
+     * @param array  $order   An array with a key and value (ASC/DESC) used for ordering/sorting the result. See: getOrderParameters() for how to check for allowed fields to order.
      *
      * @throws Exception
      *
@@ -130,15 +132,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (array_key_exists('search', $filters)) {
             $search = $filters['search'];
             unset($filters['search']);
-            $this->buildSearchQuery($query, $search)->distinct();
+            $this->addSearchQuery($query, $entity, $search)->distinct();
         }
 
         if (!empty($filters)) {
-            $filterCheck = $this->getFilterParameters($entity);
-            $multipleAttributes = $this->getMultipleAttributes($entity);
-
-            $filters = $this->cleanFiltersArray($filters, $filterCheck, $multipleAttributes);
-
+            $filters = $this->cleanFiltersArray($filters, $entity);
             $this->buildQuery($query, $filters)->distinct();
         }
 
@@ -170,7 +168,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->setParameter('defaultOrganization', 'http://testdata-organization');
 
         if (!empty($order)) {
-            $this->addOrderBy($query, $entity, $order);
+            $order = $this->cleanOrderArray($order, $entity);
+            $this->addOrderBy($query, $order);
         }
 
         return $query;
@@ -180,9 +179,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Gets and returns an array with all attributes names (as array key, dot notation) that have multiple set to true.
      * Works for subresources as well.
      *
-     * @param Entity $entity
-     * @param string $prefix
-     * @param int    $level
+     * @param Entity $entity The Entity we are currently doing a get collection on.
+     * @param string $prefix The prefix of multiple attribute, used if we are getting multiple attributes of subresources.
+     * @param int    $level  The depth level, if we are getting multiple attributes of subresource.subresource etc.
      *
      * @return array An array with all attributes that have multiple set to true.
      */
@@ -205,23 +204,21 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Handle valueScopeFilter, replace dot filters _ into . (symfony query param thing) and transform dot filters into an array with recursiveFilterSplit().
      * Also checks for filters used on multiple attributes and handles these.
      *
-     * @param array $filters     The array of query params / filters.
-     * @param array $filterCheck The allowed filters. See: getFilterParameters().
+     * @param array  $filters The array of query params / filters.
+     * @param Entity $entity  The Entity we are currently doing a get collection on.
      *
      * @return array A 'clean' array. And transformed array.
      */
-    private function cleanFiltersArray(array $filters, array $filterCheck, array $multipleAttributes): array
+    private function cleanFiltersArray(array $filters, Entity $entity): array
     {
         $result = [];
+        $filterCheck = $this->getFilterParameters($entity);
+        $multipleAttributes = $this->getMultipleAttributes($entity);
 
         // Handles valueScopeFilters. This will prevent duplicate filters and makes sure the user can not bypass authorization by using filters!
         $filters = $this->handleValueScopeFilters($filters);
 
         foreach ($filters as $key => $value) {
-            $key = str_replace(['__', '_', '..'], ['__', '.', '._'], $key);
-            if (substr($key, 0, 1) == '.') {
-                $key = '_'.ltrim($key, $key[0]);
-            }
             if (in_array($key, $filterCheck) || str_ends_with($key, '|valueScopeFilter')) {
                 $key = str_replace('|valueScopeFilter', '', $key);
                 $key = array_key_exists($key, $multipleAttributes) ? $key.'|multiple' : $key;
@@ -277,8 +274,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $newKey = array_shift($key);
             if (is_array($value)) {
                 $newKey = $newKey.'|arrayValue';
-                // todo: remove from & till after gateway refactor
-                if (!empty(array_intersect_key($value, array_flip(['from', 'till', 'after', 'before', 'strictly_after', 'strictly_before'])))) {
+                if (!empty(array_intersect_key($value, array_flip(['after', 'before', 'strictly_after', 'strictly_before'])))) {
                     $newKey = $newKey.'|compareDateTime';
                 }
             }
@@ -291,22 +287,110 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case that the search query is used.
      *
-     * @param QueryBuilder $query
-     * @param string       $search
-     *
-     * @throws Exception
+     * @param QueryBuilder $query  The existing QueryBuilder.
+     * @param Entity       $entity The Entity we are currently doing a get collection on.
+     * @param string       $search The value of the search Query.
      *
      * @return QueryBuilder
      */
-    private function buildSearchQuery(QueryBuilder $query, string $search): QueryBuilder
+    private function addSearchQuery(QueryBuilder $query, Entity $entity, string $search): QueryBuilder
     {
-        $query
-            ->leftJoin('o.objectValues', 'valueSearch')
-            ->leftJoin('valueSearch.attribute', 'valueSearchAttribute')
-            ->andWhere('LOWER(valueSearch.stringValue) LIKE :search AND valueSearchAttribute.searchPartial IS NOT NULL')
-            ->setParameter('search', '%'.strtolower($search).'%');
+        if (count($entity->getSearchPartial()) !== 0) {
+            $searchQueryOrWhere = $this->buildSearchQuery($query, $entity, $search);
+            if ($searchQueryOrWhere === []) {
+                return $query;
+            }
+
+            $searchQuery = '';
+            foreach ($searchQueryOrWhere as $key => $searchQueryValue) {
+                $searchQuery = array_key_first($searchQueryOrWhere) === $key ? $searchQueryValue : "$searchQuery OR $searchQueryValue";
+            }
+
+            $query->andWhere("($searchQuery)");
+            $query->setParameter('search', '%'.strtolower($search).'%');
+        }
 
         return $query;
+    }
+
+    /**
+     * Expands a QueryBuilder with the correct left joins if the search query is used and search on subresources is configured.
+     * Also makes sure we only check the values of the correct attribute when building the search query sql.
+     * And lastly but most importantly builds and returns an array of orWhere statements to add to the query in addSearchQuery().
+     *
+     * @param QueryBuilder $query        The existing QueryBuilder.
+     * @param Entity       $entity       The Entity we are currently doing a get collection on.
+     * @param string       $search       The value of the search Query.
+     * @param int          $level        The depth level, if we are doing a search on subresource.subresource etc.
+     * @param string       $prefix       The prefix of the value for the search query we are adding.
+     * @param string       $objectPrefix The prefix of the objectEntity for the search query we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
+     *
+     * @return array returns an array of orWhere statements to add to the query in addSearchQuery().
+     */
+    private function buildSearchQuery(QueryBuilder $query, Entity $entity, string $search, int $level = 0, string $prefix = 'valueSearch', string $objectPrefix = 'o'): array
+    {
+        $searchQueryOrWhere = [];
+
+        foreach ($entity->getSearchPartial() as $attribute) {
+            $sqlFriendlyKey = $this->makeKeySqlFriendly($attribute->getName());
+            $query->leftJoin("$objectPrefix.objectValues", $prefix.$sqlFriendlyKey);
+            // If attribute type is object (we have $attribute->object) AND if that Entity has searchPartial attributes.
+            if (!empty($attribute->getObject()) && count($attribute->getObject()->getSearchPartial()) !== 0) {
+                $searchQueryOrWhere = array_merge($searchQueryOrWhere, $this->addSubresourceSearchQuery($query, $attribute, $sqlFriendlyKey, $search, $level, $prefix));
+            } elseif (empty($attribute->getObject())) {
+                // Only do this if type is not object!
+                $searchQueryOrWhere[] = $this->addNormalSearchQuery($query, $attribute, $sqlFriendlyKey, $prefix);
+            }
+        }
+
+        return $searchQueryOrWhere;
+    }
+
+    /**
+     * Expands a QueryBuilder in the case the search query is used and search on subresources is configured.
+     *
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param Attribute    $attribute      The Attribute configured to be searchable.
+     * @param string       $sqlFriendlyKey The Attribute name. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param string       $search         The value of the search Query.
+     * @param int          $level          The depth level, if we are doing a search on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the search query we are adding.
+     *
+     * @return array returns an array of orWhere statements for a subresource to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
+     */
+    private function addSubresourceSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $search, int $level, string $prefix): array
+    {
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+
+        return $this->buildSearchQuery(
+            $query,
+            $attribute->getObject(),
+            $search,
+            $level + 1,
+            'subValue'.$sqlFriendlyKey.$level,
+            'subObjects'.$sqlFriendlyKey.$level
+        );
+    }
+
+    /**
+     * Expands a QueryBuilder so that we only check the values of the correct attribute when building the search query sql.
+     *
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param Attribute    $attribute      The Attribute configured to be searchable.
+     * @param string       $sqlFriendlyKey The attribute name. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param string       $prefix         The prefix of the value for the search query we are adding.
+     *
+     * @return string returns a single orWhere statements to add to the already existing $searchQueryOrWhere array in buildSearchQuery().
+     */
+    private function addNormalSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $prefix): string
+    {
+        // Make sure we only check the values of the correct attribute
+        $query->leftJoin("$prefix$sqlFriendlyKey.attribute", $prefix.$sqlFriendlyKey.'Attribute');
+        $query->andWhere($prefix.$sqlFriendlyKey."Attribute.name = :Key$sqlFriendlyKey")
+            ->setParameter("Key$sqlFriendlyKey", $attribute->getName());
+
+        return "LOWER($prefix$sqlFriendlyKey.stringValue) LIKE :search";
     }
 
     /**
@@ -327,14 +411,14 @@ class ObjectEntityRepository extends ServiceEntityRepository
         foreach ($filters as $key => $value) {
             $filterKey = $this->clearFilterKey($key);
 
-            $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['key']);
+            $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['sqlFriendlyKey']);
 
             if (substr($filterKey['key'], 0, 1) == '_' || $filterKey['key'] == 'id') {
                 // If the filter starts with _ or == id we need to handle this filter differently
                 $query = $this->getObjectEntityFilter($query, $filterKey['key'], $value, $objectPrefix);
             } elseif (is_array($value) && !$filterKey['arrayValue']) {
                 // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
-                $query = $this->buildSubresourceQuery($query, $filterKey['key'], $value, $level, $prefix);
+                $query = $this->buildSubresourceQuery($query, $filterKey['sqlFriendlyKey'], $value, $level, $prefix);
             } else {
                 $query = $this->buildFilterQuery($query, $filterKey, $value, $prefix);
             }
@@ -367,6 +451,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         return [
             'key'             => $key,
+            'sqlFriendlyKey'  => $this->makeKeySqlFriendly($key),
             'arrayValue'      => $arrayValue ?? false,
             'compareDateTime' => $compareDateTime ?? false,
             'multiple'        => $multiple ?? false,
@@ -422,30 +507,29 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Expands a QueryBuilder in the case a filter for a subresource is used (example: subresource.key = something).
      *
-     * @param QueryBuilder $query  The existing QueryBuilder.
-     * @param string       $key    The key of the filter.
-     * @param array        $value  The value of the filter.
-     * @param int          $level  The depth level, if we are filtering on subresource.subresource etc.
-     * @param string       $prefix The prefix of the value for the filter we are adding.
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey The key of the filter. But one that is sql friendly for using in left joins. see makeKeySqlFriendly() function.
+     * @param array        $value          The value of the filter.
+     * @param int          $level          The depth level, if we are filtering on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the filter we are adding.
      *
      * @throws Exception
      *
      * @return QueryBuilder The QueryBuilder.
      */
-    private function buildSubresourceQuery(QueryBuilder $query, string $key, array $value, int $level, string $prefix): QueryBuilder
+    private function buildSubresourceQuery(QueryBuilder $query, string $sqlFriendlyKey, array $value, int $level, string $prefix): QueryBuilder
     {
         // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
-        $query->leftJoin("$prefix$key.objects", 'subObjects'.$key.$level);
-        $query->leftJoin('subObjects'.$key.$level.'.objectValues', 'subValue'.$key.$level);
-        $query = $this->buildQuery(
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+
+        return $this->buildQuery(
             $query,
             $value,
             $level + 1,
-            'subValue'.$key.$level,
-            'subObjects'.$key.$level
+            'subValue'.$sqlFriendlyKey.$level,
+            'subObjects'.$sqlFriendlyKey.$level
         );
-
-        return $query;
     }
 
     /**
@@ -463,11 +547,12 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function buildFilterQuery(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
         $key = $filterKey['key'];
+        $sqlFriendlyKey = $filterKey['sqlFriendlyKey'];
 
         // Make sure we only check the values of the correct attribute
-        $query->leftJoin("$prefix$key.attribute", $prefix.$key.'Attribute');
-        $query->andWhere($prefix.$key."Attribute.name = :Key$key")
-            ->setParameter("Key$key", $key);
+        $query->leftJoin("$prefix$sqlFriendlyKey.attribute", $prefix.$sqlFriendlyKey.'Attribute');
+        $query->andWhere($prefix.$sqlFriendlyKey."Attribute.name = :Key$sqlFriendlyKey")
+            ->setParameter("Key$sqlFriendlyKey", $key);
 
         // Check if this filter has an array of values (example1: key = value,value2) (example2: key[a] = value, key[b] = value2)
         if (is_array($value) && $filterKey['arrayValue']) {
@@ -494,17 +579,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getArrayValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
-        $key = $filterKey['key'];
+        $sqlFriendlyKey = $filterKey['sqlFriendlyKey'];
 
         // Check if this is an dateTime after/before filter (example: endDate[after] = "2022-04-11 00:00:00")
         if ($filterKey['compareDateTime']) {
-            $query = $this->getDateTimeFilter($query, $key, $value, $prefix.$key);
+            $query = $this->getDateTimeFilter($query, $sqlFriendlyKey, $value, $prefix.$sqlFriendlyKey);
         } elseif ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
-            $query = $this->getArrayValueMultipleFilter($query, $key, $value, $prefix);
+            $query = $this->getArrayValueMultipleFilter($query, $sqlFriendlyKey, $value, $prefix);
         } else {
-            $query->andWhere("LOWER($prefix$key.stringValue) IN (:$key)")
-                ->setParameter($key, array_map('strtolower', $value));
+            $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) IN (:$sqlFriendlyKey)")
+                ->setParameter($sqlFriendlyKey, array_map('strtolower', $value));
         }
 
         return $query;
@@ -513,10 +598,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Function that handles after and/or before dateTime filters. Adds to an existing QueryBuilder.
      *
-     * @TODO: remove from & till as valid options, needed for 'old' gateway used by BISC. no longer after refactor!
-     *
-     * @param QueryBuilder $query The existing QueryBuilder.
-     * @param $key
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey
      * @param $value
      * @param string $prefix
      *
@@ -524,25 +607,23 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return QueryBuilder The QueryBuilder.
      */
-    private function getDateTimeFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
+    private function getDateTimeFilter(QueryBuilder $query, string $sqlFriendlyKey, $value, string $prefix = 'o'): QueryBuilder
     {
         $subPrefix = 'dateTimeValue';
-        if (in_array($key, ['dateCreated', 'dateModified'])) {
-            $subPrefix = $key;
+        if (in_array($sqlFriendlyKey, ['dateCreated', 'dateModified'])) {
+            $subPrefix = $sqlFriendlyKey;
         }
-        // todo: remove from
-        if (!empty(array_intersect_key($value, array_flip(['from', 'after', 'strictly_after'])))) {
-            $after = array_key_exists('from', $value) ? 'from' : (array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after');
+        if (!empty(array_intersect_key($value, array_flip(['after', 'strictly_after'])))) {
+            $after = array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after';
             $date = new DateTime($value[$after]);
             $operator = array_key_exists('strictly_after', $value) ? '>' : '>=';
-            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$key.'After')->setParameter($key.'After', $date->format('Y-m-d H:i:s'));
+            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$sqlFriendlyKey.'After')->setParameter($sqlFriendlyKey.'After', $date->format('Y-m-d H:i:s'));
         }
-        // todo: remove till
-        if (!empty(array_intersect_key($value, array_flip(['till', 'before', 'strictly_before'])))) {
-            $before = array_key_exists('till', $value) ? 'till' : (array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before');
+        if (!empty(array_intersect_key($value, array_flip(['before', 'strictly_before'])))) {
+            $before = array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before';
             $date = new DateTime($value[$before]);
             $operator = array_key_exists('strictly_before', $value) ? '<' : '<=';
-            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$key.'Before')->setParameter($key.'Before', $date->format('Y-m-d H:i:s'));
+            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$sqlFriendlyKey.'Before')->setParameter($sqlFriendlyKey.'Before', $date->format('Y-m-d H:i:s'));
         }
 
         return $query;
@@ -554,24 +635,24 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * And attribute platforms is an array (multiple=true).
      *
      * @param QueryBuilder $query
-     * @param string       $key
+     * @param string       $sqlFriendlyKey
      * @param $value
      * @param string $prefix
      *
      * @return QueryBuilder
      */
-    private function getArrayValueMultipleFilter(QueryBuilder $query, string $key, $value, string $prefix): QueryBuilder
+    private function getArrayValueMultipleFilter(QueryBuilder $query, string $sqlFriendlyKey, $value, string $prefix): QueryBuilder
     {
         $andWhere = '(';
         foreach ($value as $i => $item) {
-            $andWhere .= "LOWER($prefix$key.stringValue) LIKE LOWER(:$key$i)";
+            $andWhere .= "LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey$i)";
             if ($i !== array_key_last($value)) {
                 $andWhere .= ' OR ';
             }
         }
         $query->andWhere($andWhere.')');
         foreach ($value as $i => $item) {
-            $query->setParameter("$key$i", "%$item%");
+            $query->setParameter("$sqlFriendlyKey$i", "%,$item%");
         }
 
         return $query;
@@ -590,7 +671,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getNormalValueFilter(QueryBuilder $query, array $filterKey, $value, string $prefix): QueryBuilder
     {
-        $key = $filterKey['key'];
+        $sqlFriendlyKey = $filterKey['sqlFriendlyKey'];
 
         // If a date value is given, make sure we transform it into a dateTime string
         if (preg_match('/^(\d{4}-\d{2}-\d{2})$/', $value)) {
@@ -600,15 +681,38 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // NOTE: we always use stringValue to compare, but this works for other type of values, as long as we always set the stringValue in Value.php
         if ($filterKey['multiple']) {
             // If the attribute we filter on is multiple=true
-            $query->andWhere("LOWER($prefix$key.stringValue) LIKE LOWER(:$key)")
-                ->setParameter($key, "%$value%");
+            $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
+                ->setParameter($sqlFriendlyKey, "%,$value%");
         } else {
             // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
-            $query->andWhere("LOWER($prefix$key.stringValue) LIKE LOWER(:$key)")
-                ->setParameter($key, "$value");
+            $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
+                ->setParameter($sqlFriendlyKey, "$value");
         }
 
         return $query;
+    }
+
+    /**
+     * Replace dot order _ into . (symfony query param thing) and transform dot order into an array with recursiveFilterSplit().
+     *
+     * @param array  $order  The order array with the order query param used with the current get collection api-call.
+     * @param Entity $entity The Entity we are currently doing a get collection on.
+     *
+     * @return array A 'clean' array. And transformed array.
+     */
+    private function cleanOrderArray(array $order, Entity $entity): array
+    {
+        $result = [];
+        $orderCheck = $this->getOrderParameters($entity);
+
+        $key = array_keys($order)[0];
+        $value = strtoupper(array_values($order)[0]);
+
+        if (in_array($key, $orderCheck) && in_array($value, ['DESC', 'ASC'])) {
+            $result = $this->recursiveFilterSplit(explode('.', $key), $value, $result);
+        }
+
+        return $result;
     }
 
     /**
@@ -616,31 +720,32 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * This depends on the given $order array and the allowed attributes to order on for the given Entity.
      *
      * @param QueryBuilder $query        The existing QueryBuilder.
-     * @param Entity       $entity       The Entity to check for allowed attributes to order on.
      * @param array        $order        The order array with the order query param used with the current get collection api-call.
-     * @param int          $level
-     * @param string       $prefix
-     * @param string       $objectPrefix
+     * @param int          $level        The depth level, if we are ordering on subresource.subresource etc.
+     * @param string       $prefix       The prefix of the value for the order we are adding.
+     * @param string       $objectPrefix The prefix of the objectEntity for the order we are adding, default = 'o'. ('o'= the main ObjectEntity, not a subresource)
+     *
+     * @throws Exception
      *
      * @return QueryBuilder
      */
-    private function addOrderBy(QueryBuilder $query, Entity $entity, array $order, int $level = 0, string $prefix = 'valueOrderBy', string $objectPrefix = 'o'): QueryBuilder
+    private function addOrderBy(QueryBuilder $query, array $order, int $level = 0, string $prefix = 'valueOrderBy', string $objectPrefix = 'o'): QueryBuilder
     {
         // Important note: $prefix here = 'valueOrderBy', for filters we use $prefix = 'value'. This is to make sure the leftJoins do not clash.
-        $orderCheck = $this->getOrderParameters($entity);
         $key = array_keys($order)[0];
         $value = array_values($order)[0];
 
-        if (in_array($key, $orderCheck) && in_array(array_values($order)[0], ['desc', 'asc'])) {
-            if (substr($key, 0, 1) == '_') {
-                $query = $this->getObjectEntityOrder($query, $key, $value, $objectPrefix);
+        if (substr($key, 0, 1) == '_') {
+            // If order starts with _ we need to handle this order differently
+            $query = $this->getObjectEntityOrder($query, $key, $value, $objectPrefix);
+        } else {
+            $sqlFriendlyKey = $this->makeKeySqlFriendly($key);
+            $query->leftJoin("$objectPrefix.objectValues", $prefix.$sqlFriendlyKey);
+            if (is_array($value)) {
+                // If $value is an array we need to order on a subresource (example: subresource.key = something)
+                $query = $this->addSubresourceOrderBy($query, $sqlFriendlyKey, $value, $level, $prefix);
             } else {
-                $query->leftJoin("$objectPrefix.objectValues", $prefix.$key);
-                $query->addSelect($prefix.$key.'.stringValue');
-
-                //todo: here we could add an if statement to check for subresource ordering. (see buildQuery() for how this is done for filters)
-                // else :
-                $query = $this->buildOrderQuery($query, $key, $value, $prefix);
+                $query = $this->buildOrderQuery($query, $sqlFriendlyKey, $key, $value, $prefix);
             }
         }
 
@@ -653,8 +758,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query  The existing QueryBuilder.
      * @param string       $key    The order[$key] used in the order query param.
-     * @param string       $value  The value used with the query param, desc or asc.
-     * @param string       $prefix
+     * @param string       $value  The value used with the query param, DESC or ASC.
+     * @param string       $prefix The prefix of the value for the order we are adding.
      *
      * @return QueryBuilder The QueryBuilder.
      */
@@ -676,31 +781,76 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Expands a QueryBuilder in the case order on a subresource is used in the order query (example: subresource.key = something).
+     *
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey The key of the order. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param array        $value          The value of the order.
+     * @param int          $level          The depth level, if we are ordering on subresource.subresource etc.
+     * @param string       $prefix         The prefix of the value for the order we are adding.
+     *
+     * @throws Exception
+     *
+     * @return QueryBuilder The QueryBuilder.
+     */
+    private function addSubresourceOrderBy(QueryBuilder $query, string $sqlFriendlyKey, array $value, int $level, string $prefix): QueryBuilder
+    {
+        // If $value is an array we need to order on a subresource (example: subresource.key = something)
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+
+        return $this->addOrderBy(
+            $query,
+            $value,
+            $level + 1,
+            'subValue'.$sqlFriendlyKey.$level,
+            'subObjects'.$sqlFriendlyKey.$level
+        );
+    }
+
+    /**
      * Expands a QueryBuilder with the correct orderBy, using the given input and prefix.
      *
-     * @param QueryBuilder $query  The existing QueryBuilder.
-     * @param string       $key    The order[$key] used in the order query param.
-     * @param string       $value  The value used with the query param, desc or asc.
-     * @param string       $prefix
+     * @param QueryBuilder $query          The existing QueryBuilder.
+     * @param string       $sqlFriendlyKey The order[$key] used in the order query param. But made sql friendly for left joins with the makeKeySqlFriendly() function.
+     * @param string       $key            The order[$key] used in the order query param.
+     * @param string       $value          The value used with the query param, DESC or ASC.
+     * @param string       $prefix         The prefix of the value for the order we are adding.
      *
      * @return QueryBuilder
      */
-    private function buildOrderQuery(QueryBuilder $query, string $key, string $value, string $prefix): QueryBuilder
+    private function buildOrderQuery(QueryBuilder $query, string $sqlFriendlyKey, string $key, string $value, string $prefix): QueryBuilder
     {
-        // Make sure we only check the values of the correct attribute
-        $query->leftJoin("$prefix$key.attribute", $prefix.$key.'Attribute');
-        $query->andWhere($prefix.$key."Attribute.name = :Key$key")
-            ->setParameter("Key$key", $key);
+        // Make sure this attribute is in the select, or we are not allowed to order on it.
+        $query->addSelect($prefix.$sqlFriendlyKey.'.stringValue');
 
-        $query->orderBy("$prefix$key.stringValue", $value);
+        // Make sure we only check the values of the correct attribute
+        $query->leftJoin("$prefix$sqlFriendlyKey.attribute", $prefix.$sqlFriendlyKey.'Attribute');
+        $query->andWhere($prefix.$sqlFriendlyKey."Attribute.name = :Key$sqlFriendlyKey")
+            ->setParameter("Key$sqlFriendlyKey", $key);
+
+        $query->orderBy("$prefix$sqlFriendlyKey.stringValue", $value);
 
         return $query;
     }
 
     /**
+     * A function that replaces special characters that would otherwise break sql left joins.
+     *
+     * @param string $key
+     *
+     * @return void
+     */
+    private function makeKeySqlFriendly(string $key): string
+    {
+        // todo, probably add more special characters to replace...
+        return str_replace('-', 'Dash', $key);
+    }
+
+    /**
      * Gets and returns an array with the allowed filters on an Entity (including its subEntities / sub-filters).
      *
-     * @param Entity $Entity
+     * @param Entity $Entity The Entity we are currently doing a get collection on.
      * @param string $prefix
      * @param int    $level
      *
@@ -721,7 +871,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
@@ -734,7 +884,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     /**
      * Gets and returns an array with the allowed sortable attributes on an Entity (including its subEntities).
      *
-     * @param Entity $Entity
+     * @param Entity $Entity The Entity we are currently doing a get collection on.
      * @param string $prefix
      * @param int    $level
      *
@@ -743,18 +893,40 @@ class ObjectEntityRepository extends ServiceEntityRepository
     public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1): array
     {
         // defaults
-        $sortable = ['_dateCreated', '_dateModified'];
+        $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer']) && $attribute->getSortable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSortable()) {
                 $sortable[] = $prefix.$attribute->getName();
+            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
-            // todo: lets not allow ordering on subresources for now...
-//            elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
-//                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
-//            }
         }
 
         return $sortable;
+    }
+
+    /**
+     * Finds object entities on there external or internal id.
+     *
+     * @param string $identifier
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return ObjectEntity The found object entity
+     */
+    public function findByAnyId(string $identifier): ?ObjectEntity
+    {
+        $query = $this->createQueryBuilder('o')
+            ->leftJoin('o.synchronizations', 's')
+            ->where('s.sourceId = :identifier')
+            ->orWhere('o.externalId = :identifier')
+            ->setParameter('identifier', $identifier);
+
+        if (Uuid::isValid($identifier)) {
+            $query->orWhere('o.id = :identifier');
+        }
+
+        return $query->getQuery()->getOneOrNullResult();
     }
 }
