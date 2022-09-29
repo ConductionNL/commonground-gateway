@@ -129,7 +129,7 @@ class Entity
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="functionColumn")
      */
     private string $function = 'noFunction';
 
@@ -300,7 +300,7 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schemaColumn")
      */
     private ?string $schema = null;
 

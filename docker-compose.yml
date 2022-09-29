@@ -30,8 +30,9 @@ services:
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+#      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - DATABASE_URL=sqlsrv://api-platform:!ChangeMe!@db/api?TrustServerCertificate=1
       - APP_ENV=${APP_ENV}
       - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
@@ -157,16 +158,28 @@ services:
 #      - "3366:3306"
 
 #  Postgres db:
+#  db:
+#    image: postgres:10
+#    environment:
+#      - POSTGRES_DB=api
+#      - POSTGRES_USER=api-platform
+#      - POSTGRES_PASSWORD=!ChangeMe!
+#    volumes:
+#      - db-data:/var/lib/postgresql/data:rw
+#    ports:
+#      - "5432:5432"
+
   db:
-    image: postgres:10
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    command: /bin/bash ./entrypoint.sh
     environment:
-      - POSTGRES_DB=api
-      - POSTGRES_USER=api-platform
-      - POSTGRES_PASSWORD=!ChangeMe!
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=72ig42^ka~xMd[beCtvd
+      - MSSQL_PID=Express
     volumes:
-      - db-data:/var/lib/postgresql/data:rw
-    ports:
-      - "5432:5432"
+      - ./mssql/docker-entrypoint.sh:/entrypoint.sh
+      - ./mssql/db-init.sh:/db-init.sh
+      - ./mssql/db-init.sql:/db-init.sql
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest

@@ -137,7 +137,7 @@ class Attribute
      *
      * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="functionColumn")
      */
     private string $function = 'noFunction';
 
@@ -656,7 +656,7 @@ class Attribute
      * @var ?string The uri to a schema.org property
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schemaColumn")
      */
     private ?string $schema = null;
 
