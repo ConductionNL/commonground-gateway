@@ -23,7 +23,6 @@ use function Symfony\Component\Translation\t;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
-use GuzzleHttp\Client;
 
 class SynchronizationService
 {
@@ -382,7 +381,6 @@ class SynchronizationService
                 $callServiceConfig['method'] ?? 'GET'
             );
 
-
             if (is_array($response)) {
                 throw new Exception('Callservice error while doing fetchObjectsFromSource');
             }
@@ -569,9 +567,9 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @return Synchronization The updated synchronisation object
      *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
+     * @return Synchronization The updated synchronisation object
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {

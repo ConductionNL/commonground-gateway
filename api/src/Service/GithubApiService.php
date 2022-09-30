@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
@@ -116,7 +115,6 @@ class GithubApiService
         try {
             $response = $this->github->request('GET', 'repos/'.$slug);
         } catch (ClientException $exception) {
-
             return new Response(
                 $exception,
                 Response::HTTP_BAD_REQUEST,
@@ -235,12 +233,13 @@ class GithubApiService
     public function getPubliccode(string $url)
     {
         $parseUrl = parse_url($url);
-        $code = explode('/blob/',$parseUrl['path']);
+        $code = explode('/blob/', $parseUrl['path']);
 
         try {
             $response = $this->githubusercontent->request('GET', $code[0].'/'.$code[1]);
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
+
             return new Response(
                 $exception,
                 Response::HTTP_BAD_REQUEST,
