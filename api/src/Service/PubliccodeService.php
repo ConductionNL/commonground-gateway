@@ -9,8 +9,6 @@ use App\Exception\GatewayException;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use http\Client;
-use Symfony\Component\Yaml;
 
 class PubliccodeService
 {
@@ -22,15 +20,13 @@ class PubliccodeService
     private array $configuration;
     private array $data;
 
-
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService    $objectEntityService,
-        GithubApiService       $githubService,
-        GitlabApiService       $gitlabService
-    )
-    {
+        ObjectEntityService $objectEntityService,
+        GithubApiService $githubService,
+        GitlabApiService $gitlabService
+    ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
@@ -43,9 +39,9 @@ class PubliccodeService
     /**
      * @param string $publiccodeUrl
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function enrichRepositoryWithPubliccode(ObjectEntity $repository): array
     {
@@ -155,11 +151,12 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
+     *
+     * @return array dataset at the end of the handler
      */
     public function enrichPubliccodeHandler(array $data, array $configuration): array
     {
@@ -170,7 +167,6 @@ class PubliccodeService
 
         // If we want to do it for al repositories
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
-
             if ($repository instanceof ObjectEntity) {
                 $this->enrichRepositoryWithPubliccode($repository);
             }
@@ -191,8 +187,10 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $component
-     * @return ObjectEntity|null dataset at the end of the handler
+     *
      * @throws \Exception
+     *
+     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function rateComponent(ObjectEntity $component): ?ObjectEntity
     {
@@ -218,11 +216,13 @@ class PubliccodeService
     }
 
     /**
-     * Rates a component
+     * Rates a component.
      *
      * @param ObjectEntity $component
-     * @return ObjectEntity|null dataset at the end of the handler
+     *
      * @throws \Exception
+     *
+     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function ratingList(ObjectEntity $component): ?array
     {
@@ -231,7 +231,7 @@ class PubliccodeService
         $description = [];
 
         if ($component->getValue('name') !== null) {
-            $description[] = 'The name: ' . $component->getValue('name') . ' rated';
+            $description[] = 'The name: '.$component->getValue('name').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the name because it is not set';
@@ -239,17 +239,17 @@ class PubliccodeService
         $maxRating++;
 
         if ($repository = $component->getValue('url')) {
-        if ($repository->getValue('url') !== null) {
-            $description[] = 'The url: '.$repository->getValue('url') . ' rated';
-            $rating++;
-        } else {
-            $description[] = 'Cannot rate the url because it is not set';
-        }
-        $maxRating++;
+            if ($repository->getValue('url') !== null) {
+                $description[] = 'The url: '.$repository->getValue('url').' rated';
+                $rating++;
+            } else {
+                $description[] = 'Cannot rate the url because it is not set';
+            }
+            $maxRating++;
         }
 
         if ($component->getValue('landingURL') !== null) {
-            $description[] = 'The landingURL: ' . $component->getValue('landingURL') . ' rated';
+            $description[] = 'The landingURL: '.$component->getValue('landingURL').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the landingURL because it is not set';
@@ -257,7 +257,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('softwareVersion') !== null) {
-            $description[] = 'The softwareVersion: ' . $component->getValue('softwareVersion') . ' rated';
+            $description[] = 'The softwareVersion: '.$component->getValue('softwareVersion').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the softwareVersion because it is not set';
@@ -265,7 +265,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('releaseDate') !== null) {
-            $description[] = 'The releaseDate: ' . $component->getValue('releaseDate') . ' rated';
+            $description[] = 'The releaseDate: '.$component->getValue('releaseDate').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the releaseDate because it is not set';
@@ -273,7 +273,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('logo') !== null) {
-            $description[] = 'The logo: ' . $component->getValue('logo') . ' rated';
+            $description[] = 'The logo: '.$component->getValue('logo').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the logo because it is not set';
@@ -281,7 +281,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('roadmap') !== null) {
-            $description[] = 'The roadmap: ' . $component->getValue('roadmap') . ' rated';
+            $description[] = 'The roadmap: '.$component->getValue('roadmap').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the roadmap because it is not set';
@@ -289,7 +289,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('developmentStatus') !== null) {
-            $description[] = 'The developmentStatus: ' . $component->getValue('developmentStatus') . ' rated';
+            $description[] = 'The developmentStatus: '.$component->getValue('developmentStatus').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the developmentStatus because it is not set';
@@ -297,7 +297,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('softwareType') !== null) {
-            $description[] = 'The softwareType: ' . $component->getValue('softwareType') . ' rated';
+            $description[] = 'The softwareType: '.$component->getValue('softwareType').' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the softwareType because it is not set';
@@ -388,22 +388,22 @@ class PubliccodeService
 //            $maxRating++;
 //
 //            // @todo mainCopyrightOwner is an object
-////            if ($legalObject->getValue('mainCopyrightOwner') !== null) {
-////                $description[] = 'The mainCopyrightOwner: '.$legalObject->getValue('mainCopyrightOwner') . ' rated';
-////                $rating++;
-////            } else {
-////                $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
-////            }
-////            $maxRating++;
+        ////            if ($legalObject->getValue('mainCopyrightOwner') !== null) {
+        ////                $description[] = 'The mainCopyrightOwner: '.$legalObject->getValue('mainCopyrightOwner') . ' rated';
+        ////                $rating++;
+        ////            } else {
+        ////                $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
+        ////            }
+        ////            $maxRating++;
 //
 //            // @todo repoOwner is an object
-////            if ($legalObject->getValue('repoOwner') !== null) {
-////                $description[] = 'The repoOwner: '.$legalObject->getValue('repoOwner') . ' rated';
-////                $rating++;
-////            } else {
-////                $description[] = 'Cannot rate the repoOwner because it is not set';
-////            }
-////            $maxRating++;
+        ////            if ($legalObject->getValue('repoOwner') !== null) {
+        ////                $description[] = 'The repoOwner: '.$legalObject->getValue('repoOwner') . ' rated';
+        ////                $rating++;
+        ////            } else {
+        ////                $description[] = 'Cannot rate the repoOwner because it is not set';
+        ////            }
+        ////            $maxRating++;
 //
 //            if ($legalObject->getValue('authorsFile') !== null) {
 //                $description[] = 'The authorsFile: '.$legalObject->getValue('authorsFile') . ' rated';
@@ -441,9 +441,9 @@ class PubliccodeService
 //        }
 
         return [
-            'rating' => $rating,
+            'rating'    => $rating,
             'maxRating' => $maxRating,
-            'results' => $description
+            'results'   => $description,
         ];
     }
 
@@ -492,9 +492,9 @@ class PubliccodeService
     /**
      * @param ObjectEntity $repository
      *
-     * @return void dataset at the end of the handler
      * @throws \Psr\Cache\InvalidArgumentException
      *
+     * @return void dataset at the end of the handler
      */
     public function saveOrganisationToRepository(ObjectEntity $repository): void
     {
@@ -516,19 +516,18 @@ class PubliccodeService
             $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => $existingOrganisationId]);
         } catch (Exception $exception) {
             return false;
-
         }
         // There is already an organisation, so we don't need to do anything
         return true;
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws \Psr\Cache\InvalidArgumentException
      *
+     * @return array dataset at the end of the handler
      */
     public function publiccodeFindOrganisationsTroughRepositoriesHandler(array $data, array $configuration): array
     {
@@ -564,16 +563,16 @@ class PubliccodeService
     }
 
     /**
-     * @param Gateway $source
-     * @param Entity $entity
+     * @param Gateway      $source
+     * @param Entity       $entity
      * @param ObjectEntity $githubOrganisations
      *
-     * @return void dataset at the end of the handler
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
-     *
      * @throws GatewayException
+     *
+     * @return void dataset at the end of the handler
      */
     public function syncRepositoriesFromOrganisation(Gateway $source, Entity $entity, ObjectEntity $githubOrganisations): void
     {
@@ -589,12 +588,12 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws \GuzzleHttp\Exception\GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function publiccodeFindRepositoriesThroughOrganisationsHandler(array $data, array $configuration): array
     {
@@ -605,13 +604,13 @@ class PubliccodeService
         $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
         $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
-
 //        $githubRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['githubRepositoryActionId']);
 //        $gitlabRepositoryActionId = $this->entityManager->getRepository('App:Entity')->get($this->configuration['gitlabRepositoryActionId']);
 
         if (!empty($data)) { // it is one organisation
 
-            var_dump('handler 2 org id ' . $data['response']['id']);
+            var_dump('handler 2 org id '.$data['response']['id']);
+
             try {
                 $organisation = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
             } catch (Exception $exception) {
@@ -636,7 +635,7 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
@@ -672,7 +671,6 @@ class PubliccodeService
 
         // If we want to do it for al repositories
         foreach ($entity->getObjectEntities() as $repository) {
-
             $existingComponentId = $repository->getValueByAttribute($repository->getEntity()->getAttributeByName('component'))->getStringValue();
             if (!$existingComponent = $this->entityManager->getRepository('App:ObjectEntity')->find($existingComponentId)) {
                 $component = new ObjectEntity();
@@ -685,7 +683,7 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
@@ -725,6 +723,4 @@ class PubliccodeService
 //    public function parsePubliccodeToComponent(array $publicode, ObjectEntity $component): ObjectEntity
 //    {
 //    }
-
-
 }
