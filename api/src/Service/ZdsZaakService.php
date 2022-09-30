@@ -228,6 +228,36 @@ class ZdsZaakService
     }
 
     /**
+     * Updates all zaakInformatieObjecten with correct URLs before syncing them to ZGW
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration array from the action
+     *
+     * @throws Exception
+     *
+     * @return array The data from the call
+     */
+    public function zaakInformatieObjectHandler (array $data, array $configuration): array
+    {
+        $informatieObject = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+        if(!$informatieObject instanceof ObjectEntity){
+            return $data;
+        }
+        $zaakInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->findOneBy($configuration['zaakInformatieObjectEntityId']);
+        $zaakInformatieObjecten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $informatieObject->getId()]);
+        foreach($zaakInformatieObjecten as $zaakInformatieObject) {
+            if(!$zaakInformatieObject instanceof ObjectEntity || $zaakInformatieObject->getEntity() !== $zaakInformatieObjectEntity) {
+                continue;
+            }
+            $zaakInformatieObject->setValue('informatieobject', $informatieObject->getValue('url'));
+            $this->entityManager->persist($zaakInformatieObject);
+        }
+        $this->entityManager->flush();
+        return $data;
+
+    }
+
+    /**
      * This function converts a zds message to zgw.
      *
      * @param array $data          The data from the call
@@ -313,9 +343,9 @@ class ZdsZaakService
 
         // create zaakinformatieobject
         $zaakinformatieobject = new ObjectEntity($zaakInformatieObjectEntity);
-        $zaakinformatieobject->setValue('informatieobject', $document->getValue('url'));
+        $zaakinformatieobject->setValue('informatieobject', $document->getValue('id'));
         $zaakinformatieobject->setValue('zaak', $zdsZaakObjectEntity->getValue('zgwZaak'));
-        $zaakinformatieobject->setValue('aardRelatieWeergave', $zdsObject->getValue('titel'));
+        $zaakinformatieobject->setValue('aardRelatieWeergave', $document->getValue('titel'));
         $zaakinformatieobject->setValue('titel', $document->getValue('titel'));
         $zaakinformatieobject->setValue('beschrijving', $document->getValue('beschrijving'));
 //        $zaakinformatieobject->setValue('registratiedatum', $document->getValue(''));
