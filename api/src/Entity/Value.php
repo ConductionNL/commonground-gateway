@@ -227,8 +227,12 @@ class Value
         return $this->stringValue;
     }
 
-    public function setStringValue(?string $stringValue): self
+    public function setStringValue($stringValue): self
     {
+        //@todo this is a hack
+        if (is_array($stringValue)) {
+            $stringValue = implode(',', $stringValue);
+        }
         $this->stringValue = $stringValue;
 
         return $this;

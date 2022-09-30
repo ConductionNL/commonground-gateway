@@ -2,12 +2,14 @@
 
 namespace App\Service;
 
+use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Yaml\Yaml;
 
 class GithubApiService
 {
@@ -16,12 +18,14 @@ class GithubApiService
     private SynchronizationService $synchronizationService;
     private ObjectEntityService $objectEntityService;
     private ?Client $github;
+    private ?Client $githubusercontent;
 
     public function __construct(
         ParameterBagInterface $parameterBag
     ) {
         $this->parameterBag = $parameterBag;
         $this->github = $this->parameterBag->get('github_key') ? new Client(['base_uri' => 'https://api.github.com/', 'headers' => ['Authorization' => 'Bearer '.$this->parameterBag->get('github_key')]]) : null;
+        $this->githubusercontent = new Client(['base_uri' => 'https://raw.githubusercontent.com/']);
     }
 
     /**
@@ -217,6 +221,34 @@ class GithubApiService
         $response = json_decode($response->getBody()->getContents(), true);
 
         return $response['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($response) : null;
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $url
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null|Response
+     */
+    public function getPubliccode(string $url)
+    {
+        $parseUrl = parse_url($url);
+        $code = explode('/blob/',$parseUrl['path']);
+
+        try {
+            $response = $this->githubusercontent->request('GET', $code[0].'/'.$code[1]);
+        } catch (ClientException $exception) {
+            var_dump($exception->getMessage());
+            return new Response(
+                $exception,
+                Response::HTTP_BAD_REQUEST,
+                ['content-type' => 'json']
+            );
+        }
+
+        return Yaml::parse($response->getBody()->getContents());
     }
 
     /**

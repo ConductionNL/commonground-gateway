@@ -23,6 +23,7 @@ use function Symfony\Component\Translation\t;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
+use GuzzleHttp\Client;
 
 class SynchronizationService
 {
@@ -364,16 +365,23 @@ class SynchronizationService
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
+        if (is_array($callServiceConfig['query'])) {
+            $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
+        } else {
+            $query = $callServiceConfig['query'].'&page='.$page;
+        }
+
         try {
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
                 '',
-                array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
+                $query,
                 $callServiceConfig['headers'],
                 false,
                 $callServiceConfig['method'] ?? 'GET'
             );
+
 
             if (is_array($response)) {
                 throw new Exception('Callservice error while doing fetchObjectsFromSource');
