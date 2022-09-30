@@ -364,12 +364,18 @@ class SynchronizationService
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
+        if (is_array($callServiceConfig['query'])) {
+            $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
+        } else {
+            $query = $callServiceConfig['query'].'&page='.$page;
+        }
+
         try {
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
                 '',
-                array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
+                $query,
                 $callServiceConfig['headers'],
                 false,
                 $callServiceConfig['method'] ?? 'GET'
@@ -561,11 +567,11 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
 

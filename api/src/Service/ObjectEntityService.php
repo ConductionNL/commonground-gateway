@@ -1098,12 +1098,12 @@ class ObjectEntityService
                     if (Uuid::isValid($value) == false) {
                         // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                         // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                        if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
-                            $value = $this->commonGroundService->getUuidFromUrl($value);
-                        } else {
-//                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
-                            break;
-                        }
+//                        if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+//                            $value = $this->commonGroundService->getUuidFromUrl($value);
+//                        } else {
+////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+//                            break;
+//                        }
                     }
 
                     // Look for object in the gateway with this id (for ObjectEntity id and for ObjectEntity externalId)
