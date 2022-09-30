@@ -55,7 +55,6 @@ class PubliccodeService
         $publiccode = [];
         if ($publiccodeUrl = $repository->getValue('publiccode_url')) {
             $publiccode = $this->githubService->getPubliccode($publiccodeUrl);
-//            var_dump($publiccode);
         }
 
         if (!$repository->getValue('component')) {
@@ -92,11 +91,9 @@ class PubliccodeService
             $description->setValue('documentation', $publiccode['description']['en']['documentation'] ?? null);
             $description->setValue('apiDocumentation', $publiccode['description']['en']['apiDocumentation'] ?? null);
 
-//                var_dump($description->toArray());
             $component->setValue('description', $description);
             $this->entityManager->persist($description);
 
-//                var_dump($component->toArray());
             $this->entityManager->persist($component);
             $repository->setValue('component', $component);
             $repository->setValue('url', $publiccode['url'] ?? null);
@@ -118,9 +115,11 @@ class PubliccodeService
     {
         $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
 
+        if (!$repository->getValue('url')) {
+            return null;
+        }
         $source = $repository->getValue('source');
         $url = $repository->getValue('url');
-
 
         if ($source == null) {
             $domain = parse_url($url, PHP_URL_HOST);
@@ -132,8 +131,6 @@ class PubliccodeService
             case 'github':
                 // let's get the repository data
                 $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
-
-//                var_dump($github);
                 $existingOrganisations = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($organisationEntity, ['github' => $github['organisation']['github']]);
                 // let's see if we have an organisations // even uitzoeken
                 if (count($existingOrganisations) > 0 && $existingOrganisations[0] instanceof ObjectEntity) {
@@ -146,8 +143,6 @@ class PubliccodeService
                 $organisation->hydrate($github['organisation']);
                 $this->entityManager->persist($organisation);
                 $this->entityManager->flush();
-
-//                var_dump($organisation->toArray());
 
                 return $organisation;
             case 'gitlab':
@@ -164,6 +159,7 @@ class PubliccodeService
      * @param array $configuration configuration of the action
      *
      * @return array dataset at the end of the handler
+     * @throws GuzzleException
      */
     public function enrichPubliccodeHandler(array $data, array $configuration): array
     {
@@ -173,20 +169,14 @@ class PubliccodeService
         $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
 
         // If we want to do it for al repositories
-        $count = 0;
-//        var_dump(count($repositoryEntity->getObjectEntities()));
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
-//
-//            if ($repository instanceof ObjectEntity) {
-//                $this->enrichRepositoryWithPubliccode($repository);
-//            }
 
-//            if (!$repository->getValue('organisation')) {
-//                $this->enrichRepositoryWithOrganisation($repository);
-//            }
-            $count++;
-            if ($count > 10) {
-                break;
+            if ($repository instanceof ObjectEntity) {
+                $this->enrichRepositoryWithPubliccode($repository);
+            }
+
+            if (!$repository->getValue('organisation')) {
+                $this->enrichRepositoryWithOrganisation($repository);
             }
         }
 
@@ -200,13 +190,13 @@ class PubliccodeService
     }
 
     /**
-     * Rates a component
+     * @param ObjectEntity $component
+     * @return ObjectEntity|null dataset at the end of the handler
+     * @throws \Exception
      */
     public function rateComponent(ObjectEntity $component): ?ObjectEntity
     {
         $ratingEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['ratingEntityId']);
-
-        $componentArray = $component->toArray();
         $ratingComponent = $this->ratingList($component);
 
         if (!$component->getValue('rating')) {
@@ -224,14 +214,15 @@ class PubliccodeService
         $component->setValue('rating', $rating);
         $this->entityManager->persist($component);
 
-
-//        var_dump($rating->toArray());
-//        var_dump($component->toArray());
         return $component;
     }
 
     /**
      * Rates a component
+     *
+     * @param ObjectEntity $component
+     * @return ObjectEntity|null dataset at the end of the handler
+     * @throws \Exception
      */
     public function ratingList(ObjectEntity $component): ?array
     {
@@ -248,13 +239,13 @@ class PubliccodeService
         $maxRating++;
 
         if ($repository = $component->getValue('url')) {
-//        if ($repository->getValue('url') !== null) {
-//            $description[] = 'The url: '.$repository->getValue('url') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the url because it is not set';
-//        }
-//        $maxRating++;
+        if ($repository->getValue('url') !== null) {
+            $description[] = 'The url: '.$repository->getValue('url') . ' rated';
+            $rating++;
+        } else {
+            $description[] = 'Cannot rate the url because it is not set';
+        }
+        $maxRating++;
         }
 
         if ($component->getValue('landingURL') !== null) {
@@ -313,147 +304,141 @@ class PubliccodeService
         }
         $maxRating++;
 
-//        if (count($component->getValue('platforms')) > 0) {
-//            $description[] = 'The platforms are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the platforms because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if (count($component->getValue('categories')) > 0) {
-//            $description[] = 'The categories are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the categories because it is not set';
-//        }
-//        $maxRating++;
+        if (count($component->getValue('platforms')) > 0) {
+            $description[] = 'The platforms are rated';
+            $rating++;
+        } else {
+            $description[] = 'Cannot rate the platforms because it is not set';
+        }
+        $maxRating++;
 
-//        $descriptionObject = $component->getValue('description');
-//
-//        if ($descriptionObject->getValue('localisedName') !== null) {
-//            $description[] = 'The localisedName: '.$descriptionObject->getValue('localisedName') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the localisedName because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($descriptionObject->getValue('shortDescription') !== null) {
-//            $description[] = 'The shortDescription: '.$descriptionObject->getValue('shortDescription') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the shortDescription because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($descriptionObject->getValue('longDescription') !== null) {
-//            $description[] = 'The longDescription: '.$descriptionObject->getValue('longDescription') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the longDescription because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($descriptionObject->getValue('apiDocumentation') !== null) {
-//            $description[] = 'The apiDocumentation: '.$descriptionObject->getValue('apiDocumentation') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the apiDocumentation because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($descriptionObject->getValue('apiDocumentation') !== null) {
-//            $description[] = 'The apiDocumentation: '.$descriptionObject->getValue('apiDocumentation') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the apiDocumentation because it is not set';
-//        }
-//        $maxRating++;
+        if (count($component->getValue('categories')) > 0) {
+            $description[] = 'The categories are rated';
+            $rating++;
+        } else {
+            $description[] = 'Cannot rate the categories because it is not set';
+        }
+        $maxRating++;
 
-//        if (count($descriptionObject->getValue('features')) > 0) {
-//            $description[] = 'The features are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the features because it is not set';
-//        }
-//        $maxRating++;
+//        if ($descriptionObject = $component->getValue('description')) {
+//            if ($descriptionObject->getValue('localisedName') !== null) {
+//                $description[] = 'The localisedName: '.$descriptionObject->getValue('localisedName') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the localisedName because it is not set';
+//            }
+//            $maxRating++;
 //
-//        if (count($descriptionObject->getValue('screenshots')) > 0) {
-//            $description[] = 'The screenshots are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the screenshots because it is not set';
-//        }
-//        $maxRating++;
+//            if ($descriptionObject->getValue('shortDescription') !== null) {
+//                $description[] = 'The shortDescription: '.$descriptionObject->getValue('shortDescription') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the shortDescription because it is not set';
+//            }
+//            $maxRating++;
 //
-//        if (count($descriptionObject->getValue('videos')) > 0) {
-//            $description[] = 'The videos are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the videos because it is not set';
+//            if ($descriptionObject->getValue('longDescription') !== null) {
+//                $description[] = 'The longDescription: '.$descriptionObject->getValue('longDescription') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the longDescription because it is not set';
+//            }
+//            $maxRating++;
+//
+//            if ($descriptionObject->getValue('apiDocumentation') !== null) {
+//                $description[] = 'The apiDocumentation: '.$descriptionObject->getValue('apiDocumentation') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the apiDocumentation because it is not set';
+//            }
+//            $maxRating++;
+//
+//            if (count($descriptionObject->getValue('features')) > 0) {
+//                $description[] = 'The features are rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the features because it is not set';
+//            }
+//            $maxRating++;
+//
+//            if (count($descriptionObject->getValue('screenshots')) > 0) {
+//                $description[] = 'The screenshots are rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the screenshots because it is not set';
+//            }
+//            $maxRating++;
+//
+//            if (count($descriptionObject->getValue('videos')) > 0) {
+//                $description[] = 'The videos are rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the videos because it is not set';
+//            }
+//            $maxRating++;
 //        }
-//        $maxRating++;
 
-//        $legalObject = $component->getValue('legal');
+//        if ($legalObject = $component->getValue('legal')) {
+//            if ($legalObject->getValue('license') !== null) {
+//                $description[] = 'The license: '.$legalObject->getValue('license') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the license because it is not set';
+//            }
+//            $maxRating++;
 //
-//        if ($legalObject->getValue('license') !== null) {
-//            $description[] = 'The license: '.$legalObject->getValue('license') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the license because it is not set';
+//            // @todo mainCopyrightOwner is an object
+////            if ($legalObject->getValue('mainCopyrightOwner') !== null) {
+////                $description[] = 'The mainCopyrightOwner: '.$legalObject->getValue('mainCopyrightOwner') . ' rated';
+////                $rating++;
+////            } else {
+////                $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
+////            }
+////            $maxRating++;
+//
+//            // @todo repoOwner is an object
+////            if ($legalObject->getValue('repoOwner') !== null) {
+////                $description[] = 'The repoOwner: '.$legalObject->getValue('repoOwner') . ' rated';
+////                $rating++;
+////            } else {
+////                $description[] = 'Cannot rate the repoOwner because it is not set';
+////            }
+////            $maxRating++;
+//
+//            if ($legalObject->getValue('authorsFile') !== null) {
+//                $description[] = 'The authorsFile: '.$legalObject->getValue('authorsFile') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the authorsFile because it is not set';
+//            }
+//            $maxRating++;
 //        }
-//        $maxRating++;
-//
-//        if ($legalObject->getValue('mainCopyrightOwner') !== null) {
-//            $description[] = 'The mainCopyrightOwner: '.$legalObject->getValue('mainCopyrightOwner') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($legalObject->getValue('repoOwner') !== null) {
-//            $description[] = 'The repoOwner: '.$legalObject->getValue('repoOwner') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the repoOwner because it is not set';
-//        }
-//        $maxRating++;
-//
-//        if ($legalObject->getValue('authorsFile') !== null) {
-//            $description[] = 'The authorsFile: '.$legalObject->getValue('authorsFile') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the authorsFile because it is not set';
-//        }
-//        $maxRating++;
-//
-//        $maintenanceObject = $component->getValue('maintenance');
-//
-//        if ($maintenanceObject->getValue('type') !== null) {
-//            $description[] = 'The type: '.$maintenanceObject->getValue('type') . ' rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the type because it is not set';
-//        }
-//        $maxRating++;
 
-//        if (count($maintenanceObject->getValue('contractors')) > 0) {
-//            $description[] = 'The contractors are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the contractors because it is not set';
-//        }
-//        $maxRating++;
+//        if ($maintenanceObject = $component->getValue('maintenance')) {
+//            if ($maintenanceObject->getValue('type') !== null) {
+//                $description[] = 'The type: '.$maintenanceObject->getValue('type') . ' rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the type because it is not set';
+//            }
+//            $maxRating++;
 //
-//        if (count($maintenanceObject->getValue('contacts')) > 0) {
-//            $description[] = 'The contacts are rated';
-//            $rating++;
-//        } else {
-//            $description[] = 'Cannot rate the contacts because it is not set';
+//            if (count($maintenanceObject->getValue('contractors')) > 0) {
+//                $description[] = 'The contractors are rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the contractors because it is not set';
+//            }
+//            $maxRating++;
+//
+//            if (count($maintenanceObject->getValue('contacts')) > 0) {
+//                $description[] = 'The contacts are rated';
+//                $rating++;
+//            } else {
+//                $description[] = 'Cannot rate the contacts because it is not set';
+//            }
+//            $maxRating++;
 //        }
-//        $maxRating++;
 
         return [
             'rating' => $rating,
