@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Entity\Value;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
@@ -250,14 +251,20 @@ class ZdsZaakService
         // @todo remove the check for identification and zaaktype if the dataService is implemented
         // @todo get in the zds object the values of the properties casetype and identification and store this in the case
         $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
+        $zaakTypeEntity = $this->configuration['zaakTypeEntityId'];
         if (!$zaakTypeIdentificatie) {
             // @todo fix error
             throw new ErrorException('The identificatie is not found');
         }
 
         // Let get the zaaktype
-        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
-        if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
+        $zaaktypeObjects = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
+        foreach($zaaktypeObjects as $zaaktypeObject) {
+            if ($zaaktypeObject instanceof Value && $zaaktypeObject->getAttribute()->getEntity()->getId() == $zaakTypeEntity) {
+                $zaaktypeObjectEntity = $zaaktypeObject->getObjectEntity();
+            }
+        }
+        if (!isset($zaaktypeObjectEntity) || !$zaaktypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
