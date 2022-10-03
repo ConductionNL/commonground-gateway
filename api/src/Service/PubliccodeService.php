@@ -23,10 +23,11 @@ class PubliccodeService
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService $objectEntityService,
-        GithubApiService $githubService,
-        GitlabApiService $gitlabService
-    ) {
+        ObjectEntityService    $objectEntityService,
+        GithubApiService       $githubService,
+        GitlabApiService       $gitlabService
+    )
+    {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
@@ -39,11 +40,11 @@ class PubliccodeService
     /**
      * @param string $publiccodeUrl
      *
+     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
-     * @return array dataset at the end of the handler
      */
-    public function enrichRepositoryWithPubliccode(ObjectEntity $repository): array
+    public function enrichRepositoryWithPubliccode(ObjectEntity $repository): ?ObjectEntity
     {
         $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
         $descriptionEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['descriptionEntityId']);
@@ -63,15 +64,16 @@ class PubliccodeService
         if ($publiccode !== null) {
             $component->setValue('softwareVersion', $publiccode['publiccodeYmlVersion'] ?? null);
             $component->setValue('name', $publiccode['name'] ?? null);
-//                $publiccode['releaseDate'] !== 'TBA' && $component->setValue('releaseDate', $publiccode['releaseDate']);
             $component->setValue('softwareType', $publiccode['softwareType'] ?? null);
             $component->setValue('inputTypes', $publiccode['inputTypes'] ?? null);
             $component->setValue('outputTypes', $publiccode['outputTypes'] ?? null);
             $component->setValue('platforms', $publiccode['platforms'] ?? null);
             $component->setValue('categories', $publiccode['categories'] ?? null);
             $component->setValue('developmentStatus', $publiccode['developmentStatus'] ?? null);
-//                $component->setValue('dependsOn', $publiccode['dependsOn']['open']['name']);
-//                $component->setValue('dependsOn', $publiccode['dependsOn']['open']['versionMin']);
+
+//            $component->setValue('releaseDate', $publiccode['releaseDate']);
+//            $component->setValue('dependsOn', $publiccode['dependsOn']['open']['name']);
+//            $component->setValue('dependsOn', $publiccode['dependsOn']['open']['versionMin']);
 
             if (!$component->getValue('description')) {
                 $description = new ObjectEntity();
@@ -98,7 +100,7 @@ class PubliccodeService
 
         $this->entityManager->flush();
 
-        return $this->data;
+        return $repository;
     }
 
     /**
@@ -148,29 +150,25 @@ class PubliccodeService
             case 'github':
                 // let's get the repository data
                 $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
-
                 if ($github !== null) {
                     $repository = $this->setRepositoryWithGithubInfo($repository, $github);
 
-                    // let's see if we have an organisations // even uitzoeken
-                    $existingOrganisations = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $github['organisation']['github']])->getObjectEntity();
-                    if ($existingOrganisations instanceof ObjectEntity) {
-//                        $this->enrichRepositoryWithOrganisationRepos($existingOrganisations);
-                        return $existingOrganisations;
+                    if (!$this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $github['organisation']['github']])->getObjectEntity()) {
+                        $organisation = new ObjectEntity();
+                        $organisation->setEntity($organisationEntity);
+                    } else {
+                        $organisation = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $github['organisation']['github']])->getObjectEntity();
                     }
 
-                    $organisation = new ObjectEntity();
-                    $organisation->setEntity($organisationEntity);
                     $organisation->setValue('owns', $github['organisation']['owns']);
                     $organisation->hydrate($github['organisation']);
-
                     $repository->setValue('organisation', $organisation);
-
                     $this->entityManager->persist($organisation);
+                    $this->entityManager->persist($repository);
+
                     $this->entityManager->flush();
 
-//                    $this->enrichRepositoryWithOrganisationRepos($organisation);
-                    return $organisation;
+                    return $repository;
                 }
             case 'gitlab':
                 // hetelfde maar dan voor gitlab
@@ -210,15 +208,8 @@ class PubliccodeService
                     $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($repositoryUrl, PHP_URL_PATH), '/'));
 
                     if ($github !== null) {
-                        // let's see if we have an organisations // even uitzoeken
-                        $existingRepository = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $repositoryUrl])->getObjectEntity();
-                        if ($existingRepository instanceof ObjectEntity) {
-                            return $existingRepository;
-                        }
-
                         $repository = $this->setRepositoryWithGithubInfo($repository, $github);
                         $this->entityManager->flush();
-
                         return $repository;
                     }
                 case 'gitlab':
@@ -235,9 +226,9 @@ class PubliccodeService
      * @param array $data data set at the start of the handler
      * @param array $configuration configuration of the action
      *
+     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
-     * @return array dataset at the end of the handler
      */
     public function enrichPubliccodeHandler(array $data, array $configuration): array
     {
@@ -245,19 +236,19 @@ class PubliccodeService
         $this->data = $data;
 
         $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
-
         // If we want to do it for al repositories
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
-            if ($repository instanceof ObjectEntity) {
-                $this->enrichRepositoryWithPubliccode($repository);
-            }
+            $repository = $this->enrichRepositoryWithPubliccode($repository);
+            $repository = $this->enrichRepositoryWithOrganisation($repository);
 
-            if (!$repository->getValue('organisation')) {
-                $this->enrichRepositoryWithOrganisation($repository);
+            if ($repository === null) {
+                continue;
             }
 
             if ($organisation = $repository->getValue('organisation')) {
-                $this->enrichRepositoryWithOrganisationRepos($organisation);
+                if ($organisation instanceof ObjectEntity) {
+                    $this->enrichRepositoryWithOrganisationRepos($organisation);
+                }
             }
         }
 
@@ -273,9 +264,9 @@ class PubliccodeService
     /**
      * @param ObjectEntity $component
      *
+     * @return ObjectEntity|null dataset at the end of the handler
      * @throws \Exception
      *
-     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function rateComponent(ObjectEntity $component): ?ObjectEntity
     {
@@ -305,9 +296,9 @@ class PubliccodeService
      *
      * @param ObjectEntity $component
      *
+     * @return ObjectEntity|null dataset at the end of the handler
      * @throws \Exception
      *
-     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function ratingList(ObjectEntity $component): ?array
     {
@@ -316,7 +307,7 @@ class PubliccodeService
         $description = [];
 
         if ($component->getValue('name') !== null) {
-            $description[] = 'The name: '.$component->getValue('name').' rated';
+            $description[] = 'The name: ' . $component->getValue('name') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the name because it is not set';
@@ -334,7 +325,7 @@ class PubliccodeService
         }
 
         if ($component->getValue('landingURL') !== null) {
-            $description[] = 'The landingURL: '.$component->getValue('landingURL').' rated';
+            $description[] = 'The landingURL: ' . $component->getValue('landingURL') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the landingURL because it is not set';
@@ -342,7 +333,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('softwareVersion') !== null) {
-            $description[] = 'The softwareVersion: '.$component->getValue('softwareVersion').' rated';
+            $description[] = 'The softwareVersion: ' . $component->getValue('softwareVersion') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the softwareVersion because it is not set';
@@ -350,7 +341,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('releaseDate') !== null) {
-            $description[] = 'The releaseDate: '.$component->getValue('releaseDate').' rated';
+            $description[] = 'The releaseDate: ' . $component->getValue('releaseDate') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the releaseDate because it is not set';
@@ -358,7 +349,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('logo') !== null) {
-            $description[] = 'The logo: '.$component->getValue('logo').' rated';
+            $description[] = 'The logo: ' . $component->getValue('logo') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the logo because it is not set';
@@ -366,7 +357,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('roadmap') !== null) {
-            $description[] = 'The roadmap: '.$component->getValue('roadmap').' rated';
+            $description[] = 'The roadmap: ' . $component->getValue('roadmap') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the roadmap because it is not set';
@@ -374,7 +365,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('developmentStatus') !== null) {
-            $description[] = 'The developmentStatus: '.$component->getValue('developmentStatus').' rated';
+            $description[] = 'The developmentStatus: ' . $component->getValue('developmentStatus') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the developmentStatus because it is not set';
@@ -382,7 +373,7 @@ class PubliccodeService
         $maxRating++;
 
         if ($component->getValue('softwareType') !== null) {
-            $description[] = 'The softwareType: '.$component->getValue('softwareType').' rated';
+            $description[] = 'The softwareType: ' . $component->getValue('softwareType') . ' rated';
             $rating++;
         } else {
             $description[] = 'Cannot rate the softwareType because it is not set';
@@ -539,5 +530,7 @@ class PubliccodeService
             'maxRating' => $maxRating,
             'results' => $description
         ];
+
+
     }
 }
