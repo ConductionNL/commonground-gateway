@@ -91,6 +91,8 @@ class PubliccodeService
             $repository->setValue('component', $component);
             $repository->setValue('url', $publiccode['url'] ?? null);
             $this->entityManager->persist($repository);
+            $this->entityManager->flush();
+
         }
 
         return $repository;
@@ -114,8 +116,6 @@ class PubliccodeService
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
             $this->enrichRepositoryWithPubliccode($repository);
         }
-
-        $this->entityManager->flush();
 
         return $this->data;
     }
@@ -182,6 +182,7 @@ class PubliccodeService
                     $repository->setValue('organisation', $organisation);
                     $this->entityManager->persist($organisation);
                     $this->entityManager->persist($repository);
+                    $this->entityManager->flush();
 
                     return $repository;
                 }
@@ -212,7 +213,6 @@ class PubliccodeService
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
             $this->enrichRepositoryWithOrganisation($repository);
         }
-        $this->entityManager->flush();
 
         return $this->data;
     }
@@ -241,7 +241,10 @@ class PubliccodeService
                 $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($repositoryUrl, PHP_URL_PATH), '/'));
 
                 if ($github !== null) {
-                    return $this->setRepositoryWithGithubInfo($repository, $github);
+                    $repository = $this->setRepositoryWithGithubInfo($repository, $github);
+                    $this->entityManager->flush();
+
+                    return $repository;
                 }
             case 'gitlab':
                 // hetelfde maar dan voor gitlab
@@ -306,8 +309,6 @@ class PubliccodeService
             }
         }
 
-        $this->entityManager->flush();
-
         return $this->data;
     }
 
@@ -370,7 +371,6 @@ class PubliccodeService
         foreach ($componentEntity->getObjectEntities() as $component) {
             $this->rateComponent($component);
         }
-        $this->entityManager->flush();
 
         return $this->data;
     }
@@ -401,6 +401,7 @@ class PubliccodeService
 
         $component->setValue('rating', $rating);
         $this->entityManager->persist($component);
+        $this->entityManager->flush();
 
         return $component;
     }
