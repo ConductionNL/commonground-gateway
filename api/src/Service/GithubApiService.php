@@ -202,7 +202,7 @@ class GithubApiService
         }
 
         try {
-            $response = $this->github->request('GET', 'repos/'.$organizationName . '/.github');
+            $response = $this->github->request('GET', 'repos/'.$organizationName.'/.github');
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
 
@@ -234,7 +234,6 @@ class GithubApiService
 
             return null;
         }
-
 
         return Yaml::parse($response->getBody()->getContents());
     }
