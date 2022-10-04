@@ -115,11 +115,9 @@ class GithubApiService
         try {
             $response = $this->github->request('GET', 'repos/'.$slug);
         } catch (ClientException $exception) {
-            return new Response(
-                $exception,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
+            var_dump($exception->getMessage());
+
+            return null;
         }
 
         $response = json_decode($response->getBody()->getContents(), true);
