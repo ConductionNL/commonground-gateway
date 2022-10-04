@@ -191,6 +191,7 @@ class FunctionService
             if (!$objectEntity->getSubresourceOf()->isEmpty()) {
                 $this->removeResultFromCache[] = $objectEntity->getId()->toString();
                 $this->removeParentResultsFromCache($objectEntity, $io);
+                $this->removeChildResultsFromCache($objectEntity, $io);
             }
 
             return $this->cache->invalidateTags(['object_'.base64_encode($objectEntity->getId()->toString())]) && $this->cache->commit();
@@ -219,6 +220,29 @@ class FunctionService
             $this->removeResultFromCache($parentObject, $io);
             if ($io !== null) {
                 $io->text("Successfully removed parent Object (parent of Object: {$objectEntity->getId()->toString()}) with id: {$parentObject->getId()->toString()} (of Entity type: {$parentObject->getEntity()->getName()}) from cache");
+            }
+        }
+    }
+
+    /**
+     * Removes all responses saved for the child objects of the given ObjectEntity from the cache. Followup function of removeResultFromCache().
+     * And will also loop back to removeResultFromCache() function if needed.
+     * Always use $this->functionService->removeResultFromCache = []; before using removeResultFromCache() function to reset the list of objects that already got removed from cache.
+     * If removeResultFromCache() function is called multiple times in a row it might be better to do this before a loop or starting a recursive function.
+     *
+     * @param ObjectEntity      $objectEntity The ObjectEntity to remove saved results of child objects for from the cache.
+     * @param SymfonyStyle|null $io           If SymfonyStyle $io is given, will also send a text message for each removed parent object to $io.
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return void
+     */
+    private function removeChildResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
+    {
+        foreach ($objectEntity->getAllSubresources(null) as $childObject) {
+            $this->removeResultFromCache($childObject, $io);
+            if ($io !== null) {
+                $io->text("Successfully removed child Object (child of Object: {$objectEntity->getId()->toString()}) with id: {$childObject->getId()->toString()} (of Entity type: {$childObject->getEntity()->getName()}) from cache");
             }
         }
     }
