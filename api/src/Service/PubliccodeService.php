@@ -92,16 +92,17 @@ class PubliccodeService
             $repository->setValue('url', $publiccode['url'] ?? null);
             $this->entityManager->persist($repository);
         }
+
         return $repository;
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function enrichPubliccodeHandler(array $data, array $configuration): array
     {
@@ -194,12 +195,12 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function enrichRepositoryWithOrganizationHandler(array $data, array $configuration): array
     {
@@ -218,9 +219,11 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $organisation
-     * @param Entity $repositoryEntity
-     * @return ObjectEntity|null
+     * @param Entity       $repositoryEntity
+     *
      * @throws GuzzleException
+     *
+     * @return ObjectEntity|null
      */
     public function getOrganisationRepos(string $repositoryUrl, Entity $repositoryEntity): ?ObjectEntity
     {
@@ -251,9 +254,11 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $organisation
-     * @param Entity $repositoryEntity
-     * @return ObjectEntity|null
+     * @param Entity       $repositoryEntity
+     *
      * @throws GuzzleException
+     *
+     * @return ObjectEntity|null
      */
     public function enrichRepositoryWithOrganisationRepos(ObjectEntity $organisation, Entity $repositoryEntity): ?ObjectEntity
     {
@@ -274,7 +279,6 @@ class PubliccodeService
                 $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
             }
         }
-
 
         return $organisation;
     }
@@ -307,13 +311,13 @@ class PubliccodeService
         return $this->data;
     }
 
-        /**
-     * @param array $data data set at the start of the handler
+    /**
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function enrichOrganizationWithCatalogi(array $data, array $configuration): array
     {
@@ -323,11 +327,9 @@ class PubliccodeService
         $organizationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
         // If we want to do it for al repositories
         foreach ($organizationEntity->getObjectEntities() as $organization) {
-
             if ($organization->getValue('github')) {
                 // get org name and search if the org has an .github repository
                 if ($this->githubService->getGithubRepoFromOrganization($organization->getValue('name'))) {
-
                     if ($catalogi = $this->githubService->getOpenCatalogiFromGithubRepo($organization->getValue('name'))) {
                         $organization->setValue('name', $catalogi['name']);
                         $organization->setValue('description', $catalogi['description']);
@@ -344,7 +346,6 @@ class PubliccodeService
                     }
                 }
             }
-
         }
 
         $this->entityManager->flush();
@@ -353,12 +354,12 @@ class PubliccodeService
     }
 
     /**
-     * @param array $data data set at the start of the handler
+     * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException
      *
+     * @return array dataset at the end of the handler
      */
     public function enrichComponentWithRating(array $data, array $configuration): array
     {
@@ -590,7 +591,7 @@ class PubliccodeService
 
             if ($mainCopyrightOwnerObject = $legalObject->getValue('mainCopyrightOwner')) {
                 if ($mainCopyrightOwnerObject->getValue('mainCopyrightOwner') !== null) {
-                    $description[] = 'The mainCopyrightOwner: ' . $mainCopyrightOwnerObject->getValue('name') . ' rated';
+                    $description[] = 'The mainCopyrightOwner: '.$mainCopyrightOwnerObject->getValue('name').' rated';
                     $rating++;
                 } else {
                     $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
