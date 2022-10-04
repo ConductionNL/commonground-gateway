@@ -217,8 +217,7 @@ class FunctionService
     {
         foreach ($objectEntity->getSubresourceOf() as $parentValue) {
             $parentObject = $parentValue->getObjectEntity();
-            $this->removeResultFromCache($parentObject, $io);
-            if ($io !== null) {
+            if (!$this->removeResultFromCache($parentObject, $io) && $io !== null) {
                 $io->text("Successfully removed parent Object (parent of Object: {$objectEntity->getId()->toString()}) with id: {$parentObject->getId()->toString()} (of Entity type: {$parentObject->getEntity()->getName()}) from cache");
             }
         }
@@ -240,8 +239,7 @@ class FunctionService
     private function removeChildResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
     {
         foreach ($objectEntity->getAllSubresources(null) as $childObject) {
-            $this->removeResultFromCache($childObject, $io);
-            if ($io !== null) {
+            if (!$this->removeResultFromCache($childObject, $io) && $io !== null) {
                 $io->text("Successfully removed child Object (child of Object: {$objectEntity->getId()->toString()}) with id: {$childObject->getId()->toString()} (of Entity type: {$childObject->getEntity()->getName()}) from cache");
             }
         }
