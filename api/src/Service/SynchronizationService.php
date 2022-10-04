@@ -623,8 +623,6 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             //@TODO: Write errors to logs
-
-//            var_dump($validationErrors);
             foreach ($validationErrors as $error) {
                 if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
