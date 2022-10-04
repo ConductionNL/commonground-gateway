@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
@@ -229,7 +228,7 @@ class ZdsZaakService
     }
 
     /**
-     * Updates all zaakInformatieObjecten with correct URLs before syncing them to ZGW
+     * Updates all zaakInformatieObjecten with correct URLs before syncing them to ZGW.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
@@ -238,25 +237,25 @@ class ZdsZaakService
      *
      * @return array The data from the call
      */
-    public function zaakInformatieObjectHandler (array $data, array $configuration): array
+    public function zaakInformatieObjectHandler(array $data, array $configuration): array
     {
         $informatieObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id'])->getValue('zgwDocument');
-        if(!$informatieObject instanceof ObjectEntity){
+        if (!$informatieObject instanceof ObjectEntity) {
             return $data;
         }
 
         $zaakInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $configuration['zaakInformatieObjectEntityId']]);
         $zaakInformatieObjecten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $informatieObject->getId()->toString()]);
-        foreach($zaakInformatieObjecten as $zaakInformatieObject) {
-            if(!$zaakInformatieObject instanceof ObjectEntity || $zaakInformatieObject->getEntity() !== $zaakInformatieObjectEntity) {
+        foreach ($zaakInformatieObjecten as $zaakInformatieObject) {
+            if (!$zaakInformatieObject instanceof ObjectEntity || $zaakInformatieObject->getEntity() !== $zaakInformatieObjectEntity) {
                 continue;
             }
             $zaakInformatieObject->setValue('informatieobject', $informatieObject->getValue('url'));
             $this->entityManager->persist($zaakInformatieObject);
         }
         $this->entityManager->flush();
-        return $data;
 
+        return $data;
     }
 
     /**
@@ -291,7 +290,7 @@ class ZdsZaakService
 
         // Let get the zaaktype
         $zaaktypeObjects = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
-        foreach($zaaktypeObjects as $zaaktypeObject) {
+        foreach ($zaaktypeObjects as $zaaktypeObject) {
             if ($zaaktypeObject instanceof Value && $zaaktypeObject->getAttribute()->getEntity()->getId() == $zaakTypeEntity) {
                 $zaaktypeObjectEntity = $zaaktypeObject->getObjectEntity();
             }
@@ -353,7 +352,7 @@ class ZdsZaakService
 //        $zaakinformatieobject->setValue('registratiedatum', $document->getValue(''));
         $zaakinformatieobject = $this->synchronizationService->setApplicationAndOrganization($zaakinformatieobject);
 
-        var_Dump('Hello darkness my old friend', $zaakinformatieobject->toArray());
+        var_dump('Hello darkness my old friend', $zaakinformatieobject->toArray());
         $this->entityManager->persist($zaakinformatieobject);
     }
 
