@@ -264,7 +264,7 @@ class ZdsZaakService
 
         $zdsObject = $zds->getValue('object');
         $zdsStuurgegevens = $zds->getValue('stuurgegevens');
-        $zds->setExternalId($zdsStuurgegevens->getValue('referentienummer'));
+        $zds->setExternalId($zdsObject->getValue('identificatie'));
 
         // Lets start by setting up the case
         $zaak = new ObjectEntity($zaakEntity);

@@ -116,6 +116,7 @@ class GithubApiService
             $response = $this->github->request('GET', 'repos/'.$slug);
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
+
             return null;
         }
 

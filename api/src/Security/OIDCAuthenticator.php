@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,12 +24,14 @@ class OIDCAuthenticator extends AbstractAuthenticator
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
+    private ParameterBagInterface $parameterBag;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager)
+    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager, ParameterBagInterface $parameterBag)
     {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->entityManager = $entityManager;
+        $this->parameterBag = $parameterBag;
     }
 
     public function supports(Request $request): ?bool
@@ -107,7 +110,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return new RedirectResponse($this->session->get('backUrl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        return new RedirectResponse($this->session->get('backUrl', $this->parameterBag->get('defaultBackUrl')) ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
