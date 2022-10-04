@@ -92,7 +92,6 @@ class PubliccodeService
             $repository->setValue('url', $publiccode['url'] ?? null);
             $this->entityManager->persist($repository);
             $this->entityManager->flush();
-
         }
 
         return $repository;
