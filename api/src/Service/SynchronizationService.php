@@ -254,8 +254,11 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Gateway     $gateway The source to call
-     * @param string|null $id      The id to request (optional)
+     * @param Gateway     $gateway     The source to call
+     * @param string|null $id          The id to request (optional)
+     * @param array|null  $objectArray
+     *
+     * @throws LoaderError|SyntaxError
      *
      * @return array The configuration for the source to call
      */
@@ -264,9 +267,27 @@ class SynchronizationService
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway, $id, $objectArray),
-            'query'     => $this->getQueryForCallService($id),
-            'headers'   => $gateway->getHeaders(),
+            'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
+            'headers'   => $this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders(), //todo maybe array_merge instead of ??
+            'method'    => $this->getCallServiceOverwrite('method'),
         ];
+    }
+
+    /**
+     * This function checks if a specific key exists in $this->configuration['callService'] and returns it's value if it does.
+     * If we want to overwrite how we do a callService call to a source, use $this->configuration['callService'].
+     *
+     * @param string $key
+     *
+     * @return mixed|null
+     */
+    private function getCallServiceOverwrite(string $key)
+    {
+        if (array_key_exists('callService', $this->configuration) && array_key_exists($key, $this->configuration['callService'])) {
+            return $this->configuration['callService'][$key];
+        }
+
+        return null;
     }
 
     /**
@@ -343,25 +364,31 @@ class SynchronizationService
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
+        if (is_array($callServiceConfig['query'])) {
+            $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
+        } else {
+            $query = $callServiceConfig['query'].'&page='.$page;
+        }
+
         try {
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
                 '',
-                array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
+                $query,
                 $callServiceConfig['headers'],
                 false,
-                'GET'
+                $callServiceConfig['method'] ?? 'GET'
             );
 
             if (is_array($response)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
+                throw new Exception('Callservice error while doing fetchObjectsFromSource');
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
             return [];
             //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
+//            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [
 //                'data' => [
 //                    'message'           => $exception->getMessage(),
 //                    'code'              => $exception->getCode(),
@@ -406,7 +433,7 @@ class SynchronizationService
                 $callServiceConfig['query'],
                 $callServiceConfig['headers'],
                 false,
-                'GET'
+                $callServiceConfig['method'] ?? 'GET'
             );
 
             if (is_array($response)) {
@@ -540,11 +567,11 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
 
@@ -722,6 +749,14 @@ class SynchronizationService
      */
     private function mapOutput(array $objectArray): array
     {
+        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
+        }
+
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = array_filter($objectArray, function ($propertyName) {
@@ -735,16 +770,9 @@ class SynchronizationService
         }
 
         // todo: replace key name with notAllowedPropertiesOut because they have the same purpose
+        // NOTE: this must be done after dotHydrator! ^ So that we can first do correct mapping.
         if (array_key_exists('unavailablePropertiesOut', $this->configuration['apiSource'])) {
             $objectArray = $this->clearUnavailableProperties($objectArray);
-        }
-
-        if (array_key_exists('mappingOut', $this->configuration['apiSource']) && array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
-        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
         }
 
         if (array_key_exists('translationsOut', $this->configuration['apiSource'])) {
@@ -767,6 +795,8 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
      * @param array           $body            The body of the call to synchronise to a source
+     *
+     * @throws CacheException|InvalidArgumentException
      *
      * @return Synchronization The updated synchronization object
      */
@@ -798,7 +828,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
      * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
      *
-     * @throws CacheException|InvalidArgumentException
+     * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError
      *
      * @return Synchronization The updated synchronisation object
      */
@@ -820,16 +850,16 @@ class SynchronizationService
                 $callServiceConfig['query'],
                 $callServiceConfig['headers'],
                 false,
-                $existsInSource ? 'PUT' : 'POST'
+                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
             );
 
             if (is_array($result)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
+                throw new Exception('Callservice error while doing syncToSource');
             }
         } catch (Exception $exception) {
             return $synchronization;
             //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
+//            throw new GatewayException('Callservice error while doing syncToSource', null, null, [
 //                'data' => [
 //                    'message'           => $exception->getMessage(),
 //                    'code'              => $exception->getCode(),
@@ -845,24 +875,22 @@ class SynchronizationService
     }
 
     /**
-     * Synchronises data from an external source to the internal database of the gateway.
+     * Maps input according to configuration.
      *
-     * @param Synchronization $synchronization The synchronisation object to update
-     * @param array           $sourceObject    The external object to synchronise from
+     * @param array $sourceObject The external object to synchronise from, the data to map
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
-     * @throws Exception
-     *
-     * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     * @return array The mapped data
      */
-    private function syncToGateway(Synchronization $synchronization, array $sourceObject): Synchronization
+    private function mapInput(array $sourceObject): array
     {
-        $object = $synchronization->getObject();
+        if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator($sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
+        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $sourceObject);
+        }
 
-        // todo: see ConvertToGatewayService->convertToGatewayObject() for example code
-        // todo: turn all or some of the following todo's and there code into functions?
-
-        // todo: move to function, maybe copy: clearUnavailableProperties()
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
         if (array_key_exists('allowedPropertiesIn', $this->configuration['apiSource'])) {
             $sourceObject = array_filter($sourceObject, function ($propertyName) {
@@ -882,6 +910,26 @@ class SynchronizationService
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translate($sourceObject);
         }
+
+        return $sourceObject;
+    }
+
+    /**
+     * Synchronises data from an external source to the internal database of the gateway.
+     *
+     * @param Synchronization $synchronization The synchronisation object to update
+     * @param array           $sourceObject    The external object to synchronise from
+     *
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @throws Exception
+     *
+     * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     */
+    private function syncToGateway(Synchronization $synchronization, array $sourceObject): Synchronization
+    {
+        $object = $synchronization->getObject();
+
+        $sourceObject = $this->mapInput($sourceObject);
 
         $sourceObjectDot = new Dot($sourceObject);
 

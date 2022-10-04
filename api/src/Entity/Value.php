@@ -154,7 +154,7 @@ class Value
 
     /**
      * @Groups({"write"})
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EAGER", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY", cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
@@ -162,7 +162,7 @@ class Value
 
     /**
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EAGER", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
 
@@ -227,8 +227,12 @@ class Value
         return $this->stringValue;
     }
 
-    public function setStringValue(?string $stringValue): self
+    public function setStringValue($stringValue): self
     {
+        //@todo this is a hack
+        if (is_array($stringValue)) {
+            $stringValue = implode(',', $stringValue);
+        }
         $this->stringValue = $stringValue;
 
         return $this;
@@ -297,6 +301,10 @@ class Value
 
     public function getArrayValue(): ?array
     {
+        if (!$this->arrayValue) {
+            return [];
+        }
+
         return $this->arrayValue;
     }
 
