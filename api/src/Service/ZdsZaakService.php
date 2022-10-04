@@ -352,7 +352,6 @@ class ZdsZaakService
 //        $zaakinformatieobject->setValue('registratiedatum', $document->getValue(''));
         $zaakinformatieobject = $this->synchronizationService->setApplicationAndOrganization($zaakinformatieobject);
 
-        var_dump('Hello darkness my old friend', $zaakinformatieobject->toArray());
         $this->entityManager->persist($zaakinformatieobject);
     }
 
