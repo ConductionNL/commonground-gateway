@@ -38,8 +38,10 @@ class PubliccodeService
 
     /**
      * @param Request $request
-     * @return Response dataset at the end of the handler
+     *
      * @throws Exception
+     *
+     * @return Response dataset at the end of the handler
      */
     public function updateRepositoryWithEventResponse(Request $request): Response
     {
