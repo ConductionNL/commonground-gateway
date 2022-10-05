@@ -39,6 +39,7 @@ class TranslationService
 
     private function isAssociative(array $array)
     {
+        var_dump($array);
         if ([] === $array) {
             return false;
         }
@@ -64,15 +65,18 @@ class TranslationService
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
         foreach ($mapping as $replace => $search) {
-            if (strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
-                foreach ($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
-                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
+            while (strpos($search, '.$') !== false){
+                if (is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
+                    foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
+                        $mapping[preg_replace('/\.\$/', '.' . $key, $replace, 1)] = $search = preg_replace('/\.\$/', '.' . $key, $search, 1);
+                    }
+                    unset($mapping[$replace]);
+                } else {
+                    $mapping[preg_replace('/\.\$/', '', $replace, 1)] = $search = preg_replace('/\.\$/', '', $search, 1);
+                    unset($mapping[$replace]);
                 }
-                unset($mapping[$replace]);
-            } elseif (strpos($search, '$') !== false) {
-                $mapping[str_replace('.$.', '.', $replace)] = str_replace('.$.', '.', $search);
-                unset($mapping[$replace]);
             }
+            var_dump($search);
         }
 
         // Lets use the mapping to hydrate the array

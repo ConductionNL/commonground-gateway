@@ -19,6 +19,7 @@ use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use function Symfony\Component\Translation\t;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -624,7 +625,6 @@ class SynchronizationService
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             //@TODO: Write errors to logs
 
-//            var_dump($validationErrors);
             foreach ($validationErrors as $error) {
                 if (!is_array($error) && strpos($error, 'must be present') !== false) {
                     return $objectEntity;
@@ -822,6 +822,22 @@ class SynchronizationService
         return $synchronization;
     }
 
+    public function getObjectString(array $objectArray = []): string
+    {
+        if(!$objectArray)
+            return '';
+        $mediaType = $this->configuration['apiSource']['location']['contentType'] ?? 'application/json';
+        switch($mediaType){
+            case 'text/xml':
+            case 'application/xml':
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
+                return $xmlEncoder->encode($objectArray, 'xml');
+            case 'application/json':
+            default:
+                return json_encode($objectArray);
+        }
+    }
+
     /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
@@ -842,11 +858,13 @@ class SynchronizationService
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
+        $objectString = $this->getObjectString($objectArray);
+
         try {
             $result = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-                json_encode($objectArray),
+                $objectString,
                 $callServiceConfig['query'],
                 $callServiceConfig['headers'],
                 false,
