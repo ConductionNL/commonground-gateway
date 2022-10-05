@@ -248,7 +248,7 @@ class ConvenienceController extends AbstractController
     /**
      * This function gets the event from github if something has changed in a repository.
      *
-     * @Route("/admin/github_events")
+     * @Route("/github_events")
      *
      * @throws Exception|GuzzleException
      */
