@@ -453,6 +453,7 @@ class PubliccodeService
      */
     public function rateComponent(ObjectEntity $component, Entity $ratingEntity): ?ObjectEntity
     {
+        ini_set('max_execution_time', '1000');
         $ratingComponent = $this->ratingList($component);
 
         if (!$component->getValue('rating')) {
@@ -466,6 +467,7 @@ class PubliccodeService
         $rating->setValue('maxRating', $ratingComponent['maxRating']);
         $rating->setValue('results', $ratingComponent['results']);
         $this->entityManager->persist($rating);
+        $this->entityManager->flush();
 
         $component->setValue('rating', $rating);
         $this->entityManager->persist($component);
