@@ -253,9 +253,11 @@ class ConvenienceController extends AbstractController
      *
      * @throws Exception|GuzzleException
      */
-    public function githubEvents(Request $request): Response
+    public function githubEvents(): Response
     {
-        return $this->publiccodeService->updateRepositoryWithEventResponse($request);
+        $content = $this->handlerService->getDataFromRequest();
+
+        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
     }
 
     /**

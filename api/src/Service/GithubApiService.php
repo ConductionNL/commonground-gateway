@@ -12,10 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class GithubApiService
 {
-    private EntityManagerInterface $entityManager;
     private ParameterBagInterface $parameterBag;
-    private SynchronizationService $synchronizationService;
-    private ObjectEntityService $objectEntityService;
     private ?Client $github;
     private ?Client $githubusercontent;
 
@@ -233,6 +230,36 @@ class GithubApiService
             var_dump($exception->getMessage());
 
             return null;
+        }
+
+        return Yaml::parse($response->getBody()->getContents());
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $organizationName
+     * @param string $repositoryName
+     * @return array|null
+     * @throws GuzzleException
+     */
+    public function getPubliccodeForGithubEvent(string $organizationName, string $repositoryName): ?array
+    {
+        $response = null;
+        try {
+            $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yaml');
+        } catch (ClientException $exception) {
+            var_dump($exception->getMessage());
+        }
+
+        if ($response == null) {
+            try {
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yaml');
+            } catch (ClientException $exception) {
+                var_dump($exception->getMessage());
+
+                return null;
+            }
         }
 
         return Yaml::parse($response->getBody()->getContents());
