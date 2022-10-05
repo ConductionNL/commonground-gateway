@@ -272,13 +272,13 @@ class HandlerService
             // Update current Log
             $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
-            $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data]);
+            $event = new ActionEvent('commongateway.response.pre', ['request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
             $data = $event->getData()['response'];
 
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
         }
-
+        
         // Update current Log
         $this->logService->saveLog($this->request, null, 3, json_encode($data));
 
