@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\CollectionEntity;
 use App\Exception\GatewayException;
-use App\Service\GithubApiService;
 use App\Service\HandlerService;
 use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
@@ -247,7 +246,7 @@ class ConvenienceController extends AbstractController
     }
 
     /**
-     * This function gets the event from github if something has changed in a repository
+     * This function gets the event from github if something has changed in a repository.
      *
      * @Route("/admin/github_events")
      *

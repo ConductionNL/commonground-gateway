@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -240,12 +239,15 @@ class GithubApiService
      *
      * @param string $organizationName
      * @param string $repositoryName
-     * @return array|null
+     *
      * @throws GuzzleException
+     *
+     * @return array|null
      */
     public function getPubliccodeForGithubEvent(string $organizationName, string $repositoryName): ?array
     {
         $response = null;
+
         try {
             $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yaml');
         } catch (ClientException $exception) {
