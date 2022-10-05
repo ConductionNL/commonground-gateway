@@ -4,12 +4,14 @@ namespace App\Controller;
 
 use App\Entity\CollectionEntity;
 use App\Exception\GatewayException;
+use App\Service\GithubApiService;
 use App\Service\HandlerService;
 use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
 use App\Service\PubliccodeOldService;
+use App\Service\PubliccodeService;
 use App\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -25,6 +27,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ConvenienceController extends AbstractController
 {
     private PubliccodeOldService $publiccodeOldService;
+    private PubliccodeService $publiccodeService;
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
@@ -41,7 +44,8 @@ class ConvenienceController extends AbstractController
         ParseDataService $dataService,
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        PubliccodeService $publiccodeService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -52,6 +56,7 @@ class ConvenienceController extends AbstractController
         $this->handlerService = $handlerService;
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
+        $this->publiccodeService = $publiccodeService;
     }
 
     /**
@@ -239,6 +244,18 @@ class ConvenienceController extends AbstractController
             Response::HTTP_OK,
             ['content-type' => $contentType]
         );
+    }
+
+    /**
+     * This function gets the event from github if something has changed in a repository
+     *
+     * @Route("/admin/github_events")
+     *
+     * @throws Exception|GuzzleException
+     */
+    public function githubEvents(Request $request): Response
+    {
+        return $this->publiccodeService->updateRepositoryWithEventResponse($request);
     }
 
     /**

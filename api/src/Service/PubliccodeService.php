@@ -5,7 +5,10 @@ namespace App\Service;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class PubliccodeService
 {
@@ -31,6 +34,42 @@ class PubliccodeService
         $this->gitlabService = $gitlabService;
         $this->configuration = [];
         $this->data = [];
+    }
+
+    /**
+     * @param Request $request
+     * @return Response dataset at the end of the handler
+     * @throws Exception
+     */
+    public function updateRepositoryWithEventResponse(Request $request): Response
+    {
+        $repositoryEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
+
+        $content = json_decode($request->getContent(), true);
+        $repositoryName = $content['repository']['name'];
+
+        if (!$this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $repositoryName])->getObjectEntity()) {
+            $repository = new ObjectEntity();
+            $repository->setEntity($repositoryEntity);
+        } else {
+            $repository = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $repositoryName])->getObjectEntity();
+        }
+
+        $repository->setValue('source', 'github');
+        $repository->setValue('name', $content['repository']['name']);
+        $repository->setValue('url', $content['repository']['url']);
+        $repository->setValue('avatar_url', $content['repository']['owner']['avatar_url']);
+        $repository->setValue('last_change', $content['repository']['updated_at']);
+        $repository->setValue('stars', $content['repository']['stargazers_count']);
+        $repository->setValue('fork_count', $content['repository']['forks_count']);
+        $repository->setValue('issue_open_count', $content['repository']['open_issues_count']);
+        $repository->setValue('programming_languages', [$content['repository']['language']]);
+        $repository->setValue('topics', $content['repository']['topics']);
+
+        $this->entityManager->persist($repository);
+        $this->entityManager->flush();
+
+        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'json']);
     }
 
     /**
@@ -123,7 +162,7 @@ class PubliccodeService
     /**
      * @param ObjectEntity $repository the repository where we want to find an organisation for
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function setRepositoryWithGithubInfo(ObjectEntity $repository, $github): ObjectEntity
     {
@@ -136,6 +175,7 @@ class PubliccodeService
         $repository->setValue('fork_count', $github['fork_count']);
         $repository->setValue('issue_open_count', $github['issue_open_count']);
         $repository->setValue('programming_languages', $github['programming_languages']);
+
         $this->entityManager->persist($repository);
 
         return $repository;
@@ -144,7 +184,7 @@ class PubliccodeService
     /**
      * @param ObjectEntity $repository the repository where we want to find an organisation for
      *
-     * @throws \Exception
+     * @throws Exception
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function enrichRepositoryWithOrganisation(ObjectEntity $repository): ?ObjectEntity
@@ -378,7 +418,7 @@ class PubliccodeService
     /**
      * @param ObjectEntity $component
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return ObjectEntity|null dataset at the end of the handler
      */
@@ -411,7 +451,7 @@ class PubliccodeService
      *
      * @param ObjectEntity $component
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return ObjectEntity|null dataset at the end of the handler
      */
