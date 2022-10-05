@@ -31,8 +31,10 @@ class PubliccodeService
 
     /**
      * @param array $content
-     * @return Response dataset at the end of the handler
+     *
      * @throws GuzzleException
+     *
+     * @return Response dataset at the end of the handler
      */
     public function updateRepositoryWithEventResponse(array $content): Response
     {
@@ -81,11 +83,13 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $repository
-     * @param Entity $componentEntity
-     * @param Entity $descriptionEntity
-     * @param array $publiccode
-     * @return ObjectEntity|null dataset at the end of the handler
+     * @param Entity       $componentEntity
+     * @param Entity       $descriptionEntity
+     * @param array        $publiccode
+     *
      * @throws Exception
+     *
+     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function enrichRepositoryWithPubliccode(ObjectEntity $repository, Entity $componentEntity, Entity $descriptionEntity, array $publiccode = []): ?ObjectEntity
     {
@@ -155,7 +159,6 @@ class PubliccodeService
         // If we want to do it for al repositories
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
             if ($publiccodeUrl = $repository->getValue('publiccode_url')) {
-
                 if (is_array($publiccode = $this->githubService->getPubliccode($publiccodeUrl))) {
                     $this->enrichRepositoryWithPubliccode($repository, $componentEntity, $descriptionEntity, $publiccode);
                 }
@@ -267,8 +270,9 @@ class PubliccodeService
      * @param string $repositoryUrl
      * @param Entity $repositoryEntity
      *
-     * @return ObjectEntity|null
      * @throws GuzzleException
+     *
+     * @return ObjectEntity|null
      */
     public function getOrganisationRepos(string $repositoryUrl, Entity $repositoryEntity): ?ObjectEntity
     {
@@ -288,7 +292,6 @@ class PubliccodeService
                         $repository->setEntity($repositoryEntity);
                     } else {
                         $repository = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($repositoryEntity, ['url' => $github['url']])[0];
-
                     }
 
                     $repository = $this->setRepositoryWithGithubInfo($repository, $github);
@@ -364,8 +367,10 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $organization
-     * @return array|null dataset at the end of the handler
+     *
      * @throws GuzzleException
+     *
+     * @return array|null dataset at the end of the handler
      */
     public function getOrganizationCatalogi(ObjectEntity $organization): ?array
     {
@@ -386,6 +391,7 @@ class PubliccodeService
                 $this->entityManager->flush();
             }
         }
+
         return null;
     }
 
@@ -418,8 +424,9 @@ class PubliccodeService
      * @param array $data          data set at the start of the handler
      * @param array $configuration configuration of the action
      *
-     * @return array dataset at the end of the handler
      * @throws GuzzleException|Exception
+     *
+     * @return array dataset at the end of the handler
      */
     public function enrichComponentWithRating(array $data, array $configuration): array
     {
@@ -438,9 +445,11 @@ class PubliccodeService
 
     /**
      * @param ObjectEntity $component
-     * @param Entity $ratingEntity
-     * @return ObjectEntity|null dataset at the end of the handler
+     * @param Entity       $ratingEntity
+     *
      * @throws Exception
+     *
+     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function rateComponent(ObjectEntity $component, Entity $ratingEntity): ?ObjectEntity
     {
@@ -470,9 +479,9 @@ class PubliccodeService
      *
      * @param ObjectEntity $component
      *
-     * @return ObjectEntity|null dataset at the end of the handler
      * @throws Exception|GuzzleException
      *
+     * @return ObjectEntity|null dataset at the end of the handler
      */
     public function ratingList(ObjectEntity $component): ?array
     {
