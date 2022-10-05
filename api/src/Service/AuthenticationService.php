@@ -12,6 +12,7 @@ use Jose\Component\Signature\Algorithm\RS512;
 use Jose\Component\Signature\JWSVerifier;
 use Jose\Component\Signature\Serializer\CompactSerializer;
 use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -27,8 +28,9 @@ class AuthenticationService
     private Security $security;
     private CommonGroundService $commonGroundService;
     private Environment $twig;
+    private ParameterBagInterface $parameterBag;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, CommonGroundService $commonGroundService, Environment $twig)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, CommonGroundService $commonGroundService, Environment $twig, ParameterBagInterface $parameterBag)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
@@ -36,6 +38,7 @@ class AuthenticationService
         $this->security = $security;
         $this->commonGroundService = $commonGroundService;
         $this->twig = $twig;
+        $this->parameterBag = $parameterBag;
     }
 
     public function generateJwt()
@@ -171,11 +174,7 @@ class AuthenticationService
 
     public function retrieveData(string $method, string $code, Authentication $authentication): array
     {
-        $redirectUrl = $this->session->get('redirectUrl');
-
-        if (!$redirectUrl) {
-            throw new BadRequestException('no redirect url found in session');
-        }
+        $redirectUrl = $this->session->get('redirectUrl', $this->parameterBag->get('defaultRedirectUrl'));
 
         switch ($method) {
             case 'oidc':

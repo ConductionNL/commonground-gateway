@@ -175,6 +175,10 @@ spec:
                         name: {{ include "commonground-gateway.fullname" . }}
             {{- end}}
                       
+            - name: APP_DEFAULT_REDIRECT_URL
+              value: {{ .Values.config.defaultRedirectUrl }}
+            - name: APP_DEFAULT_BACK_URL
+              value: {{ .Values.config.defaultBackUrl }}
           #RabbitMQ
             - name: RABBITMQ_HOST
               valueFrom:

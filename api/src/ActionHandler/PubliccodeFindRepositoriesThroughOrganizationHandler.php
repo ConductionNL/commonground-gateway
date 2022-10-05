@@ -6,7 +6,7 @@ use App\Exception\GatewayException;
 use App\Service\PubliccodeService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class PubliccodeFindOrganisationsTroughRepositoriesHandler implements ActionHandlerInterface
+class PubliccodeFindRepositoriesThroughOrganizationHandler implements ActionHandlerInterface
 {
     private PubliccodeService $publiccodeService;
 
@@ -22,6 +22,6 @@ class PubliccodeFindOrganisationsTroughRepositoriesHandler implements ActionHand
 
     public function __run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->publiccodeFindOrganisationsTroughRepositoriesHandler($data, $configuration);
+        return $this->publiccodeService->enrichOrganizationWithRepositoriesHandler($data, $configuration);
     }
 }

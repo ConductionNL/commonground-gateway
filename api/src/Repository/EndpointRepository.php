@@ -49,11 +49,9 @@ class EndpointRepository extends ServiceEntityRepository
      *
      * @param Entity $entity
      *
-     * @throws NonUniqueResultException
-     *
-     * @return Endpoint|null
+     * @return array|null
      */
-    public function findGetItemByEntity(Entity $entity): ?Endpoint
+    public function findGetItemByEntity(Entity $entity): ?array
     {
         $query = $this->createQueryBuilder('e')
             ->leftJoin('e.handlers', 'h')
@@ -64,7 +62,7 @@ class EndpointRepository extends ServiceEntityRepository
 
         return $query
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getResult();
     }
 
     /**

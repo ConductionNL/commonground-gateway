@@ -31,10 +31,10 @@
 #    klantenCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/klanten_publiccode/main/OAS.json
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/KlantenAPI/main/OAS.yaml
 #        name: Klanten collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/klanten_publiccode/main/data/klanten.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/KlantenAPI/main/data/klanten.json
 #    loggingReadCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -105,500 +105,508 @@
 #        loadTestData: true
 #        autoLoad: true
 #
+#    overigeObjectenCollection:
+#        name: overigeObjecten collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/OAS.yaml
+#        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data.json
+#        loadTestData: true
+#        autoLoad: true
+#
 ## Entities
-#App\Entity\Entity:
-#    # Review Entity
-#    review:
-#        name: Review
-#        description: Biedt de generieke mogelijkheid om gebruikers reviews te geven over objecten
-#        route: "/reviews"
-#        endpoint: "reviews"
-#
-#    # Note Entity
-#    note:
-#        name: Note
-#        description: Biedt de generieke mogelijkheid om gebruikers notities te laten aanmaken of resources (bijvoorbeeld Common Ground resources). Deze functionaliteit is bewust abstract opgezet.
-#        route: "/notes"
-#        endpoint: "notes"
-#
-#    # Search Entity
-#    search:
-#        name: Search
-#        description: The search object is based on https://schema.org/SearchAction and is meant to hold search actions perfermoed by users, with other words it preserfec a search history.
-#        route: "/searches"
-#        endpoint: "searches"
-#
-#    # Taxanomy Entity
-#    taxanomy:
-#        name: Taxanomy
-#        description: The taxanomy object is lously based on wordpress taxanomies
-#        route: "/taxanomies"
-#        endpoint: "taxanomies"
-#
-#    # Medewerker Entity
-#    medewerker:
-#        name: Medewerker
-#        description: Dit ORC medewerker object vang kiss specifieke wensen af.
-#        route: "/medewerkers"
-#        endpoint: "medewerkers"
+##App\Entity\Entity:
+##    # Review Entity
+##    review:
+##        name: Review
+##        description: Biedt de generieke mogelijkheid om gebruikers reviews te geven over objecten
+##        route: "/reviews"
+##        endpoint: "reviews"
+##
+##    # Note Entity
+##    note:
+##        name: Note
+##        description: Biedt de generieke mogelijkheid om gebruikers notities te laten aanmaken of resources (bijvoorbeeld Common Ground resources). Deze functionaliteit is bewust abstract opgezet.
+##        route: "/notes"
+##        endpoint: "notes"
+##
+##    # Search Entity
+##    search:
+##        name: Search
+##        description: The search object is based on https://schema.org/SearchAction and is meant to hold search actions perfermoed by users, with other words it preserfec a search history.
+##        route: "/searches"
+##        endpoint: "searches"
+##
+##    # Taxanomy Entity
+##    taxanomy:
+##        name: Taxanomy
+##        description: The taxanomy object is lously based on wordpress taxanomies
+##        route: "/taxanomies"
+##        endpoint: "taxanomies"
+##
+##    # Medewerker Entity
+##    medewerker:
+##        name: Medewerker
+##        description: Dit ORC medewerker object vang kiss specifieke wensen af.
+##        route: "/medewerkers"
+##        endpoint: "medewerkers"
 #
 ## Attributes
-#App\Entity\Attribute:
-#    # Review Attributes
-#    review_author:
-#        name: author
-#        description: The user that made this review.
-#        type: string
-#        format: uuid
-#        entity: "@review"
-#        searchable: true
-#
-#    review_topic:
-#        name: topic
-#        description: The object that this review is about.
-#        type: string
-#        format: url
-#        entity: "@review"
-#        searchable: true
-#
-#    review_name:
-#        name: name
-#        description: The name of this review.
-#        type: string
-#        entity: "@review"
-#        searchable: true
-#
-#    review_description:
-#        name: description
-#        description: The description of this review.
-#        type: string
-#        required: true
-#        entity: "@review"
-#
-#    review_rating:
-#        name: rating
-#        description: The rating of this review.
-#        type: integer
-#        entity: "@review"
-#
-#    # Note Attributes
-#    note_author:
-#        name: author
-#        description: The user that made this note.
-#        type: string
-#        format: uuid
-#        required: true
-#        entity: "@note"
-#        searchable: true
-#
-#    note_topic:
-#        name: topic
-#        description: The object that this note is about.
-#        type: string
-#        format: url
-#        required: true
-#        entity: "@note"
-#        searchable: true
-#
-#    note_name:
-#        name: name
-#        description: The name of this note.
-#        type: string
-#        required: true
-#        entity: "@note"
-#        searchable: true
-#
-#    note_description:
-#        name: description
-#        description: The description of this note.
-#        type: string
-#        required: true
-#        entity: "@note"
-#
-#    note_contact:
-#        name: contact
-#        description: The contact that needs to be notified.
-#        type: string
-#        format: uuid
-#        entity: "@note"
-#
-#    # Search Attributes
-#    search_agent:
-#        name: agent
-#        description: The direct performer or driver of the action (animate or inanimate). e.g. John wrote a book.
-#        type: string
-#        format: url
-#        required: true
-#        entity: "@search"
-#        searchable: true
-#
-#    search_object:
-#        name: object
-#        description: The object upon which the action is carried out, whose state is kept intact or changed. Also known as the semantic roles patient, affected or undergoer (which change their state) or theme (which doesn't). e.g. John read a book.
-#        type: string
-#        format: url
-#        required: true
-#        entity: "@search"
-#        searchable: true
-#
-#    search_actionStatus:
-#        name: actionStatus
-#        description: Indicates the current disposition of the Action. Based on ActionStatusType (https://schema.org/ActionStatusType)
-#        type: string
-#        enum: ["Active", "Completed", "Failed", "Potential"]
-#        entity: "@search"
-#        searchable: true
-#
-#    search_instrument:
-#        name: instrument
-#        description: The object that helped the agent perform the action. e.g. John searched with the generic search feature.
-#        type: string
-#        entity: "@search"
-#
-#    search_location:
-#        name: location
-#        description: The location of, for example, where an event is happening, where an organization is located, or where an action takes place.
-#        type: string
-#        entity: "@search"
-#
-#    search_participants:
-#        name: participants
-#        description: Other co-agents that participated in the action indirectly. e.g. John wrote a book with Steve.
-#        type: string
-#        multiple: true
-#        entity: "@search"
-#
-#    search_provider:
-#        name: provider
-#        description: The service provider, service operator, or service performer; e.g ElasticSearch
-#        example: ElasticSearch
-#        type: string
-#        entity: "@search"
-#
-#    search_result:
-#        name: result
-#        description: The result produced in the action. e.g. John wrote a book.
-#        type: array
-#        entity: "@search"
-#
-#    search_error:
-#        name: error
-#        description: For failed actions, more information on the cause of the failure.
-#        type: string
-#        entity: "@search"
-#
-#    search_endTime:
-#        name: endTime
-#        description: The endTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to end. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the end of a clip within a larger file.
-#        type: datetime
-#        entity: "@search"
-#
-#    search_startTime:
-#        name: startTime
-#        description: The startTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to start. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the start of a clip within a larger file.
-#        type: datetime
-#        entity: "@search"
-#
-#    search_target:
-#        name: target
-#        description: Indicates a target EntryPoint for an Action. Based on EntryPoint (https://schema.org/EntryPoint)
-#        type: string
-#        format: url
-#        entity: "@search"
-#
-#    taxanomy_name:
-#        name: name
-#        description: Name of this taxanomy
-#        type: string
-#        required: true
-#        searchable: true
-#        entity: "@taxanomy"
-#
-#    taxanomy_description:
-#        name: description
-#        description: The textual description of this taxanomy
-#        type: string
-#        required: true
-#        searchable: true
-#        entity: "@taxanomy"
-#
-#    taxanomy_parent:
-#        name: parent
-#        description: The parent taxanomy of this taxanomy
-#        type: object
-#        cascade: true
-#        object: "@taxanomy"
-#        entity: "@taxanomy"
-#
-#    medewerker_user:
-#        name: user
-#        description: The user uri of this medewerker
-#        type: string
-#        format: email
-#        required: true
-#        entity: "@medewerker"
-#
-#    # todo: connect to Entity Klant (type should be object)
-#    medewerker_contact:
-#        name: contact
-#        description: The contact uri to the klanten api 
-#        type: string
-#        entity: "@medewerker"
-#
-#    medewerker_description:
-#        name: description
-#        description: The description of this medewerker 
-#        type: string
-#        entity: "@medewerker"
-#
-#    medewerker_department:
-#        name: department
-#        description: The department of this medewerker
-#        type: string
-#        entity: "@medewerker"
-#
-#    medewerker_function:
-#        name: function
-#        description: The function of this medewerker
-#        type: string
-#        entity: "@medewerker"
-#
-#    # todo: connect to Entity Calendar (type should be object)
-#    medewerker_calendar:
-#        name: calendar
-#        description: The calendar uri to the agenda api 
-#        type: string
-#        entity: "@medewerker"
-#
-#    medewerker_replacement:
-#        name: replacement
-#        description: The replacement uri to another medewerker 
-#        type: string
-#        entity: "@medewerker"
-#
-#    medewerker_skills:
-#        name: skills
-#        description: The skills of this medewerker 
-#        type: string
-#        multiple: true
-#        entity: "@medewerker"
+##App\Entity\Attribute:
+##    # Review Attributes
+##    review_author:
+##        name: author
+##        description: The user that made this review.
+##        type: string
+##        format: uuid
+##        entity: "@review"
+##        searchable: true
+##
+##    review_topic:
+##        name: topic
+##        description: The object that this review is about.
+##        type: string
+##        format: url
+##        entity: "@review"
+##        searchable: true
+##
+##    review_name:
+##        name: name
+##        description: The name of this review.
+##        type: string
+##        entity: "@review"
+##        searchable: true
+##
+##    review_description:
+##        name: description
+##        description: The description of this review.
+##        type: string
+##        required: true
+##        entity: "@review"
+##
+##    review_rating:
+##        name: rating
+##        description: The rating of this review.
+##        type: integer
+##        entity: "@review"
+##
+##    # Note Attributes
+##    note_author:
+##        name: author
+##        description: The user that made this note.
+##        type: string
+##        format: uuid
+##        required: true
+##        entity: "@note"
+##        searchable: true
+##
+##    note_topic:
+##        name: topic
+##        description: The object that this note is about.
+##        type: string
+##        format: url
+##        required: true
+##        entity: "@note"
+##        searchable: true
+##
+##    note_name:
+##        name: name
+##        description: The name of this note.
+##        type: string
+##        required: true
+##        entity: "@note"
+##        searchable: true
+##
+##    note_description:
+##        name: description
+##        description: The description of this note.
+##        type: string
+##        required: true
+##        entity: "@note"
+##
+##    note_contact:
+##        name: contact
+##        description: The contact that needs to be notified.
+##        type: string
+##        format: uuid
+##        entity: "@note"
+##
+##    # Search Attributes
+##    search_agent:
+##        name: agent
+##        description: The direct performer or driver of the action (animate or inanimate). e.g. John wrote a book.
+##        type: string
+##        format: url
+##        required: true
+##        entity: "@search"
+##        searchable: true
+##
+##    search_object:
+##        name: object
+##        description: The object upon which the action is carried out, whose state is kept intact or changed. Also known as the semantic roles patient, affected or undergoer (which change their state) or theme (which doesn't). e.g. John read a book.
+##        type: string
+##        format: url
+##        required: true
+##        entity: "@search"
+##        searchable: true
+##
+##    search_actionStatus:
+##        name: actionStatus
+##        description: Indicates the current disposition of the Action. Based on ActionStatusType (https://schema.org/ActionStatusType)
+##        type: string
+##        enum: ["Active", "Completed", "Failed", "Potential"]
+##        entity: "@search"
+##        searchable: true
+##
+##    search_instrument:
+##        name: instrument
+##        description: The object that helped the agent perform the action. e.g. John searched with the generic search feature.
+##        type: string
+##        entity: "@search"
+##
+##    search_location:
+##        name: location
+##        description: The location of, for example, where an event is happening, where an organization is located, or where an action takes place.
+##        type: string
+##        entity: "@search"
+##
+##    search_participants:
+##        name: participants
+##        description: Other co-agents that participated in the action indirectly. e.g. John wrote a book with Steve.
+##        type: string
+##        multiple: true
+##        entity: "@search"
+##
+##    search_provider:
+##        name: provider
+##        description: The service provider, service operator, or service performer; e.g ElasticSearch
+##        example: ElasticSearch
+##        type: string
+##        entity: "@search"
+##
+##    search_result:
+##        name: result
+##        description: The result produced in the action. e.g. John wrote a book.
+##        type: array
+##        entity: "@search"
+##
+##    search_error:
+##        name: error
+##        description: For failed actions, more information on the cause of the failure.
+##        type: string
+##        entity: "@search"
+##
+##    search_endTime:
+##        name: endTime
+##        description: The endTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to end. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the end of a clip within a larger file.
+##        type: datetime
+##        entity: "@search"
+##
+##    search_startTime:
+##        name: startTime
+##        description: The startTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to start. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the start of a clip within a larger file.
+##        type: datetime
+##        entity: "@search"
+##
+##    search_target:
+##        name: target
+##        description: Indicates a target EntryPoint for an Action. Based on EntryPoint (https://schema.org/EntryPoint)
+##        type: string
+##        format: url
+##        entity: "@search"
+##
+##    taxanomy_name:
+##        name: name
+##        description: Name of this taxanomy
+##        type: string
+##        required: true
+##        searchable: true
+##        entity: "@taxanomy"
+##
+##    taxanomy_description:
+##        name: description
+##        description: The textual description of this taxanomy
+##        type: string
+##        required: true
+##        searchable: true
+##        entity: "@taxanomy"
+##
+##    taxanomy_parent:
+##        name: parent
+##        description: The parent taxanomy of this taxanomy
+##        type: object
+##        cascade: true
+##        object: "@taxanomy"
+##        entity: "@taxanomy"
+##
+##    medewerker_user:
+##        name: user
+##        description: The user uri of this medewerker
+##        type: string
+##        format: email
+##        required: true
+##        entity: "@medewerker"
+##
+##    # todo: connect to Entity Klant (type should be object)
+##    medewerker_contact:
+##        name: contact
+##        description: The contact uri to the klanten api 
+##        type: string
+##        entity: "@medewerker"
+##
+##    medewerker_description:
+##        name: description
+##        description: The description of this medewerker 
+##        type: string
+##        entity: "@medewerker"
+##
+##    medewerker_department:
+##        name: department
+##        description: The department of this medewerker
+##        type: string
+##        entity: "@medewerker"
+##
+##    medewerker_function:
+##        name: function
+##        description: The function of this medewerker
+##        type: string
+##        entity: "@medewerker"
+##
+##    # todo: connect to Entity Calendar (type should be object)
+##    medewerker_calendar:
+##        name: calendar
+##        description: The calendar uri to the agenda api 
+##        type: string
+##        entity: "@medewerker"
+##
+##    medewerker_replacement:
+##        name: replacement
+##        description: The replacement uri to another medewerker 
+##        type: string
+##        entity: "@medewerker"
+##
+##    medewerker_skills:
+##        name: skills
+##        description: The skills of this medewerker 
+##        type: string
+##        multiple: true
+##        entity: "@medewerker"
 #
 ## Parameters for endpoint regex
 #parameters:
-#    reviewItemRegex: "^reviews/[a-z0-9-]{36}$"
-#    noteItemRegex: "^notes/[a-z0-9-]{36}$"
-#    searchItemRegex: "^searches/[a-z0-9-]{36}$"
-#    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
-#    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
+##    reviewItemRegex: "^reviews/[a-z0-9-]{36}$"
+##    noteItemRegex: "^notes/[a-z0-9-]{36}$"
+##    searchItemRegex: "^searches/[a-z0-9-]{36}$"
+##    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
+##    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
 #    openpubProxyRegex: "^(openpub/[^.*]*)$"
 #    elasticRegex: "^(elastic/[^.*]*)$"
 #
 ## Endpoints        
 #App\Entity\Endpoint:
-#    # Review Endpoints
-#    reviewEndpointGet:
-#        name: Review endpoint get collection
-#        description: endpoint for reviews
-#        path: [ 'reviews' ]
-#        pathRegex: "^(reviews)$"
-#        method: GET
-#        operationType: collection
-#
-#    reviewEndpointPost:
-#        name: Review endpoint post
-#        description: endpoint for reviews
-#        path: [ 'reviews' ]
-#        pathRegex: "^(reviews)$"
-#        method: POST
-#        operationType: collection
-#
-#    reviewEndpointGetItem:
-#        name: Review endpoint get item
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: GET
-#        operationType: item
-#
-#    reviewEndpointPut:
-#        name: Review endpoint put
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: PUT
-#        operationType: item
-#
-#    reviewEndpointDelete:
-#        name: Review endpoint delete
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: DELETE
-#        operationType: item
-#
-#    # Note Endpoints
-#    noteEndpointGet:
-#        name: Note endpoint get collection
-#        description: endpoint for notes
-#        path: [ 'notes' ]
-#        pathRegex: "^(notes)$"
-#        method: GET
-#        operationType: collection
-#
-#    noteEndpointPost:
-#        name: Note endpoint post
-#        description: endpoint for notes
-#        path: [ 'notes' ]
-#        pathRegex: "^(notes)$"
-#        method: POST
-#        operationType: collection
-#
-#    noteEndpointGetItem:
-#        name: Note endpoint get item
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: GET
-#        operationType: item
-#
-#    noteEndpointPut:
-#        name: Note endpoint put
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: PUT
-#        operationType: item
-#
-#    noteEndpointDelete:
-#        name: Note endpoint delete
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: DELETE
-#        operationType: item
-#
-#    # Search Endpoints
-#    searchEndpointGet:
-#        name: Search endpoint get collection
-#        description: endpoint for searches
-#        path: [ 'searches' ]
-#        pathRegex: "^(searches)$"
-#        method: GET
-#        operationType: collection
-#
-#    searchEndpointPost:
-#        name: Search endpoint post
-#        description: endpoint for searches
-#        path: [ 'searches' ]
-#        pathRegex: "^(searches)$"
-#        method: POST
-#        operationType: collection
-#
-#    searchEndpointGetItem:
-#        name: Search endpoint get item
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: GET
-#        operationType: item
-#
-#    searchEndpointPut:
-#        name: Search endpoint put
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: PUT
-#        operationType: item
-#
-#    searchEndpointDelete:
-#        name: Search endpoint delete
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: DELETE
-#        operationType: item
-#
-#    # Taxanomy Endpoints
-#    taxanomyEndpointGet:
-#        name: Taxanomy endpoint get collection
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies' ]
-#        pathRegex: "^(taxanomies)$"
-#        method: GET
-#        operationType: collection
-#
-#    taxanomyEndpointPost:
-#        name: Taxanomy endpoint post
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies' ]
-#        pathRegex: "^(taxanomies)$"
-#        method: POST
-#        operationType: collection
-#
-#    taxanomyEndpointGetItem:
-#        name: Taxanomy endpoint get item
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: GET
-#        operationType: item
-#
-#    taxanomyEndpointPut:
-#        name: Taxanomy endpoint put
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: PUT
-#        operationType: item
-#
-#    taxanomyEndpointDelete:
-#        name: Taxanomy endpoint delete
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: DELETE
-#        operationType: item
-#
-#    # Medewerker Endpoints
-#    medewerkerEndpointGet:
-#        name: Medewerker endpoint get collection
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers' ]
-#        pathRegex: "^(medewerkers)$"
-#        method: GET
-#        operationType: collection
-#
-#    medewerkerEndpointPost:
-#        name: Medewerker endpoint post
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers' ]
-#        pathRegex: "^(medewerkers)$"
-#        method: POST
-#        operationType: collection
-#
-#    medewerkerEndpointGetItem:
-#        name: Medewerker endpoint get item
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: GET
-#        operationType: item
-#
-#    medewerkerEndpointPut:
-#        name: Medewerker endpoint put
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: PUT
-#        operationType: item
-#
-#    medewerkerEndpointDelete:
-#        name: Medewerker endpoint delete
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: DELETE
-#        operationType: item
+##    # Review Endpoints
+##    reviewEndpointGet:
+##        name: Review endpoint get collection
+##        description: endpoint for reviews
+##        path: [ 'reviews' ]
+##        pathRegex: "^(reviews)$"
+##        method: GET
+##        operationType: collection
+##
+##    reviewEndpointPost:
+##        name: Review endpoint post
+##        description: endpoint for reviews
+##        path: [ 'reviews' ]
+##        pathRegex: "^(reviews)$"
+##        method: POST
+##        operationType: collection
+##
+##    reviewEndpointGetItem:
+##        name: Review endpoint get item
+##        description: endpoint for reviews
+##        path: [ 'reviews', '{id}' ]
+##        pathRegex: <{reviewItemRegex}>
+##        method: GET
+##        operationType: item
+##
+##    reviewEndpointPut:
+##        name: Review endpoint put
+##        description: endpoint for reviews
+##        path: [ 'reviews', '{id}' ]
+##        pathRegex: <{reviewItemRegex}>
+##        method: PUT
+##        operationType: item
+##
+##    reviewEndpointDelete:
+##        name: Review endpoint delete
+##        description: endpoint for reviews
+##        path: [ 'reviews', '{id}' ]
+##        pathRegex: <{reviewItemRegex}>
+##        method: DELETE
+##        operationType: item
+##
+##    # Note Endpoints
+##    noteEndpointGet:
+##        name: Note endpoint get collection
+##        description: endpoint for notes
+##        path: [ 'notes' ]
+##        pathRegex: "^(notes)$"
+##        method: GET
+##        operationType: collection
+##
+##    noteEndpointPost:
+##        name: Note endpoint post
+##        description: endpoint for notes
+##        path: [ 'notes' ]
+##        pathRegex: "^(notes)$"
+##        method: POST
+##        operationType: collection
+##
+##    noteEndpointGetItem:
+##        name: Note endpoint get item
+##        description: endpoint for notes
+##        path: [ 'notes', '{id}' ]
+##        pathRegex: <{noteItemRegex}>
+##        method: GET
+##        operationType: item
+##
+##    noteEndpointPut:
+##        name: Note endpoint put
+##        description: endpoint for notes
+##        path: [ 'notes', '{id}' ]
+##        pathRegex: <{noteItemRegex}>
+##        method: PUT
+##        operationType: item
+##
+##    noteEndpointDelete:
+##        name: Note endpoint delete
+##        description: endpoint for notes
+##        path: [ 'notes', '{id}' ]
+##        pathRegex: <{noteItemRegex}>
+##        method: DELETE
+##        operationType: item
+##
+##    # Search Endpoints
+##    searchEndpointGet:
+##        name: Search endpoint get collection
+##        description: endpoint for searches
+##        path: [ 'searches' ]
+##        pathRegex: "^(searches)$"
+##        method: GET
+##        operationType: collection
+##
+##    searchEndpointPost:
+##        name: Search endpoint post
+##        description: endpoint for searches
+##        path: [ 'searches' ]
+##        pathRegex: "^(searches)$"
+##        method: POST
+##        operationType: collection
+##
+##    searchEndpointGetItem:
+##        name: Search endpoint get item
+##        description: endpoint for searches
+##        path: [ 'searches', '{id}' ]
+##        pathRegex: <{searchItemRegex}>
+##        method: GET
+##        operationType: item
+##
+##    searchEndpointPut:
+##        name: Search endpoint put
+##        description: endpoint for searches
+##        path: [ 'searches', '{id}' ]
+##        pathRegex: <{searchItemRegex}>
+##        method: PUT
+##        operationType: item
+##
+##    searchEndpointDelete:
+##        name: Search endpoint delete
+##        description: endpoint for searches
+##        path: [ 'searches', '{id}' ]
+##        pathRegex: <{searchItemRegex}>
+##        method: DELETE
+##        operationType: item
+##
+##    # Taxanomy Endpoints
+##    taxanomyEndpointGet:
+##        name: Taxanomy endpoint get collection
+##        description: endpoint for taxanomies
+##        path: [ 'taxanomies' ]
+##        pathRegex: "^(taxanomies)$"
+##        method: GET
+##        operationType: collection
+##
+##    taxanomyEndpointPost:
+##        name: Taxanomy endpoint post
+##        description: endpoint for taxanomies
+##        path: [ 'taxanomies' ]
+##        pathRegex: "^(taxanomies)$"
+##        method: POST
+##        operationType: collection
+##
+##    taxanomyEndpointGetItem:
+##        name: Taxanomy endpoint get item
+##        description: endpoint for taxanomies
+##        path: [ 'taxanomies', '{id}' ]
+##        pathRegex: <{taxanomyItemRegex}>
+##        method: GET
+##        operationType: item
+##
+##    taxanomyEndpointPut:
+##        name: Taxanomy endpoint put
+##        description: endpoint for taxanomies
+##        path: [ 'taxanomies', '{id}' ]
+##        pathRegex: <{taxanomyItemRegex}>
+##        method: PUT
+##        operationType: item
+##
+##    taxanomyEndpointDelete:
+##        name: Taxanomy endpoint delete
+##        description: endpoint for taxanomies
+##        path: [ 'taxanomies', '{id}' ]
+##        pathRegex: <{taxanomyItemRegex}>
+##        method: DELETE
+##        operationType: item
+##
+##    # Medewerker Endpoints
+##    medewerkerEndpointGet:
+##        name: Medewerker endpoint get collection
+##        description: endpoint for medewerkers
+##        path: [ 'medewerkers' ]
+##        pathRegex: "^(medewerkers)$"
+##        method: GET
+##        operationType: collection
+##
+##    medewerkerEndpointPost:
+##        name: Medewerker endpoint post
+##        description: endpoint for medewerkers
+##        path: [ 'medewerkers' ]
+##        pathRegex: "^(medewerkers)$"
+##        method: POST
+##        operationType: collection
+##
+##    medewerkerEndpointGetItem:
+##        name: Medewerker endpoint get item
+##        description: endpoint for medewerkers
+##        path: [ 'medewerkers', '{id}' ]
+##        pathRegex: <{medewerkerItemRegex}>
+##        method: GET
+##        operationType: item
+##
+##    medewerkerEndpointPut:
+##        name: Medewerker endpoint put
+##        description: endpoint for medewerkers
+##        path: [ 'medewerkers', '{id}' ]
+##        pathRegex: <{medewerkerItemRegex}>
+##        method: PUT
+##        operationType: item
+##
+##    medewerkerEndpointDelete:
+##        name: Medewerker endpoint delete
+##        description: endpoint for medewerkers
+##        path: [ 'medewerkers', '{id}' ]
+##        pathRegex: <{medewerkerItemRegex}>
+##        method: DELETE
+##        operationType: item
 #
 #    # Openpub proxy endpoint
 #    openpubProxyEndpoint:
@@ -620,50 +628,50 @@
 #
 ## Handlers
 #App\Entity\Handler:
-#    # Review Handler
-#    reviewHandler:
-#        name: Review handler
-#        methods: ["*"]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: ["@reviewEndpointGet", "@reviewEndpointPost", "@reviewEndpointGetItem", "@reviewEndpointPut", "@reviewEndpointDelete"]
-#        entity: "@review"
-#
-#    # Note Handler
-#    noteHandler:
-#        name: Note handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@noteEndpointGet", "@noteEndpointPost", "@noteEndpointGetItem", "@noteEndpointPut", "@noteEndpointDelete" ]
-#        entity: "@note"
-#
-#    # Search Handler
-#    searchHandler:
-#        name: Search handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@searchEndpointGet", "@searchEndpointPost", "@searchEndpointGetItem", "@searchEndpointPut", "@searchEndpointDelete" ]
-#        entity: "@search"
-#
-#    # Taxanomy Handler
-#    taxanomyHandler:
-#        name: Search handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
-#        entity: "@taxanomy"
-#
-#    # Medewerker Handler
-#    medewerkerHandler:
-#        name: Medewerker handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
-#        entity: "@medewerker"
+##    # Review Handler
+##    reviewHandler:
+##        name: Review handler
+##        methods: ["*"]
+##        sequence: 0
+##        conditions: "{}"
+##        endpoints: ["@reviewEndpointGet", "@reviewEndpointPost", "@reviewEndpointGetItem", "@reviewEndpointPut", "@reviewEndpointDelete"]
+##        entity: "@review"
+##
+##    # Note Handler
+##    noteHandler:
+##        name: Note handler
+##        methods: [ "*" ]
+##        sequence: 0
+##        conditions: "{}"
+##        endpoints: [ "@noteEndpointGet", "@noteEndpointPost", "@noteEndpointGetItem", "@noteEndpointPut", "@noteEndpointDelete" ]
+##        entity: "@note"
+##
+##    # Search Handler
+##    searchHandler:
+##        name: Search handler
+##        methods: [ "*" ]
+##        sequence: 0
+##        conditions: "{}"
+##        endpoints: [ "@searchEndpointGet", "@searchEndpointPost", "@searchEndpointGetItem", "@searchEndpointPut", "@searchEndpointDelete" ]
+##        entity: "@search"
+##
+##    # Taxanomy Handler
+##    taxanomyHandler:
+##        name: Search handler
+##        methods: [ "*" ]
+##        sequence: 0
+##        conditions: "{}"
+##        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
+##        entity: "@taxanomy"
+##
+##    # Medewerker Handler
+##    medewerkerHandler:
+##        name: Medewerker handler
+##        methods: [ "*" ]
+##        sequence: 0
+##        conditions: "{}"
+##        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
+##        entity: "@medewerker"
 #
 #    # Openpub Proxy Handler
 #    openpubProxyHandler:

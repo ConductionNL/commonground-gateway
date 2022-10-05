@@ -325,7 +325,7 @@ class SynchronizationService
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
         if (array_key_exists('sourceLimit', $this->configuration)) {
-            $key = array_key_exists('sourceLimitKey', $this->configuration) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
+            $key = array_key_exists('sourceLimitKey', $this->configuration['apiSource']) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
             $query[$key] = $this->configuration['apiSource']['sourceLimit'];
         }
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
@@ -364,12 +364,18 @@ class SynchronizationService
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
         // Get a single page
+        if (is_array($callServiceConfig['query'])) {
+            $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
+        } else {
+            $query = $callServiceConfig['query'].'&page='.$page;
+        }
+
         try {
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
                 '',
-                array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []),
+                $query,
                 $callServiceConfig['headers'],
                 false,
                 $callServiceConfig['method'] ?? 'GET'
@@ -561,11 +567,11 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
      * @return Synchronization The updated synchronisation object
      */
-    private function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         $this->checkObjectEntity($synchronization);
 
@@ -788,10 +794,11 @@ class SynchronizationService
      * Stores the result of a synchronisation in the synchronization object.
      *
      * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
-     * @param array $body The body of the call to synchronise to a source
+     * @param array           $body            The body of the call to synchronise to a source
+     *
+     * @throws CacheException|InvalidArgumentException
      *
      * @return Synchronization The updated synchronization object
-     * @throws CacheException|InvalidArgumentException
      */
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
@@ -821,7 +828,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
      * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
      *
-     * @throws CacheException|InvalidArgumentException
+     * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError
      *
      * @return Synchronization The updated synchronisation object
      */
@@ -894,6 +901,10 @@ class SynchronizationService
             $sourceObject = array_filter($sourceObject, function ($propertyName) {
                 return !in_array($propertyName, $this->configuration['apiSource']['notAllowedPropertiesIn']);
             }, ARRAY_FILTER_USE_KEY);
+        }
+
+        if (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
+            $sourceObject = $this->translationService->dotHydrator(isset($this->configuration['apiSource']['skeletonIn']) ? array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']) : $sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         }
 
         if (array_key_exists('translationsIn', $this->configuration['apiSource'])) {

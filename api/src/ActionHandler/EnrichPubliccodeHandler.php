@@ -6,7 +6,7 @@ use App\Exception\GatewayException;
 use App\Service\PubliccodeService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class PubliccodeRatingHandler implements ActionHandlerInterface
+class EnrichPubliccodeHandler implements ActionHandlerInterface
 {
     private PubliccodeService $publiccodeService;
 
@@ -22,6 +22,6 @@ class PubliccodeRatingHandler implements ActionHandlerInterface
 
     public function __run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichComponentWithRating($data, $configuration);
+        return $this->publiccodeService->enrichPubliccodeHandler($data, $configuration);
     }
 }

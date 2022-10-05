@@ -37,6 +37,15 @@ class TranslationService
         return $result;
     }
 
+    private function isAssociative(array $array)
+    {
+        if ([] === $array) {
+            return false;
+        }
+
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
+
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
      *
@@ -55,18 +64,14 @@ class TranslationService
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
         foreach ($mapping as $replace => $search) {
-            if (strpos($replace, '$') !== false && strpos($search, '$') !== false) {
-                $iterator = 0;
-                if ($source->has(str_replace('$', $iterator, $search))) {
-                    while ($source->has(str_replace('$', $iterator, $search))) {
-                        $mapping[str_replace('$', "$iterator", $replace)] = str_replace('$', "$iterator", $search);
-                        $iterator++;
-                    }
-                } else {
-                    $mapping[preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $replace)] = preg_replace('/\.[^.$]*?\$[^.$]*?\./', '', $search);
+            if (strpos($search, '.$.') !== false && is_array($source[substr($search, 0, strpos($search, '.$.'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$.'))])) {
+                foreach ($source[substr($search, 0, strpos($search, '.$.'))] as $key => $value) {
+                    $mapping[str_replace('.$.', '.'.$key.'.', $replace)] = str_replace('.$.', '.'.$key.'.', $search);
                 }
                 unset($mapping[$replace]);
-                // todo: also unset the old variable in $destination
+            } elseif (strpos($search, '$') !== false) {
+                $mapping[str_replace('.$.', '.', $replace)] = str_replace('.$.', '.', $search);
+                unset($mapping[$replace]);
             }
         }
 
@@ -113,8 +118,8 @@ class TranslationService
                         $result .= trim($subSearch, '\'');
                         continue;
                     }
-                    $value = is_array($source[$subSearch]) ? implode(', ', $source[$subSearch]) : $source[$subSearch];
-                    $result .= isset($source[$subSearch]) ? ($value != '' ? $separator.$value : $value) : '';
+                    $value = is_array($source->get($subSearch)) ? implode(', ', $source->get($subSearch)) : $source->get($subSearch);
+                    $result .= !empty($source->get($subSearch)) ? ($value != '' ? $separator.$value : $value) : '';
                 }
                 $destination[$replace] = $result ?: $destination[$replace];
             }
