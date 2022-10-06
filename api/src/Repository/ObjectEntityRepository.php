@@ -476,9 +476,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // todo implement LIKE operator for (some of) these filters? just like we do for normal filters? see getNormalValueFilter() function.
         $operator = '=';
         $allowedCompareNullKeys = ['_externalId', '_uri', '_self', '_organization', '_application'];
-        if (is_string($value) && in_array($key, $allowedCompareNullKeys) && (strtoupper($value) === 'IS NOT NULL')) {
-            // todo strtoupper($value) === 'IS NULL' || strtoupper($value) === 'IS NOT NULL'
-            // todo IS NULL does not seem to work for subresources...
+        if (is_string($value) && in_array($key, $allowedCompareNullKeys) && (strtoupper($value) === 'IS NULL' || strtoupper($value) === 'IS NOT NULL')) {
+            // todo IS NULL does not work for subresources... only for the parent/main object
             $operator = '';
             $value = strtoupper($value);
         }
@@ -706,6 +705,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // If the attribute we filter on is multiple=true
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
                 ->setParameter($sqlFriendlyKey, "%,$value%");
+        } elseif ($value === 'IS NULL' || $value === 'IS NOT NULL') {
+            // Allow to filter on IS NULL and IS NOT NULL
+            $query->andWhere("$prefix$sqlFriendlyKey.stringValue $value");
         } else {
             // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
@@ -897,6 +899,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
         }
