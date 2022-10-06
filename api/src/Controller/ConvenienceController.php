@@ -256,7 +256,7 @@ class ConvenienceController extends AbstractController
     {
         $content = json_decode($request->request->get('payload'));
 
-        return $this->publiccodeService->updateRepositoryWithEventResponse($content, 'application/json');
+        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
     }
 
     /**
