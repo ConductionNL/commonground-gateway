@@ -278,7 +278,7 @@ class HandlerService
 
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
         }
-        
+
         // Update current Log
         $this->logService->saveLog($this->request, null, 3, json_encode($data));
 

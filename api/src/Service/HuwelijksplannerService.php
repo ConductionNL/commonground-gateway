@@ -22,13 +22,12 @@ class HuwelijksplannerService
 
     /**
      * @param \App\Service\ObjectEntityService $objectEntityService
-     * @param RequestStack $requestStack
+     * @param RequestStack                     $requestStack
      */
     public function __construct(
         ObjectEntityService $objectEntityService,
-        RequestStack        $requestStack
-    )
-    {
+        RequestStack $requestStack
+    ) {
         $this->objectEntityService = $objectEntityService;
         $this->request = $requestStack->getCurrentRequest();
         $this->data = [];
@@ -41,9 +40,9 @@ class HuwelijksplannerService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws \Exception
      *
+     * @return array
      */
     public function HuwelijksplannerHandler(array $data, array $configuration): array
     {
@@ -73,11 +72,10 @@ class HuwelijksplannerService
 
             // end voorbeeld code
             $resultArray[$currentDate->format('Y-m-d')][] = [
-                'start' => $currentDate->format('Y-m-d H:i:s'),
-                'stop' => $currentDate->add($interval)->format('Y-m-d H:i:s'),
+                'start'     => $currentDate->format('Y-m-d H:i:s'),
+                'stop'      => $currentDate->add($interval)->format('Y-m-d H:i:s'),
                 'resources' => $resourceArray,
             ];
-
         }
 
         $this->data['response'] = $resultArray;
@@ -91,9 +89,9 @@ class HuwelijksplannerService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
      *
+     * @return array
      */
     public function HuwelijksplannerCheckHandler(array $data, array $configuration): array
     {
