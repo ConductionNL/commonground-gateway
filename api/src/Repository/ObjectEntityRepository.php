@@ -360,16 +360,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function addSubresourceSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $search, int $level, string $prefix): array
     {
-        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
-        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjectsSearch'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjectsSearch'.$sqlFriendlyKey.$level.'.objectValues', 'subValueSearch'.$sqlFriendlyKey.$level);
 
         return $this->buildSearchQuery(
             $query,
             $attribute->getObject(),
             $search,
             $level + 1,
-            'subValue'.$sqlFriendlyKey.$level,
-            'subObjects'.$sqlFriendlyKey.$level
+            'subValueSearch'.$sqlFriendlyKey.$level,
+            'subObjectsSearch'.$sqlFriendlyKey.$level
         );
     }
 
@@ -821,15 +821,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function addSubresourceOrderBy(QueryBuilder $query, string $sqlFriendlyKey, array $value, int $level, string $prefix): QueryBuilder
     {
         // If $value is an array we need to order on a subresource (example: subresource.key = something)
-        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
-        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjectsOrderBy'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjectsOrderBy'.$sqlFriendlyKey.$level.'.objectValues', 'subValueOrderBy'.$sqlFriendlyKey.$level);
 
         return $this->addOrderBy(
             $query,
             $value,
             $level + 1,
-            'subValue'.$sqlFriendlyKey.$level,
-            'subObjects'.$sqlFriendlyKey.$level
+            'subValueOrderBy'.$sqlFriendlyKey.$level,
+            'subObjectsOrderBy'.$sqlFriendlyKey.$level
         );
     }
 
