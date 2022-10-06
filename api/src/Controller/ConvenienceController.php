@@ -254,7 +254,7 @@ class ConvenienceController extends AbstractController
      */
     public function githubEvents(Request $request): Response
     {
-        $content = json_decode($request->request->get('payload'));
+        $content = json_decode($request->request->get('payload'), true);
 
         return $this->publiccodeService->updateRepositoryWithEventResponse($content);
     }
