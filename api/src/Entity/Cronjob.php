@@ -96,7 +96,6 @@ class Cronjob
     /**
      * @var array The actions that put on the stack by the crontab.
      *
-     * @Assert\Choice({"commongateway.handler.pre", "commongateway.handler.post", "commongateway.cronjob.trigger"}, multiple=true)
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
