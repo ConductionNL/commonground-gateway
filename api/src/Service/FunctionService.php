@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\ObjectEntity;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -238,7 +239,7 @@ class FunctionService
      */
     private function removeChildResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
     {
-        foreach ($objectEntity->getAllSubresources(null) as $childObject) {
+        foreach ($objectEntity->getAllSubresources(new ArrayCollection()) as $childObject) {
             if (!$this->removeResultFromCache($childObject, $io) && $io !== null) {
                 $io->text("Successfully removed child Object (child of Object: {$objectEntity->getId()->toString()}) with id: {$childObject->getId()->toString()} (of Entity type: {$childObject->getEntity()->getName()}) from cache");
             }

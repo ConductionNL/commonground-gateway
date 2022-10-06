@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -12,10 +11,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class GithubApiService
 {
-    private EntityManagerInterface $entityManager;
     private ParameterBagInterface $parameterBag;
-    private SynchronizationService $synchronizationService;
-    private ObjectEntityService $objectEntityService;
     private ?Client $github;
     private ?Client $githubusercontent;
 
@@ -91,7 +87,7 @@ class GithubApiService
             'issue_open_count'        => $item['open_issues_count'],
             //            'merge_request_open_count'   => $this->requestFromUrl($item['merge_request_open_count']),
             'programming_languages'   => $this->requestFromUrl($item['languages_url']),
-            'organisation'            => $this->getGithubOwnerInfo($item),
+            'organisation'            => $item['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($item) : null,
             //            'topics' => $this->requestFromUrl($item['topics'], '{/name}'),
             //                'related_apis' => //
         ];
@@ -177,12 +173,9 @@ class GithubApiService
             'name'        => $item['owner']['login'],
             'description' => null,
             'logo'        => $item['owner']['avatar_url'] ?? null,
-            'supports'    => null,
             'owns'        => $this->getGithubOwnerRepositories($item['owner']['repos_url']),
-            'uses'        => null,
             'token'       => null,
             'github'      => $item['owner']['html_url'] ?? null,
-            'gitlab'      => null,
             'website'     => null,
             'phone'       => null,
             'email'       => null,
@@ -198,25 +191,80 @@ class GithubApiService
      *
      * @return array|null|Response
      */
-    public function getOrganisationOnUrl(string $slug): ?array
+    public function getGithubRepoFromOrganization(string $organizationName): ?array
     {
         if ($this->checkGithubKey()) {
             return $this->checkGithubKey();
         }
 
         try {
-            $response = $this->github->request('GET', 'repos/'.$slug);
+            $response = $this->github->request('GET', 'repos/'.$organizationName.'/.github');
         } catch (ClientException $exception) {
-            return new Response(
-                $exception,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
+            var_dump($exception->getMessage());
+
+            return null;
         }
 
-        $response = json_decode($response->getBody()->getContents(), true);
+        return Yaml::parse($response->getBody()->getContents());
+    }
 
-        return $response['owner']['type'] === 'Organization' ? $this->getGithubOwnerInfo($response) : null;
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $slug
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null|Response
+     */
+    public function getOpenCatalogiFromGithubRepo(string $organizationName): ?array
+    {
+        if ($this->checkGithubKey()) {
+            return $this->checkGithubKey();
+        }
+
+        try {
+            $response = $this->githubusercontent->request('GET', $organizationName.'/.github/main/openCatalogi.yaml');
+        } catch (ClientException $exception) {
+            var_dump($exception->getMessage());
+
+            return null;
+        }
+
+        return Yaml::parse($response->getBody()->getContents());
+    }
+
+    /**
+     * This function is searching for repositories containing a publiccode.yaml file.
+     *
+     * @param string $organizationName
+     * @param string $repositoryName
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null
+     */
+    public function getPubliccodeForGithubEvent(string $organizationName, string $repositoryName): ?array
+    {
+        $response = null;
+
+        try {
+            $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yaml');
+        } catch (ClientException $exception) {
+            var_dump($exception->getMessage());
+        }
+
+        if ($response == null) {
+            try {
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yaml');
+            } catch (ClientException $exception) {
+                var_dump($exception->getMessage());
+
+                return null;
+            }
+        }
+
+        return Yaml::parse($response->getBody()->getContents());
     }
 
     /**
