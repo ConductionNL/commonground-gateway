@@ -36,7 +36,7 @@ class PubliccodeService
      *
      * @return Response dataset at the end of the handler
      */
-    public function updateRepositoryWithEventResponse(array $content): Response
+    public function updateRepositoryWithEventResponse(array $content, string $contentType): Response
     {
         $repositoryEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
         $componentEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
@@ -78,7 +78,7 @@ class PubliccodeService
         $this->entityManager->persist($repository);
         $this->entityManager->flush();
 
-        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'json']);
+        return new Response(json_encode($repository->toArray()), 200, ['content-type' => $contentType]);
     }
 
     /**
