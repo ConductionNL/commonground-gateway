@@ -473,7 +473,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
-        // todo implement LIKE operator for (some of) these filters? just like normal filters? see getNormalValueFilter() function.
+        // todo implement LIKE operator for (some of) these filters? just like we do for normal filters? see getNormalValueFilter() function.
         $operator = '=';
         $allowedCompareNullKeys = ['_externalId', '_uri', '_self', '_organization', '_application'];
         if (is_string($value) && in_array($key, $allowedCompareNullKeys) && (strtoupper($value) === 'IS NOT NULL')) {
