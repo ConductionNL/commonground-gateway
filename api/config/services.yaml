@@ -101,6 +101,12 @@ services:
         class: App\Service\MapSimXMLService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
+    
+    mapRelocationService:
+        public: true
+        class: App\Service\MapRelocationService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             
     
     bijlagenArrayService:
