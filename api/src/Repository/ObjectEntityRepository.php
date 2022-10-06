@@ -503,6 +503,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 !empty($operator) ?
                     $query->andWhere("$prefix.self $operator :{$prefix}self")->setParameter("{$prefix}self", $value) :
                     $query->andWhere("$prefix.self $value");
+                break;
             case '_organization':
                 !empty($operator) ?
                     $query->andWhere("$prefix.organization $operator :{$prefix}organization")->setParameter("{$prefix}organization", $value) :
