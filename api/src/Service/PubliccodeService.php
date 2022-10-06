@@ -67,8 +67,8 @@ class PubliccodeService
             if ($organisation instanceof ObjectEntity) {
                 $organisation = $this->enrichRepositoryWithOrganisationRepos($organisation, $repositoryEntity);
             }
+            $this->getOrganizationCatalogi($organisation);
         }
-        $this->getOrganizationCatalogi($organisation);
 
         if ($component = $repository->getValue('component')) {
             $this->rateComponent($component, $ratingEntity);
