@@ -260,7 +260,6 @@ class ConvenienceController extends AbstractController
         return $this->publiccodeService->updateRepositoryWithEventResponse($content, $contentType);
     }
 
-
     /**
      * @Route("/admin/publiccode")
      *
