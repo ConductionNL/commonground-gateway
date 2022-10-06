@@ -805,11 +805,11 @@ class ObjectEntityService
                 // Note: attributes with function = id should also be readOnly and type=string
                 break;
             case 'self':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf());
                 // Note: attributes with function = self should also be readOnly and type=string
                 break;
             case 'uri':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $this->createUri($objectEntity));
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri());
                 // Note: attributes with function = uri should also be readOnly and type=string
                 break;
             case 'externalId':
