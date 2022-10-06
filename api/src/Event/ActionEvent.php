@@ -44,6 +44,7 @@ class ActionEvent extends Event
         if (in_array($type, self::EVENTS)) {
             $this->type = $type;
         } else {
+            $subType = $type;
             $this->type = 'commongateway.action.event';
         }
         $this->data = $data;

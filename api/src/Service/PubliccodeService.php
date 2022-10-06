@@ -66,9 +66,9 @@ class PubliccodeService
         if ($organisation = $repository->getValue('organisation')) {
             if ($organisation instanceof ObjectEntity) {
                 $organisation = $this->enrichRepositoryWithOrganisationRepos($organisation, $repositoryEntity);
+                $this->getOrganizationCatalogi($organisation);
             }
         }
-        $this->getOrganizationCatalogi($organisation);
 
         if ($component = $repository->getValue('component')) {
             $this->rateComponent($component, $ratingEntity);
@@ -78,7 +78,7 @@ class PubliccodeService
         $this->entityManager->persist($repository);
         $this->entityManager->flush();
 
-        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'json']);
+        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'application/json']);
     }
 
     /**
