@@ -45,11 +45,29 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function runFunction(Action $action, array $data): array
     {
+        // Is the action is lockable we need to lock it
+        if($action->isLockable()){
+            $action->setLocked(new \DateTime());
+            $this->entityManager->persist($action);
+            $this->entityManager->flush();
+        }
+
         $class = $action->getClass();
         $object = new $class($this->container);
         if ($object instanceof ActionHandlerInterface) {
             $data = $object->__run($data, $action->getConfiguration());
         }
+
+        // Is the action is lockable we need to unlock it
+        if($action->isLockable()){
+            $action->setLocked(null);
+        }
+
+        // Lets set some results
+        $action->lastRun(new \DateTime());
+        $action->setStatus(true); // this needs some refinement
+        $this->entityManager->persist($action);
+        $this->entityManager->flush();
 
         return $data;
     }
@@ -65,12 +83,24 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
+        // Lets see if the action prefents concurency
+        if($action->isLockable()){
+            // bijwerken uit de entity manger
+            $this->entityManager->refresh($action);
+
+            if($action->getLocked()){
+                return $event;
+            }
+        }
+
         if ($this->checkConditions($action, $event->getData())) {
+
             $event->setData($this->runFunction($action, $event->getData()));
             // throw events
             foreach ($action->getThrows() as $throw) {
                 $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
             }
+
         }
 
         return $event;
@@ -88,6 +118,7 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         foreach ($actions as $action) {
+
             $this->handleAction($action, $event);
         }
 
