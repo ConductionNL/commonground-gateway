@@ -25,13 +25,11 @@ class ClearObjectsFromCacheCommand extends Command
 {
     private InputInterface $input;
     private OutputInterface $output;
-    private CacheInterface $cache;
     private FunctionService $functionService;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(CacheInterface $cache, FunctionService $functionService, EntityManagerInterface $entityManager, string $name = null)
+    public function __construct(FunctionService $functionService, EntityManagerInterface $entityManager, string $name = null)
     {
-        $this->cache = $cache;
         $this->functionService = $functionService;
         $this->entityManager = $entityManager;
         parent::__construct($name);

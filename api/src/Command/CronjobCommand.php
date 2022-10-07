@@ -12,21 +12,28 @@ use Exception;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class CronjobCommand extends Command
 {
+    private InputInterface $input;
+    private OutputInterface $output;
     // the name of the command (the part after "bin/console")
     protected static $defaultName = 'cronjob:command';
     private EntityManagerInterface $entityManager;
     private EventDispatcherInterface $eventDispatcher;
+    private SessionInterface $session;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        SessionInterface $session
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
+        $this->session = $session;
 
         parent::__construct();
     }
@@ -68,7 +75,18 @@ class CronjobCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->input = $input;
+        $this->output = $output;
+        $io = new SymfonyStyle($input, $output);
+        $this->session->set('io', $io);
+
         $cronjobs = $this->entityManager->getRepository('App:Cronjob')->getRunnableCronjobs();
+        $total = count($cronjobs);
+
+        $io->title('Run all cronjobs');
+        $io->section("Found $total runnable cronjobs");
+        $io->progressStart($total);
+        $io->newLine();
 
         if ($cronjobs !== null) {
             foreach ($cronjobs as $cronjob) {
