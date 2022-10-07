@@ -46,7 +46,7 @@ class ActionSubscriber implements EventSubscriberInterface
     public function runFunction(Action $action, array $data): array
     {
         // Is the action is lockable we need to lock it
-        if($action->getIsLockable()){
+        if ($action->getIsLockable()) {
             $action->setLocked(new \DateTime());
             $this->entityManager->persist($action);
             $this->entityManager->flush();
@@ -64,7 +64,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $stopTimer = microtime(true);
 
         // Is the action is lockable we need to unlock it
-        if($action->getIsLockable()){
+        if ($action->getIsLockable()) {
             $action->setLocked(null);
         }
 
@@ -83,23 +83,21 @@ class ActionSubscriber implements EventSubscriberInterface
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
         // Lets see if the action prefents concurency
-        if($action->getIsLockable()){
+        if ($action->getIsLockable()) {
             // bijwerken uit de entity manger
             $this->entityManager->refresh($action);
 
-            if($action->getLocked()){
+            if ($action->getLocked()) {
                 return $event;
             }
         }
 
         if (JsonLogic::apply($action->getConditions(), $event->getData())) {
-
             $event->setData($this->runFunction($action, $event->getData()));
             // throw events
             foreach ($action->getThrows() as $throw) {
                 $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
             }
-
         }
 
         return $event;
@@ -117,7 +115,6 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         foreach ($actions as $action) {
-
             $this->handleAction($action, $event);
         }
 
