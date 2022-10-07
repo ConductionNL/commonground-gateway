@@ -135,6 +135,8 @@ class PubliccodeService
             $repository->setValue('component', $component);
             $this->entityManager->persist($repository);
             $this->entityManager->flush();
+        } else {
+            $component->setValue('name', $repository->getValue('name'));
         }
 
         return $repository;
@@ -453,7 +455,6 @@ class PubliccodeService
      */
     public function rateComponent(ObjectEntity $component, Entity $ratingEntity): ?ObjectEntity
     {
-        ini_set('max_execution_time', '1000');
         $ratingComponent = $this->ratingList($component);
 
         if (!$component->getValue('rating')) {
@@ -499,6 +500,7 @@ class PubliccodeService
         }
         $maxRating++;
 
+        // @todo does not work yet
         if ($repository = $component->getValue('url')) {
             if ($repository->getValue('url') !== null) {
                 $description[] = 'The url: '.$repository->getValue('url').' rated';
