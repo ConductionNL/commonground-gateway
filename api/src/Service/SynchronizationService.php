@@ -691,15 +691,16 @@ class SynchronizationService
      */
     private function clearUnavailableProperties(array $object): array
     {
+        $object = new Dot($object);
         // The properties to clear
         $properties = $this->configuration['apiSource']['unavailablePropertiesOut'];
         foreach ($properties as $property) {
-            if (key_exists($property, $object)) {
-                unset($object[$property]);
+            if ($object->has($property)) {
+                $object->delete($property);
             }
         }
 
-        return $object;
+        return $object->jsonSerialize();
     }
 
     /**
