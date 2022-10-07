@@ -90,22 +90,22 @@ class Action
     private array $listens;
 
     /**
-     * @var array The event names the action should trigger
+     * @var array|null The event names the action should trigger
      *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="simple_array", nullable=true)
      */
-    private array $throws = [];
+    private ?array $throws = [];
 
     /**
-     * @var array The conditions that the data object should match for the action to be triggered
+     * @var array|null The conditions that the data object should match for the action to be triggered
      *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="json", nullable=true)
      */
-    private array $conditions = [];
+    private ?array $conditions = [];
 
     /**
      * @var string|null The class that should be run when the action is triggered
@@ -136,11 +136,11 @@ class Action
     private bool $async = false;
 
     /**
-     * @var array The configuration of the action
+     * @var array|null The configuration of the action
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $configuration = [];
+    private ?array $configuration = [];
 
     /**
      * @Groups({"read", "write"})
@@ -162,15 +162,15 @@ class Action
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="integer", nullable=true)
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
-    private int $lastRunTime;
+    private ?int $lastRunTime = 0;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=true, options={"default": null})
      */
-    private bool $status;
+    private ?bool $status = null;
 
     /**
      * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
