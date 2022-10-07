@@ -92,63 +92,66 @@ class MapRelocationService
         foreach ($this->data['eigenschappen'] as $eigenschap) {
 
 
-            // if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
-            //     foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
-            //         var_dump(json_decode($eigenschap['waarde'], true));
-            //         switch ($meeverhuizende['ROL']) {
-            //             case 'P':
-            //                 $declarationType = 'PARTNER';
-            //                 break;
-            //             case 'K':
-            //                 $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
-            //                 break;
-            //             default:
-            //                 $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
-            //                 break;
-            //         }
-            //         $relocators[] = [
-            //             'bsn' => $meeverhuizende['BSN'],
-            //             'declarationType' => $declarationType
-            //         ];
-            //     }
-            //     continue;
-            // }
+            if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+                foreach (json_decode($eigenschap['waarde'], true)['MEEVERHUIZENDE_GEZINSLEDEN'] as $meeverhuizende) {
+                    switch ($meeverhuizende['ROL']) {
+                        case 'P':
+                            $declarationType = 'PARTNER';
+                            break;
+                        case 'K':
+                            $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+                            break;
+                        default:
+                            $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+                            break;
+                    }
+                    $relocators[] = [
+                        'bsn' => $meeverhuizende['BSN'],
+                        'declarationType' => $declarationType
+                    ];
+                }
+                continue;
+            }
 
             switch ($eigenschap['naam']) {
                 case 'DATUM_VERZENDING':
-                    $relocationArray['dossier']['startDate'] = $eigenschap['waarde'];
-                    continue;
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
+                    continue 2;
                 case 'VERHUISDATUM':
-                    $relocationArray['dossier']['entryDateTime'] = $eigenschap['waarde'];
-                    $relocationArray['dossier']['status']['entryDateTime'] = $eigenschap['waarde'];
-                    continue;
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+                    continue 2;
                 case 'WOONPLAATS_NIEUW':
                     $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'WIJZE_BEWONING':
                     $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'TELEFOONNUMMER':
                     $relocator['telephoneNumber'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'STRAATNAAM_NIEUW':
                     $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'POSTCODE_NIEUW':
                     $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'HUISNUMMER_NIEUW':
                     $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
-                    continue;
+                    continue 2;
                 case 'HUISNUMMERTOEVOEGING_NIEUW':
-                    $relocationArray['newAddress']['houseNumberAddittion'] = $eigenschap['waarde'];
-                    continue;
+                    $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'GEMEENTECODE':
                     $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'EMAILADRES':
                     $relocator['email'] = $eigenschap['waarde'];
-                    continue;
+                    continue 2;
                 case 'BSN':
                     $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
                     $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
@@ -159,22 +162,23 @@ class MapRelocationService
                             'bsn' => $eigenschap['waarde']
                         ]
                     ];
-                    continue;
+                    continue 2;
                 case 'AANTAL_PERS_NIEUW_ADRES':
                     $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
-                    continue;
+                    continue 2;
             }
         }
 
         $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
-            'email' => $relocator['email'],
-            'telephoneNumber' => $relocator['telephoneNumber']
+            'email' => $relocator['email'] ?? null,
+            'telephoneNumber' => $relocator['telephoneNumber'] ?? null
         ];
         $relocationArray['newAddress']['mainOccupant']['contactInformation'] = [
-            'email' => $relocator['email'],
-            'telephoneNumber' => $relocator['telephoneNumber']
+            'email' => $relocator['email'] ?? null,
+            'telephoneNumber' => $relocator['telephoneNumber'] ?? null
         ];
-        // $relocationArray['relocators'] = $relocators;
+        $relocationArray['relocators'] = $relocators;
+        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
 
         // Save in gateway
 
@@ -186,8 +190,9 @@ class MapRelocationService
         $this->entityManager->persist($intraObjectEntity);
         $this->entityManager->flush();
 
-        var_dump($intraRelocationEntity->getId()->toString());
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $intraObjectEntity->toArray()]);
+        $intraObjectArray = $intraObjectEntity->toArray();
+
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $intraObjectArray]);
 
         return $this->data;
     }
