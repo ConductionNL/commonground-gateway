@@ -24,6 +24,7 @@ class BijlagenArrayService
         $simXML = $data['request'];
 
         isset($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['ns2:Bijlagen']) && $bijlagen = $simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['ns2:Bijlagen'];
+        isset($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN']) && $meeverhuizende = $simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN']['MEEVERHUIZENDE_GEZINSLEDEN'];
 
         if (isset($bijlagen['ns2:Bijlage']['ns2:Naam'])) {
             $simXML['Bijlagen'] = [];
@@ -32,7 +33,20 @@ class BijlagenArrayService
             $simXML['Bijlagen'] = [];
             $simXML['Bijlagen'] = $bijlagen['ns2:Bijlage'];
         }
-
+        if (isset($meeverhuizende['MEEVERHUIZEND_GEZINSLID']['BSN'])) {
+            $simXML['Body']['Elementen']['MEEVERHUIZENDE_GEZINSLEDEN'] = [];
+            $simXML['Body']['Elementen']['MEEVERHUIZENDE_GEZINSLEDEN'][] = $meeverhuizende['MEEVERHUIZEND_GEZINSLID'];
+        } elseif (isset($meeverhuizende['MEEVERHUIZEND_GEZINSLID'][0])) {
+            $simXML['Body']['Elementen']['MEEVERHUIZENDE_GEZINSLEDEN'] = [];
+            foreach ($meeverhuizende['MEEVERHUIZEND_GEZINSLID'] as $gezinslid) {
+                $simXML['Body']['Elementen']['MEEVERHUIZENDE_GEZINSLEDEN'][] = $gezinslid;
+            }
+        }
+        foreach ($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN'] as $elementKey => $elementValue) {
+            $elementKey !== 'MEEVERHUIZENDE_GEZINSLEDEN' && $simXML['Body']['Elementen'][$elementKey] = $elementValue;
+        }
+        // var_dump(json_encode($simXML));
+        // die;
         return ['request' => $simXML];
     }
 }
