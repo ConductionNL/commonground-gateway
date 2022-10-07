@@ -143,32 +143,37 @@ class Action
     private array $configuration = [];
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", options={"default":false})
      */
     private bool $isLockable = false;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $locked;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $lastRun;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
     private int $lastRunTime;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
     private bool $status;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $actionLogs;
 
