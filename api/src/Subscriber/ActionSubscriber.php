@@ -54,9 +54,12 @@ class ActionSubscriber implements EventSubscriberInterface
 
         $class = $action->getClass();
         $object = new $class($this->container);
+
+        // timer starten
         if ($object instanceof ActionHandlerInterface) {
             $data = $object->__run($data, $action->getConfiguration());
         }
+        // timer stoppen
 
         // Is the action is lockable we need to unlock it
         if($action->isLockable()){
@@ -65,6 +68,7 @@ class ActionSubscriber implements EventSubscriberInterface
 
         // Lets set some results
         $action->lastRun(new \DateTime());
+        $action->lastRunTime(); // even nadenken hoe
         $action->setStatus(true); // this needs some refinement
         $this->entityManager->persist($action);
         $this->entityManager->flush();
