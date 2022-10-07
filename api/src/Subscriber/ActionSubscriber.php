@@ -46,7 +46,7 @@ class ActionSubscriber implements EventSubscriberInterface
     public function runFunction(Action $action, array $data): array
     {
         // Is the action is lockable we need to lock it
-        if($action->isLockable()){
+        if($action->getIsLockable()){
             $action->setLocked(new \DateTime());
             $this->entityManager->persist($action);
             $this->entityManager->flush();
@@ -56,19 +56,23 @@ class ActionSubscriber implements EventSubscriberInterface
         $object = new $class($this->container);
 
         // timer starten
+        $startTimer = microtime(true);
         if ($object instanceof ActionHandlerInterface) {
             $data = $object->__run($data, $action->getConfiguration());
         }
         // timer stoppen
+        $stopTimer = microtime(true);
 
         // Is the action is lockable we need to unlock it
-        if($action->isLockable()){
+        if($action->getIsLockable()){
             $action->setLocked(null);
         }
 
-        // Lets set some results
-        $action->lastRun(new \DateTime());
-        $action->lastRunTime(); // even nadenken hoe
+        $totalTime = $stopTimer - $startTimer;
+
+        // Let's set some results
+        $action->setLastRun(new \DateTime());
+        $action->setLastRunTime($totalTime);
         $action->setStatus(true); // this needs some refinement
         $this->entityManager->persist($action);
         $this->entityManager->flush();
@@ -76,19 +80,10 @@ class ActionSubscriber implements EventSubscriberInterface
         return $data;
     }
 
-    public function checkConditions(Action $action, array $data): bool
-    {
-        $conditions = $action->getConditions();
-
-        $result = JsonLogic::apply($conditions, $data);
-
-        return (bool) $result;
-    }
-
     public function handleAction(Action $action, ActionEvent $event): ActionEvent
     {
         // Lets see if the action prefents concurency
-        if($action->isLockable()){
+        if($action->getIsLockable()){
             // bijwerken uit de entity manger
             $this->entityManager->refresh($action);
 
@@ -97,7 +92,7 @@ class ActionSubscriber implements EventSubscriberInterface
             }
         }
 
-        if ($this->checkConditions($action, $event->getData())) {
+        if (JsonLogic::apply($action->getConditions(), $event->getData())) {
 
             $event->setData($this->runFunction($action, $event->getData()));
             // throw events
