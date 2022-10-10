@@ -72,8 +72,8 @@ class HuwelijksplannerService
 
             // end voorbeeld code
             $resultArray[$currentDate->format('Y-m-d')][] = [
-                'start'     => $currentDate->format('Y-m-d H:i:s'),
-                'stop'      => $currentDate->add($interval)->format('Y-m-d H:i:s'),
+                'start'     => $currentDate->format('Y-m-d\TH:i:sO'),
+                'stop'      => $currentDate->add($interval)->format('Y-m-d\TH:i:sO'),
                 'resources' => $resourceArray,
             ];
         }

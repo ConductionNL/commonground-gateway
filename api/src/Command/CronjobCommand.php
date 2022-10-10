@@ -53,7 +53,7 @@ class CronjobCommand extends Command
     {
         foreach ($cronjob->getThrows() as $throw) {
             $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
-            $this->eventDispatcher->dispatch($actionEvent, $throw);
+            $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
 
             // Get crontab expression and set the next and last run properties
             // Save cronjob in the database

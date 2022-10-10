@@ -66,9 +66,9 @@ class PubliccodeService
         if ($organisation = $repository->getValue('organisation')) {
             if ($organisation instanceof ObjectEntity) {
                 $organisation = $this->enrichRepositoryWithOrganisationRepos($organisation, $repositoryEntity);
+                $this->getOrganizationCatalogi($organisation);
             }
         }
-        $this->getOrganizationCatalogi($organisation);
 
         if ($component = $repository->getValue('component')) {
             $this->rateComponent($component, $ratingEntity);
@@ -78,7 +78,7 @@ class PubliccodeService
         $this->entityManager->persist($repository);
         $this->entityManager->flush();
 
-        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'json']);
+        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'application/json']);
     }
 
     /**
@@ -135,6 +135,8 @@ class PubliccodeService
             $repository->setValue('component', $component);
             $this->entityManager->persist($repository);
             $this->entityManager->flush();
+        } else {
+            $component->setValue('name', $repository->getValue('name'));
         }
 
         return $repository;
@@ -453,7 +455,6 @@ class PubliccodeService
      */
     public function rateComponent(ObjectEntity $component, Entity $ratingEntity): ?ObjectEntity
     {
-        ini_set('max_execution_time', '1000');
         $ratingComponent = $this->ratingList($component);
 
         if (!$component->getValue('rating')) {
@@ -499,6 +500,7 @@ class PubliccodeService
         }
         $maxRating++;
 
+        // @todo does not work yet
         if ($repository = $component->getValue('url')) {
             if ($repository->getValue('url') !== null) {
                 $description[] = 'The url: '.$repository->getValue('url').' rated';

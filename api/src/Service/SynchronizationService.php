@@ -324,7 +324,7 @@ class SynchronizationService
     {
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
-        if (array_key_exists('sourceLimit', $this->configuration)) {
+        if (array_key_exists('sourceLimit', $this->configuration['apiSource'])) {
             $key = array_key_exists('sourceLimitKey', $this->configuration['apiSource']) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
             $query[$key] = $this->configuration['apiSource']['sourceLimit'];
         }
