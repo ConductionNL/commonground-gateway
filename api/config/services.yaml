@@ -95,6 +95,12 @@ services:
         class: App\Service\MapZaakTypeService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
+        
+    handelsRegisterSearchService:
+        public: true
+        class: App\Service\HandelsRegisterSearchService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             
     Redis:
         class: Redis
