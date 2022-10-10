@@ -107,8 +107,13 @@ services:
         class: App\Service\MapRelocationService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
+
+    mapCommitmentService:
+        public: true
+        class: App\Service\MapCommitmentService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             
-    
     bijlagenArrayService:
         public: true
         class: App\Service\BijlagenArrayService

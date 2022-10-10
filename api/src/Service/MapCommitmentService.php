@@ -6,7 +6,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 
-class MapRelocationService
+class MapCommitmentService
 {
     private EntityManagerInterface $entityManager;
     private TranslationService $translationService;
@@ -48,10 +48,12 @@ class MapRelocationService
      *
      * @return array $this->data Data which we entered the function with
      */
-    public function mapRelocationHandler(array $data, array $configuration): array
+    public function mapCommitmentHandler(array $data, array $configuration): array
     {
         $this->data = $data['response'];
         $this->configuration = $configuration;
+
+        var_dump('MAP COMMITMENT TRIGGERED');
 
         if ($this->data['zaaktype']['omschrijving'] !== 'B0366') {
             return $this->data;
