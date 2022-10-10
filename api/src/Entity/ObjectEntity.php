@@ -823,20 +823,20 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1): array
+    public function toArray(int $level = 1, array $extend = ['id']): array
     {
         $array = [];
-        $array['id'] = (string) $this->getId();
+        in_array('id', $extend) && $array['id'] = (string) $this->getId();
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $level < 5) {
-                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1);
+                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1, $extend);
                 } elseif ($level < 5) {
                     foreach ($valueObject->getObjects() as $object) {
-                        $array[$attribute->getName()][] = $object->toArray($level + 1); // getValue will return a single ObjectEntity
+                        $array[$attribute->getName()][] = $object->toArray($level + 1, $extend); // getValue will return a single ObjectEntity
                     }
                 }
             } else {
