@@ -42,11 +42,12 @@ class BijlagenArrayService
                 $simXML['Body']['Elementen']['MEEVERHUIZENDE_GEZINSLEDEN'][] = $gezinslid;
             }
         }
-        foreach ($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN'] as $elementKey => $elementValue) {
-            $elementKey !== 'MEEVERHUIZENDE_GEZINSLEDEN' && $simXML['Body']['Elementen'][$elementKey] = $elementValue;
+        if (isset($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN'])) {
+            foreach ($simXML['SOAP-ENV:Body']['ns2:OntvangenIntakeNotificatie']['Body']['SIMXML']['ELEMENTEN'] as $elementKey => $elementValue) {
+                $elementKey !== 'MEEVERHUIZENDE_GEZINSLEDEN' && $simXML['Body']['Elementen'][$elementKey] = $elementValue;
+            }
         }
-        // var_dump(json_encode($simXML));
-        // die;
+
         return ['request' => $simXML];
     }
 }
