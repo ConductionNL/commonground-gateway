@@ -124,6 +124,7 @@ class MapRelocationService
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
                     $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['type']['code'] = $this->data['zaaktype']['omschrijving'];
                     continue 2;
                 case 'WOONPLAATS_NIEUW':
                     $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
