@@ -30,8 +30,9 @@ class HandelsRegisterSearchService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws CacheException|InvalidArgumentException
+     *
+     * @return array
      */
     public function handelsRegisterSearchHandler(array $data, array $configuration): array
     {
@@ -73,6 +74,7 @@ class HandelsRegisterSearchService
      * Make sure the query params used with the zoeken endpoint also match the query params we can use for vestigingen.
      *
      * @param array $queryParameters
+     *
      * @return array
      */
     private function fixQueryParams(array $queryParameters): array
@@ -101,7 +103,7 @@ class HandelsRegisterSearchService
 
         // Lets always extend all by default
         if (!isset($queryParameters['extend'])) {
-            $queryParameters['extend'] = ["all"];
+            $queryParameters['extend'] = ['all'];
         }
 
         return $queryParameters;
@@ -118,7 +120,7 @@ class HandelsRegisterSearchService
             $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entities']['vestiging']]);
             if ($entity instanceof Entity) {
                 return [
-                    'vestiging' => $entity
+                    'vestiging' => $entity,
                 ];
             }
         }
