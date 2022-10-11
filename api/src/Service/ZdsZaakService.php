@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use Exception;
@@ -13,12 +15,15 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use function Ramsey\Uuid\v4;
 
 class ZdsZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
     private ObjectEntityService $objectEntityService;
+    private CommonGroundService $commonGroundService;
     private array $configuration;
     private array $data;
     private array $usedValues = [];
@@ -31,11 +36,13 @@ class ZdsZaakService
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService,
-        ObjectEntityService $objectEntityService
+        ObjectEntityService $objectEntityService,
+        CommonGroundService $commonGroundService
     ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
         $this->objectEntityService = $objectEntityService;
+        $this->commonGroundService = $commonGroundService;
     }
 
     /**
@@ -830,6 +837,7 @@ class ZdsZaakService
         $this->configuration = $configuration;
 
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+
         $zakenEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
         $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
 
@@ -870,6 +878,65 @@ class ZdsZaakService
             $this->entityManager->flush();
         }
 
+        return $data;
+    }
+
+    public function createDi02Message(string $messageType, string $referenceNumber): string
+    {
+        $now = new \DateTime();
+        $array = [
+            '@xmlns:SOAP-ENV'   => "http://schemas.xmlsoap.org/soap/envelope/",
+            '@xmlns:ns1'        => "http://www.egem.nl/StUF/StUF0301",
+            '@xmlns:ns2'        => "http://www.egem.nl/StUF/sector/zkn/0310",
+            'SOAP-ENV:Body'     => [
+                "ns2:{$messageType}_Di02"  => [
+                    "ns2:stuurgegevens" => [
+                        "ns1:berichtcode"       =>  "Di02",
+                        "ns1:zender"            =>  $this->configuration['xmlZender'],
+                        "ns1:ontvanger"         =>  $this->configuration['xmlOntvanger'],
+                        "ns1:referentienummer"  =>  $referenceNumber,
+                        "ns1:tijdstipBericht"   =>  $now->format('Ymdhisu'),
+                        "ns1:functie"           =>  $messageType,
+                    ]
+                ]
+            ]
+        ];
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => "SOAP-ENV:Envelope"]);
+        return $xmlEncoder->encode($array, 'xml');
+    }
+
+    public function getIdentifierFromDu02 (string $Du02): string
+    {
+        $xmlEncoder = new XmlEncoder(['xml_root_node_name' => "SOAP-ENV:Envelope"]);
+        $array = $xmlEncoder->decode($Du02, 'xml');
+
+        if(isset($array['SOAP-ENV:Body']['ZKN:genereerZaakIdentificatie_Du02']['ZKN:zaak']['ZKN:identificatie'])) {
+            return $array['SOAP-ENV:Body']['ZKN:genereerZaakIdentificatie_Du02']['ZKN:zaak']['ZKN:identificatie'];
+        } else {
+            throw new Exception('Creating case identifier resulted in an error.');
+        }
+
+    }
+
+    public function identificationHandler(array $data, array $configuration): array
+    {
+        $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+        $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
+        if($zaak->getValue('identificatie') !== null && $configuration['entityType'] == 'ZAK') {
+            return $data;
+        }
+        $this->configuration = $configuration;
+        if($configuration['entityType'] == 'ZAK') {
+            $messageType = 'genereerZaakIdentificatie';
+        } else {
+            $messageType = 'genereerDocumentIdentificatie';
+        }
+        $body = $this->createDi02Message($messageType, Uuid::uuid4());
+        $source = $this->entityManager->getRepository(Gateway::class)->find($this->configuration['source']);
+        $du02 = $this->commonGroundService->callService($source->toArray(), $source->getLocation().($this->configuration['apiSource']['location'] ?? ''), $body, [], [], false, 'POST');
+        if($configuration['entityType'] == 'ZAK') {
+            $zaak->setValue('identificatie', $this->getIdentifierFromDu02($du02->getBody()->getContents()));
+        }
         return $data;
     }
 }

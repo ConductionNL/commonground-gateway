@@ -839,6 +839,23 @@ class SynchronizationService
         }
     }
 
+    public function decodeResponse(string $responseBody, string $contentType): array
+    {
+        if(!$responseBody) {
+            return [];
+        }
+        switch($contentType) {
+            case 'text/xml':
+            case 'text/xml; charset=utf-8':
+            case 'application/xml':
+                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
+                return $xmlEncoder->decode($responseBody, 'xml');
+            case 'application/json':
+            default:
+                return json_decode($responseBody, true);
+        }
+    }
+
     /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
@@ -860,7 +877,6 @@ class SynchronizationService
         $objectArray = $this->mapOutput($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
-
         try {
             $result = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
@@ -887,8 +903,11 @@ class SynchronizationService
 //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
 //            ]);
         }
-
-        $body = json_decode($result->getBody()->getContents(), true);
+        $contentType = $result->getHeader('content-type')[0];
+        if(!$contentType) {
+            $contentType = $result->getHeader('Content-Type')[0];
+        }
+        $body = $this->decodeResponse($result->getBody()->getContents(), $contentType);
 
         return $this->storeSynchronization($synchronization, $body);
     }

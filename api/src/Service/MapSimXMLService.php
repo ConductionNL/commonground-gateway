@@ -264,7 +264,7 @@ class MapSimXMLService
         return $rolType;
     }
 
-    public function createRol (ObjectEntity $zaakObject, array $simXMLArray, string $rolEntity, string $rolTypeEntity, ObjectEntity $zaakType): ObjectEntity
+    public function createRollen (ObjectEntity $zaakObject, array $simXMLArray, string $rolEntity, string $rolTypeEntity, ObjectEntity $zaakType): ObjectEntity
     {
         $rolType = $this->createRolType($rolTypeEntity, $simXMLArray, $zaakType);
         $rolArray = [
@@ -336,8 +336,14 @@ class MapSimXMLService
         $zaakObjectEntity = $this->objectEntityRepo->find($zaakObjectEntity->getId()->toString());
 
         $documents = $this->createDocumenten($zaakObjectEntity, $documentEntity, $simXMLArray);
-        $this->createRol($zaakObjectEntity, $simXMLArray, $configuration['entities']['rolEntityId'], $configuration['entities']['rolTypeEntityId'], $zaakObjectEntity);
+        $this->createRollen($zaakObjectEntity, $simXMLArray, $configuration['entities']['rolEntityId'], $configuration['entities']['rolTypeEntityId'], $zaakObjectEntity);
+        $simXMLObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id']);
 
+        $simXMLObject->setValue('zgwZaak', $zaakObjectEntity->getId()->toString());
+        $simXMLObject->setValue('zgwDocumenten', $documents);
+
+        $this->entityManager->persist($simXMLObject);
+        $this->entityManager->flush();
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $zaakEntity->getId()->toString(), 'response' => $zaakObjectEntity->toArray()]);
 
         return $this->data;
