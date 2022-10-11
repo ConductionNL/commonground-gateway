@@ -846,11 +846,12 @@ class ZdsZaakService
     /**
      * Decides the message parameters for messages translated from SimXML to ZDS.
      *
-     * @param ObjectEntity $simXML The SimXML data
-     * @param string $entityType The entity type of the data
+     * @param ObjectEntity $simXML     The SimXML data
+     * @param string       $entityType The entity type of the data
+     *
+     * @throws Exception
      *
      * @return array The resulting header block
-     * @throws Exception
      */
     public function getStuurgegevensFromSimXML(ObjectEntity $simXML, string $entityType): array
     {
