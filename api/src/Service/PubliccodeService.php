@@ -2,15 +2,16 @@
 
 namespace App\Service;
 
+use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Symfony\Component\HttpFoundation\Response;
 
 class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
-    private SynchronizationService $synchronizationService;
-    private ObjectEntityService $objectEntityService;
     private GithubApiService $githubService;
     private GitlabApiService $gitlabService;
     private array $configuration;
@@ -18,14 +19,10 @@ class PubliccodeService
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        SynchronizationService $synchronizationService,
-        ObjectEntityService $objectEntityService,
         GithubApiService $githubService,
         GitlabApiService $gitlabService
     ) {
         $this->entityManager = $entityManager;
-        $this->synchronizationService = $synchronizationService;
-        $this->objectEntityService = $objectEntityService;
         $this->githubService = $githubService;
         $this->gitlabService = $gitlabService;
         $this->configuration = [];
@@ -33,22 +30,69 @@ class PubliccodeService
     }
 
     /**
-     * @param string $publiccodeUrl
+     * @param array $content
      *
      * @throws GuzzleException
      *
-     * @return array dataset at the end of the handler
+     * @return Response dataset at the end of the handler
      */
-    public function enrichRepositoryWithPubliccode(ObjectEntity $repository): ?ObjectEntity
+    public function updateRepositoryWithEventResponse(array $content): Response
     {
-        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
-        $descriptionEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['descriptionEntityId']);
+        $repositoryEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Repository']);
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Component']);
+        $organisationEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Organisation']);
+        $descriptionEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Description']);
+        $ratingEntity = $this->entityManager->getRepository('App:Entity')->findOneBy(['name' => 'Rating']);
 
-        $publiccode = [];
-        if ($publiccodeUrl = $repository->getValue('publiccode_url')) {
-            $publiccode = $this->githubService->getPubliccode($publiccodeUrl);
+        $repositoryName = $content['repository']['name'];
+
+        if (!$this->entityManager->getRepository('App:ObjectEntity')->findByEntity($repositoryEntity, ['name' => $repositoryName])) {
+            $repository = new ObjectEntity();
+            $repository->setEntity($repositoryEntity);
+        } else {
+            $repository = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($repositoryEntity, ['name' => $repositoryName])[0];
         }
 
+        if ($publiccodeUrl = $repository->getValue('publiccode_url')) {
+            if (is_array($publiccode = $this->githubService->getPubliccode($publiccodeUrl))) {
+                $this->enrichRepositoryWithPubliccode($repository, $componentEntity, $descriptionEntity, $publiccode);
+            }
+        } elseif ($publiccode = $this->githubService->getPubliccodeForGithubEvent($content['organization']['login'], $content['repository']['name'])) {
+            $this->enrichRepositoryWithPubliccode($repository, $componentEntity, $descriptionEntity, $publiccode);
+        }
+
+        $this->enrichRepositoryWithOrganisation($repository, $organisationEntity);
+
+        if ($organisation = $repository->getValue('organisation')) {
+            if ($organisation instanceof ObjectEntity) {
+                $organisation = $this->enrichRepositoryWithOrganisationRepos($organisation, $repositoryEntity);
+                $this->getOrganizationCatalogi($organisation);
+            }
+        }
+
+        if ($component = $repository->getValue('component')) {
+            $this->rateComponent($component, $ratingEntity);
+        }
+
+        $repository->setValue('name', $content['repository']['name']);
+        $this->entityManager->persist($repository);
+        $this->entityManager->flush();
+
+        return new Response(json_encode($repository->toArray()), 200, ['content-type' => 'application/json']);
+    }
+
+    /**
+     * @param ObjectEntity $repository
+     * @param Entity       $componentEntity
+     * @param Entity       $descriptionEntity
+     * @param array        $publiccode
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity|null dataset at the end of the handler
+     */
+    public function enrichRepositoryWithPubliccode(ObjectEntity $repository, Entity $componentEntity, Entity $descriptionEntity, array $publiccode = []): ?ObjectEntity
+    {
         if (!$repository->getValue('component')) {
             $component = new ObjectEntity();
             $component->setEntity($componentEntity);
@@ -89,134 +133,13 @@ class PubliccodeService
 
             $this->entityManager->persist($component);
             $repository->setValue('component', $component);
-            $repository->setValue('url', $publiccode['url'] ?? null);
             $this->entityManager->persist($repository);
+            $this->entityManager->flush();
+        } else {
+            $component->setValue('name', $repository->getValue('name'));
         }
-
-        $this->entityManager->flush();
 
         return $repository;
-    }
-
-    /**
-     * @param ObjectEntity $repository the repository where we want to find an organisation for
-     *
-     * @throws \Exception
-     */
-    public function setRepositoryWithGithubInfo(ObjectEntity $repository, $github): ObjectEntity
-    {
-        $repository->setValue('source', 'github');
-        $repository->setValue('name', $github['name']);
-        $repository->setValue('url', $github['url']);
-        $repository->setValue('avatar_url', $github['avatar_url']);
-        $repository->setValue('last_change', $github['last_change']);
-        $repository->setValue('stars', $github['stars']);
-        $repository->setValue('fork_count', $github['fork_count']);
-        $repository->setValue('issue_open_count', $github['issue_open_count']);
-        $repository->setValue('programming_languages', $github['programming_languages']);
-        $this->entityManager->persist($repository);
-
-        return $repository;
-    }
-
-    /**
-     * @param ObjectEntity $repository the repository where we want to find an organisation for
-     *
-     * @throws \Exception
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
-    public function enrichRepositoryWithOrganisation(ObjectEntity $repository): ?ObjectEntity
-    {
-        $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
-
-        if (!$repository->getValue('url')) {
-            return null;
-        }
-        $source = $repository->getValue('source');
-        $url = $repository->getValue('url');
-
-        if ($source == null) {
-            $domain = parse_url($url, PHP_URL_HOST);
-            $domain == 'github.com' && $source = 'github';
-            $domain == 'gitlab.com' && $source = 'gitlab';
-        }
-
-        switch ($source) {
-            case 'github':
-                // let's get the repository data
-                $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
-                if ($github !== null) {
-                    $repository = $this->setRepositoryWithGithubInfo($repository, $github);
-
-                    if (!$this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $github['organisation']['github']])->getObjectEntity()) {
-                        $organisation = new ObjectEntity();
-                        $organisation->setEntity($organisationEntity);
-                    } else {
-                        $organisation = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $github['organisation']['github']])->getObjectEntity();
-                    }
-
-                    $organisation->setValue('owns', $github['organisation']['owns']);
-                    $organisation->hydrate($github['organisation']);
-                    $repository->setValue('organisation', $organisation);
-                    $this->entityManager->persist($organisation);
-                    $this->entityManager->persist($repository);
-
-                    $this->entityManager->flush();
-
-                    return $repository;
-                }
-            case 'gitlab':
-                // hetelfde maar dan voor gitlab
-            default:
-                // error voor onbeknd type
-        }
-
-        return null;
-    }
-
-    /**
-     * @param ObjectEntity $organisation
-     *
-     * @throws GuzzleException
-     *
-     * @return ObjectEntity|null
-     */
-    public function enrichRepositoryWithOrganisationRepos(ObjectEntity $organisation): ?ObjectEntity
-    {
-        $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
-
-        if (!$owns = $organisation->getValue('owns')) {
-            return null;
-        }
-
-        $source = null;
-        foreach ($owns as $repositoryUrl) {
-            $domain = parse_url($repositoryUrl, PHP_URL_HOST);
-            $domain == 'github.com' && $source = 'github';
-            $domain == 'gitlab.com' && $source = 'gitlab';
-
-            $repository = new ObjectEntity();
-            $repository->setEntity($repositoryEntity);
-
-            switch ($source) {
-                case 'github':
-                    // let's get the repository data
-                    $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($repositoryUrl, PHP_URL_PATH), '/'));
-
-                    if ($github !== null) {
-                        $repository = $this->setRepositoryWithGithubInfo($repository, $github);
-                        $this->entityManager->flush();
-
-                        return $repository;
-                    }
-                case 'gitlab':
-                    // hetelfde maar dan voor gitlab
-                default:
-                    // error voor onbeknd type
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -233,41 +156,305 @@ class PubliccodeService
         $this->data = $data;
 
         $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
+        $descriptionEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['descriptionEntityId']);
         // If we want to do it for al repositories
         foreach ($repositoryEntity->getObjectEntities() as $repository) {
-            $repository = $this->enrichRepositoryWithPubliccode($repository);
-            $repository = $this->enrichRepositoryWithOrganisation($repository);
-
-            if ($repository === null) {
-                continue;
-            }
-
-            if ($organisation = $repository->getValue('organisation')) {
-                if ($organisation instanceof ObjectEntity) {
-                    $this->enrichRepositoryWithOrganisationRepos($organisation);
+            if ($publiccodeUrl = $repository->getValue('publiccode_url')) {
+                if (is_array($publiccode = $this->githubService->getPubliccode($publiccodeUrl))) {
+                    $this->enrichRepositoryWithPubliccode($repository, $componentEntity, $descriptionEntity, $publiccode);
                 }
             }
         }
 
-        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
-        foreach ($componentEntity->getObjectEntities() as $component) {
-            $this->rateComponent($component);
+        return $this->data;
+    }
+
+    /**
+     * @param ObjectEntity $repository the repository where we want to find an organisation for
+     *
+     * @throws Exception
+     */
+    public function setRepositoryWithGithubInfo(ObjectEntity $repository, $github): ObjectEntity
+    {
+        $repository->setValue('source', 'github');
+        $repository->setValue('name', $github['name']);
+        $repository->setValue('url', $github['url']);
+        $repository->setValue('avatar_url', $github['avatar_url']);
+        $repository->setValue('last_change', $github['last_change']);
+        $repository->setValue('stars', $github['stars']);
+        $repository->setValue('fork_count', $github['fork_count']);
+        $repository->setValue('issue_open_count', $github['issue_open_count']);
+        $repository->setValue('programming_languages', $github['programming_languages']);
+
+        $this->entityManager->persist($repository);
+
+        return $repository;
+    }
+
+    /**
+     * @param ObjectEntity $repository the repository where we want to find an organisation for
+     *
+     * @throws Exception
+     * @throws GuzzleException
+     */
+    public function enrichRepositoryWithOrganisation(ObjectEntity $repository, Entity $organisationEntity): ?ObjectEntity
+    {
+        if (!$repository->getValue('url')) {
+            return null;
         }
-        $this->entityManager->flush();
+        $source = $repository->getValue('source');
+        $url = $repository->getValue('url');
+
+        if ($source == null) {
+            $domain = parse_url($url, PHP_URL_HOST);
+            $domain == 'github.com' && $source = 'github';
+            $domain == 'gitlab.com' && $source = 'gitlab';
+        }
+
+        switch ($source) {
+            case 'github':
+                // let's get the repository data
+                $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($url, PHP_URL_PATH), '/'));
+                if ($github !== null && array_key_exists('organisation', $github) && $github['organisation'] !== null) {
+                    $repository = $this->setRepositoryWithGithubInfo($repository, $github);
+
+                    if (!$this->entityManager->getRepository('App:ObjectEntity')->findByEntity($organisationEntity, ['github' => $github['organisation']['github']])) {
+                        $organisation = new ObjectEntity();
+                        $organisation->setEntity($organisationEntity);
+                    } else {
+                        $organisation = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($organisationEntity, ['github' => $github['organisation']['github']])[0];
+                    }
+
+                    $organisation->setValue('owns', $github['organisation']['owns']);
+                    $organisation->hydrate($github['organisation']);
+                    $repository->setValue('organisation', $organisation);
+                    $this->entityManager->persist($organisation);
+                    $this->entityManager->persist($repository);
+                    $this->entityManager->flush();
+
+                    return $repository;
+                }
+            case 'gitlab':
+                // hetelfde maar dan voor gitlab
+            default:
+                // error voor onbeknd type
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
+     *
+     * @throws GuzzleException
+     *
+     * @return array dataset at the end of the handler
+     */
+    public function enrichRepositoryWithOrganizationHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
+        $organisationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
+
+        // If we want to do it for al repositories
+        foreach ($repositoryEntity->getObjectEntities() as $repository) {
+            $this->enrichRepositoryWithOrganisation($repository, $organisationEntity);
+        }
+
+        return $this->data;
+    }
+
+    /**
+     * @param string $repositoryUrl
+     * @param Entity $repositoryEntity
+     *
+     * @throws GuzzleException
+     *
+     * @return ObjectEntity|null
+     */
+    public function getOrganisationRepos(string $repositoryUrl, Entity $repositoryEntity): ?ObjectEntity
+    {
+        $source = null;
+        $domain = parse_url($repositoryUrl, PHP_URL_HOST);
+        $domain == 'github.com' && $source = 'github';
+        $domain == 'gitlab.com' && $source = 'gitlab';
+
+        switch ($source) {
+            case 'github':
+                // let's get the repository data
+                $github = $this->githubService->getRepositoryFromUrl(trim(parse_url($repositoryUrl, PHP_URL_PATH), '/'));
+
+                if ($github !== null) {
+                    if (!$this->entityManager->getRepository('App:ObjectEntity')->findByEntity($repositoryEntity, ['url' => $github['url']])) {
+                        $repository = new ObjectEntity();
+                        $repository->setEntity($repositoryEntity);
+                    } else {
+                        $repository = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($repositoryEntity, ['url' => $github['url']])[0];
+                    }
+
+                    $repository = $this->setRepositoryWithGithubInfo($repository, $github);
+                    $this->entityManager->flush();
+
+                    return $repository;
+                }
+            case 'gitlab':
+                // hetelfde maar dan voor gitlab
+            default:
+                // error voor onbeknd type
+        }
+
+        return null;
+    }
+
+    /**
+     * @param ObjectEntity $organisation
+     * @param Entity       $repositoryEntity
+     *
+     * @throws GuzzleException
+     *
+     * @return ObjectEntity|null
+     */
+    public function enrichRepositoryWithOrganisationRepos(ObjectEntity $organisation, Entity $repositoryEntity): ?ObjectEntity
+    {
+        if ($owns = $organisation->getValue('owns')) {
+            foreach ($owns as $repositoryUrl) {
+                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+            }
+        }
+
+        if ($uses = $organisation->getValue('uses')) {
+            foreach ($uses as $repositoryUrl) {
+                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+            }
+        }
+
+        if ($supports = $organisation->getValue('supports')) {
+            foreach ($supports as $repositoryUrl) {
+                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+            }
+        }
+
+        return $organisation;
+    }
+
+    /**
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
+     *
+     * @throws GuzzleException
+     *
+     * @return array dataset at the end of the handler
+     */
+    public function enrichOrganizationWithRepositoriesHandler(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $repositoryEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['repositoryEntityId']);
+        // If we want to do it for al repositories
+        foreach ($repositoryEntity->getObjectEntities() as $repository) {
+            if ($organisation = $repository->getValue('organisation')) {
+                if ($organisation instanceof ObjectEntity) {
+                    $this->enrichRepositoryWithOrganisationRepos($organisation, $repositoryEntity);
+                }
+            }
+        }
+
+        return $this->data;
+    }
+
+    /**
+     * @param ObjectEntity $organization
+     *
+     * @throws GuzzleException
+     *
+     * @return array|null dataset at the end of the handler
+     */
+    public function getOrganizationCatalogi(ObjectEntity $organization): ?array
+    {
+        if ($this->githubService->getGithubRepoFromOrganization($organization->getValue('name'))) {
+            if ($catalogi = $this->githubService->getOpenCatalogiFromGithubRepo($organization->getValue('name'))) {
+                $organization->setValue('name', $catalogi['name']);
+                $organization->setValue('description', $catalogi['description']);
+                $organization->setValue('type', $catalogi['type']);
+                $organization->setValue('telephone', $catalogi['telephone']);
+                $organization->setValue('email', $catalogi['email']);
+                $organization->setValue('website', $catalogi['website']);
+                $organization->setValue('logo', $catalogi['logo']);
+                $organization->setValue('catalogusAPI', $catalogi['catalogusAPI']);
+                $organization->setValue('uses', $catalogi['uses']);
+                $organization->setValue('supports', $catalogi['supports']);
+
+                $this->entityManager->persist($organization);
+                $this->entityManager->flush();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
+     *
+     * @throws GuzzleException
+     *
+     * @return array dataset at the end of the handler
+     */
+    public function enrichOrganizationWithCatalogi(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $organizationEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['organisationEntityId']);
+        // If we want to do it for al repositories
+        foreach ($organizationEntity->getObjectEntities() as $organization) {
+            if ($organization->getValue('github')) {
+                // get org name and search if the org has an .github repository
+                $this->getOrganizationCatalogi($organization);
+            }
+        }
+
+        return $this->data;
+    }
+
+    /**
+     * @param array $data          data set at the start of the handler
+     * @param array $configuration configuration of the action
+     *
+     * @throws GuzzleException|Exception
+     *
+     * @return array dataset at the end of the handler
+     */
+    public function enrichComponentWithRating(array $data, array $configuration): array
+    {
+        $this->configuration = $configuration;
+        $this->data = $data;
+
+        $componentEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['componentEntityId']);
+        $ratingEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['ratingEntityId']);
+
+        foreach ($componentEntity->getObjectEntities() as $component) {
+            $this->rateComponent($component, $ratingEntity);
+        }
 
         return $this->data;
     }
 
     /**
      * @param ObjectEntity $component
+     * @param Entity       $ratingEntity
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return ObjectEntity|null dataset at the end of the handler
      */
-    public function rateComponent(ObjectEntity $component): ?ObjectEntity
+    public function rateComponent(ObjectEntity $component, Entity $ratingEntity): ?ObjectEntity
     {
-        $ratingEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['ratingEntityId']);
         $ratingComponent = $this->ratingList($component);
 
         if (!$component->getValue('rating')) {
@@ -281,9 +468,11 @@ class PubliccodeService
         $rating->setValue('maxRating', $ratingComponent['maxRating']);
         $rating->setValue('results', $ratingComponent['results']);
         $this->entityManager->persist($rating);
+        $this->entityManager->flush();
 
         $component->setValue('rating', $rating);
         $this->entityManager->persist($component);
+        $this->entityManager->flush();
 
         return $component;
     }
@@ -293,7 +482,7 @@ class PubliccodeService
      *
      * @param ObjectEntity $component
      *
-     * @throws \Exception
+     * @throws Exception|GuzzleException
      *
      * @return ObjectEntity|null dataset at the end of the handler
      */
@@ -311,15 +500,25 @@ class PubliccodeService
         }
         $maxRating++;
 
+        // @todo does not work yet
         if ($repository = $component->getValue('url')) {
             if ($repository->getValue('url') !== null) {
                 $description[] = 'The url: '.$repository->getValue('url').' rated';
                 $rating++;
+
+                if ($this->githubService->checkPublicRepository($repository->getValue('url'))) {
+                    $description[] = 'Rated the repository because it is public';
+                    $rating++;
+                } else {
+                    $description[] = 'Cannot rated the repository because it is private';
+                }
+                $maxRating++;
             } else {
                 $description[] = 'Cannot rate the url because it is not set';
             }
             $maxRating++;
         }
+        $maxRating = $maxRating + 2;
 
         if ($component->getValue('landingURL') !== null) {
             $description[] = 'The landingURL: '.$component->getValue('landingURL').' rated';
@@ -463,23 +662,25 @@ class PubliccodeService
             }
             $maxRating++;
 
-            // @todo mainCopyrightOwner is an object
-//            if ($legalObject->getValue('mainCopyrightOwner') !== null) {
-//                $description[] = 'The mainCopyrightOwner: '.$legalObject->getValue('mainCopyrightOwner') . ' rated';
-//                $rating++;
-//            } else {
-//                $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
-//            }
-//            $maxRating++;
+            if ($mainCopyrightOwnerObject = $legalObject->getValue('mainCopyrightOwner')) {
+                if ($mainCopyrightOwnerObject->getValue('mainCopyrightOwner') !== null) {
+                    $description[] = 'The mainCopyrightOwner: '.$mainCopyrightOwnerObject->getValue('name').' rated';
+                    $rating++;
+                } else {
+                    $description[] = 'Cannot rate the mainCopyrightOwner because it is not set';
+                }
+                $maxRating++;
+            }
 
-            // @todo repoOwner is an object
-//            if ($legalObject->getValue('repoOwner') !== null) {
-//                $description[] = 'The repoOwner: '.$legalObject->getValue('repoOwner') . ' rated';
-//                $rating++;
-//            } else {
-//                $description[] = 'Cannot rate the repoOwner because it is not set';
-//            }
-//            $maxRating++;
+            if ($repoOwnerObject = $legalObject->getValue('repoOwner')) {
+                if ($repoOwnerObject->getValue('repoOwner') !== null) {
+                    $description[] = 'The repoOwner is rated';
+                    $rating++;
+                } else {
+                    $description[] = 'Cannot rate the repoOwner because it is not set';
+                }
+                $maxRating++;
+            }
 
             if ($legalObject->getValue('authorsFile') !== null) {
                 $description[] = 'The authorsFile: '.$legalObject->getValue('authorsFile').' rated';

@@ -9,6 +9,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\ActionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -88,22 +90,22 @@ class Action
     private array $listens;
 
     /**
-     * @var array The event names the action should trigger
+     * @var array|null The event names the action should trigger
      *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="simple_array", nullable=true)
      */
-    private array $throws = [];
+    private ?array $throws = [];
 
     /**
-     * @var array The conditions that the data object should match for the action to be triggered
+     * @var array|null The conditions that the data object should match for the action to be triggered
      *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="json", nullable=true)
      */
-    private array $conditions = [];
+    private ?array $conditions = [];
 
     /**
      * @var string|null The class that should be run when the action is triggered
@@ -134,11 +136,51 @@ class Action
     private bool $async = false;
 
     /**
-     * @var array The configuration of the action
+     * @var array|null The configuration of the action
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $configuration = [];
+    private ?array $configuration = [];
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default":false})
+     */
+    private bool $isLockable = false;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $locked;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $lastRun;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     */
+    private ?int $lastRunTime = 0;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default": null})
+     */
+    private ?bool $status = null;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $actionLogs;
+
+    public function __construct()
+    {
+        $this->actionLogs = new ArrayCollection();
+    }
 
     public function getId(): ?UuidInterface
     {
@@ -249,6 +291,96 @@ class Action
     public function setConfiguration(?array $configuration): self
     {
         $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getIsLockable(): ?bool
+    {
+        return $this->isLockable;
+    }
+
+    public function setIsLockable(?bool $isLockable): self
+    {
+        $this->isLockable = $isLockable;
+
+        return $this;
+    }
+
+    public function getLocked(): ?\DateTimeInterface
+    {
+        return $this->locked;
+    }
+
+    public function setLocked(?\DateTimeInterface $locked): self
+    {
+        $this->locked = $locked;
+
+        return $this;
+    }
+
+    public function getLastRun(): ?\DateTimeInterface
+    {
+        return $this->lastRun;
+    }
+
+    public function setLastRun(?\DateTimeInterface $lastRun): self
+    {
+        $this->lastRun = $lastRun;
+
+        return $this;
+    }
+
+    public function getLastRunTime(): ?int
+    {
+        return $this->lastRunTime;
+    }
+
+    public function setLastRunTime(?int $lastRunTime): self
+    {
+        $this->lastRunTime = $lastRunTime;
+
+        return $this;
+    }
+
+    public function getStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?bool $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ActionLog[]
+     */
+    public function getActionLogs(): Collection
+    {
+        return $this->actionLogs;
+    }
+
+    public function addActionLog(ActionLog $actionLog): self
+    {
+        if (!$this->actionLogs->contains($actionLog)) {
+            $this->actionLogs[] = $actionLog;
+            $actionLog->setAction($this);
+        }
+
+        return $this;
+    }
+
+    public function removeActionLog(ActionLog $actionLog): self
+    {
+        if ($this->actionLogs->removeElement($actionLog)) {
+            // set the owning side to null (unless already changed)
+            if ($actionLog->getAction() === $this) {
+                $actionLog->setAction(null);
+            }
+        }
 
         return $this;
     }

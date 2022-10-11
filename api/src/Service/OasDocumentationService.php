@@ -1102,7 +1102,6 @@ class OasDocumentationService
     public function getMethodSummary(string $method, Handler $handler, string $path): array
     {
         $pathArray = explode('/', $path);
-        $methodName = null;
         switch ($method) {
             case 'get':
                 $methodName = [
@@ -1136,7 +1135,10 @@ class OasDocumentationService
                 break;
         }
 
-        return $methodName;
+        return $methodName ?? [
+            'summary'   => 'Unrecognized method for '.strtolower($handler->getEntity()->getName()),
+            'summaryId' => 'Unrecognized method for '.strtolower($handler->getEntity()->getName()),
+        ];
     }
 
     /**

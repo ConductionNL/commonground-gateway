@@ -325,8 +325,8 @@ class SynchronizationService
     {
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
-        if (array_key_exists('sourceLimit', $this->configuration)) {
-            $key = array_key_exists('sourceLimitKey', $this->configuration) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
+        if (array_key_exists('sourceLimit', $this->configuration['apiSource'])) {
+            $key = array_key_exists('sourceLimitKey', $this->configuration['apiSource']) ? $this->configuration['apiSource']['sourceLimitKey'] : 'limit';
             $query[$key] = $this->configuration['apiSource']['sourceLimit'];
         }
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
@@ -691,15 +691,16 @@ class SynchronizationService
      */
     private function clearUnavailableProperties(array $object): array
     {
+        $object = new Dot($object);
         // The properties to clear
         $properties = $this->configuration['apiSource']['unavailablePropertiesOut'];
         foreach ($properties as $property) {
-            if (key_exists($property, $object)) {
-                unset($object[$property]);
+            if ($object->has($property)) {
+                $object->delete($property);
             }
         }
 
-        return $object;
+        return $object->jsonSerialize();
     }
 
     /**

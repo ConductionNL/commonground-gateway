@@ -49,6 +49,34 @@ class ResponseService
         $this->cache = $cache;
     }
 
+    // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->createSelf() function here
+    /**
+     * Returns the string used for {at sign}id or self->href for the given objectEntity. This function will use the ObjectEntity->Entity
+     * to first look for the get item endpoint and else use the Entity route or name to generate the correct string.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return string
+     */
+    public function createSelf(ObjectEntity $objectEntity): string
+    {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
+        $this->em->persist($objectEntity);
+        $endpoints = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if (count($endpoints) > 0 && $endpoints[0] instanceof Endpoint) {
+            $pathArray = $endpoints[0]->getPath();
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
+                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            if ($foundId !== false) {
+                $path = implode('/', $pathArray);
+
+                return '/api/'.$path;
+            }
+        }
+
+        return '/api'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
+    }
+
     // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
     // todo if we do this^ maybe move the getDateRead function to ObjectEntityService as well
     private function checkOwner(ObjectEntity $result): bool
@@ -416,7 +444,7 @@ class ResponseService
         $this->addToMetadata(
             $metadata,
             'self',
-            $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId()
+            $result->getSelf() ?? $result->setSelf($this->createSelf($result))->getSelf()
         );
         $this->addToMetadata($metadata, 'type', ucfirst($result->getEntity()->getName()));
         $this->addToMetadata($metadata, 'context', '/contexts/'.ucfirst($result->getEntity()->getName()));

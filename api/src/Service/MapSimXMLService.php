@@ -97,6 +97,37 @@ class MapSimXMLService
                 ];
             }
 
+            isset($simXMLArray['embedded']['Body']['DatumVerzending']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'DATUM_VERZENDING',
+                    'definitie' => 'DATUM_VERZENDING',
+                ];
+            isset($simXMLArray['embedded']['Body']['FormulierId']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'FORMULIER_ID',
+                    'definitie' => 'FORMULIER_ID',
+                ];
+            isset($simXMLArray['embedded']['Body']['MetaData']['INDIENER']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'INDIENER_BSN',
+                    'definitie' => 'INDIENER_BSN',
+                ];
+            isset($simXMLArray['embedded']['stuurgegevens']['Berichttype']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'BERICHTTYPE',
+                    'definitie' => 'BERICHTTYPE',
+                ];
+            isset($simXMLArray['embedded']['stuurgegevens']['Ontvanger']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'ONTVANGER',
+                    'definitie' => 'ONTVANGER',
+                ];
+            isset($simXMLArray['embedded']['stuurgegevens']['Zender']) &&
+                $zaakTypeArray['eigenschappen'][] = [
+                    'naam'      => 'ZENDER',
+                    'definitie' => 'ZENDER',
+                ];
+
             $zaakTypeObjectEntity->hydrate($zaakTypeArray);
             $this->entityManager->persist($zaakTypeObjectEntity);
             $this->entityManager->flush();
@@ -104,13 +135,62 @@ class MapSimXMLService
 
             foreach ($simXMLArray['embedded']['Body']['embedded']['Elementen'] as $elementName => $elementValue) {
                 foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
-                    if ($eigenschap['naam'] == $elementName) {
+                    if ($eigenschap['naam'] == $elementName && $eigenschap['naam'] !== 'embedded') {
+                        if (is_array($elementValue)) {
+                            continue;
+                        }
                         $zaakArray['eigenschappen'][] = [
                             'naam'       => $elementName,
                             'waarde'     => is_array($elementValue) ?: strval($elementValue),
                             'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                         ];
                     }
+                }
+            }
+
+            foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
+                if ($eigenschap['naam'] == 'ONTVANGER') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'ONTVANGER',
+                        'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Ontvanger'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'ZENDER') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'ZENDER',
+                        'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Zender'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'BERICHTTYPE') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'BERICHTTYPE',
+                        'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Berichttype'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'INDIENER_BSN') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'INDIENER_BSN',
+                        'waarde'     => $simXMLArray['embedded']['Body']['MetaData']['INDIENER'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'FORMULIER_ID') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'FORMULIER_ID',
+                        'waarde'     => $simXMLArray['embedded']['Body']['FormulierId'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'DATUM_VERZENDING') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'DATUM_VERZENDING',
+                        'waarde'     => $simXMLArray['embedded']['Body']['DatumVerzending'],
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
+                } else if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+                    $zaakArray['eigenschappen'][] = [
+                        'naam'       => 'MEEVERHUIZENDE_GEZINSLEDEN',
+                        'waarde'     => json_encode($elementValue),
+                        'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                    ];
                 }
             }
         }
@@ -242,6 +322,8 @@ class MapSimXMLService
         $zaakTypeObjectEntity = $this->objectEntityRepo->findOneBy(['externalId' => $simXMLArray['embedded']['stuurgegevens']['Zaaktype'], 'entity' => $zaakTypeEntity]);
 
         $zaakTypeArray = $this->createZaakType($zaakObjectEntity, $zaakTypeObjectEntity, $simXMLArray, $zaakEntity, $zaakTypeEntity);
+        $zaakArray['zaaktype'] = $zaakTypeArray;
+
         $zaakArray = $this->createEigenschappen($zaakTypeObjectEntity, $simXMLArray, $zaakTypeArray);
 
         $zaakObjectEntity->hydrate($zaakArray);
@@ -256,13 +338,7 @@ class MapSimXMLService
         $documents = $this->createDocumenten($zaakObjectEntity, $documentEntity, $simXMLArray);
         $this->createRol($zaakObjectEntity, $simXMLArray, $configuration['entities']['rolEntityId'], $configuration['entities']['rolTypeEntityId'], $zaakObjectEntity);
 
-        $simXMLObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id']);
-
-        $simXMLObject->setValue('zgwZaak', $zaakObjectEntity->getId()->toString());
-        $simXMLObject->setValue('zgwDocumenten', $documents);
-
-        $this->entityManager->persist($simXMLObject);
-        $this->entityManager->flush();
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $zaakEntity->getId()->toString(), 'response' => $zaakObjectEntity->toArray()]);
 
         return $this->data;
     }

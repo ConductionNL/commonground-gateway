@@ -53,8 +53,6 @@ services:
         class: App\Service\PubliccodeService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            $synchronizationService: '@App\Service\SynchronizationService'
-            $objectEntityService: '@App\Service\ObjectEntityService'
             $githubService: '@App\Service\GithubApiService'
             $gitlabService: '@App\Service\GitlabApiService'
             
@@ -101,6 +99,12 @@ services:
     mapSimXMLService:
         public: true
         class: App\Service\MapSimXMLService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+    
+    mapRelocationService:
+        public: true
+        class: App\Service\MapRelocationService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
             
