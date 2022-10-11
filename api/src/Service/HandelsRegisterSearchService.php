@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Entity\Entity;
+use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response;
 
 class HandelsRegisterSearchService
 {
@@ -38,6 +40,9 @@ class HandelsRegisterSearchService
 
         // Query params
         $queryParameters = $this->fixQueryParams($this->data['queryParameters']);
+        if (array_key_exists('errorMessage', $queryParameters)) {
+            throw new GatewayException($queryParameters['errorMessage'], null, null, ['data' => $this->data['queryParameters'], 'path' => "/api/kvk/zoeken?{$_SERVER['QUERY_STRING']}", 'responseType' => Response::HTTP_BAD_REQUEST]);
+        }
 
         // Let's allow for extending
         $extend = $this->eavService->getRequestExtend($this->data['httpRequest']);
@@ -75,6 +80,28 @@ class HandelsRegisterSearchService
         if (array_key_exists('kvkNummer', $queryParameters)) {
             $queryParameters['kvknummer'] = $queryParameters['kvkNummer'];
             unset($queryParameters['kvkNummer']);
+        }
+        if (array_key_exists('handelsnaam', $queryParameters)) {
+            $queryParameters['eersteHandelsnaam'] = $queryParameters['handelsnaam'];
+//            $queryParameters['handelsnamen'] = $queryParameters['handelsnaam']; //todo ?
+            unset($queryParameters['handelsnaam']);
+        }
+        if (array_key_exists('postcode', $queryParameters) && array_key_exists('huisnummer', $queryParameters)) {
+            $queryParameters['postadres.postcode'] = $queryParameters['postcode'];
+            $queryParameters['postadres.huisnummer'] = $queryParameters['huisnummer'];
+            if (array_key_exists('huisnummerToevoeging', $queryParameters)) {
+                $queryParameters['postadres.huisnummertoevoeging'] = $queryParameters['huisnummerToevoeging'];
+                unset($queryParameters['huisnummerToevoeging']);
+            }
+            unset($queryParameters['postcode']);
+            unset($queryParameters['huisnummer']);
+        } elseif (!empty(array_intersect_key($queryParameters, array_flip(['postcode', 'huisnummer', 'huisnummerToevoeging'])))) {
+            return ['errorMessage' => 'Gebruik een postcode en een huisnummer in je filters om te zoeken op een adres.'];
+        }
+
+        // Lets always extend all by default
+        if (!isset($queryParameters['extend'])) {
+            $queryParameters['extend'] = ["all"];
         }
 
         return $queryParameters;

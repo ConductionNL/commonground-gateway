@@ -121,7 +121,7 @@
 #        description: Bedoelt om een search te doen op HandelsRegister.
 #        route: "/zoeken"
 #        endpoint: "zoeken"
-#        
+#
 ##    # Review Entity
 ##    review:
 ##        name: Review
@@ -159,19 +159,37 @@
 #
 ## Attributes
 #App\Entity\Attribute:
-#    # HandelsRegisterSearch Attributes
+#    # HandelsRegisterSearch Attributes (here so we can do filter query params on the search endpoint)
 #    handelsRegisterSearch_kvkNummer:
 #        name: kvkNummer
 #        type: string
 #        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#        
+#
 #    handelsRegisterSearch_handelsnaam:
 #        name: handelsnaam
 #        type: string
 #        entity: "@HandelsRegisterSearch"
 #        searchable: true
+#        
+#    handelsRegisterSearch_postcode:
+#        name: postcode
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#        
+#    handelsRegisterSearch_huisnummer:
+#        name: huisnummer
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
 #    
+#    handelsRegisterSearch_huisnummerToevoeging:
+#        name: huisnummerToevoeging
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#
 ##    # Review Attributes
 ##    review_author:
 ##        name: author
@@ -431,7 +449,7 @@
 #        pathRegex: "^kvk/zoeken$"
 #        method: GET
 #        operationType: collection
-#        
+#
 ##    # Review Endpoints
 ##    reviewEndpointGet:
 ##        name: Review endpoint get collection
@@ -665,7 +683,7 @@
 #        conditions: "{}"
 #        endpoints: ["@HandelsRegisterSearchGet"]
 #        entity: "@HandelsRegisterSearch"
-#        
+#
 ##    # Review Handler
 ##    reviewHandler:
 ##        name: Review handler
@@ -923,7 +941,7 @@
 #                    - gerelateerdeProducten
 #                prefixFieldsOut:
 #                    id: kennisartikel_
-#                    
+#
 #    HandelsRegisterSearchAction:
 #        name: HandelsRegisterSearchAction
 #        description: This is an action for searching KVK vestigingen.
