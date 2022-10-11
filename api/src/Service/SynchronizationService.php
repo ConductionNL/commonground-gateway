@@ -836,12 +836,16 @@ class SynchronizationService
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
         $object = $synchronization->getObject();
-        $objectArray = $object->toArray();
+        var_dump('EXTEND array', $this->configuration['apiSource']['extend']);
+        $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? []);
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
+
+        var_dump('-------------------- OBJECT ARRAY ______________', json_encode($objectArray));
+        // var_dump($callServiceConfig['url']);
 
         try {
             $result = $this->commonGroundService->callService(
