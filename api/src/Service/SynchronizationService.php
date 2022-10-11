@@ -16,6 +16,7 @@ use Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -38,6 +39,7 @@ class SynchronizationService
     private ValidatorService $validatorService;
     private array $configuration;
     private array $data;
+    private SymfonyStyle $io;
     private Environment $twig;
 
     /**
@@ -178,6 +180,9 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+        if ($this->session->get('io')) {
+            $this->io = $this->session->get('io');
+        }
 
         // todo: i think we need the Action here, because we need to set it with $synchronization->setAction($action) later...
         // todo: if we do this, some functions that have $synchronization no longer need $configuration because we can do: $synchronization->getAction()->getConfiguration()
