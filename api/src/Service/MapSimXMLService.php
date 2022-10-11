@@ -79,6 +79,29 @@ class MapSimXMLService
     }
 
     /**
+     * Gets elements and adds them to the case array
+     *
+     * @param array $zaakTypeArray  The case type array
+     * @param string $elementName   The name of the element
+     * @param $elementValue         The value of the element
+     * @param array $zaakArray      The case array
+     * @return array                The new case array
+     */
+    private function getElements (array $zaakTypeArray, string $elementName, $elementValue, array $zaakArray): array
+    {
+        foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
+            if ($eigenschap['naam'] == $elementName && $eigenschap['naam'] !== 'embedded') {
+                $zaakArray['eigenschappen'][] = [
+                    'naam'       => $elementName,
+                    'waarde'     => is_array($elementValue) ?: strval($elementValue),
+                    'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
+                ];
+            }
+        }
+        return $zaakArray;
+    }
+
+    /**
      * Maps the ZaakType from sim to zgw.
      *
      * @param ObjectEntity $zaakTypeObjectEntity This is the ZGW ZaakType object.
@@ -133,19 +156,9 @@ class MapSimXMLService
             $this->entityManager->flush();
             $zaakTypeArray = $zaakTypeObjectEntity->toArray();
 
+            $zaakArray = [];
             foreach ($simXMLArray['embedded']['Body']['embedded']['Elementen'] as $elementName => $elementValue) {
-                foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
-                    if ($eigenschap['naam'] == $elementName && $eigenschap['naam'] !== 'embedded') {
-                        if (is_array($elementValue)) {
-                            continue;
-                        }
-                        $zaakArray['eigenschappen'][] = [
-                            'naam'       => $elementName,
-                            'waarde'     => is_array($elementValue) ?: strval($elementValue),
-                            'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
-                        ];
-                    }
-                }
+                $zaakArray = $this->getElements($zaakTypeArray, $elementName, $elementValue, $zaakArray);
             }
 
             foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
@@ -254,6 +267,8 @@ class MapSimXMLService
      * @throws \Exception
      *
      * @return ObjectEntity The resulting role type
+     *
+     * @throws \Exception
      */
     public function createRolType(string $rolTypeEntityId, array $simXmlArray, ObjectEntity $zaakType): ObjectEntity
     {

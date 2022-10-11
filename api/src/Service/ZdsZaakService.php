@@ -846,14 +846,13 @@ class ZdsZaakService
     /**
      * Decides the message parameters for messages translated from SimXML to ZDS.
      *
-     * @param array  $simXML     The SimXML data
+     * @param ObjectEntity $simXML The SimXML data
      * @param string $entityType The entity type of the data
      *
-     * @throws Exception
-     *
      * @return array The resulting header block
+     * @throws Exception
      */
-    public function getStuurgegevensFromSimXML(array $simXML, string $entityType): array
+    public function getStuurgegevensFromSimXML(ObjectEntity $simXML, string $entityType): array
     {
         $simXMLStuurGegevens = $simXML->getValue('stuurgegevens');
 
@@ -916,7 +915,6 @@ class ZdsZaakService
         $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator']);
         if ($result->getValue('object') && $result->getValue('object')->getValue('identificatie')) {
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zakenEntity, ['identificatie' => $result->getValue('object')->getValue('identificatie')])[0];
-
             foreach ($rollen as $rol) {
                 if ($rol->getValue('zaak') == $zaak) {
                     break;
