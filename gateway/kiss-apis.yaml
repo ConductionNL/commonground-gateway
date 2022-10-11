@@ -119,7 +119,7 @@
 #    HandelsRegisterSearch:
 #        name: HandelsRegisterSearch
 #        description: Bedoelt om een search te doen op HandelsRegister.
-#        route: "/zoeken"
+#        route: "/kvk/zoeken"
 #        endpoint: "zoeken"
 #
 ##    # Review Entity
