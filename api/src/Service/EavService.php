@@ -1017,9 +1017,9 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld', ?array $query = null): array
     {
-        $query = $this->realRequestQueryAll($request->getMethod());
+        $query = $query ?? $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
         unset($query['page']);
         unset($query['start']);
