@@ -101,6 +101,23 @@ services:
         class: App\Service\HandelsRegisterSearchService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
+    
+    mapSimXMLService:
+        public: true
+        class: App\Service\MapSimXMLService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+    
+    mapRelocationService:
+        public: true
+        class: App\Service\MapRelocationService
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            
+    
+    bijlagenArrayService:
+        public: true
+        class: App\Service\BijlagenArrayService
             
     Redis:
         class: Redis

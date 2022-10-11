@@ -929,4 +929,22 @@ class Gateway
 
         return $this;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'auth'                  => $this->getAuth(),
+            'authorizationHeader'   => $this->getAuthorizationHeader(),
+            'passthroughMethod'     => $this->getAuthorizationPassthroughMethod(),
+            'location'              => $this->getLocation(),
+            'apikey'                => $this->getApiKey(),
+            'jwt'                   => $this->getJwt(),
+            'secret'                => $this->getSecret(),
+            'id'                    => $this->getJwtId(),
+            'locale'                => $this->getLocale(),
+            'accept'                => $this->getAccept(),
+            'username'              => $this->getUsername(),
+            'password'              => $this->getPassword(),
+        ];
+    }
 }
