@@ -107,8 +107,6 @@ class MapRelocationService
                     continue 2;
                 case 'WOONPLAATS_NIEUW':
                     $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
-                    continue 2;
-                case 'WIJZE_BEWONING':
                     $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
                     continue 2;
                 case 'TELEFOONNUMMER':
@@ -142,6 +140,7 @@ class MapRelocationService
                             'bsn' => $eigenschap['waarde']
                         ]
                     ];
+                    $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
                     continue 2;
                 case 'AANTAL_PERS_NIEUW_ADRES':
                     $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
