@@ -122,6 +122,9 @@ class TranslationService
                     $result .= !empty($source->get($subSearch)) ? ($value != '' ? $separator.$value : $value) : '';
                 }
                 $destination[$replace] = $result ?: $destination[$replace];
+            } elseif (strpos($format, 'datetimeutc') !== false) {
+                $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
+                $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
             }
             unset($format);
 
