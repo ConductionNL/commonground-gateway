@@ -53,6 +53,8 @@ class MapRelocationService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
+        var_dump('mapRelocation');
+
         if ($this->data['zaaktype']['omschrijving'] !== 'B0366') {
             return $this->data;
         }
@@ -134,8 +136,8 @@ class MapRelocationService
                     $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
                     $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
                     $relocationArray['newAddress']['liveIn'] = [
-                        'liveInApplicable' => false,
-                        'consent' => 'NOT_APPLICABLE',
+                        'liveInApplicable' => true,
+                        'consent' => 'PENDING',
                         'consenter' => [
                             'bsn' => $eigenschap['waarde']
                         ]
@@ -169,9 +171,10 @@ class MapRelocationService
         $this->entityManager->persist($intraObjectEntity);
         $this->entityManager->flush();
 
-        $intraObjectArray = $intraObjectEntity->toArray();
+        // $intraObjectArray = $intraObjectEntity->toArray();
+        // var_dump($relocationArray);
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $intraObjectArray]);
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
 
         return $this->data;
     }
