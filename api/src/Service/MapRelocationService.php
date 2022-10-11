@@ -62,9 +62,10 @@ class MapRelocationService
     }
 
     /**
-     * Maps relocators to their VrijBRP layout
+     * Maps relocators to their VrijBRP layout.
      *
      * @param array $eigenschap The relocators-element in the SimXML message
+     *
      * @return array The resulting relocators array
      */
     public function mapRelocators(array $eigenschap): array
@@ -82,21 +83,23 @@ class MapRelocationService
                     break;
             }
             $relocators[] = [
-                'bsn' => $meeverhuizende['BSN'],
-                'declarationType' => $declarationType
+                'bsn'             => $meeverhuizende['BSN'],
+                'declarationType' => $declarationType,
             ];
         }
+
         return $relocators;
     }
 
     /**
-     * Maps an element from the SimXML to an element in VrijBRP
+     * Maps an element from the SimXML to an element in VrijBRP.
      *
      * @param array $eigenschap The element to map
      * @param array $relocator  The main relocator (as pointer)
      *
-     * @return array The resulting relocationArray
      * @throws \Exception
+     *
+     * @return array The resulting relocationArray
      */
     public function mapEigenschap(array $eigenschap, array &$relocator): array
     {
@@ -143,10 +146,10 @@ class MapRelocationService
                 $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
                 $relocationArray['newAddress']['liveIn'] = [
                     'liveInApplicable' => false,
-                    'consent' => 'NOT_APPLICABLE',
-                    'consenter' => [
-                        'bsn' => $eigenschap['waarde']
-                    ]
+                    'consent'          => 'NOT_APPLICABLE',
+                    'consenter'        => [
+                        'bsn' => $eigenschap['waarde'],
+                    ],
                 ];
                 $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
                 break;
@@ -154,6 +157,7 @@ class MapRelocationService
                 $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
                 break;
         }
+
         return $relocationArray;
     }
 

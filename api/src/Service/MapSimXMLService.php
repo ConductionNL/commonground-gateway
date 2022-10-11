@@ -79,15 +79,16 @@ class MapSimXMLService
     }
 
     /**
-     * Gets elements and adds them to the case array
+     * Gets elements and adds them to the case array.
      *
-     * @param array $zaakTypeArray  The case type array
+     * @param array  $zaakTypeArray The case type array
      * @param string $elementName   The name of the element
      * @param $elementValue         The value of the element
-     * @param array $zaakArray      The case array
-     * @return array                The new case array
+     * @param array $zaakArray The case array
+     *
+     * @return array The new case array
      */
-    private function getElements (array $zaakTypeArray, string $elementName, $elementValue, array $zaakArray): array
+    private function getElements(array $zaakTypeArray, string $elementName, $elementValue, array $zaakArray): array
     {
         foreach ($zaakTypeArray['eigenschappen'] as $eigenschap) {
             if ($eigenschap['naam'] == $elementName && $eigenschap['naam'] !== 'embedded') {
@@ -98,6 +99,7 @@ class MapSimXMLService
                 ];
             }
         }
+
         return $zaakArray;
     }
 
@@ -265,10 +267,9 @@ class MapSimXMLService
      * @param ObjectEntity $zaakType        The case type to add the role type to
      *
      * @throws \Exception
+     * @throws \Exception
      *
      * @return ObjectEntity The resulting role type
-     *
-     * @throws \Exception
      */
     public function createRolType(string $rolTypeEntityId, array $simXmlArray, ObjectEntity $zaakType): ObjectEntity
     {
