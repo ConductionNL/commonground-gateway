@@ -824,20 +824,23 @@ class SynchronizationService
     }
 
     /**
-     * Encodes the object dependent on the settings for the synchronisation action
+     * Encodes the object dependent on the settings for the synchronisation action.
      *
      * @param array $objectArray The object array to encode
+     *
      * @return string The encoded object
      */
     public function getObjectString(array $objectArray = []): string
     {
-        if(!$objectArray)
+        if (!$objectArray) {
             return '';
+        }
         $mediaType = $this->configuration['apiSource']['location']['contentType'] ?? 'application/json';
-        switch($mediaType){
+        switch ($mediaType) {
             case 'text/xml':
             case 'application/xml':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
+
                 return $xmlEncoder->encode($objectArray, 'xml');
             case 'application/json':
             default:
@@ -846,7 +849,7 @@ class SynchronizationService
     }
 
     /**
-     * Decodes the response body based on the content type header
+     * Decodes the response body based on the content type header.
      *
      * @param string $responseBody The body of the response
      * @param string $contentType  The media type from the response headers
@@ -855,14 +858,15 @@ class SynchronizationService
      */
     public function decodeResponse(string $responseBody, string $contentType): array
     {
-        if(!$responseBody) {
+        if (!$responseBody) {
             return [];
         }
-        switch($contentType) {
+        switch ($contentType) {
             case 'text/xml':
             case 'text/xml; charset=utf-8':
             case 'application/xml':
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
+
                 return $xmlEncoder->decode($responseBody, 'xml');
             case 'application/json':
             default:
@@ -891,6 +895,7 @@ class SynchronizationService
         $objectArray = $this->mapOutput($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
+
         try {
             $result = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
@@ -918,7 +923,7 @@ class SynchronizationService
 //            ]);
         }
         $contentType = $result->getHeader('content-type')[0];
-        if(!$contentType) {
+        if (!$contentType) {
             $contentType = $result->getHeader('Content-Type')[0];
         }
         $body = $this->decodeResponse($result->getBody()->getContents(), $contentType);

@@ -47,16 +47,16 @@ class TranslationService
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
-    public function iterateNumericArrays(array $mapping, Dot $source) : array
+    public function iterateNumericArrays(array $mapping, Dot $source): array
     {
         foreach ($mapping as $replace => $search) {
-            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])){
+            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
                 foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
-                    $mapping[preg_replace('/\.\$/', '.' . $key, $replace, 1)] = preg_replace('/\.\$/', '.' . $key, $search, 1);
+                    $mapping[preg_replace('/\.\$/', '.'.$key, $replace, 1)] = preg_replace('/\.\$/', '.'.$key, $search, 1);
                 }
                 unset($mapping[$replace]);
                 $mapping = $this->iterateNumericArrays($mapping, $source);
-            } elseif(strpos($search, '.$') !== false) {
+            } elseif (strpos($search, '.$') !== false) {
                 $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
                 unset($mapping[$replace]);
                 $mapping = $this->iterateNumericArrays($mapping, $source);
