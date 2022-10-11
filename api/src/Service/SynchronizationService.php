@@ -823,6 +823,12 @@ class SynchronizationService
         return $synchronization;
     }
 
+    /**
+     * Encodes the object dependent on the settings for the synchronisation action
+     *
+     * @param array $objectArray The object array to encode
+     * @return string The encoded object
+     */
     public function getObjectString(array $objectArray = []): string
     {
         if(!$objectArray)
@@ -839,6 +845,14 @@ class SynchronizationService
         }
     }
 
+    /**
+     * Decodes the response body based on the content type header
+     *
+     * @param string $responseBody The body of the response
+     * @param string $contentType  The media type from the response headers
+     *
+     * @return array The decoded response body as array
+     */
     public function decodeResponse(string $responseBody, string $contentType): array
     {
         if(!$responseBody) {

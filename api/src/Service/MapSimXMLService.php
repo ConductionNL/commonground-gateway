@@ -242,6 +242,18 @@ class MapSimXMLService
         return $zaakTypeArray;
     }
 
+    /**
+     * Creates role types for the case type
+     * @TODO: add the 'Overige betrokkene' role
+     *
+     * @param string       $rolTypeEntityId The entity id for role types
+     * @param array        $simXmlArray     The original SimXML data
+     * @param ObjectEntity $zaakType        The case type to add the role type to
+     *
+     * @return ObjectEntity The resulting role type
+     * 
+     * @throws \Exception
+     */
     public function createRolType (string $rolTypeEntityId, array $simXmlArray, ObjectEntity $zaakType): ObjectEntity
     {
         $rolTypeEntity = $this->entityManager->getRepository(Entity::class)->find($rolTypeEntityId);
@@ -264,6 +276,20 @@ class MapSimXMLService
         return $rolType;
     }
 
+    /**
+     * Creates roles for the case
+     * @TODO: add the 'Overige betrokkene' role
+     *
+     * @param ObjectEntity  $zaakObject     The case object to add the roles to
+     * @param array         $simXMLArray    The original SimXML data
+     * @param string        $rolEntity      The entity of roles
+     * @param string        $rolTypeEntity  The entity of role types
+     * @param ObjectEntity  $zaakType       The case type to link to the role type
+     *
+     * @return ObjectEntity The resulting role
+     *
+     * @throws \Exception
+     */
     public function createRollen (ObjectEntity $zaakObject, array $simXMLArray, string $rolEntity, string $rolTypeEntity, ObjectEntity $zaakType): ObjectEntity
     {
         $rolType = $this->createRolType($rolTypeEntity, $simXMLArray, $zaakType);
