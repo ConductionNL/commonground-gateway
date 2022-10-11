@@ -53,46 +53,45 @@ class MapCommitmentService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
-        var_dump('MAP COMMITMENT TRIGGERED');
 
-        if ($this->data['zaaktype']['omschrijving'] !== 'B0366') {
+        if ($this->data['zaaktype']['omschrijving'] !== 'B0337') {
             return $this->data;
         }
+        $commitmentEntity = $this->entityRepo->find($configuration['entities']['Commitment']);
 
-        $interRelocationEntity = $this->entityRepo->find($configuration['entities']['InterRelocation']);
-        $intraRelocationEntity = $this->entityRepo->find($configuration['entities']['IntraRelocation']);
+        if (!isset($commitmentEntity)) {
+            throw new \Exception('Commitment entity could not be found');
+        }
+        var_dump('MAP COMMITMENT TRIGGERED');
 
-        if (!isset($interRelocationEntity)) {
-            throw new \Exception('IntraRelocation entity could not be found');
-        }
-        if (!isset($intraRelocationEntity)) {
-            throw new \Exception('InterRelocation entity could not be found');
-        }
 
         $relocators = [];
+        var_dump(json_encode($data));
+        var_dump(json_encode($this->$data));
+        die;
         foreach ($this->data['eigenschappen'] as $eigenschap) {
 
 
-            if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
-                foreach (json_decode($eigenschap['waarde'], true)['MEEVERHUIZENDE_GEZINSLEDEN'] as $meeverhuizende) {
-                    switch ($meeverhuizende['ROL']) {
-                        case 'P':
-                            $declarationType = 'PARTNER';
-                            break;
-                        case 'K':
-                            $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
-                            break;
-                        default:
-                            $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
-                            break;
-                    }
-                    $relocators[] = [
-                        'bsn' => $meeverhuizende['BSN'],
-                        'declarationType' => $declarationType
-                    ];
-                }
-                continue;
-            }
+            // if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+            //     foreach (json_decode($eigenschap['waarde'], true)['MEEVERHUIZENDE_GEZINSLEDEN'] as $meeverhuizende) {
+            //         switch ($meeverhuizende['ROL']) {
+            //             case 'P':
+            //                 $declarationType = 'PARTNER';
+            //                 break;
+            //             case 'K':
+            //                 $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+            //                 break;
+            //             default:
+            //                 $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+            //                 break;
+            //         }
+            //         $relocators[] = [
+            //             'bsn' => $meeverhuizende['BSN'],
+            //             'declarationType' => $declarationType
+            //         ];
+            //     }
+            //     continue;
+            // }
 
             switch ($eigenschap['naam']) {
                 case 'DATUM_VERZENDING':
