@@ -41,10 +41,14 @@ class MapSimXMLService
      */
     private function createDocumenten(ObjectEntity &$zaakObjectEntity, Entity $documentEntity, array $simXMLArray): array
     {
+        if(!isset($simXMLArray['embedded']['Bijlagen'])) {
+            return [];
+        }
         $documents = [];
         // Create documenten
         $today = new \DateTime('now');
         $todayAsString = $today->format('Y-m-d h:i:s');
+//        var_dump(array_keys($simXMLArray['embedded']));
         foreach ($simXMLArray['embedded']['Bijlagen'] as $bijlage) {
             $objectInformatieObject = [
                 'informatieobject' => [
@@ -103,7 +107,7 @@ class MapSimXMLService
                     if ($eigenschap['naam'] == $elementName) {
                         $zaakArray['eigenschappen'][] = [
                             'naam'       => $elementName,
-                            'waarde'     => strval($elementValue),
+                            'waarde'     => is_array($elementValue) ?: strval($elementValue),
                             'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                         ];
                     }

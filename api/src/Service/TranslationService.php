@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Adbar\Dot;
 use DateTime;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -39,12 +40,30 @@ class TranslationService
 
     private function isAssociative(array $array)
     {
-        var_dump($array);
         if ([] === $array) {
             return false;
         }
 
         return array_keys($array) !== range(0, count($array) - 1);
+    }
+
+    public function iterateNumericArrays(array $mapping, Dot $source) : array
+    {
+        foreach ($mapping as $replace => $search) {
+            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])){
+                foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
+                    $mapping[preg_replace('/\.\$/', '.' . $key, $replace, 1)] = preg_replace('/\.\$/', '.' . $key, $search, 1);
+                }
+                unset($mapping[$replace]);
+                $mapping = $this->iterateNumericArrays($mapping, $source);
+            } elseif(strpos($search, '.$') !== false) {
+                $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
+                unset($mapping[$replace]);
+                $mapping = $this->iterateNumericArrays($mapping, $source);
+            }
+        }
+
+        return $mapping;
     }
 
     /**
@@ -64,20 +83,7 @@ class TranslationService
         // Lets turn the two arrays into dot notation
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
-        foreach ($mapping as $replace => $search) {
-            while (strpos($search, '.$') !== false){
-                if (is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
-                    foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
-                        $mapping[preg_replace('/\.\$/', '.' . $key, $replace, 1)] = $search = preg_replace('/\.\$/', '.' . $key, $search, 1);
-                    }
-                    unset($mapping[$replace]);
-                } else {
-                    $mapping[preg_replace('/\.\$/', '', $replace, 1)] = $search = preg_replace('/\.\$/', '', $search, 1);
-                    unset($mapping[$replace]);
-                }
-            }
-            var_dump($search);
-        }
+        $mapping = $this->iterateNumericArrays($mapping, $source);
 
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
