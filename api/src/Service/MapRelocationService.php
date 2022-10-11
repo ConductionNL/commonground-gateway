@@ -90,8 +90,6 @@ class MapRelocationService
 
         $relocators = [];
         foreach ($this->data['eigenschappen'] as $eigenschap) {
-
-
             if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
                 foreach (json_decode($eigenschap['waarde'], true)['MEEVERHUIZENDE_GEZINSLEDEN'] as $meeverhuizende) {
                     switch ($meeverhuizende['ROL']) {
@@ -106,8 +104,8 @@ class MapRelocationService
                             break;
                     }
                     $relocators[] = [
-                        'bsn' => $meeverhuizende['BSN'],
-                        'declarationType' => $declarationType
+                        'bsn'             => $meeverhuizende['BSN'],
+                        'declarationType' => $declarationType,
                     ];
                 }
                 continue;
@@ -156,10 +154,10 @@ class MapRelocationService
                     $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
                     $relocationArray['newAddress']['liveIn'] = [
                         'liveInApplicable' => false,
-                        'consent' => 'NOT_APPLICABLE',
-                        'consenter' => [
-                            'bsn' => $eigenschap['waarde']
-                        ]
+                        'consent'          => 'NOT_APPLICABLE',
+                        'consenter'        => [
+                            'bsn' => $eigenschap['waarde'],
+                        ],
                     ];
                     $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
                     continue 2;
@@ -170,12 +168,12 @@ class MapRelocationService
         }
 
         $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
-            'email' => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null
+            'email'           => $relocator['email'] ?? null,
+            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
         ];
         $relocationArray['newAddress']['mainOccupant']['contactInformation'] = [
-            'email' => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null
+            'email'           => $relocator['email'] ?? null,
+            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
         ];
         $relocationArray['relocators'] = $relocators;
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);

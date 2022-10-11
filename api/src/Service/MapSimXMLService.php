@@ -41,7 +41,7 @@ class MapSimXMLService
      */
     private function createDocumenten(ObjectEntity &$zaakObjectEntity, Entity $documentEntity, array $simXMLArray): array
     {
-        if(!isset($simXMLArray['embedded']['Bijlagen'])) {
+        if (!isset($simXMLArray['embedded']['Bijlagen'])) {
             return [];
         }
         $documents = [];
@@ -155,37 +155,37 @@ class MapSimXMLService
                         'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Ontvanger'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'ZENDER') {
+                } elseif ($eigenschap['naam'] == 'ZENDER') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'ZENDER',
                         'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Zender'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'BERICHTTYPE') {
+                } elseif ($eigenschap['naam'] == 'BERICHTTYPE') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'BERICHTTYPE',
                         'waarde'     => $simXMLArray['embedded']['stuurgegevens']['Berichttype'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'INDIENER_BSN') {
+                } elseif ($eigenschap['naam'] == 'INDIENER_BSN') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'INDIENER_BSN',
                         'waarde'     => $simXMLArray['embedded']['Body']['MetaData']['INDIENER'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'FORMULIER_ID') {
+                } elseif ($eigenschap['naam'] == 'FORMULIER_ID') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'FORMULIER_ID',
                         'waarde'     => $simXMLArray['embedded']['Body']['FormulierId'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'DATUM_VERZENDING') {
+                } elseif ($eigenschap['naam'] == 'DATUM_VERZENDING') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'DATUM_VERZENDING',
                         'waarde'     => $simXMLArray['embedded']['Body']['DatumVerzending'],
                         'eigenschap' => $this->objectEntityRepo->find($eigenschap['id']),
                     ];
-                } else if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+                } elseif ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
                     $zaakArray['eigenschappen'][] = [
                         'naam'       => 'MEEVERHUIZENDE_GEZINSLEDEN',
                         'waarde'     => json_encode($elementValue),
@@ -243,64 +243,67 @@ class MapSimXMLService
     }
 
     /**
-     * Creates role types for the case type
+     * Creates role types for the case type.
+     *
      * @TODO: add the 'Overige betrokkene' role
      *
      * @param string       $rolTypeEntityId The entity id for role types
      * @param array        $simXmlArray     The original SimXML data
      * @param ObjectEntity $zaakType        The case type to add the role type to
      *
-     * @return ObjectEntity The resulting role type
-     * 
      * @throws \Exception
+     *
+     * @return ObjectEntity The resulting role type
      */
-    public function createRolType (string $rolTypeEntityId, array $simXmlArray, ObjectEntity $zaakType): ObjectEntity
+    public function createRolType(string $rolTypeEntityId, array $simXmlArray, ObjectEntity $zaakType): ObjectEntity
     {
         $rolTypeEntity = $this->entityManager->getRepository(Entity::class)->find($rolTypeEntityId);
         $rolTypes = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolTypeEntity, ['omschrijvingGeneriek' => 'initiator']);
 
-        if(count($rolTypes) > 0) {
+        if (count($rolTypes) > 0) {
             return $rolTypes[0];
         }
 
         $rolTypeArray = [
-            'zaaktype' => $zaakType,
-            'omschrijving' => 'Initiator',
-            'omschrijvingGeneriek' => 'initiator'
+            'zaaktype'             => $zaakType,
+            'omschrijving'         => 'Initiator',
+            'omschrijvingGeneriek' => 'initiator',
         ];
 
         $rolType = new ObjectEntity($rolTypeEntity);
         $rolType->hydrate($rolTypeArray);
         $this->synchronizationService->setApplicationAndOrganization($rolType);
         $this->entityManager->persist($rolType);
+
         return $rolType;
     }
 
     /**
-     * Creates roles for the case
+     * Creates roles for the case.
+     *
      * @TODO: add the 'Overige betrokkene' role
      *
-     * @param ObjectEntity  $zaakObject     The case object to add the roles to
-     * @param array         $simXMLArray    The original SimXML data
-     * @param string        $rolEntity      The entity of roles
-     * @param string        $rolTypeEntity  The entity of role types
-     * @param ObjectEntity  $zaakType       The case type to link to the role type
-     *
-     * @return ObjectEntity The resulting role
+     * @param ObjectEntity $zaakObject    The case object to add the roles to
+     * @param array        $simXMLArray   The original SimXML data
+     * @param string       $rolEntity     The entity of roles
+     * @param string       $rolTypeEntity The entity of role types
+     * @param ObjectEntity $zaakType      The case type to link to the role type
      *
      * @throws \Exception
+     *
+     * @return ObjectEntity The resulting role
      */
-    public function createRollen (ObjectEntity $zaakObject, array $simXMLArray, string $rolEntity, string $rolTypeEntity, ObjectEntity $zaakType): ObjectEntity
+    public function createRollen(ObjectEntity $zaakObject, array $simXMLArray, string $rolEntity, string $rolTypeEntity, ObjectEntity $zaakType): ObjectEntity
     {
         $rolType = $this->createRolType($rolTypeEntity, $simXMLArray, $zaakType);
         $rolArray = [
-            'zaak' => $zaakObject,
-            'betrokkeneType' => 'natuurlijk_persoon',
-            'roltype' => $rolType,
-            'rolToelichting' => 'Initiator',
+            'zaak'                    => $zaakObject,
+            'betrokkeneType'          => 'natuurlijk_persoon',
+            'roltype'                 => $rolType,
+            'rolToelichting'          => 'Initiator',
             'betrokkeneIdentificatie' => ['inpBsn' => $simXMLArray['embedded']['Body']['embedded']['MetaData']['INDIENER']],
-            'omschrijvingGeneriek' => 'initiator',
-            'omschrijving' => 'Initiator'
+            'omschrijvingGeneriek'    => 'initiator',
+            'omschrijving'            => 'Initiator',
         ];
 
         $rol = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($rolEntity));
