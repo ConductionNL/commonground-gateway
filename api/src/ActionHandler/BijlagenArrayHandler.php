@@ -6,7 +6,6 @@ use App\Exception\GatewayException;
 use App\Service\BijlagenArrayService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
 class BijlagenArrayHandler

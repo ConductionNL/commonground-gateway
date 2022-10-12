@@ -2,9 +2,7 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\PubliccodeService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PubliccodeRatingHandler
 {

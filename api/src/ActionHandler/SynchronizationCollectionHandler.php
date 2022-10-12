@@ -7,7 +7,6 @@ use App\Service\SynchronizationService;
 use Cassandra\Exception\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Exception\CacheException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SynchronizationCollectionHandler
 {

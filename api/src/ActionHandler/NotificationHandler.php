@@ -2,9 +2,7 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\NotificationService;
-use Psr\Container\ContainerInterface;
 
 class NotificationHandler
 {

@@ -2,7 +2,6 @@
 
 namespace App\Subscriber;
 
-use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
 use App\Service\ObjectEntityService;

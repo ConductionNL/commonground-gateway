@@ -6,7 +6,6 @@ use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
 class ZdsToZGWHandler
@@ -60,7 +59,8 @@ class ZdsToZGWHandler
      */
     public function run(array $data, array $configuration): array
     {
-        var_dump("hoi");
+        var_dump('hoi');
+
         return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
     }
 }
