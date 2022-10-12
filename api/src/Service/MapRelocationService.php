@@ -35,30 +35,9 @@ class MapRelocationService
         $this->objectEntityRepo = $this->entityManager->getRepository(ObjectEntity::class);
         $this->entityRepo = $this->entityManager->getRepository(Entity::class);
 
-        $this->mappingIn = [
-            'identificatie'                   => 'embedded.instance.embedded.legacy.zaaktype_id|string',
-            'onderwerp'                       => 'embedded.instance.title',
-            'indicatieInternOfExtern'         => 'embedded.instance.trigger',
-            'doorlooptijd'                    => 'embedded.instance.embedded.properties.lead_time_legal.weken',
-            'servicenorm'                     => 'embedded.instance.embedded.properties.lead_time_service.weken',
-            'vertrouwelijkheidaanduiding'     => 'embedded.instance.embedded.properties.designation_of_confidentiality',
-            'verlengingMogelijk'              => 'embedded.instance.embedded.properties.extension',
-            'trefwoorden'                     => 'embedded.instance.subject_types',
-            'publicatieIndicatie'             => 'embedded.instance.embedded.properties.publication|bool',
-            'verantwoordingsrelatie'          => 'embedded.instance.embedded.properties.supervisor_relation|array',
-            'omschrijving'                    => 'embedded.instance.title',
-            'opschortingEnAanhoudingMogelijk' => 'embedded.instance.embedded.properties.suspension|bool',
-        ];
+        $this->mappingIn = [];
 
-        $this->skeletonIn = [
-            'handelingInitiator'   => 'indienen',
-            'beginGeldigheid'      => '1970-01-01',
-            'versieDatum'          => '1970-01-01',
-            'doel'                 => 'Overzicht hebben van de bezoekers die aanwezig zijn',
-            'versiedatum'          => '1970-01-01',
-            'handelingBehandelaar' => 'Hoofd beveiliging',
-            'aanleiding'           => 'Er is een afspraak gemaakt met een (niet) natuurlijk persoon',
-        ];
+        $this->skeletonIn = [];
     }
 
     /**
@@ -70,7 +49,7 @@ class MapRelocationService
      */
     public function mapRelocators(array $eigenschap): array
     {
-        foreach (json_decode($eigenschap['waarde'], true)['MEEVERHUIZENDE_GEZINSLEDEN'] as $meeverhuizende) {
+        foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
             switch ($meeverhuizende['ROL']) {
                 case 'P':
                     $declarationType = 'PARTNER';
@@ -91,75 +70,75 @@ class MapRelocationService
         return $relocators;
     }
 
-    /**
-     * Maps an element from the SimXML to an element in VrijBRP.
-     *
-     * @param array $eigenschap The element to map
-     * @param array $relocator  The main relocator (as pointer)
-     *
-     * @throws \Exception
-     *
-     * @return array The resulting relocationArray
-     */
-    public function mapEigenschap(array $eigenschap, array &$relocator): array
-    {
-        switch ($eigenschap['naam']) {
-            case 'DATUM_VERZENDING':
-                $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
-                break;
-            case 'VERHUISDATUM':
-                $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-                $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
-                $relocationArray['dossier']['type']['code'] = $this->data['zaaktype']['omschrijving'];
-                break;
-            case 'WOONPLAATS_NIEUW':
-                $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
-                $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
-                break;
-            case 'TELEFOONNUMMER':
-                $relocator['telephoneNumber'] = $eigenschap['waarde'];
-                break;
-            case 'STRAATNAAM_NIEUW':
-                $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
-                break;
-            case 'POSTCODE_NIEUW':
-                $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
-                break;
-            case 'HUISNUMMER_NIEUW':
-                $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
-                break;
-            case 'HUISNUMMERTOEVOEGING_NIEUW':
-                $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
-                break;
-            case 'GEMEENTECODE':
-                $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                break;
-            case 'EMAILADRES':
-                $relocator['email'] = $eigenschap['waarde'];
-                break;
-            case 'BSN':
-                $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
-                $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
-                $relocationArray['newAddress']['liveIn'] = [
-                    'liveInApplicable' => false,
-                    'consent'          => 'NOT_APPLICABLE',
-                    'consenter'        => [
-                        'bsn' => $eigenschap['waarde'],
-                    ],
-                ];
-                $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
-                break;
-            case 'AANTAL_PERS_NIEUW_ADRES':
-                $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
-                break;
-        }
+    // /**
+    //  * Maps an element from the SimXML to an element in VrijBRP.
+    //  *
+    //  * @param array $eigenschap The element to map
+    //  * @param array $relocator  The main relocator (as pointer)
+    //  *
+    //  * @throws \Exception
+    //  *
+    //  * @return array The resulting relocationArray
+    //  */
+    // public function mapEigenschap(array $eigenschap, array &$relocator): array
+    // {
+    //     switch ($eigenschap['naam']) {
+    //         case 'DATUM_VERZENDING':
+    //             $dateTimeObject = new \DateTime($eigenschap['waarde']);
+    //             $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+    //             $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
+    //             continue 2;
+    //         case 'VERHUISDATUM':
+    //             $dateTimeObject = new \DateTime($eigenschap['waarde']);
+    //             $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+    //             $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+    //             $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+    //             $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['omschrijving'];
+    //             continue 2;
+    //         case 'WOONPLAATS_NIEUW':
+    //             $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
+    //             $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'TELEFOONNUMMER':
+    //             $relocator['telephoneNumber'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'STRAATNAAM_NIEUW':
+    //             $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'POSTCODE_NIEUW':
+    //             $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'HUISNUMMER_NIEUW':
+    //             $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
+    //             continue 2;
+    //         case 'HUISNUMMERTOEVOEGING_NIEUW':
+    //             $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'GEMEENTECODE':
+    //             $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'EMAILADRES':
+    //             $relocator['email'] = $eigenschap['waarde'];
+    //             continue 2;
+    //         case 'BSN':
+    //             $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
+    //             $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
+    //             $relocationArray['newAddress']['liveIn'] = [
+    //                 'liveInApplicable' => true,
+    //                 'consent' => 'PENDING',
+    //                 'consenter' => [
+    //                     'bsn' => $eigenschap['waarde']
+    //                 ]
+    //             ];
+    //             $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
+    //             continue 2;
+    //         case 'AANTAL_PERS_NIEUW_ADRES':
+    //             $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+    //             continue 2;
+    //     }
 
-        return $relocationArray;
-    }
+    //     return $relocationArray;
+    // }
 
     /**
      * Creates a VrijRBP Relocation from a ZGW Zaak with the use of mapping.
@@ -171,10 +150,22 @@ class MapRelocationService
      */
     public function mapRelocationHandler(array $data, array $configuration): array
     {
-        $this->data = $data['response'];
+        var_dump('mapRelocation');
+        $this->data = $data;
         $this->configuration = $configuration;
 
-        if ($this->data['zaaktype']['omschrijving'] !== 'B0366') {
+        if (!isset($data['id'])) {
+            throw new \Exception('Zaak ID not given for MapRelocationHandler');
+        }
+
+        $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['id']);
+        if (!$zaakObjectEntity instanceof ObjectEntity) {
+            throw new \Exception('Zaak not found with given ID for MapRelocationHandler');
+        }
+
+        $zaakArray = $zaakObjectEntity->toArray();
+
+        if ($zaakArray['zaaktype']['identificatie'] !== 'B0366') {
             return $this->data;
         }
 
@@ -190,11 +181,214 @@ class MapRelocationService
 
         $relocators = [];
         $relocator = [];
-        foreach ($this->data['eigenschappen'] as $eigenschap) {
+
+        $zaakArray['eigenschappen'] = [
+            [
+                "eigenschap" => "string",
+                "naam" => "FORMULIERID",
+                "waarde" => "000000100000"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "DATUMVERZENDING",
+                "waarde" => "2021-12-01T23:41:18"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "ZAAKTYPE",
+                "waarde" => "B0366"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "CODE_KANAAL",
+                "waarde" => "web"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "INDIENER",
+                "waarde" => "999995923"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "INDIENERSOORT",
+                "waarde" => "burger"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "BETROUWBAARHEID_IDENTIFICATIE",
+                "waarde" => "10"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "BETROUWBAARHEID_NAW",
+                "waarde" => "1"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "BSN",
+                "waarde" => "999995923"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "VOORLETTERS",
+                "waarde" => "W.J."
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "ACHTERNAAM",
+                "waarde" => "Zech"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "GESLACHT",
+                "waarde" => "m"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "STRAATNAAM",
+                "waarde" => "Amazonestroom"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "HUISNUMMER",
+                "waarde" => "96"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "POSTCODE",
+                "waarde" => "2721EP"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "WOONPLAATS",
+                "waarde" => "Zoetermeer"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "TELEFOONNUMMER",
+                "waarde" => "0650606977"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "EMAILADRES",
+                "waarde" => "wim@zech.nl"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "GEMEENTECODE",
+                "waarde" => "0268"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "STRAATNAAM_NIEUW",
+                "waarde" => "Binderskampweg"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "HUISNUMMER_NIEUW",
+                "waarde" => "29"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "HUISLETTER_NIEUW",
+                "waarde" => "U"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "HUISNUMMERTOEVOEGING_NIEUW",
+                "waarde" => "39"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "POSTCODE_NIEUW",
+                "waarde" => "6545CA"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "WOONPLAATS_NIEUW",
+                "waarde" => "Nijmegen"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "VERHUISDATUM",
+                "waarde" => "2022-01-09"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "AANTAL_PERS_NIEUW_ADRES",
+                "waarde" => "3"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "WIJZE_BEWONING",
+                "waarde" => "nieuwbouw"
+            ],
+            [
+                "eigenschap" => "string",
+                "naam" => "MEEVERHUIZENDE_GEZINSLEDEN",
+                "waarde" => "[{\"BSN\":\"999995959\",\"ROL\":\"P\",\"VOORLETTERS\":\"S.C.A.\",\"VOORNAAM\":\"Simone Clarina Antoinette\",\"ACHTERNAAM\":\"Meelis\",\"GESLACHTSAANDUIDING\":\"v\",\"GEBOORTEDATUM\":\"19680822\"},{\"BSN\":\"999995996\",\"ROL\":\"K\",\"VOORLETTERS\":\"K.\",\"VOORNAAM\":\"Kim\",\"ACHTERNAAM\":\"Zech\",\"GESLACHTSAANDUIDING\":\"v\",\"GEBOORTEDATUM\":\"19980227\"}]"
+            ]
+        ];
+
+        foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
                 $relocators = $this->mapRelocators($eigenschap);
             } else {
-                $relocationArray = $this->mapEigenschap($eigenschap, $relocator);
+                switch ($eigenschap['naam']) {
+                    case 'DATUM_VERZENDING':
+                        $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                        $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
+                        continue 2;
+                    case 'VERHUISDATUM':
+                        $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                        // var_dump($dateTimeFormatted);
+                        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+                        $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['omschrijving'];
+                        continue 2;
+                    case 'WOONPLAATS_NIEUW':
+                        $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
+                        $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'TELEFOONNUMMER':
+                        $relocator['telephoneNumber'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'STRAATNAAM_NIEUW':
+                        $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'POSTCODE_NIEUW':
+                        $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'HUISNUMMER_NIEUW':
+                        $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
+                        continue 2;
+                    case 'HUISNUMMERTOEVOEGING_NIEUW':
+                        $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'GEMEENTECODE':
+                        $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'EMAILADRES':
+                        $relocator['email'] = $eigenschap['waarde'];
+                        continue 2;
+                    case 'BSN':
+                        $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
+                        $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
+                        $relocationArray['newAddress']['liveIn'] = [
+                            'liveInApplicable' => true,
+                            'consent' => 'PENDING',
+                            'consenter' => [
+                                'bsn' => $eigenschap['waarde']
+                            ]
+                        ];
+                        $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
+                        continue 2;
+                    case 'AANTAL_PERS_NIEUW_ADRES':
+                        $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+                        continue 2;
+                }
             }
         }
 
@@ -209,6 +403,10 @@ class MapRelocationService
         $relocationArray['relocators'] = $relocators;
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
 
+        var_dump($zaakArray['id']);
+        $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
+        !isset($relocationArray['dossier']['startDate']) && $relocationArray['dossier']['startDate'] = $relocationArray['dossier']['entryDateTime'];
+
         // Save in gateway
 
         $intraObjectEntity = new ObjectEntity();
@@ -219,9 +417,13 @@ class MapRelocationService
         $this->entityManager->persist($intraObjectEntity);
         $this->entityManager->flush();
 
-        $intraObjectArray = $intraObjectEntity->toArray();
+        // $intraObjectArray = $intraObjectEntity->toArray();
+        // var_dump($relocationArray['dossier']['entryDateTime']);
+        // var_dump(json_encode($relocationArray));
+        // die;
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $intraObjectArray]);
+        var_dump('END OF RELOCATION SERVICE');
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
 
         return $this->data;
     }
