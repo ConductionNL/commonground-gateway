@@ -117,48 +117,100 @@ class CronjobCommand extends Command
         $io->progressStart($total);
         $io->newLine();
 
+        $errorCount = 0;
         if ($cronjobs !== null) {
             foreach ($cronjobs as $cronjob) {
-                $io->newLine();
-                $io->definitionList(
-                    'Start running the following Cronjob',
-                    new TableSeparator(),
-                    ['Id' => $cronjob->getId()->toString()],
-                    ['Name' => $cronjob->getName()],
-                    ['Description' => $cronjob->getDescription()],
-                    ['Crontab' => $cronjob->getCrontab()],
-                    ['Throws' => implode(", ", $cronjob->getThrows())],
-//                    ['Data' => "[{$this->objectEntityService->implodeMultiArray($cronjob->getData())}]"],
-                    ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
-                    ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
-                );
+                try {
+                    $this->handleCronjobIoStart($io, $cronjob);
 
-                $this->makeActionEvent($cronjob, $io);
+                    $this->makeActionEvent($cronjob, $io);
 
-                $io->definitionList(
-                    'Finished running the following cronjob',
-                    new TableSeparator(),
-                    ['Id' => $cronjob->getId()->toString()],
-                    ['Name' => $cronjob->getName()],
-                    ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
-                    ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
-                );
+                    $this->handleCronjobIoFinish($io, $cronjob);
+                } catch (Exception $exception) {
+                    $io->error("Stopped running this cronjob because of the following error: {$exception->getMessage()}");
+                    $io->block("Code: {$exception->getCode()}");
+                    $io->block("File: {$exception->getFile()}");
+                    $io->block("Line: {$exception->getLine()}");
+                    $io->block("Trace: {$exception->getTraceAsString()}");
+                    $errorCount++;
+                }
+
                 $io->progressAdvance();
             }
         }
 
         $io->progressFinish();
 
-        $io->success("Finished running all Cronjobs");
+        return $this->handleExecuteResponse($io, $errorCount, $total);
+    }
+
+    /**
+     * Write user feedback to $io before handling a Cronjob.
+     *
+     * @param SymfonyStyle $io
+     * @param Cronjob $cronjob
+     * @return void
+     */
+    private function handleCronjobIoStart(SymfonyStyle $io, Cronjob $cronjob)
+    {
+        $io->newLine();
+        $io->definitionList(
+            'Start running the following Cronjob',
+            new TableSeparator(),
+            ['Id' => $cronjob->getId()->toString()],
+            ['Name' => $cronjob->getName()],
+            ['Description' => $cronjob->getDescription()],
+            ['Crontab' => $cronjob->getCrontab()],
+            ['Throws' => implode(", ", $cronjob->getThrows())],
+//                    ['Data' => "[{$this->objectEntityService->implodeMultiArray($cronjob->getData())}]"],
+            ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
+            ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
+        );
+    }
+
+    /**
+     * Write user feedback to $io after handling a Cronjob.
+     *
+     * @param SymfonyStyle $io
+     * @param Cronjob $cronjob
+     * @return void
+     */
+    private function handleCronjobIoFinish(SymfonyStyle $io, Cronjob $cronjob)
+    {
+        $io->definitionList(
+            'Finished running the following cronjob',
+            new TableSeparator(),
+            ['Id' => $cronjob->getId()->toString()],
+            ['Name' => $cronjob->getName()],
+            ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
+            ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
+        );
+    }
+
+    /**
+     * Determine the response of executing this command. Response depends on te amount of errors in percentage.
+     * If more than 20% failed will return Failure = 1. Else returns Succes = 0.
+     * Will also send a final message with SymfonyStyle $io as user feedback, depending on the failure rate this will be a Success, Warning or Error message.
+     *
+     * @param SymfonyStyle $io
+     * @param int $errorCount
+     * @param int $total
+     *
+     * @return int
+     */
+    private function handleExecuteResponse(SymfonyStyle $io, int $errorCount, int $total): int
+    {
+        $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
+        if ($errors == 0) {
+            $io->success("Successfully finished running all Cronjobs");
+        } elseif ($errors < 20) {
+            $io->warning("Some Cronjobs did not run successfully. Failure rate is $errors%");
+        } else {
+            $io->error("A lot of Cronjobs did not run successfully. Failure rate is $errors%");
+
+            return Command::FAILURE;
+        }
 
         return Command::SUCCESS;
-
-        // or return this if some error happened during the execution
-        // (it's equivalent to returning int(1))
-        // return Command::FAILURE;
-
-        // or return this to indicate incorrect command usage; e.g. invalid options
-        // or missing arguments (it's equivalent to returning int(2))
-        // return Command::INVALID
     }
 }
