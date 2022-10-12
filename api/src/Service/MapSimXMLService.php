@@ -52,16 +52,16 @@ class MapSimXMLService
         foreach ($simXMLArray['embedded']['Bijlagen'] as $bijlage) {
             $objectInformatieObject = [
                 'informatieobject' => [
-                    'titel'         => $bijlage['ns2:Naam'],
-                    'bestandsnaam'  => $bijlage['ns2:Naam'],
-                    'beschrijving'  => $bijlage['ns2:Omschrijving'],
-                    'creatieDatum'  => $todayAsString,
-                    'formaat'       => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
-                    'taal'          => 'NLD',
-                    'inhoud'        => $bijlage['embedded']['ns2:Inhoud']['#'],
-                    'status'        => 'defintief',
+                    'titel'                   => $bijlage['ns2:Naam'],
+                    'bestandsnaam'            => $bijlage['ns2:Naam'],
+                    'beschrijving'            => $bijlage['ns2:Omschrijving'],
+                    'creatieDatum'            => $todayAsString,
+                    'formaat'                 => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
+                    'taal'                    => 'NLD',
+                    'inhoud'                  => $bijlage['embedded']['ns2:Inhoud']['#'],
+                    'status'                  => 'defintief',
                     'vertrouwelijkAanduiding' => 'OPENBAAR',
-                    'auteur'        => 'SIMform',
+                    'auteur'                  => 'SIMform',
 
                 ],
                 'object'     => $zaakObjectEntity->getId()->toString(),
