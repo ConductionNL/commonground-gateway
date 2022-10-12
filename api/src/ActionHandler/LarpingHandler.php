@@ -2,22 +2,15 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\LarpingService;
-use Psr\Container\ContainerInterface;
 
-class LarpingHandler implements ActionHandlerInterface
+class LarpingHandler
 {
     private LarpingService $larpingService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(LarpingService $larpingService)
     {
-        $larpingService = $container->get('larpingService');
-        if ($larpingService instanceof LarpingService) {
-            $this->larpingService = $larpingService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->larpingService = $larpingService;
     }
 
     /**
@@ -58,8 +51,8 @@ class LarpingHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
-        return $this->LarpingService->LarpingHandler($data, $configuration);
+        return $this->larpingService->LarpingHandler($data, $configuration);
     }
 }
