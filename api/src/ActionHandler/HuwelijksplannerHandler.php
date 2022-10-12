@@ -10,7 +10,7 @@ class HuwelijksplannerHandler
 {
     private huwelijksplannerService $huwelijksplannerService;
 
-    public function __construct(huwelijksplannerService $huwelijksplannerService)
+    public function __construct(HuwelijksplannerService $huwelijksplannerService)
     {
         $this->huwelijksplannerService = $huwelijksplannerService;
     }

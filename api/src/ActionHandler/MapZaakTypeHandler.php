@@ -11,9 +11,9 @@ use Respect\Validation\Exceptions\ComponentException;
 
 class MapZaakTypeHandler
 {
-    private mapZaakTypeService $mapZaakTypeService;
+    private MapZaakTypeService $mapZaakTypeService;
 
-    public function __construct(mapZaakTypeService $mapZaakTypeService)
+    public function __construct(MapZaakTypeService $mapZaakTypeService)
     {
         $this->mapZaakTypeService = $mapZaakTypeService;
     }

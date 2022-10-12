@@ -70,7 +70,7 @@ services:
     App\ActionHandler\HuwelijksplannerHandler:
         public: true
         arguments:
-            $huwelijksplannerService: '@App\Service\huwelijksplannerService'
+            $huwelijksplannerService: '@App\Service\HuwelijksplannerService'
             
     App\ActionHandler\IdentificationHandler:
         public: true
@@ -85,12 +85,12 @@ services:
     App\ActionHandler\MapSimXMLHandler:
         public: true
         arguments:
-            $mapSimXMLService: '@App\Service\mapSimXMLService'
+            $mapSimXMLService: '@App\Service\MapSimXMLService'
             
     App\ActionHandler\MapZaakTypeHandler:
         public: true
         arguments:
-            $mapZaakTypeService: '@App\Service\mapZaakTypeService'
+            $mapZaakTypeService: '@App\Service\MapZaakTypeService'
             
     App\ActionHandler\NotificationHandler:
         public: true

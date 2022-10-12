@@ -11,9 +11,9 @@ use Respect\Validation\Exceptions\ComponentException;
 
 class MapSimXMLHandler
 {
-    private mapSimXMLService $mapSimXMLService;
+    private MapSimXMLService $mapSimXMLService;
 
-    public function __construct(mapSimXMLService $mapSimXMLService)
+    public function __construct(MapSimXMLService $mapSimXMLService)
     {
         $this->mapSimXMLService = $mapSimXMLService;
     }
