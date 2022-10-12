@@ -2,26 +2,19 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\HandelsRegisterSearchService;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class HandelsRegisterSearchHandler implements ActionHandlerInterface
+class HandelsRegisterSearchHandler
 {
-    private HandelsRegisterSearchService $HandelsRegisterSearchService;
+    private HandelsRegisterSearchService $handelsRegisterSearchService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(HandelsRegisterSearchService $handelsRegisterSearchService)
     {
-        $HandelsRegisterSearchService = $container->get('handelsRegisterSearchService');
-        if ($HandelsRegisterSearchService instanceof HandelsRegisterSearchService) {
-            $this->HandelsRegisterSearchService = $HandelsRegisterSearchService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->handelsRegisterSearchService = $handelsRegisterSearchService;
     }
 
     /**
@@ -56,8 +49,8 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
-        return $this->HandelsRegisterSearchService->handelsRegisterSearchHandler($data, $configuration);
+        return $this->handelsRegisterSearchService->handelsRegisterSearchHandler($data, $configuration);
     }
 }

@@ -4,25 +4,17 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class SynchronizationPushHandler implements ActionHandlerInterface
+class SynchronizationPushHandler
 {
     private SynchronizationService $synchronizationService;
 
     /**
-     * @param ContainerInterface $container
-     *
-     * @throws GatewayException
+     * @param SynchronizationService $synchronizationService
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(SynchronizationService $synchronizationService)
     {
-        $synchronizationService = $container->get('synchronizationservice');
-        if ($synchronizationService instanceof SynchronizationService) {
-            $this->synchronizationService = $synchronizationService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->synchronizationService = $synchronizationService;
     }
 
     /**
@@ -57,7 +49,7 @@ class SynchronizationPushHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         $this->synchronizationService->synchronisationPushHandler($data, $configuration);
 

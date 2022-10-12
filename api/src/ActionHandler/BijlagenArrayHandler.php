@@ -6,21 +6,15 @@ use App\Exception\GatewayException;
 use App\Service\BijlagenArrayService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class BijlagenArrayHandler implements ActionHandlerInterface
+class BijlagenArrayHandler
 {
     private BijlagenArrayService $bijlagenArrayService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(BijlagenArrayService $bijlagenArrayService)
     {
-        $bijlagenArrayService = $container->get('bijlagenArrayService');
-        if ($bijlagenArrayService instanceof BijlagenArrayService) {
-            $this->bijlagenArrayService = $bijlagenArrayService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->bijlagenArrayService = $bijlagenArrayService;
     }
 
     /**
@@ -59,7 +53,7 @@ class BijlagenArrayHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->bijlagenArrayService->bijlagenArrayHandler($data, $configuration);
     }
