@@ -39,7 +39,7 @@ class MapSimXMLService
      *
      * @return void
      */
-    private function createDocumenten(ObjectEntity &$zaakObjectEntity, Entity $documentEntity, array $simXMLArray): array
+    private function createDocumenten(ObjectEntity &$zaakObjectEntity, Entity $documentEntity, array &$simXMLArray): array
     {
         if (!isset($simXMLArray['embedded']['Bijlagen'])) {
             return [];
@@ -56,12 +56,15 @@ class MapSimXMLService
                     'bestandsnaam'  => $bijlage['ns2:Naam'],
                     'beschrijving'  => $bijlage['ns2:Omschrijving'],
                     'creatieDatum'  => $todayAsString,
-                    'taal'          => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
-                    'bestandsdelen' => [
-                        ['inhoud' => $bijlage['embedded']['ns2:Inhoud']['#']],
-                    ],
+                    'formaat'       => $bijlage['embedded']['ns2:Inhoud']['@d6p1:contentType'],
+                    'taal'          => 'NLD',
+                    'inhoud'        => $bijlage['embedded']['ns2:Inhoud']['#'],
+                    'status'        => 'defintief',
+                    'vertrouwelijkAanduiding' => 'OPENBAAR',
+                    'auteur'        => 'SIMform',
+
                 ],
-                'object'     => $zaakObjectEntity->getSelf(),
+                'object'     => $zaakObjectEntity->getId()->toString(),
                 'objectType' => 'zaak',
             ];
 
@@ -72,7 +75,10 @@ class MapSimXMLService
 
             $this->entityManager->persist($objectInformatieObjectObjectEntity);
             $this->entityManager->flush();
+            $this->synchronizationService->setApplicationAndOrganization($objectInformatieObjectObjectEntity);
+            $this->synchronizationService->setApplicationAndOrganization($objectInformatieObjectObjectEntity->getValue('informatieobject'));
             $documents[] = $objectInformatieObjectObjectEntity->getId()->toString();
+            $simXMLArray['zgwDocumenten'][] = $objectInformatieObjectObjectEntity->getId()->toString();
         }
 
         return $documents;
