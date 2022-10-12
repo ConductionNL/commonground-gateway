@@ -191,48 +191,7 @@ class ZdsZaakService
             }
         }
     }
-
-    /**
-     * Returns the statusType from an array of statusTypes with the lowest order number.
-     *
-     * @param array $statusTypes An array of status types
-     *
-     * @return ObjectEntity
-     */
-    public function getFirstStatus(array $statusTypes): ObjectEntity
-    {
-        foreach ($statusTypes as $statusType) {
-            if (!$volgnummer || $statusType->getValue('volgnummer') < $volgnummer) {
-                $volgnummer = $statusType->getValue('volgnummer');
-                $firstStatusType = $statusType;
-            }
-        }
-
-        return $firstStatusType;
-    }
-
-    /**
-     * Creates a starting status for a new case.
-     *
-     * @param ObjectEntity $zaaktypeObjectEntity The zaaktypeobject to find the statusType in
-     * @param ObjectEntity $zaak                 The zaak to add a status to
-     *
-     * @throws Exception
-     */
-    public function createZgwStartStatus(ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
-    {
-        $statusEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['statusEntityId']);
-
-        $statusTypen = $zaaktypeObjectEntity->getValue('statustypen');
-        $statusType = $this->getFirstStatus($statusTypen);
-        $status = new ObjectEntity($statusEntity);
-        $status->setValue('zaak', $zaak);
-        $status->setValue('statusType', $statusType->getValue('url'));
-        $status->setValue('statusDatumGezet', new \DateTime());
-
-        $this->entityManager->persist($status);
-    }
-
+    
     /**
      * This function converts a zds message to zgw.
      *
@@ -444,56 +403,6 @@ class ZdsZaakService
     }
 
     /**
-     * This function set an identifier on the dataset.
-     *
-     * @param string $identifier The identifier to set
-     * @param array  $data       The data from the call
-     *
-     * @return array
-     */
-    public function overridePath(string $identifier, array $data): array
-    {
-        // @todo in de sync service noemen we dit niet identifierPath maar locationIdField
-        $path = $this->configuration['identifierPath'];
-        $dotData = new \Adbar\Dot($data);
-        $dotData->set($path, $identifier);
-
-        // @todo er wordt aangegeven dat de result een array is (that makes sense) maar we geven een JSON object terug?
-        //return $dotData->jsonSerialize();
-        return $dotData->all();
-    }
-
-    /**
-     * Changes the request to hold the proper zaaktype url insted of given identifier.
-     *
-     * @param array $data          The data from the call
-     * @param array $configuration The configuration of the action
-     *
-     * @return array
-     */
-    public function zaakTypeHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        $identifier = $this->getIdentifier($data['request']);
-
-        $zaakTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakTypeEntityId']);
-        $zaakTypeObjectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeEntity, ['identificatie' => $identifier]);
-
-        if (count($zaakTypeObjectEntities) > 0 && $zaakTypeObjectEntities[0] instanceof ObjectEntity) {
-            // @todo bij meer dan één zaak hebben we gewoon een probleem en willen we een error
-            $zaakTypeObjectEntity = $zaakTypeObjectEntities[0];
-            // Ok dus dat is de url van de aangemaakte zaak en dan
-            $url = $zaakTypeObjectEntity->getValueByAttribute($zaakTypeObjectEntity->getEntity()->getAttributeByName('url'))->getStringValue();
-            // deze functie verhaspeld het overwriten van het paht en muteren van object (naar json)
-            $data['request'] = $this->overridePath($url, $data['request']);
-        }
-
-        return $data;
-    }
-
-    /**
      * @param ObjectEntity $objectEntity The object entity that relates to the entity Eigenschap
      * @param array        $data         The data array
      *
@@ -519,28 +428,6 @@ class ZdsZaakService
         $this->entityManager->persist($synchronization);
 
         return $synchronization;
-    }
-
-    /**
-     * This function gets the name of the eigenschap and returns the getEigenschapValues functie.
-     *
-     * @param array $data          The data from the call
-     * @param array $extraElements The extra elements that are taken from the action configuration eigenschappen path
-     * @param array $eigenschappen The eigenschappen @ids
-     *
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     * @throws ComponentException
-     * @throws GatewayException
-     *
-     * @return void
-     */
-    public function getZaakByIdentification(string $identification): ObjectEntity
-    {
-        $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
-        $zaakObject = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakEntity, ['identificatie' => $identification]);
-
-        return $zaakObject;
     }
 
     /**
