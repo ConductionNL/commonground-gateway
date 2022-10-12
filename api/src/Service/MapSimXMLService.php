@@ -281,7 +281,7 @@ class MapSimXMLService
         }
 
         $rolTypeArray = [
-            'zaaktype'             => $zaakType,
+            'zaaktype'             => $zaakType->getId()->toString(),
             'omschrijving'         => 'Initiator',
             'omschrijvingGeneriek' => 'initiator',
         ];
@@ -290,6 +290,7 @@ class MapSimXMLService
         $rolType->hydrate($rolTypeArray);
         $this->synchronizationService->setApplicationAndOrganization($rolType);
         $this->entityManager->persist($rolType);
+        $this->entityManager->flush();
 
         return $rolType;
     }
