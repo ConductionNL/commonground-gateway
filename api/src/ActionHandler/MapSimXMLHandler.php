@@ -9,18 +9,13 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapSimXMLHandler implements ActionHandlerInterface
+class MapSimXMLHandler
 {
     private mapSimXMLService $mapSimXMLService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(mapSimXMLService $mapSimXMLService)
     {
-        $mapSimXMLService = $container->get('mapSimXMLService');
-        if ($mapSimXMLService instanceof MapSimXMLService) {
-            $this->mapSimXMLService = $mapSimXMLService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->mapSimXMLService = $mapSimXMLService;
     }
 
     /**
@@ -59,7 +54,7 @@ class MapSimXMLHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->mapSimXMLService->mapSimXMLHandler($data, $configuration);
     }

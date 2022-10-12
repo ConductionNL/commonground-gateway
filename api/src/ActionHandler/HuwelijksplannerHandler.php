@@ -6,18 +6,13 @@ use App\Exception\GatewayException;
 use App\Service\HuwelijksplannerService;
 use Psr\Container\ContainerInterface;
 
-class HuwelijksplannerHandler implements ActionHandlerInterface
+class HuwelijksplannerHandler
 {
     private huwelijksplannerService $huwelijksplannerService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(huwelijksplannerService $huwelijksplannerService)
     {
-        $huwelijksplannerService = $container->get('huwelijksplannerService');
-        if ($huwelijksplannerService instanceof HuwelijksplannerService) {
-            $this->huwelijksplannerService = $huwelijksplannerService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->huwelijksplannerService = $huwelijksplannerService;
     }
 
     /**
@@ -54,7 +49,7 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->huwelijksplannerService->HuwelijksplannerHandler($data, $configuration);
     }

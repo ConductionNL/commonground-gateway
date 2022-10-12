@@ -53,13 +53,11 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         $class = $action->getClass();
-        $object = new $class($this->container);
+        $object = $this->container->get($class);
 
         // timer starten
         $startTimer = microtime(true);
-        if ($object instanceof ActionHandlerInterface) {
-            $data = $object->__run($data, $action->getConfiguration());
-        }
+        $data = $object->run($data, $action->getConfiguration());
         // timer stoppen
         $stopTimer = microtime(true);
 
