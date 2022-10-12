@@ -17,10 +17,10 @@
 #    contactmomentenCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactmomenten_publiccode/main/OAS.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ContactmomentenAPI/main/OAS.yaml
 #        name: contactmomenten collection
 #        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/contactmomenten_publiccode/raw/main/data/contactmomenten.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ContactmomentenAPI/main/data/data.json
 #    drcCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -114,7 +114,14 @@
 #        autoLoad: true
 #
 ## Entities
-##App\Entity\Entity:
+#App\Entity\Entity:
+#    # HandelsRegisterSearch Entity
+#    HandelsRegisterSearch:
+#        name: HandelsRegisterSearch
+#        description: Bedoelt om een search te doen op HandelsRegister.
+#        route: "/kvk/zoeken"
+#        endpoint: "zoeken"
+#
 ##    # Review Entity
 ##    review:
 ##        name: Review
@@ -151,7 +158,38 @@
 ##        endpoint: "medewerkers"
 #
 ## Attributes
-##App\Entity\Attribute:
+#App\Entity\Attribute:
+#    # HandelsRegisterSearch Attributes (here so we can do filter query params on the search endpoint)
+#    handelsRegisterSearch_kvkNummer:
+#        name: kvkNummer
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#
+#    handelsRegisterSearch_handelsnaam:
+#        name: handelsnaam
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#        
+#    handelsRegisterSearch_postcode:
+#        name: postcode
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#        
+#    handelsRegisterSearch_huisnummer:
+#        name: huisnummer
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#    
+#    handelsRegisterSearch_huisnummerToevoeging:
+#        name: huisnummerToevoeging
+#        type: string
+#        entity: "@HandelsRegisterSearch"
+#        searchable: true
+#
 ##    # Review Attributes
 ##    review_author:
 ##        name: author
@@ -403,6 +441,15 @@
 #
 ## Endpoints        
 #App\Entity\Endpoint:
+#    # HandelsRegisterSearch Endpoint
+#    HandelsRegisterSearchGet:
+#        name: HandelsRegisterSearch endpoint
+#        description: HandelsRegisterSearch endpoint
+#        path: [ 'kvk', 'zoeken' ]
+#        pathRegex: "^kvk/zoeken$"
+#        method: GET
+#        operationType: collection
+#
 ##    # Review Endpoints
 ##    reviewEndpointGet:
 ##        name: Review endpoint get collection
@@ -628,6 +675,15 @@
 #
 ## Handlers
 #App\Entity\Handler:
+#    # HandelsRegisterSearch Handler
+#    HandelsRegisterSearchHandler:
+#        name: HandelsRegisterSearch handler
+#        methods: ["GET"]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: ["@HandelsRegisterSearchGet"]
+#        entity: "@HandelsRegisterSearch"
+#
 ##    # Review Handler
 ##    reviewHandler:
 ##        name: Review handler
@@ -885,3 +941,20 @@
 #                    - gerelateerdeProducten
 #                prefixFieldsOut:
 #                    id: kennisartikel_
+#
+#    HandelsRegisterSearchAction:
+#        name: HandelsRegisterSearchAction
+#        description: This is an action for searching KVK vestigingen.
+#        listens:
+#            - 'commongateway.response.pre'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # HandelsRegisterSearch entity uuid
+#        class: App\ActionHandler\HandelsRegisterSearchHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            entities: 
+#                vestiging: '97b05576-af9b-43df-bab7-dbf0f057258e' # HandelsRegister Vestiging entity uuid
