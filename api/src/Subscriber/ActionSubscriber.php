@@ -125,12 +125,25 @@ class ActionSubscriber implements EventSubscriberInterface
             // throw events
             if (isset($this->io)) {
                 $totalThrows = $action->getThrows() ? count($action->getThrows()) : 0;
-                $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Action.".($totalThrows !== 0 ? " Loop through all Throws of this Action..." : '');
+                $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Action.";
                 $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
+                $totalThrows === 0 ?: $this->io->text("0/$totalThrows - Start looping through all Throws of this Action...");
                 $currentCronJobThrow ?: $this->io->newLine();
+                $currentCronJobThrow && $totalThrows !== 0 ? $this->io->newLine() : null;
             }
-            foreach ($action->getThrows() as $throw) {
+            foreach ($action->getThrows() as $key => $throw) {
                 $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
+                if (isset($this->io) && isset($totalThrows)) {
+                    if ($key !== array_key_last($action->getThrows())) {
+                        $keyStr = $key + 1;
+                        $this->io->text("$keyStr/$totalThrows - Looping through Throws of this Action \"{$action->getName()}\"...");
+                    }
+                    $this->io->newLine();
+                }
+            }
+            if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0) {
+                $this->io->text("$totalThrows/$totalThrows - Finished looping through all Throws of this Action \"{$action->getName()}\"");
+                $this->io->newLine();
             }
         }
 
