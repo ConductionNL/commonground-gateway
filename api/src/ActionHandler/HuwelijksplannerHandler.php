@@ -2,9 +2,7 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\HuwelijksplannerService;
-use Psr\Container\ContainerInterface;
 
 class HuwelijksplannerHandler
 {

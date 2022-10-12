@@ -4,7 +4,6 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SynchronizationItemHandler
 {

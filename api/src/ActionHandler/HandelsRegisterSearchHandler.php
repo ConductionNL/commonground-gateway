@@ -2,9 +2,7 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\HandelsRegisterSearchService;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
