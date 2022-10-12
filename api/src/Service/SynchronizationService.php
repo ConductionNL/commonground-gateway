@@ -16,6 +16,7 @@ use Exception;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -182,10 +183,10 @@ class SynchronizationService
         $this->data = $data;
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
+            $this->io->note("SynchronizationService->SynchronizationCollectionHandler()");
         }
 
         // todo: i think we need the Action here, because we need to set it with $synchronization->setAction($action) later...
-        // todo: if we do this, some functions that have $synchronization no longer need $configuration because we can do: $synchronization->getAction()->getConfiguration()
         $gateway = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
 
@@ -235,6 +236,9 @@ class SynchronizationService
                 return $source;
             }
         }
+        if (isset($this->io)) {
+            $this->io->warning("Could not get a Source with current Action->Configuration");
+        }
 
         return null;
     }
@@ -251,6 +255,9 @@ class SynchronizationService
             if ($entity instanceof Entity) {
                 return $entity;
             }
+        }
+        if (isset($this->io)) {
+            $this->io->warning("Could not get an Entity with current Action->Configuration");
         }
 
         return null;
@@ -346,10 +353,24 @@ class SynchronizationService
      * @param Gateway $gateway The source to get the data from
      *
      * @return array The results found on the source
+     *
+     * @throws LoaderError|SyntaxError
      */
     private function getObjectsFromSource(Gateway $gateway): array
     {
         $callServiceConfig = $this->getCallServiceConfig($gateway);
+        if (isset($this->io)) {
+            $this->io->definitionList(
+                'getObjectsFromSource with this callServiceConfig data',
+                new TableSeparator(),
+                ['Component' => "Data of Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()}) as array"],
+                ['Url' => $callServiceConfig['url']],
+                ['Query' => "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]"],
+                ['Headers' => "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]"],
+                ['Method' => $callServiceConfig['method'] ?? "GET"],
+            );
+        }
+
         // Right now there are two options, either api source is paginated or it is not
         $results = $this->fetchObjectsFromSource($callServiceConfig);
 
@@ -376,6 +397,9 @@ class SynchronizationService
         }
 
         try {
+            if(isset($this->io)) {
+                $this->io->text("fetchObjectsFromSource with \$page = $page");
+            }
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
@@ -391,6 +415,9 @@ class SynchronizationService
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
+            if (isset($this->io)) {
+                $this->io->warning("(This might just be the final page!) - {$exception->getMessage()}");
+            }
             return [];
             //todo: error, user feedback and log this?
 //            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [

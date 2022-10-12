@@ -64,11 +64,11 @@ class CronjobCommand extends Command
         $totalThrows = $cronjob->getThrows() ? count($cronjob->getThrows()) : 0;
         $io->section("Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Cronjob");
 
-        ProgressBar::setFormatDefinition('throwProgressBar', ' %current%/%max% |----| %message%');
+        ProgressBar::setFormatDefinition('throwProgressBar', ' %current%/%max% ---- %message%');
         $throwProgressBar = new ProgressBar($this->output, $totalThrows);
         $throwProgressBar->setFormat('throwProgressBar');
         $throwProgressBar->setMaxSteps($totalThrows);
-        $throwProgressBar->setMessage('Start looping through Throws');
+        $throwProgressBar->setMessage('Start looping through all Throws of this Cronjob');
         $throwProgressBar->start();
         $io->newLine();
         $io->newLine();
@@ -80,7 +80,7 @@ class CronjobCommand extends Command
             $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
             $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
 
-            $io->comment("Get crontab expression ({$cronjob->getCrontab()}) and set the next and last run properties of the cronjob");
+            $io->comment("Get crontab expression ({$cronjob->getCrontab()}) and set the next and last run properties of the Cronjob");
             $cronExpression = new CronExpression($cronjob->getCrontab());
             $cronjob->setNextRun($cronExpression->getNextRunDate());
             $cronjob->setLastRun(new \DateTime('now'));
@@ -90,13 +90,13 @@ class CronjobCommand extends Command
             $this->entityManager->flush();
 
             if ($key !== array_key_last($throws)) {
-                $throwProgressBar->setMessage('Looping through Throws...');
+                $throwProgressBar->setMessage('Looping through Throws of current Cronjob...');
                 $throwProgressBar->advance();
                 $io->newLine();
             }
             $io->newLine();
         }
-        $throwProgressBar->setMessage('Finished looping through Throws');
+        $throwProgressBar->setMessage('Finished looping through all Throws of this Cronjob');
         $throwProgressBar->finish();
         $io->newLine();
         $io->newLine();

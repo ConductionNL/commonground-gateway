@@ -2015,4 +2015,32 @@ class ObjectEntityService
             }
         );
     }
+
+    /**
+     * Implodes a multidimensional array to a string.
+     *
+     * @param array $array
+     * @param string $separator
+     * @param string $keyValueSeparator
+     *
+     * @return string
+     */
+    public function implodeMultiArray(array $array, string $separator = ", ", string $keyValueSeparator = "="): string
+    {
+        $str = '';
+
+        foreach ($array as $key => $value) {
+            $currentSeparator = $separator;
+            if ($key === array_key_first($array)) {
+                $currentSeparator = '';
+            }
+            if (is_array($value)) {
+                $str .= "$currentSeparator\"$key\"{$keyValueSeparator}[{$this->implodeMultiArray($value, $separator, $keyValueSeparator)}]";
+            } else {
+                $str .= "$currentSeparator\"$key\"$keyValueSeparator\"$value\"";
+            }
+        }
+
+        return $str;
+    }
 }

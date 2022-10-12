@@ -6,6 +6,7 @@ use App\ActionHandler\ActionHandlerInterface;
 use App\Entity\Action;
 use App\Event\ActionEvent;
 use App\Service\ObjectEntityService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -55,9 +56,12 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         // Is the action is lockable we need to lock it
         if ($action->getIsLockable()) {
-            $action->setLocked(new \DateTime());
+            $action->setLocked(new DateTime());
             $this->entityManager->persist($action);
             $this->entityManager->flush();
+            if (isset($this->io)) {
+                $this->io->text("Locked Action {$action->getName()} at {$action->getLocked()->format('Y-m-d H:i:s')}");
+            }
         }
 
         $class = $action->getClass();
@@ -66,6 +70,10 @@ class ActionSubscriber implements EventSubscriberInterface
         // timer starten
         $startTimer = microtime(true);
         if ($object instanceof ActionHandlerInterface) {
+            if (isset($this->io)) {
+                $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
+                $this->io->newLine();
+            }
             $data = $object->__run($data, $action->getConfiguration());
         }
         // timer stoppen
@@ -74,12 +82,16 @@ class ActionSubscriber implements EventSubscriberInterface
         // Is the action is lockable we need to unlock it
         if ($action->getIsLockable()) {
             $action->setLocked(null);
+            if (isset($this->io)) {
+                $now = new DateTime();
+                $this->io->text("Unlocked Action {$action->getName()} at {$now->format('Y-m-d H:i:s')}");
+            }
         }
 
         $totalTime = $stopTimer - $startTimer;
 
         // Let's set some results
-        $action->setLastRun(new \DateTime());
+        $action->setLastRun(new DateTime());
         $action->setLastRunTime($totalTime);
         $action->setStatus(true); // this needs some refinement
         $this->entityManager->persist($action);
@@ -110,6 +122,7 @@ class ActionSubscriber implements EventSubscriberInterface
                 $this->session->get('currentCronJobThrow') === $event->getType()
             ) {
                 $currentCronJobThrow = true;
+                $this->io->block("Found an Action with matching conditions: [{$this->objectEntityService->implodeMultiArray($action->getConditions())}]");
                 $this->io->definitionList(
                     'The conditions of the following Action match with the ActionEvent data',
                     new TableSeparator(),
@@ -126,6 +139,7 @@ class ActionSubscriber implements EventSubscriberInterface
                     ['LastRunTime' => $action->getLastRunTime()],
                     ['Status' => is_null($action->getStatus()) ? null: ($action->getStatus() ? 'True' : 'False')],
                 );
+                $this->io->block("The configuration of this Action: [{$this->objectEntityService->implodeMultiArray($action->getConfiguration())}]");
             } elseif (isset($this->io)) {
                 $currentCronJobThrow = false;
                 $this->io->text("The conditions of the Action {$action->getName()} match with the 'sub'-ActionEvent data");
@@ -185,6 +199,10 @@ class ActionSubscriber implements EventSubscriberInterface
         }
         foreach ($actions as $action) {
             $this->handleAction($action, $event);
+        }
+
+        if (isset($this->io)) {
+            $this->io->newLine();
         }
 
         return $event;
