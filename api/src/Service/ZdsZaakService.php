@@ -738,9 +738,9 @@ class ZdsZaakService
             $this->entityManager->persist($zaak);
         } else {
             $messageType = 'genereerDocumentIdentificatie';
-            foreach($result->getValue('zgwDocumenten') as $documentId) {
+            foreach ($result->getValue('zgwDocumenten') as $documentId) {
                 $document = $this->entityManager->getRepository(ObjectEntity::class)->find($documentId);
-                $document->getValue('identificatie') ?:  $document->setValue('identificatie', $this->getIdentificationForObject($messageType));
+                $document->getValue('identificatie') ?: $document->setValue('identificatie', $this->getIdentificationForObject($messageType));
                 $this->entityManager->persist($document);
             }
         }
@@ -778,6 +778,7 @@ class ZdsZaakService
         $zdsObject->setValue('isRelevantVoor', $this->getIsRelevantVoor($document, $zaak, $zdsObject));
 
         $this->entityManager->persist($zdsObject);
+
         return $zdsObject;
     }
 
@@ -786,8 +787,8 @@ class ZdsZaakService
         $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['documentEntityId']);
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
         $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')]);
-        $zaak =  $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
-        foreach($documenten as $document) {
+        $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
+        foreach ($documenten as $document) {
             $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($configuration['zdsEntityId']));
             $zds->setValue('referentienummer', Uuid::uuid4());
             $zds->setValue('object', $this->getDocumentObject($zds, $document, $zaak));
@@ -797,7 +798,6 @@ class ZdsZaakService
             $zds->getEntity()->addObjectEntity($zds);
             $this->entityManager->persist($zds);
             $this->entityManager->flush();
-
         }
 
         return $data;
