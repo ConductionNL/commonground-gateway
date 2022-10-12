@@ -193,6 +193,9 @@ class SynchronizationService
         // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($gateway);
 
+        if (isset($this->io)) {
+            $this->io->block("Start syncing all objects found in Source...");
+        }
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
 
@@ -214,6 +217,7 @@ class SynchronizationService
             if (array_key_exists('useDataFromCollection', $this->configuration) and !$this->configuration['useDataFromCollection']) {
                 $result = [];
             }
+            // todo $this->>io
             $synchronization = $this->handleSync($synchronization, $result);
 
             $this->entityManager->persist($synchronization);
@@ -506,6 +510,9 @@ class SynchronizationService
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source->getId(), 'entity' => $entity->getId(), 'sourceId' => $sourceId]);
 
         if ($synchronization instanceof Synchronization) {
+            if (isset($this->io)) {
+                $this->io->text("findSyncBySource() Found existing Synchronization. Gateway={$source->getId()->toString()}. Entity={$entity->getId()->toString()}. SourceId=$sourceId");
+            }
             return $synchronization;
         }
 
@@ -516,6 +523,9 @@ class SynchronizationService
         $this->entityManager->persist($synchronization);
         // We flush later
 
+        if (isset($this->io)) {
+            $this->io->text("findSyncBySource() Created new Synchronization. Gateway={$source->getId()->toString()}. Entity={$entity->getId()->toString()}. SourceId=$sourceId");
+        }
         return $synchronization;
     }
 
