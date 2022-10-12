@@ -9,6 +9,7 @@ use App\Service\ObjectEntityService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -95,13 +96,57 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->entityManager->refresh($action);
 
             if ($action->getLocked()) {
+                if (isset($this->io)) {
+                    $this->io->info("Action {$action->getName()} is lockable and locked = {$action->getLocked()}");
+                }
                 return $event;
             }
         }
 
         if (JsonLogic::apply($action->getConditions(), $event->getData())) {
-            $this->io->block("w.i.p. Action {$action->getName()} conditions matches"); //todo
+            //todo: make this a function
+            if (isset($this->io) &&
+                $this->session->get('currentCronJobThrow') &&
+                $this->session->get('currentCronJobThrow') === $event->getType()
+            ) {
+                $currentCronJobThrow = true;
+                $this->io->definitionList(
+                    'The conditions of the following Action match with the ActionEvent data',
+                    new TableSeparator(),
+                    ['Id' => $action->getId()->toString()],
+                    ['Name' => $action->getName()],
+                    ['Description' => $action->getDescription()],
+                    ['Listens' => implode(", ", $action->getListens())],
+                    ['Throws' => implode(", ", $action->getThrows())],
+                    ['Class' => $action->getClass()],
+                    ['Priority' => $action->getPriority()],
+                    ['Async' => is_null($action->getAsync()) ? null: ($action->getAsync() ? 'True' : 'False')],
+                    ['IsLockable' => is_null($action->getIsLockable()) ? null: ($action->getIsLockable() ? 'True' : 'False')],
+                    ['LastRun' => $action->getLastRun() ? $action->getLastRun()->format('Y-m-d H:i:s') : null],
+                    ['LastRunTime' => $action->getLastRunTime()],
+                    ['Status' => is_null($action->getStatus()) ? null: ($action->getStatus() ? 'True' : 'False')],
+                );
+            } elseif (isset($this->io)) {
+                $currentCronJobThrow = false;
+                $this->io->text("The conditions of the Action {$action->getName()} match with the 'sub'-ActionEvent data");
+            }
+
             $event->setData($this->runFunction($action, $event->getData()));
+
+            //todo: make this a function
+            if (isset($this->io) && $currentCronJobThrow) {
+                $this->io->definitionList(
+                    'Finished handling the following Action that matched the ActionEvent data',
+                    new TableSeparator(),
+                    ['Id' => $action->getId()->toString()],
+                    ['Name' => $action->getName()],
+                    ['LastRun' => $action->getLastRun() ? $action->getLastRun()->format('Y-m-d H:i:s') : null],
+                    ['LastRunTime' => $action->getLastRunTime()],
+                    ['Status' => is_null($action->getStatus()) ? null: ($action->getStatus() ? 'True' : 'False')],
+                );
+            } elseif (isset($this->io)) {
+                $this->io->text("Finished handling the Action {$action->getName()} that matched the 'sub'-ActionEvent data");
+            }
             // throw events
             foreach ($action->getThrows() as $throw) {
                 $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
@@ -135,8 +180,8 @@ class ActionSubscriber implements EventSubscriberInterface
 
         $totalActions = is_countable($actions) ? count($actions) : 0;
         if (isset($this->io)) {
-            $ioMessage = "Found $totalActions action".($totalActions !== 1 ?'s':'')." listening to \"{$event->getType()}\"";
-            $currentCronJobThrow ? $this->io->block($ioMessage) : null;
+            $ioMessage = "Found $totalActions Action".($totalActions !== 1 ?'s':'')." listening to \"{$event->getType()}\"";
+            $currentCronJobThrow ? $this->io->block($ioMessage) : null; // todo: optionally add $this->io->text($ioMessage) instead of null
         }
         foreach ($actions as $action) {
             $this->handleAction($action, $event);
