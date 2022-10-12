@@ -95,12 +95,6 @@ services:
         class: App\Service\MapZaakTypeService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-        
-    handelsRegisterSearchService:
-        public: true
-        class: App\Service\HandelsRegisterSearchService
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
     
     mapSimXMLService:
         public: true
@@ -113,7 +107,6 @@ services:
         class: App\Service\MapRelocationService
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            
     
     bijlagenArrayService:
         public: true
