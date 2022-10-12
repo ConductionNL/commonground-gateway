@@ -128,45 +128,10 @@ class CronjobCommand extends Command
                     ['Description' => $cronjob->getDescription()],
                     ['Crontab' => $cronjob->getCrontab()],
                     ['Throws' => implode(", ", $cronjob->getThrows())],
-                    //todo: not sure if $conjob->getData() is possible, array->string conversion if this is a multidimensional array
-//                    ['Data' => implode(", ", $cronjob->getData())],
+//                    ['Data' => "[{$this->objectEntityService->implodeMultiArray($cronjob->getData())}]"],
                     ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
                     ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
                 );
-
-//                $io->text('text');
-//                $io->block('block');
-//                $io->writeln('writeln');
-//                $io->write('write');
-//                $io->comment('comment');
-//                $io->info('info');
-//                $io->caution('caution');
-//                $io->note('note');
-//                $io->warning('warning');
-//                $io->error('error');
-//                $io->success('success');
-//                $io->listing([
-//                    'Element #1 Lorem ipsum dolor sit amet',
-//                    'Element #2 Lorem ipsum dolor sit amet',
-//                    'Element #3 Lorem ipsum dolor sit amet',
-//                ]);
-//                $io->horizontalTable(
-//                    ['Header 1', 'Header 2'],
-//                    [
-//                        ['Cell 1-1', 'Cell 1-2'],
-//                        ['Cell 2-1', 'Cell 2-2'],
-//                        ['Cell 3-1', 'Cell 3-2'],
-//                    ]
-//                );
-//                $io->definitionList(
-//                    'This is a title',
-//                    ['foo1' => 'bar1'],
-//                    ['foo2' => 'bar2'],
-//                    ['foo3' => 'bar3'],
-//                    new TableSeparator(),
-//                    'This is another title',
-//                    ['foo4' => 'bar4']
-//                );
 
                 $this->makeActionEvent($cronjob, $io);
 
@@ -183,6 +148,8 @@ class CronjobCommand extends Command
         }
 
         $io->progressFinish();
+
+        $io->success("Finished running all Cronjobs");
 
         return Command::SUCCESS;
 

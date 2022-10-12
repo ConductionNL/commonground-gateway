@@ -59,7 +59,7 @@ class SynchronizationItemHandler implements ActionHandlerInterface
      */
     public function __run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->SynchronizationItemHandler($data, $configuration);
+        $result = $this->synchronizationService->synchronizationItemHandler($data, $configuration);
 
         return $data;
     }

@@ -105,6 +105,11 @@ class ObjectEntityService
      */
     public function dispatchEvent(string $type, array $data, $subType = null): void
     {
+        if ($this->session->get('io')) {
+            $io = $this->session->get('io');
+            $io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
+            $io->newLine();
+        }
         $event = new ActionEvent($type, $data, null);
         if ($subType) {
             $event->setSubType($subType);
