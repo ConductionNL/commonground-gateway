@@ -9,18 +9,13 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class ZgwObjectInformatieObjectToZdsDocumentHandler implements ActionHandlerInterface
+class ZgwObjectInformatieObjectToZdsDocumentHandler
 {
     private ZdsZaakService $zdsZaakService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(ZdsZaakService $zdsZaakService)
     {
-        $zdsZaakService = $container->get('zdszaakservice');
-        if ($zdsZaakService instanceof ZdsZaakService) {
-            $this->zdsZaakService = $zdsZaakService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->zdsZaakService = $zdsZaakService;
     }
 
     /**
@@ -63,7 +58,7 @@ class ZgwObjectInformatieObjectToZdsDocumentHandler implements ActionHandlerInte
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->zdsZaakService->zgwObjectInformatieObjectToZdsDocumentHandler($data, $configuration);
     }

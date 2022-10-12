@@ -118,6 +118,11 @@ services:
     bijlagenArrayService:
         public: true
         class: App\Service\BijlagenArrayService
+        
+    App\ActionHandler\ZgwObjectInformatieObjectToZdsDocumentHandler:
+        public: true
+        arguments:
+            $zdsZaakService: '@App\Service\ZdsZaakService'
             
     Redis:
         class: Redis
