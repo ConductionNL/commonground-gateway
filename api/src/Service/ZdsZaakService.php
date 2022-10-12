@@ -707,6 +707,15 @@ class ZdsZaakService
         }
     }
 
+    public function getIdentificationForObject(string $messageType): string
+    {
+        $body = $this->createDi02Message($messageType, Uuid::uuid4());
+        $source = $this->entityManager->getRepository(Gateway::class)->find($this->configuration['source']);
+        $du02 = $this->commonGroundService->callService($source->toArray(), $source->getLocation().($this->configuration['apiSource']['location'] ?? ''), $body, [], [], false, 'POST');
+
+        return $this->getIdentifierFromDu02($du02->getBody()->getContents());
+    }
+
     /**
      * Checks if the case has an identification field and if not, launches a Di02 request to add it.
      *
@@ -721,20 +730,74 @@ class ZdsZaakService
     {
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
         $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
-        if ($zaak->getValue('identificatie') !== null && $configuration['entityType'] == 'ZAK') {
-            return $data;
-        }
+
         $this->configuration = $configuration;
-        if ($configuration['entityType'] == 'ZAK') {
+        if ($configuration['entityType'] == 'ZAK' && !$zaak->getValue('identificatie')) {
             $messageType = 'genereerZaakIdentificatie';
+            $zaak->setValue('identificatie', $this->getIdentificationForObject($messageType));
+            $this->entityManager->persist($zaak);
         } else {
             $messageType = 'genereerDocumentIdentificatie';
+            foreach ($result->getValue('zgwDocumenten') as $documentId) {
+                $document = $this->entityManager->getRepository(ObjectEntity::class)->find($documentId);
+                $document->getValue('identificatie') ?: $document->setValue('identificatie', $this->getIdentificationForObject($messageType));
+                $this->entityManager->persist($document);
+            }
         }
-        $body = $this->createDi02Message($messageType, Uuid::uuid4());
-        $source = $this->entityManager->getRepository(Gateway::class)->find($this->configuration['source']);
-        $du02 = $this->commonGroundService->callService($source->toArray(), $source->getLocation().($this->configuration['apiSource']['location'] ?? ''), $body, [], [], false, 'POST');
-        if ($configuration['entityType'] == 'ZAK') {
-            $zaak->setValue('identificatie', $this->getIdentifierFromDu02($du02->getBody()->getContents()));
+        $this->entityManager->flush();
+
+        return $data;
+    }
+
+    public function getIsRelevantVoor(ObjectEntity $document, ObjectEntity $zaak, ObjectEntity $zdsObject): ObjectEntity
+    {
+        $zdsIsRelevantVoor = new ObjectEntity($zdsObject->getEntity()->getAttributeByName('isRelevantVoor')->getObject());
+        $zdsIsRelevantVoor->setValue('identificatie', $zaak->getValue('identificatie'));
+
+        $this->entityManager->persist($zdsIsRelevantVoor);
+
+        return $zdsIsRelevantVoor;
+    }
+
+    public function getDocumentObject(ObjectEntity $zds, ObjectEntity $document, ObjectEntity $zaak): ObjectEntity
+    {
+        $now = new \DateTime();
+        $zdsObject = new ObjectEntity($zds->getEntity()->getAttributeByName('object')->getObject());
+        $zdsObject->setValue('identificatie', $document->getValue('informatieobject')->getValue('identificatie'));
+        $zdsObject->setValue('dctOmschrijving', $document->getValue('informatieobject')->getValue('beschrijving'));
+        $zdsObject->setValue('creatiedatum', $now->format('Ymd'));
+        $zdsObject->setValue('ontvangstdatum', $now->format('Ymd'));
+        $zdsObject->setValue('titel', $document->getValue('informatieobject')->getValue('titel'));
+        $zdsObject->setValue('beschrijving', $document->getValue('informatieobject')->getValue('beschrijving'));
+        $zdsObject->setValue('formaat', $document->getValue('informatieobject')->getValue('formaat'));
+        $zdsObject->setValue('taal', $document->getValue('informatieobject')->getValue('taal'));
+        $zdsObject->setValue('status', $document->getValue('informatieobject')->getValue('status'));
+        $zdsObject->setValue('vertrouwelijkAanduiding', $document->getValue('informatieobject')->getValue('vertrouwelijkAanduiding'));
+        $zdsObject->setValue('auteur', $document->getValue('informatieobject')->getValue('auteur'));
+        $zdsObject->setValue('inhoud', $document->getValue('informatieobject')->getValue('inhoud'));
+        $zdsObject->setValue('isRelevantVoor', $this->getIsRelevantVoor($document, $zaak, $zdsObject));
+
+        $this->entityManager->persist($zdsObject);
+
+        return $zdsObject;
+    }
+
+    public function zgwObjectInformatieObjectToZdsDocumentHandler(array $data, array $configuration): array
+    {
+        $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['documentEntityId']);
+        $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')]);
+        $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
+        foreach ($documenten as $document) {
+            $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($configuration['zdsEntityId']));
+            $zds->setValue('referentienummer', Uuid::uuid4());
+            $zds->setValue('object', $this->getDocumentObject($zds, $document, $zaak));
+
+            $zds->setValue('stuurgegevens', $this->getStuurgegevensFromSimXML($result, 'EDC'));
+            $this->synchronizationService->setApplicationAndOrganization($zds);
+            $zds->getEntity()->addObjectEntity($zds);
+            $this->entityManager->persist($zds);
+            $this->entityManager->flush();
         }
 
         return $data;

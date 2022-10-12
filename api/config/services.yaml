@@ -147,6 +147,11 @@ services:
         arguments:
             $zdsZaakService: '@App\Service\ZdsZaakService'
 
+    App\ActionHandler\ZgwObjectInformatieObjectToZdsDocumentHandler:
+        public: true
+        arguments:
+            $zdsZaakService: '@App\Service\ZdsZaakService'
+            
     Redis:
         class: Redis
         calls:
