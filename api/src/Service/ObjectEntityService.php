@@ -105,6 +105,11 @@ class ObjectEntityService
      */
     public function dispatchEvent(string $type, array $data, $subType = null): void
     {
+        if ($this->session->get('io')) {
+            $io = $this->session->get('io');
+            $io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
+            $io->newLine();
+        }
         $event = new ActionEvent($type, $data, null);
         if ($subType) {
             $event->setSubType($subType);
@@ -805,11 +810,11 @@ class ObjectEntityService
                 // Note: attributes with function = id should also be readOnly and type=string
                 break;
             case 'self':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf());
                 // Note: attributes with function = self should also be readOnly and type=string
                 break;
             case 'uri':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $this->createUri($objectEntity));
+                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri());
                 // Note: attributes with function = uri should also be readOnly and type=string
                 break;
             case 'externalId':
@@ -2014,5 +2019,33 @@ class ObjectEntityService
                 $this->onError($error, $objectEntity);
             }
         );
+    }
+
+    /**
+     * Implodes a multidimensional array to a string.
+     *
+     * @param array  $array
+     * @param string $separator
+     * @param string $keyValueSeparator
+     *
+     * @return string
+     */
+    public function implodeMultiArray(array $array, string $separator = ', ', string $keyValueSeparator = '='): string
+    {
+        $str = '';
+
+        foreach ($array as $key => $value) {
+            $currentSeparator = $separator;
+            if ($key === array_key_first($array)) {
+                $currentSeparator = '';
+            }
+            if (is_array($value)) {
+                $str .= "$currentSeparator\"$key\"{$keyValueSeparator}[{$this->implodeMultiArray($value, $separator, $keyValueSeparator)}]";
+            } else {
+                $str .= "$currentSeparator\"$key\"$keyValueSeparator\"$value\"";
+            }
+        }
+
+        return $str;
     }
 }

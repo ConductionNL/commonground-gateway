@@ -2,22 +2,15 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\NotificationService;
-use Psr\Container\ContainerInterface;
 
-class NotificationHandler implements ActionHandlerInterface
+class NotificationHandler
 {
     private NotificationService $notificationService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(NotificationService $notificationService)
     {
-        $notificationService = $container->get('notificationService');
-        if ($notificationService instanceof NotificationService) {
-            $this->notificationService = $notificationService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -100,7 +93,7 @@ class NotificationHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->notificationService->NotificationHandler($data, $configuration);
     }

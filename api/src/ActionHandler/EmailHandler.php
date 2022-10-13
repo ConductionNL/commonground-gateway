@@ -2,26 +2,19 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
 use App\Service\EmailService;
-use Psr\Container\ContainerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class EmailHandler implements ActionHandlerInterface
+class EmailHandler
 {
     private EmailService $emailService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(EmailService $emailService)
     {
-        $emailService = $container->get('mailService');
-        if ($emailService instanceof EmailService) {
-            $this->emailService = $emailService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->emailService = $emailService;
     }
 
     /**
@@ -99,7 +92,7 @@ class EmailHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->emailService->emailHandler($data, $configuration);
     }

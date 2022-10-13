@@ -360,16 +360,16 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function addSubresourceSearchQuery(QueryBuilder $query, Attribute $attribute, string $sqlFriendlyKey, string $search, int $level, string $prefix): array
     {
-        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
-        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjectsSearch'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjectsSearch'.$sqlFriendlyKey.$level.'.objectValues', 'subValueSearch'.$sqlFriendlyKey.$level);
 
         return $this->buildSearchQuery(
             $query,
             $attribute->getObject(),
             $search,
             $level + 1,
-            'subValue'.$sqlFriendlyKey.$level,
-            'subObjects'.$sqlFriendlyKey.$level
+            'subValueSearch'.$sqlFriendlyKey.$level,
+            'subObjectsSearch'.$sqlFriendlyKey.$level
         );
     }
 
@@ -411,16 +411,17 @@ class ObjectEntityRepository extends ServiceEntityRepository
         foreach ($filters as $key => $value) {
             $filterKey = $this->clearFilterKey($key);
 
-            $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['sqlFriendlyKey']);
-
             if (substr($filterKey['key'], 0, 1) == '_' || $filterKey['key'] == 'id') {
                 // If the filter starts with _ or == id we need to handle this filter differently
                 $query = $this->getObjectEntityFilter($query, $filterKey['key'], $value, $objectPrefix);
-            } elseif (is_array($value) && !$filterKey['arrayValue']) {
-                // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
-                $query = $this->buildSubresourceQuery($query, $filterKey['sqlFriendlyKey'], $value, $level, $prefix);
             } else {
-                $query = $this->buildFilterQuery($query, $filterKey, $value, $prefix);
+                $query->leftJoin("$objectPrefix.objectValues", $prefix.$filterKey['sqlFriendlyKey']);
+                if (is_array($value) && !$filterKey['arrayValue']) {
+                    // If $value is an array we need to check filters on a subresource (example: subresource.key = something)
+                    $query = $this->buildSubresourceQuery($query, $filterKey['sqlFriendlyKey'], $value, $level, $prefix);
+                } else {
+                    $query = $this->buildFilterQuery($query, $filterKey, $value, $prefix);
+                }
             }
         }
 
@@ -472,24 +473,45 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     private function getObjectEntityFilter(QueryBuilder $query, $key, $value, string $prefix = 'o'): QueryBuilder
     {
+        // todo implement LIKE operator for (some of) these filters? just like we do for normal filters? see getNormalValueFilter() function.
+        $operator = '=';
+        $allowedCompareNullKeys = ['_externalId', '_uri', '_self', '_organization', '_application'];
+        if (is_string($value) && in_array($key, $allowedCompareNullKeys) && (strtoupper($value) === 'IS NULL' || strtoupper($value) === 'IS NOT NULL')) {
+            // todo IS NULL does not work for subresources... only for the parent/main object
+            $operator = '';
+            $value = strtoupper($value);
+        }
         switch ($key) {
             case 'id':
-                $query->andWhere('('.$prefix.'.id = :'.$prefix.$key.' OR '.$prefix.'.externalId = :'.$prefix.$key.')')->setParameter($prefix.$key, $value);
+                $query->andWhere("($prefix.id $operator :$prefix$key OR $prefix.externalId $operator :$prefix$key)")->setParameter("$prefix$key", $value);
                 break;
             case '_id':
-                $query->andWhere($prefix.".id = :{$prefix}id")->setParameter("{$prefix}id", $value);
+                $query->andWhere("$prefix.id $operator :{$prefix}id")->setParameter("{$prefix}id", $value);
                 break;
             case '_externalId':
-                $query->andWhere($prefix.".externalId = :{$prefix}externalId")->setParameter("{$prefix}externalId", $value);
+                !empty($operator) ?
+                    $query->andWhere("$prefix.externalId $operator :{$prefix}externalId")->setParameter("{$prefix}externalId", $value) :
+                    $query->andWhere("$prefix.externalId $value");
                 break;
             case '_uri':
-                $query->andWhere($prefix.'.uri = :uri')->setParameter('uri', $value);
+                !empty($operator) ?
+                    $query->andWhere("$prefix.uri $operator :{$prefix}uri")->setParameter("{$prefix}uri", $value) :
+                    $query->andWhere("$prefix.uri $value");
+                break;
+            case '_self':
+                !empty($operator) ?
+                    $query->andWhere("$prefix.self $operator :{$prefix}self")->setParameter("{$prefix}self", $value) :
+                    $query->andWhere("$prefix.self $value");
                 break;
             case '_organization':
-                $query->andWhere($prefix.'.organization = :organization')->setParameter('organization', $value);
+                !empty($operator) ?
+                    $query->andWhere("$prefix.organization $operator :{$prefix}organization")->setParameter("{$prefix}organization", $value) :
+                    $query->andWhere("$prefix.organization $value");
                 break;
             case '_application':
-                $query->andWhere($prefix.'.application = :application')->setParameter('application', $value);
+                !empty($operator) ?
+                    $query->andWhere("$prefix.application $operator :{$prefix}application")->setParameter("{$prefix}application", $value) :
+                    $query->andWhere("$prefix.application $value");
                 break;
             case '_dateCreated':
                 $query = $this->getDateTimeFilter($query, 'dateCreated', $value, $prefix);
@@ -617,13 +639,13 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $after = array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after';
             $date = new DateTime($value[$after]);
             $operator = array_key_exists('strictly_after', $value) ? '>' : '>=';
-            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$sqlFriendlyKey.'After')->setParameter($sqlFriendlyKey.'After', $date->format('Y-m-d H:i:s'));
+            $query->andWhere("$prefix.$subPrefix $operator :$prefix$subPrefix{$sqlFriendlyKey}After")->setParameter("$prefix$subPrefix{$sqlFriendlyKey}After", $date->format('Y-m-d H:i:s'));
         }
         if (!empty(array_intersect_key($value, array_flip(['before', 'strictly_before'])))) {
             $before = array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before';
             $date = new DateTime($value[$before]);
             $operator = array_key_exists('strictly_before', $value) ? '<' : '<=';
-            $query->andWhere($prefix.'.'.$subPrefix.' '.$operator.' :'.$sqlFriendlyKey.'Before')->setParameter($sqlFriendlyKey.'Before', $date->format('Y-m-d H:i:s'));
+            $query->andWhere("$prefix.$subPrefix $operator :$prefix$subPrefix{$sqlFriendlyKey}Before")->setParameter("$prefix$subPrefix{$sqlFriendlyKey}Before", $date->format('Y-m-d H:i:s'));
         }
 
         return $query;
@@ -683,6 +705,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
             // If the attribute we filter on is multiple=true
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
                 ->setParameter($sqlFriendlyKey, "%,$value%");
+        } elseif ($value === 'IS NULL' || $value === 'IS NOT NULL') {
+            // Allow to filter on IS NULL and IS NOT NULL
+            $query->andWhere("$prefix$sqlFriendlyKey.stringValue $value");
         } else {
             // Use LIKE here to allow %sometext% in query param filters (from front-end or through postman for example)
             $query->andWhere("LOWER($prefix$sqlFriendlyKey.stringValue) LIKE LOWER(:$sqlFriendlyKey)")
@@ -796,15 +821,15 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private function addSubresourceOrderBy(QueryBuilder $query, string $sqlFriendlyKey, array $value, int $level, string $prefix): QueryBuilder
     {
         // If $value is an array we need to order on a subresource (example: subresource.key = something)
-        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjects'.$sqlFriendlyKey.$level);
-        $query->leftJoin('subObjects'.$sqlFriendlyKey.$level.'.objectValues', 'subValue'.$sqlFriendlyKey.$level);
+        $query->leftJoin("$prefix$sqlFriendlyKey.objects", 'subObjectsOrderBy'.$sqlFriendlyKey.$level);
+        $query->leftJoin('subObjectsOrderBy'.$sqlFriendlyKey.$level.'.objectValues', 'subValueOrderBy'.$sqlFriendlyKey.$level);
 
         return $this->addOrderBy(
             $query,
             $value,
             $level + 1,
-            'subValue'.$sqlFriendlyKey.$level,
-            'subObjects'.$sqlFriendlyKey.$level
+            'subValueOrderBy'.$sqlFriendlyKey.$level,
+            'subObjectsOrderBy'.$sqlFriendlyKey.$level
         );
     }
 
@@ -866,7 +891,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // defaults
         $filters = [
-            $prefix.'id', $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_organization',
+            $prefix.'id', $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_self', $prefix.'_organization',
             $prefix.'_application', $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
         ];
 
@@ -874,6 +899,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
             }
         }
