@@ -152,6 +152,12 @@ services:
         arguments:
             $zdsZaakService: '@App\Service\ZdsZaakService'
             
+
+    App\ActionHandler\MapRelocationHandler:
+        public: true
+        arguments:
+            $mapRelocationService: '@App\Service\MapRelocationService'
+            
     Redis:
         class: Redis
         calls:
