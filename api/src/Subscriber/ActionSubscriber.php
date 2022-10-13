@@ -258,7 +258,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $totalActions = is_countable($actions) ? count($actions) : 0;
         if (isset($this->io) && isset($currentCronJobThrow)) {
             $ioMessage = "Found $totalActions Action".($totalActions !== 1 ?'s':'')." listening to \"{$event->getType()}\"";
-            $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage); // todo: optionally add $this->io->text($ioMessage) instead of null
+            $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
         }
         foreach ($actions as $action) {
             $this->handleAction($action, $event);
