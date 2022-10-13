@@ -7,7 +7,6 @@ use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
-use App\Exception\GatewayException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
@@ -222,8 +221,8 @@ class ZdsZaakService
 
         // Let get the zaaktype
         $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
-        foreach($zaaktypeValues as $zaaktypeValue) {
-            if($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
+        foreach ($zaaktypeValues as $zaaktypeValue) {
+            if ($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
                 $zaaktypeObjectEntity = $zaaktypeValue->getObjectEntity();
             }
         }
