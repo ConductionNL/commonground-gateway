@@ -9,18 +9,13 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapRelocationHandler implements ActionHandlerInterface
+class MapRelocationHandler
 {
-    private mapRelocationService $mapRelocationService;
+    private MapRelocationService $mapRelocationService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(MapRelocationService $mapRelocationService)
     {
-        $mapRelocationService = $container->get('mapRelocationService');
-        if ($mapRelocationService instanceof MapRelocationService) {
-            $this->mapRelocationService = $mapRelocationService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->mapRelocationService = $mapRelocationService;
     }
 
     /**
@@ -53,7 +48,7 @@ class MapRelocationHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->mapRelocationService->mapRelocationHandler($data, $configuration);
     }
