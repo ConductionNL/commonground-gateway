@@ -225,7 +225,6 @@ class ZdsZaakService
         foreach($zaaktypeValues as $zaaktypeValue) {
             if($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
                 $zaaktypeObjectEntity = $zaaktypeValue->getObjectEntity();
-                var_dump($zaaktypeObjectEntity->getId()->toString());
             }
         }
         if (!isset($zaaktypeObjectEntity) || !$zaaktypeObjectEntity instanceof ObjectEntity) {
