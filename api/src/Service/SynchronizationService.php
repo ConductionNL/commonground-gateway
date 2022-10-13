@@ -887,7 +887,7 @@ class SynchronizationService
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
         $object = $synchronization->getObject();
-        $objectArray = $object->toArray();
+        $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? []);
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
