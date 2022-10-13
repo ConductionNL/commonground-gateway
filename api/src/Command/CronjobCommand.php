@@ -54,7 +54,7 @@ class CronjobCommand extends Command
     /**
      * This function makes action events.
      *
-     * @param Cronjob $cronjob
+     * @param Cronjob      $cronjob
      * @param SymfonyStyle $io
      *
      * @throws Exception
@@ -62,7 +62,7 @@ class CronjobCommand extends Command
     public function makeActionEvent(Cronjob $cronjob, SymfonyStyle $io): void
     {
         $totalThrows = $cronjob->getThrows() ? count($cronjob->getThrows()) : 0;
-        $io->section("Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Cronjob");
+        $io->section("Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Cronjob');
 
         ProgressBar::setFormatDefinition('throwProgressBar', ' %current%/%max% ---- %message%');
         $throwProgressBar = new ProgressBar($this->output, $totalThrows);
@@ -85,7 +85,7 @@ class CronjobCommand extends Command
             $cronjob->setNextRun($cronExpression->getNextRunDate());
             $cronjob->setLastRun(new \DateTime('now'));
 
-            $io->comment("Save Cronjob in the database");
+            $io->comment('Save Cronjob in the database');
             $this->entityManager->persist($cronjob);
             $this->entityManager->flush();
 
@@ -113,7 +113,7 @@ class CronjobCommand extends Command
         $total = is_countable($cronjobs) ? count($cronjobs) : 0;
 
         $io->title('Run all Cronjobs');
-        $io->section("Found $total runnable Cronjob".($total !== 1 ?'s':''));
+        $io->section("Found $total runnable Cronjob".($total !== 1 ? 's' : ''));
         $io->progressStart($total);
         $io->newLine();
 
@@ -148,7 +148,8 @@ class CronjobCommand extends Command
      * Write user feedback to $io before handling a Cronjob.
      *
      * @param SymfonyStyle $io
-     * @param Cronjob $cronjob
+     * @param Cronjob      $cronjob
+     *
      * @return void
      */
     private function handleCronjobIoStart(SymfonyStyle $io, Cronjob $cronjob)
@@ -157,11 +158,11 @@ class CronjobCommand extends Command
         $io->definitionList(
             'Start running the following Cronjob',
             new TableSeparator(),
-            ['Id' => $cronjob->getId()->toString()],
-            ['Name' => $cronjob->getName()],
+            ['Id'          => $cronjob->getId()->toString()],
+            ['Name'        => $cronjob->getName()],
             ['Description' => $cronjob->getDescription()],
-            ['Crontab' => $cronjob->getCrontab()],
-            ['Throws' => implode(", ", $cronjob->getThrows())],
+            ['Crontab'     => $cronjob->getCrontab()],
+            ['Throws'      => implode(', ', $cronjob->getThrows())],
 //                    ['Data' => "[{$this->objectEntityService->implodeMultiArray($cronjob->getData())}]"],
             ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
             ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
@@ -172,7 +173,8 @@ class CronjobCommand extends Command
      * Write user feedback to $io after handling a Cronjob.
      *
      * @param SymfonyStyle $io
-     * @param Cronjob $cronjob
+     * @param Cronjob      $cronjob
+     *
      * @return void
      */
     private function handleCronjobIoFinish(SymfonyStyle $io, Cronjob $cronjob)
@@ -180,8 +182,8 @@ class CronjobCommand extends Command
         $io->definitionList(
             'Finished running the following cronjob',
             new TableSeparator(),
-            ['Id' => $cronjob->getId()->toString()],
-            ['Name' => $cronjob->getName()],
+            ['Id'      => $cronjob->getId()->toString()],
+            ['Name'    => $cronjob->getName()],
             ['LastRun' => $cronjob->getLastRun() ? $cronjob->getLastRun()->format('Y-m-d H:i:s') : null],
             ['NextRun' => $cronjob->getNextRun() ? $cronjob->getNextRun()->format('Y-m-d H:i:s') : null],
         );
@@ -193,8 +195,8 @@ class CronjobCommand extends Command
      * Will also send a final message with SymfonyStyle $io as user feedback, depending on the failure rate this will be a Success, Warning or Error message.
      *
      * @param SymfonyStyle $io
-     * @param int $errorCount
-     * @param int $total
+     * @param int          $errorCount
+     * @param int          $total
      *
      * @return int
      */
@@ -202,7 +204,7 @@ class CronjobCommand extends Command
     {
         $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
         if ($errors == 0) {
-            $io->success("Successfully finished running all Cronjobs");
+            $io->success('Successfully finished running all Cronjobs');
         } elseif ($errors < 20) {
             $io->warning("Some Cronjobs did not run successfully. Failure rate is $errors%");
         } else {

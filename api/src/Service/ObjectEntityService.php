@@ -2024,13 +2024,13 @@ class ObjectEntityService
     /**
      * Implodes a multidimensional array to a string.
      *
-     * @param array $array
+     * @param array  $array
      * @param string $separator
      * @param string $keyValueSeparator
      *
      * @return string
      */
-    public function implodeMultiArray(array $array, string $separator = ", ", string $keyValueSeparator = "="): string
+    public function implodeMultiArray(array $array, string $separator = ', ', string $keyValueSeparator = '='): string
     {
         $str = '';
 
