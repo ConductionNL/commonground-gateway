@@ -226,20 +226,15 @@ class ConvenienceController extends AbstractController
         $contentType = $this->handlerService->getRequestType('content-type');
         $data = $this->handlerService->getDataFromRequest();
 
-        $conditions = $action->getConditions();
-        $result = JsonLogic::apply($conditions, $data);
+        $data = $this->actionSubscriber->runFunction($action, $data);
 
-        if ($result) {
-            $data = $this->actionSubscriber->runFunction($action, $data);
-
-            // throw events
-            foreach ($action->getThrows() as $throw) {
-                $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
-            }
+        // throw events
+        foreach ($action->getThrows() as $throw) {
+            $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
         }
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Action '.$action->getName()], $contentType),
+            $this->serializer->serialize(['message' => 'Action ' . $action->getName()], $contentType),
             Response::HTTP_OK,
             ['content-type' => $contentType]
         );
