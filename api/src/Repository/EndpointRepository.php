@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 
 /**
  * @method Endpoint|null find($id, $lockMode = null, $lockVersion = null)
@@ -23,7 +24,7 @@ class EndpointRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Function to find an Endpoint by given $method and $path, comparing $path to Endpoint.pathRegex using sql REGEXP_REPLACE in DB.
      *
      * @param string $method
      * @param string $path
@@ -34,14 +35,52 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
-        $query = $this->createQueryBuilder('e')
-            ->andWhere('LOWER(e.method) = :method')
-            ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
-            ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+        try {
+            $query = $this->createQueryBuilder('e')
+                ->andWhere('LOWER(e.method) = :method')
+                ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
+                ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
 
-        return $query
+            return $query
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (Exception $exception) {
+            return $this->findByMethodRegexAlt($method, $path);
+        }
+    }
+
+    /**
+     * Function with an alternative way to find an Endpoint by given $method and $path. Used if findByMethodRegex caught an Exception.
+     *
+     * @param string $method
+     * @param string $path
+     *
+     * @return Endpoint|null
+     */
+    private function findByMethodRegexAlt(string $method, string $path): ?Endpoint
+    {
+        $endpoint = null;
+        $allEndpoints = $this->createQueryBuilder('e')
+            ->andWhere('LOWER(e.method) = :method')
+            ->setParameters(['method' => strtolower($method)])
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getResult();
+
+        // Match path to regex of Endpoints
+        foreach ($allEndpoints as $currentEndpoint) {
+            try {
+                $updatedPathRegex = str_replace('/', '\/', $currentEndpoint->getPathRegex());
+                if ($currentEndpoint->getPathRegex() !== null && preg_match("/$updatedPathRegex/", $path)) {
+                    $endpoint = $currentEndpoint;
+                    break;
+                }
+            } catch (Exception $exception) {
+                // failsafe for preg_match
+                continue;
+            }
+        }
+
+        return $endpoint;
     }
 
     /**
