@@ -275,6 +275,7 @@ class ActionSubscriber implements EventSubscriberInterface
      * If we got here through CronjobCommand, write user feedback to $this->io before handling Actions.
      *
      * @param ActionEvent $event
+     *
      * @return bool currentCronJobThrow. True if the throw of the current Cronjob matches the type of the ActionEvent.
      */
     private function handleEventIo(ActionEvent $event): bool
@@ -283,11 +284,13 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io = $this->session->get('io');
             if ($this->session->get('currentCronJobThrow') && $this->session->get('currentCronJobThrow') === $event->getType()) {
                 $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+
                 return true;
             } else {
                 $this->io->text("Handle 'sub'-ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
             }
         }
+
         return false;
     }
 }
