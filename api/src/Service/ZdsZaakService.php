@@ -221,10 +221,11 @@ class ZdsZaakService
         }
 
         // Let get the zaaktype
-        $zaaktypeObjects = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
-        foreach ($zaaktypeObjects as $zaaktypeObject) {
-            if ($zaaktypeObject instanceof Value && $zaaktypeObject->getAttribute()->getEntity()->getId() == $zaakTypeEntity) {
-                $zaaktypeObjectEntity = $zaaktypeObject->getObjectEntity();
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
+        foreach($zaaktypeValues as $zaaktypeValue) {
+            if($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
+                $zaaktypeObjectEntity = $zaaktypeValue->getObjectEntity();
+                var_dump($zaaktypeObjectEntity->getId()->toString());
             }
         }
         if (!isset($zaaktypeObjectEntity) || !$zaaktypeObjectEntity instanceof ObjectEntity) {
@@ -254,6 +255,7 @@ class ZdsZaakService
         $this->entityManager->persist($zaak);
 
         $zds->setValue('zgwZaak', $zaak);
+        $zaak = $this->synchronizationService->setApplicationAndOrganization($zaak);
 
         $this->entityManager->persist($zds);
         $this->entityManager->flush();

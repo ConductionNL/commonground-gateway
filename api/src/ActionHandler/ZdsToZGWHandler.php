@@ -59,7 +59,6 @@ class ZdsToZGWHandler
      */
     public function run(array $data, array $configuration): array
     {
-        var_dump('hoi');
 
         return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
     }
