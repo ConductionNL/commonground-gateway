@@ -150,17 +150,19 @@ class MapRelocationService
      */
     public function mapRelocationHandler(array $data, array $configuration): array
     {
-        var_dump('mapRelocation');
         $this->data = $data;
         $this->configuration = $configuration;
 
-        if (!isset($data['id'])) {
+        if (!isset($data['id']) && !isset($data['response']['id'])) {
             throw new \Exception('Zaak ID not given for MapRelocationHandler');
         }
 
         $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['id']);
         if (!$zaakObjectEntity instanceof ObjectEntity) {
-            throw new \Exception('Zaak not found with given ID for MapRelocationHandler');
+            $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['id']);
+            if (!$zaakObjectEntity instanceof ObjectEntity) {
+                throw new \Exception('Zaak not found with given ID for MapRelocationHandler');
+            }
         }
 
         $zaakArray = $zaakObjectEntity->toArray();
@@ -343,7 +345,6 @@ class MapRelocationService
                     case 'VERHUISDATUM':
                         $dateTimeObject = new \DateTime($eigenschap['waarde']);
                         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                        // var_dump($dateTimeFormatted);
                         $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
                         $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
                         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['omschrijving'];
@@ -403,7 +404,6 @@ class MapRelocationService
         $relocationArray['relocators'] = $relocators;
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
 
-        var_dump($zaakArray['id']);
         $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
         !isset($relocationArray['dossier']['startDate']) && $relocationArray['dossier']['startDate'] = $relocationArray['dossier']['entryDateTime'];
 
@@ -417,12 +417,6 @@ class MapRelocationService
         $this->entityManager->persist($intraObjectEntity);
         $this->entityManager->flush();
 
-        // $intraObjectArray = $intraObjectEntity->toArray();
-        // var_dump($relocationArray['dossier']['entryDateTime']);
-        // var_dump(json_encode($relocationArray));
-        // die;
-
-        var_dump('END OF RELOCATION SERVICE');
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
 
         return $this->data;
