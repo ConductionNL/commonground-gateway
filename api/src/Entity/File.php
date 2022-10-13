@@ -36,6 +36,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     },
  * )
  * @ORM\Entity(repositoryClass="App\Repository\FileRepository")
+ * @ORM\Table(name="file_table")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
