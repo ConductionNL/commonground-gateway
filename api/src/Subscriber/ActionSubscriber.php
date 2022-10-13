@@ -141,8 +141,9 @@ class ActionSubscriber implements EventSubscriberInterface
             $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Action.';
             $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
             if ($totalThrows !== 0) {
-                $this->io->text("0/$totalThrows -- Start looping through all Throws of this Action...");
-                $this->io->newLine();
+                $extraDashesStr = $currentCronJobThrow ? '-' : '';
+                $this->io->text("0/$totalThrows -$extraDashesStr Start looping through all Throws of this Action...");
+                !$currentCronJobThrow ?: $this->io->newLine();
             } else {
                 $currentCronJobThrow ?: $this->io->newLine();
             }
@@ -151,16 +152,16 @@ class ActionSubscriber implements EventSubscriberInterface
             // Throw event
             $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
 
-            if (isset($this->io) && isset($totalThrows)) {
+            if (isset($this->io) && isset($totalThrows) && isset($extraDashesStr)) {
                 if ($key !== array_key_last($action->getThrows())) {
                     $keyStr = $key + 1;
-                    $this->io->text("$keyStr/$totalThrows -- Looping through Throws of this Action \"{$action->getName()}\"...");
+                    $this->io->text("$keyStr/$totalThrows -$extraDashesStr Looping through Throws of this Action \"{$action->getName()}\"...");
+                    !$currentCronJobThrow ?: $this->io->newLine();
                 }
-                $this->io->newLine();
             }
         }
-        if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0) {
-            $this->io->text("$totalThrows/$totalThrows -- Finished looping through all Throws of this Action \"{$action->getName()}\"");
+        if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0 && isset($extraDashesStr)) {
+            $this->io->text("$totalThrows/$totalThrows -$extraDashesStr Finished looping through all Throws of this Action \"{$action->getName()}\"");
             $this->io->newLine();
         }
     }
@@ -239,13 +240,14 @@ class ActionSubscriber implements EventSubscriberInterface
         $listeningToThrow = !$event->getSubType() ? $event->getType() : $event->getSubType();
         $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
 
-        if (isset($this->io) && isset($currentCronJobThrow)) {
+        if (isset($this->io)) {
             $totalActions = is_countable($actions) ? count($actions) : 0;
             $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
             $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
             if ($totalActions !== 0) {
-                $this->io->text("0/$totalActions ---- Start looping through all Actions listening to \"$listeningToThrow\"...");
-                $this->io->newLine();
+                $extraDashesStr = $currentCronJobThrow ? '--' : '';
+                $this->io->text("0/$totalActions --$extraDashesStr Start looping through all Actions listening to \"$listeningToThrow\"...");
+                !$currentCronJobThrow ?: $this->io->newLine();
             } else {
                 $currentCronJobThrow ?: $this->io->newLine();
             }
@@ -254,17 +256,17 @@ class ActionSubscriber implements EventSubscriberInterface
             // Handle Action
             $this->handleAction($action, $event);
 
-            if (isset($this->io) && isset($totalActions)) {
+            if (isset($this->io) && isset($totalActions) && isset($extraDashesStr)) {
                 if ($key !== array_key_last($actions)) {
                     $keyStr = $key + 1;
-                    $this->io->text("$keyStr/$totalActions ---- Looping through all Actions listening to \"$listeningToThrow\"...");
+                    $this->io->text("$keyStr/$totalActions --$extraDashesStr Looping through all Actions listening to \"$listeningToThrow\"...");
+                    !$currentCronJobThrow ?: $this->io->newLine();
                 }
-                $this->io->newLine();
             }
         }
 
-        if (isset($this->io) && isset($totalActions) && $totalActions !== 0) {
-            $this->io->text("$totalActions/$totalActions ---- Finished looping all Actions listening to \"$listeningToThrow\"");
+        if (isset($this->io) && isset($totalActions) && $totalActions !== 0 && isset($extraDashesStr)) {
+            $this->io->text("$totalActions/$totalActions --$extraDashesStr Finished looping all Actions listening to \"$listeningToThrow\"");
             $this->io->newLine();
         }
 
