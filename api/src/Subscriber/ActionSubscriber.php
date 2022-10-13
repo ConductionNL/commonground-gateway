@@ -122,32 +122,51 @@ class ActionSubscriber implements EventSubscriberInterface
 
             $this->handleActionIoFinish($action, $currentCronJobThrow);
 
-            // throw events
-            if (isset($this->io)) {
-                $totalThrows = $action->getThrows() ? count($action->getThrows()) : 0;
-                $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Action.";
-                $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
-                $totalThrows === 0 ?: $this->io->text("0/$totalThrows - Start looping through all Throws of this Action...");
-                $currentCronJobThrow ?: $this->io->newLine();
-                $currentCronJobThrow && $totalThrows !== 0 ? $this->io->newLine() : null;
-            }
-            foreach ($action->getThrows() as $key => $throw) {
-                $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
-                if (isset($this->io) && isset($totalThrows)) {
-                    if ($key !== array_key_last($action->getThrows())) {
-                        $keyStr = $key + 1;
-                        $this->io->text("$keyStr/$totalThrows - Looping through Throws of this Action \"{$action->getName()}\"...");
-                    }
-                    $this->io->newLine();
-                }
-            }
-            if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0) {
-                $this->io->text("$totalThrows/$totalThrows - Finished looping through all Throws of this Action \"{$action->getName()}\"");
-                $this->io->newLine();
-            }
+            // throw events for this Action
+            $this->handleActionThrows($action, $event, $currentCronJobThrow);
         }
 
         return $event;
+    }
+
+    /**
+     * Throws Events for the Action if it has any Throws configured.
+     *
+     * @param Action $action
+     * @param ActionEvent $event
+     * @param bool $currentCronJobThrow
+     *
+     * @return void
+     */
+    private function handleActionThrows(Action $action, ActionEvent $event, bool $currentCronJobThrow)
+    {
+        if (isset($this->io)) {
+            $totalThrows = $action->getThrows() ? count($action->getThrows()) : 0;
+            $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ?'s':'')." for this Action.";
+            $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
+            if ($totalThrows !== 0) {
+                $this->io->text("0/$totalThrows - Start looping through all Throws of this Action...");
+                $this->io->newLine();
+            } else {
+                $currentCronJobThrow ?: $this->io->newLine();
+            }
+        }
+        foreach ($action->getThrows() as $key => $throw) {
+            // Throw event
+            $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
+
+            if (isset($this->io) && isset($totalThrows)) {
+                if ($key !== array_key_last($action->getThrows())) {
+                    $keyStr = $key + 1;
+                    $this->io->text("$keyStr/$totalThrows - Looping through Throws of this Action \"{$action->getName()}\"...");
+                }
+                $this->io->newLine();
+            }
+        }
+        if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0) {
+            $this->io->text("$totalThrows/$totalThrows - Finished looping through all Throws of this Action \"{$action->getName()}\"");
+            $this->io->newLine();
+        }
     }
 
     /**
