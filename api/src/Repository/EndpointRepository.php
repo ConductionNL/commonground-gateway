@@ -79,6 +79,7 @@ class EndpointRepository extends ServiceEntityRepository
                 continue;
             }
         }
+
         return $endpoint;
     }
 
