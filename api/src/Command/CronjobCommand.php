@@ -64,7 +64,7 @@ class CronjobCommand extends Command
         $totalThrows = $cronjob->getThrows() ? count($cronjob->getThrows()) : 0;
         $io->section("Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Cronjob');
 
-        ProgressBar::setFormatDefinition('throwProgressBar', ' %current%/%max% ---- %message%');
+        ProgressBar::setFormatDefinition('throwProgressBar', ' %current%/%max% ------ %message%');
         $throwProgressBar = new ProgressBar($this->output, $totalThrows);
         $throwProgressBar->setFormat('throwProgressBar');
         $throwProgressBar->setMaxSteps($totalThrows);

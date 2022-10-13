@@ -66,13 +66,11 @@ class ActionSubscriber implements EventSubscriberInterface
 
         // timer starten
         $startTimer = microtime(true);
-        if ($object instanceof ActionHandlerInterface) {
-            if (isset($this->io)) {
-                $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
-                $this->io->newLine();
-            }
-            $data = $object->__run($data, $action->getConfiguration());
+        if (isset($this->io)) {
+            $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
+            $this->io->newLine();
         }
+        $data = $object->run($data, $action->getConfiguration());
         // timer stoppen
         $stopTimer = microtime(true);
 
@@ -143,7 +141,7 @@ class ActionSubscriber implements EventSubscriberInterface
             $ioMessage = "Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Action.';
             $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
             if ($totalThrows !== 0) {
-                $this->io->text("0/$totalThrows - Start looping through all Throws of this Action...");
+                $this->io->text("0/$totalThrows -- Start looping through all Throws of this Action...");
                 $this->io->newLine();
             } else {
                 $currentCronJobThrow ?: $this->io->newLine();
@@ -156,13 +154,13 @@ class ActionSubscriber implements EventSubscriberInterface
             if (isset($this->io) && isset($totalThrows)) {
                 if ($key !== array_key_last($action->getThrows())) {
                     $keyStr = $key + 1;
-                    $this->io->text("$keyStr/$totalThrows - Looping through Throws of this Action \"{$action->getName()}\"...");
+                    $this->io->text("$keyStr/$totalThrows -- Looping through Throws of this Action \"{$action->getName()}\"...");
                 }
                 $this->io->newLine();
             }
         }
         if (isset($this->io) && isset($totalThrows) && $totalThrows !== 0) {
-            $this->io->text("$totalThrows/$totalThrows - Finished looping through all Throws of this Action \"{$action->getName()}\"");
+            $this->io->text("$totalThrows/$totalThrows -- Finished looping through all Throws of this Action \"{$action->getName()}\"");
             $this->io->newLine();
         }
     }
@@ -235,39 +233,61 @@ class ActionSubscriber implements EventSubscriberInterface
 
     public function handleEvent(ActionEvent $event): ActionEvent
     {
-        if ($this->session->get('io')) {
-            $this->io = $this->session->get('io');
-            if ($this->session->get('currentCronJobThrow') && $this->session->get('currentCronJobThrow') === $event->getType()) {
-                $currentCronJobThrow = true;
-                $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+        $currentCronJobThrow = $this->handleEventIo($event);
+
+        // Normal behaviour is using the $event->getType(), but if $event->getSubType() is set, use that one instead.
+        $listeningToThrow = !$event->getSubType() ? $event->getType() : $event->getSubType();
+        $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
+
+        if (isset($this->io) && isset($currentCronJobThrow)) {
+            $totalActions = is_countable($actions) ? count($actions) : 0;
+            $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
+            $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
+            if ($totalActions !== 0) {
+                $this->io->text("0/$totalActions ---- Start looping through all Actions listening to \"$listeningToThrow\"...");
+                $this->io->newLine();
             } else {
-                $currentCronJobThrow = false;
-                $this->io->text("Handle 'sub'-ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+                $currentCronJobThrow ?: $this->io->newLine();
+            }
+        }
+        foreach ($actions as $key => $action) {
+            // Handle Action
+            $this->handleAction($action, $event);
+
+            if (isset($this->io) && isset($totalActions)) {
+                if ($key !== array_key_last($actions)) {
+                    $keyStr = $key + 1;
+                    $this->io->text("$keyStr/$totalActions ---- Looping through all Actions listening to \"$listeningToThrow\"...");
+                }
+                $this->io->newLine();
             }
         }
 
-        // bij normaal gedrag
-        if (!$event->getSubType()) {
-            $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getType());
-        }
-        // Anders als er wel een subtype is
-        else {
-            $actions = $this->entityManager->getRepository('App:Action')->findByListens($event->getSubType());
-        }
-
-        $totalActions = is_countable($actions) ? count($actions) : 0;
-        if (isset($this->io) && isset($currentCronJobThrow)) {
-            $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"{$event->getType()}\"";
-            $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
-        }
-        foreach ($actions as $action) {
-            $this->handleAction($action, $event);
-        }
-
-        if (isset($this->io)) {
+        if (isset($this->io) && isset($totalActions) && $totalActions !== 0) {
+            $this->io->text("$totalActions/$totalActions ---- Finished looping all Actions listening to \"$listeningToThrow\"");
             $this->io->newLine();
         }
 
         return $event;
+    }
+
+    /**
+     * If we got here through CronjobCommand, write user feedback to $this->io before handling Actions.
+     *
+     * @param ActionEvent $event
+     * @return bool currentCronJobThrow. True if the throw of the current Cronjob matches the type of the ActionEvent.
+     */
+    private function handleEventIo(ActionEvent $event): bool
+    {
+        if ($this->session->get('io')) {
+            $this->io = $this->session->get('io');
+            if ($this->session->get('currentCronJobThrow') && $this->session->get('currentCronJobThrow') === $event->getType()) {
+                $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+                return true;
+            } else {
+                $this->io->text("Handle 'sub'-ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+            }
+        }
+        return false;
     }
 }

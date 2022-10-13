@@ -714,7 +714,7 @@ class SynchronizationService
 
         if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
             if (isset($this->io)) {
-                $this->io->warning('ValidationErrors: '.$this->objectEntityService->implodeMultiArray($validationErrors));
+                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
             }
             //@TODO: Write errors to logs
 
