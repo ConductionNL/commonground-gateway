@@ -3,18 +3,24 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\MapZaakTypeService;
+use App\Service\MapRelocationService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapZaakTypeHandler
+class MapRelocationHandler implements ActionHandlerInterface
 {
-    private MapZaakTypeService $mapZaakTypeService;
+    private mapRelocationService $mapRelocationService;
 
-    public function __construct(MapZaakTypeService $mapZaakTypeService)
+    public function __construct(ContainerInterface $container)
     {
-        $this->mapZaakTypeService = $mapZaakTypeService;
+        $mapRelocationService = $container->get('mapRelocationService');
+        if ($mapRelocationService instanceof MapRelocationService) {
+            $this->mapRelocationService = $mapRelocationService;
+        } else {
+            throw new GatewayException('The service container does not contain the required services for this handler');
+        }
     }
 
     /**
@@ -27,16 +33,10 @@ class MapZaakTypeHandler
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'ZGW ZaakType Action',
-            'description' => 'This handler customly maps xxllnc casetype to zgw zaaktype ',
-            'required'    => ['zaakTypeEntityId'],
-            'properties'  => [
-                'zaakTypeEntityId' => [
-                    'type'        => 'string',
-                    'description' => 'The UUID of the case entitEntity on the gateway',
-                    'example'     => '',
-                ],
-            ],
+            'title'       => 'Map Relocation Action',
+            'description' => 'This handler customly maps zgw zaak to vrijbrp relocation',
+            'required'    => [],
+            'properties'  => [],
         ];
     }
 
@@ -53,8 +53,8 @@ class MapZaakTypeHandler
      *
      * @return array
      */
-    public function run(array $data, array $configuration): array
+    public function __run(array $data, array $configuration): array
     {
-        return $this->mapZaakTypeService->mapZaakTypeHandler($data, $configuration);
+        return $this->mapRelocationService->mapRelocationHandler($data, $configuration);
     }
 }

@@ -7,25 +7,17 @@ use App\Service\SynchronizationService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class SynchronizationWebhookHandler implements ActionHandlerInterface
+class SynchronizationWebhookHandler
 {
     private SynchronizationService $synchronizationService;
 
     /**
-     * @param ContainerInterface $container
-     *
-     * @throws GatewayException
+     * @param SynchronizationService $synchronizationService
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(SynchronizationService $synchronizationService)
     {
-        $synchronizationService = $container->get('synchronizationservice');
-        if ($synchronizationService instanceof SynchronizationService) {
-            $this->synchronizationService = $synchronizationService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for the SynchronizationWebhookHandler');
-        }
+        $this->synchronizationService = $synchronizationService;
     }
 
     /**
@@ -71,7 +63,7 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         $result = $this->synchronizationService->SynchronizationWebhookHandler($data, $configuration);
 
