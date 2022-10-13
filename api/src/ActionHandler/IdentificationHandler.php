@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class ZgwZaaktypeHandler
+class IdentificationHandler
 {
     private ZdsZaakService $zdsZaakService;
 
@@ -45,7 +45,7 @@ class ZgwZaaktypeHandler
     }
 
     /**
-     * This function runs the zgw zaaktype plugin.
+     * This function runs the zaakeigenschappen plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
@@ -59,6 +59,6 @@ class ZgwZaaktypeHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zgwZaaktypeHandler($data, $configuration);
+        return $this->zdsZaakService->identificationHandler($data, $configuration);
     }
 }

@@ -2,19 +2,19 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
-use App\Service\SynchronizationService;
+use App\Service\HandelsRegisterSearchService;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
-class SynchronizationPushHandler
+class HandelsRegisterSearchHandler
 {
-    private SynchronizationService $synchronizationService;
+    private HandelsRegisterSearchService $handelsRegisterSearchService;
 
-    /**
-     * @param SynchronizationService $synchronizationService
-     */
-    public function __construct(SynchronizationService $synchronizationService)
+    public function __construct(HandelsRegisterSearchService $handelsRegisterSearchService)
     {
-        $this->synchronizationService = $synchronizationService;
+        $this->handelsRegisterSearchService = $handelsRegisterSearchService;
     }
 
     /**
@@ -28,7 +28,7 @@ class SynchronizationPushHandler
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
             'title'      => 'Notification Action',
-            'required'   => ['ServiceDNS', 'template', 'sender', 'reciever', 'subject'],
+            'required'   => ['ServiceDNS'],
             'properties' => [
                 'serviceDNS' => [
                     'type'        => 'string',
@@ -40,19 +40,17 @@ class SynchronizationPushHandler
     }
 
     /**
-     * Run the actual business logic in the appropriate server.
+     * This function runs the HandelsRegisterSearch service plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
+     * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
      *
      * @return array
      */
     public function run(array $data, array $configuration): array
     {
-        $this->synchronizationService->synchronisationPushHandler($data, $configuration);
-
-        return $data;
+        return $this->handelsRegisterSearchService->handelsRegisterSearchHandler($data, $configuration);
     }
 }

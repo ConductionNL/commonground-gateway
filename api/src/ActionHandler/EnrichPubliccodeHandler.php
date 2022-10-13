@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\PubliccodeService;
 
-class PubliccodeRatingHandler
+class EnrichPubliccodeHandler
 {
     private PubliccodeService $publiccodeService;
 
@@ -15,6 +15,6 @@ class PubliccodeRatingHandler
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichComponentWithRating($data, $configuration);
+        return $this->publiccodeService->enrichPubliccodeHandler($data, $configuration);
     }
 }
