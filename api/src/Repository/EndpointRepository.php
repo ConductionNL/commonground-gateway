@@ -24,7 +24,7 @@ class EndpointRepository extends ServiceEntityRepository
     }
 
     /**
-     * @TODO
+     * Function to find an Endpoint by given $method and $path, comparing $path to Endpoint.pathRegex using sql REGEXP_REPLACE in DB.
      *
      * @param string $method
      * @param string $path
@@ -49,9 +49,37 @@ class EndpointRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * Function with an alternative way to find an Endpoint by given $method and $path. Used if findByMethodRegex caught an Exception.
+     *
+     * @param string $method
+     * @param string $path
+     *
+     * @return Endpoint|null
+     */
     private function findByMethodRegexAlt(string $method, string $path): ?Endpoint
     {
-        return null;
+        $endpoint = null;
+        $allEndpoints = $this->createQueryBuilder('e')
+            ->andWhere('LOWER(e.method) = :method')
+            ->setParameters(['method' => strtolower($method)])
+            ->getQuery()
+            ->getResult();
+
+        // Match path to regex of Endpoints
+        foreach ($allEndpoints as $currentEndpoint) {
+            try {
+                $updatedPathRegex = str_replace('/', '\/', $currentEndpoint->getPathRegex());
+                if ($currentEndpoint->getPathRegex() !== null && preg_match("/$updatedPathRegex/", $path)) {
+                    $endpoint = $currentEndpoint;
+                    break;
+                }
+            } catch (Exception $exception) {
+                // failsafe for preg_match
+                continue;
+            }
+        }
+        return $endpoint;
     }
 
     /**
