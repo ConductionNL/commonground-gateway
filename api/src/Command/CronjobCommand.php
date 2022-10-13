@@ -202,7 +202,7 @@ class CronjobCommand extends Command
      */
     private function handleExecuteResponse(SymfonyStyle $io, int $errorCount, int $total): int
     {
-        $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
+        $errors = $total == 0 ? 0 : (round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100));
         if ($errors == 0) {
             $io->success('Successfully finished running all Cronjobs');
         } elseif ($errors < 20) {
