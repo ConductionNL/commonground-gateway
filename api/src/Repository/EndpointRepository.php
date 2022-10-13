@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 
 /**
  * @method Endpoint|null find($id, $lockMode = null, $lockVersion = null)
@@ -34,14 +35,23 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
-        $query = $this->createQueryBuilder('e')
-            ->andWhere('LOWER(e.method) = :method')
-            ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
-            ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+        try {
+            $query = $this->createQueryBuilder('e')
+                ->andWhere('LOWER(e.method) = :method')
+                ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
+                ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
 
-        return $query
-            ->getQuery()
-            ->getOneOrNullResult();
+            return $query
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (Exception $exception) {
+            return $this->findByMethodRegexAlt($method, $path);
+        }
+    }
+
+    private function findByMethodRegexAlt(string $method, string $path): ?Endpoint
+    {
+        return null;
     }
 
     /**
