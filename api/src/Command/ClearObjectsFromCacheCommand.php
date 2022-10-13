@@ -11,7 +11,6 @@ use App\Service\FunctionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,13 +24,11 @@ class ClearObjectsFromCacheCommand extends Command
 {
     private InputInterface $input;
     private OutputInterface $output;
-    private CacheInterface $cache;
     private FunctionService $functionService;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(CacheInterface $cache, FunctionService $functionService, EntityManagerInterface $entityManager, string $name = null)
+    public function __construct(FunctionService $functionService, EntityManagerInterface $entityManager, string $name = null)
     {
-        $this->cache = $cache;
         $this->functionService = $functionService;
         $this->entityManager = $entityManager;
         parent::__construct($name);
