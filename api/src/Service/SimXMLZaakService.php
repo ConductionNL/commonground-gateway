@@ -17,7 +17,7 @@ use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
-class ZdsZaakService
+class SimXMLZaakService
 {
     private EntityManagerInterface $entityManager;
     private SynchronizationService $synchronizationService;
@@ -57,49 +57,6 @@ class ZdsZaakService
 
         // @todo in de sync service noemen we dit niet identifierPath maar locationIdField
         return $dotData->get($this->configuration['identifierPath']);
-    }
-
-    /**
-     * This function validates whether the zds message has an identifier associated with a case type.
-     *
-     * @param array $data          The data from the call
-     * @param array $configuration The configuration array from the action
-     *
-     * @throws ErrorException
-     *
-     * @return array The modified data of the call with the case type and identification
-     *
-     * @todo Zgw zaaktype en identificatie toevoegen aan het zds bericht (DataService hebben we hiervoor nodig)
-     */
-    public function zdsValidationHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
-
-        if (!$zaakTypeIdentificatie) {
-            throw new ErrorException('The identificatie is not found');
-        }
-
-        // Let get the zaaktype
-        $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
-        if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
-            // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
-        }
-
-        // @todo change the data with the zaaktype and identification.
-
-//        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
-//
-//        $zdsArray = $zds->toArray();
-//        $zdsArray['object']['zgw'] = [
-//            'zaaktype' => $zaakTypeObjectEntity,
-//            'identificatie' => $zaakTypeIdentificatie,
-//        ];
-
-        return $this->data;
     }
 
     /**

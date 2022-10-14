@@ -1,0 +1,59 @@
+<?php
+
+namespace App\ActionHandler;
+
+use App\Service\SimXMLZaakService;
+use ErrorException;
+
+class SimXMLToZGWHandler
+{
+    private SimXMLZaakService $simXMLZaakService;
+
+    public function __construct(SimXMLZaakService $simXMLZaakService)
+    {
+        $this->simXMLZaakService = $simXMLZaakService;
+    }
+
+    /**
+     *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
+     *
+     * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
+     */
+    public function getConfiguration(): array
+    {
+        return [
+            '$id'         => 'https://example.com/person.schema.json',
+            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
+            'title'       => 'Zaakeigenschappen Action',
+            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
+            'required'    => ['identifierPath'],
+            'properties'  => [
+                'identifierPath' => [
+                    'type'        => 'string',
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example'     => 'native://default',
+                ],
+                'eigenschappen' => [
+                    'type'        => 'array',
+                    'description' => '',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * This function runs the zaakeigenschappen plugin.
+     *
+     * @param array $data The data from the call
+     * @param array $configuration The configuration of the action
+     *
+     *
+     * @return array
+     * @throws ErrorException
+     */
+    public function run(array $data, array $configuration): array
+    {
+        var_dump("hoi");
+        return $this->simXMLZaakService->zdsToZGWHandler($data, $configuration);
+    }
+}
