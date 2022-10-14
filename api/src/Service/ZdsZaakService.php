@@ -843,6 +843,4 @@ class ZdsZaakService
 
         return $data;
     }
-
-
 }
