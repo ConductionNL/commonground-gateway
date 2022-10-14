@@ -5,20 +5,14 @@ namespace App\ActionHandler;
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
 use Exception;
-use Psr\Container\ContainerInterface;
 
-class ZaakInformatieObjectHandler implements ActionHandlerInterface
+class ZaakInformatieObjectHandler
 {
     private ZdsZaakService $zdsZaakService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(ZdsZaakService $zdsZaakService)
     {
-        $zdsZaakService = $container->get('zdszaakservice');
-        if ($zdsZaakService instanceof ZdsZaakService) {
-            $this->zdsZaakService = $zdsZaakService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->zdsZaakService = $zdsZaakService;
     }
 
     /**
