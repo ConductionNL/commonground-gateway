@@ -123,6 +123,14 @@ class ObjectEntityService
             if ($entity instanceof Entity) {
                 //todo: check if Entity has a parent Attribute with triggerParentEvents set to true...
                 //todo: make a new function for this^ (add $io user feedback)
+
+                // function->
+                // Find parent attribute(s) and/or find parent Value(s)
+                // Make sure these are the correct attribute/value by matching with entity and data (id) in $data array.
+                // Check if triggerParentEvents is true.
+                // Get the parent Object
+                // Create a data array for the parent Object data. (Also add entity etc. to this $data array)
+                // Dispatch update event with correct data.
                 return;
             }
             if (isset($io)) {
