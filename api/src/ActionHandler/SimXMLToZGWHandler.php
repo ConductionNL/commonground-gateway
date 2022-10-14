@@ -53,7 +53,6 @@ class SimXMLToZGWHandler
      */
     public function run(array $data, array $configuration): array
     {
-        var_dump("hoi");
-        return $this->simXMLZaakService->zdsToZGWHandler($data, $configuration);
+        return $this->simXMLZaakService->simXMLToZGWHandler($data, $configuration);
     }
 }

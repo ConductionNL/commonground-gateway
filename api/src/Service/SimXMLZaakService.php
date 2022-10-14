@@ -237,12 +237,12 @@ class SimXMLZaakService
      * @todo Eigenschappen ophalen uit de zaaktype (zaaktypen uit contezza synchroniseren met de eigenschappen)
      * @todo ExtraElementen ophalen uit het zds bericht (extraElementen moeten met naam en value gemapt worden in het zds object)
      */
-    public function zdsToZGWHandler(array $data, array $configuration): array
+    public function simXMLToZGWHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
         $this->data = $data;
 
-        $zds = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
+        $simXml = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zaakEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
 
         // @todo remove the check for identification and zaaktype if the dataService is implemented
@@ -253,9 +253,11 @@ class SimXMLZaakService
             throw new ErrorException('The identificatie is not found');
         }
 
-        $zdsObject = $zds->getValue('object');
-        $zdsStuurgegevens = $zds->getValue('stuurgegevens');
-        $zds->setExternalId($zdsObject->getValue('identificatie'));
+        $simXmlBody = $simXml->getValue('body');
+        $simXmlMetadata = $simXmlBody->getValue('metaData');
+        $simXml->setExternalId($simXmlBody->getValue('formulierId'));
+
+        $simXmlStuurgegevens = $simXml->getValue('stuurgegevens');
 
         // Let get the zaaktype
         $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
@@ -270,7 +272,7 @@ class SimXMLZaakService
 
                 $zaaktypeArray = [
                     'identificatie' => $zaakTypeIdentificatie,
-                    'omschrijving' => $zdsObject->getValue('omschrijving'),
+                    'omschrijving' => $simXmlStuurgegevens->getValue('berichttype'),
                 ];
 
                 $zaaktypeObjectEntity->hydrate($zaaktypeArray);
@@ -284,47 +286,45 @@ class SimXMLZaakService
 
         // Lets start by setting up the case
         $zaak = new ObjectEntity($zaakEntity);
-        $zaak->setValue('referentienummer', $zdsStuurgegevens->getValue('referentienummer'));
-        $zaak->setValue('registratiedatum', $zdsObject->getValue('registratiedatum'));
-        $zaak->setValue('omschrijving', $zdsObject->getValue('omschrijving'));
-        $zaak->setValue('einddatumGepland', $zdsObject->getValue('einddatumGepland'));
-        $zaak->setValue('uiterlijkeEinddatumAfdoening', $zdsObject->getValue('uiterlijkeEinddatum'));
-        $zaak->setValue('betalingsindicatie', $zdsObject->getValue('betalingsIndicatie'));
-        $zaak->setValue('laatsteBetaaldatum', $zdsObject->getValue('laatsteBetaaldatum'));
-        $zaak->setValue('startdatum', $zdsObject->getValue('startdatum'));
+        $zaak->setValue('identificatie', $simXmlBody->getValue('formulierId'));
+        $zaak->setValue('registratiedatum', $simXmlStuurgegevens->getValue('datum'));
+        $zaak->setValue('omschrijving', $simXmlStuurgegevens->getValue('berichttype'));
+        $zaak->setValue('startdatum', $simXmlBody->getValue('datumVerzending'));
         $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
         $this->entityManager->persist($zaak);
 
-        if ($zaaktypeObjectEntity->getValue('eigenschappen')) {
-            $this->createZgwZaakEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
-        } elseif (key_exists('enrichData',  $this->configuration) &&
-            $this->configuration['enrichData']) {
+//        if ($zaaktypeObjectEntity->getValue('eigenschappen')) {
+//            $this->createZgwZaakEigenschappen($simXmlBody, $zaaktypeObjectEntity, $zaak);
+//        } elseif (key_exists('enrichData',  $this->configuration) &&
+//            $this->configuration['enrichData']) {
+//
+//            $this->createNewZgwEigenschappen($simXmlBody, $zaaktypeObjectEntity, $zaak);
+//        } else {
+//            throw new ErrorException('Cannot create zaakeigenschappen');
+//        }
+//
+//        if ($roltypen = $zaaktypeObjectEntity->getValue('roltypen')) {
+//            foreach ($roltypen as $roltype) {
+//                $this->createZgwRollen($simXmlBody, $zaak, $roltype);
+//            }
+//        }elseif (key_exists('enrichData',  $this->configuration) &&
+//            $this->configuration['enrichData']) {
+//
+//            $this->createNewZgwRolObject($simXmlBody, $zaaktypeObjectEntity, $zaak);
+//        } else {
+//            throw new ErrorException('Cannot create rollen');
+//        }
 
-            $this->createNewZgwEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
-        } else {
-            throw new ErrorException('Cannot create zaakeigenschappen');
-        }
-
-        if ($roltypen = $zaaktypeObjectEntity->getValue('roltypen')) {
-            foreach ($roltypen as $roltype) {
-                $this->createZgwRollen($zdsObject, $zaak, $roltype);
-            }
-        }elseif (key_exists('enrichData',  $this->configuration) &&
-            $this->configuration['enrichData']) {
-
-            $this->createNewZgwRolObject($zdsObject, $zaaktypeObjectEntity, $zaak);
-        } else {
-            throw new ErrorException('Cannot create rollen');
-        }
+        // add bijlagen
 
         $this->entityManager->persist($zaak);
 
-        $zds->setValue('zgwZaak', $zaak);
+        $simXml->setValue('zgwZaak', $zaak);
 
         var_dump($zaak->toArray());
 
 
-        $this->entityManager->persist($zds);
+        $this->entityManager->persist($simXml);
         $this->entityManager->flush();
 
 
