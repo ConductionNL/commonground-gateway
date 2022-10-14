@@ -53,7 +53,7 @@ class ZaakInformatieObjectHandler
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->zdsZaakService->zaakInformatieObjectHandler($data, $configuration);
     }
