@@ -115,6 +115,22 @@ class ObjectEntityService
             $event->setSubType($subType);
         }
         $this->eventDispatcher->dispatch($event, $type);
+
+        if (array_key_exists('entity', $data) &&
+            ($type === 'commongateway.object.update' || $subType === 'commongateway.object.update')
+        ) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $data['entity']]);
+            if ($entity instanceof Entity) {
+                //todo: check if Entity has a parent Attribute with triggerParentEvents set to true...
+                //todo: make a new function for this^ (add $io user feedback)
+                return;
+            }
+            if (isset($io)) {
+                $io->warning("Trying to look if we need to trigger parent events for Throw: \"$type\""
+                    .($subType ? " and SubType: \"$subType\"" : '')
+                    ." But couldn't find an Entity with id: \"{$data['entity']}\"");
+            }
+        }
     }
 
     /**
