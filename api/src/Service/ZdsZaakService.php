@@ -812,4 +812,37 @@ class ZdsZaakService
 
         return $data;
     }
+
+    /**
+     * Updates all zaakInformatieObjecten with correct URLs before syncing them to ZGW.
+     *
+     * @param array $data          The data from the call
+     * @param array $configuration The configuration array from the action
+     *
+     * @throws Exception
+     *
+     * @return array The data from the call
+     */
+    public function zaakInformatieObjectHandler(array $data, array $configuration): array
+    {
+        $informatieObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id'])->getValue('zgwDocument');
+        if (!$informatieObject instanceof ObjectEntity) {
+            return $data;
+        }
+
+        $zaakInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $configuration['zaakInformatieObjectEntityId']]);
+        $zaakInformatieObjecten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $informatieObject->getId()->toString()]);
+        foreach ($zaakInformatieObjecten as $zaakInformatieObject) {
+            if (!$zaakInformatieObject instanceof ObjectEntity || $zaakInformatieObject->getEntity() !== $zaakInformatieObjectEntity) {
+                continue;
+            }
+            $zaakInformatieObject->setValue('informatieobject', $informatieObject->getValue('url'));
+            $this->entityManager->persist($zaakInformatieObject);
+        }
+        $this->entityManager->flush();
+
+        return $data;
+    }
+
+
 }
