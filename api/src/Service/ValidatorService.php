@@ -470,6 +470,7 @@ class ValidatorService
         $objectValidator->addRule(new Rules\NotEmpty());
 
         // TODO: Make a custom rule for cascading so we can give custom exception messages back?
+        // TODO: maybe check if an object with the given UUID actually exists?
         // Validate for cascading
         if ($attribute->getValidations()['cascade'] === true) {
             // Array or Uuid
