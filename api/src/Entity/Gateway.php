@@ -222,12 +222,12 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256"})
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none"},
+     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256"},
      *             "example"="apikey"
      *         }
      *     }

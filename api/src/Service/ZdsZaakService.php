@@ -6,6 +6,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
@@ -212,14 +213,20 @@ class ZdsZaakService
         // @todo remove the check for identification and zaaktype if the dataService is implemented
         // @todo get in the zds object the values of the properties casetype and identification and store this in the case
         $zaakTypeIdentificatie = $this->getIdentifier($this->data['request']);
+        $zaakTypeEntity = $this->configuration['zaakTypeEntityId'];
         if (!$zaakTypeIdentificatie) {
             // @todo fix error
             throw new ErrorException('The identificatie is not found');
         }
 
         // Let get the zaaktype
-        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
-        if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
+        foreach ($zaaktypeValues as $zaaktypeValue) {
+            if ($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
+                $zaaktypeObjectEntity = $zaaktypeValue->getObjectEntity();
+            }
+        }
+        if (!isset($zaaktypeObjectEntity) || !$zaaktypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
             throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
@@ -246,6 +253,7 @@ class ZdsZaakService
         $this->entityManager->persist($zaak);
 
         $zds->setValue('zgwZaak', $zaak);
+        $zaak = $this->synchronizationService->setApplicationAndOrganization($zaak);
 
         $this->entityManager->persist($zds);
         $this->entityManager->flush();
@@ -268,12 +276,13 @@ class ZdsZaakService
 
         // create zaakinformatieobject
         $zaakinformatieobject = new ObjectEntity($zaakInformatieObjectEntity);
-        $zaakinformatieobject->setValue('informatieobject', $document->getValue('url'));
+        $zaakinformatieobject->setValue('informatieobject', $document->getId()->toString());
         $zaakinformatieobject->setValue('zaak', $zdsZaakObjectEntity->getValue('zgwZaak'));
-        $zaakinformatieobject->setValue('aardRelatieWeergave', $zdsObject->getValue('titel'));
+        $zaakinformatieobject->setValue('aardRelatieWeergave', $document->getValue('titel'));
         $zaakinformatieobject->setValue('titel', $document->getValue('titel'));
-        $zaakinformatieobject->setValue('beschrijving', $document->getValue('beschrijving'));
+        $zaakinformatieobject->setValue('beschrijving', $document->getValue('beschrijving') ?? '');
 //        $zaakinformatieobject->setValue('registratiedatum', $document->getValue(''));
+        $zaakinformatieobject = $this->synchronizationService->setApplicationAndOrganization($zaakinformatieobject);
 
         $this->entityManager->persist($zaakinformatieobject);
     }
@@ -323,18 +332,19 @@ class ZdsZaakService
         $document->setValue('creatiedatum', $zdsObject->getValue('creatiedatum'));
         $document->setValue('titel', $zdsObject->getValue('titel'));
         $document->setValue('auteur', $zdsObject->getValue('auteur'));
-        $document->setValue('status', $zdsObject->getValue('status'));
+        $document->setValue('status', strtolower($zdsObject->getValue('status')));
         $document->setValue('formaat', $zdsObject->getValue('formaat'));
         $document->setValue('taal', $zdsObject->getValue('taal'));
         $document->setValue('inhoud', $zdsObject->getValue('inhoud'));
         $document->setValue('beschrijving', $zdsObject->getValue('beschrijving'));
-        $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity[0]->getValue('url'));
+        $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity[0]->getUri());
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity[0]->getValue('vertrouwelijkheidaanduiding'));
 
 //        $document->setValue('indicatieGebruiksrecht', $zdsObject->getValue(''));
 //        $document->setValue('bestandsnaam', $zdsObject->getValue(''));
 //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
 //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
+        $this->entityManager->persist($document);
 
         $this->createZgwZaakInformatieObject($zdsObject, $zdsZaakObjectEntity, $document);
 

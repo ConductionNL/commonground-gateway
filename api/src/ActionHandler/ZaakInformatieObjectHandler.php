@@ -4,17 +4,21 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
-use Psr\Cache\CacheException;
-use Psr\Cache\InvalidArgumentException;
-use Respect\Validation\Exceptions\ComponentException;
+use Exception;
+use Psr\Container\ContainerInterface;
 
-class ZdsToZGWHandler
+class ZaakInformatieObjectHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    public function __construct(ContainerInterface $container)
     {
-        $this->zdsZaakService = $zdsZaakService;
+        $zdsZaakService = $container->get('zdszaakservice');
+        if ($zdsZaakService instanceof ZdsZaakService) {
+            $this->zdsZaakService = $zdsZaakService;
+        } else {
+            throw new GatewayException('The service container does not contain the required services for this handler');
+        }
     }
 
     /**
@@ -51,14 +55,12 @@ class ZdsToZGWHandler
      * @param array $configuration The configuration of the action
      *
      * @throws GatewayException
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     * @throws ComponentException
+     * @throws Exception
      *
      * @return array
      */
-    public function run(array $data, array $configuration): array
+    public function __run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
+        return $this->zdsZaakService->zaakInformatieObjectHandler($data, $configuration);
     }
 }
