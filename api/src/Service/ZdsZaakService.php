@@ -6,15 +6,11 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
-use App\Exception\GatewayException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use Exception;
-use Psr\Cache\CacheException;
-use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
-use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class ZdsZaakService

@@ -7,7 +7,6 @@ use App\Service\SynchronizationService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SynchronizationWebhookHandler
 {
