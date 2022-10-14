@@ -2,19 +2,16 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
-use App\Service\ZdsZaakService;
-use Psr\Cache\CacheException;
-use Psr\Cache\InvalidArgumentException;
-use Respect\Validation\Exceptions\ComponentException;
+use App\Service\SimXMLZaakService;
+use ErrorException;
 
-class ZdsToZGWHandler
+class SimXMLToZGWHandler
 {
-    private ZdsZaakService $zdsZaakService;
+    private SimXMLZaakService $simXMLZaakService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    public function __construct(SimXMLZaakService $simXMLZaakService)
     {
-        $this->zdsZaakService = $zdsZaakService;
+        $this->simXMLZaakService = $simXMLZaakService;
     }
 
     /**
@@ -47,18 +44,16 @@ class ZdsToZGWHandler
     /**
      * This function runs the zaakeigenschappen plugin.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     * @throws ComponentException
      *
      * @return array
+     * @throws ErrorException
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
+        var_dump("hoi");
+        return $this->simXMLZaakService->zdsToZGWHandler($data, $configuration);
     }
 }
