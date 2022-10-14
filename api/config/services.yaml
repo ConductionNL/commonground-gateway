@@ -153,10 +153,10 @@ services:
             $zdsZaakService: '@App\Service\ZdsZaakService'
             
 
-    App\ActionHandler\MapRelocationHandler:
+    App\ActionHandler\ZgwToVrijbrpHandler:
         public: true
         arguments:
-            $mapRelocationService: '@App\Service\MapRelocationService'
+            $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
             
     Redis:
         class: Redis
