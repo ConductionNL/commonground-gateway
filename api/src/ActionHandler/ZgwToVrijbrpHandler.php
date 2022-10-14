@@ -3,19 +3,18 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\MapBirthService;
+use App\Service\ZgwToVrijbrpService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapBirthService
+class ZgwToVrijbrpHandler
 {
-    private MapBirthService $mapBirthService;
+    private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(MapBirthService $mapBirthService)
+    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
     {
-        $this->mapBirthService = $mapBirthService;
+        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
     }
 
     /**
@@ -28,15 +27,25 @@ class MapBirthService
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Map Relocation Action',
-            'description' => 'This handler customly maps zgw zaak to vrijbrp relocation',
-            'required'    => [],
-            'properties'  => [],
+            'title'       => 'Zaakeigenschappen Action',
+            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
+            'required'    => ['identifierPath'],
+            'properties'  => [
+                'identifierPath' => [
+                    'type'        => 'string',
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example'     => 'native://default',
+                ],
+                'eigenschappen' => [
+                    'type'        => 'array',
+                    'description' => '',
+                ],
+            ],
         ];
     }
 
     /**
-     * This function runs the service for validating cases.
+     * This function runs the zgw zaaktype plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
@@ -50,6 +59,6 @@ class MapBirthService
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->mapBirthService->mapBirthHandler($data, $configuration);
+        return $this->zgwToVrijbrpService->zgwToVrijbrpHandler($data, $configuration);
     }
 }

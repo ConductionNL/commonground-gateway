@@ -3,20 +3,18 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\MapCommitmentService;
+use App\Service\BijlagenArrayService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapCommitmentHandler
+class BijlagenArrayHandler
 {
+    private BijlagenArrayService $bijlagenArrayService;
 
-    private MapCommitmentService $mapCommitmentService;
-
-    public function __construct(MapCommitmentService $mapCommitmentService)
+    public function __construct(BijlagenArrayService $bijlagenArrayService)
     {
-        $this->mapCommitmentService = $mapCommitmentService;
+        $this->bijlagenArrayService = $bijlagenArrayService;
     }
 
     /**
@@ -29,10 +27,16 @@ class MapCommitmentHandler
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Map Relocation Action',
-            'description' => 'This handler customly maps zgw zaak to vrijbrp relocation',
-            'required'    => [],
-            'properties'  => [],
+            'title'       => 'Sim XML Action',
+            'description' => 'This handler customly maps sim xml to zgw zaak and document ',
+            'required'    => ['simXMLEntityId'],
+            'properties'  => [
+                'simXMLEntityId' => [
+                    'type'        => 'string',
+                    'description' => 'The UUID of the case entitEntity on the gateway',
+                    'example'     => '',
+                ],
+            ],
         ];
     }
 
@@ -51,6 +55,6 @@ class MapCommitmentHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->mapCommitmentService->mapCommitmentHandler($data, $configuration);
+        return $this->bijlagenArrayService->bijlagenArrayHandler($data, $configuration);
     }
 }
