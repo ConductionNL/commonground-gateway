@@ -219,7 +219,6 @@ class ZdsZaakService
         $this->entityManager->persist($roltype);
 
         $roltypen[] = $roltype;
-        var_dump($roltypen[0]->toArray());
 
         $zaaktypeObjectEntity->setValue('roltypen', $roltypen);
 
@@ -359,9 +358,6 @@ class ZdsZaakService
         $this->entityManager->persist($zaak);
 
         $zds->setValue('zgwZaak', $zaak);
-
-        var_dump($zaak->toArray());
-
 
         $this->entityManager->persist($zds);
         $this->entityManager->flush();
