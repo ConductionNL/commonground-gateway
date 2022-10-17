@@ -310,8 +310,10 @@ class ZdsZaakService
             }
         }
         if (!$zaaktypeObjectEntity || !$zaaktypeObjectEntity instanceof ObjectEntity) {
-            if (key_exists('enrichData', $this->configuration) &&
-                $this->configuration['enrichData']) {
+            if (
+                key_exists('enrichData', $this->configuration) &&
+                $this->configuration['enrichData']
+            ) {
                 $zaakTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakTypeEntityId']);
 
                 $zaaktypeObjectEntity = new ObjectEntity($zaakTypeEntity);
@@ -345,21 +347,27 @@ class ZdsZaakService
 
         if ($zaaktypeObjectEntity->getValue('eigenschappen')->toArray()) {
             $this->createZgwZaakEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
-        } elseif (key_exists('enrichData', $this->configuration) &&
-            $this->configuration['enrichData']) {
+        } elseif (
+            key_exists('enrichData', $this->configuration) &&
+            $this->configuration['enrichData']
+        ) {
             $this->createNewZgwEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
         } else {
             throw new ErrorException('Cannot create zaakeigenschappen');
         }
 
-        if ($zaaktypeObjectEntity->getValue('roltypen') &&
-            count($zaaktypeObjectEntity->getValue('roltypen')) > 0) {
+        if (
+            $zaaktypeObjectEntity->getValue('roltypen') &&
+            count($zaaktypeObjectEntity->getValue('roltypen')) > 0
+        ) {
             $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
             foreach ($roltypen as $roltype) {
                 $this->createZgwRollen($zdsObject, $zaak, $roltype);
             }
-        } elseif (key_exists('enrichData', $this->configuration) &&
-            $this->configuration['enrichData']) {
+        } elseif (
+            key_exists('enrichData', $this->configuration) &&
+            $this->configuration['enrichData']
+        ) {
             $this->createNewZgwRolObject($zdsObject, $zaaktypeObjectEntity, $zaak);
         } else {
             throw new ErrorException('Cannot create rollen');
@@ -376,7 +384,7 @@ class ZdsZaakService
         $this->data['response'] = $zds->toArray();
 
 
-        return ['response' => $zds->toArray()];
+        return $this->data;
     }
 
     /**
