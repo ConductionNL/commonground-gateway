@@ -372,7 +372,7 @@ class ZdsZaakService
             if ($objectEntity->getValue('zaaktype') !== null) {
                 var_dump($objectEntity->getValue('zaaktype'));
                 $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($objectEntity->getValue('zaaktype'));
-                if($zaaktype == null) {
+                if ($zaaktype == null) {
                     continue;
                 }
                 $zaaktype->getValueObject($attributeName)->addObject($objectEntity);
