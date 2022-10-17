@@ -163,6 +163,12 @@ services:
         arguments:
             $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
             
+
+    App\ActionHandler\ZaakInformatieObjectHandler:
+        public: true
+        arguments:
+            $zdsZaakService: '@App\Service\ZdsZaakService'
+
     Redis:
         class: Redis
         calls:
