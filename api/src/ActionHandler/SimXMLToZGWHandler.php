@@ -44,12 +44,12 @@ class SimXMLToZGWHandler
     /**
      * This function runs the zaakeigenschappen plugin.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
+     * @throws ErrorException
      *
      * @return array
-     * @throws ErrorException
      */
     public function run(array $data, array $configuration): array
     {
