@@ -36,7 +36,7 @@ class ZgwToVrijbrpService
         $this->skeletonIn = [];
     }
 
-    private function createBirthObject(array $zaakArray, ObjectEntity $zaakObjectEntity)
+    private function createBirthObject(array $zaakArray)
     {
 
         $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
@@ -104,239 +104,26 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
-    private function createCommitmentObject(array $zaakArray, ObjectEntity $zaakObjectEntity)
+    private function createCommitmentObject(array $zaakArray): array
     {
         $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
 
         if (!isset($commitmentEntity)) {
             throw new \Exception('Commitment entity could not be found');
         }
-        var_dump('MAP COMMITMENT TRIGGERED');
 
-        $zaakArray['eigenschappen'] = [
-            [
-                "eigenschap" => "string",
-                "naam" => "identificatie",
-                "waarde" => "778bc0e0-8a26-4b92-b670-a174dfad2349"
+        $commitmentArray = [
+            'partner1' => [
+                'nameAfterCommitment' => []
             ],
-            [
-                "eigenschap" => "string",
-                "naam" => "omschrijving",
-                "waarde" => "huwelijk zds zonder bijlagen"
+            'partner2' => [
+                'nameAfterCommitment' => []
             ],
-            [
-                "eigenschap" => "string",
-                "naam" => "startdatum",
-                "waarde" => "20211203"
+            'dossier' => [
+                'type' => [],
+                'status' => []
             ],
-            [
-                "eigenschap" => "string",
-                "naam" => "registratiedatum",
-                "waarde" => "20211203"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "sub.telefoonnummer",
-                "waarde" => "0633309392"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "sub.emailadres",
-                "waarde" => "s.everard@simgroep.nl"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geselecteerdNaamgebruik",
-                "waarde" => "N"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "verbintenisType",
-                "waarde" => "MARRIAGE"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "verbintenisDatum",
-                "waarde" => "230405"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "verbintenisTijd",
-                "waarde" => "1970-01-01T10:00:00+01:00"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "naam",
-                "waarde" => "Trouwzaal Stadhuis"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "naam",
-                "waarde" => "Trouwzaal Stadhuis"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "naam1",
-                "waarde" => "H. Smaling"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "naam2",
-                "waarde" => "R.S. Nas"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "trouwboekje",
-                "waarde" => "true"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "bsn1",
-                "waarde" => "999993781"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voornamen1",
-                "waarde" => "Vanessa"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voorvoegselGeslachtsnaam1",
-                "waarde" => ""
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geslachtsnaam1",
-                "waarde" => "Groeman"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geboortedatum1",
-                "waarde" => "931008"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geboortedatum1",
-                "waarde" => "931008"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "verzorgdgem",
-                "waarde" => "2"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "bsn2",
-                "waarde" => "999992478"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voornamen2",
-                "waarde" => "Troje"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voorvoegselGeslachtsnaam2",
-                "waarde" => ""
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geslachtsnaam2",
-                "waarde" => "Homeros"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geboortedatum2",
-                "waarde" => "911221"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "inp.bsn",
-                "waarde" => "999990974"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "sub.emailadres",
-                "waarde" => "s.everard@simgroep.nl"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voornamen",
-                "waarde" => "Patrick"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voornamen",
-                "waarde" => "Patrick"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voornamen",
-                "waarde" => "Patrick"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "voorvoegselGeslachtsnaam",
-                "waarde" => "de"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geslachtsnaam",
-                "waarde" => "Boer"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "gor.openbareRuimteNaam",
-                "waarde" => "TESTadres"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geboortedatum",
-                "waarde" => "891112"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "aoa.huisnummer",
-                "waarde" => "16"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "aoa.huisletter",
-                "waarde" => "a"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "aoa.huisnummertoevoeging",
-                "waarde" => ""
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "aoa.postcode",
-                "waarde" => "1234AB"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "wpl.woonplaatsNaam",
-                "waarde" => "TestWoonplaats"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "sub.telefoonnummer",
-                "waarde" => "0633309392"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "sub.emailadres",
-                "waarde" => "s.everard@simgroep.nl"
-            ],
-            [
-                "eigenschap" => "string",
-                "naam" => "geselecteerdNaamgebruik",
-                "waarde" => "E"
-            ]
         ];
-
-        $commitmentArray = [];
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
                 case 'identificatie':
@@ -346,19 +133,8 @@ class ZgwToVrijbrpService
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
                     continue 2;
-                case 'startdatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                    $commitmentArray['dossier']['startDate'] = $dateTimeFormatted;
-                    continue 2;
-                case 'registratiedatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d|TH:i:s');
-                    $commitmentArray['dossier']['entryDateTime'] = $eigenschap['waarde'];
-                    $commitmentArray['dossier']['status']['entryDateTime'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'bsn1':
-                    $commitmentArray['partner1'] = $eigenschap['waarde'];
+                    $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam1':
                     $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
@@ -368,22 +144,36 @@ class ZgwToVrijbrpService
                     $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
                     continue 2;
                 case 'bsn2':
-                    $commitmentArray['partner2'] = $eigenschap['waarde'];
+                    $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam2':
                     $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
                 case 'verbintenisType':
-                    $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
+                    in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
                 case 'verbintenisDatum':
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d|TH:i:s');
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $commitmentArray['planning']['commitmentDateTime'] = $dateTimeFormatted;
+                    continue 2;
+                case 'gor.openbareRuimteNaam':
+                    $commitmentArray['location']['name'] = $eigenschap['waarde'];
                     continue 2;
             }
         }
 
-        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
+        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['code'];
+        $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
+
+        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+        $commitmentArray['dossier']['startDate'] = $dateTimeFormatted;
+
+        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+        $dateTimeObject = new \DateTime($eigenschap['waarde']);
+        $commitmentArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+        $commitmentArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         // Save in gateway
 
@@ -395,9 +185,9 @@ class ZgwToVrijbrpService
         $this->entityManager->persist($commitmentObjectEntity);
         $this->entityManager->flush();
 
-        $intraObjectArray = $commitmentObjectEntity->toArray();
+        $commitmentObjectArray = $commitmentObjectEntity->toArray();
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $commitmentEntity->getId()->toString(), 'response' => $intraObjectArray]);
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $commitmentEntity->getId()->toString(), 'response' => $commitmentObjectArray]);
 
         return $this->data;
     }
@@ -700,13 +490,15 @@ class ZgwToVrijbrpService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        if (!isset($data['id']) && !isset($data['response']['id'])) {
+
+
+        if (!isset($data['response']['id'])) {
             throw new \Exception('Zaak ID not given for ZgwToVrijbrpHandler');
         }
 
-        $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['id']);
+        $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
         if (!$zaakObjectEntity instanceof ObjectEntity) {
-            $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['id']);
+            $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
             if (!$zaakObjectEntity instanceof ObjectEntity) {
                 throw new \Exception('Zaak not found with given ID for ZgwToVrijbrpHandler');
             }
@@ -714,13 +506,13 @@ class ZgwToVrijbrpService
 
         $zaakArray = $zaakObjectEntity->toArray();
 
-        switch ($zaakArray['zaaktype']['identificatie']) {
+        switch ($zaakArray['zaaktype']['code']) {
             case 'B0237':
-                return $this->createBirthObject($zaakArray, $zaakObjectEntity);
+                return $this->createBirthObject($zaakArray);
             case 'B0366':
                 return $this->createRelocationObject($zaakArray, $zaakObjectEntity);
             case 'B0337':
-                return $this->createCommitmentObject($zaakArray, $zaakObjectEntity);
+                return $this->createCommitmentObject($zaakArray);
             default:
                 return $this->data;
         }
