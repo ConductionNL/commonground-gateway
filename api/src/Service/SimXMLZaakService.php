@@ -319,20 +319,20 @@ class SimXMLZaakService
             throw new ErrorException('Cannot create rollen');
         }
 
-        if ($bijlagen = $simXml->getValue('bijlagen')) {
-            $informatieObjectTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['informatieObjectTypeEntityId']);
-            $enkelvoudiginformatieobjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['enkelvoudigInformatieObjectEntityId']);
-
-            foreach ($bijlagen as $bijlage) {
-
-                $informatieObjectType = new ObjectEntity($informatieObjectTypeEntity);
-                $informatieObjectType->setValue('zaak', $zaak);
-                $informatieObjectType->setValue('roltype', $roltype);
-                $informatieObjectType->setValue('omschrijving', $roltype->getValue('omschrijving'));
-                $informatieObjectType->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
-                $informatieObjectType->setValue('roltoelichting', 'indiener');
-            }
-        }
+//        if ($bijlagen = $simXml->getValue('bijlagen')) {
+//            $informatieObjectTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['informatieObjectTypeEntityId']);
+//            $enkelvoudiginformatieobjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['enkelvoudigInformatieObjectEntityId']);
+//
+//            foreach ($bijlagen as $bijlage) {
+//
+//                $informatieObjectType = new ObjectEntity($informatieObjectTypeEntity);
+//                $informatieObjectType->setValue('zaak', $zaak);
+//                $informatieObjectType->setValue('roltype', $roltype);
+//                $informatieObjectType->setValue('omschrijving', $roltype->getValue('omschrijving'));
+//                $informatieObjectType->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
+//                $informatieObjectType->setValue('roltoelichting', 'indiener');
+//            }
+//        }
 
         // add bijlagen
 
@@ -340,11 +340,8 @@ class SimXMLZaakService
 
         $simXml->setValue('zgwZaak', $zaak);
 
-        var_dump($zaak->toArray());
-
         $this->entityManager->persist($simXml);
         $this->entityManager->flush();
-
 
         return $this->data;
     }
