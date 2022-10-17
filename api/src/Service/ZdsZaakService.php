@@ -172,7 +172,7 @@ class ZdsZaakService
                 $rol->setValue('roltype', $roltype);
                 $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
                 $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
-                $rol->setValue('roltoelichting', 'indiener');
+                $rol->setValue('roltoelichting', $zaak->getValue('toelichting'));
 
                 if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
                     $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
@@ -371,6 +371,9 @@ class ZdsZaakService
         foreach ($objectEntities as $objectEntity) {
             if ($objectEntity->getValue('zaaktype') !== null) {
                 $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($objectEntity->getValue('zaaktype'));
+                if ($zaaktype == null) {
+                    continue;
+                }
                 $zaaktype->getValueObject($attributeName)->addObject($objectEntity);
                 $this->entityManager->persist($zaaktype);
             }
