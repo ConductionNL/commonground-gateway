@@ -15,7 +15,6 @@ use App\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use JWadhams\JsonLogic;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -234,7 +233,7 @@ class ConvenienceController extends AbstractController
         }
 
         return new Response(
-            $this->serializer->serialize(['message' => 'Action ' . $action->getName()], $contentType),
+            $this->serializer->serialize(['message' => 'Action '.$action->getName()], $contentType),
             Response::HTTP_OK,
             ['content-type' => $contentType]
         );

@@ -38,7 +38,6 @@ class ZgwToVrijbrpService
 
     private function createBirthObject(array $zaakArray)
     {
-
         $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
 
         if (!isset($birthEntity)) {
@@ -47,10 +46,10 @@ class ZgwToVrijbrpService
 
         $zaakArray['eigenschappen'] = [
             [
-                "eigenschap" => "string",
-                "naam" => "FORMULIERID",
-                "waarde" => "000000100000"
-            ]
+                'eigenschap' => 'string',
+                'naam'       => 'FORMULIERID',
+                'waarde'     => '000000100000',
+            ],
         ];
 
         $birthArray = [];
@@ -88,7 +87,6 @@ class ZgwToVrijbrpService
         $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $commitmentArray['qualificationForDeclaringType'] = 'UNDERTAKER';
 
-
         // Save in gateway
 
         $birthObjectEntity = new ObjectEntity();
@@ -114,14 +112,14 @@ class ZgwToVrijbrpService
 
         $commitmentArray = [
             'partner1' => [
-                'nameAfterCommitment' => []
+                'nameAfterCommitment' => [],
             ],
             'partner2' => [
-                'nameAfterCommitment' => []
+                'nameAfterCommitment' => [],
             ],
             'dossier' => [
-                'type' => [],
-                'status' => []
+                'type'   => [],
+                'status' => [],
             ],
         ];
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
@@ -239,150 +237,150 @@ class ZgwToVrijbrpService
 
         $zaakArray['eigenschappen'] = [
             [
-                "eigenschap" => "string",
-                "naam" => "FORMULIERID",
-                "waarde" => "000000100000"
+                'eigenschap' => 'string',
+                'naam'       => 'FORMULIERID',
+                'waarde'     => '000000100000',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "DATUMVERZENDING",
-                "waarde" => "2021-12-01T23:41:18"
+                'eigenschap' => 'string',
+                'naam'       => 'DATUMVERZENDING',
+                'waarde'     => '2021-12-01T23:41:18',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "ZAAKTYPE",
-                "waarde" => "B0366"
+                'eigenschap' => 'string',
+                'naam'       => 'ZAAKTYPE',
+                'waarde'     => 'B0366',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "CODE_KANAAL",
-                "waarde" => "web"
+                'eigenschap' => 'string',
+                'naam'       => 'CODE_KANAAL',
+                'waarde'     => 'web',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "INDIENER",
-                "waarde" => "999995923"
+                'eigenschap' => 'string',
+                'naam'       => 'INDIENER',
+                'waarde'     => '999995923',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "INDIENERSOORT",
-                "waarde" => "burger"
+                'eigenschap' => 'string',
+                'naam'       => 'INDIENERSOORT',
+                'waarde'     => 'burger',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "BETROUWBAARHEID_IDENTIFICATIE",
-                "waarde" => "10"
+                'eigenschap' => 'string',
+                'naam'       => 'BETROUWBAARHEID_IDENTIFICATIE',
+                'waarde'     => '10',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "BETROUWBAARHEID_NAW",
-                "waarde" => "1"
+                'eigenschap' => 'string',
+                'naam'       => 'BETROUWBAARHEID_NAW',
+                'waarde'     => '1',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "BSN",
-                "waarde" => "999995923"
+                'eigenschap' => 'string',
+                'naam'       => 'BSN',
+                'waarde'     => '999995923',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "VOORLETTERS",
-                "waarde" => "W.J."
+                'eigenschap' => 'string',
+                'naam'       => 'VOORLETTERS',
+                'waarde'     => 'W.J.',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "ACHTERNAAM",
-                "waarde" => "Zech"
+                'eigenschap' => 'string',
+                'naam'       => 'ACHTERNAAM',
+                'waarde'     => 'Zech',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "GESLACHT",
-                "waarde" => "m"
+                'eigenschap' => 'string',
+                'naam'       => 'GESLACHT',
+                'waarde'     => 'm',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "STRAATNAAM",
-                "waarde" => "Amazonestroom"
+                'eigenschap' => 'string',
+                'naam'       => 'STRAATNAAM',
+                'waarde'     => 'Amazonestroom',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "HUISNUMMER",
-                "waarde" => "96"
+                'eigenschap' => 'string',
+                'naam'       => 'HUISNUMMER',
+                'waarde'     => '96',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "POSTCODE",
-                "waarde" => "2721EP"
+                'eigenschap' => 'string',
+                'naam'       => 'POSTCODE',
+                'waarde'     => '2721EP',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "WOONPLAATS",
-                "waarde" => "Zoetermeer"
+                'eigenschap' => 'string',
+                'naam'       => 'WOONPLAATS',
+                'waarde'     => 'Zoetermeer',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "TELEFOONNUMMER",
-                "waarde" => "0650606977"
+                'eigenschap' => 'string',
+                'naam'       => 'TELEFOONNUMMER',
+                'waarde'     => '0650606977',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "EMAILADRES",
-                "waarde" => "wim@zech.nl"
+                'eigenschap' => 'string',
+                'naam'       => 'EMAILADRES',
+                'waarde'     => 'wim@zech.nl',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "GEMEENTECODE",
-                "waarde" => "0268"
+                'eigenschap' => 'string',
+                'naam'       => 'GEMEENTECODE',
+                'waarde'     => '0268',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "STRAATNAAM_NIEUW",
-                "waarde" => "Binderskampweg"
+                'eigenschap' => 'string',
+                'naam'       => 'STRAATNAAM_NIEUW',
+                'waarde'     => 'Binderskampweg',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "HUISNUMMER_NIEUW",
-                "waarde" => "29"
+                'eigenschap' => 'string',
+                'naam'       => 'HUISNUMMER_NIEUW',
+                'waarde'     => '29',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "HUISLETTER_NIEUW",
-                "waarde" => "U"
+                'eigenschap' => 'string',
+                'naam'       => 'HUISLETTER_NIEUW',
+                'waarde'     => 'U',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "HUISNUMMERTOEVOEGING_NIEUW",
-                "waarde" => "39"
+                'eigenschap' => 'string',
+                'naam'       => 'HUISNUMMERTOEVOEGING_NIEUW',
+                'waarde'     => '39',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "POSTCODE_NIEUW",
-                "waarde" => "6545CA"
+                'eigenschap' => 'string',
+                'naam'       => 'POSTCODE_NIEUW',
+                'waarde'     => '6545CA',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "WOONPLAATS_NIEUW",
-                "waarde" => "Nijmegen"
+                'eigenschap' => 'string',
+                'naam'       => 'WOONPLAATS_NIEUW',
+                'waarde'     => 'Nijmegen',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "VERHUISDATUM",
-                "waarde" => "2022-01-09"
+                'eigenschap' => 'string',
+                'naam'       => 'VERHUISDATUM',
+                'waarde'     => '2022-01-09',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "AANTAL_PERS_NIEUW_ADRES",
-                "waarde" => "3"
+                'eigenschap' => 'string',
+                'naam'       => 'AANTAL_PERS_NIEUW_ADRES',
+                'waarde'     => '3',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "WIJZE_BEWONING",
-                "waarde" => "nieuwbouw"
+                'eigenschap' => 'string',
+                'naam'       => 'WIJZE_BEWONING',
+                'waarde'     => 'nieuwbouw',
             ],
             [
-                "eigenschap" => "string",
-                "naam" => "MEEVERHUIZENDE_GEZINSLEDEN",
-                "waarde" => "[{\"BSN\":\"999995959\",\"ROL\":\"P\",\"VOORLETTERS\":\"S.C.A.\",\"VOORNAAM\":\"Simone Clarina Antoinette\",\"ACHTERNAAM\":\"Meelis\",\"GESLACHTSAANDUIDING\":\"v\",\"GEBOORTEDATUM\":\"19680822\"},{\"BSN\":\"999995996\",\"ROL\":\"K\",\"VOORLETTERS\":\"K.\",\"VOORNAAM\":\"Kim\",\"ACHTERNAAM\":\"Zech\",\"GESLACHTSAANDUIDING\":\"v\",\"GEBOORTEDATUM\":\"19980227\"}]"
-            ]
+                'eigenschap' => 'string',
+                'naam'       => 'MEEVERHUIZENDE_GEZINSLEDEN',
+                'waarde'     => '[{"BSN":"999995959","ROL":"P","VOORLETTERS":"S.C.A.","VOORNAAM":"Simone Clarina Antoinette","ACHTERNAAM":"Meelis","GESLACHTSAANDUIDING":"v","GEBOORTEDATUM":"19680822"},{"BSN":"999995996","ROL":"K","VOORLETTERS":"K.","VOORNAAM":"Kim","ACHTERNAAM":"Zech","GESLACHTSAANDUIDING":"v","GEBOORTEDATUM":"19980227"}]',
+            ],
         ];
 
         $relocationArray = [];
@@ -434,10 +432,10 @@ class ZgwToVrijbrpService
                         $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
                         $relocationArray['newAddress']['liveIn'] = [
                             'liveInApplicable' => true,
-                            'consent' => 'PENDING',
-                            'consenter' => [
-                                'bsn' => $eigenschap['waarde']
-                            ]
+                            'consent'          => 'PENDING',
+                            'consenter'        => [
+                                'bsn' => $eigenschap['waarde'],
+                            ],
                         ];
                         $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
                         continue 2;
@@ -489,8 +487,6 @@ class ZgwToVrijbrpService
     {
         $this->data = $data;
         $this->configuration = $configuration;
-
-
 
         if (!isset($data['response']['id'])) {
             throw new \Exception('Zaak ID not given for ZgwToVrijbrpHandler');
