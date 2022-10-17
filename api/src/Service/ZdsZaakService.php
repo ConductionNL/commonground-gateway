@@ -370,7 +370,6 @@ class ZdsZaakService
     {
         foreach ($objectEntities as $objectEntity) {
             if ($objectEntity->getValue('zaaktype') !== null) {
-                var_dump($objectEntity->getValue('zaaktype'));
                 $zaaktype = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($objectEntity->getValue('zaaktype'));
                 if ($zaaktype == null) {
                     continue;
