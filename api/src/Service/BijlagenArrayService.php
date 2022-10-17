@@ -29,7 +29,7 @@ class BijlagenArrayService
         if (isset($bijlagen['ns2:Bijlage']['ns2:Naam'])) {
             $simXML['Bijlagen'] = [];
             $simXML['Bijlagen'][] = $bijlagen['ns2:Bijlage'];
-        } elseif (isset($bijlagen[0])) {
+        } elseif (isset($bijlagen['ns2:Bijlage'][0])) {
             $simXML['Bijlagen'] = [];
             $simXML['Bijlagen'] = $bijlagen['ns2:Bijlage'];
         }

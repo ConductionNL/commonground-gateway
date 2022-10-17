@@ -152,6 +152,16 @@ services:
         arguments:
             $simXMLZaakService: '@App\Service\SimXMLZaakService'
 
+    App\ActionHandler\ZgwObjectInformatieObjectToZdsDocumentHandler:
+        public: true
+        arguments:
+            $zdsZaakService: '@App\Service\ZdsZaakService'
+
+    App\ActionHandler\ZaakInformatieObjectHandler:
+        public: true
+        arguments:
+            $zdsZaakService: '@App\Service\ZdsZaakService'
+
     Redis:
         class: Redis
         calls:

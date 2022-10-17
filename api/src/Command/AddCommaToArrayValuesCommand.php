@@ -62,7 +62,7 @@ class AddCommaToArrayValuesCommand extends Command
         $this->entityManager->flush();
         $io->progressFinish();
 
-        $errors = round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100);
+        $errors = $total == 0 ? 0 : (round($errorCount / $total * 100) == 0 && $errorCount > 0 ? 1 : round($errorCount / $total * 100));
 
         return $this->handleCommandResult($io, $errors);
     }

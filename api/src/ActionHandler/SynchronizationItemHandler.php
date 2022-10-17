@@ -51,7 +51,7 @@ class SynchronizationItemHandler
      */
     public function run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->SynchronizationItemHandler($data, $configuration);
+        $result = $this->synchronizationService->synchronizationItemHandler($data, $configuration);
 
         return $data;
     }
