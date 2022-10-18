@@ -45,25 +45,25 @@ class ZgwToVrijbrpService
         }
 
         $birthArray = [
-            'declarant' => []
+            'declarant' => [],
         ];
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            if (in_array(substr_replace($eigenschap['naam'], "", -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
             }
             switch ($eigenschap['naam']) {
-                case 'voornamen' . $childIndex:
+                case 'voornamen'.$childIndex:
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geboortedatum' . $childIndex:
+                case 'geboortedatum'.$childIndex:
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'geslachtsaanduiding' . $childIndex:
+                case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
