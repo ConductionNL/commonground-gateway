@@ -853,7 +853,7 @@ class ZdsZaakService
     {
         $body = $this->createDi02Message($messageType, Uuid::uuid4());
         $source = $this->entityManager->getRepository(Gateway::class)->find($this->configuration['source']);
-        $du02 = $this->commonGroundService->callService($source->toArray(), $source->getLocation() . ($this->configuration['apiSource']['location'] ?? ''), $body, [], [], false, 'POST');
+        $du02 = $this->commonGroundService->callService($source->toArray(), $source->getLocation().($this->configuration['apiSource']['location'] ?? ''), $body, [], [], false, 'POST');
 
         return $this->getIdentifierFromDu02($du02->getBody()->getContents());
     }
