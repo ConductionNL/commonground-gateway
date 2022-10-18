@@ -10,7 +10,7 @@ class FakerExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
-            new TwigFunction('generated_uuid', [FakerRuntime::class, 'generateUuid'])
+            new TwigFunction('generated_uuid', [FakerRuntime::class, 'generateUuid']),
         ];
     }
 }

@@ -10,7 +10,8 @@ class FakerRuntime implements RuntimeExtensionInterface
 {
     private Generator $faker;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->faker = Factory::create();
     }
 
