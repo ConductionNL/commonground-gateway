@@ -243,7 +243,7 @@ class UserController extends AbstractController
                 'Content-type' => 'application/json',
             ]
         );
-        $response->headers->clearCookie('PHPSESSID');
+        $response->headers->clearCookie('PHPSESSID', '/', null, true, true, $this->getParameter('samesite'));
 
         return $response;
     }
