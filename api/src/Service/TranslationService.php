@@ -118,6 +118,9 @@ class TranslationService
             } elseif ($format == 'date') {
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
+            } elseif ($format == 'datetimeutc') {
+                $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
+                $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);
                 $separator = str_replace('&nbsp;', ' ', $separator);
