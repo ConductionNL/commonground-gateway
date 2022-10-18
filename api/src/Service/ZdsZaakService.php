@@ -174,6 +174,7 @@ class ZdsZaakService
 
         // Lets grep our extra elements to stuff into the zaak
         $extraElementen = $zdsObject->getValue('extraElementen');
+        $zaakEigenschappen = [];
         foreach ($extraElementen as $extraElement) {
             // Extra element does exist in eigenschappen
             if (array_key_exists($extraElement->getValue('@naam'), $eigenschappenArray) && !in_array($extraElement->getValue('@naam'), $unusedExtraElements)) {
@@ -190,6 +191,7 @@ class ZdsZaakService
                 $zaakEigenschap->setValue('zaak', $zaak);
                 $zaakEigenschap->setValue('eigenschap', $eigenschapType->getValue('url'));
 
+                $zaakEigenschappen[] = $zaakEigenschap;
                 $this->entityManager->persist($zaakEigenschap);
                 // Nieuwe eigenschap aan zaak toevoegen
 
@@ -198,6 +200,7 @@ class ZdsZaakService
             // Extra element doesn't exist in eigenschappen
             $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}\n{$extraElement->getValue('@naam')}: {$extraElement->getValue('#')}");
         }
+        $zaak->setValue('eigenschappen', $zaakEigenschappen);
     }
 
     /**
