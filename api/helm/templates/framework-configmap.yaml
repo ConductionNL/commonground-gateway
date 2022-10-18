@@ -14,4 +14,6 @@ data:
                 cookie_secure: true
                 cookie_samesite: {{ .Values.config.samesiteCookie }}
                 storage_factory_id: session.storage.factory.native
+        parameters:
+            samesite: {{ .Values.config.samesiteCookie }}
 {{- end }}
