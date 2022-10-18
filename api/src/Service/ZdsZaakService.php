@@ -83,7 +83,7 @@ class ZdsZaakService
         $zaakTypeObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakTypeIdentificatie);
         if (!$zaakTypeObjectEntity || !$zaakTypeObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+            throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
         }
 
         // @todo change the data with the zaaktype and identification.
@@ -329,7 +329,7 @@ class ZdsZaakService
                 $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getUri());
             } else {
                 // @todo fix error
-                throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+                throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
             }
         }
 
@@ -438,7 +438,7 @@ class ZdsZaakService
         $zdsZaakObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakIdentificatie);
         if (!$zdsZaakObjectEntity && !$zdsZaakObjectEntity instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The zaak with referentienummer: ' . $zaakIdentificatie . ' can\'t be found');
+            throw new ErrorException('The zaak with referentienummer: '.$zaakIdentificatie.' can\'t be found');
         }
 
         if (!$zdsZaakObjectEntity->getValue('zgwZaak')) {
@@ -449,7 +449,7 @@ class ZdsZaakService
         $informatieobjecttypenObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($informatieObjectTypeEntity, ['omschrijving' => $zdsObject->getValue('dctOmschrijving')]);
         if (count($informatieobjecttypenObjectEntity) == 0 || !$informatieobjecttypenObjectEntity[0] instanceof ObjectEntity) {
             // @todo fix error
-            throw new ErrorException('The informatieobjecttypen with omschrijving: ' . $zdsObject->getValue('dctOmschrijving') . ' can\'t be found');
+            throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
         }
 
         // Lets start by setting up the document
