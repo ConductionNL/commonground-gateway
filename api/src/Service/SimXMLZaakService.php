@@ -304,8 +304,10 @@ class SimXMLZaakService
         // Let get the zaaktype
         $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
         if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
-            if (key_exists('enrichData', $this->configuration) &&
-                $this->configuration['enrichData']) {
+            if (
+                key_exists('enrichData', $this->configuration) &&
+                $this->configuration['enrichData']
+            ) {
                 $zaakTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakTypeEntityId']);
                 // create zaaktype if not found
 
@@ -336,8 +338,10 @@ class SimXMLZaakService
 
         if ($zaaktypeObjectEntity->getValue('eigenschappen')) {
             $this->createZgwZaakEigenschappen($simXmlBody, $zaaktypeObjectEntity, $zaak);
-        } elseif (key_exists('enrichData', $this->configuration) &&
-            $this->configuration['enrichData']) {
+        } elseif (
+            key_exists('enrichData', $this->configuration) &&
+            $this->configuration['enrichData']
+        ) {
             $this->createNewZgwEigenschappen($simXmlBody, $simXmlStuurgegevens, $zaaktypeObjectEntity, $zaak);
         } else {
             throw new ErrorException('Cannot create zaakeigenschappen');
@@ -347,8 +351,10 @@ class SimXMLZaakService
             foreach ($roltypen as $roltype) {
                 $this->createZgwRollen($simXmlBody, $zaak, $roltype);
             }
-        } elseif (key_exists('enrichData', $this->configuration) &&
-            $this->configuration['enrichData']) {
+        } elseif (
+            key_exists('enrichData', $this->configuration) &&
+            $this->configuration['enrichData']
+        ) {
             $this->createNewZgwRolObject($simXmlBody, $simXmlStuurgegevens, $zaaktypeObjectEntity, $zaak);
         } else {
             throw new ErrorException('Cannot create rollen');

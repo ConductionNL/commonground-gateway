@@ -48,7 +48,7 @@ class MapSimXMLService
         // Create documenten
         $today = new \DateTime('now');
         $todayAsString = $today->format('Y-m-d h:i:s');
-//        var_dump(array_keys($simXMLArray['embedded']));
+        //        var_dump(array_keys($simXMLArray['embedded']));
         foreach ($simXMLArray['embedded']['Bijlagen'] as $bijlage) {
             $objectInformatieObject = [
                 'informatieobject' => [
