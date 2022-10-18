@@ -365,9 +365,11 @@ class ZdsZaakService
             count($zaaktypeObjectEntity->getValue('roltypen')) > 0
         ) {
             $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
+            $rollen = [];
             foreach ($roltypen as $roltype) {
-                $this->createZgwRollen($zdsObject, $zaak, $roltype);
+                $rollen[] = $this->createZgwRollen($zdsObject, $zaak, $roltype);
             }
+            $zaak->setValue('rollen', $rollen);
         } elseif (
             key_exists('enrichData', $this->configuration) &&
             $this->configuration['enrichData']
