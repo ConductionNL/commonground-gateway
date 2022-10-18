@@ -44,60 +44,64 @@ class ZgwToVrijbrpService
             throw new \Exception('Birth entity could not be found');
         }
 
-        $zaakArray['eigenschappen'] = [
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'FORMULIERID',
-                'waarde'     => '000000100000',
-            ],
+        $birthArray = [
+            'declarant' => [],
         ];
 
-        $birthArray = [];
-
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
+            $childIndex = '';
+            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+                $childIndex = substr($eigenschap['naam'], -1);
+                $childIndexInt = intval($childIndex) - 1;
+            }
             switch ($eigenschap['naam']) {
-                case 'identificatie':
-                    $commitmentArray['dossier']['dossierId'] = $eigenschap['waarde'];
+                case 'voornamen'.$childIndex:
+                    $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
-                case 'omschrijving':
-                    $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
-                    $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
-                    continue 2;
-                case 'startdatum':
+                case 'geboortedatum'.$childIndex:
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                    $commitmentArray['dossier']['startDate'] = $dateTimeFormatted;
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'registratiedatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d|TH:i:s');
-                    $commitmentArray['dossier']['entryDateTime'] = $eigenschap['waarde'];
-                    $commitmentArray['dossier']['status']['entryDateTime'] = $eigenschap['waarde'];
-                    continue 2;
-                case 'inp.bsn':
-                    $commitmentArray['declarant']['bsn'] = $eigenschap['waarde'];
-                    $commitmentArray['mother']['bsn'] = $eigenschap['waarde'];
+                case 'geslachtsaanduiding'.$childIndex:
+                    in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
-                    $commitmentArray['nameSelection']['lastName'] = $eigenschap['waarde'];
+                    $birthArray['nameSelection']['lastname'] = $eigenschap['waarde'];
                     continue 2;
             }
         }
 
-        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $commitmentArray['qualificationForDeclaringType'] = 'UNDERTAKER';
+        isset($birthArray['children']) && $birthArray['children'] = array_values($birthArray['children']);
 
-        // Save in gateway
+        $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
+        $birthArray['dossier']['dossierId'] = $zaakArray['id'];
+        $birthArray['qualificationForDeclaringType'] = 'MOTHER';
 
-        $birthObjectEntity = new ObjectEntity();
-        $birthObjectEntity->setEntity($birthEntity);
+        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+        $birthArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $birthObjectEntity->hydrate($birthArray);
+        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+        $birthArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+        $birthArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
-        $this->entityManager->persist($birthObjectEntity);
-        $this->entityManager->flush();
+        if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])) {
+            $birthArray['declarant']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
+            $birthArray['mother']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $birthEntity->getId()->toString(), 'response' => $birthArray]);
+            // Save in gateway (only save when we have a declarant/mother)
+            $birthObjectEntity = new ObjectEntity();
+            $birthObjectEntity->setEntity($birthEntity);
+
+            $birthObjectEntity->hydrate($birthArray);
+
+            $this->entityManager->persist($birthObjectEntity);
+            $this->entityManager->flush();
+
+            $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $birthEntity->getId()->toString(), 'response' => $birthArray]);
+        }
 
         return $this->data;
     }
@@ -122,6 +126,7 @@ class ZgwToVrijbrpService
                 'status' => [],
             ],
         ];
+
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
                 case 'identificatie':
@@ -160,7 +165,7 @@ class ZgwToVrijbrpService
             }
         }
 
-        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['code'];
+        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
 
         $dateTimeObject = new \DateTime($zaakArray['startdatum']);
@@ -169,7 +174,6 @@ class ZgwToVrijbrpService
 
         $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-        $dateTimeObject = new \DateTime($eigenschap['waarde']);
         $commitmentArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $commitmentArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
@@ -502,7 +506,7 @@ class ZgwToVrijbrpService
 
         $zaakArray = $zaakObjectEntity->toArray();
 
-        switch ($zaakArray['zaaktype']['code']) {
+        switch ($zaakArray['zaaktype']['identificatie']) {
             case 'B0237':
                 return $this->createBirthObject($zaakArray);
             case 'B0366':
