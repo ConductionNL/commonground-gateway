@@ -89,6 +89,13 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
 #        loadTestData: true
 #        autoLoad: true
+#    pubReferentielijstenCollection:
+#        name: pubReferentielijsten collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/KissPubOas.yaml
+#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/KissPubData.json
+#        loadTestData: true
+#        autoLoad: true
 #    agendaserviceCollection:
 #        name: AgendaService collection
 #        sourceType: GitHub
