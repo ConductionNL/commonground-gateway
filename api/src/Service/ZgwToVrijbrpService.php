@@ -160,7 +160,7 @@ class ZgwToVrijbrpService
             }
         }
 
-        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['code'];
+        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
 
         $dateTimeObject = new \DateTime($zaakArray['startdatum']);
@@ -169,7 +169,6 @@ class ZgwToVrijbrpService
 
         $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-        $dateTimeObject = new \DateTime($eigenschap['waarde']);
         $commitmentArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $commitmentArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
@@ -502,7 +501,7 @@ class ZgwToVrijbrpService
 
         $zaakArray = $zaakObjectEntity->toArray();
 
-        switch ($zaakArray['zaaktype']['code']) {
+        switch ($zaakArray['zaaktype']['identificatie']) {
             case 'B0237':
                 return $this->createBirthObject($zaakArray);
             case 'B0366':
