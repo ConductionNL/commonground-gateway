@@ -681,6 +681,10 @@ class Value
                 case 'datetime':
                     $format = $this->getAttribute()->getType() == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:sP';
 
+                    if ($this->getAttribute()->getFormat()) {
+                        $format = $this->getAttribute()->getFormat();
+                    }
+
                     // We don't want to format null
                     if ((!$this->getDateTimeValue() && !$this->getAttribute()->getMultiple())
                         || (!$this->getArrayValue() && $this->getAttribute()->getMultiple())
