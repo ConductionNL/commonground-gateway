@@ -2,16 +2,10 @@
 
 namespace App\Service;
 
-use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
-use App\Entity\Synchronization;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use Exception;
-use Ramsey\Uuid\Uuid;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class SimXMLZaakService
 {
@@ -243,7 +237,6 @@ class SimXMLZaakService
             $enkelvoudiginformatieobjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['enkelvoudigInformatieObjectEntityId']);
 
             foreach ($bijlagen as $bijlage) {
-
                 $informatieObjectType = new ObjectEntity($informatieObjectTypeEntity);
                 $informatieObjectType->setValue('omschrijving', $bijlage->getValue('omschrijving'));
                 $informatieObjectType->setValue('vertrouwelijkheidaanduiding', 'OPENBAAR');
@@ -262,7 +255,7 @@ class SimXMLZaakService
                     'inhoud'                  => $inhoudObject->getValue('content'),
                     'status'                  => 'defintief',
                     'vertrouwelijkAanduiding' => $informatieObjectType->getValue('vertrouwelijkheidaanduiding'),
-                    'auteur'                  => $simXmlStuurgegevens->getValue('zender')
+                    'auteur'                  => $simXmlStuurgegevens->getValue('zender'),
                 ];
 
                 $enkelvoudigInformatieObject = new ObjectEntity($enkelvoudiginformatieobjectEntity);
@@ -275,7 +268,6 @@ class SimXMLZaakService
 
         return $documenten;
     }
-
 
     /**
      * This function converts a zds message to zgw.
@@ -378,8 +370,6 @@ class SimXMLZaakService
 
         $this->entityManager->persist($simXml);
         $this->entityManager->flush();
-
-        var_dump($simXml->toArray());
 
         return $this->data;
     }
