@@ -382,14 +382,8 @@ class MapSimXMLService
 
         $zaakObjectEntity = $this->synchronizationService->setApplicationAndOrganization($zaakObjectEntity);
 
-                $zaaktypeObjectEntity->hydrate($zaaktypeArray);
-                $this->entityManager->persist($zaaktypeObjectEntity);
-                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity['@id']);
-            } else {
-                // @todo fix error
-                throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
-            }
-        }
+        $this->entityManager->persist($zaakObjectEntity);
+        $this->entityManager->flush();
 
         $zaakObjectEntity = $this->objectEntityRepo->find($zaakObjectEntity->getId()->toString());
 
