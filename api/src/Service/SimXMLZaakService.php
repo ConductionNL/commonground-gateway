@@ -323,7 +323,7 @@ class SimXMLZaakService
                 $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity['@id']);
             } else {
                 // @todo fix error
-                throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+                throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
             }
         }
 
