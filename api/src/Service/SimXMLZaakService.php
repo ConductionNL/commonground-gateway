@@ -99,11 +99,11 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
      */
-    public function createZgwZaakEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    public function createZgwZaakEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
         $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
         $unusedExtraElements = [
@@ -363,9 +363,11 @@ class SimXMLZaakService
         }
 
         if (count($zaaktypeObjectEntity->getValue('roltypen')) > 0 && $roltypen = $zaaktypeObjectEntity->getValue('roltypen')) {
+            $rollenArray = [];
             foreach ($roltypen as $roltype) {
-                $this->createZgwRollen($simXmlBody, $zaak, $roltype);
+                $rollenArray[] = $this->createZgwRollen($simXmlBody, $zaak, $roltype);
             }
+            $zaak->setValue('rollen', $rollenArray);
         } elseif (
             key_exists('enrichData', $this->configuration) &&
             $this->configuration['enrichData']
