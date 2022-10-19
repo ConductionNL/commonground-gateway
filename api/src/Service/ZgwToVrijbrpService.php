@@ -38,10 +38,10 @@ class ZgwToVrijbrpService
 
     private function createBirthObject(array $zaakArray)
     {
-        $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
+        isset($this->configuration['entities']['Birth']) && $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
 
         if (!isset($birthEntity)) {
-            throw new \Exception('Birth entity could not be found');
+            throw new \Exception('Birth entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $birthArray = [
@@ -108,10 +108,10 @@ class ZgwToVrijbrpService
 
     private function createCommitmentObject(array $zaakArray): array
     {
-        $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
+        isset($this->configuration['entities']['Commitment']) && $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
 
         if (!isset($commitmentEntity)) {
-            throw new \Exception('Commitment entity could not be found');
+            throw new \Exception('Commitment entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $commitmentArray = [
@@ -226,14 +226,14 @@ class ZgwToVrijbrpService
 
     private function createRelocationObject(array $zaakArray): array
     {
-        $interRelocationEntity = $this->entityRepo->find($this->configuration['entities']['InterRelocation']);
-        $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
+        isset($this->configuration['entities']['InterRelocation']) && $interRelocationEntity = $this->entityRepo->find($this->configuration['entities']['InterRelocation']);
+        isset($this->configuration['entities']['IntraRelocation']) && $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
 
         if (!isset($interRelocationEntity)) {
-            throw new \Exception('IntraRelocation entity could not be found');
+            throw new \Exception('IntraRelocation entity could not be found, check ZgwToVrijbrpAction config');
         }
         if (!isset($intraRelocationEntity)) {
-            throw new \Exception('InterRelocation entity could not be found');
+            throw new \Exception('InterRelocation entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $relocators = [];
@@ -339,6 +339,101 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+
+
+    private function createDeceasementObject(array $zaakArray): array
+    {
+        isset($this->configuration['entities']['Death']) && $deathEntity = $this->entityRepo->find($this->configuration['entities']['Death']);
+
+        if (!isset($deathEntity)) {
+            throw new \Exception('Death entity could not be found, check ZgwToVrijbrpAction config');
+        }
+
+        $deathArrayObject = [];
+
+        $eigenschappenArray = [];
+
+        foreach ($zaakArray['eigenschappen'] as $eigenschap) {
+            $eigenschappenArray[] = ['naam' => $eigenschap['naam'], 'waarde' => $eigenschap['waarde']];
+            switch ($eigenschap['naam']) {
+                case 'sub.emailadres':
+                    $relocationArray['deceased']['contactInformation']['email'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'inp.bsn':
+                    $relocationArray['deceased']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'voornamen':
+                    $relocationArray['deceased']['firstname'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'voorvoegselGeslachtsnaam':
+                    $relocationArray['deceased']['prefix'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'geslachtsnaam':
+                    $relocationArray['deceased']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'geboortedatum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = (int) $dateTimeObject->format('ymd');
+                    $deathArrayObject['deceased']['birthdate'] = $dateTimeFormatted;
+                    continue 2;
+                case 'natdood':
+                    $relocationArray['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['municipality']['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'datumoverlijden':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+                case 'tijdoverlijden':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+            }
+        }
+
+        if ((isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])
+            || (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer'])
+        ) {
+            $deathArrayObject['declarant']['bsn'] = $bsn;
+            $deathArrayObject['deceased']['bsn'] = $bsn;
+        }
+
+        $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
+        $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
+
+        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+        $deathArrayObject['dossier']['startDate'] = $dateTimeFormatted;
+
+        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+        $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
+        $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+
+        var_dump(json_encode($deathArrayObject));
+        die;
+
+        // Save in gateway
+        $deathObjectEntity = new ObjectEntity();
+        $deathObjectEntity->setEntity($deathEntity);
+
+        $deathObjectEntity->hydrate($deathArrayObject);
+
+        $this->entityManager->persist($deathObjectEntity);
+        $this->entityManager->flush();
+
+        $event = 'commongateway.vrijbrp.death.created' ?? 'commongateway.vrijbrp.foundbody.created';
+
+        $this->objectEntityService->dispatchEvent($event, ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject]);
+
+        return $this->data;
+    }
+
+
     /**
      * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
      *
@@ -375,6 +470,8 @@ class ZgwToVrijbrpService
                 return $this->createRelocationObject($zaakArray);
             case 'B0337':
                 return $this->createCommitmentObject($zaakArray);
+            case 'B0360':
+                return $this->createDeceasementObject($zaakArray);
             default:
                 return $this->data;
         }
