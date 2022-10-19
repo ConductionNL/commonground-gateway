@@ -204,7 +204,7 @@ class ZgwToVrijbrpService
     private function mapRelocators(array $eigenschap): array
     {
         foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
-            switch ($meeverhuizende['ROL']) {
+            switch ($meeverhuizende['rol']) {
                 case 'P':
                     $declarationType = 'PARTNER';
                     break;
@@ -216,7 +216,7 @@ class ZgwToVrijbrpService
                     break;
             }
             $relocators[] = [
-                'bsn'             => $meeverhuizende['BSN'],
+                'bsn'             => $meeverhuizende['bsn'],
                 'declarationType' => $declarationType,
             ];
         }
@@ -241,66 +241,62 @@ class ZgwToVrijbrpService
 
         $relocationArray = [];
 
-        $eigenschappenDump = [];
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
-            $eigenschappenDump[] = ['naam' => $eigenschap['naam'], 'waarde' => $eigenschap['waarde']];
-            if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+            if ($eigenschap['naam'] == 'meeverhuizende_gezinsleden') {
                 $relocators = $this->mapRelocators($eigenschap);
-            } else {
-                switch ($eigenschap['naam']) {
-                    case 'bsn':
-                        $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
-                        $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
-                        $relocationArray['newAddress']['liveIn'] = [
-                            'liveInApplicable' => true,
-                            'consent'          => 'PENDING',
-                            'consenter'        => [
-                                'bsn' => $eigenschap['waarde'],
-                            ],
-                        ];
-                        $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
-                        continue 2;
-                        // case 'DATUM_VERZENDING':
-                        //     $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                        //     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                        //     $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
-                        //     continue 2;
-                    case 'verhuisdatum':
-                        $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-                        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
-                        continue 2;
-                        // case 'WOONPLAATS_NIEUW':
-                        //     $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
-                        //     $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
-                        //     continue 2;
-                    case 'telefoonnummer':
-                        $relocator['telephoneNumber'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'straatnaam_nieuw':
-                        $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'postcode_nieuw':
-                        $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'huisnummer_nieuw':
-                        $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
-                        continue 2;
-                    case 'huisnummertoevoeging_nieuw':
-                        $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
-                        continue 2;
-                        // case 'GEMEENTECODE':
-                        //     $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                        //     continue 2;
-                    case 'emailadres':
-                        $relocator['email'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'aantal_pers_nieuw_adres':
-                        $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
-                        continue 2;
-                }
+                continue;
             }
+
+
+            switch ($eigenschap['naam']) {
+                case 'bsn':
+                    continue 2;
+                case 'verhuisdatum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+                    continue 2;
+                case 'woonplaats_nieuw':
+                    $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'telefoonnummer':
+                    $relocator['telephoneNumber'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'straatnaam_nieuw':
+                    $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'postcode_nieuw':
+                    $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'huisnummer_nieuw':
+                    $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
+                    continue 2;
+                case 'huisnummertoevoeging_nieuw':
+                    $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'emailadres':
+                    $relocator['email'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aantal_pers_nieuw_adres':
+                    $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+                    continue 2;
+            }
+        }
+
+        if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) {
+            $relocationArray['declarant']['bsn'] = $bsn;
+            $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
+            $relocationArray['newAddress']['liveIn'] = [
+                'liveInApplicable' => true,
+                'consent'          => 'PENDING',
+                'consenter'        => [
+                    'bsn' => $bsn,
+                ],
+            ];
         }
 
         $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
@@ -311,6 +307,8 @@ class ZgwToVrijbrpService
             'email'           => $relocator['email'] ?? null,
             'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
         ];
+        $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
+
         $relocationArray['relocators'] = $relocators;
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
 
@@ -326,10 +324,7 @@ class ZgwToVrijbrpService
         $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
-        var_dump(json_encode($relocationArray));
-        die;
         // Save in gateway
-
         $intraObjectEntity = new ObjectEntity();
         $intraObjectEntity->setEntity($intraRelocationEntity);
 
@@ -337,6 +332,7 @@ class ZgwToVrijbrpService
 
         $this->entityManager->persist($intraObjectEntity);
         $this->entityManager->flush();
+
 
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
 
