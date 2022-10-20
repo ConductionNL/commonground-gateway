@@ -62,6 +62,6 @@ class ZgwToSoapHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zgwToVrijbrpService->zgwToSoapHandler($data, $configuration);
+        return $this->zgwToVrijbrpService->zgwToVrijbrpHandler($data, $configuration);
     }
 }

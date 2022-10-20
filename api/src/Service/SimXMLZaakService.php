@@ -84,7 +84,7 @@ class SimXMLZaakService
             $zaakEigenschap->setValue('type', null);
             $zaakEigenschap->setValue('eigenschap', $eigenschap);
             $zaakEigenschap->setValue('naam', $key);
-            $zaakEigenschap->setValue('waarde', is_string($value) ? $value : json_encode($value));
+            $zaakEigenschap->setValue('waarde', is_array($value) ? json_encode($value) : $value);
             $zaakEigenschap->setValue('zaak', $zaak);
 
             $this->entityManager->persist($zaakEigenschap);
@@ -334,7 +334,7 @@ class SimXMLZaakService
 
                 $zaaktypeObjectEntity->hydrate($zaaktypeArray);
                 $this->entityManager->persist($zaaktypeObjectEntity);
-                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getValue('@id'));
+                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getUri());
             } else {
                 // @todo fix error
                 throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
