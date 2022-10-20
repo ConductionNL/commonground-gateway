@@ -481,10 +481,10 @@ class ZgwToVrijbrpService
         $properties = [
             'bsn' => 'burgerservicenummerAanvrager',
             'datumVertrek' => 'emigratiedatum',
-            'landcode',
-            'adresregel1',
-            'adresregel2',
-            'meeverhuizende_gezinsleden'
+            'landcode' => 'landcodeEmigratie',
+            'adresregel1' => 'adresBuitenland',
+            'adresregel2'=> null,
+            'meeverhuizende_gezinsleden' => 'meeEmigranten'
         ];
         $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
 
@@ -494,11 +494,18 @@ class ZgwToVrijbrpService
         $zaakEigenschappen = [];
         foreach ($zaakObjectEntity->getValue('eigenschappen') as $eigenschap) {
             if (key_exists($eigenschap->getValue('naam'), $properties)) {
-                $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap->getValue('waarde');
+//                var_dump($eigenschap->getValue('naam'));
+                $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap;
             }
         }
 
-        var_dump($zaakEigenschappen);
+//        foreach ($properties as $key => $value ) {
+//            if (key_exists($key, $zaakEigenschappen)){
+//                var_dump("joooo");
+//            }
+//        }
+
+//        var_dump($zaakEigenschappen);
 
         $soapEmigrationArray['aanvraaggegevens'] = [
             'burgerservicenummerAanvrager' => null,
@@ -636,17 +643,21 @@ class ZgwToVrijbrpService
             case 'B0360':
                 return $this->createDeceasementObject($zaakArray);
             case 'B1425':
+                return $this->data;
                 //emigratie
-                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+//                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
             case 'B0328':
+                return $this->data;
                 // geheimhouding
-                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+//                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
             case 'B0255':
+                return $this->data;
                 // brp uittreksel
-                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+//                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
             case 'B0348':
                 // naamsgebruik
-                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
+                return $this->data;
+//                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }
