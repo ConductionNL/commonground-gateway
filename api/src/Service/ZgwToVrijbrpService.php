@@ -478,12 +478,12 @@ class ZgwToVrijbrpService
     public function zgwEmigrationToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
     {
         $properties = [
-            'bsn'          => 'burgerservicenummerAanvrager',
-            'datumVertrek' => 'emigratiedatum',
-            'landcode' => 'landcodeEmigratie',
-            'adresregel1' => 'adresBuitenland',
-            'adresregel2'=> null,
-            'meeverhuizende_gezinsleden' => 'meeEmigranten'
+            'bsn'                        => 'burgerservicenummerAanvrager',
+            'datumVertrek'               => 'emigratiedatum',
+            'landcode'                   => 'landcodeEmigratie',
+            'adresregel1'                => 'adresBuitenland',
+            'adresregel2'                => null,
+            'meeverhuizende_gezinsleden' => 'meeEmigranten',
         ];
         $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
 
