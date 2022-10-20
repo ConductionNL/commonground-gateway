@@ -230,10 +230,13 @@ class ZgwToVrijbrpService
         isset($this->configuration['entities']['IntraRelocation']) && $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
 
         if (!isset($interRelocationEntity)) {
-            throw new \Exception('IntraRelocation entity could not be found, check ZgwToVrijbrpAction config');
+            throw new \Exception('IntraRelocation entity could not be found, check the ZgwToVrijbrpAction config');
         }
         if (!isset($intraRelocationEntity)) {
-            throw new \Exception('InterRelocation entity could not be found, check ZgwToVrijbrpAction config');
+            throw new \Exception('InterRelocation entity could not be found, check the ZgwToVrijbrpAction config');
+        }
+        if (!isset($this->configuration['gemeentecode'])) {
+            throw new \Exception('Municipality code could not be found, check the ZgwToVrijbrpAction config');
         }
 
         $relocators = [];
@@ -241,12 +244,13 @@ class ZgwToVrijbrpService
 
         $relocationArray = [];
 
+        $isInterRelocation = false;
+
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             if ($eigenschap['naam'] == 'meeverhuizende_gezinsleden') {
                 $relocators = $this->mapRelocators($eigenschap);
                 continue;
             }
-
 
             switch ($eigenschap['naam']) {
                 case 'bsn':
@@ -275,14 +279,18 @@ class ZgwToVrijbrpService
                 case 'huisnummertoevoeging_nieuw':
                     $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
                     continue 2;
-                case 'gemeentecode':
-                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'emailadres':
                     $relocator['email'] = $eigenschap['waarde'];
                     continue 2;
                 case 'aantal_pers_nieuw_adres':
                     $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                    if ($eigenschap['waarde'] !== $this->configuration['gemeentecode']) {
+                        $relocationArray['previousMunicipality']['code'] = $this->configuration['gemeentecode'];
+                        $isInterRelocation = true;
+                    }
                     continue 2;
             }
         }
@@ -325,16 +333,21 @@ class ZgwToVrijbrpService
         $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         // Save in gateway
-        $intraObjectEntity = new ObjectEntity();
-        $intraObjectEntity->setEntity($intraRelocationEntity);
+        $relocationObjectEntity = new ObjectEntity();
+        $relocationObjectEntity->setEntity($isInterRelocation ? $interRelocationEntity : $intraRelocationEntity);
 
-        $intraObjectEntity->hydrate($relocationArray);
+        $relocationObjectEntity->hydrate($relocationArray);
 
-        $this->entityManager->persist($intraObjectEntity);
+        $this->entityManager->persist($relocationObjectEntity);
         $this->entityManager->flush();
 
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
+        $event = 'commongateway.vrijbrp.intrarelocation.created';
+        if ($isInterRelocation === true) {
+            $event = 'commongateway.vrijbrp.interrelocation.created';
+        }
+
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
 
         return $this->data;
     }
@@ -353,54 +366,105 @@ class ZgwToVrijbrpService
 
         $eigenschappenArray = [];
 
+        $event = 'commongateway.vrijbrp.death.created';
+
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
+            $extractIndex = '';
+            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['amount', 'code'])) {
+                $extractIndex = substr($eigenschap['naam'], -1);
+            }
             $eigenschappenArray[] = ['naam' => $eigenschap['naam'], 'waarde' => $eigenschap['waarde']];
             switch ($eigenschap['naam']) {
                 case 'sub.emailadres':
-                    $relocationArray['deceased']['contactInformation']['email'] = $eigenschap['waarde'];
+                    $deathArrayObject['correspondence']['email'] = $eigenschap['waarde'];
                     continue 2;
                 case 'inp.bsn':
-                    $relocationArray['deceased']['bsn'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'voornamen':
-                    $relocationArray['deceased']['firstname'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'voorvoegselGeslachtsnaam':
-                    $relocationArray['deceased']['prefix'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['prefix'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
-                    $relocationArray['deceased']['lastname'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['lastname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = (int) $dateTimeObject->format('ymd');
-                    $deathArrayObject['deceased']['birthdate'] = $dateTimeFormatted;
+                    $deathArrayObject['deceased']['birthdate'] = (int) $eigenschap['waarde'];
                     continue 2;
                 case 'natdood':
-                    $relocationArray['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    $deathArrayObject['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
                     continue 2;
                 case 'gemeentecode':
-                    $relocationArray['municipality']['code'] = $eigenschap['waarde'];
+                    $deathArrayObject['municipality']['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datumoverlijden':
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    $deathArrayObject['dateOfDeath'] = $dateTimeFormatted;
                     continue 2;
                 case 'tijdoverlijden':
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    $dateTimeFormatted = $dateTimeObject->format('H:i');
+                    $deathArrayObject['timeOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+                case 'type':
+                    in_array($eigenschap['waarde'], ['BURIAL_CREMATION', 'DISSECTION']) && $deathArrayObject['funeralServices']['serviceType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'amount' . $extractIndex:
+                    $deathArrayObject['extracts'][$extractIndex]['amount'] = (int) $eigenschap['waarde'];
+                    continue 2;
+                case 'code' . $extractIndex:
+                    $deathArrayObject['extracts'][$extractIndex]['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'datum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $deathArrayObject['funeralServices']['date'] = $dateTimeFormatted;
+                    continue 2;
+                case 'buitenbenelux':
+                    $deathArrayObject['funeralServices']['outsideBenelux'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    continue 2;
+                case 'communicatietype':
+                    in_array($eigenschap['waarde'], ['EMAIL', 'POST']) && $deathArrayObject['correspondence']['communicationType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'contact.naam':
+                    $deathArrayObject['correspondence']['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'handelsnaam':
+                    $deathArrayObject['correspondence']['organization'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisnummer':
+                    $deathArrayObject['correspondence']['houseNumber'] = (int) $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisletter':
+                    !empty($eigenschap['waarde']) && $deathArrayObject['correspondence']['houseNumberLetter'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisnummertoevoeging':
+                    !empty($eigenschap['waarde']) && $deathArrayObject['correspondence']['houseNumberAddition'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.postcode':
+                    $deathArrayObject['correspondence']['postalCode'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'wpl.woonplaatsnaam':
+                    $deathArrayObject['correspondence']['residence'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'lnd.landcode':
+                    !empty($eigenschap['waarde']) && $event = 'commongateway.vrijbrp.foundbody.created';
                     continue 2;
             }
         }
+
+        isset($deathArrayObject['extracts']) && $deathArrayObject['extracts'] = array_values($deathArrayObject['extracts']);
 
         if ((isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])
             || (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer'])
         ) {
             $deathArrayObject['declarant']['bsn'] = $bsn;
-            $deathArrayObject['deceased']['bsn'] = $bsn;
         }
+
+        $deathArrayObject['funeralServices']['causeOfDeathType'] = $deathArrayObject['deathByNaturalCauses'] == true ? 'NATURAL_CAUSES' : 'NON_CONTAGIOUS_DISEASE';
 
         $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
@@ -414,9 +478,6 @@ class ZgwToVrijbrpService
         $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
         $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
-        var_dump(json_encode($deathArrayObject));
-        die;
-
         // Save in gateway
         $deathObjectEntity = new ObjectEntity();
         $deathObjectEntity->setEntity($deathEntity);
@@ -426,9 +487,9 @@ class ZgwToVrijbrpService
         $this->entityManager->persist($deathObjectEntity);
         $this->entityManager->flush();
 
-        $event = 'commongateway.vrijbrp.death.created' ?? 'commongateway.vrijbrp.foundbody.created';
+        var_dump(json_encode($deathArrayObject));
 
-        $this->objectEntityService->dispatchEvent($event, ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject]);
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject], $event);
 
         return $this->data;
     }

@@ -48,11 +48,11 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
      */
-    public function createNewZgwEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    public function createNewZgwEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
         $eigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['eigenschapEntityId']);
         $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
@@ -92,6 +92,7 @@ class SimXMLZaakService
         }
 
         $zaak->setValue('eigenschappen', $zaakEigenschappen);
+        return $zaak;
     }
 
     /**
@@ -159,11 +160,11 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
      */
-    public function createNewZgwRolObject(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    public function createNewZgwRolObject(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
         $rolTypeEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolTypeEntityId']);
 
@@ -179,6 +180,7 @@ class SimXMLZaakService
 
         $rol[] = $this->createZgwRollen($simXmlBody, $zaak, $roltype);
         $zaak->setValue('rollen', $rol);
+        return $zaak;
     }
 
     /**
@@ -357,7 +359,7 @@ class SimXMLZaakService
             key_exists('enrichData', $this->configuration) &&
             $this->configuration['enrichData']
         ) {
-            $this->createNewZgwEigenschappen($simXmlBody, $simXmlStuurgegevens, $zaaktypeObjectEntity, $zaak);
+            $zaak = $this->createNewZgwEigenschappen($simXmlBody, $simXmlStuurgegevens, $zaaktypeObjectEntity, $zaak);
         } else {
             throw new ErrorException('Cannot create zaakeigenschappen');
         }
