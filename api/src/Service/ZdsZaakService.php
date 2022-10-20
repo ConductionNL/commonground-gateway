@@ -460,10 +460,10 @@ class ZdsZaakService
                 $informatieobjecttypenObjectEntity[0] = new ObjectEntity($informatieobjecttypenObjectEntity);
 
                 $informatieobjecttypenArray = [
-                    'omschrijving' => $zdsObject->getValue('omschrijving'),
+                    'omschrijving'                 => $zdsObject->getValue('omschrijving'),
                     'vertrouwelijkheidaanduiding'  => 'zaakvertrouwelijk ',
-                    'beginGeldigheid'  => $zdsObject->getValue('creatiedatum'),
-                    'eindeGeldigheid'  => null,
+                    'beginGeldigheid'              => $zdsObject->getValue('creatiedatum'),
+                    'eindeGeldigheid'              => null,
                 ];
 
                 $informatieobjecttypenObjectEntity[0]->hydrate($informatieobjecttypenArray);
