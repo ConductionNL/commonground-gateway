@@ -3,8 +3,6 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\ZdsZaakService;
-use App\Service\ZgwToSoapService;
 use App\Service\ZgwToVrijbrpService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -45,7 +43,6 @@ class ZgwToSoapHandler
             ],
         ];
     }
-
 
     /**
      * This function runs the zaakeigenschappen plugin.
