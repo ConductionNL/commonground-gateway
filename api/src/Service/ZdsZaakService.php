@@ -457,7 +457,7 @@ class ZdsZaakService
                 key_exists('enrichData', $this->configuration) &&
                 $this->configuration['enrichData']
             ) {
-                $informatieobjecttypenObjectEntity[0] = new ObjectEntity($informatieobjecttypenObjectEntity);
+                $informatieobjecttypenObjectEntity[0] = new ObjectEntity($informatieObjectTypeEntity);
 
                 $informatieobjecttypenArray = [
                     'omschrijving'                 => $zdsObject->getValue('omschrijving'),
