@@ -125,6 +125,20 @@ jobs:
             ignore-unfixed: true
             vuln-type: 'os,library'
             severity: 'CRITICAL,HIGH'
+      - name: Run Fossa checks
+        uses: fossas/fossa-action@main # Use a specific version if locking is preferred
+        with:
+            api-key: ${{secrets.fossaApiKey}}
+            container: ubuntu:20.04
+      - name: Run Postman checks
+        uses: matt-ball/newman-action@master
+        with:
+            collection: api/public/schema/*.postman_collection.json
+      - name: Run PHPUnit tests
+        uses: php-actions/phpunit@v3
+        with:
+            configuration: plugins/OpenPub/phpunit.xml.dit
+            memory_limit: 256M
       - name: Add docker tags
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
