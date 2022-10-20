@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 
 class ZgwToVrijbrpService
 {
@@ -38,10 +39,10 @@ class ZgwToVrijbrpService
 
     private function createBirthObject(array $zaakArray)
     {
-        $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
+        isset($this->configuration['entities']['Birth']) && $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
 
         if (!isset($birthEntity)) {
-            throw new \Exception('Birth entity could not be found');
+            throw new Exception('Birth entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $birthArray = [
@@ -108,10 +109,10 @@ class ZgwToVrijbrpService
 
     private function createCommitmentObject(array $zaakArray): array
     {
-        $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
+        isset($this->configuration['entities']['Commitment']) && $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
 
         if (!isset($commitmentEntity)) {
-            throw new \Exception('Commitment entity could not be found');
+            throw new Exception('Commitment entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $commitmentArray = [
@@ -204,7 +205,7 @@ class ZgwToVrijbrpService
     private function mapRelocators(array $eigenschap): array
     {
         foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
-            switch ($meeverhuizende['ROL']) {
+            switch ($meeverhuizende['rol']) {
                 case 'P':
                     $declarationType = 'PARTNER';
                     break;
@@ -216,7 +217,7 @@ class ZgwToVrijbrpService
                     break;
             }
             $relocators[] = [
-                'bsn'             => $meeverhuizende['BSN'],
+                'bsn'             => $meeverhuizende['bsn'],
                 'declarationType' => $declarationType,
             ];
         }
@@ -224,230 +225,78 @@ class ZgwToVrijbrpService
         return $relocators;
     }
 
-    private function createRelocationObject(array $zaakArray, ObjectEntity $zaakObjectEntity)
+    private function createRelocationObject(array $zaakArray): array
     {
-        $interRelocationEntity = $this->entityRepo->find($this->configuration['entities']['InterRelocation']);
-        $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
+        isset($this->configuration['entities']['InterRelocation']) && $interRelocationEntity = $this->entityRepo->find($this->configuration['entities']['InterRelocation']);
+        isset($this->configuration['entities']['IntraRelocation']) && $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
 
         if (!isset($interRelocationEntity)) {
-            throw new \Exception('IntraRelocation entity could not be found');
+            throw new Exception('IntraRelocation entity could not be found, check ZgwToVrijbrpAction config');
         }
         if (!isset($intraRelocationEntity)) {
-            throw new \Exception('InterRelocation entity could not be found');
+            throw new Exception('InterRelocation entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $relocators = [];
         $relocator = [];
 
-        $zaakArray['eigenschappen'] = [
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'FORMULIERID',
-                'waarde'     => '000000100000',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'DATUMVERZENDING',
-                'waarde'     => '2021-12-01T23:41:18',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'ZAAKTYPE',
-                'waarde'     => 'B0366',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'CODE_KANAAL',
-                'waarde'     => 'web',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'INDIENER',
-                'waarde'     => '999995923',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'INDIENERSOORT',
-                'waarde'     => 'burger',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'BETROUWBAARHEID_IDENTIFICATIE',
-                'waarde'     => '10',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'BETROUWBAARHEID_NAW',
-                'waarde'     => '1',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'BSN',
-                'waarde'     => '999995923',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'VOORLETTERS',
-                'waarde'     => 'W.J.',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'ACHTERNAAM',
-                'waarde'     => 'Zech',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'GESLACHT',
-                'waarde'     => 'm',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'STRAATNAAM',
-                'waarde'     => 'Amazonestroom',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'HUISNUMMER',
-                'waarde'     => '96',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'POSTCODE',
-                'waarde'     => '2721EP',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'WOONPLAATS',
-                'waarde'     => 'Zoetermeer',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'TELEFOONNUMMER',
-                'waarde'     => '0650606977',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'EMAILADRES',
-                'waarde'     => 'wim@zech.nl',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'GEMEENTECODE',
-                'waarde'     => '0268',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'STRAATNAAM_NIEUW',
-                'waarde'     => 'Binderskampweg',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'HUISNUMMER_NIEUW',
-                'waarde'     => '29',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'HUISLETTER_NIEUW',
-                'waarde'     => 'U',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'HUISNUMMERTOEVOEGING_NIEUW',
-                'waarde'     => '39',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'POSTCODE_NIEUW',
-                'waarde'     => '6545CA',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'WOONPLAATS_NIEUW',
-                'waarde'     => 'Nijmegen',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'VERHUISDATUM',
-                'waarde'     => '2022-01-09',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'AANTAL_PERS_NIEUW_ADRES',
-                'waarde'     => '3',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'WIJZE_BEWONING',
-                'waarde'     => 'nieuwbouw',
-            ],
-            [
-                'eigenschap' => 'string',
-                'naam'       => 'MEEVERHUIZENDE_GEZINSLEDEN',
-                'waarde'     => '[{"BSN":"999995959","ROL":"P","VOORLETTERS":"S.C.A.","VOORNAAM":"Simone Clarina Antoinette","ACHTERNAAM":"Meelis","GESLACHTSAANDUIDING":"v","GEBOORTEDATUM":"19680822"},{"BSN":"999995996","ROL":"K","VOORLETTERS":"K.","VOORNAAM":"Kim","ACHTERNAAM":"Zech","GESLACHTSAANDUIDING":"v","GEBOORTEDATUM":"19980227"}]',
-            ],
-        ];
-
         $relocationArray = [];
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
-            if ($eigenschap['naam'] == 'MEEVERHUIZENDE_GEZINSLEDEN') {
+            if ($eigenschap['naam'] == 'meeverhuizende_gezinsleden') {
                 $relocators = $this->mapRelocators($eigenschap);
-            } else {
-                switch ($eigenschap['naam']) {
-                    case 'DATUM_VERZENDING':
-                        $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                        $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
-                        continue 2;
-                    case 'VERHUISDATUM':
-                        $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-                        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
-                        $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['omschrijving'];
-                        continue 2;
-                    case 'WOONPLAATS_NIEUW':
-                        $relocationArray['newAddress']['municipality']['description'] = $eigenschap['waarde'];
-                        $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'TELEFOONNUMMER':
-                        $relocator['telephoneNumber'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'STRAATNAAM_NIEUW':
-                        $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'POSTCODE_NIEUW':
-                        $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'HUISNUMMER_NIEUW':
-                        $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
-                        continue 2;
-                    case 'HUISNUMMERTOEVOEGING_NIEUW':
-                        $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'GEMEENTECODE':
-                        $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'EMAILADRES':
-                        $relocator['email'] = $eigenschap['waarde'];
-                        continue 2;
-                    case 'BSN':
-                        $relocationArray['declarant']['bsn'] = $eigenschap['waarde'];
-                        $relocationArray['newAddress']['mainOccupant']['bsn'] = $eigenschap['waarde'];
-                        $relocationArray['newAddress']['liveIn'] = [
-                            'liveInApplicable' => true,
-                            'consent'          => 'PENDING',
-                            'consenter'        => [
-                                'bsn' => $eigenschap['waarde'],
-                            ],
-                        ];
-                        $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
-                        continue 2;
-                    case 'AANTAL_PERS_NIEUW_ADRES':
-                        $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
-                        continue 2;
-                }
+                continue;
             }
+
+            switch ($eigenschap['naam']) {
+                case 'bsn':
+                    continue 2;
+                case 'verhuisdatum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+                    continue 2;
+                case 'woonplaats_nieuw':
+                    $relocationArray['newAddress']['residence'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'telefoonnummer':
+                    $relocator['telephoneNumber'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'straatnaam_nieuw':
+                    $relocationArray['newAddress']['street'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'postcode_nieuw':
+                    $relocationArray['newAddress']['postalCode'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'huisnummer_nieuw':
+                    $relocationArray['newAddress']['houseNumber'] = intval($eigenschap['waarde']);
+                    continue 2;
+                case 'huisnummertoevoeging_nieuw':
+                    $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'emailadres':
+                    $relocator['email'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aantal_pers_nieuw_adres':
+                    $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+                    continue 2;
+            }
+        }
+
+        if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) {
+            $relocationArray['declarant']['bsn'] = $bsn;
+            $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
+            $relocationArray['newAddress']['liveIn'] = [
+                'liveInApplicable' => true,
+                'consent'          => 'PENDING',
+                'consenter'        => [
+                    'bsn' => $bsn,
+                ],
+            ];
         }
 
         $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
@@ -458,14 +307,24 @@ class ZgwToVrijbrpService
             'email'           => $relocator['email'] ?? null,
             'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
         ];
+        $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
+
         $relocationArray['relocators'] = $relocators;
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
 
+        $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
-        !isset($relocationArray['dossier']['startDate']) && $relocationArray['dossier']['startDate'] = $relocationArray['dossier']['entryDateTime'];
+
+        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+        $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
+
+        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         // Save in gateway
-
         $intraObjectEntity = new ObjectEntity();
         $intraObjectEntity->setEntity($intraRelocationEntity);
 
@@ -479,11 +338,281 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+    private function createDeceasementObject(array $zaakArray): array
+    {
+        isset($this->configuration['entities']['Death']) && $deathEntity = $this->entityRepo->find($this->configuration['entities']['Death']);
+
+        if (!isset($deathEntity)) {
+            throw new Exception('Death entity could not be found, check ZgwToVrijbrpAction config');
+        }
+
+        $deathArrayObject = [];
+
+        $eigenschappenArray = [];
+
+        foreach ($zaakArray['eigenschappen'] as $eigenschap) {
+            $eigenschappenArray[] = ['naam' => $eigenschap['naam'], 'waarde' => $eigenschap['waarde']];
+            switch ($eigenschap['naam']) {
+                case 'sub.emailadres':
+                    $relocationArray['deceased']['contactInformation']['email'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'inp.bsn':
+                    $relocationArray['deceased']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'voornamen':
+                    $relocationArray['deceased']['firstname'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'voorvoegselGeslachtsnaam':
+                    $relocationArray['deceased']['prefix'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'geslachtsnaam':
+                    $relocationArray['deceased']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'geboortedatum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = (int) $dateTimeObject->format('ymd');
+                    $deathArrayObject['deceased']['birthdate'] = $dateTimeFormatted;
+                    continue 2;
+                case 'natdood':
+                    $relocationArray['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['municipality']['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'datumoverlijden':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+                case 'tijdoverlijden':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+            }
+        }
+
+        if ((isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])
+            || (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer'])
+        ) {
+            $deathArrayObject['declarant']['bsn'] = $bsn;
+            $deathArrayObject['deceased']['bsn'] = $bsn;
+        }
+
+        $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
+        $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
+
+        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+        $deathArrayObject['dossier']['startDate'] = $dateTimeFormatted;
+
+        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
+        $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
+        $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+
+        var_dump(json_encode($deathArrayObject));
+        exit;
+
+        // Save in gateway
+        $deathObjectEntity = new ObjectEntity();
+        $deathObjectEntity->setEntity($deathEntity);
+
+        $deathObjectEntity->hydrate($deathArrayObject);
+
+        $this->entityManager->persist($deathObjectEntity);
+        $this->entityManager->flush();
+
+        $event = 'commongateway.vrijbrp.death.created' ?? 'commongateway.vrijbrp.foundbody.created';
+
+        $this->objectEntityService->dispatchEvent($event, ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject]);
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
+    {
+        return [
+            'zaakId'      => $zaakObjectEntity->getValue('identificatie'),
+            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
+            'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
+            //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
+            'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
+            'toelichting'   => $zaakObjectEntity->getValue('toelichting'),
+        ];
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function createVrijBrpSoapContactgegevens(ObjectEntity $zaakObjectEntity): array
+    {
+        return [
+            'emailadres'           => null,
+            'telefoonnummerPrive'  => null,
+            'telefoonnummerWerk'   => null,
+            'telefoonnummerMobiel' => null,
+        ];
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwEmigrationToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $properties = [
+            'bsn'          => 'burgerservicenummerAanvrager',
+            'datumVertrek' => 'emigratiedatum',
+            'landcode',
+            'adresregel1',
+            'adresregel2',
+            'meeverhuizende_gezinsleden',
+        ];
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapEmigrationArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapEmigrationArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $zaakEigenschappen = [];
+        foreach ($zaakObjectEntity->getValue('eigenschappen') as $eigenschap) {
+            if (key_exists($eigenschap->getValue('naam'), $properties)) {
+                $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap->getValue('waarde');
+            }
+        }
+
+        var_dump($zaakEigenschappen);
+
+        $soapEmigrationArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'emigratiedatum'               => null,
+            'landcodeEmigratie'            => null,
+            'adresBuitenland'              => null, // object
+            'meeEmigranten'                => [],
+        ];
+
+        $soapEmigration = new ObjectEntity($soapVrijBrpEntity);
+        $soapEmigration->hydrate($soapEmigrationArray);
+
+        var_dump($soapEmigration->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwConfidentialityToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapConfidentialityArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapConfidentialityArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapConfidentialityArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'geheimhoudingBetrokkenen'     => [],
+        ];
+
+        $soapConfidentiality = new ObjectEntity($soapVrijBrpEntity);
+        $soapConfidentiality->hydrate($soapConfidentialityArray);
+
+        var_dump($soapConfidentiality->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwExtractToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapExtractArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapExtractArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapExtractArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'uittrekselBetrokkenen'        => [],
+        ];
+
+        $soapExtract = new ObjectEntity($soapVrijBrpEntity);
+        $soapExtract->hydrate($soapExtractArray);
+
+        var_dump($soapExtract->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwNamingToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapNamingArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapNamingArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapNamingArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'naamgebruikBetrokkenen'       => [],
+        ];
+
+        $soapNaming = new ObjectEntity($soapVrijBrpEntity);
+        $soapNaming->hydrate($soapNamingArray);
+
+        var_dump($soapNaming->toArray());
+        exit();
+
+        return $this->data;
+    }
+
     /**
      * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
      *
      * @param array $data          Data from the handler where the xxllnc casetype is in.
      * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
+     *
+     * @throws Exception
      *
      * @return array $this->data Data which we entered the function with
      */
@@ -492,16 +621,15 @@ class ZgwToVrijbrpService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        if (!isset($data['response']['id'])) {
-            throw new \Exception('Zaak ID not given for ZgwToVrijbrpHandler');
+        if (!isset($data['response']['zgwZaak']['id'])) {
+            throw new Exception('Zaak ID not given for ZgwToVrijbrpHandler');
         }
+
+        // var_dump(json_encode($data));
 
         $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
         if (!$zaakObjectEntity instanceof ObjectEntity) {
-            $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
-            if (!$zaakObjectEntity instanceof ObjectEntity) {
-                throw new \Exception('Zaak not found with given ID for ZgwToVrijbrpHandler');
-            }
+            throw new Exception('Zaak not found with given ID for ZgwToVrijbrpHandler');
         }
 
         $zaakArray = $zaakObjectEntity->toArray();
@@ -510,9 +638,23 @@ class ZgwToVrijbrpService
             case 'B0237':
                 return $this->createBirthObject($zaakArray);
             case 'B0366':
-                return $this->createRelocationObject($zaakArray, $zaakObjectEntity);
+                return $this->createRelocationObject($zaakArray);
             case 'B0337':
                 return $this->createCommitmentObject($zaakArray);
+            case 'B0360':
+                return $this->createDeceasementObject($zaakArray);
+            case 'B1425':
+                //emigratie
+                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+            case 'B0328':
+                // geheimhouding
+                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+            case 'B0255':
+                // brp uittreksel
+                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+            case 'B0348':
+                // naamsgebruik
+                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }

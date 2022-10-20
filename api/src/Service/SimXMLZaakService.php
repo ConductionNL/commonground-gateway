@@ -83,7 +83,7 @@ class SimXMLZaakService
             $zaakEigenschap->setValue('type', null);
             $zaakEigenschap->setValue('eigenschap', $eigenschap);
             $zaakEigenschap->setValue('naam', $key);
-            $zaakEigenschap->setValue('waarde', is_string($value) ? $value : json_encode($value));
+            $zaakEigenschap->setValue('waarde', is_array($value) ? json_encode($value) : $value);
             $zaakEigenschap->setValue('zaak', $zaak);
 
             $this->entityManager->persist($zaakEigenschap);
@@ -100,9 +100,9 @@ class SimXMLZaakService
      *
      * @throws Exception
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      */
-    public function createZgwZaakEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): void
+    public function createZgwZaakEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
         $zaakEigenschapEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEigenschapEntityId']);
         $unusedExtraElements = [
@@ -113,12 +113,14 @@ class SimXMLZaakService
 
         $eigenschappenArray = [];
 
-        foreach ($eigenschappen as $key => $value) {
-            $eigenschappenArray[$key] = $value;
+        foreach ($eigenschappen as $eigenschapObjectEntity) {
+            $eigenschappenArray[$eigenschapObjectEntity->getValue('naam')] = $eigenschapObjectEntity;
         }
 
         // Lets grep our extra elements to stuff into the zaak
-        $elementen = $simXmlBody->getValue('elementen');
+        $elementen = $simXmlBody->getValue('elementen')->toArray();
+
+        $zaakEigenschappenArray = [];
         foreach ($elementen as $key => $value) {
             // Extra element does exist in eigenschappen
             if ($value !== null && array_key_exists($key, $eigenschappenArray) && !in_array($key, $unusedExtraElements)) {
@@ -137,12 +139,17 @@ class SimXMLZaakService
 
                 $this->entityManager->persist($zaakEigenschap);
                 // Nieuwe eigenschap aan zaak toevoegen
+                $zaakEigenschappenArray[] = $zaakEigenschap;
 
                 continue;
             }
+            is_array($value) && $value = json_encode($value);
             // Extra element doesn't exist in eigenschappen
             $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}\n$key: $value");
         }
+        $zaak->setValue('eigenschappen', $zaakEigenschappenArray);
+
+        return $zaak;
     }
 
     /**
@@ -302,7 +309,13 @@ class SimXMLZaakService
         $simXmlStuurgegevens = $simXml->getValue('stuurgegevens');
 
         // Let get the zaaktype
-        $zaaktypeObjectEntity = $this->entityManager->getRepository('App:Value')->findOneBy(['stringValue' => $zaakTypeIdentificatie])->getObjectEntity();
+        $zaaktypeObjectEntity = null;
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $zaakTypeIdentificatie]);
+        foreach ($zaaktypeValues as $zaaktypeValue) {
+            if ($zaaktypeValue->getObjectEntity()->getEntity()->getId() == $this->configuration['zaakTypeEntityId'] && $zaaktypeValue->getObjectEntity()->getValue('eindeGeldigheid') == null) {
+                $zaaktypeObjectEntity = $zaaktypeValue->getObjectEntity();
+            }
+        }
         if (!$zaaktypeObjectEntity && !$zaaktypeObjectEntity instanceof ObjectEntity) {
             if (
                 key_exists('enrichData', $this->configuration) &&
@@ -320,7 +333,7 @@ class SimXMLZaakService
 
                 $zaaktypeObjectEntity->hydrate($zaaktypeArray);
                 $this->entityManager->persist($zaaktypeObjectEntity);
-                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity['@id']);
+                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getUri());
             } else {
                 // @todo fix error
                 throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
@@ -334,10 +347,11 @@ class SimXMLZaakService
         $zaak->setValue('omschrijving', $simXmlStuurgegevens->getValue('berichttype'));
         $zaak->setValue('startdatum', $simXmlBody->getValue('datumVerzending'));
         $zaak->setValue('zaaktype', $zaaktypeObjectEntity);
+
         $this->entityManager->persist($zaak);
 
-        if ($zaaktypeObjectEntity->getValue('eigenschappen')) {
-            $this->createZgwZaakEigenschappen($simXmlBody, $zaaktypeObjectEntity, $zaak);
+        if (count($zaaktypeObjectEntity->getValue('eigenschappen')) > 0) {
+            $zaak = $this->createZgwZaakEigenschappen($simXmlBody, $zaaktypeObjectEntity, $zaak);
         } elseif (
             key_exists('enrichData', $this->configuration) &&
             $this->configuration['enrichData']
@@ -347,10 +361,12 @@ class SimXMLZaakService
             throw new ErrorException('Cannot create zaakeigenschappen');
         }
 
-        if ($roltypen = $zaaktypeObjectEntity->getValue('roltypen')) {
+        if (count($zaaktypeObjectEntity->getValue('roltypen')) > 0 && $roltypen = $zaaktypeObjectEntity->getValue('roltypen')) {
+            $rollenArray = [];
             foreach ($roltypen as $roltype) {
-                $this->createZgwRollen($simXmlBody, $zaak, $roltype);
+                $rollenArray[] = $this->createZgwRollen($simXmlBody, $zaak, $roltype);
             }
+            $zaak->setValue('rollen', $rollenArray);
         } elseif (
             key_exists('enrichData', $this->configuration) &&
             $this->configuration['enrichData']
@@ -370,6 +386,8 @@ class SimXMLZaakService
 
         $this->entityManager->persist($simXml);
         $this->entityManager->flush();
+
+        $this->data['response'] = $simXml->toArray();
 
         return $this->data;
     }
