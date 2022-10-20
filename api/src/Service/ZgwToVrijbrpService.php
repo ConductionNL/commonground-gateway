@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 
 class ZgwToVrijbrpService
 {
@@ -41,7 +42,7 @@ class ZgwToVrijbrpService
         isset($this->configuration['entities']['Birth']) && $birthEntity = $this->entityRepo->find($this->configuration['entities']['Birth']);
 
         if (!isset($birthEntity)) {
-            throw new \Exception('Birth entity could not be found, check ZgwToVrijbrpAction config');
+            throw new Exception('Birth entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $birthArray = [
@@ -55,15 +56,15 @@ class ZgwToVrijbrpService
                 $childIndexInt = intval($childIndex) - 1;
             }
             switch ($eigenschap['naam']) {
-                case 'voornamen' . $childIndex:
+                case 'voornamen'.$childIndex:
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geboortedatum' . $childIndex:
+                case 'geboortedatum'.$childIndex:
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'geslachtsaanduiding' . $childIndex:
+                case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
@@ -111,7 +112,7 @@ class ZgwToVrijbrpService
         isset($this->configuration['entities']['Commitment']) && $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
 
         if (!isset($commitmentEntity)) {
-            throw new \Exception('Commitment entity could not be found, check ZgwToVrijbrpAction config');
+            throw new Exception('Commitment entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $commitmentArray = [
@@ -352,14 +353,12 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
-
-
     private function createDeceasementObject(array $zaakArray): array
     {
         isset($this->configuration['entities']['Death']) && $deathEntity = $this->entityRepo->find($this->configuration['entities']['Death']);
 
         if (!isset($deathEntity)) {
-            throw new \Exception('Death entity could not be found, check ZgwToVrijbrpAction config');
+            throw new Exception('Death entity could not be found, check ZgwToVrijbrpAction config');
         }
 
         $deathArrayObject = [];
@@ -494,12 +493,196 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
+    {
+        return [
+            'zaakId'      => $zaakObjectEntity->getValue('identificatie'),
+            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
+            'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
+            //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
+            'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
+            'toelichting'   => $zaakObjectEntity->getValue('toelichting'),
+        ];
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function createVrijBrpSoapContactgegevens(ObjectEntity $zaakObjectEntity): array
+    {
+        return [
+            'emailadres'           => null,
+            'telefoonnummerPrive'  => null,
+            'telefoonnummerWerk'   => null,
+            'telefoonnummerMobiel' => null,
+        ];
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwEmigrationToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $properties = [
+            'bsn'                        => 'burgerservicenummerAanvrager',
+            'datumVertrek'               => 'emigratiedatum',
+            'landcode'                   => 'landcodeEmigratie',
+            'adresregel1'                => 'adresBuitenland',
+            'adresregel2'                => null,
+            'meeverhuizende_gezinsleden' => 'meeEmigranten',
+        ];
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapEmigrationArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapEmigrationArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $zaakEigenschappen = [];
+        foreach ($zaakObjectEntity->getValue('eigenschappen') as $eigenschap) {
+            if (key_exists($eigenschap->getValue('naam'), $properties)) {
+//                var_dump($eigenschap->getValue('naam'));
+                $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap;
+            }
+        }
+
+//        foreach ($properties as $key => $value ) {
+//            if (key_exists($key, $zaakEigenschappen)){
+//                var_dump("joooo");
+//            }
+//        }
+
+//        var_dump($zaakEigenschappen);
+
+        $soapEmigrationArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'emigratiedatum'               => null,
+            'landcodeEmigratie'            => null,
+            'adresBuitenland'              => null, // object
+            'meeEmigranten'                => [],
+        ];
+
+        $soapEmigration = new ObjectEntity($soapVrijBrpEntity);
+        $soapEmigration->hydrate($soapEmigrationArray);
+
+        var_dump($soapEmigration->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwConfidentialityToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapConfidentialityArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapConfidentialityArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapConfidentialityArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'geheimhoudingBetrokkenen'     => [],
+        ];
+
+        $soapConfidentiality = new ObjectEntity($soapVrijBrpEntity);
+        $soapConfidentiality->hydrate($soapConfidentialityArray);
+
+        var_dump($soapConfidentiality->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwExtractToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapExtractArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapExtractArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapExtractArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'uittrekselBetrokkenen'        => [],
+        ];
+
+        $soapExtract = new ObjectEntity($soapVrijBrpEntity);
+        $soapExtract->hydrate($soapExtractArray);
+
+        var_dump($soapExtract->toArray());
+        exit();
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwNamingToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $soapVrijBrpEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($this->configuration['soapVrijBrpEntityId']);
+
+        $soapNamingArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapNamingArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $soapNamingArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => null,
+            'naamgebruikBetrokkenen'       => [],
+        ];
+
+        $soapNaming = new ObjectEntity($soapVrijBrpEntity);
+        $soapNaming->hydrate($soapNamingArray);
+
+        var_dump($soapNaming->toArray());
+        exit();
+
+        return $this->data;
+    }
 
     /**
      * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
      *
      * @param array $data          Data from the handler where the xxllnc casetype is in.
      * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
+     *
+     * @throws Exception
      *
      * @return array $this->data Data which we entered the function with
      */
@@ -508,18 +691,15 @@ class ZgwToVrijbrpService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        if (!isset($data['response']['id'])) {
-            throw new \Exception('Zaak ID not given for ZgwToVrijbrpHandler');
+        if (!isset($data['response']['zgwZaak']['id'])) {
+            throw new Exception('Zaak ID not given for ZgwToVrijbrpHandler');
         }
 
         // var_dump(json_encode($data));
 
         $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
         if (!$zaakObjectEntity instanceof ObjectEntity) {
-            $zaakObjectEntity = $this->entityManager->find('App:ObjectEntity', $data['response']['zgwZaak']['id']);
-            if (!$zaakObjectEntity instanceof ObjectEntity) {
-                throw new \Exception('Zaak not found with given ID for ZgwToVrijbrpHandler');
-            }
+            throw new Exception('Zaak not found with given ID for ZgwToVrijbrpHandler');
         }
 
         $zaakArray = $zaakObjectEntity->toArray();
@@ -533,6 +713,22 @@ class ZgwToVrijbrpService
                 return $this->createCommitmentObject($zaakArray);
             case 'B0360':
                 return $this->createDeceasementObject($zaakArray);
+            case 'B1425':
+                return $this->data;
+                //emigratie
+//                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+            case 'B0328':
+                return $this->data;
+                // geheimhouding
+//                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+            case 'B0255':
+                return $this->data;
+                // brp uittreksel
+//                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+            case 'B0348':
+                // naamsgebruik
+                return $this->data;
+//                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }

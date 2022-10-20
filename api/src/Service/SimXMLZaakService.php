@@ -21,8 +21,7 @@ class SimXMLZaakService
     public function __construct(
         EntityManagerInterface $entityManager,
         SynchronizationService $synchronizationService
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
         $this->synchronizationService = $synchronizationService;
     }
@@ -51,6 +50,7 @@ class SimXMLZaakService
      * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
+     * @return void The modified data of the call with the case type and identification
      */
     public function createNewZgwEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
@@ -84,7 +84,7 @@ class SimXMLZaakService
             $zaakEigenschap->setValue('type', null);
             $zaakEigenschap->setValue('eigenschap', $eigenschap);
             $zaakEigenschap->setValue('naam', $key);
-            $zaakEigenschap->setValue('waarde', is_string($value) ? $value : json_encode($value));
+            $zaakEigenschap->setValue('waarde', is_array($value) ? json_encode($value) : $value);
             $zaakEigenschap->setValue('zaak', $zaak);
 
             $this->entityManager->persist($zaakEigenschap);
@@ -100,9 +100,9 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      */
     public function createZgwZaakEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
@@ -163,6 +163,7 @@ class SimXMLZaakService
      * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
+     * @return void The modified data of the call with the case type and identification
      */
     public function createNewZgwRolObject(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
@@ -188,9 +189,9 @@ class SimXMLZaakService
      * @param ObjectEntity $zaak
      * @param ObjectEntity $roltype
      *
-     * @return ObjectEntity|null The modified data of the call with the case type and identification
      * @throws Exception
      *
+     * @return ObjectEntity|null The modified data of the call with the case type and identification
      */
     public function createZgwRollen(ObjectEntity $simXmlBody, ObjectEntity $zaak, ObjectEntity $roltype): ?ObjectEntity
     {
@@ -216,7 +217,7 @@ class SimXMLZaakService
                     'betrokkeneIdentificatie',
                     [
                         'vestigingsNummer' => $metadataObject->getValue('indiener'),
-                        'handelsnaam' => $metadataObject->getValue('indiener'),
+                        'handelsnaam'      => $metadataObject->getValue('indiener'),
                     ]
                 );
                 $rol->setValue('betrokkeneType', 'vestiging');
@@ -235,9 +236,9 @@ class SimXMLZaakService
      * @param ObjectEntity $zaak
      * @param ObjectEntity $roltype
      *
-     * @return ObjectEntity|null The modified data of the call with the case type and identification
      * @throws Exception
      *
+     * @return ObjectEntity|null The modified data of the call with the case type and identification
      */
     public function createZgwEnkelvoudigInformatieObject(ObjectEntity $simXml, ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens): ?array
     {
@@ -256,16 +257,16 @@ class SimXMLZaakService
 
                 $inhoudObject = $bijlage->getValue('inhoud');
                 $enkelvoudigInformatieObjectArray = [
-                    'titel' => $bijlage->getValue('naam'),
-                    'bestandsnaam' => $bijlage->getValue('naam'),
-                    'beschrijving' => $bijlage->getValue('omschrijving'),
-                    'creatieDatum' => $informatieObjectType->getValue('beginGeldigheid'),
-                    'formaat' => $inhoudObject->getValue('contentType'),
-                    'taal' => 'NLD',
-                    'inhoud' => $inhoudObject->getValue('content'),
-                    'status' => 'defintief',
+                    'titel'                   => $bijlage->getValue('naam'),
+                    'bestandsnaam'            => $bijlage->getValue('naam'),
+                    'beschrijving'            => $bijlage->getValue('omschrijving'),
+                    'creatieDatum'            => $informatieObjectType->getValue('beginGeldigheid'),
+                    'formaat'                 => $inhoudObject->getValue('contentType'),
+                    'taal'                    => 'NLD',
+                    'inhoud'                  => $inhoudObject->getValue('content'),
+                    'status'                  => 'defintief',
                     'vertrouwelijkAanduiding' => $informatieObjectType->getValue('vertrouwelijkheidaanduiding'),
-                    'auteur' => $simXmlStuurgegevens->getValue('zender'),
+                    'auteur'                  => $simXmlStuurgegevens->getValue('zender'),
                 ];
 
                 $enkelvoudigInformatieObject = new ObjectEntity($enkelvoudiginformatieobjectEntity);
@@ -282,12 +283,12 @@ class SimXMLZaakService
     /**
      * This function converts a zds message to zgw.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration array from the action
      *
-     * @return array The data from the call
      * @throws ErrorException
      *
+     * @return array The data from the call
      */
     public function simXMLToZGWHandler(array $data, array $configuration): array
     {
@@ -331,15 +332,15 @@ class SimXMLZaakService
 
                 $zaaktypeArray = [
                     'identificatie' => $zaakTypeIdentificatie,
-                    'omschrijving' => $simXmlStuurgegevens->getValue('berichttype'),
+                    'omschrijving'  => $simXmlStuurgegevens->getValue('berichttype'),
                 ];
 
                 $zaaktypeObjectEntity->hydrate($zaaktypeArray);
                 $this->entityManager->persist($zaaktypeObjectEntity);
-                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getValue('@id'));
+                $zaaktypeObjectEntity->setValue('url', $zaaktypeObjectEntity->getUri());
             } else {
                 // @todo fix error
-                throw new ErrorException('The zaakType with identificatie: ' . $zaakTypeIdentificatie . ' can\'t be found');
+                throw new ErrorException('The zaakType with identificatie: '.$zaakTypeIdentificatie.' can\'t be found');
             }
         }
 

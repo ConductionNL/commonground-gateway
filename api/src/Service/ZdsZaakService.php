@@ -453,8 +453,26 @@ class ZdsZaakService
         // Let get the informatieobjecttypen
         $informatieobjecttypenObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($informatieObjectTypeEntity, ['omschrijving' => $zdsObject->getValue('dctOmschrijving')]);
         if (count($informatieobjecttypenObjectEntity) == 0 || !$informatieobjecttypenObjectEntity[0] instanceof ObjectEntity) {
-            // @todo fix error
-            throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
+            if (
+                key_exists('enrichData', $this->configuration) &&
+                $this->configuration['enrichData']
+            ) {
+                $informatieobjecttypenObjectEntity[0] = new ObjectEntity($informatieObjectTypeEntity);
+
+                $informatieobjecttypenArray = [
+                    'omschrijving'                 => $zdsObject->getValue('omschrijving'),
+                    'vertrouwelijkheidaanduiding'  => 'zaakvertrouwelijk ',
+                    'beginGeldigheid'              => $zdsObject->getValue('creatiedatum'),
+                    'eindeGeldigheid'              => null,
+                ];
+
+                $informatieobjecttypenObjectEntity[0]->hydrate($informatieobjecttypenArray);
+                $this->entityManager->persist($informatieobjecttypenObjectEntity[0]);
+                $informatieobjecttypenObjectEntity[0]->setValue('url', $informatieobjecttypenObjectEntity[0]->getUri());
+            } else {
+                // @todo fix error
+                throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
+            }
         }
 
         // Lets start by setting up the document
