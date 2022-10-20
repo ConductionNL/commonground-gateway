@@ -22,6 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
+        with:
+            node-version: '16'
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
@@ -129,11 +131,19 @@ jobs:
         uses: fossas/fossa-action@main # Use a specific version if locking is preferred
         with:
             api-key: ${{secrets.fossaApiKey}}
-            container: ubuntu:20.04
+            container: php
+      # Postman      
+      - name: Install postman dependencies
+        run: npm install -g openapi-to-postmanv2
+      - name: Create tests folder
+        run: mkdir -p ./tests/postman
+      - name: Generate Postman collection
+        run: openapi2postmanv2 -s ./api/public/schema/openapi.yaml -o ./tests/postman/collection.json --pretty
       - name: Run Postman checks
         uses: matt-ball/newman-action@master
         with:
-            collection: api/public/schema/*.postman_collection.json
+            collection: ./tests/postman/collection.json
+      # Unit      
       - name: Run PHPUnit tests
         uses: php-actions/phpunit@v3
         with:
