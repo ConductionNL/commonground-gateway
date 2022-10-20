@@ -66,6 +66,13 @@ class TranslationService
         return $mapping;
     }
 
+    public function getUuidFromUrl(?string $url)
+    {
+        $array = explode('/', $url);
+        /* @todo we might want to validate against uuid and id here */
+        return end($array);
+    }
+
     /**
      * This function hydrates an array with the values of another array bassed on a mapping diffined in dot notation, with al little help from https://github.com/adbario/php-dot-notation.
      *
@@ -119,8 +126,10 @@ class TranslationService
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
             } elseif ($format == 'datetimeutc') {
-                $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
+                $datum = new DateTime(isset($source[$search]) ? (string)$source[$search] : ((string)$destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
+            } elseif($format == 'uuidFromUrl') {
+                $destination[$replace] = $this->getUuidFromUrl($source[$search]) ?? ($destination[$replace]) ?? null;
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);
                 $separator = str_replace('&nbsp;', ' ', $separator);

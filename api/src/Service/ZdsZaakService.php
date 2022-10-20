@@ -367,7 +367,8 @@ class ZdsZaakService
             $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
             $rollen = [];
             foreach ($roltypen as $roltype) {
-                $rollen[] = $this->createZgwRollen($zdsObject, $zaak, $roltype);
+                $rol = $this->createZgwRollen($zdsObject, $zaak, $roltype);
+                !$rol ?: $rollen[] = $rol;
             }
             $zaak->setValue('rollen', $rollen);
         } elseif (
