@@ -139,19 +139,26 @@ jobs:
         run: docker images
       # Lets save the images
       - name: Create PHP Artifact
-        run: docker save -o php.tar php
-      - name: Create PHP Artifact
         run: docker save -o nginx.tar nginx      
       - name: Upload PHP artifact
         uses: actions/upload-artifact@v2
         with:
             name: php.tar
             path: php.tar
+      - name: Create NGINX Artifact
+        run: docker save -o php.tar php
       - name: Upload NGINX artifact
         uses: actions/upload-artifact@v2
         with:
             name: nginx.tar
             path: nginx.tar
+      - name: Create postgres Artifact
+        run: docker save -o postgres.tar postgres
+      - name: Upload postgres artifact
+        uses: actions/upload-artifact@v2
+        with:
+            name: postgres.tar
+            path: postgres.tar
   Trivy:
       needs: build
       runs-on: ubuntu-latest
@@ -163,7 +170,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images 
@@ -204,7 +211,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
@@ -224,7 +231,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
@@ -245,7 +252,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
@@ -264,7 +271,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
@@ -286,7 +293,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker --input load php.tar && docker --input load nginx.tar
+            run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
@@ -304,7 +311,7 @@ jobs:
         - name: Download artifacts (Docker images) from previous workflows
           uses: actions/download-artifact@v2
         - name: Load Docker images from previous workflows
-          run: docker --input load php.tar && docker --input load nginx.tar
+          run: docker --input load php.tar && docker --input load nginx.tar && docker --input load postgres.tar
         - name: Show all images
           run: docker images
         - name: Up the images
