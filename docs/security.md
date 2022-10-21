@@ -15,6 +15,7 @@ Images and instalation files are only created afther an succesful workflow, the 
 - Postman (integration test) provided by [github Newman action](https://github.com/marketplace/actions/newman-action).
 - PHP Unit (unit and integration test)
 - Composer Dependency (security test)
+- Database consistency (integration test)
 
 All actions can be configured from dthe dockerimage.yaml workflow file. Please see the appropriate gitworkflow action page for configuration options.
 

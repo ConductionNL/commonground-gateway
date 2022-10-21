@@ -227,3 +227,27 @@ jobs:
       - name: Chores
         if: (success() || failure())
         run: docker-compose down
+  test1:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v1
+          - uses: actions/setup-node@v1
+            with:
+                node-version: '16'
+  test2:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v1
+          - uses: actions/setup-node@v1
+            with:
+                node-version: '16'
+  publish:
+      needs: [test1, test2]
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v1
+        - uses: actions/setup-node@v1
+          with:
+            node-version: '16'
