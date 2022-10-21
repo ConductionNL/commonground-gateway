@@ -233,7 +233,7 @@ jobs:
                 container: php
                 debug: true
   publish:
-      needs: [Trivy, Gryphe, Postman, Dependencies, Unit]
+      needs: [Trivy, Gryphe, Dependencies]
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v1
