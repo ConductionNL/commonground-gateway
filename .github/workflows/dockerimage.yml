@@ -133,21 +133,21 @@ jobs:
             api-key: ${{secrets.fossaApiKey}}
             container: php
       # Postman      
-      - name: Install postman dependencies
-        run: npm install -g openapi-to-postmanv2
-      - name: Create tests folder
-        run: mkdir -p ./tests/postman
-      - name: Generate Postman collection
-        run: openapi2postmanv2 -s ./api/public/schema/openapi.yaml -o ./tests/postman/collection.json --pretty
-      - name: Run Postman checks
-        uses: matt-ball/newman-action@master
-        with:
-            collection: ./tests/postman/collection.json
+#      - name: Install postman dependencies
+#        run: npm install -g openapi-to-postmanv2
+#      - name: Create tests folder
+#        run: mkdir -p ./tests/postman
+#      - name: Generate Postman collection
+#        run: openapi2postmanv2 -s ./api/public/schema/openapi.yaml -o ./tests/postman/collection.json --pretty
+#      - name: Run Postman checks
+#        uses: matt-ball/newman-action@master
+#        with:
+#            collection: ./tests/postman/collection.json
       # Unit      
       - name: Run PHPUnit tests
         uses: php-actions/phpunit@v3
         with:
-            configuration: plugins/OpenPub/phpunit.xml.dit
+            configuration: api/phpunit.xml.dist
             memory_limit: 256M
       - name: Add docker tags
         run: |
