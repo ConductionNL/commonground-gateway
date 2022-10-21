@@ -1078,7 +1078,6 @@ class EavService
         if (!empty($entity->getSearchPartial())) {
             $filterCheck[] = 'search';
         }
-        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (!in_array($param, $filterCheck)) {
