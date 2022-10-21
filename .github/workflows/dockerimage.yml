@@ -116,7 +116,7 @@ jobs:
         uses: anchore/scan-action@v3
         with:
             image: php
-            fail-build: true
+            fail-build: false
             severity-cutoff: critical
             output-format: table
       - name: Run Trivy to check for vulnerabilities
