@@ -159,7 +159,13 @@ jobs:
           - uses: actions/checkout@v1
           - uses: actions/setup-node@v1
             with:
-                node-version: '16'
+                node-version: '16' 
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
           - name: Up the images 
             run: docker compose up
           - name: Run Trivy to check for vulnerabilities
@@ -195,7 +201,13 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
-          - name: Up the images 
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
+          - name: Up the images
             run: docker compose up
           - name: Run Core Postman checks
             uses: matt-ball/newman-action@master
@@ -209,7 +221,13 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
-          - name: Up the images 
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
+          - name: Up the images
             run: docker compose up
           - name: Checksing al dependencies for known security issues
             run: |
@@ -224,6 +242,12 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
           - name: Up the images
             run: docker compose up
           - name: Unit  Check
@@ -237,6 +261,12 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
           - name: Up the images
             run: docker compose up
           - name: Run Fossa checks
@@ -253,6 +283,12 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
+          - name: Download artifacts (Docker images) from previous workflows
+            uses: actions/download-artifact@v2
+          - name: Load Docker images from previous workflows
+            run: docker --input load php.tar && docker --input load nginx.tar
+          - name: Show all images
+            run: docker images
           - name: Up the images
             run: docker compose up
           - name: Database Update
@@ -265,8 +301,14 @@ jobs:
         - uses: actions/setup-node@v1
           with:
             node-version: '16'
-        - name: Up the images
-          run: docker compose up
+            - name: Download artifacts (Docker images) from previous workflows
+              uses: actions/download-artifact@v2
+            - name: Load Docker images from previous workflows
+              run: docker --input load php.tar && docker --input load nginx.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up
         - name: Login to Container Registry
           id: containerregistry-login
           run: |
