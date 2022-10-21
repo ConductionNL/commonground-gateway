@@ -421,7 +421,7 @@ class SynchronizationService
             $response = $this->commonGroundService->callService(
                 $callServiceConfig['component'],
                 $callServiceConfig['url'],
-                '',
+                strtoupper($callServiceConfig['method']) == 'POST' ? '{}' : '',
                 $query,
                 $callServiceConfig['headers'],
                 false,
