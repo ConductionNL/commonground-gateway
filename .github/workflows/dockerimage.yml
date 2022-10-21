@@ -301,14 +301,14 @@ jobs:
         - uses: actions/setup-node@v1
           with:
             node-version: '16'
-            - name: Download artifacts (Docker images) from previous workflows
-              uses: actions/download-artifact@v2
-            - name: Load Docker images from previous workflows
-              run: docker --input load php.tar && docker --input load nginx.tar
-            - name: Show all images
-              run: docker images
-            - name: Up the images
-              run: docker compose up
+        - name: Download artifacts (Docker images) from previous workflows
+          uses: actions/download-artifact@v2
+        - name: Load Docker images from previous workflows
+          run: docker --input load php.tar && docker --input load nginx.tar
+        - name: Show all images
+          run: docker images
+        - name: Up the images
+          run: docker compose up
         - name: Login to Container Registry
           id: containerregistry-login
           run: |
