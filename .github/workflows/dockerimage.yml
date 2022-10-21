@@ -127,11 +127,16 @@ jobs:
             ignore-unfixed: true
             vuln-type: 'os,library'
             severity: 'CRITICAL,HIGH'
-      - name: Run Fossa checks
-        uses: fossas/fossa-action@main # Use a specific version if locking is preferred
-        with:
-            api-key: ${{secrets.fossaApiKey}}
-            container: php
+#      - name: Run Fossa checks
+#        uses: fossas/fossa-action@main # Use a specific version if locking is preferred
+#        with:
+#            api-key: ${{secrets.fossaApiKey}}
+#            container: php
+#            debug: true
+#      - uses: actions/upload-artifact@v3
+#        with:
+#            name: fossa.debug.json.gz
+#            path: ./fossa.debug.json.gz
       # Postman      
 #      - name: Install postman dependencies
 #        run: npm install -g openapi-to-postmanv2
@@ -142,7 +147,11 @@ jobs:
 #      - name: Run Postman checks
 #        uses: matt-ball/newman-action@master
 #        with:
-#            collection: ./tests/postman/collection.json
+#            collection: ./tests/postman/collection.json            
+      - name: Run Core Postman checks
+        uses: matt-ball/newman-action@master
+        with:
+            collection: api/public/schema/testflow.postman_collection
       # Unit      
       - name: Run PHPUnit tests
         uses: php-actions/phpunit@v3
