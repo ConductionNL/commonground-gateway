@@ -119,6 +119,14 @@
 #        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data.json
 #        loadTestData: true
 #        autoLoad: true
+#        
+##    overigeObjectenSDGCollection:
+##        name: overigeObjectenSDG collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/OAS-SDG.yaml
+##        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data-SDG.json
+##        loadTestData: true
+##        autoLoad: true
 #
 ## Entities
 #App\Entity\Entity:
