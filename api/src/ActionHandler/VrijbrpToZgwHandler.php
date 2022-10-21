@@ -3,18 +3,18 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\ZdsZaakService;
+use App\Service\ZgwToVrijbrpService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class IdentificationHandler
+class VrijbrpToZgwHandler
 {
-    private ZdsZaakService $zdsZaakService;
+    private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
     {
-        $this->zdsZaakService = $zdsZaakService;
+        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
     }
 
     /**
@@ -45,7 +45,7 @@ class IdentificationHandler
     }
 
     /**
-     * This function runs the zaakeigenschappen plugin.
+     * This function runs the zgw zaaktype plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
@@ -59,6 +59,6 @@ class IdentificationHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->identificationHandler($data, $configuration);
+        return $this->zgwToVrijbrpService->vrijbrpToZgwHandler($data, $configuration);
     }
 }
