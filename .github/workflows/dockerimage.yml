@@ -214,7 +214,8 @@ jobs:
           - name: Up the images
             run: docker compose up
           - name: Unit  Check
-            run: docker-compose exec -T php bin/phpunit
+            #run: docker-compose exec -T php bin/phpunit
+            run: docker-compose exec -T php phpunit
   Fossa:
       needs: build
       runs-on: ubuntu-latest
