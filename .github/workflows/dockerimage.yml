@@ -137,6 +137,21 @@ jobs:
           echo 'IMAGES=$images' >> $GITHUB_ENV
       - name: Show all images
         run: docker images
+      # Lets save the images
+      - name: Create PHP Artifact
+        run: docker save -o php.tar php
+      - name: Create PHP Artifact
+        run: docker save -o nginx.tar nginx      
+      - name: Upload PHP artifact
+        uses: actions/upload-artifact@v2
+        with:
+            name: php.tar
+            path: php.tar
+      - name: Upload NGINX artifact
+        uses: actions/upload-artifact@v2
+        with:
+            name: nginx.tar
+            path: nginx.tar
   Trivy:
       needs: build
       runs-on: ubuntu-latest
