@@ -10,14 +10,15 @@ use Symfony\Component\Cache\Exception\CacheException;
 
 class SynchronizationCollectionHandler
 {
-    private SynchronizationService $synchronizationService;
-
     /**
+     * Gets the SynchronizationService trough autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(SynchronizationService $synchronizationService):SynchronizationService
     {
-        $this->synchronizationService = $synchronizationService;
+        return $synchronizationService;
     }
 
     /**
@@ -54,7 +55,7 @@ class SynchronizationCollectionHandler
      */
     public function run(array $data, array $configuration): array
     {
-        $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
+        $this->getSynchronizationService()->SynchronizationCollectionHandler($data, $configuration);
 
         return $data;
     }

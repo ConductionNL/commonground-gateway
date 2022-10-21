@@ -29,23 +29,15 @@ services:
             
     App\ActionHandler\SynchronizationCollectionHandler:
         public: true
-        arguments:
-            $synchronizationService: '@App\Service\SynchronizationService'
 
     App\ActionHandler\SynchronizationItemHandler:
         public: true
-        arguments:
-            $synchronizationService: '@App\Service\SynchronizationService'
 
     App\ActionHandler\SynchronizationPushHandler:
         public: true
-        arguments:
-            $synchronizationService: '@App\Service\SynchronizationService'
 
     App\ActionHandler\SynchronizationWebhookHandler:
         public: true
-        arguments:
-            $synchronizationService: '@App\Service\SynchronizationService'
             
     App\ActionHandler\BijlagenArrayHandler:
         public: true
@@ -59,8 +51,6 @@ services:
 
     App\ActionHandler\EnrichPubliccodeHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
             
     App\ActionHandler\HandelsRegisterSearchHandler:
         public: true
@@ -79,8 +69,6 @@ services:
             
     App\ActionHandler\LarpingHandler:
         public: true
-        arguments:
-            $larpingService: '@App\Service\LarpingService'
             
     App\ActionHandler\MapSimXMLHandler:
         public: true
@@ -99,28 +87,18 @@ services:
             
     App\ActionHandler\PubliccodeCheckRepositoriesForPubliccodeHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
             
     App\ActionHandler\PubliccodeFindGithubRepositoryThroughOrganizationHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
             
     App\ActionHandler\PubliccodeFindOrganizationThroughRepositoriesHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
 
     App\ActionHandler\PubliccodeFindRepositoriesThroughOrganizationHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
 
     App\ActionHandler\PubliccodeRatingHandler:
         public: true
-        arguments:
-            $publiccodeService: '@App\Service\PubliccodeService'
             
     App\ActionHandler\ZdsToZGWHandler:
         public: true

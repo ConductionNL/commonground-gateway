@@ -6,7 +6,16 @@ use App\Service\PubliccodeService;
 
 class PubliccodeCheckRepositoriesForPubliccodeHandler
 {
-    private PubliccodeService $publiccodeService;
+    /**
+     * Gets the PubliccodeService trough autowiring
+     *
+     * @param PubliccodeService $publiccodeService
+     * @return PubliccodeService
+     */
+    private function getPubliccodeService(PubliccodeService $publiccodeService):PubliccodeService
+    {
+        return $publiccodeService;
+    }
 
     public function __construct(PubliccodeService $publiccodeService)
     {
@@ -15,6 +24,6 @@ class PubliccodeCheckRepositoriesForPubliccodeHandler
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichPubliccodeHandler($data, $configuration);
+        return $this->getPubliccodeService()->enrichPubliccodeHandler($data, $configuration);
     }
 }

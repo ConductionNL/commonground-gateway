@@ -6,15 +6,19 @@ use App\Service\PubliccodeService;
 
 class PubliccodeFindOrganizationThroughRepositoriesHandler
 {
-    private PubliccodeService $publiccodeService;
-
-    public function __construct(PubliccodeService $publiccodeService)
+    /**
+     * Gets the PubliccodeService trough autowiring
+     *
+     * @param PubliccodeService $publiccodeService
+     * @return PubliccodeService
+     */
+    private function getPubliccodeService(PubliccodeService $publiccodeService):PubliccodeService
     {
-        $this->publiccodeService = $publiccodeService;
+        return $publiccodeService;
     }
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichRepositoryWithOrganizationHandler($data, $configuration);
+        return $this->getPubliccodeService()->enrichRepositoryWithOrganizationHandler($data, $configuration);
     }
 }

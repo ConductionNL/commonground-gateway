@@ -6,12 +6,17 @@ use App\Service\LarpingService;
 
 class LarpingHandler
 {
-    private LarpingService $larpingService;
-
-    public function __construct(LarpingService $larpingService)
+    /**
+     * Gets the LarpingService trough autowiring
+     *
+     * @param LarpingService $larpingService
+     * @return LarpingService
+     */
+    private function getLarpingService(LarpingService $larpingService):LarpingService
     {
-        $this->larpingService = $larpingService;
+        return $larpingService;
     }
+
 
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
@@ -53,6 +58,6 @@ class LarpingHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->larpingService->LarpingHandler($data, $configuration);
+        return $this->getLarpingService()->LarpingHandler($data, $configuration);
     }
 }

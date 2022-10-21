@@ -7,14 +7,16 @@ use App\Service\SynchronizationService;
 
 class SynchronizationPushHandler
 {
-    private SynchronizationService $synchronizationService;
 
     /**
+     * Gets the SynchronizationService trough autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(SynchronizationService $synchronizationService):SynchronizationService
     {
-        $this->synchronizationService = $synchronizationService;
+        return $synchronizationService;
     }
 
     /**
@@ -51,7 +53,7 @@ class SynchronizationPushHandler
      */
     public function run(array $data, array $configuration): array
     {
-        $this->synchronizationService->synchronisationPushHandler($data, $configuration);
+        $this->getSynchronizationService()->synchronisationPushHandler($data, $configuration);
 
         return $data;
     }
