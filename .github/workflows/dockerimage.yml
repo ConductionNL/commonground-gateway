@@ -110,12 +110,12 @@ jobs:
       #- name: Run Postman Tests
       #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
       #  run: newman run api/public/schema/*.postman_collection.json
-      - name: Run Unit Tests
-        run: docker-compose exec -T php bin/phpunit --coverage-clover unit-coverage.xml
+      - name: Run PHP Unit Tests
+        run: docker-compose exec -T php bin/phpunit --coverage-clover coverage.xml
       - uses: actions/upload-artifact@v3
-            with:
-                name: unit-coverage.xml
-                path: api/unit-coverage.xml  
+        with:
+            name: coverage.xml
+            path: api/unit-coverage.xml  
       - name: Run Gryphe to check for vulnerabilities
         uses: anchore/scan-action@v3
         with:
@@ -151,7 +151,7 @@ jobs:
       - name: Run Core Postman checks
         uses: matt-ball/newman-action@master
         with:
-            collection: api/public/schema/testflow.postman_collection
+            collection: api/public/schema/testflow.postman_collection.json
         # Unit      
 #      - name: Run PHPUnit tests
 #        uses: php-actions/phpunit@v3
