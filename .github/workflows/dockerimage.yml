@@ -90,8 +90,6 @@ jobs:
         run: docker ps
       - name: Dumping the logs
         run: docker-compose logs
-      - name: Database Update
-        run: docker-compose exec -T php bin/console doctrine:schema:update --force
  #     - name: Taking some more sleep (for database to be updated)
  #       run: sleep 20
  #     - name: Database Check
@@ -232,8 +230,20 @@ jobs:
                 api-key: ${{secrets.fossaApiKey}}
                 container: php
                 debug: true
+  Database:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v1
+          - uses: actions/setup-node@v1
+            with:
+                node-version: '16'
+          - name: Up the images
+            run: docker compose up
+          - name: Database Update
+            run: docker-compose exec -T php bin/console doctrine:schema:update --force
   publish:
-      needs: [Trivy, Gryphe, Dependencies]
+      needs: [Trivy, Gryphe, Dependencies,Database]
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v1
