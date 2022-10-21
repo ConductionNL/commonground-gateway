@@ -24,6 +24,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
             node-version: '16'
+        # Unit      
+      - name: Run PHPUnit tests
+        uses: php-actions/phpunit@v3
+        with:
+            configuration: api/phpunit.xml.dist
+            memory_limit: 256M
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
@@ -152,12 +158,6 @@ jobs:
         uses: matt-ball/newman-action@master
         with:
             collection: api/public/schema/testflow.postman_collection
-      # Unit      
-      - name: Run PHPUnit tests
-        uses: php-actions/phpunit@v3
-        with:
-            configuration: api/phpunit.xml.dist
-            memory_limit: 256M
       - name: Add docker tags
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
