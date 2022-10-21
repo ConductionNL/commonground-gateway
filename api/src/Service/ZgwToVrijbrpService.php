@@ -56,15 +56,15 @@ class ZgwToVrijbrpService
                 $childIndexInt = intval($childIndex) - 1;
             }
             switch ($eigenschap['naam']) {
-                case 'voornamen'.$childIndex:
+                case 'voornamen' . $childIndex:
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geboortedatum'.$childIndex:
+                case 'geboortedatum' . $childIndex:
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'geslachtsaanduiding'.$childIndex:
+                case 'geslachtsaanduiding' . $childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
@@ -556,18 +556,18 @@ class ZgwToVrijbrpService
         $zaakEigenschappen = [];
         foreach ($zaakObjectEntity->getValue('eigenschappen') as $eigenschap) {
             if (key_exists($eigenschap->getValue('naam'), $properties)) {
-//                var_dump($eigenschap->getValue('naam'));
+                //                var_dump($eigenschap->getValue('naam'));
                 $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap;
             }
         }
 
-//        foreach ($properties as $key => $value ) {
-//            if (key_exists($key, $zaakEigenschappen)){
-//                var_dump("joooo");
-//            }
-//        }
+        //        foreach ($properties as $key => $value ) {
+        //            if (key_exists($key, $zaakEigenschappen)){
+        //                var_dump("joooo");
+        //            }
+        //        }
 
-//        var_dump($zaakEigenschappen);
+        //        var_dump($zaakEigenschappen);
 
         $soapEmigrationArray['aanvraaggegevens'] = [
             'burgerservicenummerAanvrager' => null,
@@ -676,10 +676,74 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates or updates a ZGW Zaak from a VrijBRP dossier with the use of mapping.
      *
-     * @param array $data          Data from the handler where the xxllnc casetype is in.
+     * @param array $data          Data from the handler where the vrijbrp dossier is in.
+     * @param array $configuration Configuration from the Action where entity id's are stored in.
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function vrijbrpToZgwHandler(array $data, array $configuration): array
+    {
+        $this->data = $data;
+        $this->configuration = $configuration;
+
+        var_dump('VrijbrpToZgw triggered');
+        isset($this->configuration['entities']['Zaak']) && $zaakEntity = $this->entityRepo->find($this->configuration['entities']['Zaak']);
+        isset($this->configuration['entities']['ZaakType']) && $zaakTypeEntity = $this->entityRepo->find($this->configuration['entities']['ZaakType']);
+
+
+        if (!isset($zaakEntity)) {
+            throw new Exception('Zaak entity could not be found, check VrijbrpToZgwAction config');
+        }
+
+        $dossierArrayObject = $this->data['response'];
+
+        $zaakObjectEntity = $this->objectEntityRepo->findOneBy(['entity' => $zaakEntity, 'externalId' => $dossierArrayObject['dossierId']]);
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $dossierArrayObject['type']['code']]);
+        foreach ($zaaktypeValues as $zaaktypeValue) {
+            if ($zaaktypeValue->getObjectEntity()->getEntity()->getId()->toString() == $this->configuration['entities']['ZaakType']) {
+                $zaakTypeObjectEntity = $zaaktypeValue->getObjectEntity();
+            }
+        }
+        if (!$zaakObjectEntity instanceof ObjectEntity) {
+            $zaakObjectEntity = new ObjectEntity($zaakEntity);
+            // $zaakArrayObject = [
+            //     'zaaktype' => '',
+            //     'omschrijving' => ''
+            // ];
+        } else {
+            // Update zaak
+            var_dump('update zaak');
+        }
+
+        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+            // Create zaakType
+            $zaakTypeObjectEntity = new ObjectEntity($zaakTypeEntity);
+            // $zaakTypeArray = [
+            //     ''
+            // ]
+        }
+
+        $zaakArrayObject['zaaktype'] = $zaakTypeObjectEntity;
+        $zaakTypeObjectEntity->hydrate($zaakArrayObject);
+
+        $this->entityManager->persist($zaakTypeObjectEntity);
+        $this->entityManager->flush();
+
+        var_dump(json_encode($this->data));
+        die;
+
+        return $this->data;
+    }
+    /**
+     * Creates a vrijbrp object from a ZGW Zaak with the use of mapping.
+     *
+     * @param array $data          Data from the handler where the vrijbrp casetype is in.
      * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
      *
      * @throws Exception
@@ -690,6 +754,7 @@ class ZgwToVrijbrpService
     {
         $this->data = $data;
         $this->configuration = $configuration;
+
 
         if (!isset($data['response']['zgwZaak']['id'])) {
             throw new Exception('Zaak ID not given for ZgwToVrijbrpHandler');
@@ -716,19 +781,19 @@ class ZgwToVrijbrpService
             case 'B1425':
                 return $this->data;
                 //emigratie
-//                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
             case 'B0328':
                 return $this->data;
                 // geheimhouding
-//                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
             case 'B0255':
                 return $this->data;
                 // brp uittreksel
-//                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
             case 'B0348':
                 // naamsgebruik
                 return $this->data;
-//                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }
