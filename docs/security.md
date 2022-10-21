@@ -12,6 +12,8 @@ Images and instalation files are only created afther an succesful workflow, the 
 - Gryphe (security test) provided by the [github Gryphe action](https://github.com/marketplace/actions/anchore-container-scan).
 - Trivy (security test) provided by [github Trivy action](https://github.com/marketplace/actions/aqua-security-trivy).
 - Fossa (lincane and intelectual property test) provided by [github Fossa action](https://github.com/marketplace/actions/official-fossa-action).
-- Postman (integration test) provided by []()
-- Php Unit (unit test) provided by []()
+- Postman (integration test) provided by [github Newman action](https://github.com/marketplace/actions/newman-action).
+- Php Unit (unit test) provided by [github PHP Unit action](https://github.com/marketplace/actions/phpunit-php-actions).
+
+All actions can be configured from dthe dockerimage.yaml workflow file. Please see the appropriate gitworkflow action page for configuration options.
 
