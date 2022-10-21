@@ -24,12 +24,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
             node-version: '16'
-        # Unit      
-      - name: Run PHPUnit tests
-        uses: php-actions/phpunit@v3
-        with:
-            configuration: api/phpunit.xml.dist
-            memory_limit: 256M
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
@@ -102,13 +96,11 @@ jobs:
       #  run: sleep 20
       #- name: Database Check
       #  run: docker-compose exec -T php bin/console doctrine:schema:validate
-      #- name: Security Checks
-      #  run: |
-      #    curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
-      #    chmod +x ./local-php-security-checker
-      #    ./local-php-security-checker --path ./api/composer.lock
-#      - name: Run PHPUnit
-#        run: ./vendor/bin/phpunit --coverage-clover coverage.xml
+      - name: Security Checks
+        run: |
+          curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
+          chmod +x ./local-php-security-checker
+          ./local-php-security-checker --path ./api/composer.lock
 #      - uses: codecov/codecov-action@v1
 #        with:
 #            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
@@ -118,6 +110,12 @@ jobs:
       #- name: Run Postman Tests
       #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
       #  run: newman run api/public/schema/*.postman_collection.json
+      - name: Run Unit Tests
+        run: docker-compose exec -T php bin/phpunit --coverage-clover unit-coverage.xml
+      - uses: actions/upload-artifact@v3
+            with:
+                name: unit-coverage.xml
+                path: api/unit-coverage.xml  
       - name: Run Gryphe to check for vulnerabilities
         uses: anchore/scan-action@v3
         with:
@@ -139,10 +137,6 @@ jobs:
 #            api-key: ${{secrets.fossaApiKey}}
 #            container: php
 #            debug: true
-#      - uses: actions/upload-artifact@v3
-#        with:
-#            name: fossa.debug.json.gz
-#            path: ./fossa.debug.json.gz
       # Postman      
 #      - name: Install postman dependencies
 #        run: npm install -g openapi-to-postmanv2
@@ -158,6 +152,12 @@ jobs:
         uses: matt-ball/newman-action@master
         with:
             collection: api/public/schema/testflow.postman_collection
+        # Unit      
+#      - name: Run PHPUnit tests
+#        uses: php-actions/phpunit@v3
+#       with:
+#            configuration: api/phpunit.xml.dist
+#            memory_limit: 256M
       - name: Add docker tags
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
